@@ -3,7 +3,7 @@
 Статический сайт: три страницы + данные. Серверов и баз данных нет.
 
 ```
-index.html           — входная страница
+index.html            — входная страница
 board.html           — доска инструментов (board.html?type=warrant / discount / protection)
 instrument.html      — карточка инструмента (instrument.html?id=W-SBER-310-0327)
 data/instruments.js  — ДАННЫЕ (котировки, инструменты) — генерируется update_site.py
