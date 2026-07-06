@@ -24,17 +24,17 @@ import sys
 
 # ============================================================
 # ВАШИ ДАННЫЕ.
-# Заполняйте этот список из своего прайсера: руками, из Excel/CSV
-# или прямо расчётом — это обычные питоновские словари.
 #
 # Поля по типам:
 #   discount   — id, type, name, underlying, cls, expiry, quote, chg, minNom
 #   protection — + spot, strike (нач. уровень S0), participation (0..1), protectionPct
-#   warrant    — + strike, spot
-# quote — котировка в % от номинала; chg — изм. за день, п.п.
+#   warrant    — собирается сеткой ниже: структура (call / cs) × БА × срок.
+#                Страйки варрантов — в % от начального уровня БА:
+#                100 = уровень в день покупки, 150 = плюс 50%.
+# quote — котировка (премия) в % от номинала; chg — изм. за день, п.п.
 # ============================================================
 
-INSTRUMENTS = [
+INSTRUMENTS_BASE = [
     dict(
         id="D-OFZ-1226", type="discount",
         name="Дисконтная облигация · ОФЗ",
@@ -48,14 +48,69 @@ INSTRUMENTS = [
         spot=3285, strike=3285, participation=0.6, protectionPct=100,
         expiry="18.06.2027", quote=101.30, chg=0.2, minNom=1_000_000,
     ),
-    dict(
-        id="W-SBER-310-0327", type="warrant",
-        name="Варрант · Сбербанк CALL 310",
-        underlying="Сбербанк", cls="Акции",
-        strike=310, spot=296.4,
-        expiry="19.03.2027", quote=6.80, chg=0.3, minNom=1_000_000,
-    ),
 ]
+
+# --- Сетка варрантов: структура × базовый актив × срок ----------------------
+# Добавить базовый актив — новая строка в WARRANT_UNDERLYINGS + котировки.
+# Добавить срок — новая строка в WARRANT_TENORS + котировки.
+
+WARRANT_UNDERLYINGS = {
+    "SPX":    dict(short="S&P 500",   underlying="S&P 500",             cls="Индекс",    uRef="6 320 пт"),
+    "OFZ238": dict(short="ОФЗ 26238", underlying="ОФЗ 26238",           cls="Облигации", uRef="64,1% ном."),
+    "NBIS":   dict(short="NBIS",      underlying="Nebius Group (NBIS)", cls="Акции США", uRef="$54,80"),
+    "NVDA":   dict(short="NVDA",      underlying="NVIDIA (NVDA)",       cls="Акции США", uRef="$176,40"),
+}
+
+# (лет, подпись, дата экспирации, ММГГ для id)
+WARRANT_TENORS = [
+    (1, "1 год",  "16.07.2027", "0727"),
+    (2, "2 года", "21.07.2028", "0728"),
+    (3, "3 года", "20.07.2029", "0729"),
+]
+
+# Котировки из прайсера: (БА, структура, срок в годах) -> (quote, chg).
+#   call — CALL со страйком 100 (участие в росте без потолка);
+#   cs   — колл-спред 100–150 (рост засчитывается до +50%, выплата ≤ 50% номинала).
+# Нет пары в словаре — инструмент не публикуется.
+WARRANT_QUOTES = {
+    ("SPX", "call", 1): (7.60, 0.2),    ("SPX", "call", 2): (11.30, 0.3),   ("SPX", "call", 3): (14.30, 0.3),
+    ("SPX", "cs", 1):   (7.45, 0.2),    ("SPX", "cs", 2):   (10.65, 0.2),   ("SPX", "cs", 3):   (12.50, 0.3),
+
+    ("OFZ238", "call", 1): (3.80, 0.1), ("OFZ238", "call", 2): (5.30, 0.2), ("OFZ238", "call", 3): (6.20, 0.2),
+    ("OFZ238", "cs", 1):   (3.75, 0.1), ("OFZ238", "cs", 2):   (5.20, 0.1), ("OFZ238", "cs", 3):   (6.10, 0.2),
+
+    ("NBIS", "call", 1): (23.30, -0.6), ("NBIS", "call", 2): (33.10, -0.4), ("NBIS", "call", 3): (40.40, -0.3),
+    ("NBIS", "cs", 1):   (13.45, -0.2), ("NBIS", "cs", 2):   (13.30, -0.1), ("NBIS", "cs", 3):   (12.60, -0.1),
+
+    ("NVDA", "call", 1): (17.60, 0.4),  ("NVDA", "call", 2): (25.40, 0.5),  ("NVDA", "call", 3): (31.60, 0.5),
+    ("NVDA", "cs", 1):   (12.90, 0.2),  ("NVDA", "cs", 2):   (13.95, 0.2),  ("NVDA", "cs", 3):   (14.20, 0.1),
+}
+
+
+def build_warrants():
+    out = []
+    for code, u in WARRANT_UNDERLYINGS.items():
+        for struct in ("call", "cs"):
+            for years, tenor, expiry, mmyy in WARRANT_TENORS:
+                if (code, struct, years) not in WARRANT_QUOTES:
+                    continue
+                quote, chg = WARRANT_QUOTES[(code, struct, years)]
+                d = dict(
+                    id="W-%s-%s-%s" % (code, "C100" if struct == "call" else "CS150", mmyy),
+                    type="warrant", structure=struct,
+                    name=("CALL 100 · " if struct == "call" else "CS 100–150 · ") + u["short"] + " · " + tenor,
+                    underlying=u["underlying"], cls=u["cls"], uRef=u["uRef"],
+                    strike=100,
+                )
+                if struct == "cs":
+                    d["strike2"] = 150
+                d.update(spot=100, tenor=tenor, expiry=expiry,
+                         quote=quote, chg=chg, minNom=1_000_000)
+                out.append(d)
+    return out
+
+
+INSTRUMENTS = INSTRUMENTS_BASE + build_warrants()
 
 # ============================================================
 

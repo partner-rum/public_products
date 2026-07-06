@@ -28,8 +28,8 @@ window.SITE = (function () {
       title: "Варранты",
       chip: "Активный",
       chipFg: "#B07B22", chipBg: "#F4E9D4",
-      desc: "Варрант на рост базового актива: выплата на экспирацию — Ном × max(S − K; 0). Котировка — в процентах от номинала; премия — максимальный риск покупателя.",
-      paramLabel: "Страйк"
+      desc: "CALL и колл-спреды (CS) на S&P 500, ОФЗ 26238, NBIS и NVIDIA со сроками 1–3 года. Страйк — 100% уровня базового актива в день покупки. Котировка — премия в процентах от номинала, она же максимальный риск покупателя.",
+      paramLabel: "Страйк, %"
     }
   };
 
@@ -38,9 +38,17 @@ window.SITE = (function () {
   // --- Продукт -------------------------------------------------------------
 
   const PAYOFF = {
-    formulaText: "Ном × max(S − K; 0)",
-    // Выплата варранта в % от номинала. Конвенция: нормировка на страйк, (S − K) / K.
-    pct(S, K) { return Math.max(S - K, 0) / K * 100; }
+    // Текст формулы выплаты для инструмента (CALL или колл-спред).
+    formula(r) {
+      return r && r.structure === "cs" ? "Ном × min(max(S − K; 0); K₂ − K)" : "Ном × max(S − K; 0)";
+    },
+    // Выплата в % от номинала. S, K, K2 — в % от начального уровня БА.
+    // CALL: (S − K) / K; колл-спред: рост засчитывается не выше K2.
+    pct(S, K, K2) {
+      let v = Math.max(S - K, 0);
+      if (K2) v = Math.min(v, K2 - K);
+      return v / K * 100;
+    }
   };
 
   function displayName(r) { return r.name; }
@@ -62,7 +70,7 @@ window.SITE = (function () {
 
   // Значение ключевого параметра для колонки доски.
   function paramValue(r) {
-    if (r.type === "warrant") return fmtSmart(r.strike);
+    if (r.type === "warrant") return fmtSmart(r.strike) + (r.strike2 ? "–" + fmtSmart(r.strike2) : "");
     if (r.type === "discount") return fmt1(yieldAnnual(r)) + "% год.";
     if (r.type === "protection") return Math.round(r.participation * 100) + "% роста";
     return "";
