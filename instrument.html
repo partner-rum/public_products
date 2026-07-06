@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Инструмент</title>
+<meta name="description" content="Карточка инструмента: котировка, диаграмма выплат, пример расчёта и условия.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700;800&family=Fragment+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #ECEAE4; color: #1E2126; font-family: 'Golos Text', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  a { text-decoration: none; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 40px 44px 64px; }
+  .crumbs { display: flex; align-items: center; gap: 12px; font-size: 13px; color: #8A897F; margin-bottom: 28px; }
+  .crumbs a { color: #8A897F; }
+  .crumbs a:hover { color: #1E2126; }
+  .crumbs .sep { color: #C4C2B8; }
+  .crumbs .here { color: #1E2126; font-weight: 500; }
+  .head { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; flex-wrap: wrap; margin-bottom: 32px; }
+  .title-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  h1 { margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.01em; }
+  .badge { font-family: 'Fragment Mono', monospace; font-size: 12px; color: #2B4A78; background: #DCE6F2; border-radius: 6px; padding: 4px 9px; }
+  .subtitle { font-size: 14px; color: #6B6A61; }
+  .quote-block { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+  .quote-big { font-family: 'Fragment Mono', monospace; font-size: 34px; letter-spacing: -0.02em; }
+  .quote-sub { font-size: 12.5px; color: #8A897F; }
+  .quote-chg { font-size: 14px; font-weight: 600; }
+  .grid { display: grid; grid-template-columns: 1.55fr 1fr; gap: 24px; align-items: stretch; }
+  .panel { background: #FBFAF7; border-radius: 18px; padding: 24px 26px; box-shadow: 0 1px 3px rgba(30,32,38,0.07); }
+  .chart-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 18px; }
+  .chart-title { font-size: 15px; font-weight: 600; color: #3A3A33; }
+  .tabs { display: flex; gap: 4px; background: #EFEDE6; border-radius: 10px; padding: 4px; }
+  .tab { border: none; border-radius: 7px; padding: 6px 16px; font-size: 13px; font-weight: 500; cursor: pointer; background: transparent; color: #8A897F; font-family: 'Golos Text', sans-serif; }
+  .tab.active { font-weight: 600; background: #FBFAF7; color: #1E2126; box-shadow: 0 1px 2px rgba(30,32,38,0.12); }
+  .chart-caption { margin-top: 18px; font-size: 12.5px; line-height: 1.5; color: #8A897F; }
+  .metrics { display: flex; flex-direction: column; gap: 12px; }
+  .metric { background: #FBFAF7; border-radius: 14px; padding: 14px 18px; box-shadow: 0 1px 3px rgba(30,32,38,0.06); display: flex; justify-content: space-between; align-items: center; }
+  .metric .k { font-size: 13.5px; color: #6B6A61; }
+  .metric .v { font-family: 'Fragment Mono', monospace; font-size: 15px; }
+  .section { margin-top: 24px; background: #FBFAF7; border-radius: 18px; padding: 28px 30px; box-shadow: 0 1px 3px rgba(30,32,38,0.07); }
+  .section h2 { margin: 0 0 6px; font-size: 17px; font-weight: 700; }
+  .intro { font-size: 14px; color: #54534B; margin-bottom: 8px; }
+  .scenario { display: grid; grid-template-columns: 1.4fr 1.2fr 0.8fr; gap: 16px; align-items: center; padding: 14px 0; border-top: 1px solid #EFEDE6; }
+  .scenario .l { font-size: 14.5px; font-weight: 600; }
+  .scenario .d { font-size: 13.5px; color: #6B6A61; }
+  .scenario .r { text-align: right; font-family: 'Fragment Mono', monospace; font-size: 15px; }
+  .explainer { font-size: 14.5px; line-height: 1.65; color: #454540; max-width: 760px; text-wrap: pretty; margin: 14px 0 0; }
+  .facts { display: flex; gap: 28px; flex-wrap: wrap; margin-top: 22px; padding-top: 22px; border-top: 1px solid #EAE7DE; }
+  .fact { display: flex; flex-direction: column; gap: 5px; min-width: 150px; max-width: 220px; }
+  .fact .k { font-size: 12px; color: #8A897F; text-transform: uppercase; letter-spacing: 0.04em; }
+  .fact .v { font-size: 14px; line-height: 1.45; }
+  @media (max-width: 900px) {
+    .wrap { padding: 24px 20px 48px; }
+    .grid { grid-template-columns: 1fr; }
+    .scenario { grid-template-columns: 1fr; gap: 4px; }
+    .scenario .r { text-align: left; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="crumbs">
+    <a href="index.html">Главная</a>
+    <span class="sep">/</span>
+    <a href="#" id="crumb-board"></a>
+    <span class="sep">/</span>
+    <span class="here" id="crumb-id"></span>
+  </div>
+
+  <div class="head">
+    <div>
+      <div class="title-row">
+        <h1 id="title"></h1>
+        <span class="badge" id="badge"></span>
+      </div>
+      <div class="subtitle" id="subtitle"></div>
+    </div>
+    <div class="quote-block">
+      <div class="quote-big" id="quote"></div>
+      <div class="quote-sub">котировка · % от номинала</div>
+      <div class="quote-chg" id="chg"></div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="panel">
+      <div class="chart-head">
+        <div class="chart-title" id="chart-title"></div>
+        <div class="tabs">
+          <button class="tab active" id="tab-quote" onclick="setMode('quote')">Котировка</button>
+          <button class="tab" id="tab-payoff" onclick="setMode('payoff')">Выплата</button>
+        </div>
+      </div>
+      <div id="chart"></div>
+      <div class="chart-caption" id="chart-caption"></div>
+    </div>
+    <div class="metrics" id="metrics"></div>
+  </div>
+
+  <div class="section">
+    <h2>Пример расчёта</h2>
+    <div class="intro" id="example-intro"></div>
+    <div id="scenarios"></div>
+  </div>
+
+  <div class="section">
+    <h2>Как устроен продукт</h2>
+    <div class="explainer" id="explainer"></div>
+    <div class="facts" id="facts"></div>
+  </div>
+
+</div>
+
+<script src="data/instruments.js"></script>
+<script src="data/lib.js"></script>
+<script>
+  const S = window.SITE;
+  const inst = S.findInstrument(new URLSearchParams(location.search).get("id"));
+  const t = S.TYPES[inst.type];
+  let mode = "quote";
+
+  document.title = S.displayName(inst) + " — " + t.title;
+
+  // --- Графики (SVG строками) ---
+  const W = 620, H = 300, PAD = 28;
+  const MONO = 'font-family="Fragment Mono, monospace"';
+
+  function chartQuote() {
+    const data = S.history(inst.id, inst.quote);
+    const min = Math.min(...data), max = Math.max(...data), rng = (max - min) || 1;
+    const x = i => PAD + (i / (data.length - 1)) * (W - PAD * 2);
+    const y = v => H - PAD - ((v - min) / rng) * (H - PAD * 2);
+    const pts = data.map((v, i) => [x(i), y(v)]);
+    const line = pts.map((p, i) => (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" ");
+    const area = line + " L" + x(data.length - 1).toFixed(1) + " " + (H - PAD) + " L" + PAD + " " + (H - PAD) + " Z";
+    let grid = "";
+    for (let g = 0; g <= 3; g++) {
+      const gy = PAD + (g / 3) * (H - PAD * 2);
+      grid += '<line x1="' + PAD + '" y1="' + gy + '" x2="' + (W - PAD) + '" y2="' + gy + '" stroke="#EAE7DE" stroke-width="1"/>';
+    }
+    const last = pts[pts.length - 1];
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="display:block">' + grid +
+      '<defs><linearGradient id="fillq" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0%" stop-color="#2E7D57" stop-opacity="0.16"/><stop offset="100%" stop-color="#2E7D57" stop-opacity="0"/></linearGradient></defs>' +
+      '<path d="' + area + '" fill="url(#fillq)"/>' +
+      '<path d="' + line + '" fill="none" stroke="#2E7D57" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>' +
+      '<circle cx="' + last[0] + '" cy="' + last[1] + '" r="4.5" fill="#2E7D57"/>' +
+      '<text x="' + (W - PAD) + '" y="' + (last[1] - 12) + '" text-anchor="end" fill="#2E7D57" font-size="12" ' + MONO + '>' + S.fmt2(inst.quote) + '%</text>' +
+      '</svg>';
+  }
+
+  function chartWarrant() {
+    const K = inst.strike, q = inst.quote;
+    const s0 = K * 0.78, s1 = K * 1.32, yMax = 34;
+    const x = s => PAD + ((s - s0) / (s1 - s0)) * (W - PAD * 2);
+    const y = v => H - PAD - (v / yMax) * (H - PAD * 2);
+    const sBe = K * (1 + q / 100);
+    const line = "M" + x(s0).toFixed(1) + " " + y(0).toFixed(1) + " L" + x(K).toFixed(1) + " " + y(0).toFixed(1) + " L" + x(s1).toFixed(1) + " " + y(S.PAYOFF.pct(s1, K)).toFixed(1);
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="display:block">' +
+      '<line x1="' + PAD + '" y1="' + y(0) + '" x2="' + (W - PAD) + '" y2="' + y(0) + '" stroke="#EAE7DE" stroke-width="1"/>' +
+      '<line x1="' + PAD + '" y1="' + y(q) + '" x2="' + (W - PAD) + '" y2="' + y(q) + '" stroke="#B07B22" stroke-width="1" stroke-dasharray="4 4"/>' +
+      '<text x="' + (PAD + 2) + '" y="' + (y(q) - 7) + '" fill="#B07B22" font-size="11" ' + MONO + '>премия ' + S.fmt1(q) + '%</text>' +
+      '<path d="' + line + '" fill="none" stroke="#2B4A78" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>' +
+      '<circle cx="' + x(K) + '" cy="' + y(0) + '" r="4" fill="#2B4A78"/>' +
+      '<text x="' + x(K) + '" y="' + (y(0) + 18) + '" text-anchor="middle" fill="#6B6A61" font-size="11" ' + MONO + '>K ' + S.fmtSmart(K) + '</text>' +
+      '<circle cx="' + x(sBe) + '" cy="' + y(q) + '" r="4.5" fill="#B07B22"/>' +
+      '<text x="' + (x(sBe) + 8) + '" y="' + (y(q) + 16) + '" fill="#B07B22" font-size="11" ' + MONO + '>б/у ' + S.fmtSmart(sBe) + '</text>' +
+      '</svg>';
+  }
+
+  function chartDiscount() {
+    const q = inst.quote;
+    const base = H - 52, pxPer = (H - 110) / 110, barW = 120;
+    const x1 = W * 0.32 - barW / 2, x2 = W * 0.68 - barW / 2;
+    const h1 = q * pxPer, h2 = 100 * pxPer;
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="display:block">' +
+      '<line x1="' + PAD + '" y1="' + base + '" x2="' + (W - PAD) + '" y2="' + base + '" stroke="#DAD7CC" stroke-width="1"/>' +
+      '<line x1="' + (x1 + barW / 2) + '" y1="' + (base - h1) + '" x2="' + (x2 + barW) + '" y2="' + (base - h1) + '" stroke="#B07B22" stroke-width="1" stroke-dasharray="4 4"/>' +
+      '<rect x="' + x1 + '" y="' + (base - h1) + '" width="' + barW + '" height="' + h1 + '" rx="8" fill="#C6CFDC"/>' +
+      '<rect x="' + x2 + '" y="' + (base - h2) + '" width="' + barW + '" height="' + h2 + '" rx="8" fill="#2B4A78"/>' +
+      '<text x="' + (x1 + barW / 2) + '" y="' + (base - h1 - 10) + '" text-anchor="middle" fill="#54534B" font-size="13" ' + MONO + '>' + S.fmt2(q) + '%</text>' +
+      '<text x="' + (x2 + barW / 2) + '" y="' + (base - h2 - 10) + '" text-anchor="middle" fill="#2B4A78" font-size="13" ' + MONO + '>100%</text>' +
+      '<text x="' + ((x1 + barW + x2) / 2) + '" y="' + (base - h1 - 8) + '" text-anchor="middle" fill="#B07B22" font-size="11" ' + MONO + '>доход +' + S.fmt2(100 - q) + ' п.п.</text>' +
+      '<text x="' + (x1 + barW / 2) + '" y="' + (base + 20) + '" text-anchor="middle" fill="#6B6A61" font-size="12">Покупка сегодня</text>' +
+      '<text x="' + (x2 + barW / 2) + '" y="' + (base + 20) + '" text-anchor="middle" fill="#6B6A61" font-size="12">Погашение ' + inst.expiry + '</text>' +
+      '</svg>';
+  }
+
+  function chartProtection() {
+    const part = inst.participation, yMin = 88, yMax = 130;
+    const x = rel => PAD + ((rel - 0.7) / (1.4 - 0.7)) * (W - PAD * 2);
+    const y = v => H - PAD - ((v - yMin) / (yMax - yMin)) * (H - PAD * 2);
+    const endVal = 100 + part * 40;
+    const line = "M" + x(0.7).toFixed(1) + " " + y(100).toFixed(1) + " L" + x(1.0).toFixed(1) + " " + y(100).toFixed(1) + " L" + x(1.4).toFixed(1) + " " + y(endVal).toFixed(1);
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="display:block">' +
+      '<line x1="' + PAD + '" y1="' + y(100) + '" x2="' + (W - PAD) + '" y2="' + y(100) + '" stroke="#C4C2B8" stroke-width="1" stroke-dasharray="4 4"/>' +
+      '<text x="' + (PAD + 2) + '" y="' + (y(100) + 16) + '" fill="#6B6A61" font-size="11" ' + MONO + '>защита 100%</text>' +
+      '<path d="' + line + '" fill="none" stroke="#2B4A78" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>' +
+      '<circle cx="' + x(1.0) + '" cy="' + y(100) + '" r="4" fill="#2B4A78"/>' +
+      '<text x="' + x(1.0) + '" y="' + (y(100) + 18) + '" text-anchor="middle" fill="#6B6A61" font-size="11" ' + MONO + '>S₀</text>' +
+      '<text x="' + x(1.24) + '" y="' + (y(100 + part * 24) - 12) + '" fill="#2B4A78" font-size="11" ' + MONO + '>участие ' + Math.round(part * 100) + '%</text>' +
+      '</svg>';
+  }
+
+  // --- Контент по типу продукта ---
+  const nom = inst.minNom;
+  const chgSign = inst.chg > 0 ? "+" : "−";
+  const chgColor = inst.chg > 0 ? "#2E7D57" : "#B4483C";
+  let content = {};
+
+  if (inst.type === "warrant") {
+    const premiumRub = nom * inst.quote / 100;
+    const s1 = Math.round(inst.strike * 1.16);
+    const payout1 = nom * S.PAYOFF.pct(s1, inst.strike) / 100;
+    const s2 = Math.round(inst.strike * 0.97);
+    content = {
+      badge: "CALL · варрант",
+      subtitle: "Варрант на рост: " + inst.underlying + " · Экспирация " + inst.expiry + " · Выплата " + S.PAYOFF.formulaText,
+      explainer: "Варрант — право на выплату, привязанную к росту базового актива. Вы платите премию — котировку в процентах от номинала. Если на дату экспирации цена актива S выше страйка K, вы получаете выплату по формуле Ном × max(S − K; 0). Если ниже — выплаты нет, а потеря ограничена уплаченной премией.",
+      payoff: chartWarrant,
+      payoffCaption: "Выплата на экспирацию в % от номинала в зависимости от цены базового актива. Пунктир — уплаченная премия; б/у — точка безубыточности.",
+      metrics: [
+        ["Котировка", S.fmt2(inst.quote) + "%"],
+        ["Изм. за день", chgSign + S.fmt1(Math.abs(inst.chg)) + " п.п."],
+        ["Страйк (K)", S.fmtSmart(inst.strike)],
+        ["Спот БА (S)", S.fmtSmart(inst.spot)],
+        ["Экспирация", inst.expiry],
+        ["Осталось", S.daysTo(inst.expiry) + " дн."],
+        ["Мин. номинал", S.fmtInt(nom) + " ₽"]
+      ],
+      exampleIntro: "Номинал " + S.fmtInt(nom) + " ₽ · премия " + S.fmt2(inst.quote) + "% = " + S.fmtInt(premiumRub) + " ₽",
+      scenarios: [
+        [inst.underlying + " вырос до " + S.fmtSmart(s1), "Выплата " + S.fmtInt(payout1) + " ₽", "+" + S.fmtInt(payout1 - premiumRub) + " ₽", "#2E7D57"],
+        [inst.underlying + " остался ниже страйка (" + S.fmtSmart(s2) + ")", "Выплаты нет", "−" + S.fmtInt(premiumRub) + " ₽", "#B4483C"]
+      ],
+      facts: [
+        ["Формула выплаты", S.PAYOFF.formulaText],
+        ["Котировка", "В процентах от номинала"],
+        ["Стиль", "Европейский — выплата на дату экспирации"],
+        ["Расчёты", "Денежные, без поставки актива"],
+        ["Максимальный убыток", "Уплаченная премия"],
+        ["Мин. номинал", S.fmtInt(nom) + " ₽"]
+      ]
+    };
+  } else if (inst.type === "discount") {
+    const buyRub = nom * inst.quote / 100;
+    content = {
+      badge: "облигация",
+      subtitle: "Дисконтная облигация · Погашение " + inst.expiry + " · Выплата 100% номинала",
+      explainer: "Облигация покупается дешевле номинала — сегодня по " + S.fmt2(inst.quote) + "% от него. На дату погашения выплачивается полный номинал, 100%. Весь доход — это дисконт: разница между ценой покупки и номиналом, известная в день сделки. Купонов нет.",
+      payoff: chartDiscount,
+      payoffCaption: "Покупка дешевле номинала, погашение по 100%. Доход — разница, зафиксированная в момент покупки.",
+      metrics: [
+        ["Котировка", S.fmt2(inst.quote) + "%"],
+        ["Изм. за день", chgSign + S.fmt1(Math.abs(inst.chg)) + " п.п."],
+        ["Выплата на погашение", "100%"],
+        ["Доходность", S.fmt1(S.yieldAnnual(inst)) + "% год."],
+        ["Погашение", inst.expiry],
+        ["Осталось", S.daysTo(inst.expiry) + " дн."],
+        ["Мин. номинал", S.fmtInt(nom) + " ₽"]
+      ],
+      exampleIntro: "Номинал " + S.fmtInt(nom) + " ₽ · покупка по " + S.fmt2(inst.quote) + "% = " + S.fmtInt(buyRub) + " ₽",
+      scenarios: [
+        ["Дождались погашения " + inst.expiry, "Выплата " + S.fmtInt(nom) + " ₽ — 100% номинала", "+" + S.fmtInt(nom - buyRub) + " ₽", "#2E7D57"],
+        ["Продали раньше срока", "По текущей рыночной цене", "по рынку", "#6B6A61"]
+      ],
+      facts: [
+        ["Формула выплаты", "100% номинала на погашение"],
+        ["Котировка", "В процентах от номинала"],
+        ["Доход", "Дисконт: номинал минус цена покупки"],
+        ["Купоны", "Нет — весь доход в дисконте"],
+        ["Риск", "Кредитное качество эмитента"],
+        ["Мин. номинал", S.fmtInt(nom) + " ₽"]
+      ]
+    };
+  } else {
+    const entryRub = nom * inst.quote / 100;
+    const upPct = 20;
+    const payoutUp = nom * (1 + inst.participation * upPct / 100);
+    const partS = Math.round(inst.participation * 100) + "%";
+    content = {
+      badge: "нота · защита капитала",
+      subtitle: "Нота с защитой капитала · " + inst.underlying + " · Экспирация " + inst.expiry,
+      explainer: "Нота возвращает 100% номинала при любом сценарии. Если базовый актив на дату экспирации выше начального уровня S₀, дополнительно выплачивается " + partS + " его роста: 100% + " + partS + " × max(S/S₀ − 1; 0). Если актив упал — вы получаете номинал целиком.",
+      payoff: chartProtection,
+      payoffCaption: "Выплата на экспирацию в % от номинала: не ниже 100% при любом сценарии, выше S₀ — участие в росте.",
+      metrics: [
+        ["Котировка", S.fmt2(inst.quote) + "%"],
+        ["Изм. за день", chgSign + S.fmt1(Math.abs(inst.chg)) + " п.п."],
+        ["Защита капитала", "100%"],
+        ["Участие в росте", partS],
+        ["Нач. уровень (S₀)", S.fmtSmart(inst.strike)],
+        ["Экспирация", inst.expiry],
+        ["Мин. номинал", S.fmtInt(nom) + " ₽"]
+      ],
+      exampleIntro: "Номинал " + S.fmtInt(nom) + " ₽ · вход по " + S.fmt2(inst.quote) + "% = " + S.fmtInt(entryRub) + " ₽",
+      scenarios: [
+        [inst.underlying + " вырос на " + upPct + "%", "Выплата " + S.fmtInt(payoutUp) + " ₽ — 100% + участие", "+" + S.fmtInt(payoutUp - entryRub) + " ₽", "#2E7D57"],
+        [inst.underlying + " упал на 15%", "Сработала защита: выплата " + S.fmtInt(nom) + " ₽", "−" + S.fmtInt(entryRub - nom) + " ₽", "#B4483C"]
+      ],
+      facts: [
+        ["Формула выплаты", "100% + " + partS + " × max(S/S₀ − 1; 0)"],
+        ["Защита", "100% номинала при любом сценарии"],
+        ["Котировка", "В процентах от номинала"],
+        ["Стиль", "Европейский — выплата на дату экспирации"],
+        ["Риск", "Кредитный риск эмитента ноты"],
+        ["Мин. номинал", S.fmtInt(nom) + " ₽"]
+      ]
+    };
+  }
+
+  // --- Рендер ---
+  const boardLink = document.getElementById("crumb-board");
+  boardLink.textContent = t.title;
+  boardLink.href = "board.html?type=" + inst.type;
+  document.getElementById("crumb-id").textContent = inst.id;
+  document.getElementById("title").textContent = S.displayName(inst);
+  document.getElementById("badge").textContent = content.badge;
+  document.getElementById("subtitle").textContent = content.subtitle;
+  document.getElementById("quote").textContent = S.fmt2(inst.quote) + "%";
+  const chgEl = document.getElementById("chg");
+  chgEl.textContent = chgSign + S.fmt1(Math.abs(inst.chg)) + " п.п. сегодня";
+  chgEl.style.color = chgColor;
+
+  document.getElementById("metrics").innerHTML = content.metrics.map(m =>
+    '<div class="metric"><span class="k">' + m[0] + '</span><span class="v">' + m[1] + '</span></div>').join("");
+
+  document.getElementById("example-intro").textContent = content.exampleIntro;
+  document.getElementById("scenarios").innerHTML = content.scenarios.map(s =>
+    '<div class="scenario"><div class="l">' + s[0] + '</div><div class="d">' + s[1] + '</div><div class="r" style="color:' + s[3] + '">' + s[2] + '</div></div>').join("");
+
+  document.getElementById("explainer").textContent = content.explainer;
+  document.getElementById("facts").innerHTML = content.facts.map(f =>
+    '<div class="fact"><div class="k">' + f[0] + '</div><div class="v">' + f[1] + '</div></div>').join("");
+
+  function setMode(m) {
+    mode = m;
+    document.getElementById("tab-quote").className = "tab" + (m === "quote" ? " active" : "");
+    document.getElementById("tab-payoff").className = "tab" + (m === "payoff" ? " active" : "");
+    document.getElementById("chart-title").textContent = m === "quote" ? "Котировка, 30 дней" : "Диаграмма выплат";
+    document.getElementById("chart-caption").textContent = m === "quote"
+      ? "Котировка в % от номинала за последний месяц. Данные — демо."
+      : content.payoffCaption;
+    document.getElementById("chart").innerHTML = m === "quote" ? chartQuote() : content.payoff();
+  }
+  setMode("quote");
+</script>
+</body>
+</html>

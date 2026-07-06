@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Структурные продукты — понятным языком</title>
+<meta name="description" content="Витрина структурных продуктов: дисконтные облигации, защита капитала, варранты. Цены, условия и понятные объяснения по каждому инструменту.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700;800&family=Fragment+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: #ECEAE4; color: #1E2126; font-family: 'Golos Text', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  a { text-decoration: none; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding-left: 44px; padding-right: 44px; }
+  .nav { display: flex; justify-content: space-between; align-items: center; padding-top: 26px; }
+  .logo { display: flex; align-items: center; gap: 11px; color: #1E2126; }
+  .logo-mark { width: 14px; height: 14px; background: #2B4A78; transform: rotate(45deg); }
+  .logo-text { font-size: 16px; font-weight: 700; letter-spacing: -0.01em; }
+  .nav-link { color: #6B6A61; font-size: 14px; font-weight: 500; }
+  .nav-link:hover { color: #1E2126; }
+  .hero { padding: 88px 0 72px; }
+  .hero-inner { max-width: 720px; display: flex; flex-direction: column; gap: 22px; }
+  .hero h1 { margin: 0; font-size: 48px; font-weight: 800; line-height: 1.08; letter-spacing: -0.02em; text-wrap: balance; }
+  .hero p { margin: 0; font-size: 17px; line-height: 1.6; color: #54534B; max-width: 600px; text-wrap: pretty; }
+  .cta { display: inline-block; background: #2B4A78; color: #FBFAF7; font-size: 15px; font-weight: 600; padding: 13px 26px; border-radius: 12px; }
+  .cta:hover { background: #233D64; }
+  .principles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: #DAD7CC; border-radius: 16px; overflow: hidden; }
+  .principle { background: #F3F1EA; padding: 22px 26px; }
+  .principle b { display: block; font-size: 14.5px; margin-bottom: 6px; }
+  .principle span { font-size: 13.5px; line-height: 1.5; color: #6B6A61; }
+  .products { padding: 80px 0 40px; }
+  .products-head { margin-bottom: 34px; }
+  .products-head h2 { margin: 0 0 10px; font-size: 30px; font-weight: 800; letter-spacing: -0.015em; }
+  .products-head p { margin: 0; font-size: 15.5px; color: #6B6A61; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+  .card { color: #1E2126; background: #FBFAF7; border-radius: 18px; padding: 28px; box-shadow: 0 1px 3px rgba(30,32,38,0.07); display: flex; flex-direction: column; gap: 16px; transition: box-shadow .15s, transform .15s; }
+  .card:hover { box-shadow: 0 6px 20px rgba(30,32,38,0.12); transform: translateY(-2px); }
+  .card-top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .count { font-family: 'Fragment Mono', monospace; font-size: 12px; color: #6B6A61; background: #EFEDE6; border-radius: 6px; padding: 4px 8px; }
+  .card h3 { margin: 0; font-size: 19px; font-weight: 700; }
+  .chip { align-self: flex-start; font-size: 12px; font-weight: 600; border-radius: 999px; padding: 4px 10px; }
+  .card p { margin: 0; font-size: 14px; line-height: 1.6; color: #54534B; text-wrap: pretty; }
+  .card-link { margin-top: auto; font-size: 14px; font-weight: 600; color: #2B4A78; }
+  .caption { margin-top: 16px; font-size: 12px; color: #9A9990; font-family: 'Fragment Mono', monospace; }
+  footer { margin-top: 48px; border-top: 1px solid #DAD7CC; }
+  .footer-inner { padding: 28px 0 40px; display: flex; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+  .footer-brand { display: flex; align-items: center; gap: 10px; font-size: 13.5px; font-weight: 600; color: #54534B; }
+  .footer-mark { width: 11px; height: 11px; background: #2B4A78; transform: rotate(45deg); }
+  .disclaimer { font-size: 12.5px; line-height: 1.5; color: #9A9990; max-width: 460px; }
+  @media (max-width: 900px) {
+    .wrap { padding-left: 20px; padding-right: 20px; }
+    .hero h1 { font-size: 34px; }
+    .principles, .grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap nav">
+  <div class="logo">
+    <div class="logo-mark"></div>
+    <div class="logo-text">Структурные продукты</div>
+  </div>
+  <a class="nav-link" href="#products">Продукты</a>
+</div>
+
+<section class="wrap hero">
+  <div class="hero-inner">
+    <h1>Структурные продукты — понятным языком</h1>
+    <p>Готовые инвестиционные решения с заранее известными правилами: сколько можно заработать, чем вы рискуете и когда получите выплату. Разбираем каждый инструмент и показываем его цену.</p>
+    <div><a class="cta" href="#products">Смотреть продукты</a></div>
+  </div>
+</section>
+
+<section class="wrap">
+  <div class="principles">
+    <div class="principle"><b>Сценарии известны заранее</b><span>Формула выплаты фиксируется в момент покупки</span></div>
+    <div class="principle"><b>Риск описан до сделки</b><span>Максимально возможный убыток понятен с первого дня</span></div>
+    <div class="principle"><b>Фиксированный срок</b><span>Дата выплаты известна заранее</span></div>
+  </div>
+</section>
+
+<section id="products" class="wrap products">
+  <div class="products-head">
+    <h2>Типы продуктов</h2>
+    <p>Три семейства — от консервативных к активным. В каждом — свои инструменты и цены.</p>
+  </div>
+  <div class="grid">
+
+    <a class="card" href="board.html?type=discount">
+      <div class="card-top">
+        <svg viewBox="0 0 120 64" width="110" height="59">
+          <line x1="8" y1="40" x2="112" y2="40" stroke="#C4C2B8" stroke-width="1" stroke-dasharray="4 4"></line>
+          <path d="M10 50 L68 22 L112 22" fill="none" stroke="#2E7D57" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+        <span class="count" data-count="discount">1</span>
+      </div>
+      <h3>Дисконтные облигации</h3>
+      <span class="chip" style="color:#2E7D57;background:#E2EDE5">Консервативный</span>
+      <p>Покупаете облигацию дешевле номинала. В конце срока получаете полный номинал. Доход — разница, и он известен в день покупки.</p>
+      <span class="card-link">Смотреть инструменты →</span>
+    </a>
+
+    <a class="card" href="board.html?type=protection">
+      <div class="card-top">
+        <svg viewBox="0 0 120 64" width="110" height="59">
+          <line x1="8" y1="40" x2="112" y2="40" stroke="#C4C2B8" stroke-width="1" stroke-dasharray="4 4"></line>
+          <path d="M10 40 L62 40 L112 14" fill="none" stroke="#2B4A78" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+        <span class="count" data-count="protection">1</span>
+      </div>
+      <h3>Защита капитала</h3>
+      <span class="chip" style="color:#2B4A78;background:#DCE6F2">Сбалансированный</span>
+      <p>При любом сценарии возвращается 100% номинала, а при росте базового актива — ещё и доля этого роста.</p>
+      <span class="card-link">Смотреть инструменты →</span>
+    </a>
+
+    <a class="card" href="board.html?type=warrant">
+      <div class="card-top">
+        <svg viewBox="0 0 120 64" width="110" height="59">
+          <line x1="8" y1="40" x2="112" y2="40" stroke="#C4C2B8" stroke-width="1" stroke-dasharray="4 4"></line>
+          <path d="M10 46 L62 46 L112 10" fill="none" stroke="#B07B22" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+        <span class="count" data-count="warrant">1</span>
+      </div>
+      <h3>Варранты</h3>
+      <span class="chip" style="color:#B07B22;background:#F4E9D4">Активный</span>
+      <p>Право на выплату при росте актива: Ном × max(S − K; 0). Котировка — в % от номинала; если актив не вырос, теряется только премия.</p>
+      <span class="card-link">Смотреть инструменты →</span>
+    </a>
+
+  </div>
+  <div class="caption">линия на миниатюре — профиль выплаты продукта</div>
+</section>
+
+<footer>
+  <div class="wrap footer-inner">
+    <div class="footer-brand"><div class="footer-mark"></div>Витрина структурных продуктов</div>
+    <div class="disclaimer">Не является индивидуальной инвестиционной рекомендацией. Материалы носят информационный характер.</div>
+  </div>
+</footer>
+
+<script src="data/instruments.js"></script>
+<script src="data/lib.js"></script>
+<script>
+  // Количество инструментов в каждом типе — из единого файла данных.
+  document.querySelectorAll("[data-count]").forEach(el => {
+    el.textContent = SITE.instrumentsOfType(el.getAttribute("data-count")).length;
+  });
+</script>
+</body>
+</html>

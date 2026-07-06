@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Инструменты</title>
+<meta name="description" content="Доска инструментов: котировки в процентах от номинала, ключевые параметры и сроки.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700;800&family=Fragment+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #ECEAE4; color: #1E2126; font-family: 'Golos Text', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  a { text-decoration: none; }
+  .wrap { max-width: 1160px; margin: 0 auto; padding: 26px 44px 64px; }
+  .nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
+  .logo { display: flex; align-items: center; gap: 11px; color: #1E2126; }
+  .logo-mark { width: 14px; height: 14px; background: #2B4A78; transform: rotate(45deg); }
+  .logo-text { font-size: 16px; font-weight: 700; letter-spacing: -0.01em; }
+  .nav-link { color: #6B6A61; font-size: 14px; font-weight: 500; }
+  .nav-link:hover { color: #1E2126; }
+  .crumbs { display: flex; align-items: center; gap: 12px; font-size: 13px; color: #8A897F; margin-bottom: 22px; }
+  .crumbs a { color: #8A897F; }
+  .crumbs a:hover { color: #1E2126; }
+  .crumbs .sep { color: #C4C2B8; }
+  .crumbs .here { color: #1E2126; font-weight: 500; }
+  .head { display: flex; flex-direction: column; gap: 12px; max-width: 720px; }
+  .head-row { display: flex; align-items: center; gap: 14px; }
+  h1 { margin: 0; font-size: 34px; font-weight: 800; letter-spacing: -0.015em; }
+  .chip { font-size: 12px; font-weight: 600; border-radius: 999px; padding: 4px 10px; }
+  .desc { font-size: 15px; line-height: 1.6; color: #54534B; text-wrap: pretty; }
+  .count { font-size: 12.5px; color: #9A9990; margin: 30px 0 10px; font-family: 'Fragment Mono', monospace; }
+  .table { background: #FBFAF7; border-radius: 16px; box-shadow: 0 1px 3px rgba(30,32,38,0.07); overflow: hidden; }
+  .thead, .row { display: grid; grid-template-columns: 2fr 1.1fr 1fr 0.9fr 1fr 1fr; align-items: center; }
+  .thead { background: #F3F1EA; }
+  .th { padding: 12px 18px; font-size: 12px; font-weight: 600; color: #8A897F; }
+  .row { color: #1E2126; border-top: 1px solid #F0EEE6; }
+  .row:hover { background: #F5F3EC; }
+  .cell { padding: 14px 18px; }
+  .num { text-align: right; font-family: 'Fragment Mono', monospace; }
+  .r { text-align: right; }
+  .name { font-size: 14px; font-weight: 600; }
+  .sub { font-family: 'Fragment Mono', monospace; font-size: 11.5px; color: #9A9990; margin-top: 3px; }
+  .asset { font-size: 13.5px; color: #3A3A33; }
+  .asset-sub { font-size: 11.5px; color: #9A9990; margin-top: 3px; }
+  .disclaimer { margin-top: 24px; font-size: 12.5px; line-height: 1.5; color: #9A9990; max-width: 560px; }
+  @media (max-width: 900px) {
+    .wrap { padding: 20px 20px 48px; }
+    .thead, .row { grid-template-columns: 1.6fr 1fr 1fr; }
+    .th:nth-child(n+4), .cell:nth-child(n+4) { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="nav">
+    <a class="logo" href="index.html">
+      <div class="logo-mark"></div>
+      <div class="logo-text">Структурные продукты</div>
+    </a>
+    <a class="nav-link" href="index.html#products">Все типы продуктов</a>
+  </div>
+
+  <div class="crumbs">
+    <a href="index.html">Главная</a>
+    <span class="sep">/</span>
+    <span class="here" id="crumb-type"></span>
+  </div>
+
+  <div class="head">
+    <div class="head-row">
+      <h1 id="type-title"></h1>
+      <span class="chip" id="type-chip"></span>
+    </div>
+    <div class="desc" id="type-desc"></div>
+  </div>
+
+  <div class="count" id="count"></div>
+
+  <div class="table">
+    <div class="thead">
+      <div class="th">Инструмент</div>
+      <div class="th">Базовый актив</div>
+      <div class="th r">Котировка, % ном.</div>
+      <div class="th r">Изм., п.п.</div>
+      <div class="th r" id="param-label"></div>
+      <div class="th r">Экспирация</div>
+    </div>
+    <div id="rows"></div>
+  </div>
+
+  <div class="disclaimer">Не является индивидуальной инвестиционной рекомендацией. Котировки — демонстрационные.</div>
+
+</div>
+
+<script src="data/instruments.js"></script>
+<script src="data/lib.js"></script>
+<script>
+  const S = window.SITE;
+  const qs = new URLSearchParams(location.search);
+  const type = S.TYPES[qs.get("type")] ? qs.get("type") : "warrant";
+  const t = S.TYPES[type];
+
+  document.title = t.title + " — структурные продукты";
+  document.getElementById("crumb-type").textContent = t.title;
+  document.getElementById("type-title").textContent = t.title;
+  const chip = document.getElementById("type-chip");
+  chip.textContent = t.chip;
+  chip.style.color = t.chipFg;
+  chip.style.background = t.chipBg;
+  document.getElementById("type-desc").textContent = t.desc;
+  document.getElementById("param-label").textContent = t.paramLabel;
+
+  const list = S.instrumentsOfType(type);
+  document.getElementById("count").textContent = "инструментов: " + list.length;
+
+  document.getElementById("rows").innerHTML = list.map(r => {
+    const up = r.chg > 0;
+    return '<a class="row" href="instrument.html?id=' + encodeURIComponent(r.id) + '">' +
+      '<div class="cell"><div class="name">' + S.displayName(r) + '</div><div class="sub">' + r.id + '</div></div>' +
+      '<div class="cell"><div class="asset">' + r.underlying + '</div><div class="asset-sub">' + r.cls + '</div></div>' +
+      '<div class="cell num" style="font-size:14px">' + S.fmt2(r.quote) + '%</div>' +
+      '<div class="cell r" style="font-size:13.5px;font-weight:600;color:' + (up ? "#2E7D57" : "#B4483C") + '">' + (up ? "+" : "−") + S.fmt1(Math.abs(r.chg)) + '</div>' +
+      '<div class="cell num" style="font-size:13.5px;color:#3A3A33">' + S.paramValue(r) + '</div>' +
+      '<div class="cell r" style="font-size:13.5px;color:#3A3A33">' + r.expiry + '</div>' +
+    '</a>';
+  }).join("");
+</script>
+</body>
+</html>
