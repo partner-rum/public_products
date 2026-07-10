@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Структурные продукты</title>
+<meta name="description" content="Структурные продукты: дайджест инвестидей, текущие продукты и размещённые выпуски.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prata&family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #F2EFE9; --ink: #221B1E; --fog: #6E6266;
+    --hair: #DCD4CC; --wine: #33121C;
+    --gold: #C09246; --gold-dark: #A87C33;
+    --spruce: #2E6E56; --steel: #33608C; --amber: #B3801F;
+    --f-disp: 'Prata', Georgia, serif;
+    --f-body: 'Onest', system-ui, sans-serif;
+    --f-mono: 'JetBrains Mono', Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); min-height: 100dvh; color: var(--ink); font-family: var(--f-body); -webkit-font-smoothing: antialiased; }
+  a { text-decoration: none; color: inherit; cursor: pointer; }
+  a:focus-visible { outline: 2px solid var(--gold); outline-offset: 4px; border-radius: 4px; }
+
+  .scene { min-height: 100dvh; display: flex; flex-direction: column; max-width: 1100px; margin: 0 auto; padding: 30px 44px 26px; }
+  .top { display: flex; align-items: center; gap: 11px; }
+  .top .name { font-size: 14px; font-weight: 600; color: var(--fog); }
+
+  .hero { margin: auto 0; padding: 44px 0 30px; }
+  h1 { margin: 0; font-family: var(--f-disp); font-weight: 400; font-size: clamp(36px, 6vw, 72px); line-height: 1.14; text-wrap: balance; }
+  h1 em { font-style: normal; color: var(--gold-dark); }
+  .sub { margin: 20px 0 0; font-size: 16px; line-height: 1.6; color: var(--fog); max-width: 460px; text-wrap: pretty; }
+
+  /* Полосы-пути */
+  .paths { border-top: 1px solid var(--hair); }
+  .path { --pc: var(--gold-dark); display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 4px 24px; padding: 22px 6px; border-bottom: 1px solid var(--hair); position: relative; overflow: hidden; transition: padding .28s cubic-bezier(.2,.7,.3,1), background-color .28s; }
+  .path .t { font-family: var(--f-disp); font-size: clamp(22px, 3vw, 34px); transition: transform .28s cubic-bezier(.2,.7,.3,1); }
+  .path .glyph { grid-row: span 2; align-self: center; }
+  .path .glyph path { stroke-dasharray: 130; stroke-dashoffset: 130; transition: stroke-dashoffset .55s cubic-bezier(.4,0,.2,1) .05s; }
+  .path .d { grid-column: 1; max-width: 560px; font-size: 14px; line-height: 1.55; color: var(--fog); max-height: 0; opacity: 0; transition: max-height .3s cubic-bezier(.2,.7,.3,1), opacity .28s .06s, margin .3s; margin-top: 0; }
+  .path .meta { position: absolute; right: 6px; top: 20px; font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #A39A94; transition: color .28s; }
+  .path:hover, .path:focus-visible { background: color-mix(in srgb, var(--pc) 7%, transparent); padding-left: 20px; padding-top: 26px; padding-bottom: 26px; }
+  .path:hover .t, .path:focus-visible .t { transform: translateX(2px); }
+  .path:hover .d, .path:focus-visible .d { max-height: 90px; opacity: 1; margin-top: 8px; }
+  .path:hover .glyph path, .path:focus-visible .glyph path { stroke-dashoffset: 0; }
+  .path:hover .meta, .path:focus-visible .meta { color: var(--pc); }
+
+  .foot { padding-top: 22px; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; font-size: 11.5px; color: #A39A94; }
+  .foot .mono { font-family: var(--f-mono); }
+
+  .rise { opacity: 0; transform: translateY(16px); animation: rise .65s cubic-bezier(.2,.7,.3,1) forwards; }
+  @keyframes rise { to { opacity: 1; transform: none; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    .rise { animation: none; opacity: 1; transform: none; }
+    .path, .path * { transition: none !important; }
+    .path .d { max-height: none; opacity: 1; margin-top: 8px; }
+    .path .glyph path { stroke-dashoffset: 0; }
+  }
+  @media (max-width: 700px) {
+    .scene { padding: 22px 20px 20px; }
+    .path .meta { position: static; grid-column: 1; order: 3; margin-top: 4px; }
+    .path .glyph { display: none; }
+    .path .d { max-height: none; opacity: 1; margin-top: 6px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="scene">
+  <div class="top rise">
+    <svg width="24" height="24" viewBox="0 0 26 26" fill="none" aria-hidden="true">
+      <path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#C09246"/>
+    </svg>
+    <span class="name">Структурные продукты</span>
+  </div>
+
+  <div class="hero">
+    <h1 class="rise" style="animation-delay:.08s">Формула дохода —<br><em>до сделки</em></h1>
+    <p class="sub rise" style="animation-delay:.16s">Выберите, с чего начать: свежие идеи, живые котировки или размещённые выпуски.</p>
+  </div>
+
+  <nav class="paths" aria-label="Разделы">
+    <a class="path rise" style="--pc:var(--gold-dark);animation-delay:.26s" href="digest.html">
+      <span class="t">Дайджест</span>
+      <svg class="glyph" width="92" height="40" viewBox="0 0 92 40" aria-hidden="true">
+        <path d="M6 32 L34 32 L58 12 L86 12" fill="none" stroke="#A87C33" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span class="d">Инвестиционные идеи недели: гипотеза, рыночная ситуация, факторы и параметры выпуска по каждому продукту.</span>
+      <span class="meta" id="m-digest">идеи недели</span>
+    </a>
+    <a class="path rise" style="--pc:var(--steel);animation-delay:.33s" href="board.html?type=warrant">
+      <span class="t">Текущие продукты</span>
+      <svg class="glyph" width="92" height="40" viewBox="0 0 92 40" aria-hidden="true">
+        <path d="M6 34 L26 22 L42 28 L60 10 L86 16" fill="none" stroke="#33608C" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span class="d">Доска инструментов с котировками в процентах от номинала: варранты, дисконтные облигации, ноты с защитой капитала.</span>
+      <span class="meta" id="m-board">котировки</span>
+    </a>
+    <a class="path rise" style="--pc:var(--spruce);animation-delay:.40s" href="placements.html">
+      <span class="t">Размещённые выпуски</span>
+      <svg class="glyph" width="92" height="40" viewBox="0 0 92 40" aria-hidden="true">
+        <path d="M6 30 L30 30 L30 16 L56 16 L56 24 L86 24" fill="none" stroke="#2E6E56" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span class="d">Выпуски структурных облигаций на рынке: базовые активы, параметры выплат, фиксинги и динамика.</span>
+      <span class="meta" id="m-place">выпуски</span>
+    </a>
+    <a class="path rise" style="--pc:var(--amber);animation-delay:.47s" href="index.html#families">
+      <span class="t">Как устроены продукты</span>
+      <svg class="glyph" width="92" height="40" viewBox="0 0 92 40" aria-hidden="true">
+        <path d="M6 32 L36 32 L66 8 L86 8" fill="none" stroke="#B3801F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span class="d">Три семейства — от консервативных к активным: формула выплаты, риск и срок фиксируются заранее.</span>
+      <span class="meta">три семейства</span>
+    </a>
+  </nav>
+
+  <div class="foot rise" style="animation-delay:.58s">
+    <span>Не является индивидуальной инвестиционной рекомендацией.</span>
+    <span class="mono" id="upd"></span>
+  </div>
+</div>
+
+<script src="data/instruments.js"></script>
+<script src="data/digest.js"></script>
+<script src="data/placements.js"></script>
+<script>
+  try {
+    document.getElementById("m-digest").textContent = "идеи от " + window.DIGEST.date;
+    document.getElementById("m-board").textContent = window.SITE_DATA.instruments.length + " инструментов";
+    document.getElementById("m-place").textContent = window.PLACEMENTS_DATA.issues.length + " выпуска";
+    const u = window.SITE_DATA.updated;
+    if (u) document.getElementById("upd").textContent = "данные: " + u.split("-").reverse().join(".");
+  } catch (e) {}
+</script>
+</body>
+</html>
