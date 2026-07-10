@@ -16,6 +16,7 @@
 """
 import json
 import os
+import re
 import sys
 import time
 
@@ -158,9 +159,19 @@ def fetch():
         print(f"  + {i['isin']} → id {bond_id}")
         time.sleep(0.15)  # не душим прод
 
+    # Текущие цены базовых активов — реалтайм-снимок одним запросом (только чтение)
+    rt_prices = []
+    r = s.get(base + "rt-price-equity/", timeout=60)
+    if r.status_code == 200:
+        payload = r.json()
+        rt_prices = payload.get("results", payload) if isinstance(payload, dict) else payload
+        print(f"rt-price-equity: {len(rt_prices)} цен")
+    else:
+        print(f"  ! rt-price-equity: HTTP {r.status_code} — цены не обновлены")
+
     with open(RAW_PATH, "w", encoding="utf-8") as f:
         json.dump({"fetched_at": time.strftime("%Y-%m-%d %H:%M"), "found": found,
-                   "missing": missing}, f, ensure_ascii=False, indent=1)
+                   "missing": missing, "rt_prices": rt_prices}, f, ensure_ascii=False, indent=1)
     print(f"\nИтого: {len(found)} выгружено, {len(missing)} не найдено → {RAW_PATH}")
     if missing:
         for m in missing:
@@ -207,8 +218,14 @@ def _norm_autocall(link):
             rj = {}
     prod = (rj or {}).get("product") or {}
 
+    # Начальные фиксинги: ref_spots из rumberg_json, фолбэк — fixings_initial по fixing_source
+    ref_spots = prod.get("ref_spots") or {}
+    init_by_src = {fx.get("fixing_source"): _f(fx.get("fixing_value"))
+                   for fx in (ac.get("fixings_initial") or [])}
     basket = [{"t": u.get("equity_ticker"), "n": _asset_name(u.get("equity_ticker"), u.get("equity_name")),
-               "w": _f(u.get("weight"))} for u in (ac.get("basket") or [])]
+               "w": _f(u.get("weight")),
+               "f0": _f(ref_spots.get(u.get("equity_ticker"))) or init_by_src.get(u.get("fixing_source"))}
+              for u in (ac.get("basket") or [])]
 
     coupon_pa = prod.get("cpn_amt_pa")
     coupon_period = prod.get("fixed_cpn_amt")
@@ -252,7 +269,8 @@ def _norm_autocall(link):
 def _norm_pp(link):
     pp = link.get("protected_participation") or {}
     ticker = pp.get("underlying_equity_ticker")
-    basket = [{"t": ticker, "n": _asset_name(ticker, pp.get("underlying_equity_name")), "w": 1.0}]
+    f0 = _f((pp.get("initial_fixing") or {}).get("fixing_value"))
+    basket = [{"t": ticker, "n": _asset_name(ticker, pp.get("underlying_equity_name")), "w": 1.0, "f0": f0}]
     lev = _f(pp.get("leverage_rate"))
     prot = _f(pp.get("protection_rate"))
     s1 = _f(pp.get("strike_pct1"))
@@ -278,6 +296,15 @@ def _norm_pp(link):
 
 
 def normalize(raw):
+    # Текущие цены: тикер → {price, time, ccy}
+    prices = {}
+    for row in raw.get("rt_prices") or []:
+        t = row.get("ticker") or ((row.get("equity") or {}).get("ticker") if isinstance(row.get("equity"), dict) else None)
+        if t and _f(row.get("price")):
+            prices[t] = {"px": _f(row.get("price")),
+                         "time": (row.get("update_time") or "")[:10],
+                         "ccy": row.get("price_currency_code") or ""}
+
     issues = []
     for item in raw["found"]:
         b = item["bond"]
@@ -291,7 +318,21 @@ def normalize(raw):
         else:
             print("  ! нет LIVE структуры:", item["isin"])
             continue
-        serial = " ".join((attrs.get("serial_number") or b.get("name") or "").split())
+
+        # Обогащение корзины текущей ценой и динамикой от начального фиксинга
+        perfs = []
+        for u in struct["basket"]:
+            p = prices.get(u["t"])
+            if p:
+                u["px"] = p["px"]
+                u["pxTime"] = p["time"]
+            if u.get("f0") and u.get("px"):
+                u["perfPct"] = round((u["px"] / u["f0"] - 1) * 100, 1)
+                perfs.append(u["perfPct"])
+        struct["perfPct"] = min(perfs) if perfs else None  # worst-of для корзин
+
+        # Серия — из полного имени: serial_number в БО местами обрезан («16», «3»)
+        serial = re.sub(r"^RSP[\s-]*", "", " ".join((b.get("name") or "").split())) or item["isin"]
         issues.append({
             "isin": item["isin"],
             "name": " ".join((b.get("name") or "").split()),

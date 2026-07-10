@@ -56,10 +56,10 @@
   .count { font-family: var(--f-mono); font-size: 12px; color: var(--fog); margin: 0 0 10px; }
 
   .table { background: var(--card); border: 1px solid var(--hair); border-radius: 14px; overflow: hidden; }
-  .thead { display: grid; grid-template-columns: 1.7fr 1.5fr 1fr 1fr 0.9fr 0.9fr; background: #F5F0EA; border-bottom: 1px solid var(--hair); }
+  .thead { display: grid; grid-template-columns: 1.6fr 1.4fr 1fr 1fr 0.75fr 0.85fr 0.85fr; background: #F5F0EA; border-bottom: 1px solid var(--hair); }
   .th { padding: 11px 18px; font-family: var(--f-mono); font-size: 10.5px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fog); }
   .r { text-align: right; }
-  .row { display: grid; grid-template-columns: 1.7fr 1.5fr 1fr 1fr 0.9fr 0.9fr; align-items: center; width: 100%; border: none; border-top: 1px solid var(--hair2); background: transparent; text-align: left; cursor: pointer; font-family: var(--f-body); color: var(--ink); padding: 0; }
+  .row { display: grid; grid-template-columns: 1.6fr 1.4fr 1fr 1fr 0.75fr 0.85fr 0.85fr; align-items: center; width: 100%; border: none; border-top: 1px solid var(--hair2); background: transparent; text-align: left; cursor: pointer; font-family: var(--f-body); color: var(--ink); padding: 0; }
   .row:hover { background: #F6F1EB; }
   .row.open { background: #F6F1EB; }
   .cell { padding: 13px 18px; }
@@ -137,6 +137,7 @@
       <div class="th">Базовый актив</div>
       <div class="th">Тип структуры</div>
       <div class="th r">Ключевой параметр</div>
+      <div class="th r">Динамика БА</div>
       <div class="th r">Размещение</div>
       <div class="th r">Погашение</div>
     </div>
@@ -157,7 +158,9 @@
     participation: { label: "Участие в росте", fg: "#33608C", bg: "#DCE6F0" }
   };
   const fmtD = s => s ? s.split("-").reverse().join(".") : "—";
-  const fmtN = v => v == null ? "—" : String(v).replace(".", ",");
+  const fmtN = v => v == null ? "—" : String(v).replace(".", ",").replace("-", "−");
+  const fmtPerf = v => v == null ? null : (v > 0 ? "+" : "") + fmtN(v) + "%";
+  const perfColor = v => v > 0 ? "#2E7D57" : (v < 0 ? "#B4483C" : "#6E6266");
 
   document.getElementById("updated").textContent = fmtD(D.updated);
 
@@ -175,7 +178,13 @@
   function detailFacts(i) {
     const p = i.payoff, f = [];
     const add = (k, v, mono) => { if (v != null && v !== "") f.push([k, v, mono]); };
-    add("Базовый актив", i.basket.map(b => b.n).join(", "));
+    add("Базовый актив", i.basket.map(b => {
+      let s = b.n;
+      if (b.f0 != null) s += " · фиксинг " + fmtN(b.f0);
+      if (b.px != null) s += " → " + fmtN(b.px) + (b.pxTime ? " (" + fmtD(b.pxTime) + ")" : "");
+      if (b.perfPct != null) s += ' · <span style="color:' + perfColor(b.perfPct) + ';font-weight:600">' + fmtPerf(b.perfPct) + "</span>";
+      return s;
+    }).join("<br>"));
     if (i.kind === "coupon") {
       if (p.couponPa != null) add("Купон", fmtN(p.couponPa) + "% годовых" + (p.couponPeriodPct != null ? " (" + fmtN(p.couponPeriodPct) + "% за период)" : ""));
       if (p.couponBarrierPct != null) add("Барьер купона", fmtN(p.couponBarrierPct) + "% нач. уровня");
@@ -210,6 +219,7 @@
         '<div class="cell"><span class="asset">' + i.basket.map(b => b.n).join(", ") + '</span>' + (i.fx ? '<span class="fxtag">FX</span>' : '') + '</div>' +
         '<div class="cell"><span class="kind-chip" style="color:' + k.fg + ';background:' + k.bg + '">' + k.label + '</span></div>' +
         '<div class="cell param">' + keyParam(i) + '</div>' +
+        '<div class="cell param" style="color:' + (i.perfPct != null ? perfColor(i.perfPct) : "#A39A94") + ';font-weight:600">' + (fmtPerf(i.perfPct) || "—") + '</div>' +
         '<div class="cell dt">' + fmtD(i.issueStart) + '</div>' +
         '<div class="cell dt">' + fmtD(i.maturity) + (i.matured ? '<small>погашен</small>' : '') + '</div>' +
       '</button>' +

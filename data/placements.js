@@ -21,7 +21,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "DOFZ26248",
      "n": "ОФЗ 26248",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 79.969,
+     "px": 82.25,
+     "pxTime": "2026-07-10",
+     "perfPct": 2.9
     }
    ],
    "dates": {
@@ -41,12 +45,13 @@ window.PLACEMENTS_DATA = {
      "strikePct": 100.0,
      "barrierPct": 100.0
     }
-   }
+   },
+   "perfPct": 2.9
   },
   {
    "isin": "RU000A10CRT8",
    "name": "RSP РСП-1-58",
-   "serial": "СП-1-58",
+   "serial": "РСП-1-58",
    "secid": "RU000A10CRT8",
    "issuer": "SFO-RSP",
    "currency": "RUB",
@@ -61,7 +66,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "RUMPREIPO 1",
      "n": "Rumberg Pre-IPO Index 1",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 85.11,
+     "px": 85.11,
+     "pxTime": "2026-06-25",
+     "perfPct": 0.0
     }
    ],
    "dates": {
@@ -76,7 +85,8 @@ window.PLACEMENTS_DATA = {
     "strike2Pct": null,
     "participationPct": 51.07,
     "protectionPct": 0.0
-   }
+   },
+   "perfPct": 0.0
   },
   {
    "isin": "RU000A10B9X5",
@@ -96,7 +106,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "Index_AI_RSP_30",
      "n": "Index AI RSP 30",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 100.0,
+     "px": 100.0,
+     "pxTime": "2026-06-16",
+     "perfPct": 0.0
     }
    ],
    "dates": {
@@ -111,7 +125,8 @@ window.PLACEMENTS_DATA = {
     "strike2Pct": null,
     "participationPct": 100.0,
     "protectionPct": 0.0
-   }
+   },
+   "perfPct": 0.0
   },
   {
    "isin": "RU000A10CVG7",
@@ -131,7 +146,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "DOFZ26238",
      "n": "ОФЗ 26238",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 56.51,
+     "px": 52.689,
+     "pxTime": "2026-07-10",
+     "perfPct": -6.8
     }
    ],
    "dates": {
@@ -146,7 +165,8 @@ window.PLACEMENTS_DATA = {
     "strike2Pct": null,
     "participationPct": 100.0,
     "protectionPct": 0.0
-   }
+   },
+   "perfPct": -6.8
   },
   {
    "isin": "RU000A10CVF9",
@@ -166,7 +186,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "DOFZ26248",
      "n": "ОФЗ 26248",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 89.873,
+     "px": 82.25,
+     "pxTime": "2026-07-10",
+     "perfPct": -8.5
     }
    ],
    "dates": {
@@ -186,7 +210,8 @@ window.PLACEMENTS_DATA = {
      "strikePct": 100.0,
      "barrierPct": 100.0
     }
-   }
+   },
+   "perfPct": -8.5
   },
   {
    "isin": "RU000A10CVE2",
@@ -206,7 +231,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "DOFZ26248",
      "n": "ОФЗ 26248",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 88.549,
+     "px": 82.25,
+     "pxTime": "2026-07-10",
+     "perfPct": -7.1
     }
    ],
    "dates": {
@@ -226,7 +255,8 @@ window.PLACEMENTS_DATA = {
      "strikePct": 100.0,
      "barrierPct": 100.0
     }
-   }
+   },
+   "perfPct": -7.1
   },
   {
    "isin": "RU000A10CVD4",
@@ -246,7 +276,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "DOFZ26248",
      "n": "ОФЗ 26248",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 88.4,
+     "px": 82.25,
+     "pxTime": "2026-07-10",
+     "perfPct": -7.0
     }
    ],
    "dates": {
@@ -266,12 +300,13 @@ window.PLACEMENTS_DATA = {
      "strikePct": 100.0,
      "barrierPct": 100.0
     }
-   }
+   },
+   "perfPct": -7.0
   },
   {
    "isin": "RU000A10CVC6",
    "name": "RSP СП-2-73-ЦБ-RUB",
-   "serial": "СП-2-73-ЦБ- RUB",
+   "serial": "СП-2-73-ЦБ-RUB",
    "secid": "RU000A10CVC6",
    "issuer": "SFO-RSP",
    "currency": "RUB",
@@ -286,7 +321,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "DOFZ26248",
      "n": "ОФЗ 26248",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 86.356,
+     "px": 82.25,
+     "pxTime": "2026-07-10",
+     "perfPct": -4.8
     }
    ],
    "dates": {
@@ -306,7 +345,8 @@ window.PLACEMENTS_DATA = {
      "strikePct": 100.0,
      "barrierPct": 100.0
     }
-   }
+   },
+   "perfPct": -4.8
   },
   {
    "isin": "RU000A10B9W7",
@@ -326,7 +366,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "IBIT",
      "n": "iShares Bitcoin Trust ETF",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 40.11,
+     "px": 36.23,
+     "pxTime": "2026-07-10",
+     "perfPct": -9.7
     }
    ],
    "dates": {
@@ -346,7 +390,8 @@ window.PLACEMENTS_DATA = {
      "strikePct": 100.0,
      "barrierPct": 500.0
     }
-   }
+   },
+   "perfPct": -9.7
   },
   {
    "isin": "RU000A10ASL7",
@@ -366,7 +411,8 @@ window.PLACEMENTS_DATA = {
     {
      "t": "RWMD",
      "n": "Румберг Широкий Рынок Д",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 91.22
     }
    ],
    "dates": {
@@ -381,7 +427,8 @@ window.PLACEMENTS_DATA = {
     "strike2Pct": null,
     "participationPct": 100.0,
     "protectionPct": 0.0
-   }
+   },
+   "perfPct": null
   },
   {
    "isin": "RU000A10CBL9",
@@ -401,7 +448,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "DOFZ26248",
      "n": "ОФЗ 26248",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 90.05,
+     "px": 82.25,
+     "pxTime": "2026-07-10",
+     "perfPct": -8.7
     }
    ],
    "dates": {
@@ -421,7 +472,8 @@ window.PLACEMENTS_DATA = {
      "strikePct": 100.0,
      "barrierPct": 100.0
     }
-   }
+   },
+   "perfPct": -8.7
   },
   {
    "isin": "RU000A10CBK1",
@@ -441,7 +493,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "DOFZ26230",
      "n": "ОФЗ 26230",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 63.766,
+     "px": 57.397,
+     "pxTime": "2026-07-10",
+     "perfPct": -10.0
     }
    ],
    "dates": {
@@ -456,7 +512,8 @@ window.PLACEMENTS_DATA = {
     "strike2Pct": null,
     "participationPct": 100.0,
     "protectionPct": 0.0
-   }
+   },
+   "perfPct": -10.0
   },
   {
    "isin": "RU000A10CV88",
@@ -476,7 +533,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "RNATGAS",
      "n": "Rumberg Natural Gas",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 4.012,
+     "px": 2.96,
+     "pxTime": "2025-11-27",
+     "perfPct": -26.2
     }
    ],
    "dates": {
@@ -491,7 +552,8 @@ window.PLACEMENTS_DATA = {
     "strike2Pct": null,
     "participationPct": 27.0,
     "protectionPct": 100.0
-   }
+   },
+   "perfPct": -26.2
   },
   {
    "isin": "RU000A10DER8",
@@ -511,7 +573,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "GLD",
      "n": "SPDR Gold Shares (GLD)",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 393.24,
+     "px": 377.36,
+     "pxTime": "2026-07-10",
+     "perfPct": -4.0
     }
    ],
    "dates": {
@@ -526,7 +592,8 @@ window.PLACEMENTS_DATA = {
     "strike2Pct": null,
     "participationPct": 70.0,
     "protectionPct": 100.0
-   }
+   },
+   "perfPct": -4.0
   },
   {
    "isin": "RU000A10DES6",
@@ -546,7 +613,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "SPY",
      "n": "SPDR S&P 500 ETF Trust",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 689.17,
+     "px": 753.28,
+     "pxTime": "2026-07-10",
+     "perfPct": 9.3
     }
    ],
    "dates": {
@@ -561,7 +632,8 @@ window.PLACEMENTS_DATA = {
     "strike2Pct": null,
     "participationPct": 70.0,
     "protectionPct": 100.0
-   }
+   },
+   "perfPct": 9.3
   },
   {
    "isin": "RU000A10CV70",
@@ -581,7 +653,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "CSI_300",
      "n": "CSI 300 Index",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 4621.75,
+     "px": 4921.6,
+     "pxTime": "2026-05-25",
+     "perfPct": 6.5
     }
    ],
    "dates": {
@@ -596,7 +672,8 @@ window.PLACEMENTS_DATA = {
     "strike2Pct": null,
     "participationPct": 80.0,
     "protectionPct": 100.0
-   }
+   },
+   "perfPct": 6.5
   },
   {
    "isin": "RU000A10DEK3",
@@ -616,7 +693,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "URA",
      "n": "Global X Uranium ETF",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 49.2,
+     "px": 42.85,
+     "pxTime": "2026-07-10",
+     "perfPct": -12.9
     }
    ],
    "dates": {
@@ -631,7 +712,8 @@ window.PLACEMENTS_DATA = {
     "strike2Pct": null,
     "participationPct": 30.0,
     "protectionPct": 100.0
-   }
+   },
+   "perfPct": -12.9
   },
   {
    "isin": "RU000A10CVB8",
@@ -651,7 +733,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "DOFZ26238",
      "n": "ОФЗ 26238",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 58.826,
+     "px": 52.689,
+     "pxTime": "2026-07-10",
+     "perfPct": -10.4
     }
    ],
    "dates": {
@@ -667,7 +753,8 @@ window.PLACEMENTS_DATA = {
     "obsCount": 1,
     "acBarrierPct": null,
     "protection": null
-   }
+   },
+   "perfPct": -10.4
   },
   {
    "isin": "RU000A10CV62",
@@ -687,7 +774,8 @@ window.PLACEMENTS_DATA = {
     {
      "t": "RWMD",
      "n": "Румберг Широкий Рынок Д",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 86.47
     }
    ],
    "dates": {
@@ -702,7 +790,8 @@ window.PLACEMENTS_DATA = {
     "strike2Pct": null,
     "participationPct": 100.0,
     "protectionPct": 0.0
-   }
+   },
+   "perfPct": null
   },
   {
    "isin": "RU000A10CBJ3",
@@ -722,7 +811,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "DOFZ26238",
      "n": "ОФЗ 26238",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 55.449,
+     "px": 52.689,
+     "pxTime": "2026-07-10",
+     "perfPct": -5.0
     }
    ],
    "dates": {
@@ -737,7 +830,8 @@ window.PLACEMENTS_DATA = {
     "strike2Pct": null,
     "participationPct": 100.0,
     "protectionPct": 0.0
-   }
+   },
+   "perfPct": -5.0
   },
   {
    "isin": "RU000A10CBH7",
@@ -757,7 +851,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "DOFZ26248",
      "n": "ОФЗ 26248",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 85.77,
+     "px": 82.25,
+     "pxTime": "2026-07-10",
+     "perfPct": -4.1
     }
    ],
    "dates": {
@@ -777,7 +875,8 @@ window.PLACEMENTS_DATA = {
      "strikePct": 100.0,
      "barrierPct": 100.0
     }
-   }
+   },
+   "perfPct": -4.1
   },
   {
    "isin": "RU000A10CBG9",
@@ -797,7 +896,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "DOFZ26238",
      "n": "ОФЗ 26238",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 56.31,
+     "px": 52.689,
+     "pxTime": "2026-07-10",
+     "perfPct": -6.4
     }
    ],
    "dates": {
@@ -812,7 +915,8 @@ window.PLACEMENTS_DATA = {
     "strike2Pct": null,
     "participationPct": 100.0,
     "protectionPct": 0.0
-   }
+   },
+   "perfPct": -6.4
   },
   {
    "isin": "RU000A10CBF1",
@@ -832,7 +936,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "DOFZ26238",
      "n": "ОФЗ 26238",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 60.2,
+     "px": 52.689,
+     "pxTime": "2026-07-10",
+     "perfPct": -12.5
     }
    ],
    "dates": {
@@ -847,7 +955,8 @@ window.PLACEMENTS_DATA = {
     "strike2Pct": null,
     "participationPct": 100.0,
     "protectionPct": 0.0
-   }
+   },
+   "perfPct": -12.5
   },
   {
    "isin": "RU000A10CBE4",
@@ -867,7 +976,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "DOFZ26238",
      "n": "ОФЗ 26238",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 60.9,
+     "px": 52.689,
+     "pxTime": "2026-07-10",
+     "perfPct": -13.5
     }
    ],
    "dates": {
@@ -882,7 +995,8 @@ window.PLACEMENTS_DATA = {
     "strike2Pct": null,
     "participationPct": 100.0,
     "protectionPct": 0.0
-   }
+   },
+   "perfPct": -13.5
   },
   {
    "isin": "RU000A10CBD6",
@@ -902,7 +1016,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "DOFZ26238",
      "n": "ОФЗ 26238",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 61.19,
+     "px": 52.689,
+     "pxTime": "2026-07-10",
+     "perfPct": -13.9
     }
    ],
    "dates": {
@@ -917,7 +1035,8 @@ window.PLACEMENTS_DATA = {
     "strike2Pct": null,
     "participationPct": 100.0,
     "protectionPct": 0.0
-   }
+   },
+   "perfPct": -13.9
   },
   {
    "isin": "RU000A10ASK9",
@@ -937,7 +1056,8 @@ window.PLACEMENTS_DATA = {
     {
      "t": "RWMD",
      "n": "Румберг Широкий Рынок Д",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 99.96
     }
    ],
    "dates": {
@@ -952,7 +1072,8 @@ window.PLACEMENTS_DATA = {
     "strike2Pct": null,
     "participationPct": 100.0,
     "protectionPct": 0.0
-   }
+   },
+   "perfPct": null
   },
   {
    "isin": "RU000A10CBC8",
@@ -972,7 +1093,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "DOFZ26238",
      "n": "ОФЗ 26238",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 61.3,
+     "px": 52.689,
+     "pxTime": "2026-07-10",
+     "perfPct": -14.0
     }
    ],
    "dates": {
@@ -987,7 +1112,8 @@ window.PLACEMENTS_DATA = {
     "strike2Pct": null,
     "participationPct": 100.0,
     "protectionPct": 0.0
-   }
+   },
+   "perfPct": -14.0
   },
   {
    "isin": "RU000A10ASJ1",
@@ -1007,7 +1133,8 @@ window.PLACEMENTS_DATA = {
     {
      "t": "RWMD",
      "n": "Румберг Широкий Рынок Д",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 100.92
     }
    ],
    "dates": {
@@ -1022,7 +1149,8 @@ window.PLACEMENTS_DATA = {
     "strike2Pct": null,
     "participationPct": 100.0,
     "protectionPct": 0.0
-   }
+   },
+   "perfPct": null
   },
   {
    "isin": "RU000A10BUH9",
@@ -1042,7 +1170,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "DOFZ26238",
      "n": "ОФЗ 26238",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 60.89,
+     "px": 52.689,
+     "pxTime": "2026-07-10",
+     "perfPct": -13.5
     }
    ],
    "dates": {
@@ -1057,7 +1189,8 @@ window.PLACEMENTS_DATA = {
     "strike2Pct": null,
     "participationPct": 100.0,
     "protectionPct": 0.0
-   }
+   },
+   "perfPct": -13.5
   },
   {
    "isin": "RU000A10ASH5",
@@ -1077,7 +1210,8 @@ window.PLACEMENTS_DATA = {
     {
      "t": "RWMD",
      "n": "Румберг Широкий Рынок Д",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 101.4
     }
    ],
    "dates": {
@@ -1092,7 +1226,8 @@ window.PLACEMENTS_DATA = {
     "strike2Pct": null,
     "participationPct": 100.0,
     "protectionPct": 0.0
-   }
+   },
+   "perfPct": null
   },
   {
    "isin": "RU000A10BA27",
@@ -1112,7 +1247,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "DOFZ26238",
      "n": "ОФЗ 26238",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 62.65,
+     "px": 52.689,
+     "pxTime": "2026-07-10",
+     "perfPct": -15.9
     }
    ],
    "dates": {
@@ -1127,7 +1266,8 @@ window.PLACEMENTS_DATA = {
     "strike2Pct": null,
     "participationPct": 180.0,
     "protectionPct": 100.0
-   }
+   },
+   "perfPct": -15.9
   },
   {
    "isin": "RU000A10A9H9",
@@ -1147,7 +1287,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "DOFZ26238",
      "n": "ОФЗ 26238",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 61.175,
+     "px": 52.689,
+     "pxTime": "2026-07-10",
+     "perfPct": -13.9
     }
    ],
    "dates": {
@@ -1162,7 +1306,8 @@ window.PLACEMENTS_DATA = {
     "strike2Pct": null,
     "participationPct": 100.0,
     "protectionPct": 0.0
-   }
+   },
+   "perfPct": -13.9
   },
   {
    "isin": "RU000A10BUG1",
@@ -1182,7 +1327,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "DOFZ26246",
      "n": "ОФЗ 26246",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 90.79,
+     "px": 82.933,
+     "pxTime": "2026-07-10",
+     "perfPct": -8.7
     }
    ],
    "dates": {
@@ -1197,7 +1346,8 @@ window.PLACEMENTS_DATA = {
     "strike2Pct": 130.0,
     "participationPct": 300.0,
     "protectionPct": 100.0
-   }
+   },
+   "perfPct": -8.7
   },
   {
    "isin": "RU000A10BUF3",
@@ -1217,7 +1367,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "DOFZ26238",
      "n": "ОФЗ 26238",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 59.4,
+     "px": 52.689,
+     "pxTime": "2026-07-10",
+     "perfPct": -11.3
     }
    ],
    "dates": {
@@ -1232,7 +1386,8 @@ window.PLACEMENTS_DATA = {
     "strike2Pct": null,
     "participationPct": 190.0,
     "protectionPct": 100.0
-   }
+   },
+   "perfPct": -11.3
   },
   {
    "isin": "RU000A10BUD8",
@@ -1252,7 +1407,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "DOFZ26238",
      "n": "ОФЗ 26238",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 58.857,
+     "px": 52.689,
+     "pxTime": "2026-07-10",
+     "perfPct": -10.5
     }
    ],
    "dates": {
@@ -1267,7 +1426,8 @@ window.PLACEMENTS_DATA = {
     "strike2Pct": null,
     "participationPct": 190.0,
     "protectionPct": 100.0
-   }
+   },
+   "perfPct": -10.5
   },
   {
    "isin": "RU000A10BUE6",
@@ -1287,7 +1447,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "DOFZ26238",
      "n": "ОФЗ 26238",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 58.857,
+     "px": 52.689,
+     "pxTime": "2026-07-10",
+     "perfPct": -10.5
     }
    ],
    "dates": {
@@ -1302,12 +1466,13 @@ window.PLACEMENTS_DATA = {
     "strike2Pct": 135.0,
     "participationPct": 300.0,
     "protectionPct": 100.0
-   }
+   },
+   "perfPct": -10.5
   },
   {
    "isin": "RU000A10B9V9",
    "name": "RSP СП-1-28-ЦБ- FX-RUB",
-   "serial": "СП-1-28-ЦБ-FX-RUB",
+   "serial": "СП-1-28-ЦБ- FX-RUB",
    "secid": "RU000A10B9V9",
    "issuer": "SFO-RSP",
    "currency": "RUB",
@@ -1322,7 +1487,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "IBIT",
      "n": "iShares Bitcoin Trust ETF",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 58.67,
+     "px": 36.23,
+     "pxTime": "2026-07-10",
+     "perfPct": -38.2
     }
    ],
    "dates": {
@@ -1337,7 +1506,8 @@ window.PLACEMENTS_DATA = {
     "strike2Pct": 160.0,
     "participationPct": 100.0,
     "protectionPct": 100.0
-   }
+   },
+   "perfPct": -38.2
   },
   {
    "isin": "RU000A10BA19",
@@ -1357,7 +1527,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "DOFZ26238",
      "n": "ОФЗ 26238",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 54.73,
+     "px": 52.689,
+     "pxTime": "2026-07-10",
+     "perfPct": -3.7
     }
    ],
    "dates": {
@@ -1372,7 +1546,8 @@ window.PLACEMENTS_DATA = {
     "strike2Pct": null,
     "participationPct": 190.0,
     "protectionPct": 100.0
-   }
+   },
+   "perfPct": -3.7
   },
   {
    "isin": "RU000A10BA01",
@@ -1392,7 +1567,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "DOFZ26238",
      "n": "ОФЗ 26238",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 52.942,
+     "px": 52.689,
+     "pxTime": "2026-07-10",
+     "perfPct": -0.5
     }
    ],
    "dates": {
@@ -1407,7 +1586,8 @@ window.PLACEMENTS_DATA = {
     "strike2Pct": null,
     "participationPct": 190.0,
     "protectionPct": 100.0
-   }
+   },
+   "perfPct": -0.5
   },
   {
    "isin": "RU000A10B9Z0",
@@ -1427,7 +1607,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "DOFZ26238",
      "n": "ОФЗ 26238",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 53.078,
+     "px": 52.689,
+     "pxTime": "2026-07-10",
+     "perfPct": -0.7
     }
    ],
    "dates": {
@@ -1442,7 +1626,8 @@ window.PLACEMENTS_DATA = {
     "strike2Pct": null,
     "participationPct": 150.0,
     "protectionPct": 95.0
-   }
+   },
+   "perfPct": -0.7
   },
   {
    "isin": "RU000A10B9U1",
@@ -1462,7 +1647,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "USDRUB",
      "n": "Currency Pair USD/RUB",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 81.5616,
+     "px": 77.3225,
+     "pxTime": "2026-07-10",
+     "perfPct": -5.2
     }
    ],
    "dates": {
@@ -1477,7 +1666,8 @@ window.PLACEMENTS_DATA = {
     "strike2Pct": 150.0,
     "participationPct": 145.0,
     "protectionPct": 95.0
-   }
+   },
+   "perfPct": -5.2
   },
   {
    "isin": "RU000A10A9F3",
@@ -1497,22 +1687,38 @@ window.PLACEMENTS_DATA = {
     {
      "t": "HEAD",
      "n": "МКПАО \"Хэдхантер\"",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 3183.0,
+     "px": 2596.0,
+     "pxTime": "2026-07-10",
+     "perfPct": -18.4
     },
     {
      "t": "MOEX",
      "n": "МосБиржа",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 201.8,
+     "px": 146.48,
+     "pxTime": "2026-07-10",
+     "perfPct": -27.4
     },
     {
      "t": "TATN",
      "n": "Татнефть (ао)",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 682.3,
+     "px": 457.6,
+     "pxTime": "2026-07-10",
+     "perfPct": -32.9
     },
     {
      "t": "X5",
      "n": "Корпоративный центр ИКС 5",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 3528.0,
+     "px": 1910.0,
+     "pxTime": "2026-07-10",
+     "perfPct": -45.9
     }
    ],
    "dates": {
@@ -1532,7 +1738,8 @@ window.PLACEMENTS_DATA = {
      "strikePct": 100.0,
      "barrierPct": null
     }
-   }
+   },
+   "perfPct": -45.9
   },
   {
    "isin": "RU000A10A9G1",
@@ -1552,7 +1759,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "SPY",
      "n": "SPDR S&P 500 ETF Trust",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 536.7,
+     "px": 753.28,
+     "pxTime": "2026-07-10",
+     "perfPct": 40.4
     }
    ],
    "dates": {
@@ -1567,12 +1778,13 @@ window.PLACEMENTS_DATA = {
     "strike2Pct": null,
     "participationPct": 120.0,
     "protectionPct": 100.0
-   }
+   },
+   "perfPct": 40.4
   },
   {
    "isin": "RU000A10A9C0",
    "name": "RSP СП-1-16",
-   "serial": "16",
+   "serial": "СП-1-16",
    "secid": "RU000A10A9C0",
    "issuer": "SFO-RSP",
    "currency": "RUB",
@@ -1587,7 +1799,8 @@ window.PLACEMENTS_DATA = {
     {
      "t": "RWMD",
      "n": "Румберг Широкий Рынок Д",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 115.27
     }
    ],
    "dates": {
@@ -1602,7 +1815,8 @@ window.PLACEMENTS_DATA = {
     "strike2Pct": null,
     "participationPct": 100.0,
     "protectionPct": 0.0
-   }
+   },
+   "perfPct": null
   },
   {
    "isin": "RU000A10A9E6",
@@ -1622,7 +1836,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "DOFZ26238",
      "n": "ОФЗ 26238",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 53.34,
+     "px": 52.689,
+     "pxTime": "2026-07-10",
+     "perfPct": -1.2
     }
    ],
    "dates": {
@@ -1637,7 +1855,8 @@ window.PLACEMENTS_DATA = {
     "strike2Pct": 140.0,
     "participationPct": 200.0,
     "protectionPct": 100.0
-   }
+   },
+   "perfPct": -1.2
   },
   {
    "isin": "RU000A10A9B2",
@@ -1657,7 +1876,8 @@ window.PLACEMENTS_DATA = {
     {
      "t": "RWMD",
      "n": "Румберг Широкий Рынок Д",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 105.5
     }
    ],
    "dates": {
@@ -1672,7 +1892,8 @@ window.PLACEMENTS_DATA = {
     "strike2Pct": null,
     "participationPct": 100.0,
     "protectionPct": 0.0
-   }
+   },
+   "perfPct": null
   },
   {
    "isin": "RU000A109EJ8",
@@ -1692,7 +1913,8 @@ window.PLACEMENTS_DATA = {
     {
      "t": "RWMD",
      "n": "Румберг Широкий Рынок Д",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 97.83
     }
    ],
    "dates": {
@@ -1707,7 +1929,8 @@ window.PLACEMENTS_DATA = {
     "strike2Pct": null,
     "participationPct": 100.0,
     "protectionPct": 0.0
-   }
+   },
+   "perfPct": null
   },
   {
    "isin": "RU000A108FA6",
@@ -1727,7 +1950,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "RUMOILGAS",
      "n": "Румберг Нефтегазовый Сектор",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 99.95,
+     "px": 100.0,
+     "pxTime": "2024-10-15",
+     "perfPct": 0.1
     }
    ],
    "dates": {
@@ -1742,7 +1969,8 @@ window.PLACEMENTS_DATA = {
     "strike2Pct": null,
     "participationPct": 100.0,
     "protectionPct": 0.0
-   }
+   },
+   "perfPct": 0.1
   },
   {
    "isin": "RU000A109EH2",
@@ -1762,7 +1990,8 @@ window.PLACEMENTS_DATA = {
     {
      "t": "RWMD",
      "n": "Румберг Широкий Рынок Д",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 110.0
     }
    ],
    "dates": {
@@ -1777,7 +2006,8 @@ window.PLACEMENTS_DATA = {
     "strike2Pct": null,
     "participationPct": 100.0,
     "protectionPct": 0.0
-   }
+   },
+   "perfPct": null
   },
   {
    "isin": "RU000A108F97",
@@ -1797,7 +2027,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "RTECHTRD",
      "n": "Румберг Технологический Сектор ПДН Д",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 90.17,
+     "px": 90.0,
+     "pxTime": "2024-08-07",
+     "perfPct": -0.2
     }
    ],
    "dates": {
@@ -1817,12 +2051,13 @@ window.PLACEMENTS_DATA = {
      "strikePct": 100.0,
      "barrierPct": 100.0
     }
-   }
+   },
+   "perfPct": -0.2
   },
   {
    "isin": "RU000A108F89",
    "name": "RSP СП-1-3",
-   "serial": "3",
+   "serial": "СП-1-3",
    "secid": "RU000A108F89",
    "issuer": "SFO-RSP",
    "currency": "RUB",
@@ -1837,7 +2072,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "RTECHTRD",
      "n": "Румберг Технологический Сектор ПДН Д",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 90.17,
+     "px": 90.0,
+     "pxTime": "2024-08-07",
+     "perfPct": -0.2
     }
    ],
    "dates": {
@@ -1852,12 +2091,13 @@ window.PLACEMENTS_DATA = {
     "strike2Pct": null,
     "participationPct": 100.0,
     "protectionPct": 0.0
-   }
+   },
+   "perfPct": -0.2
   },
   {
    "isin": "RU000A108FB4",
    "name": "RSP-СП-1-6",
-   "serial": "6",
+   "serial": "СП-1-6",
    "secid": null,
    "issuer": "SFO-RSP",
    "currency": "RUB",
@@ -1872,7 +2112,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "LANTHANUM.1",
      "n": "Лантаниум 1.0",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 100.0,
+     "px": 117.50737404,
+     "pxTime": "2026-02-27",
+     "perfPct": 17.5
     }
    ],
    "dates": {
@@ -1887,12 +2131,13 @@ window.PLACEMENTS_DATA = {
     "strike2Pct": null,
     "participationPct": 100.0,
     "protectionPct": 0.0
-   }
+   },
+   "perfPct": 17.5
   },
   {
    "isin": "RU000A108F71",
    "name": "RSP СП-1-2",
-   "serial": "6-02-00761-R-001P",
+   "serial": "СП-1-2",
    "secid": "RU000A108F71",
    "issuer": "SFO-RSP",
    "currency": "RUB",
@@ -1907,7 +2152,8 @@ window.PLACEMENTS_DATA = {
     {
      "t": "RUMBANKS",
      "n": "Румберг Банковский Сектор",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 100.45
     }
    ],
    "dates": {
@@ -1922,7 +2168,8 @@ window.PLACEMENTS_DATA = {
     "strike2Pct": null,
     "participationPct": 100.0,
     "protectionPct": 0.0
-   }
+   },
+   "perfPct": null
   },
   {
    "isin": "RU000A1087H2",
@@ -1942,7 +2189,8 @@ window.PLACEMENTS_DATA = {
     {
      "t": "RUMSTEEL",
      "n": "Румберг Отечественная Сталь",
-     "w": 1.0
+     "w": 1.0,
+     "f0": 99.74
     }
    ],
    "dates": {
@@ -1957,7 +2205,8 @@ window.PLACEMENTS_DATA = {
     "strike2Pct": null,
     "participationPct": 100.0,
     "protectionPct": 0.0
-   }
+   },
+   "perfPct": null
   }
  ]
 };
