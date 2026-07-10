@@ -1,0 +1,13 @@
+# Локальные настройки инструментов
+.claude/
+.idea/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# ОС
+Thumbs.db
+.DS_Store

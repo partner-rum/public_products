@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>One-pager</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500;1,600;1,700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #1B2153; --navy-deep: #0D1026;
+    --orange: #EE7D1B;
+    --lightcard: #EAECF4; --ring: #C9CEDE;
+    --graytxt: #8A90A6; --bodytxt: #3C4260;
+    --green: #1E7C4F; --red: #C24438;
+  }
+  /* Принудительная печать фонов и цветов — иначе браузер отдаёт PDF без заливок */
+  * { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
+  body { margin: 0; background: #2B2D33; font-family: 'Montserrat', system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+
+  /* Экранная панель (в печать не идёт) */
+  .toolbar { position: sticky; top: 0; z-index: 10; background: #1B1D22; color: #F0F0EE; display: flex; justify-content: space-between; align-items: center; padding: 12px 22px; }
+  .toolbar a { color: #B4B6BB; text-decoration: none; font-size: 14px; }
+  .toolbar a:hover { color: #fff; }
+  .btn-print { background: #C09246; border: none; color: #23252B; font-family: 'Montserrat', sans-serif; font-size: 14px; font-weight: 600; padding: 10px 20px; border-radius: 9px; cursor: pointer; }
+  .btn-print:hover { background: #D2A558; }
+
+  .slide { position: relative; width: 960px; height: 540px; margin: 18px auto; background: #FFFFFF; overflow: hidden; box-shadow: 0 10px 34px rgba(0,0,0,0.5); }
+
+  /* Общие элементы контентных слайдов */
+  .qual { position: absolute; top: 20px; right: 118px; text-align: right; font-size: 9.5px; line-height: 1.5; color: #9AA0B0; max-width: 380px; }
+  .corner { position: absolute; top: 0; right: 36px; width: 52px; height: 86px; background: var(--orange); display: flex; align-items: center; justify-content: center; }
+  .s-head { padding: 46px 48px 0; }
+  .s-title { font-size: 29px; font-weight: 800; color: var(--navy); letter-spacing: -0.01em; }
+  .s-sub { margin-top: 7px; font-size: 12.5px; font-style: italic; font-weight: 500; color: #5A6180; }
+  .foot { position: absolute; left: 48px; bottom: 16px; right: 48px; font-size: 8.8px; color: #9AA0B0; }
+
+  /* Слайд 1 — титул */
+  .t-slide { background: linear-gradient(168deg, #0D1026 0%, #1B2153 55%, #283067 100%); }
+  .t-brand { position: absolute; top: 34px; left: 48px; display: flex; align-items: center; gap: 10px; color: #FFFFFF; font-size: 14px; font-weight: 700; letter-spacing: 0.02em; }
+  .t-qual { position: absolute; top: 24px; right: 118px; text-align: right; font-size: 10px; line-height: 1.55; color: #8B92B4; max-width: 400px; }
+  .t-corner { position: absolute; top: 0; right: 36px; width: 52px; height: 100px; background: var(--orange); display: flex; align-items: center; justify-content: center; }
+  .t-title { position: absolute; left: 48px; top: 216px; right: 120px; color: #FFFFFF; font-size: 46px; font-weight: 800; letter-spacing: -0.01em; line-height: 1.12; }
+  .t-bar { position: absolute; left: 0; top: 318px; width: 70%; height: 44px; background: var(--orange); }
+  .t-meta { position: absolute; left: 48px; bottom: 30px; color: #8B92B4; font-size: 11px; font-weight: 500; }
+
+  /* Слайд 2 — базовый актив */
+  .u-grid { display: grid; grid-template-columns: 262px 1fr; gap: 26px; padding: 22px 48px 0; }
+  .stat { background: var(--lightcard); border-radius: 8px; padding: 15px 18px; margin-bottom: 12px; }
+  .stat .v { font-size: 22px; font-weight: 800; color: var(--navy); }
+  .stat .v.or { color: var(--orange); }
+  .stat .k { margin-top: 3px; font-size: 10.5px; font-weight: 500; color: #6A7190; }
+  .u-chart-t { font-size: 13.5px; font-weight: 700; color: var(--navy); margin-bottom: 6px; }
+  .u-desc { margin: 10px 48px 0; background: var(--lightcard); border-radius: 8px; padding: 13px 18px; font-size: 11px; line-height: 1.55; color: #3C4260; }
+
+  /* Слайд 3 — продукт */
+  .p-grid { display: grid; grid-template-columns: 1.03fr 1fr; gap: 30px; padding: 20px 48px 0; }
+  .p-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 12px; }
+  .p-stat { background: var(--lightcard); border-radius: 8px; padding: 13px 14px; }
+  .p-stat .v { font-size: 21px; font-weight: 800; color: var(--navy); letter-spacing: -0.01em; }
+  .p-stat .v.or { color: var(--orange); }
+  .p-stat .k { margin-top: 3px; font-size: 9.5px; font-weight: 500; color: #6A7190; line-height: 1.35; }
+  .p-how { background: var(--lightcard); border-radius: 8px; padding: 11px 15px; font-size: 11px; line-height: 1.5; color: #3C4260; margin-bottom: 10px; }
+  .p-how b { color: var(--navy); }
+  .p-how .hl { color: var(--orange); font-weight: 700; }
+  .p-how .ex { display: block; margin-top: 3px; font-style: italic; color: #5A6180; font-size: 10.5px; }
+  .p-risk { font-size: 11px; line-height: 1.55; color: #3C4260; margin-bottom: 12px; }
+  .p-slogan { background: var(--navy); border-radius: 10px; padding: 20px 24px; }
+  .p-slogan .sq { width: 12px; height: 12px; background: var(--orange); margin-bottom: 12px; }
+  .p-slogan .l1 { color: #FFFFFF; font-size: 18.5px; font-weight: 700; font-style: italic; line-height: 1.35; }
+  .p-slogan .l2 { color: var(--orange); font-size: 18.5px; font-weight: 700; font-style: italic; line-height: 1.35; margin-top: 4px; }
+  .p-ex-t { font-size: 15px; font-weight: 700; color: var(--navy); margin-bottom: 10px; }
+  .p-donut-row { display: flex; gap: 18px; align-items: center; margin-bottom: 10px; }
+  .legend { display: flex; flex-direction: column; gap: 11px; flex: 1; }
+  .lrow { display: flex; gap: 10px; align-items: flex-start; }
+  .lico { width: 30px; height: 30px; border-radius: 50%; flex: none; display: flex; align-items: center; justify-content: center; }
+  .lrow .tt { font-size: 11px; font-weight: 700; color: var(--navy); line-height: 1.3; }
+  .lrow .tt .or { color: var(--orange); }
+  .lrow .dd { font-size: 10px; color: #5A6180; line-height: 1.35; margin-top: 1px; }
+  .p-scen { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .p-scen.two { grid-template-columns: repeat(2, 1fr); }
+  .scard { background: var(--lightcard); border-radius: 8px; padding: 11px 13px; }
+  .scard .st { font-size: 11.5px; font-weight: 700; margin-bottom: 5px; }
+  .scard .sd { font-size: 9.8px; line-height: 1.45; color: #5A6180; }
+
+  /* Слайд 4 — дисклеймер */
+  .d-slide { background: var(--navy); }
+  .d-slide .qual { color: #8B92B4; }
+  .d-title { padding: 44px 48px 0; color: #FFFFFF; font-size: 27px; font-weight: 800; }
+  .d-body { padding: 18px 48px 0; }
+  .d-body p { margin: 0 0 9px; font-size: 10.6px; line-height: 1.55; color: rgba(255,255,255,0.88); }
+  .d-meta { position: absolute; left: 48px; bottom: 16px; font-size: 9px; color: #8B92B4; }
+
+  @media print {
+    @page { size: 10in 5.625in; margin: 0; }
+    body { background: #fff; }
+    .toolbar { display: none !important; }
+    .slide { margin: 0; box-shadow: none; page-break-after: always; }
+    .slide:last-child { page-break-after: auto; }
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <a id="back-link" href="index.html">← К инструменту</a>
+  <span style="font-size:12px;color:#8E8F92;margin-left:auto;margin-right:16px">Если PDF без цвета — включите «Фоновая графика» в диалоге печати</span>
+  <button class="btn-print" onclick="window.print()">Сохранить как PDF</button>
+</div>
+
+<div id="deck"></div>
+
+<script src="data/instruments.js"></script>
+<script src="data/lib.js"></script>
+<script>
+  const S = window.SITE;
+  const qs = new URLSearchParams(location.search);
+  const inst = S.findInstrument(qs.get("id"));
+  const U = S.underlyingInfo(inst.underlying);
+  const nom = inst.minNom;
+
+  document.title = "One-pager — " + S.displayName(inst);
+  document.getElementById("back-link").href = "instrument.html?id=" + encodeURIComponent(inst.id);
+
+  const today = new Date();
+  const dateS = ("0" + today.getDate()).slice(-2) + "." + ("0" + (today.getMonth() + 1)).slice(-2) + "." + today.getFullYear();
+
+  const STAR_W = '<svg width="__S__" height="__S__" viewBox="0 0 26 26" fill="none"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#FFFFFF"/></svg>';
+  const star = s => STAR_W.split("__S__").join(s);
+  const QUAL = "Информация предназначена только для квалифицированных инвесторов<br>Не является инвестиционной рекомендацией";
+
+  // ── Донат: доли в % (первая — оранжевая) ──
+  function donut(orPct, centerV, centerK) {
+    const R = 62, CW = 34, CX = 95, CY = 95;
+    const circ = 2 * Math.PI * R;
+    const orLen = circ * orPct / 100;
+    return '<svg width="190" height="190" viewBox="0 0 190 190">' +
+      '<circle cx="' + CX + '" cy="' + CY + '" r="' + R + '" fill="none" stroke="#C9CEDE" stroke-width="' + CW + '"/>' +
+      '<circle cx="' + CX + '" cy="' + CY + '" r="' + R + '" fill="none" stroke="#EE7D1B" stroke-width="' + CW + '" stroke-dasharray="' + orLen.toFixed(1) + ' ' + circ.toFixed(1) + '" transform="rotate(-90 ' + CX + ' ' + CY + ')"/>' +
+      '<text x="' + CX + '" y="' + (CY - 2) + '" text-anchor="middle" font-family="Montserrat" font-size="15" font-weight="800" fill="#1B2153">' + centerV + '</text>' +
+      '<text x="' + CX + '" y="' + (CY + 14) + '" text-anchor="middle" font-family="Montserrat" font-size="9.5" font-weight="500" fill="#6A7190">' + centerK + '</text>' +
+      '</svg>';
+  }
+
+  // Иконки легенды
+  const icoRub = '<svg width="14" height="14" viewBox="0 0 14 14"><text x="7" y="11" text-anchor="middle" font-family="Montserrat" font-size="11" font-weight="800" fill="#fff">₽</text></svg>';
+  const icoLayers = '<svg width="14" height="14" viewBox="0 0 14 14"><rect x="2" y="2" width="10" height="2.4" rx="1.2" fill="#fff"/><rect x="2" y="5.8" width="10" height="2.4" rx="1.2" fill="#fff"/><rect x="2" y="9.6" width="10" height="2.4" rx="1.2" fill="#fff"/></svg>';
+  const icoShield = '<svg width="14" height="14" viewBox="0 0 14 14"><path d="M7 1 L12 3 V7 C12 10 9.8 12.2 7 13 C4.2 12.2 2 10 2 7 V3 Z" fill="#fff"/></svg>';
+
+  // ── Слайд 2: график базового актива ──
+  function chartUnderlying() {
+    const data = U.history, W = 560, H = 268;
+    const PL = 44, PR = 30, PT = 24, PB = 34;
+    const min = Math.min(...data), max = Math.max(...data), rng = (max - min) || 1;
+    const x = i => PL + (i / (data.length - 1)) * (W - PL - PR);
+    const y = v => PT + (1 - (v - min) / rng) * (H - PT - PB);
+    const pts = data.map((v, i) => [x(i), y(v)]);
+    const line = pts.map((p, i) => (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" ");
+    let grid = "";
+    for (let g = 0; g <= 4; g++) {
+      const gy = PT + (g / 4) * (H - PT - PB);
+      grid += '<line x1="' + PL + '" y1="' + gy + '" x2="' + (W - PR) + '" y2="' + gy + '" stroke="#E3E6EF" stroke-width="1"/>';
+    }
+    const MONTHS = ["янв", "фев", "мар", "апр", "май", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"];
+    let xlab = "";
+    for (let i = 0; i < data.length; i++) {
+      if ((data.length - 1 - i) % 3) continue;
+      const d = new Date(today.getFullYear(), today.getMonth() - (data.length - 1 - i), 1);
+      xlab += '<text x="' + x(i).toFixed(1) + '" y="' + (H - 12) + '" text-anchor="middle" font-family="Montserrat" font-size="10" font-weight="500" fill="#8A90A6">' + MONTHS[d.getMonth()] + '</text>';
+    }
+    const p0 = pts[0], p1 = pts[pts.length - 1];
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="display:block">' + grid + xlab +
+      '<path d="' + line + '" fill="none" stroke="#1B2153" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>' +
+      '<circle cx="' + p0[0] + '" cy="' + p0[1] + '" r="5" fill="#1B2153"/>' +
+      '<circle cx="' + p1[0] + '" cy="' + p1[1] + '" r="5.5" fill="#EE7D1B"/>' +
+      '<text x="' + p0[0] + '" y="' + (p0[1] - 11) + '" text-anchor="middle" font-family="Montserrat" font-size="11.5" font-weight="700" fill="#8A90A6">' + S.fmtSmart(data[0]) + '</text>' +
+      '<text x="' + Math.min(p1[0], W - PR - 4) + '" y="' + (p1[1] - 12) + '" text-anchor="end" font-family="Montserrat" font-size="12" font-weight="800" fill="#EE7D1B">' + S.fmtSmart(data[data.length - 1]) + (U.unit ? " " + U.unit : "") + '</text>' +
+      '</svg>';
+  }
+
+  // ── Контент по типу ──
+  const q = inst.quote;
+  let c = {};
+  if (inst.type === "warrant") {
+    const isCS = inst.structure === "cs";
+    const K = inst.strike, K2 = inst.strike2;
+    const capPct = isCS ? (K2 - K) / K * 100 : 0;
+    const premiumRub = nom * q / 100;
+    const upPct = Math.max(16, Math.ceil((q + 6) / 5) * 5);
+    const payout1 = nom * S.PAYOFF.pct(K * (1 + upPct / 100), K, K2) / 100;
+    const net1 = payout1 - premiumRub;
+    c = {
+      subtitle: "Заработать на росте " + inst.underlying + " — с полной экспозицией на номинал и ограниченным риском",
+      stats: [
+        [S.fmtSmart(K) + "%", "Страйк (% от цены на старте)", false],
+        [S.fmt2(q) + "%", "Премия (цена размещения)", true],
+        [inst.tenor, "Срок структуры", false]
+      ],
+      how: '<b>Как считается выплата:</b> ' + (isCS
+        ? 'рост цены ' + inst.underlying + ' сверх страйка × номинал, <span class="hl">но не более ' + S.fmtSmart(capPct) + '%</span>.'
+        : '<span class="hl">весь рост</span> цены ' + inst.underlying + ' сверх страйка × номинал.') +
+        '<span class="ex">Пример: цена выросла на ' + upPct + '% → выплата = ' + upPct + '% × ' + S.fmtInt(nom) + ' = ' + S.fmtInt(payout1) + ' ₽</span>',
+      risk: "Максимальный риск инвестора ограничен уплаченной премией — дальше вниз убыток не растёт.",
+      sloganL1: isCS ? "Рост " + inst.underlying + " до +" + S.fmtSmart(capPct) + "% — за " + S.fmt2(q) + "% капитала." : "Весь рост " + inst.underlying + " — за " + S.fmt2(q) + "% капитала.",
+      sloganL2: "Риск — только эти " + S.fmt2(q) + "%.",
+      donutOr: q,
+      donutV: S.fmtInt(nom) + " ₽", donutK: "номинал",
+      legend: [
+        [icoRub, "#EE7D1B", '<span class="or">' + S.fmtInt(premiumRub) + ' ₽ (' + S.fmt2(q) + '%)</span>', "в варрант — экспозиция на весь номинал " + S.fmtInt(nom) + " ₽"],
+        [icoLayers, "#1B2153", S.fmtInt(nom - premiumRub) + " ₽ (" + S.fmt2(100 - q) + "%)", "свободны: депозиты, валюта, другие продукты"],
+        [icoShield, "#1B2153", "Риск ограничен", "максимум — премия (" + S.fmtInt(premiumRub) + " ₽)"]
+      ],
+      scen: [
+        ["Цена " + inst.underlying + " +" + upPct + "%", "выплата " + S.fmtInt(payout1) + " ₽ → " + (net1 >= 0 ? "+" : "−") + S.fmtInt(Math.abs(net1)) + " ₽" + (net1 > 0 ? " (+" + Math.round(net1 / premiumRub * 100) + "% на премию)" : ""), net1 >= 0 ? "var(--green)" : "var(--red)"],
+        ["Цена " + inst.underlying + " +" + S.fmtSmart(q) + "%", "выплата " + S.fmtInt(premiumRub) + " ₽ → 0 ₽ (безубыток)", "var(--navy)"],
+        ["Цена не выросла", "выплаты нет → −" + S.fmtInt(premiumRub) + " ₽ (максимум убытка)", "var(--red)"]
+      ],
+      foot: "Продукт: структурная облигация (СО) на базовый актив " + inst.underlying + ". Пример иллюстративный, без учёта комиссий и налогов."
+    };
+  } else if (inst.type === "discount") {
+    const buyRub = nom * q / 100;
+    c = {
+      subtitle: "Покупка дешевле номинала, погашение по 100% — доход зафиксирован в день сделки",
+      stats: [
+        [S.fmt2(q) + "%", "Цена покупки (% от номинала)", false],
+        [S.fmt1(S.yieldAnnual(inst)) + "%", "Доходность годовых", true],
+        [inst.expiry, "Дата погашения", false]
+      ],
+      how: '<b>Как считается выплата:</b> на погашение выплачивается <span class="hl">100% номинала</span>; доход — дисконт при покупке.' +
+        '<span class="ex">Пример: покупка по ' + S.fmt2(q) + '% = ' + S.fmtInt(buyRub) + ' ₽ → на погашение ' + S.fmtInt(nom) + ' ₽</span>',
+      risk: "Купонов нет — весь доход в дисконте. Основной риск — кредитное качество эмитента.",
+      sloganL1: "Доход известен в день покупки.",
+      sloganL2: "+" + S.fmt2(100 - q) + " п.п. к погашению.",
+      donutOr: 100 - q,
+      donutV: S.fmtInt(nom) + " ₽", donutK: "номинал",
+      legend: [
+        [icoRub, "#1B2153", S.fmtInt(buyRub) + " ₽ (" + S.fmt2(q) + "%)", "платите сегодня при покупке"],
+        [icoLayers, "#EE7D1B", '<span class="or">' + S.fmtInt(nom - buyRub) + ' ₽ (' + S.fmt2(100 - q) + '%)</span>', "дисконт — ваш доход к погашению"],
+        [icoShield, "#1B2153", "100% номинала", "выплата на погашение " + inst.expiry]
+      ],
+      scen: [
+        ["Дождались погашения", "выплата " + S.fmtInt(nom) + " ₽ → +" + S.fmtInt(nom - buyRub) + " ₽", "var(--green)"],
+        ["Продали раньше срока", "по текущей рыночной цене", "var(--navy)"]
+      ],
+      foot: "Продукт: дисконтная облигация, базовый актив — " + inst.underlying + ". Пример иллюстративный, без учёта комиссий и налогов."
+    };
+  } else {
+    const entryRub = nom * q / 100;
+    const part = Math.round(inst.participation * 100);
+    const upPct = 20;
+    const payoutUp = nom * (1 + inst.participation * upPct / 100);
+    c = {
+      subtitle: "Участие в росте " + inst.underlying + " с возвратом 100% номинала при любом сценарии",
+      stats: [
+        ["100%", "Защита капитала", false],
+        [part + "%", "Участие в росте", true],
+        [inst.expiry, "Экспирация", false]
+      ],
+      how: '<b>Как считается выплата:</b> 100% номинала + <span class="hl">' + part + '%</span> роста ' + inst.underlying + ' сверх начального уровня S₀.' +
+        '<span class="ex">Пример: актив вырос на ' + upPct + '% → выплата = ' + S.fmtInt(payoutUp) + ' ₽</span>',
+      risk: "Если актив упал — возвращается номинал целиком. Основной риск — кредитный риск эмитента ноты.",
+      sloganL1: "Участие в росте — " + part + "%.",
+      sloganL2: "Защита капитала — 100%.",
+      donutOr: Math.max(q - 100, 0),
+      donutV: S.fmtInt(nom) + " ₽", donutK: "номинал",
+      legend: [
+        [icoRub, "#1B2153", S.fmtInt(entryRub) + " ₽ (" + S.fmt2(q) + "%)", "вход по текущей котировке"],
+        [icoShield, "#EE7D1B", '<span class="or">100% номинала</span>', "возврат при любом сценарии на " + inst.expiry],
+        [icoLayers, "#1B2153", part + "% роста", "доля роста актива сверх S₀ — ваша"]
+      ],
+      scen: [
+        [inst.underlying + " +" + upPct + "%", "выплата " + S.fmtInt(payoutUp) + " ₽ → +" + S.fmtInt(payoutUp - entryRub) + " ₽", "var(--green)"],
+        [inst.underlying + " упал", "сработала защита: выплата " + S.fmtInt(nom) + " ₽", "var(--navy)"]
+      ],
+      foot: "Продукт: нота с защитой капитала, базовый актив — " + inst.underlying + ". Пример иллюстративный, без учёта комиссий и налогов."
+    };
+  }
+
+  // ── Сборка слайдов ──
+  const name = S.displayName(inst);
+  let html = "";
+
+  // 1. Титул
+  html += '<section class="slide t-slide">' +
+    '<div class="t-brand">' + star(22) + ' Структурные продукты</div>' +
+    '<div class="t-qual">' + QUAL + '</div>' +
+    '<div class="t-corner">' + star(26) + '</div>' +
+    '<div class="t-title">' + name + '</div>' +
+    '<div class="t-bar"></div>' +
+    '<div class="t-meta">' + dateS + ' · ' + inst.id + '</div>' +
+    '</section>';
+
+  // 2. Базовый актив (если есть данные)
+  if (U) {
+    const h = U.history;
+    const chg12 = (h[h.length - 1] - h[0]) / h[0] * 100;
+    html += '<section class="slide">' +
+      '<div class="qual">' + QUAL + '</div>' +
+      '<div class="corner">' + star(24) + '</div>' +
+      '<div class="s-head"><div class="s-title">' + inst.underlying + ': базовый актив</div>' +
+      '<div class="s-sub">Динамика за 12 месяцев · данные на ' + dateS + ' (демо)</div></div>' +
+      '<div class="u-grid">' +
+        '<div>' +
+          '<div class="stat"><div class="v">' + (inst.uRef || S.fmtSmart(h[h.length - 1]) + (U.unit ? " " + U.unit : "")) + '</div><div class="k">Текущий уровень</div></div>' +
+          '<div class="stat"><div class="v or">' + (chg12 >= 0 ? "+" : "−") + S.fmt1(Math.abs(chg12)) + '%</div><div class="k">Изменение за 12 месяцев</div></div>' +
+          '<div class="stat"><div class="v">' + S.fmtSmart(Math.min(...h)) + ' – ' + S.fmtSmart(Math.max(...h)) + '</div><div class="k">Диапазон за 12 месяцев' + (U.unit ? ", " + U.unit : "") + '</div></div>' +
+        '</div>' +
+        '<div><div class="u-chart-t">Динамика ' + inst.underlying + '</div>' + chartUnderlying() + '</div>' +
+      '</div>' +
+      '<div class="u-desc">' + U.desc + '</div>' +
+      '<div class="foot">Данные — демонстрационные. Историческая динамика не гарантирует будущую доходность.</div>' +
+      '</section>';
+  }
+
+  // 3. Продукт
+  html += '<section class="slide">' +
+    '<div class="qual">' + QUAL + '</div>' +
+    '<div class="corner">' + star(24) + '</div>' +
+    '<div class="s-head"><div class="s-title">' + name + '</div>' +
+    '<div class="s-sub">' + c.subtitle + '</div></div>' +
+    '<div class="p-grid">' +
+      '<div>' +
+        '<div class="p-stats">' + c.stats.map(s =>
+          '<div class="p-stat"><div class="v' + (s[2] ? " or" : "") + '">' + s[0] + '</div><div class="k">' + s[1] + '</div></div>').join("") + '</div>' +
+        '<div class="p-how">' + c.how + '</div>' +
+        '<div class="p-risk">' + c.risk + '</div>' +
+        '<div class="p-slogan"><div class="sq"></div><div class="l1">' + c.sloganL1 + '</div><div class="l2">' + c.sloganL2 + '</div></div>' +
+      '</div>' +
+      '<div>' +
+        '<div class="p-ex-t">Пример: номинал ' + S.fmtInt(nom) + ' ₽</div>' +
+        '<div class="p-donut-row">' + donut(c.donutOr, c.donutV, c.donutK) +
+          '<div class="legend">' + c.legend.map(l =>
+            '<div class="lrow"><div class="lico" style="background:' + l[1] + '">' + l[0] + '</div><div><div class="tt">' + l[2] + '</div><div class="dd">' + l[3] + '</div></div></div>').join("") + '</div>' +
+        '</div>' +
+        '<div class="p-scen' + (c.scen.length === 2 ? " two" : "") + '">' + c.scen.map(s =>
+          '<div class="scard"><div class="st" style="color:' + s[2] + '">' + s[0] + '</div><div class="sd">' + s[1] + '</div></div>').join("") + '</div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="foot">' + c.foot + '</div>' +
+    '</section>';
+
+  // 4. Дисклеймер
+  html += '<section class="slide d-slide">' +
+    '<div class="qual">' + QUAL + '</div>' +
+    '<div class="t-corner" style="height:86px">' + star(24) + '</div>' +
+    '<div class="d-title">Ограничение ответственности</div>' +
+    '<div class="d-body">' + S.LEGAL.onepager.map(p => "<p>" + p + "</p>").join("") + '</div>' +
+    '<div class="d-meta">' + dateS + ' · ' + inst.id + '</div>' +
+    '</section>';
+
+  document.getElementById("deck").innerHTML = html;
+
+  // Автовызов диалога печати (кнопка «Скачать one-pager» на карточке)
+  if (qs.get("print") === "1") {
+    (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve())
+      .then(() => setTimeout(() => window.print(), 400));
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Структурные продукты — доход по формуле, известной до сделки</title>
+<meta name="description" content="Витрина структурных продуктов: дисконтные облигации, ноты с защитой капитала, варранты. Котировки, сценарии выплат и примеры расчёта по каждому инструменту.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prata&family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --wine: #1B1D22; --wine2: #26292F;
+    --paper: #F1F0EC; --card: #FBFBF9;
+    --ink: #1F2125; --fog: #67696E;
+    --hair: #DEDCD6; --hair2: #E9E7E1;
+    --gold: #C09246; --gold-dark: #A87C33;
+    --accent: #34373F;
+    --spruce: #2E6E56; --steel: #33608C; --amber: #B3801F;
+    --up: #2E7D57; --down: #B4483C;
+    --f-disp: 'Prata', Georgia, serif;
+    --f-body: 'Onest', system-ui, sans-serif;
+    --f-mono: 'JetBrains Mono', Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--f-body); -webkit-font-smoothing: antialiased; }
+  a { text-decoration: none; color: inherit; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; border-radius: 4px; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 44px; }
+
+  /* ── Переплёт: тёмная шапка ─────────────────────────── */
+  .topbar { background: var(--wine); color: #F0F0EE; }
+  .topbar-in { display: flex; justify-content: space-between; align-items: center; padding-top: 18px; padding-bottom: 18px; }
+  .brand { display: flex; align-items: center; gap: 11px; }
+  .brand svg { display: block; }
+  .brand-name { font-size: 15px; font-weight: 600; letter-spacing: 0.01em; }
+  .topnav { display: flex; gap: 26px; font-size: 14px; font-weight: 500; }
+  .topnav a { color: #B4B6BB; }
+  .topnav a:hover { color: #FFFFFF; }
+
+  /* ── Хиро: тёмный переплёт ──────────────────────────── */
+  .hero { background: linear-gradient(180deg, var(--wine) 0%, #23262D 100%); color: #F0F0EE; padding-bottom: 0; }
+  .hero-text { max-width: 700px; padding: 76px 0 40px; }
+  .eyebrow { display: flex; align-items: center; gap: 9px; font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.16em; color: var(--gold); text-transform: uppercase; margin-bottom: 26px; }
+  .hero h1 { margin: 0 0 22px; font-family: var(--f-disp); font-size: 46px; font-weight: 400; line-height: 1.18; letter-spacing: 0.002em; text-wrap: balance; color: #F2F1EC; }
+  .hero h1 em { font-style: normal; color: #D9BE85; }
+  .hero p { margin: 0 0 30px; font-size: 16.5px; line-height: 1.65; color: #B7B9BE; max-width: 560px; text-wrap: pretty; }
+  .cta-row { display: flex; gap: 14px; flex-wrap: wrap; }
+  .btn-gold { display: inline-block; background: var(--gold); color: #23252B; font-size: 15px; font-weight: 600; padding: 13px 26px; border-radius: 10px; transition: background .15s; }
+  .btn-gold:hover { background: #D2A558; }
+  .btn-ghost { display: inline-block; color: #C7C9CE; font-size: 15px; font-weight: 500; padding: 13px 22px; border-radius: 10px; border: 1px solid #4A4D55; transition: border-color .15s, color .15s; }
+  .btn-ghost:hover { border-color: #6E717A; color: #FFFFFF; }
+
+  .hero-chart { padding: 8px 0 0; }
+  .hero-chart svg { display: block; width: 100%; height: auto; }
+  .hero-caption { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap; padding: 14px 0 30px; border-top: 1px solid #34363D; }
+  .hc-left { display: flex; align-items: baseline; gap: 10px; min-height: 22px; }
+  .hc-dot { width: 8px; height: 8px; transform: rotate(45deg); flex: none; align-self: center; }
+  .hc-name { font-size: 14.5px; font-weight: 600; color: #F0F0EE; transition: opacity .3s; }
+  .hc-tag { font-size: 13.5px; color: #97999F; transition: opacity .3s; }
+  .hc-right { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.1em; color: #7E8087; text-transform: uppercase; }
+
+  /* ── Принципы ───────────────────────────────────────── */
+  .principles { display: grid; grid-template-columns: repeat(3, 1fr); padding: 52px 0 8px; }
+  .principle { padding: 4px 28px 24px 0; }
+  .principle + .principle { border-left: 1px solid var(--hair); padding-left: 28px; }
+  .principle .k { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold-dark); margin-bottom: 10px; }
+  .principle .v { font-size: 14.5px; line-height: 1.6; color: #43454A; text-wrap: pretty; }
+
+  /* ── Семейства ──────────────────────────────────────── */
+  .families { padding: 56px 0 24px; }
+  .fam-head { margin-bottom: 30px; }
+  .fam-head h2 { margin: 0 0 12px; font-family: var(--f-disp); font-size: 31px; font-weight: 400; letter-spacing: 0.002em; }
+  .fam-head p { margin: 0; font-size: 15px; color: var(--fog); }
+  .fam-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .fam-card { background: var(--card); border: 1px solid var(--hair); border-top: 3px solid var(--fc); border-radius: 14px; padding: 24px 26px 22px; display: flex; flex-direction: column; gap: 14px; transition: box-shadow .18s, transform .18s; }
+  .fam-card:hover { box-shadow: 0 10px 28px rgba(24,25,30,0.12); transform: translateY(-2px); }
+  .fam-card svg { display: block; }
+  .fam-card h3 { margin: 0; font-size: 18.5px; font-weight: 700; letter-spacing: -0.005em; }
+  .chip { align-self: flex-start; font-size: 12px; font-weight: 600; border-radius: 999px; padding: 4px 11px; }
+  .fam-card p { margin: 0; font-size: 14px; line-height: 1.6; color: #43454A; text-wrap: pretty; }
+  .fam-meta { margin-top: auto; padding-top: 14px; border-top: 1px solid var(--hair2); display: flex; justify-content: space-between; align-items: center; }
+  .fam-count { font-family: var(--f-mono); font-size: 12px; color: var(--fog); }
+  .fam-link { font-size: 14px; font-weight: 600; color: var(--fc); }
+
+  /* ── Как читать котировку ───────────────────────────── */
+  .howto { margin: 40px 0 0; }
+  .howto-card { background: var(--card); border: 1px solid var(--hair); border-left: 3px solid var(--gold); border-radius: 14px; padding: 26px 30px; display: grid; grid-template-columns: auto 1fr; gap: 30px; align-items: center; }
+  .howto-num { font-family: var(--f-mono); font-size: 40px; font-weight: 500; letter-spacing: -0.02em; color: var(--ink); }
+  .howto-num small { display: block; font-size: 11px; letter-spacing: 0.12em; color: var(--fog); text-transform: uppercase; margin-top: 6px; }
+  .howto-text { font-size: 14.5px; line-height: 1.65; color: #43454A; max-width: 640px; text-wrap: pretty; }
+  .howto-text b { color: var(--ink); }
+
+  /* ── Футер ──────────────────────────────────────────── */
+  footer { margin-top: 72px; background: var(--wine); color: #97999F; }
+  .footer-in { padding: 36px 0 44px; display: flex; justify-content: space-between; gap: 32px; flex-wrap: wrap; }
+  .footer-brand { display: flex; flex-direction: column; gap: 8px; }
+  .footer-brand .row { display: flex; align-items: center; gap: 10px; color: #D8DADD; font-size: 14px; font-weight: 600; }
+  .footer-brand .sub { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #7E8087; }
+  .footer-right { display: flex; flex-direction: column; gap: 10px; max-width: 460px; }
+  .disclaimer { font-size: 12.5px; line-height: 1.55; color: #8F9196; }
+  .updated { font-family: var(--f-mono); font-size: 11.5px; color: #7E8087; }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .fam-card, .btn-gold, .btn-ghost { transition: none; }
+  }
+  @media (max-width: 900px) {
+    .wrap { padding: 0 20px; }
+    .hero-text { padding: 52px 0 32px; }
+    .hero h1 { font-size: 31px; }
+    .topnav { display: none; }
+    .principles { grid-template-columns: 1fr; padding-top: 36px; }
+    .principle + .principle { border-left: none; border-top: 1px solid var(--hair); padding-left: 0; padding-top: 20px; }
+    .fam-grid { grid-template-columns: 1fr; }
+    .howto-card { grid-template-columns: 1fr; gap: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap topbar-in">
+    <a class="brand" href="index.html" aria-label="На главную">
+      <svg width="26" height="26" viewBox="0 0 26 26" fill="none" aria-hidden="true">
+        <path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#C09246"/>
+      </svg>
+      <span class="brand-name">Структурные продукты</span>
+    </a>
+    <nav class="topnav">
+      <a href="#families">Семейства</a>
+      <a href="board.html?type=warrant">Доска инструментов</a>
+      <a href="digest.html">Дайджест</a>
+    </nav>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <div class="hero-text">
+      <div class="eyebrow">
+        <svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M5 0 L6 4 L10 5 L6 6 L5 10 L4 6 L0 5 L4 4 Z" fill="#C09246"/></svg>
+        Витрина инструментов
+      </div>
+      <h1>Доход по формуле, <em>известной до сделки</em></h1>
+      <p>Дисконтные облигации, ноты с защитой капитала и варранты. По каждому инструменту — котировка, сценарии выплат и пример расчёта в рублях: сколько платите сегодня и что получаете на дату экспирации.</p>
+      <div class="cta-row">
+        <a class="btn-gold" href="board.html?type=warrant">Открыть доску инструментов</a>
+        <a class="btn-ghost" href="#families">Три семейства</a>
+      </div>
+    </div>
+    <div class="hero-chart" aria-hidden="true">
+      <svg id="market-hero" viewBox="0 0 960 300" width="100%"></svg>
+    </div>
+    <div class="hero-caption">
+      <div class="hc-left">
+        <span class="hc-dot" id="hc-dot"></span>
+        <span class="hc-name" id="hc-name"></span>
+        <span class="hc-tag" id="hc-tag"></span>
+      </div>
+      <div class="hc-right">торговый ряд · NYSE / NASDAQ → MOEX</div>
+    </div>
+  </div>
+</section>
+
+<section class="wrap principles">
+  <div class="principle">
+    <div class="k">Формула</div>
+    <div class="v">Выплата определяется формулой, зафиксированной в спецификации инструмента, — а не чьим-то решением по ходу срока.</div>
+  </div>
+  <div class="principle">
+    <div class="k">Риск</div>
+    <div class="v">Максимально возможный убыток известен в день покупки: премия, дисконт или защита номинала — прописаны заранее.</div>
+  </div>
+  <div class="principle">
+    <div class="k">Срок</div>
+    <div class="v">Дата экспирации и порядок расчёта фиксированы. Вы заранее знаете, когда и по какому правилу произойдёт выплата.</div>
+  </div>
+</section>
+
+<section id="families" class="wrap families">
+  <div class="fam-head">
+    <h2>Три семейства</h2>
+    <p>От консервативных к активным. В каждом — свои инструменты и живые котировки.</p>
+  </div>
+  <div class="fam-grid">
+
+    <a class="fam-card" style="--fc:#2E6E56" href="board.html?type=discount">
+      <svg viewBox="0 0 120 56" width="110" height="51" aria-hidden="true">
+        <line x1="8" y1="16" x2="112" y2="16" stroke="#C6C4BD" stroke-width="1" stroke-dasharray="3 4"/>
+        <path d="M8 40 L112 17" fill="none" stroke="#2E6E56" stroke-width="2.5" stroke-linecap="round"/>
+        <rect x="108.5" y="13.5" width="7" height="7" transform="rotate(45 112 17)" fill="#2E6E56"/>
+      </svg>
+      <h3>Дисконтные облигации</h3>
+      <span class="chip" style="color:#2E6E56;background:#DFEAE2">Консервативный</span>
+      <p>Покупаете дешевле номинала, на погашение получаете 100%. Доход — дисконт, известный в день покупки.</p>
+      <div class="fam-meta">
+        <span class="fam-count"><span data-count="discount">—</span> инстр.</span>
+        <span class="fam-link">Открыть доску →</span>
+      </div>
+    </a>
+
+    <a class="fam-card" style="--fc:#33608C" href="board.html?type=protection">
+      <svg viewBox="0 0 120 56" width="110" height="51" aria-hidden="true">
+        <line x1="8" y1="38" x2="112" y2="38" stroke="#C6C4BD" stroke-width="1" stroke-dasharray="3 4"/>
+        <path d="M8 38 L62 38 L112 13" fill="none" stroke="#33608C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <rect x="58.5" y="34.5" width="7" height="7" transform="rotate(45 62 38)" fill="#33608C"/>
+      </svg>
+      <h3>Защита капитала</h3>
+      <span class="chip" style="color:#33608C;background:#DCE6F0">Сбалансированный</span>
+      <p>100% номинала возвращается при любом сценарии, а при росте базового актива — ещё и доля этого роста.</p>
+      <div class="fam-meta">
+        <span class="fam-count"><span data-count="protection">—</span> инстр.</span>
+        <span class="fam-link">Открыть доску →</span>
+      </div>
+    </a>
+
+    <a class="fam-card" style="--fc:#B3801F" href="board.html?type=warrant">
+      <svg viewBox="0 0 120 56" width="110" height="51" aria-hidden="true">
+        <line x1="8" y1="42" x2="112" y2="42" stroke="#C6C4BD" stroke-width="1" stroke-dasharray="3 4"/>
+        <path d="M8 42 L54 42 L88 22 L112 22" fill="none" stroke="#D9BE85" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M8 42 L58 42 L112 9" fill="none" stroke="#B3801F" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <rect x="54.5" y="38.5" width="7" height="7" transform="rotate(45 58 42)" fill="#B3801F"/>
+      </svg>
+      <h3>Варранты</h3>
+      <span class="chip" style="color:#B3801F;background:#F2E7CF">Активный</span>
+      <p>CALL и колл-спреды на S&amp;P 500, ОФЗ 26238, NBIS и NVIDIA. Если актив не вырос — теряется только премия.</p>
+      <div class="fam-meta">
+        <span class="fam-count"><span data-count="warrant">—</span> инстр.</span>
+        <span class="fam-link">Открыть доску →</span>
+      </div>
+    </a>
+
+  </div>
+
+  <div class="howto">
+    <div class="howto-card">
+      <div class="howto-num">96,80%<small>котировка</small></div>
+      <div class="howto-text">Все цены на витрине — <b>в процентах от номинала</b>. Купить инструмент на номинал 1&nbsp;000&nbsp;000&nbsp;₽ по котировке 96,80% — значит заплатить сегодня 968&nbsp;000&nbsp;₽. Выплата на экспирацию считается от номинала по формуле инструмента.</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap footer-in">
+    <div class="footer-brand">
+      <div class="row">
+        <svg width="18" height="18" viewBox="0 0 26 26" fill="none" aria-hidden="true">
+          <path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#C09246"/>
+        </svg>
+        Структурные продукты
+      </div>
+      <div class="sub">Витрина инструментов</div>
+    </div>
+    <div class="footer-right">
+      <div class="disclaimer">Не является индивидуальной инвестиционной рекомендацией. Материалы носят информационный характер; котировки — демонстрационные.</div>
+      <div class="updated">данные обновлены: <span id="updated">—</span></div>
+    </div>
+  </div>
+</footer>
+
+<script src="data/instruments.js"></script>
+<script src="data/lib.js"></script>
+<script>
+  // Счётчики семейств и дата обновления — из единого файла данных.
+  document.querySelectorAll("[data-count]").forEach(el => {
+    el.textContent = SITE.instrumentsOfType(el.getAttribute("data-count")).length;
+  });
+  (function () {
+    const u = (window.SITE_DATA || {}).updated;
+    if (u) document.getElementById("updated").textContent = u.split("-").reverse().join(".");
+  })();
+
+  // ── Хиро: торговый ряд — свечи переходят с NYSE/NASDAQ на MOEX ──
+  (function () {
+    const svg = document.getElementById("market-hero");
+    const W = 960, H = 300, PT = 34, PB = 26;
+    const STEP = 16, BODY = 9;   // шаг сетки свечей и ширина тела
+    const SPEED = 34;            // px/сек
+    const UP = "#45A97D", DOWN = "#C2544A";
+    const SNS = "http://www.w3.org/2000/svg";
+
+    const ZONES = [
+      { label: "NYSE · NASDAQ · $", color: "#97999F",
+        name: "NYSE · NASDAQ", tag: "сессия США: S&P 500, NVDA, NBIS — базовые активы",
+        idx: "S&P 500", base: 5800, range: 900 },
+      { label: "MOEX · ₽", color: "#C09246",
+        name: "Московская биржа", tag: "те же активы — в российском контуре, расчёты в ₽",
+        idx: "IMOEX", base: 3000, range: 500 }
+    ];
+
+    // Статичный режим — по системной настройке или ?motion=0
+    const isStatic = window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
+      new URLSearchParams(location.search).get("motion") === "0";
+    const ZLEN = isStatic ? 30 : 20; // свечей в «сессии» одной биржи
+
+    const y = v => PT + (1 - v) * (H - PT - PB);
+    const zoneOf = i => ZONES[Math.floor(i / ZLEN) % 2];
+    const el = (tag, attrs) => {
+      const n = document.createElementNS(SNS, tag);
+      for (const k in attrs) n.setAttribute(k, attrs[k]);
+      return n;
+    };
+
+    // Слои: сетка → поток свечей → текущая цена
+    let gridHtml = "";
+    for (let g = 0; g <= 3; g++) {
+      const gy = PT + (g / 3) * (H - PT - PB);
+      gridHtml += '<line x1="0" y1="' + gy + '" x2="' + W + '" y2="' + gy + '" stroke="#2E3138" stroke-width="1"/>';
+    }
+    svg.innerHTML = gridHtml + '<g id="mh-stream"></g>' +
+      '<circle id="mh-dot" r="4.5"/>' +
+      '<text id="mh-price" x="' + (W - 2) + '" y="' + (H - 6) + '" text-anchor="end" font-size="12" font-family="JetBrains Mono, monospace"></text>';
+    const stream = document.getElementById("mh-stream");
+    const dotSvg = document.getElementById("mh-dot");
+    const priceEl = document.getElementById("mh-price");
+    const nameEl = document.getElementById("hc-name");
+    const tagEl = document.getElementById("hc-tag");
+    const dotEl = document.getElementById("hc-dot");
+
+    // Свечи: случайное блуждание с лёгким дрейфом вверх
+    let v = 0.45, nextI = 0, offset = 0;
+    const candles = [], nodes = [];
+
+    function drawCandle(c) {
+      const cx = c.i * STEP + STEP / 2;
+      const col = c.c >= c.o ? UP : DOWN;
+      const g = el("g", {});
+      g.appendChild(el("line", { x1: cx, y1: y(c.h).toFixed(1), x2: cx, y2: y(c.l).toFixed(1), stroke: col, "stroke-width": 1.4 }));
+      const top = y(Math.max(c.o, c.c)), bot = y(Math.min(c.o, c.c));
+      g.appendChild(el("rect", { x: cx - BODY / 2, y: top.toFixed(1), width: BODY, height: Math.max(2, bot - top).toFixed(1), rx: 1.5, fill: col }));
+      stream.appendChild(g);
+      nodes.push({ i: c.i, n: g });
+    }
+
+    function drawBoundary(i) {
+      const x = i * STEP, z = zoneOf(i);
+      const g = el("g", {});
+      g.appendChild(el("line", { x1: x, y1: PT - 14, x2: x, y2: H - PB, stroke: "#3A3D45", "stroke-width": 1, "stroke-dasharray": "3 5" }));
+      g.appendChild(el("rect", { x: x - 4, y: PT - 22, width: 8, height: 8, transform: "rotate(45 " + x + " " + (PT - 18) + ")", fill: z.color }));
+      const t = el("text", { x: x + 12, y: PT - 14, "font-size": "10.5", "font-family": "JetBrains Mono, monospace", "letter-spacing": "0.08em", fill: z.color });
+      t.textContent = z.label;
+      g.appendChild(t);
+      stream.appendChild(g);
+      nodes.push({ i: i, n: g });
+    }
+
+    let curZone = null;
+    function setCaption(z, instant) {
+      if (z === curZone) return;
+      curZone = z;
+      const apply = () => {
+        nameEl.textContent = z.name;
+        tagEl.textContent = z.tag;
+        dotEl.style.background = z.color;
+        nameEl.style.opacity = tagEl.style.opacity = "1";
+      };
+      if (instant) { apply(); return; }
+      nameEl.style.opacity = tagEl.style.opacity = "0";
+      setTimeout(apply, 320);
+    }
+
+    function genTo(maxI, instant) {
+      while (nextI <= maxI) {
+        if (nextI % ZLEN === 0) drawBoundary(nextI);
+        let step = (Math.random() - 0.5) * 0.14 + 0.0035;
+        const o = v;
+        let c = o + step;
+        if (c > 0.9 || c < 0.1) c = o - step; // отскок от границ диапазона
+        const cd = {
+          i: nextI, o, c,
+          h: Math.max(o, c) + Math.random() * 0.035,
+          l: Math.min(o, c) - Math.random() * 0.035
+        };
+        candles.push(cd);
+        drawCandle(cd);
+        setCaption(zoneOf(nextI), instant);
+        v = c;
+        nextI++;
+      }
+    }
+
+    function updatePrice() {
+      const c = candles[candles.length - 1];
+      const z = zoneOf(c.i);
+      dotSvg.setAttribute("cx", (c.i * STEP + STEP / 2 - offset).toFixed(1));
+      dotSvg.setAttribute("cy", y(c.c).toFixed(1));
+      dotSvg.setAttribute("fill", z.color);
+      priceEl.textContent = z.idx + " · " + SITE.fmtInt(z.base + c.c * z.range) + " пт";
+      priceEl.setAttribute("fill", z.color);
+    }
+
+    function cleanup() {
+      // запас 160px, чтобы метка биржи не исчезала, пока её текст ещё виден
+      while (nodes.length && nodes[0].i * STEP < offset - 160) {
+        nodes.shift().n.remove();
+      }
+      while (candles.length > 90) candles.shift();
+    }
+
+    genTo(Math.ceil(W / STEP) - 1, true);
+    updatePrice();
+    if (isStatic) return;
+
+    let prev = performance.now();
+    function frame(now) {
+      // клэмп в 1с: после возврата на вкладку ряд не «улетает», но при троттлинге скорость сохраняется
+      const dt = Math.min(1, (now - prev) / 1000);
+      prev = now;
+      offset += SPEED * dt;
+      genTo(Math.ceil((offset + W) / STEP) + 1);
+      stream.setAttribute("transform", "translate(" + (-offset).toFixed(2) + " 0)");
+      cleanup();
+      updatePrice();
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  })();
+</script>
+</body>
+</html>

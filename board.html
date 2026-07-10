@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Доска инструментов — структурные продукты</title>
+<meta name="description" content="Доска инструментов: котировки в процентах от номинала, ключевые параметры и сроки.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prata&family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --night: #1B1D22; --night2: #26292F;
+    --paper: #F1F0EC; --card: #FBFBF9;
+    --ink: #1F2125; --fog: #67696E;
+    --hair: #DEDCD6; --hair2: #E9E7E1;
+    --gold: #C09246; --gold-dark: #A87C33;
+    --spruce: #2E6E56; --steel: #33608C; --amber: #B3801F;
+    --up: #2E7D57; --down: #B4483C;
+    --f-disp: 'Prata', Georgia, serif;
+    --f-body: 'Onest', system-ui, sans-serif;
+    --f-mono: 'JetBrains Mono', Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--f-body); -webkit-font-smoothing: antialiased; }
+  a { text-decoration: none; color: inherit; }
+  a:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; border-radius: 4px; }
+  .wrap { max-width: 1160px; margin: 0 auto; padding: 0 44px; }
+
+  .topbar { background: var(--night); color: #E9EDF2; }
+  .topbar-in { display: flex; justify-content: space-between; align-items: center; padding-top: 18px; padding-bottom: 18px; }
+  .brand { display: flex; align-items: center; gap: 11px; }
+  .brand-name { font-size: 15px; font-weight: 600; }
+  .brand-sub { display: block; font-family: var(--f-mono); font-size: 10.5px; letter-spacing: 0.14em; color: #8FA0B5; text-transform: uppercase; margin-top: 2px; }
+  .topnav { display: flex; gap: 26px; font-size: 14px; font-weight: 500; }
+  .topnav a { color: #B4B6BB; }
+  .topnav a:hover { color: #FFFFFF; }
+
+  .crumbs { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--fog); padding: 26px 0 0; }
+  .crumbs a:hover { color: var(--ink); }
+  .crumbs .sep { color: #C0BFBA; }
+  .crumbs .here { color: var(--ink); font-weight: 500; }
+
+  /* Переключатель семейств */
+  .fams { display: flex; gap: 6px; margin: 22px 0 30px; border-bottom: 1px solid var(--hair); }
+  .fam { position: relative; padding: 10px 16px 12px; font-size: 14px; font-weight: 500; color: var(--fog); border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .fam:hover { color: var(--ink); }
+  .fam.active { color: var(--ink); font-weight: 600; border-bottom-color: var(--fc); }
+  .fam .n { font-family: var(--f-mono); font-size: 11px; color: #A09F9B; margin-left: 6px; }
+
+  .head { display: flex; flex-direction: column; gap: 12px; max-width: 760px; }
+  .head-row { display: flex; align-items: center; gap: 14px; }
+  h1 { margin: 0; font-family: var(--f-disp); font-size: 34px; font-weight: 400; letter-spacing: 0.002em; }
+  .chip { font-size: 12px; font-weight: 600; border-radius: 999px; padding: 4px 11px; }
+  .desc { font-size: 15px; line-height: 1.6; color: #414D59; text-wrap: pretty; }
+
+  .count { font-family: var(--f-mono); font-size: 12px; color: var(--fog); margin: 28px 0 10px; }
+
+  .table { background: var(--card); border: 1px solid var(--hair); border-radius: 14px; overflow: hidden; }
+  .thead, .row { display: grid; grid-template-columns: 2fr 1.1fr 1fr 0.9fr 1fr 1fr; align-items: center; }
+  .thead { background: #F3F2EE; border-bottom: 1px solid var(--hair); }
+  .th { padding: 11px 18px; font-family: var(--f-mono); font-size: 10.5px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fog); }
+  .row { border-top: 1px solid var(--hair2); }
+  .row:first-child { border-top: none; }
+  .row:hover { background: #F4F3EF; }
+  .cell { padding: 14px 18px; }
+  .num { text-align: right; font-family: var(--f-mono); }
+  .r { text-align: right; }
+  .name { font-size: 14px; font-weight: 600; }
+  .sub { font-family: var(--f-mono); font-size: 11px; color: #A09F9B; margin-top: 3px; }
+  .asset { font-size: 13.5px; color: #3F4147; }
+  .asset-sub { font-size: 11.5px; color: #A09F9B; margin-top: 3px; }
+  .group { padding: 18px 18px 8px; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--fog); border-top: 1px solid var(--hair2); }
+  .mx .group { display: flex; align-items: baseline; gap: 10px; padding: 16px 18px 12px; font-size: 16px; font-weight: 700; letter-spacing: -0.005em; text-transform: none; color: var(--ink); background: #F3F2EE; border-top: 1px solid var(--hair); }
+  .group-meta { font-family: var(--f-mono); font-weight: 400; letter-spacing: 0.04em; text-transform: uppercase; color: #A09F9B; font-size: 10.5px; }
+  /* Матрица варрантов: строки — пэйоффы, колонки — сроки */
+  .mx .thead, .mx .row { grid-template-columns: 1.4fr 1fr 1fr 1fr; }
+  .mx .row:hover { background: transparent; }
+  .th-sub { font-family: var(--f-mono); font-size: 10.5px; font-weight: 400; letter-spacing: 0; text-transform: none; color: #A09F9B; margin-top: 3px; }
+  a.mx-cell:hover, a.mx-label:hover { background: #F0F4EE; }
+  a.mx-label .name { border-bottom: 1px dotted #AFAEA9; padding-bottom: 1px; display: inline-block; }
+  .mx-quote { font-family: var(--f-mono); font-size: 14.5px; }
+  .mx-none { color: #C6C5C0; }
+  .disclaimer { margin-top: 24px; font-size: 12.5px; line-height: 1.5; color: #8E8F92; max-width: 560px; }
+  .pagefoot { padding-bottom: 64px; }
+
+  @media (max-width: 900px) {
+    .wrap { padding: 0 20px; }
+    .topnav { display: none; }
+    h1 { font-size: 27px; }
+    .fams { overflow-x: auto; }
+    .fam { white-space: nowrap; }
+    .thead, .row { grid-template-columns: 1.6fr 1fr 1fr; }
+    .th:nth-child(n+4), .cell:nth-child(n+4) { display: none; }
+    .mx .thead, .mx .row { grid-template-columns: 1.2fr 1fr 1fr 1fr; }
+    .mx .th:nth-child(n+4), .mx .cell:nth-child(n+4) { display: block; }
+    .mx .th, .mx .cell { padding: 12px 10px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wrap topbar-in">
+    <a class="brand" href="index.html" aria-label="На главную">
+      <svg width="26" height="26" viewBox="0 0 26 26" fill="none" aria-hidden="true">
+        <path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#C09246"/>
+      </svg>
+      <span class="brand-name">Структурные продукты</span>
+    </a>
+    <nav class="topnav">
+      <a href="index.html#families">Все типы продуктов</a>
+      <a href="digest.html">Дайджест</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap pagefoot">
+
+  <div class="crumbs">
+    <a href="index.html">Главная</a>
+    <span class="sep">/</span>
+    <span class="here" id="crumb-type"></span>
+  </div>
+
+  <nav class="fams" id="fams" aria-label="Семейства продуктов"></nav>
+
+  <div class="head">
+    <div class="head-row">
+      <h1 id="type-title"></h1>
+      <span class="chip" id="type-chip"></span>
+    </div>
+    <div class="desc" id="type-desc"></div>
+  </div>
+
+  <div class="count" id="count"></div>
+
+  <div class="table">
+    <div class="thead" id="thead">
+      <div class="th">Инструмент</div>
+      <div class="th">Базовый актив</div>
+      <div class="th r">Котировка, % ном.</div>
+      <div class="th r">Изм., п.п.</div>
+      <div class="th r" id="param-label"></div>
+      <div class="th r">Экспирация</div>
+    </div>
+    <div id="rows"></div>
+  </div>
+
+  <div class="disclaimer">Не является индивидуальной инвестиционной рекомендацией. Котировки — демонстрационные.</div>
+
+</div>
+
+<script src="data/instruments.js"></script>
+<script src="data/lib.js"></script>
+<script>
+  const S = window.SITE;
+  const qs = new URLSearchParams(location.search);
+  const type = S.TYPES[qs.get("type")] ? qs.get("type") : "warrant";
+  const t = S.TYPES[type];
+  const FAM_COLORS = { discount: "#2E6E56", protection: "#33608C", warrant: "#B3801F" };
+
+  document.title = t.title + " — структурные продукты";
+  document.getElementById("crumb-type").textContent = t.title;
+  document.getElementById("type-title").textContent = t.title;
+  const chip = document.getElementById("type-chip");
+  chip.textContent = t.chip;
+  chip.style.color = t.chipFg;
+  chip.style.background = t.chipBg;
+  document.getElementById("type-desc").textContent = t.desc;
+  document.getElementById("param-label").textContent = t.paramLabel;
+
+  // Переключатель семейств с количеством инструментов
+  document.getElementById("fams").innerHTML = Object.keys(S.TYPES).map(k =>
+    '<a class="fam' + (k === type ? " active" : "") + '" style="--fc:' + FAM_COLORS[k] + '" href="board.html?type=' + k + '">' +
+      S.TYPES[k].title + '<span class="n">' + S.instrumentsOfType(k).length + '</span></a>').join("");
+
+  const list = S.instrumentsOfType(type);
+  document.getElementById("count").textContent = "инструментов: " + list.length;
+  const rowsEl = document.getElementById("rows");
+
+  if (type === "warrant") {
+    // Матрица: группа — БА; строки — пэйоффы; колонки — сроки.
+    // Экспирация одна на срок, поэтому показывается один раз — в шапке колонки.
+    document.querySelector(".table").classList.add("mx");
+
+    const tenors = [];
+    list.forEach(r => { if (!tenors.some(t => t.tenor === r.tenor)) tenors.push({ tenor: r.tenor, expiry: r.expiry }); });
+
+    const groups = [];
+    list.forEach(r => {
+      let g = groups.find(x => x.u === r.underlying);
+      if (!g) { g = { u: r.underlying, cls: r.cls, uRef: r.uRef, cells: {} }; groups.push(g); }
+      g.cells[r.structure + "|" + r.tenor] = r;
+    });
+
+    const STRUCTS = [
+      { key: "call", label: "CALL 100", sub: "рост без потолка" },
+      { key: "cs",   label: "CS 100–150", sub: "рост до +50%" }
+    ];
+
+    document.getElementById("thead").innerHTML =
+      '<div class="th">Пэйофф<div class="th-sub">цена — премия, % ном.</div></div>' +
+      tenors.map(t => '<div class="th r">' + t.tenor + '</div>').join("");
+
+    rowsEl.innerHTML = groups.map(g =>
+      '<div class="group">' + g.u + '<span class="group-meta">' + g.cls + '</span></div>' +
+      STRUCTS.map(s => {
+        const first = tenors.map(t => g.cells[s.key + "|" + t.tenor]).find(Boolean);
+        return '<div class="row">' +
+          '<a class="cell mx-label" href="instrument.html?id=' + encodeURIComponent(first ? first.id : "") + '">' +
+            '<div class="name">' + s.label + '</div><div class="asset-sub">' + s.sub + '</div></a>' +
+          tenors.map(t => {
+            const r = g.cells[s.key + "|" + t.tenor];
+            if (!r) return '<div class="cell r mx-none">—</div>';
+            return '<a class="cell r mx-cell" href="instrument.html?id=' + encodeURIComponent(r.id) + '">' +
+              '<div class="mx-quote">' + S.fmt2(r.quote) + '%</div></a>';
+          }).join("") + '</div>';
+      }).join("")
+    ).join("");
+  } else {
+    let lastGroup = null;
+    rowsEl.innerHTML = list.map(r => {
+      const up = r.chg > 0;
+      let head = "";
+      if (list.length > 6 && r.underlying !== lastGroup) {
+        head = '<div class="group">' + r.underlying + '</div>';
+        lastGroup = r.underlying;
+      }
+      return head + '<a class="row" href="instrument.html?id=' + encodeURIComponent(r.id) + '">' +
+        '<div class="cell"><div class="name">' + S.displayName(r) + '</div></div>' +
+        '<div class="cell"><div class="asset">' + r.underlying + '</div><div class="asset-sub">' + r.cls + '</div></div>' +
+        '<div class="cell num" style="font-size:14px">' + S.fmt2(r.quote) + '%</div>' +
+        '<div class="cell r" style="font-size:13.5px;font-weight:600;color:' + (up ? "#2E7D57" : "#B4483C") + '">' + (up ? "+" : "−") + S.fmt1(Math.abs(r.chg)) + '</div>' +
+        '<div class="cell num" style="font-size:13.5px;color:#3F4147">' + S.paramValue(r) + '</div>' +
+        '<div class="cell r" style="font-size:13.5px;color:#3F4147">' + r.expiry + '</div>' +
+      '</a>';
+    }).join("");
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,131 @@
+// ============================================================
+// ЛОГИКА САЙТА: тексты типов продуктов, формула выплаты, форматирование.
+// Котировки и инструменты — в instruments.js (его генерирует update_site.py).
+// Этот файл правится редко — только если меняются тексты или конвенции.
+// ============================================================
+
+window.SITE = (function () {
+
+  const TYPES = {
+    discount: {
+      slug: "discount",
+      title: "Дисконтные облигации",
+      chip: "Консервативный",
+      chipFg: "#2E6E56", chipBg: "#DFEAE2",
+      desc: "Облигация покупается дешевле номинала, на погашение выплачивается 100%. Доход — дисконт, и он известен в день покупки.",
+      paramLabel: "Доходность"
+    },
+    protection: {
+      slug: "protection",
+      title: "Защита капитала",
+      chip: "Сбалансированный",
+      chipFg: "#33608C", chipBg: "#DCE6F0",
+      desc: "Нота с возвратом 100% номинала при любом сценарии и участием в росте базового актива.",
+      paramLabel: "Участие"
+    },
+    warrant: {
+      slug: "warrant",
+      title: "Варранты",
+      chip: "Активный",
+      chipFg: "#B3801F", chipBg: "#F2E7CF",
+      desc: "CALL и колл-спреды (CS) на S&P 500, ОФЗ 26238, NBIS и NVIDIA со сроками 1–3 года. Страйк — 100% уровня базового актива в день покупки. Котировка — премия в процентах от номинала, она же максимальный риск покупателя.",
+      paramLabel: "Страйк, %"
+    }
+  };
+
+  const INSTRUMENTS = (window.SITE_DATA || {}).instruments || [];
+  const UNDERLYINGS = (window.SITE_DATA || {}).underlyings || {};
+
+  // Юридические тексты (one-pager, футеры). Реквизиты заполняет компания — правится в одном месте.
+  const LEGAL = {
+    qual: "Материал предназначен исключительно для квалифицированных инвесторов.",
+    onepager: [
+      "Настоящий материал содержит информацию, предназначенную исключительно для квалифицированных инвесторов. Копирование, распространение, передача или пересылка настоящего материала либо любой информации из него допускается только с предварительного письменного согласия компании.",
+      "У читателя отсутствует обязанность получать статус квалифицированного инвестора при отсутствии потребности совершать действия, которые в соответствии с применимым законодательством и разъяснениями Банка России могут совершаться только квалифицированными инвесторами. Решение о получении статуса квалифицированного инвестора принимается читателем самостоятельно после ознакомления с правовыми последствиями такого статуса. Подробности — у вашего брокера.",
+      "Настоящий материал не является индивидуальной инвестиционной рекомендацией и может не соответствовать инвестиционному профилю читателя, его целям инвестирования и ожиданиям по уровню риска и/или доходности.",
+      "Сценарии доходности не являются гарантированными, носят иллюстративный характер и рассчитаны без учёта комиссий и налогов. Итоговая доходность может отличаться от прогнозной. Параметры выпуска — ориентировочные; финальные условия определяются эмиссионной документацией по выпуску.",
+      "Инвестирование в структурные облигации связано с рисками, включая кредитный риск эмитента и риск потери части или всей суммы инвестиций. Не является офертой. Доход от инвестирования не гарантирован.",
+      "Реквизиты и правовой статус компании: [заполняется компанией]."
+    ]
+  };
+
+  // --- Продукт -------------------------------------------------------------
+
+  const PAYOFF = {
+    // Текст формулы выплаты для инструмента (CALL или колл-спред).
+    formula(r) {
+      return r && r.structure === "cs" ? "Ном × min(max(S − K; 0); K₂ − K)" : "Ном × max(S − K; 0)";
+    },
+    // Выплата в % от номинала. S, K, K2 — в % от начального уровня БА.
+    // CALL: (S − K) / K; колл-спред: рост засчитывается не выше K2.
+    pct(S, K, K2) {
+      let v = Math.max(S - K, 0);
+      if (K2) v = Math.min(v, K2 - K);
+      return v / K * 100;
+    }
+  };
+
+  function displayName(r) { return r.name; }
+
+  function findInstrument(id) {
+    return INSTRUMENTS.find(r => r.id === id) || INSTRUMENTS[0];
+  }
+
+  function instrumentsOfType(type) {
+    return INSTRUMENTS.filter(r => r.type === type);
+  }
+
+  // Инфо о базовом активе (описание, динамика) — из update_site.py.
+  function underlyingInfo(name) {
+    return UNDERLYINGS[name] || null;
+  }
+
+  // Годовая доходность дисконтной облигации к погашению (простая).
+  function yieldAnnual(r) {
+    const d = daysTo(r.expiry);
+    if (!d) return 0;
+    return (100 / r.quote - 1) * (365 / d) * 100;
+  }
+
+  // Значение ключевого параметра для колонки доски.
+  function paramValue(r) {
+    if (r.type === "warrant") return fmtSmart(r.strike) + (r.strike2 ? "–" + fmtSmart(r.strike2) : "");
+    if (r.type === "discount") return fmt1(yieldAnnual(r)) + "% год.";
+    if (r.type === "protection") return Math.round(r.participation * 100) + "% роста";
+    return "";
+  }
+
+  // Детерминированная история котировки (демо).
+  function history(id, quote) {
+    let seed = 0;
+    for (const ch of id) seed = (seed * 31 + ch.charCodeAt(0)) >>> 0;
+    const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
+    const n = 30, out = new Array(n);
+    out[n - 1] = quote;
+    for (let i = n - 2; i >= 0; i--) {
+      const step = (rnd() - 0.5) * quote * 0.02;
+      out[i] = Math.max(quote * 0.4, out[i + 1] - step);
+    }
+    return out;
+  }
+
+  // --- Форматирование ------------------------------------------------------
+
+  function fmtInt(n) { return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, "\u00A0"); }
+  function fmt2(n) {
+    const parts = n.toFixed(2).split(".");
+    return parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, "\u00A0") + "," + parts[1];
+  }
+  function fmt1(n) { return n.toFixed(1).replace(".", ","); }
+  function fmtSmart(v) {
+    if (Math.abs(v) >= 1000) return fmtInt(v);
+    return String(parseFloat(v.toFixed(2))).replace(".", ",");
+  }
+  function daysTo(expiry) {
+    const p = expiry.split(".").map(Number);
+    return Math.max(0, Math.ceil((new Date(p[2], p[1] - 1, p[0]).getTime() - Date.now()) / 86400000));
+  }
+
+  return { TYPES, INSTRUMENTS, PAYOFF, LEGAL, displayName, findInstrument, instrumentsOfType, underlyingInfo, yieldAnnual, paramValue, history, fmtInt, fmt2, fmt1, fmtSmart, daysTo };
+
+})();
