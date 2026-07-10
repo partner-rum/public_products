@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Размещённые выпуски — структурные продукты</title>
+<meta name="description" content="Размещённые выпуски структурных облигаций: базовые активы, параметры выплат, даты размещения и погашения.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prata&family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --night: #33121C; --night2: #47182A;
+    --paper: #F2EFE9; --card: #FCFBF8;
+    --ink: #221B1E; --fog: #6E6266;
+    --hair: #E0D9D2; --hair2: #EAE4DD;
+    --gold: #C09246; --gold-dark: #A87C33;
+    --accent: #6B2A3C;
+    --spruce: #2E6E56; --steel: #33608C; --amber: #B3801F;
+    --f-disp: 'Prata', Georgia, serif;
+    --f-body: 'Onest', system-ui, sans-serif;
+    --f-mono: 'JetBrains Mono', Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--f-body); -webkit-font-smoothing: antialiased; }
+  a { text-decoration: none; color: inherit; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; border-radius: 4px; }
+  .wrap { max-width: 1160px; margin: 0 auto; padding: 0 44px 64px; }
+
+  .topbar { background: var(--night); color: #F2EAE6; }
+  .topbar-in { max-width: 1160px; margin: 0 auto; padding: 18px 44px; display: flex; justify-content: space-between; align-items: center; }
+  .brand { display: flex; align-items: center; gap: 11px; }
+  .brand-name { font-size: 15px; font-weight: 600; }
+  .topnav { display: flex; gap: 26px; font-size: 14px; font-weight: 500; }
+  .topnav a { color: #CDB4BB; }
+  .topnav a:hover { color: #FFFFFF; }
+
+  .crumbs { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--fog); padding: 26px 0 0; }
+  .crumbs a:hover { color: var(--ink); }
+  .crumbs .sep { color: #C2B8B2; }
+  .crumbs .here { color: var(--ink); font-weight: 500; }
+
+  .head { display: flex; flex-direction: column; gap: 12px; max-width: 800px; margin-top: 24px; }
+  h1 { margin: 0; font-family: var(--f-disp); font-size: 34px; font-weight: 400; letter-spacing: 0.002em; }
+  .desc { font-size: 15px; line-height: 1.6; color: #4A3F43; text-wrap: pretty; }
+
+  .controls { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; margin: 26px 0 12px; }
+  .kinds { display: flex; gap: 6px; }
+  .kf { border: 1px solid var(--hair); background: var(--card); border-radius: 999px; padding: 7px 16px; font-size: 13.5px; font-weight: 500; color: var(--fog); cursor: pointer; font-family: var(--f-body); }
+  .kf:hover { color: var(--ink); }
+  .kf.active { background: var(--night); border-color: var(--night); color: #F2EAE6; font-weight: 600; }
+  .kf .n { font-family: var(--f-mono); font-size: 11px; opacity: 0.75; margin-left: 5px; }
+  .matured-toggle { display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--fog); cursor: pointer; user-select: none; }
+  .matured-toggle input { accent-color: var(--gold-dark); width: 15px; height: 15px; cursor: pointer; }
+
+  .count { font-family: var(--f-mono); font-size: 12px; color: var(--fog); margin: 0 0 10px; }
+
+  .table { background: var(--card); border: 1px solid var(--hair); border-radius: 14px; overflow: hidden; }
+  .thead { display: grid; grid-template-columns: 1.7fr 1.5fr 1fr 1fr 0.9fr 0.9fr; background: #F5F0EA; border-bottom: 1px solid var(--hair); }
+  .th { padding: 11px 18px; font-family: var(--f-mono); font-size: 10.5px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fog); }
+  .r { text-align: right; }
+  .row { display: grid; grid-template-columns: 1.7fr 1.5fr 1fr 1fr 0.9fr 0.9fr; align-items: center; width: 100%; border: none; border-top: 1px solid var(--hair2); background: transparent; text-align: left; cursor: pointer; font-family: var(--f-body); color: var(--ink); padding: 0; }
+  .row:hover { background: #F6F1EB; }
+  .row.open { background: #F6F1EB; }
+  .cell { padding: 13px 18px; }
+  .serial { font-size: 14px; font-weight: 600; }
+  .isin { font-family: var(--f-mono); font-size: 11px; color: #A39A94; margin-top: 3px; }
+  .asset { font-size: 13.5px; color: #3A3238; }
+  .fxtag { font-family: var(--f-mono); font-size: 10px; color: var(--gold-dark); background: #F3E9D8; border-radius: 4px; padding: 1px 5px; margin-left: 6px; }
+  .kind-chip { display: inline-block; font-size: 11.5px; font-weight: 600; border-radius: 999px; padding: 3px 10px; }
+  .param { font-family: var(--f-mono); font-size: 13.5px; text-align: right; }
+  .dt { font-size: 13px; color: #3A3238; text-align: right; }
+  .dt small { display: block; font-size: 10.5px; color: #A39A94; }
+  .matured .serial, .matured .asset, .matured .param, .matured .dt { color: #A39A94; }
+
+  .details { display: none; border-top: 1px dashed var(--hair2); background: #FAF7F2; padding: 16px 18px 18px; }
+  .details.open { display: block; }
+  .dfacts { display: flex; gap: 26px; flex-wrap: wrap; }
+  .dfact { min-width: 140px; }
+  .dfact .k { font-size: 10.5px; letter-spacing: 0.07em; text-transform: uppercase; color: #95898E; margin-bottom: 4px; }
+  .dfact .v { font-size: 13.5px; line-height: 1.45; }
+  .dfact .v.mono { font-family: var(--f-mono); font-size: 13px; }
+
+  .disclaimer { margin-top: 24px; font-size: 12.5px; line-height: 1.55; color: #95898E; max-width: 640px; }
+  .updated { font-family: var(--f-mono); font-size: 11.5px; color: #95898E; margin-top: 8px; }
+
+  @media (max-width: 900px) {
+    .wrap { padding: 0 20px 48px; }
+    .topbar-in { padding: 14px 20px; flex-direction: column; align-items: flex-start; gap: 10px; }
+    .topnav { gap: 18px; font-size: 13.5px; }
+    h1 { font-size: 27px; }
+    .thead, .row { grid-template-columns: 1.6fr 1.2fr 1fr; }
+    .th:nth-child(n+4), .cell:nth-child(n+4) { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <a class="brand" href="index.html" aria-label="На главную">
+      <svg width="26" height="26" viewBox="0 0 26 26" fill="none" aria-hidden="true">
+        <path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#C09246"/>
+      </svg>
+      <span class="brand-name">Структурные продукты</span>
+    </a>
+    <nav class="topnav">
+      <a href="board.html?type=warrant">Доска инструментов</a>
+      <a href="digest.html">Дайджест</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="crumbs">
+    <a href="index.html">Главная</a>
+    <span class="sep">/</span>
+    <span class="here">Размещённые выпуски</span>
+  </div>
+
+  <div class="head">
+    <h1>Размещённые выпуски</h1>
+    <div class="desc">Структурные облигации, размещённые на рынке: базовый актив, параметры выплаты и даты по каждому выпуску. Данные — из учётной системы, состав выплат приведён по действующей версии условий. Нажмите на строку, чтобы раскрыть детали.</div>
+  </div>
+
+  <div class="controls">
+    <div class="kinds" id="kinds"></div>
+    <label class="matured-toggle"><input type="checkbox" id="show-matured"> показывать погашенные</label>
+  </div>
+
+  <div class="count" id="count"></div>
+
+  <div class="table">
+    <div class="thead">
+      <div class="th">Выпуск</div>
+      <div class="th">Базовый актив</div>
+      <div class="th">Тип структуры</div>
+      <div class="th r">Ключевой параметр</div>
+      <div class="th r">Размещение</div>
+      <div class="th r">Погашение</div>
+    </div>
+    <div id="rows"></div>
+  </div>
+
+  <div class="disclaimer">Информация предназначена только для квалифицированных инвесторов и носит справочный характер. Не является офертой или индивидуальной инвестиционной рекомендацией. Полные условия каждого выпуска определяются эмиссионной документацией.</div>
+  <div class="updated">данные обновлены: <span id="updated">—</span></div>
+
+</div>
+
+<script src="data/placements.js"></script>
+<script>
+  const D = window.PLACEMENTS_DATA;
+  const TODAY = new Date().toISOString().slice(0, 10);
+  const KINDS = {
+    coupon:        { label: "Купонный", fg: "#B3801F", bg: "#F2E7CF" },
+    participation: { label: "Участие в росте", fg: "#33608C", bg: "#DCE6F0" }
+  };
+  const fmtD = s => s ? s.split("-").reverse().join(".") : "—";
+  const fmtN = v => v == null ? "—" : String(v).replace(".", ",");
+
+  document.getElementById("updated").textContent = fmtD(D.updated);
+
+  const issues = D.issues.map(i => ({ ...i, matured: i.maturity && i.maturity < TODAY }));
+
+  let kind = "all", showMatured = false;
+
+  function keyParam(i) {
+    const p = i.payoff;
+    if (i.kind === "coupon") return p.couponPa != null ? "купон " + fmtN(p.couponPa) + "% год." : "купонный";
+    let s = p.participationPct != null ? "участие " + fmtN(p.participationPct) + "%" : "участие";
+    return s;
+  }
+
+  function detailFacts(i) {
+    const p = i.payoff, f = [];
+    const add = (k, v, mono) => { if (v != null && v !== "") f.push([k, v, mono]); };
+    add("Базовый актив", i.basket.map(b => b.n).join(", "));
+    if (i.kind === "coupon") {
+      if (p.couponPa != null) add("Купон", fmtN(p.couponPa) + "% годовых" + (p.couponPeriodPct != null ? " (" + fmtN(p.couponPeriodPct) + "% за период)" : ""));
+      if (p.couponBarrierPct != null) add("Барьер купона", fmtN(p.couponBarrierPct) + "% нач. уровня");
+      add("Эффект памяти", p.memory ? "да" : "нет");
+      add("Автоотзыв", p.acBarrierPct != null ? "барьер " + fmtN(p.acBarrierPct) + "%" : "не предусмотрен");
+      if (p.protection) add("Защита на погашение", (p.protection.type === "EKI" ? "барьерная (EKI)" : p.protection.type) +
+        (p.protection.barrierPct != null ? " · барьер " + fmtN(p.protection.barrierPct) + "%" : ""));
+      if (p.obsCount) add("Наблюдений до погашения", String(p.obsCount), true);
+    } else {
+      add("Участие в росте", p.participationPct != null ? fmtN(p.participationPct) + "%" : null);
+      add("Защита номинала", p.protectionPct ? fmtN(p.protectionPct) + "%" : "не предусмотрена");
+      if (p.strikePct != null) add("Страйк", fmtN(p.strikePct) + "% нач. уровня" + (p.strike2Pct ? " · потолок " + fmtN(p.strike2Pct) + "%" : ""));
+      add("Опцион", (p.optType || "") + (p.style === "EUROPEAN" ? " · европейский" : ""));
+    }
+    if (i.fx) add("Валютная составляющая", "выплата с валютной переоценкой (FX)");
+    add("Начальная фиксация", fmtD(i.dates.initialFixing), true);
+    add("Финальная фиксация", fmtD(i.dates.expiry), true);
+    add("Расчёт", fmtD(i.dates.settlement), true);
+    add("Номинал", i.notional ? Math.round(i.notional) + " " + (i.currency || "") : null, true);
+    add("Рег. номер", i.regNumber, true);
+    add("Статус", i.matured ? "погашен" : "в обращении");
+    return f;
+  }
+
+  function render() {
+    const list = issues.filter(i => (kind === "all" || i.kind === kind) && (showMatured || !i.matured));
+    document.getElementById("count").textContent = "выпусков: " + list.length;
+    document.getElementById("rows").innerHTML = list.map((i, idx) => {
+      const k = KINDS[i.kind] || KINDS.coupon;
+      return '<button class="row' + (i.matured ? " matured" : "") + '" data-i="' + idx + '" aria-expanded="false">' +
+        '<div class="cell"><div class="serial">' + i.serial + '</div><div class="isin">' + i.isin + '</div></div>' +
+        '<div class="cell"><span class="asset">' + i.basket.map(b => b.n).join(", ") + '</span>' + (i.fx ? '<span class="fxtag">FX</span>' : '') + '</div>' +
+        '<div class="cell"><span class="kind-chip" style="color:' + k.fg + ';background:' + k.bg + '">' + k.label + '</span></div>' +
+        '<div class="cell param">' + keyParam(i) + '</div>' +
+        '<div class="cell dt">' + fmtD(i.issueStart) + '</div>' +
+        '<div class="cell dt">' + fmtD(i.maturity) + (i.matured ? '<small>погашен</small>' : '') + '</div>' +
+      '</button>' +
+      '<div class="details" id="det-' + idx + '"><div class="dfacts">' +
+        detailFacts(i).map(f => '<div class="dfact"><div class="k">' + f[0] + '</div><div class="v' + (f[2] ? " mono" : "") + '">' + f[1] + '</div></div>').join("") +
+      '</div></div>';
+    }).join("");
+
+    document.querySelectorAll(".row").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const det = document.getElementById("det-" + btn.getAttribute("data-i"));
+        const open = det.classList.toggle("open");
+        btn.classList.toggle("open", open);
+        btn.setAttribute("aria-expanded", open);
+      });
+    });
+  }
+
+  // Фильтры по типу структуры
+  const counts = { all: issues.length };
+  issues.forEach(i => counts[i.kind] = (counts[i.kind] || 0) + 1);
+  document.getElementById("kinds").innerHTML =
+    ['all', 'coupon', 'participation'].map(k =>
+      '<button class="kf' + (k === "all" ? " active" : "") + '" data-k="' + k + '">' +
+      (k === "all" ? "Все" : KINDS[k].label) + '<span class="n">' + (counts[k] || 0) + '</span></button>').join("");
+  document.querySelectorAll(".kf").forEach(b => b.addEventListener("click", () => {
+    kind = b.getAttribute("data-k");
+    document.querySelectorAll(".kf").forEach(x => x.classList.toggle("active", x === b));
+    render();
+  }));
+  document.getElementById("show-matured").addEventListener("change", e => {
+    showMatured = e.target.checked;
+    render();
+  });
+
+  render();
+</script>
+</body>
+</html>

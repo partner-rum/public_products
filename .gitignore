@@ -2,6 +2,10 @@
 .claude/
 .idea/
 
+# Креды бэкофиса и сырьё выгрузки — не публиковать
+.bo_creds
+placements_raw.json
+
 # Python
 __pycache__/
 *.pyc
