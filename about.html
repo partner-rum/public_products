@@ -3,22 +3,20 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Как устроены продукты — структурные продукты</title>
-<meta name="description" content="Как устроены структурные продукты: дисконтные облигации, ноты с защитой капитала, варранты. Формула выплаты, риск и срок — известны до сделки.">
+<title>Как это работает — библиотека структурных продуктов</title>
+<meta name="description" content="Библиотека продуктов: как работают дисконтные облигации, ноты с защитой капитала и варранты (CALL, PUT, спреды, барьеры KO). Профиль выплаты, риск и срок — известны заранее.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --canvas: #F4F2F0; --card: #FFFFFF;
-    --black: #1A1919;
-    --ink: #0C0A08; --hushed: rgba(12,10,8,0.6); --faint: rgba(12,10,8,0.38);
+    --canvas: #F4F2F0; --card: #FFFFFF; --black: #1A1919;
+    --ink: #0C0A08; --hushed: rgba(12,10,8,0.6); --faint: rgba(12,10,8,0.62);
     --border: #D2CECB; --border-soft: #E0DCD6;
     --solar: #E4F222; --solar-l: #F5FF78;
     --spruce: #2E6E56; --steel: #33608C; --amber: #B3801F;
     --up: #1F7A53; --down: #E96516;
-    --f-body: 'Onest', system-ui, sans-serif;
-    --f-mono: 'JetBrains Mono', Consolas, monospace;
+    --f-body: 'Onest', system-ui, sans-serif; --f-mono: 'JetBrains Mono', Consolas, monospace;
     --ease: cubic-bezier(0.16, 1, 0.3, 1);
   }
   * { box-sizing: border-box; }
@@ -28,97 +26,142 @@
   a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 4px; }
   .wrap { max-width: 1120px; margin: 0 auto; padding: 0 44px; }
 
-  /* ── Навигация ──────────────────────────────────────── */
-  .nav { position: sticky; top: 0; z-index: 20; background: rgba(244,242,240,0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); }
+  .nav { position: sticky; top: 0; z-index: 30; background: rgba(244,242,240,0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); }
   .nav-in { max-width: 1120px; margin: 0 auto; padding: 0 44px; height: 62px; display: flex; align-items: center; gap: 12px; }
-  .brand { display: flex; align-items: center; gap: 10px; }
-  .brand-name { font-size: 14.5px; font-weight: 600; }
+  .brand { display: flex; align-items: center; gap: 10px; } .brand-name { font-size: 14.5px; font-weight: 600; }
   .topnav { margin-left: auto; display: flex; align-items: center; gap: 22px; font-size: 14px; font-weight: 500; }
-  .topnav a { color: var(--hushed); transition: color .2s; }
-  .topnav a:hover { color: var(--ink); }
+  .topnav a { color: var(--hushed); transition: color .2s; } .topnav a:hover { color: var(--ink); }
   .topnav a[aria-current="page"] { color: var(--ink); font-weight: 600; }
   .btn-solar { background: var(--solar); color: var(--ink) !important; border-radius: 6px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 7px; transition: background .3s ease-in-out; }
   .btn-solar:hover { background: var(--solar-l); }
 
-  /* ── Заголовочный блок ──────────────────────────────── */
-  .page-head { padding: 64px 0 8px; }
-  .page-head h1 { margin: 0 0 18px; font-size: clamp(32px, 4.5vw, 48px); font-weight: 400; line-height: 1.1; letter-spacing: -0.02em; text-wrap: balance; }
+  .page-head { padding: 56px 0 8px; }
+  .page-head h1 { margin: 0 0 16px; font-size: clamp(32px, 4.5vw, 46px); font-weight: 400; line-height: 1.08; letter-spacing: -0.02em; text-wrap: balance; }
   .page-head p { margin: 0; font-size: 16.5px; line-height: 1.6; color: var(--hushed); max-width: 640px; text-wrap: pretty; }
 
-  /* ── Принципы ───────────────────────────────────────── */
-  .principles { display: grid; grid-template-columns: repeat(3, 1fr); padding: 52px 0 8px; }
-  .principle { padding: 4px 28px 24px 0; }
+  .principles { display: grid; grid-template-columns: repeat(3, 1fr); padding: 44px 0 8px; }
+  .principle { padding: 4px 28px 22px 0; }
   .principle + .principle { border-left: 1px solid var(--border-soft); padding-left: 28px; }
   .principle .k { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #6E6A68; margin-bottom: 10px; }
   .principle .v { font-size: 14.5px; line-height: 1.6; color: var(--hushed); text-wrap: pretty; }
 
-  /* ── Семейства ──────────────────────────────────────── */
-  .families { padding: 56px 0 24px; }
-  .fam-head { margin-bottom: 30px; }
-  .fam-head h2 { margin: 0 0 12px; font-size: 31px; font-weight: 400; line-height: 1.15; letter-spacing: -0.02em; }
-  .fam-head p { margin: 0; font-size: 15px; color: var(--hushed); }
-  .fam-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-  .fam-card { background: var(--card); border: 1px solid var(--border-soft); border-top: 3px solid var(--fc); border-radius: 12px; padding: 24px 26px 22px; display: flex; flex-direction: column; gap: 14px; transition: box-shadow .18s, transform .18s; }
-  .fam-card:hover { box-shadow: 0 8px 22px rgba(12,10,8,0.07); transform: translateY(-2px); }
-  .fam-card svg { display: block; }
-  .fam-card h3 { margin: 0; font-size: 18.5px; font-weight: 600; letter-spacing: -0.005em; }
-  .chip { align-self: flex-start; font-size: 12px; font-weight: 600; border-radius: 999px; padding: 4px 11px; }
-  .fam-card p { margin: 0; font-size: 14px; line-height: 1.6; color: var(--hushed); text-wrap: pretty; }
-  .fam-meta { margin-top: auto; padding-top: 14px; border-top: 1px solid #E7E3DD; display: flex; justify-content: space-between; align-items: center; }
-  .fam-count { font-family: var(--f-mono); font-size: 12px; color: var(--faint); }
-  .fam-link { font-size: 14px; font-weight: 600; color: var(--fc); }
+  /* Липкая навигация по главам */
+  .chapnav { position: sticky; top: 62px; z-index: 20; background: rgba(244,242,240,0.9); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); margin-top: 34px; }
+  .chapnav-in { max-width: 1120px; margin: 0 auto; padding: 0 44px; display: flex; gap: 8px; height: 52px; align-items: center; }
+  .chapnav a { font-size: 13.5px; color: var(--hushed); padding: 7px 14px; border-radius: 20px; display: inline-flex; align-items: center; gap: 8px; transition: background .2s, color .2s; }
+  .chapnav a .d { width: 8px; height: 8px; border-radius: 50%; background: var(--fc); }
+  .chapnav a:hover { color: var(--ink); }
+  .chapnav a.on { background: var(--ink); color: #fff; }
 
-  /* ── Как читать котировку ───────────────────────────── */
+  .chap { padding: 52px 0 8px; scroll-margin-top: 128px; }
+  .chap-head { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 4px; }
+  .chap-k { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--fc); }
+  .chap h2 { margin: 6px 0 0; font-size: 30px; font-weight: 400; letter-spacing: -0.02em; }
+  .chap-lead { margin: 12px 0 26px; font-size: 15.5px; line-height: 1.6; color: var(--hushed); max-width: 660px; text-wrap: pretty; }
+
+  .card { background: var(--card); border: 1px solid var(--border-soft); border-top: 3px solid var(--fc); border-radius: 14px; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+  .two .txt { padding: 26px 30px; } .two .viz { padding: 22px 26px; border-left: 1px solid var(--border-soft); display: flex; flex-direction: column; justify-content: center; }
+  .kv { margin: 0 0 16px; } .kv:last-child { margin-bottom: 0; }
+  .kv .k { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: 0.11em; text-transform: uppercase; color: #6E6A68; margin-bottom: 6px; }
+  .kv .v { font-size: 14.5px; line-height: 1.6; color: var(--hushed); text-wrap: pretty; }
+  .kv .v b { color: var(--ink); font-weight: 600; }
+  .plaque { margin-top: 4px; padding: 11px 14px; border-left: 3px solid var(--down); background: #FBEFE3; border-radius: 0 8px 8px 0; font-size: 13px; line-height: 1.5; color: #8A5A22; }
+  .metrics { display: flex; gap: 22px; flex-wrap: wrap; margin-top: 4px; }
+  .metric .k { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); }
+  .metric .v { font-size: 13.5px; color: var(--hushed); margin-top: 3px; max-width: 240px; line-height: 1.45; }
+  .boardlink { display: inline-flex; align-items: center; gap: 7px; margin-top: 18px; font-size: 14px; font-weight: 600; color: var(--fc); }
+
+  .pf { background: var(--canvas); border-radius: 10px; padding: 12px 14px 8px; }
+  .pf svg { display: block; width: 100%; height: auto; }
+  .pf-cap { font-size: 12px; line-height: 1.45; color: var(--faint); margin-top: 8px; text-wrap: pretty; }
+  .pf-line { transition: stroke-dashoffset 1.05s var(--ease); }
+  .pf-bar { transform-box: fill-box; transform-origin: bottom; transform: scaleY(0); transition: transform .8s var(--ease); }
+  .pf.grown .pf-bar { transform: scaleY(1); }
+
+  /* Защита: интерактив */
+  .prot-ctrls { display: flex; flex-wrap: wrap; gap: 22px; margin-bottom: 16px; }
+  .ctrl .k { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); margin-bottom: 7px; }
+  .seg { display: inline-flex; background: #ECE8E1; border-radius: 9px; padding: 3px; gap: 2px; }
+  .seg button { border: none; background: none; cursor: pointer; font-family: var(--f-mono); font-size: 13px; color: var(--hushed); padding: 6px 13px; border-radius: 7px; transition: background .18s, color .18s; }
+  .seg button.on { background: var(--card); color: var(--steel); font-weight: 600; box-shadow: 0 1px 3px rgba(12,10,8,0.1); }
+  .prot-read { font-size: 13.5px; line-height: 1.55; color: var(--hushed); margin-top: 10px; text-wrap: pretty; }
+  .prot-read b { color: var(--ink); }
+
+  /* Варранты: матрица + деталь */
+  .mx { display: grid; grid-template-columns: 92px 1fr 1fr 1fr; gap: 10px; }
+  .mx .hd { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: 0.04em; color: #6E6A68; display: flex; align-items: flex-end; padding-bottom: 6px; }
+  .mx .rl { display: flex; flex-direction: column; justify-content: center; }
+  .mx .rl .t { font-size: 15px; font-weight: 600; color: #8A5A22; }
+  .mx .rl .s { font-family: var(--f-mono); font-size: 10px; color: var(--faint); margin-top: 2px; }
+  .cell { background: var(--card); border: 1px solid var(--border-soft); border-radius: 11px; padding: 10px 11px 8px; cursor: pointer; text-align: left; font-family: var(--f-body); transition: box-shadow .18s, transform .18s, border-color .18s; }
+  .cell:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(12,10,8,0.07); }
+  .cell.on { border-color: var(--amber); box-shadow: 0 0 0 1px var(--amber); }
+  .cell svg { display: block; width: 100%; height: auto; }
+  .cell svg text { display: none; }
+  .cell .nm { font-size: 13px; font-weight: 600; margin-top: 6px; }
+  .cell .tg { font-size: 11px; line-height: 1.35; color: var(--hushed); margin-top: 2px; }
+  .wdetail { margin-top: 16px; background: var(--card); border: 1px solid var(--border-soft); border-top: 3px solid var(--amber); border-radius: 14px; display: grid; grid-template-columns: 1fr 380px; gap: 0; }
+  .wdetail .txt { padding: 24px 28px; } .wdetail .viz { padding: 20px 24px; border-left: 1px solid var(--border-soft); display: flex; flex-direction: column; justify-content: center; }
+  .wdetail h3 { margin: 0 0 3px; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; }
+  .wdetail .sub { font-size: 13.5px; color: var(--hushed); margin-bottom: 16px; }
+
   .howto { margin: 40px 0 0; }
-  .howto-card { background: var(--card); border: 1px solid var(--border-soft); border-left: 3px solid var(--solar); border-radius: 12px; padding: 26px 30px; display: grid; grid-template-columns: auto 1fr; gap: 30px; align-items: center; }
-  .howto-num { font-family: var(--f-mono); font-size: 40px; font-weight: 500; letter-spacing: -0.02em; color: var(--ink); }
+  .howto-card { background: var(--card); border: 1px solid var(--border-soft); border-left: 3px solid var(--solar); border-radius: 12px; padding: 22px 28px; display: grid; grid-template-columns: auto 1fr; gap: 26px; align-items: center; }
+  .howto-num { font-family: var(--f-mono); font-size: 34px; font-weight: 500; letter-spacing: -0.02em; }
   .howto-num small { display: block; font-size: 11px; letter-spacing: 0.12em; color: var(--faint); text-transform: uppercase; margin-top: 6px; }
-  .howto-text { font-size: 14.5px; line-height: 1.65; color: var(--hushed); max-width: 640px; text-wrap: pretty; }
-  .howto-text b { color: var(--ink); }
+  .howto-text { font-size: 14.5px; line-height: 1.65; color: var(--hushed); max-width: 640px; } .howto-text b { color: var(--ink); }
 
-  /* ── Футер ──────────────────────────────────────────── */
-  footer { margin-top: 72px; background: var(--canvas); border-top: 1px solid var(--border); color: var(--hushed); }
-  .footer-in { padding: 36px 0 44px; display: flex; justify-content: space-between; gap: 32px; flex-wrap: wrap; }
-  .footer-brand { display: flex; flex-direction: column; gap: 8px; }
+  footer { margin-top: 68px; background: var(--canvas); border-top: 1px solid var(--border); color: var(--hushed); }
+  .footer-in { padding: 34px 0 44px; display: flex; justify-content: space-between; gap: 32px; flex-wrap: wrap; }
   .footer-brand .row { display: flex; align-items: center; gap: 10px; color: var(--ink); font-size: 14px; font-weight: 600; }
-  .footer-brand .sub { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); }
+  .footer-brand .sub { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); margin-top: 8px; }
   .footer-right { display: flex; flex-direction: column; gap: 10px; max-width: 460px; }
-  .disclaimer { font-size: 12.5px; line-height: 1.55; color: var(--hushed); }
+  .disclaimer { font-size: 12.5px; line-height: 1.55; }
   .updated { font-family: var(--f-mono); font-size: 11.5px; color: var(--faint); }
 
   @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }
-    .fam-card, .btn-solar, .topnav a { transition: none; }
+    .pf-line { transition: none !important; } .pf-bar { transition: none !important; }
+    .cell, .btn-solar, .topnav a, .seg button { transition: none; }
   }
-  @media (max-width: 900px) {
-    .wrap { padding: 0 20px; }
-    .page-head { padding: 44px 0 4px; }
-    .principles { grid-template-columns: 1fr; padding-top: 36px; }
+  @media (max-width: 960px) {
+    .wrap { padding: 0 20px; } .nav-in, .chapnav-in { padding-left: 20px; padding-right: 20px; }
+    .principles { grid-template-columns: 1fr; padding-top: 32px; }
     .principle + .principle { border-left: none; border-top: 1px solid var(--border-soft); padding-left: 0; padding-top: 20px; }
-    .fam-grid { grid-template-columns: 1fr; }
-    .howto-card { grid-template-columns: 1fr; gap: 16px; }
+    .two, .wdetail { grid-template-columns: 1fr; }
+    .two .viz, .wdetail .viz { border-left: none; border-top: 1px solid var(--border-soft); }
+    .mx { grid-template-columns: 1fr; }
+    .mx .hd, .mx .rl { display: none; }
+    .howto-card { grid-template-columns: 1fr; gap: 14px; }
+    .chapnav-in { overflow-x: auto; }
   }
+  @media (max-width: 560px) { .mx { grid-template-columns: 1fr; } }
   @media (max-width: 860px) {
     .nav-in { height: auto; flex-wrap: wrap; padding: 12px 20px; row-gap: 10px; }
     .topnav { margin-left: 0; width: 100%; gap: 16px; font-size: 13.5px; }
+    .chapnav { position: static; }
+    .chap { scroll-margin-top: 20px; }
   }
+  .skip { position: absolute; left: -9999px; top: 0; z-index: 100; background: var(--ink); color: #fff; padding: 10px 16px; border-radius: 0 0 8px 0; font-size: 14px; }
+  .skip:focus { left: 0; }
 </style>
 </head>
 <body>
 
+<a class="skip" href="#content">К содержимому</a>
+
 <header class="nav">
   <div class="nav-in">
     <a class="brand" href="index.html" aria-label="На главную">
-      <svg width="22" height="22" viewBox="0 0 26 26" fill="none" aria-hidden="true">
-        <path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#1A1919"/>
-      </svg>
+      <svg width="22" height="22" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#1A1919"/></svg>
       <span class="brand-name">Структурные продукты</span>
     </a>
     <nav class="topnav">
       <a href="digest.html">Дайджест</a>
       <a href="placements.html">Выпуски</a>
-      <a href="about.html" aria-current="page">Об устройстве</a>
-      <a class="btn-solar" href="board.html?type=warrant">Доска
+      <a href="about.html" aria-current="page">Библиотека</a>
+      <a class="btn-solar" href="board.html">Доска
         <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </a>
     </nav>
@@ -126,101 +169,112 @@
 </header>
 
 <section class="wrap page-head">
-  <h1>Как устроены продукты</h1>
-  <p>Дисконтные облигации, ноты с защитой капитала и варранты. По каждому инструменту — котировка, сценарии выплат и пример расчёта в рублях: сколько платите сегодня и что получаете на дату экспирации.</p>
+  <h1>Как это работает</h1>
+  <p>Библиотека продуктов: как устроен каждый тип — дисконтные облигации, ноты с защитой капитала и варранты. По каждому — профиль выплаты, риск и сценарии, известные заранее.</p>
 </section>
 
 <section class="wrap principles">
-  <div class="principle">
-    <div class="k">Формула</div>
-    <div class="v">Выплата определяется формулой, зафиксированной в спецификации инструмента, — а не чьим-то решением по ходу срока.</div>
-  </div>
-  <div class="principle">
-    <div class="k">Риск</div>
-    <div class="v">Максимально возможный убыток известен в день покупки: премия, дисконт или защита номинала — прописаны заранее.</div>
-  </div>
-  <div class="principle">
-    <div class="k">Срок</div>
-    <div class="v">Дата экспирации и порядок расчёта фиксированы. Вы заранее знаете, когда и по какому правилу произойдёт выплата.</div>
-  </div>
+  <div class="principle"><div class="k">Формула</div><div class="v">Выплата определяется формулой, зафиксированной в спецификации инструмента, — а не чьим-то решением по ходу срока.</div></div>
+  <div class="principle"><div class="k">Риск</div><div class="v">Максимально возможный убыток известен в день покупки: премия, дисконт или защита номинала — прописаны заранее.</div></div>
+  <div class="principle"><div class="k">Срок</div><div class="v">Дата экспирации и порядок расчёта фиксированы. Вы заранее знаете, когда и по какому правилу произойдёт выплата.</div></div>
 </section>
 
-<section id="families" class="wrap families">
-  <div class="fam-head">
-    <h2>Три семейства</h2>
-    <p>От консервативных к активным. В каждом — свои инструменты и живые котировки.</p>
+<nav class="chapnav" aria-label="Разделы библиотеки">
+  <div class="chapnav-in">
+    <a href="#discount" data-c="discount" style="--fc:#2E6E56"><span class="d"></span>Дисконтные</a>
+    <a href="#protection" data-c="protection" style="--fc:#33608C"><span class="d"></span>Защита капитала</a>
+    <a href="#warrants" data-c="warrants" style="--fc:#B3801F"><span class="d"></span>Варранты</a>
   </div>
-  <div class="fam-grid">
+</nav>
 
-    <a class="fam-card" style="--fc:#2E6E56" href="board.html?type=discount">
-      <svg viewBox="0 0 120 56" width="110" height="51" aria-hidden="true">
-        <line x1="8" y1="16" x2="112" y2="16" stroke="#C9C4BC" stroke-width="1" stroke-dasharray="3 4"/>
-        <path d="M8 40 L112 17" fill="none" stroke="#2E6E56" stroke-width="2.5" stroke-linecap="round"/>
-        <rect x="108.5" y="13.5" width="7" height="7" transform="rotate(45 112 17)" fill="#2E6E56"/>
-      </svg>
-      <h3>Дисконтные облигации</h3>
-      <span class="chip" style="color:#2E6E56;background:#DFEAE2">Консервативный</span>
-      <p>Покупаете дешевле номинала, на погашение получаете 100%. Доход — дисконт, известный в день покупки.</p>
-      <div class="fam-meta">
-        <span class="fam-count"><span data-count="discount">—</span> инстр.</span>
-        <span class="fam-link">Открыть доску →</span>
+<main class="wrap" id="content">
+
+  <!-- Дисконтные -->
+  <section class="chap" id="discount" style="--fc:#2E6E56">
+    <div class="chap-head"><div><div class="chap-k">01 · консервативный</div><h2 id="t-discount-name">Дисконтные облигации</h2></div></div>
+    <div class="chap-lead" id="t-discount-tagline"></div>
+    <div class="card two">
+      <div class="txt">
+        <div class="kv"><div class="k">Как работает</div><div class="v" id="t-discount-how"></div></div>
+        <div class="plaque" id="t-discount-risk"></div>
+        <div class="metrics" style="margin-top:16px">
+          <div class="metric"><div class="k">Доход</div><div class="v" id="t-discount-profit"></div></div>
+          <div class="metric"><div class="k">Риск убытка</div><div class="v" id="t-discount-loss"></div></div>
+        </div>
+        <a class="boardlink" href="board.html?type=discount">Смотреть выпуски на доске
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#2E6E56" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
       </div>
-    </a>
-
-    <a class="fam-card" style="--fc:#33608C" href="board.html?type=protection">
-      <svg viewBox="0 0 120 56" width="110" height="51" aria-hidden="true">
-        <line x1="8" y1="38" x2="112" y2="38" stroke="#C9C4BC" stroke-width="1" stroke-dasharray="3 4"/>
-        <path d="M8 38 L62 38 L112 13" fill="none" stroke="#33608C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-        <rect x="58.5" y="34.5" width="7" height="7" transform="rotate(45 62 38)" fill="#33608C"/>
-      </svg>
-      <h3>Защита капитала</h3>
-      <span class="chip" style="color:#33608C;background:#DCE6F0">Сбалансированный</span>
-      <p>100% номинала возвращается при любом сценарии, а при росте базового актива — ещё и доля этого роста.</p>
-      <div class="fam-meta">
-        <span class="fam-count"><span data-count="protection">—</span> инстр.</span>
-        <span class="fam-link">Открыть доску →</span>
-      </div>
-    </a>
-
-    <a class="fam-card" style="--fc:#B3801F" href="board.html?type=warrant">
-      <svg viewBox="0 0 120 56" width="110" height="51" aria-hidden="true">
-        <line x1="8" y1="42" x2="112" y2="42" stroke="#C9C4BC" stroke-width="1" stroke-dasharray="3 4"/>
-        <path d="M8 42 L54 42 L88 22 L112 22" fill="none" stroke="#1A1919" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M8 42 L58 42 L112 9" fill="none" stroke="#B3801F" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-        <rect x="54.5" y="38.5" width="7" height="7" transform="rotate(45 58 42)" fill="#B3801F"/>
-      </svg>
-      <h3>Варранты</h3>
-      <span class="chip" style="color:#B3801F;background:#F2E7CF">Активный</span>
-      <p>CALL и колл-спреды на S&amp;P 500, ОФЗ 26238, NBIS и NVIDIA. Если актив не вырос — теряется только премия.</p>
-      <div class="fam-meta">
-        <span class="fam-count"><span data-count="warrant">—</span> инстр.</span>
-        <span class="fam-link">Открыть доску →</span>
-      </div>
-    </a>
-
-  </div>
-
-  <div class="howto">
-    <div class="howto-card">
-      <div class="howto-num">96,80%<small>котировка</small></div>
-      <div class="howto-text">Все цены на витрине — <b>в процентах от номинала</b>. Купить инструмент на номинал 1&nbsp;000&nbsp;000&nbsp;₽ по котировке 96,80% — значит заплатить сегодня 968&nbsp;000&nbsp;₽. Выплата на экспирацию считается от номинала по формуле инструмента.</div>
+      <div class="viz"><div class="pf" id="pf-discount"></div><div class="pf-cap" id="t-discount-payoffNote"></div></div>
     </div>
-  </div>
-</section>
+  </section>
+
+  <!-- Защита капитала -->
+  <section class="chap" id="protection" style="--fc:#33608C">
+    <div class="chap-head"><div><div class="chap-k">02 · сбалансированный</div><h2 id="t-protection-name">Защита капитала</h2></div></div>
+    <div class="chap-lead" id="t-protection-tagline"></div>
+    <div class="card two">
+      <div class="txt">
+        <div class="kv"><div class="k">Как работает</div><div class="v" id="t-protection-how"></div></div>
+        <div class="prot-ctrls">
+          <div class="ctrl"><div class="k">Уровень защиты</div>
+            <div class="seg" id="seg-level" role="radiogroup" aria-label="Уровень защиты, %"><button data-v="50" role="radio" aria-checked="false" aria-label="Защита 50%">50</button><button data-v="70" role="radio" aria-checked="false" aria-label="Защита 70%">70</button><button data-v="90" class="on" role="radio" aria-checked="true" aria-label="Защита 90%">90</button><button data-v="100" role="radio" aria-checked="false" aria-label="Защита 100%">100</button></div>
+          </div>
+          <div class="ctrl"><div class="k">Участие</div>
+            <div class="seg" id="seg-dir" role="radiogroup" aria-label="Направление участия"><button data-v="up" class="on" role="radio" aria-checked="true" aria-label="Участие в росте">↑ в росте</button><button data-v="down" role="radio" aria-checked="false" aria-label="Участие в падении">↓ в падении</button></div>
+          </div>
+        </div>
+        <div class="prot-read" id="prot-read" aria-live="polite"></div>
+        <div class="plaque" id="t-protection-risk" style="margin-top:14px"></div>
+        <a class="boardlink" href="board.html?type=protection">Смотреть выпуски на доске
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#33608C" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+      </div>
+      <div class="viz"><div class="pf" id="pf-protection"></div><div class="pf-cap" id="t-protection-payoffNote"></div></div>
+    </div>
+  </section>
+
+  <!-- Варранты -->
+  <section class="chap" id="warrants" style="--fc:#B3801F">
+    <div class="chap-head"><div><div class="chap-k">03 · активный</div><h2>Варранты</h2></div></div>
+    <div class="chap-lead">Ставка на движение базового актива за ограниченную премию. Шесть типов — комбинации направления (CALL — рост, PUT — падение) и структуры (базовый, с потолком, с барьером KO). Выберите ячейку, чтобы увидеть описание и профиль выплаты.</div>
+    <div class="mx">
+      <div class="hd"></div><div class="hd">Базовый</div><div class="hd">С потолком</div><div class="hd">С барьером KO</div>
+      <div class="rl"><span class="t">CALL</span><span class="s">ставка на рост</span></div>
+      <div id="mx-call"></div><div id="mx-callspread"></div><div id="mx-callko"></div>
+      <div class="rl"><span class="t">PUT</span><span class="s">ставка на падение</span></div>
+      <div id="mx-put"></div><div id="mx-putspread"></div><div id="mx-putko"></div>
+    </div>
+    <div class="wdetail" id="wdetail" aria-live="polite">
+      <div class="txt">
+        <h3 id="w-name"></h3><div class="sub" id="w-tagline"></div>
+        <div class="kv"><div class="k">Как работает</div><div class="v" id="w-how"></div></div>
+        <div class="metrics">
+          <div class="metric"><div class="k">Макс. прибыль</div><div class="v" id="w-profit"></div></div>
+          <div class="metric"><div class="k">Макс. убыток</div><div class="v" id="w-loss"></div></div>
+        </div>
+        <div class="plaque" id="w-risk" style="margin-top:16px"></div>
+        <div class="kv" style="margin-top:16px"><div class="k">Когда уместен</div><div class="v" id="w-when"></div></div>
+      </div>
+      <div class="viz"><div class="pf" id="pf-warrant"></div><div class="pf-cap" id="w-payoffNote"></div></div>
+    </div>
+    <a class="boardlink" href="board.html?type=warrant">Смотреть варранты на доске
+      <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#B3801F" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+  </section>
+
+  <div class="howto"><div class="howto-card">
+    <div class="howto-num">96,80%<small>котировка</small></div>
+    <div class="howto-text">Все цены на витрине — <b>в процентах от номинала</b>. Купить инструмент на номинал 1&nbsp;000&nbsp;000&nbsp;₽ по котировке 96,80% — значит заплатить сегодня 968&nbsp;000&nbsp;₽. Выплата на экспирацию считается от номинала по формуле инструмента.</div>
+  </div></div>
+
+</main>
 
 <footer>
   <div class="wrap footer-in">
     <div class="footer-brand">
-      <div class="row">
-        <svg width="18" height="18" viewBox="0 0 26 26" fill="none" aria-hidden="true">
-          <path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#1A1919"/>
-        </svg>
-        Структурные продукты
-      </div>
+      <div class="row"><svg width="18" height="18" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#1A1919"/></svg>Структурные продукты</div>
       <div class="sub">Витрина инструментов</div>
     </div>
     <div class="footer-right">
-      <div class="disclaimer">Не является индивидуальной инвестиционной рекомендацией. Материалы носят информационный характер; котировки — демонстрационные.</div>
+      <div class="disclaimer">Не является индивидуальной инвестиционной рекомендацией. Материалы носят информационный характер; котировки — демонстрационные. Продукты доступны только квалифицированным инвесторам.</div>
       <div class="updated">данные обновлены: <span id="updated">—</span></div>
     </div>
   </div>
@@ -229,14 +283,211 @@
 <script src="data/instruments.js"></script>
 <script src="data/lib.js"></script>
 <script>
-  // Счётчики семейств и дата обновления — из единого файла данных.
-  document.querySelectorAll("[data-count]").forEach(el => {
-    el.textContent = SITE.instrumentsOfType(el.getAttribute("data-count")).length;
+(function () {
+  "use strict";
+  var REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // ── Контент (проверен на финансовую корректность) ──
+  var LIB = {
+    discount: {"name":"Дисконтная облигация","tagline":"Покупка ниже номинала; при отсутствии кредитного события — погашение по 100%. Размер дохода известен заранее.","how":"Облигация приобретается дешевле номинала — например, по 50%. Если за срок обращения по референс-энтити не наступает кредитное событие, на погашении выплачивается 100% номинала. Доход — это дисконт, разница между ценой входа и номиналом; он фиксируется в день сделки. Купонов нет: весь результат заложен в цену покупки.","risk":"Главный риск — кредитный на референс-энтити: при кредитном событии по нему выплата на погашении снижается вплоть до нуля. Максимальный убыток ограничен вложенной суммой и известен в день сделки.","profit":"Дисконт до номинала: при входе по 50% доход равен вложенной сумме, возврат на погашении — 100% номинала.","loss":"Вплоть до всей вложенной суммы — при кредитном событии по референс-энтити.","whenToUse":"Когда вы готовы принять кредитный риск на конкретное контрольное лицо ради заранее известной доходности к погашению без купонов.","payoffNote":"Без кредитного события — 100% номинала на погашении; при кредитном событии выплата снижается вплоть до нуля."},
+    protection: {"name":"Защита капитала","tagline":"Защищённый уровень номинала и участие в движении базового актива.","how":"Структурная нота: в неблагоприятном сценарии возвращается заранее заданный уровень номинала — 50, 70, 90 или 100%. Одновременно нота даёт участие в динамике базового актива; направление участия фиксируется при выпуске — в росте либо в падении. Компромисс задан конструкцией: чем выше уровень защиты, тем ниже коэффициент участия, и наоборот.","risk":"Рыночный убыток ограничен и известен заранее: в неблагоприятном сценарии инвестор получает защищённый уровень, а разницу до полного номинала берёт на себя. Отдельно действует кредитный риск эмитента ноты: защитой он не покрывается.","profit":"Формируется сверх защищённого уровня участием в движении базового актива с коэффициентом, заданным при выпуске. При участии в росте жёсткий потолок обычно не задан; при участии в падении потенциал ограничен снижением БА до нуля.","loss":"До «100% минус уровень защиты» номинала (например, до 50% при защите 50%; ноль при полной защите). Отдельно — кредитный риск эмитента.","whenToUse":"Когда нужен контролируемый риск на капитал при сохранении доли в движении базового актива — вверх или вниз.","payoffNote":"Выплата на экспирацию в % от номинала: не ниже защищённого уровня, далее — участие в движении БА в выбранном направлении."},
+    call: {"name":"Варрант CALL","tagline":"Участие в росте базового актива сверх страйка за фиксированную премию.","how":"CALL — колл-опцион в обёртке структурной облигации. Инвестор платит только премию и получает выплату, равную росту базового актива выше страйка K. Пока актив не превысил страйк, выплата нулевая; выше страйка она растёт линейно вместе с активом. Страйк, как правило, задаётся на уровне 100% базового актива в день покупки.","risk":"Если к погашению базовый актив не поднялся выше страйка, премия теряется полностью. Максимальный убыток известен заранее и ограничен уплаченной премией.","profit":"Не ограничена — растёт вместе с базовым активом.","loss":"Уплаченная премия.","whenToUse":"При уверенном взгляде на рост, когда потеря премии приемлема ради неограниченного потенциала.","payoffNote":"До страйка K — фиксированный убыток на уровне премии; выше страйка выплата растёт линейно вместе с активом."},
+    put: {"name":"Варрант PUT","tagline":"Ставка на снижение: выплата растёт по мере падения базового актива ниже страйка.","how":"PUT-варрант даёт право на выплату, равную снижению базового актива ниже страйка K. Инвестор платит премию. На экспирацию, если актив ниже страйка, выплата тем больше, чем глубже снижение. На уровне страйка или выше выплаты нет.","risk":"Главный риск — обесценение премии: если базовый актив не опустился ниже страйка, вся уплаченная премия теряется. Максимальный убыток известен заранее и ограничен премией.","profit":"Растёт по мере падения актива; максимальна при снижении к нулю и ограничена — цена не опускается ниже нуля.","loss":"Уплаченная премия.","whenToUse":"При ожидании снижения базового актива или для хеджа длинной позиции с заранее ограниченной стоимостью.","payoffNote":"Прибыль растёт при движении БА влево (падение) и максимальна у нуля; правее страйка — плоско на уровне −премии."},
+    callspread: {"name":"Колл-спред","tagline":"CALL с потолком выплаты: рост засчитывается до верхнего страйка.","how":"Инструмент повторяет CALL, но с ограничением сверху. Рост базового актива засчитывается только до верхнего страйка K₂ — выше этого уровня выплата не увеличивается. За отказ от неограниченной прибыли премия ниже, чем у обычного CALL. Профиль выплаты: плоский участок до страйка K, затем рост от K до K₂ и горизонтальный потолок.","risk":"Если к погашению базовый актив не превысит нижний страйк K, выплаты не будет. В диапазоне от K до точки безубыточности выплата есть, но не покрывает премию. Максимальный убыток ограничен уплаченной премией.","profit":"Ограничена: (K₂ − K) за вычетом премии. Достигается при уровне базового актива не ниже K₂.","loss":"Уплаченная премия.","whenToUse":"При ожидании умеренного роста до определённого уровня, когда ради дешёвого входа можно отказаться от прибыли выше потолка.","payoffNote":"Плоский участок до K, рост от K до K₂, затем горизонтальный потолок выплаты."},
+    putspread: {"name":"Пут-спред","tagline":"PUT с нижним ограничением: заработок на падении до заданного уровня — дешевле обычного PUT.","how":"Покупается PUT с верхним страйком и одновременно продаётся PUT с более низким страйком. Выплата растёт по мере снижения базового актива от верхнего страйка и достигает максимума на нижнем; глубже падение уже не учитывается. Проданный нижний PUT удешевляет позицию, поэтому премия меньше, чем у обычного PUT.","risk":"Если к погашению базовый актив не опустится ниже верхнего страйка, выплаты нет и уплаченная премия теряется полностью. Максимальный убыток ограничен размером премии.","profit":"Ограничена: разница между страйками за вычетом премии. Достигается при цене на нижнем страйке или ниже.","loss":"Уплаченная премия.","whenToUse":"При ожидании умеренного снижения до определённого уровня, когда нужна защита дешевле обычного PUT.","payoffNote":"Выплата растёт при падении от верхнего страйка и упирается в потолок на нижнем; максимальный риск — премия."},
+    callko: {"name":"CALL с барьером KO","tagline":"Ставка на рост дешевле обычного CALL — но гаснет при касании барьера KO.","how":"Работает как обычный CALL: на погашении выплачивает рост базового актива выше страйка. При выпуске задаётся барьер KO; если в течение срока актив касается его, продукт досрочно гаснет и право на выплату теряется. Барьер ограничивает диапазон, в котором продукт работает, — за счёт этого премия ниже, чем у сопоставимого обычного CALL.","risk":"Риск специфический: направление можно угадать верно, но при касании барьера позиция закрывается досрочно, а прибыль обнуляется (иногда предусмотрен небольшой ребейт). Максимальный убыток ограничен уплаченной премией.","profit":"Ограничена барьером KO: рост реализуется, только пока барьер не затронут. Касание гасит продукт, поэтому потенциал ограничен уровнем барьера — в отличие от неограниченного роста у обычного CALL.","loss":"Ограничен уплаченной премией (за вычетом ребейта, если он предусмотрен).","whenToUse":"При уверенности и в росте, и в том, что барьер KO не будет затронут, когда экономия на премии важнее риска досрочного гашения.","payoffNote":"Профиль CALL, обрезанный барьером KO: выплата по росту выше страйка, пока барьер не затронут; касание — продукт гаснет."},
+    putko: {"name":"PUT с барьером KO","tagline":"Ставка на снижение дешевле обычного PUT — ценой досрочного гашения при касании барьера.","how":"PUT даёт право заработать на снижении базового актива ниже страйка. От обычного PUT отличается барьером KO, заданным при выпуске: если за время жизни опциона актив касается барьера, опцион досрочно прекращает действие и гаснет. Из-за этого ограничения премия ниже, чем у классического PUT. При касании возможен небольшой ребейт, оговорённый заранее.","risk":"Главный риск — касание барьера KO: опцион гаснет досрочно, и право на выплату теряется, даже если до этого актив снижался (возможен небольшой ребейт). Максимальный убыток ограничен уплаченной премией.","profit":"Ограничена. Реализуется, только если за время жизни опциона актив ни разу не коснулся барьера; тем больше, чем глубже снижение к этому уровню.","loss":"Уплаченная премия (за вычетом ребейта, если он предусмотрен).","whenToUse":"При ставке на умеренное снижение, когда резкого провала до уровня барьера не ожидается.","payoffNote":"Выплата тем больше, чем ниже актив опустился под страйк; но при касании барьера KO опцион гаснет и право на выплату обнуляется."}
+  };
+
+  // ── Движок пэйоффов (профиль прибыли от уровня БА) ──
+  var W = 340, H = 178, PADX = 24, TOP = 26, ZERO = 108, PREM = 134, CAP = 62;
+  var COL = { discount: "#2E6E56", protection: "#33608C", warrant: "#B3801F" };
+  var GRID = "#DDD8D2", AX = "#B7B1A8", LAB = "#5F5B54", KOc = "#C24E0A";
+  var MONO = 'font-family="JetBrains Mono, monospace"';
+  function xu(u) { return (PADX + (u / 2) * (W - 2 * PADX)); }
+  function svgWrap(inner) { return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="display:block" aria-hidden="true" focusable="false">' + inner + '</svg>'; }
+  function axes(labels) {
+    var s = '<line x1="' + PADX + '" y1="' + ZERO + '" x2="' + (W - PADX) + '" y2="' + ZERO + '" stroke="' + AX + '" stroke-width="1"/>';
+    s += '<text x="' + PADX + '" y="' + (H - 4) + '" font-size="11" ' + MONO + ' fill="' + LAB + '">базовый актив →</text>';
+    return s;
+  }
+  function line(d, color) { return '<path class="pf-line" d="' + d + '" fill="none" stroke="' + color + '" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>'; }
+  function strike(u, y, label) {
+    return '<rect x="' + (xu(u) - 4) + '" y="' + (y - 4) + '" width="8" height="8" transform="rotate(45 ' + xu(u) + ' ' + y + ')" fill="#5A5750"/>' +
+      '<text x="' + xu(u) + '" y="' + (H - 16) + '" text-anchor="middle" font-size="11" ' + MONO + ' fill="' + LAB + '">' + label + '</text>';
+  }
+  function premLine(color) {
+    return '<line x1="' + PADX + '" y1="' + PREM + '" x2="' + (W - PADX) + '" y2="' + PREM + '" stroke="' + GRID + '" stroke-width="1" stroke-dasharray="3 4"/>' +
+      '<text x="' + (PADX + 2) + '" y="' + (PREM - 5) + '" font-size="11" ' + MONO + ' fill="' + LAB + '">−премия</text>';
+  }
+  function koBarrier(u) {
+    return '<line x1="' + xu(u) + '" y1="' + TOP + '" x2="' + xu(u) + '" y2="' + (PREM + 6) + '" stroke="' + KOc + '" stroke-width="1.4" stroke-dasharray="3 3"/>' +
+      '<text x="' + xu(u) + '" y="' + (TOP - 4) + '" text-anchor="middle" font-size="11" ' + MONO + ' fill="' + KOc + '">барьер KO</text>';
+  }
+
+  function payoff(kind, opt) {
+    opt = opt || {};
+    var c = opt.color || COL.warrant, inner = "";
+    if (kind === "discount") {
+      var base = H - 22, top100 = TOP + 6, bw = 74, x1 = W * 0.30 - bw / 2, x2 = W * 0.68 - bw / 2;
+      var h50 = (base - top100) * 0.5, h100 = (base - top100);
+      inner = '<line x1="' + PADX + '" y1="' + top100 + '" x2="' + (W - PADX) + '" y2="' + top100 + '" stroke="' + GRID + '" stroke-width="1" stroke-dasharray="3 4"/>' +
+        '<text x="' + (W - PADX) + '" y="' + (top100 - 5) + '" text-anchor="end" font-size="11" ' + MONO + ' fill="' + LAB + '">номинал 100%</text>' +
+        '<rect class="pf-bar" x="' + x1 + '" y="' + (base - h50) + '" width="' + bw + '" height="' + h50 + '" rx="3" fill="#BFC7BE"/>' +
+        '<rect class="pf-bar" x="' + x2 + '" y="' + (base - h100) + '" width="' + bw + '" height="' + h100 + '" rx="3" fill="' + COL.discount + '"/>' +
+        '<text x="' + (x1 + bw / 2) + '" y="' + (base + 13) + '" text-anchor="middle" font-size="11" ' + MONO + ' fill="' + LAB + '">вход 50%</text>' +
+        '<text x="' + (x2 + bw / 2) + '" y="' + (base + 13) + '" text-anchor="middle" font-size="11" ' + MONO + ' fill="' + COL.discount + '">погашение 100%</text>' +
+        '<text x="' + ((x1 + x2 + bw) / 2) + '" y="' + (base - h50 - 7) + '" text-anchor="middle" font-size="10" ' + MONO + ' fill="' + COL.discount + '">+50 п.п.</text>';
+      return svgWrap(inner);
+    }
+    if (kind === "protection") {
+      var level = opt.level || 90, dir = opt.dir || "up";
+      var part = { 100: 22, 90: 40, 70: 60, 50: 80 }[level] || 40;
+      function yv(v) { return (H - 20) - ((v - 40) / (190 - 40)) * ((H - 20) - TOP); }
+      var yPar = yv(100), yLvl = yv(level), yTop = yv(100 + part);
+      inner = '<line x1="' + PADX + '" y1="' + yPar + '" x2="' + (W - PADX) + '" y2="' + yPar + '" stroke="' + GRID + '" stroke-width="1" stroke-dasharray="3 4"/>' +
+        '<text x="' + (W - PADX) + '" y="' + (yPar - 5) + '" text-anchor="end" font-size="11" ' + MONO + ' fill="' + LAB + '">номинал 100%</text>' +
+        '<line x1="' + PADX + '" y1="' + yLvl + '" x2="' + (W - PADX) + '" y2="' + yLvl + '" stroke="' + c + '" stroke-width="1" stroke-dasharray="2 4" opacity="0.7"/>' +
+        '<text x="' + (PADX + 2) + '" y="' + (yLvl - 5) + '" font-size="11" ' + MONO + ' fill="' + c + '">защита ' + level + '%</text>';
+      var d;
+      if (dir === "up") d = "M" + xu(0) + " " + yLvl + " L" + xu(0.55) + " " + yLvl + " L" + xu(1) + " " + yPar + " L" + xu(2) + " " + yTop;
+      else d = "M" + xu(0) + " " + yTop + " L" + xu(1) + " " + yPar + " L" + xu(1.45) + " " + yLvl + " L" + xu(2) + " " + yLvl;
+      inner += '<rect x="' + (xu(1) - 4) + '" y="' + (yPar - 4) + '" width="8" height="8" transform="rotate(45 ' + xu(1) + ' ' + yPar + ')" fill="#5A5750"/>' +
+        '<text x="' + xu(1) + '" y="' + (H - 4) + '" text-anchor="middle" font-size="11" ' + MONO + ' fill="' + LAB + '">S₀ · старт</text>';
+      inner += '<text x="' + (dir === "up" ? xu(1.7) : xu(0.3)) + '" y="' + Math.max(TOP + 10, yTop + 12) + '" text-anchor="middle" font-size="11" ' + MONO + ' fill="' + c + '">участие</text>';
+      inner += line(d, c);
+      return svgWrap(inner);
+    }
+    // варранты — профиль прибыли
+    inner = axes() + premLine(c);
+    var d2, be;
+    if (kind === "call") {
+      d2 = "M" + xu(0) + " " + PREM + " L" + xu(1) + " " + PREM + " L" + xu(2) + " " + TOP;
+      inner += strike(1, PREM, "страйк K");
+    } else if (kind === "put") {
+      d2 = "M" + xu(0) + " " + TOP + " L" + xu(1) + " " + PREM + " L" + xu(2) + " " + PREM;
+      inner += strike(1, PREM, "страйк K");
+    } else if (kind === "callspread") {
+      d2 = "M" + xu(0) + " " + PREM + " L" + xu(1) + " " + PREM + " L" + xu(1.55) + " " + CAP + " L" + xu(2) + " " + CAP;
+      inner += strike(1, PREM, "K") + strike(1.55, CAP, "потолок K₂");
+    } else if (kind === "putspread") {
+      d2 = "M" + xu(0) + " " + CAP + " L" + xu(0.45) + " " + CAP + " L" + xu(1) + " " + PREM + " L" + xu(2) + " " + PREM;
+      inner += strike(1, PREM, "K") + strike(0.45, CAP, "K₂");
+    } else if (kind === "callko") {
+      d2 = "M" + xu(0) + " " + PREM + " L" + xu(1) + " " + PREM + " L" + xu(1.55) + " " + (TOP + 14) + " L" + xu(1.55) + " " + PREM + " L" + xu(2) + " " + PREM;
+      inner += strike(1, PREM, "K") + koBarrier(1.55);
+    } else if (kind === "putko") {
+      d2 = "M" + xu(0) + " " + PREM + " L" + xu(0.45) + " " + PREM + " L" + xu(0.45) + " " + (TOP + 14) + " L" + xu(1) + " " + PREM + " L" + xu(2) + " " + PREM;
+      inner += strike(1, PREM, "K") + koBarrier(0.45);
+    }
+    inner += line(d2, c);
+    return svgWrap(inner);
+  }
+
+  // ── Анимация: прорисовка линий / рост столбцов ──
+  function animate(box) {
+    if (!box) return;
+    box.querySelectorAll(".pf-line").forEach(function (p) {
+      var len = p.getTotalLength();
+      p.style.strokeDasharray = len;
+      if (REDUCED) { p.style.strokeDashoffset = 0; return; }
+      p.style.transition = "none";
+      p.style.strokeDashoffset = len;
+      p.getBoundingClientRect();
+      requestAnimationFrame(function () { p.style.transition = ""; p.style.strokeDashoffset = 0; });
+    });
+    var pf = box.querySelector(".pf") || (box.classList && box.classList.contains("pf") ? box : null);
+    if (pf) pf.classList.add("grown");
+  }
+
+  // ── Заполнение текста ──
+  function fill(id, val) { var e = document.getElementById(id); if (e) e.textContent = val; }
+  ["discount", "protection"].forEach(function (k) {
+    var d = LIB[k];
+    fill("t-" + k + "-name", d.name); fill("t-" + k + "-tagline", d.tagline);
+    fill("t-" + k + "-how", d.how); fill("t-" + k + "-risk", d.risk);
+    fill("t-" + k + "-profit", d.profit); fill("t-" + k + "-loss", d.loss);
+    fill("t-" + k + "-payoffNote", d.payoffNote);
   });
-  (function () {
-    const u = (window.SITE_DATA || {}).updated;
-    if (u) document.getElementById("updated").textContent = u.split("-").reverse().join(".");
-  })();
+
+  // Дисконт — статичная диаграмма
+  document.getElementById("pf-discount").innerHTML = payoff("discount");
+
+  // Защита — интерактив
+  var pLevel = 90, pDir = "up";
+  var pfProt = document.getElementById("pf-protection");
+  function renderProt() {
+    pfProt.innerHTML = payoff("protection", { level: pLevel, dir: pDir, color: COL.protection });
+    var dirTxt = pDir === "up" ? "росте" : "падении";
+    document.getElementById("prot-read").innerHTML = "При защите <b>" + pLevel + "%</b> и участии в <b>" + dirTxt + "</b>: в неблагоприятном сценарии возвращается не менее " + pLevel + "% номинала" + (pLevel < 100 ? " (риск до " + (100 - pLevel) + "% рыночного убытка)" : " (полная защита)") + ", а выгодное движение приносит долю " + (pDir === "up" ? "роста" : "снижения") + " базового актива. Ниже защита — выше коэффициент участия.";
+    animate(pfProt);
+  }
+  document.getElementById("seg-level").addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b) return;
+    pLevel = parseInt(b.getAttribute("data-v"), 10);
+    this.querySelectorAll("button").forEach(function (x) { var on = x === b; x.classList.toggle("on", on); x.setAttribute("aria-checked", on ? "true" : "false"); });
+    renderProt();
+  });
+  document.getElementById("seg-dir").addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b) return;
+    pDir = b.getAttribute("data-v");
+    this.querySelectorAll("button").forEach(function (x) { var on = x === b; x.classList.toggle("on", on); x.setAttribute("aria-checked", on ? "true" : "false"); });
+    renderProt();
+  });
+
+  // Варранты — матрица + деталь
+  var WMINI = { call: "call", put: "put", callspread: "callspread", putspread: "putspread", callko: "callko", putko: "putko" };
+  Object.keys(WMINI).forEach(function (k) {
+    var cell = document.createElement("button");
+    cell.className = "cell"; cell.setAttribute("data-w", k); cell.setAttribute("aria-pressed", "false"); cell.setAttribute("aria-controls", "wdetail");
+    cell.innerHTML = payoff(k, { color: COL.warrant }) + '<div class="nm">' + LIB[k].name + '</div><div class="tg">' + LIB[k].tagline + '</div>';
+    document.getElementById("mx-" + k).replaceWith(cell);
+    cell.id = "mx-" + k;
+  });
+  var pfWarr = document.getElementById("pf-warrant");
+  function selectW(k) {
+    var d = LIB[k];
+    fill("w-name", d.name); fill("w-tagline", d.tagline); fill("w-how", d.how);
+    fill("w-profit", d.profit); fill("w-loss", d.loss); fill("w-risk", d.risk);
+    fill("w-when", d.whenToUse); fill("w-payoffNote", d.payoffNote);
+    pfWarr.innerHTML = payoff(k, { color: COL.warrant });
+    document.querySelectorAll(".cell").forEach(function (c) { var on = c.getAttribute("data-w") === k; c.classList.toggle("on", on); c.setAttribute("aria-pressed", on ? "true" : "false"); });
+    animate(pfWarr);
+  }
+  document.querySelectorAll(".cell").forEach(function (c) {
+    c.addEventListener("click", function () { selectW(c.getAttribute("data-w")); });
+  });
+
+  // ── Появление по скроллу: анимируем пэйофф при входе главы в экран ──
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) {
+      if (!en.isIntersecting) return;
+      animate(en.target.querySelector(".pf"));
+      io.unobserve(en.target);
+    });
+  }, { threshold: 0.25 });
+  ["discount", "protection", "warrants"].forEach(function (k) { io.observe(document.getElementById(k)); });
+
+  // первичный рендер
+  renderProt();
+  selectW("call");
+
+  // ── Скролл-спай для навигации по главам ──
+  var links = {};
+  document.querySelectorAll(".chapnav a").forEach(function (a) { links[a.getAttribute("data-c")] = a; });
+  var spy = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) {
+      if (en.isIntersecting) {
+        Object.keys(links).forEach(function (k) { links[k].classList.toggle("on", k === en.target.id); });
+      }
+    });
+  }, { rootMargin: "-130px 0px -60% 0px" });
+  ["discount", "protection", "warrants"].forEach(function (k) { spy.observe(document.getElementById(k)); });
+
+  // дата обновления
+  var u = (window.SITE_DATA || {}).updated;
+  if (u) document.getElementById("updated").textContent = u.split("-").reverse().join(".");
+})();
 </script>
 </body>
 </html>
