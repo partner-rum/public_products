@@ -510,7 +510,7 @@
     const searching = q.trim().length > 0;
 
     document.getElementById("list").innerHTML = sorted.length ? sorted.map(([name, items], gi) => {
-      const open = searching || openGroups.has(name) || (openGroups.size === 0 && gi === 0);
+      const open = searching || openGroups.has(name);
       return '<button class="group-h' + (open ? " open" : "") + '" data-g="' + name.replace(/"/g, "&quot;") + '" aria-expanded="' + open + '">' +
           '<span class="chev">▶</span><span class="name">' + name + '</span><span class="gc">' + items.length + '</span></button>' +
         '<div class="group-items' + (open ? " open" : "") + '">' + items.map(itemHTML).join("") + '</div>';
@@ -518,16 +518,15 @@
 
     document.querySelectorAll(".group-h").forEach(el => el.addEventListener("click", () => {
       const g = el.getAttribute("data-g");
-      if (openGroups.size === 0 && sorted.length) openGroups.add(sorted[0][0]);
       if (openGroups.has(g)) openGroups.delete(g); else openGroups.add(g);
       render();
     }));
     document.querySelectorAll(".item").forEach(el =>
       el.addEventListener("click", () => select(el.getAttribute("data-id"), true)));
 
-    if (list.length && (!selected || !list.some(r => r.id === selected))) {
-      const first = sorted[0] && sorted[0][1][0];
-      if (first) select(first.id, false);
+    if (selected && !list.some(r => r.id === selected)) {
+      selected = null;
+      document.getElementById("panel").innerHTML = '<div class="placeholder">Выберите инструмент в списке слева</div>';
     }
   }
 
