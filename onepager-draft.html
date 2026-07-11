@@ -227,7 +227,7 @@
     const params = [["Страйк (K)", S.fmtSmart(K) + "% нач. уровня", false]];
     if (isCS) params.push(["Потолок (K₂)", S.fmtSmart(K2) + "% · до " + S.fmtSmart(capPct) + "%", false]);
     else params.push(["Макс. убыток", "премия", false]);
-    params.push(["Срок", inst.tenor, false], ["Мин. номинал", S.fmtInt(nom) + " ₽", false]);
+    params.push(["Срок", inst.tenor, false], ["Экспозиция", "100% номинала", false]);
     c = {
       badge: isCS ? "Колл-спред · структурная облигация" : "CALL · структурная облигация",
       subtitle: "Заработать на росте " + inst.underlying + " с полной экспозицией на номинал и риском, ограниченным премией.",
@@ -251,7 +251,7 @@
       subtitle: "Покупка дешевле номинала, погашение по 100% — доход зафиксирован в день сделки.",
       chart: chDiscount,
       chartCap: "Покупка дешевле номинала, погашение по 100%. Доход — разница, зафиксированная в момент покупки.",
-      params: [["Доходность", S.fmt1(S.yieldAnnual(inst)) + "% год.", true], ["Выплата", "100% номинала", false], ["Осталось", S.daysTo(inst.expiry) + " дн.", false], ["Мин. номинал", S.fmtInt(nom) + " ₽", false]],
+      params: [["Доходность", S.fmt1(S.yieldAnnual(inst)) + "% год.", true], ["Выплата", "100% номинала", false], ["Осталось", S.daysTo(inst.expiry) + " дн.", false], ["Купоны", "нет", false]],
       exIntro: "Номинал " + S.fmtInt(nom) + " ₽ · покупка по " + S.fmt2(q) + "% = " + S.fmtInt(buyRub) + " ₽",
       scen: [
         ["Дождались погашения", "выплата 100% номинала", "+" + S.fmtInt(nom - buyRub) + " ₽", "var(--up)"],
@@ -269,7 +269,7 @@
       subtitle: "Участие в росте " + inst.underlying + " с возвратом 100% номинала при любом сценарии.",
       chart: chProtection,
       chartCap: "Выплата в % от номинала: не ниже 100% при любом сценарии, выше S₀ — участие в росте.",
-      params: [["Защита капитала", "100%", false], ["Участие в росте", part + "%", true], ["Нач. уровень S₀", S.fmtSmart(inst.strike), false], ["Мин. номинал", S.fmtInt(nom) + " ₽", false]],
+      params: [["Защита капитала", "100%", false], ["Участие в росте", part + "%", true], ["Нач. уровень S₀", S.fmtSmart(inst.strike), false], ["Стиль", "европейский", false]],
       exIntro: "Номинал " + S.fmtInt(nom) + " ₽ · вход по " + S.fmt2(q) + "% = " + S.fmtInt(entryRub) + " ₽",
       scen: [
         [inst.underlying + " вырос на " + upPct + "%", "выплата 100% + участие", "+" + S.fmtInt(payoutUp - entryRub) + " ₽", "var(--up)"],
