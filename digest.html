@@ -4,208 +4,228 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Дайджест — инвестиционные идеи недели</title>
-<meta name="description" content="Дайджест инвестиционных идей: гипотеза, рыночная ситуация, факторы и параметры выпуска по каждому продукту.">
+<meta name="description" content="Дайджест инвестиционных идей: гипотеза, рыночная ситуация, факторы и параметры выпуска. С архивом прошлых выпусков.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --canvas: #F4F2F0; --card: #FFFFFF;
-    --black: #1A1919;
+    --canvas: #F4F2F0; --card: #FFFFFF; --black: #1A1919;
     --ink: #0C0A08; --hushed: rgba(12,10,8,0.6); --faint: rgba(12,10,8,0.38);
     --border: #D2CECB; --border-soft: #E0DCD6;
-    --solar: #E4F222; --solar-l: #F5FF78;
-    --spruce: #2E6E56; --steel: #33608C; --amber: #B3801F;
-    --up: #1F7A53; --down: #E96516;
-    --f-body: 'Onest', system-ui, sans-serif;
-    --f-mono: 'JetBrains Mono', Consolas, monospace;
+    --solar: #E4F222; --solar-l: #F5FF78; --up: #1F7A53; --down: #E96516;
+    --f-body: 'Onest', system-ui, sans-serif; --f-mono: 'JetBrains Mono', Consolas, monospace;
     --ease: cubic-bezier(0.16, 1, 0.3, 1);
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--canvas); color: var(--ink); font-family: var(--f-body); -webkit-font-smoothing: antialiased; }
   a { text-decoration: none; color: inherit; }
-  a:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 4px; }
-  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 44px 64px; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 4px; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 44px 56px; }
 
-  .nav { position: sticky; top: 0; z-index: 20; background: rgba(244,242,240,0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); }
-  .nav-in { max-width: 1080px; margin: 0 auto; padding: 0 44px; height: 62px; display: flex; align-items: center; gap: 12px; }
-  .brand { display: flex; align-items: center; gap: 10px; }
-  .brand-name { font-size: 14.5px; font-weight: 600; }
+  .nav { position: sticky; top: 0; z-index: 30; background: rgba(244,242,240,0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); }
+  .nav-in { max-width: 1180px; margin: 0 auto; padding: 0 44px; height: 62px; display: flex; align-items: center; gap: 12px; }
+  .brand { display: flex; align-items: center; gap: 10px; } .brand-name { font-size: 14.5px; font-weight: 600; }
   .topnav { margin-left: auto; display: flex; align-items: center; gap: 22px; font-size: 14px; font-weight: 500; }
-  .topnav a { color: var(--hushed); transition: color .2s; }
-  .topnav a:hover { color: var(--ink); }
+  .topnav a { color: var(--hushed); transition: color .2s; } .topnav a:hover { color: var(--ink); }
   .topnav a[aria-current="page"] { color: var(--ink); font-weight: 600; }
-  .btn-solar { background: var(--solar); color: var(--ink) !important; border-radius: 6px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 7px; transition: background .3s ease-in-out; }
+  .btn-solar { background: var(--solar); color: var(--ink) !important; border-radius: 6px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 7px; transition: background .3s; }
   .btn-solar:hover { background: var(--solar-l); }
 
-  .crumbs { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--hushed); padding: 26px 0 28px; }
-  .crumbs a:hover { color: var(--ink); }
-  .crumbs .sep { color: #C4BFB8; }
-  .crumbs .here { color: var(--ink); font-weight: 500; }
+  .crumbs { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--hushed); padding: 24px 0 22px; }
+  .crumbs .sep { color: #C4BFB8; } .crumbs .here { color: var(--ink); font-weight: 500; }
 
-  .head { max-width: 760px; margin-bottom: 14px; }
-  .head-row { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
-  h1 { margin: 0; font-family: var(--f-body); font-size: 38px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1; }
-  .date { font-family: var(--f-mono); font-size: 13px; color: var(--hushed); }
-  .intro { margin-top: 12px; font-size: 15px; line-height: 1.6; color: var(--hushed); text-wrap: pretty; }
-  .qual { margin: 22px 0 34px; display: inline-flex; align-items: center; gap: 10px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 10px 16px; font-size: 13px; color: var(--hushed); }
+  .head { margin-bottom: 6px; }
+  .head-row { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+  h1 { margin: 0; font-size: 34px; font-weight: 400; letter-spacing: -0.02em; }
+  .intro { margin-top: 10px; font-size: 15px; line-height: 1.6; color: var(--hushed); max-width: 680px; }
 
-  /* Идея */
-  .idea { background: var(--card); border: 1px solid var(--border-soft); border-top: 3px solid var(--fc); border-radius: 12px; padding: 30px 32px; margin-bottom: 26px; }
-  .idea-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; flex-wrap: wrap; margin-bottom: 6px; }
-  .idea-kind { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fc); }
-  .idea h2 { margin: 6px 0 4px; font-family: var(--f-body); font-size: 25px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.15; }
-  .idea-under { font-size: 14px; color: var(--hushed); }
-  .hypothesis { margin: 18px 0 22px; padding: 16px 20px; background: #EDEAE4; border-radius: 10px; font-family: var(--f-body); font-size: 16.5px; line-height: 1.55; color: var(--ink); max-width: 720px; text-wrap: pretty; }
-  .hypothesis .k { display: block; font-family: var(--f-mono); font-size: 10.5px; font-style: normal; letter-spacing: 0.12em; text-transform: uppercase; color: #6E6A68; margin-bottom: 7px; }
+  /* Переключатель выпусков (архив) */
+  .pick { position: relative; }
+  .pick-btn { display: inline-flex; align-items: center; gap: 10px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 8px 13px; font-family: var(--f-body); font-size: 14px; color: var(--ink); cursor: pointer; }
+  .pick-btn:hover { border-color: #BBB5AE; }
+  .pick-btn .lbl { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--faint); }
+  .pick-btn .cv { color: var(--hushed); transition: transform .25s var(--ease); }
+  .pick.open .cv { transform: rotate(180deg); }
+  .pick-menu { position: absolute; top: calc(100% + 6px); left: 0; z-index: 40; min-width: 320px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 18px 44px rgba(12,10,8,0.16); padding: 6px; display: none; }
+  .pick.open .pick-menu { display: block; }
+  .pick-mh { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); padding: 8px 12px 6px; }
+  .pick-i { display: block; width: 100%; text-align: left; background: none; border: none; border-radius: 8px; padding: 10px 12px; cursor: pointer; font-family: var(--f-body); color: var(--ink); }
+  .pick-i:hover { background: #F2EFEA; }
+  .pick-i.active { background: #EFEBE4; }
+  .pick-i .d { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+  .pick-i .d .t { font-size: 14.5px; font-weight: 600; }
+  .pick-i .d .c { font-family: var(--f-mono); font-size: 11px; color: var(--faint); white-space: nowrap; }
+  .pick-i .s { font-size: 12px; color: var(--hushed); margin-top: 3px; line-height: 1.4; }
 
-  .idea-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 30px; align-items: start; }
-  .block { margin-bottom: 20px; }
-  .block .k { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #6E6A68; margin-bottom: 9px; }
-  .block p { margin: 0; font-size: 14.5px; line-height: 1.65; color: var(--hushed); text-wrap: pretty; }
-  .block ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 7px; }
-  .block li { font-size: 14px; line-height: 1.55; color: var(--hushed); }
-  .block li::marker { color: var(--fc); }
+  .qual { margin: 16px 0 4px; display: inline-flex; align-items: center; gap: 10px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 9px 15px; font-size: 12.5px; color: var(--hushed); }
 
-  .side { display: flex; flex-direction: column; gap: 10px; }
-  .side-chart { background: var(--canvas); border-radius: 10px; padding: 14px 16px 10px; }
-  .side-chart .cap { font-size: 11.5px; color: var(--faint); margin-top: 8px; line-height: 1.45; }
-  .param { background: var(--canvas); border-radius: 10px; padding: 11px 15px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-  .param .k { font-size: 13px; color: var(--hushed); }
-  .param .v { font-family: var(--f-mono); font-size: 13.5px; text-align: right; }
-  .payout { margin-top: 4px; font-size: 13px; line-height: 1.55; color: var(--hushed); }
+  .layout { display: grid; grid-template-columns: 300px minmax(0,1fr); gap: 40px; align-items: start; margin-top: 24px; }
 
-  .foot-note { margin-top: 8px; font-size: 12.5px; line-height: 1.55; color: var(--faint); max-width: 640px; }
+  .toc { position: sticky; top: 86px; }
+  .toc-h { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint); margin-bottom: 8px; }
+  .toc-sec { font-size: 12px; font-weight: 600; margin: 16px 0 6px; }
+  .toc-i { display: flex; gap: 12px; align-items: baseline; width: 100%; text-align: left; background: none; border: none; cursor: pointer; padding: 7px 8px; border-radius: 8px; font-family: var(--f-body); color: var(--ink); }
+  .toc-i:hover { background: #EEEBE5; }
+  .toc-i.active { background: var(--ink); color: #fff; }
+  .toc-i.active .num, .toc-i.active .mv { color: rgba(255,255,255,0.72); }
+  .toc-i .num { font-family: var(--f-mono); font-size: 11px; color: var(--faint); flex: none; width: 20px; }
+  .toc-i .tx { flex: 1; min-width: 0; }
+  .toc-i .nm { font-size: 13.5px; line-height: 1.3; }
+  .toc-i .mv { font-family: var(--f-mono); font-size: 11px; color: var(--fc); margin-top: 2px; }
+
+  .art-num { font-family: var(--f-mono); font-size: 13px; color: var(--fc); letter-spacing: 0.05em; }
+  .art-kind { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); margin-left: 10px; }
+  .art-title { margin: 12px 0 6px; font-size: 40px; font-weight: 400; letter-spacing: -0.025em; line-height: 1.08; max-width: 640px; }
+  .art-un { font-size: 15px; color: var(--hushed); margin-bottom: 8px; }
+  .art-bar { width: 60px; height: 4px; background: var(--fc); margin: 16px 0 24px; }
+
+  .nextprev { display: flex; justify-content: space-between; gap: 14px; margin-top: 30px; border-top: 1px solid var(--border); padding-top: 18px; }
+  .np { background: none; border: none; cursor: pointer; font-family: var(--f-body); color: var(--hushed); text-align: left; padding: 6px 0; max-width: 46%; }
+  .np:hover { color: var(--ink); } .np.r { text-align: right; }
+  .np .l { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); }
+  .np .n { font-size: 14.5px; margin-top: 3px; }
+  .np[disabled] { visibility: hidden; }
+
+  .foot { margin-top: 30px; font-size: 12px; line-height: 1.5; color: var(--faint); max-width: 700px; }
 
   @media (max-width: 900px) {
-    .wrap { padding: 0 20px 48px; }
-    h1 { font-size: 30px; }
-    .idea { padding: 22px 20px; }
-    .idea-grid { grid-template-columns: 1fr; }
+    .wrap { padding: 0 18px 40px; } .nav-in { padding-left: 18px; padding-right: 18px; }
+    .layout { grid-template-columns: 1fr; gap: 20px; } .toc { position: static; }
+    .art-title { font-size: 28px; } .pick-menu { min-width: 260px; }
   }
   @media (max-width: 860px) {
-    .nav-in { height: auto; flex-wrap: wrap; padding: 12px 20px; row-gap: 10px; }
+    .nav-in { height: auto; flex-wrap: wrap; padding: 12px 18px; row-gap: 10px; }
     .topnav { margin-left: 0; width: 100%; gap: 16px; font-size: 13.5px; }
   }
-  @media print {
-    .nav, .crumbs { display: none !important; }
-    body { background: #fff; }
-    .idea { border: 1px solid #CFCFCF; break-inside: avoid; }
-  }
+  @media print { .nav, .crumbs, .pick, .nextprev { display: none !important; } body { background: #fff; } .toc { display: none; } .layout { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
 
 <header class="nav">
   <div class="nav-in">
-    <a class="brand" href="index.html" aria-label="На главную">
-      <svg width="22" height="22" viewBox="0 0 26 26" fill="none" aria-hidden="true">
-        <path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#1A1919"/>
-      </svg>
-      <span class="brand-name">Структурные продукты</span>
-    </a>
+    <a class="brand" href="index.html" aria-label="На главную"><svg width="22" height="22" viewBox="0 0 26 26" fill="none"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#1A1919"/></svg><span class="brand-name">Структурные продукты</span></a>
     <nav class="topnav">
       <a href="digest.html" aria-current="page">Дайджест</a>
       <a href="placements.html">Выпуски</a>
       <a href="about.html">Об устройстве</a>
-      <a class="btn-solar" href="board.html?type=warrant">Доска
-        <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <a class="btn-solar" href="board.html">Доска
+        <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </a>
     </nav>
   </div>
 </header>
 
 <div class="wrap">
-
-  <div class="crumbs">
-    <a href="index.html">Главная</a>
-    <span class="sep">/</span>
-    <span class="here">Дайджест</span>
-  </div>
+  <div class="crumbs"><a href="index.html">Главная</a><span class="sep">/</span><span class="here">Дайджест</span></div>
 
   <div class="head">
     <div class="head-row">
       <h1>Дайджест</h1>
-      <span class="date" id="digest-date"></span>
+      <div class="pick" id="pick">
+        <button class="pick-btn" id="pick-btn" aria-haspopup="true" aria-expanded="false">
+          <span class="lbl">Выпуск</span><span id="pick-date"></span>
+          <svg class="cv" width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 5 L7 9 L11 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="pick-menu" id="pick-menu"><div class="pick-mh">Архив выпусков</div><div id="pick-list"></div></div>
+      </div>
     </div>
-    <div class="intro" id="digest-intro"></div>
+    <div class="intro" id="intro"></div>
   </div>
 
-  <div class="qual" id="digest-qual">
-    <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 0 L8.4 5.6 L14 7 L8.4 8.4 L7 14 L5.6 8.4 L0 7 L5.6 5.6 Z" fill="#1A1919"/></svg>
-    <span></span>
+  <div class="qual"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M7 0 L8.4 5.6 L14 7 L8.4 8.4 L7 14 L5.6 8.4 L0 7 L5.6 5.6 Z" fill="#1A1919"/></svg><span id="qual"></span></div>
+
+  <div class="layout">
+    <aside class="toc"><div class="toc-h">Содержание</div><div id="toc"></div></aside>
+    <main>
+      <article id="article"></article>
+      <div class="nextprev"><button class="np" id="prev"></button><button class="np r" id="next"></button></div>
+      <div class="foot">Материалы дайджеста носят информационный характер и не являются офертой. Параметры выпусков ориентировочные; финальные условия фиксируются в спецификации инструмента.</div>
+    </main>
   </div>
-
-  <div id="ideas"></div>
-
-  <div class="foot-note">Материалы дайджеста носят информационный характер и не являются офертой. Параметры выпусков — ориентировочные; финальные условия фиксируются в спецификации инструмента.</div>
-
 </div>
 
 <script src="data/lib.js?v=fx4"></script>
 <script src="data/digest.js"></script>
 <script>
-  const S = window.SITE;
-  const D = window.DIGEST;
-  const FAM = {
-    warrant:    { color: "#B3801F" },
-    protection: { color: "#33608C" },
-    discount:   { color: "#2E6E56" }
-  };
-  const MONO = 'font-family="JetBrains Mono, monospace"';
+  const A = window.DIGEST_ARCHIVE;
+  let issue = null, order = [];
 
-  document.getElementById("digest-date").textContent = D.date;
-  document.getElementById("digest-intro").textContent = D.intro;
-  document.querySelector("#digest-qual span").textContent = D.qualNote;
+  function num(id) { return String(order.findIndex(i => i.id === id) + 1).padStart(2, "0"); }
 
-  // Мини-диаграмма выплаты идеи. Типы: callcap (рост до потолка), digital (купон при барьере).
-  function payoffSvg(p, color) {
-    const W = 300, H = 130, PAD = 16;
-    const x = t => PAD + t * (W - PAD * 2);
-    const y = t => PAD + t * (H - PAD * 2);
-    let el = "";
-    if (p.type === "callcap") {
-      const line = "M" + x(0) + " " + y(0.85) + " L" + x(0.38) + " " + y(0.85) + " L" + x(0.74) + " " + y(0.15) + " L" + x(1) + " " + y(0.15);
-      el = '<line x1="' + PAD + '" y1="' + y(0.15) + '" x2="' + (W - PAD) + '" y2="' + y(0.15) + '" stroke="#DDD8D2" stroke-width="1" stroke-dasharray="2 4"/>' +
-        '<path d="' + line + '" fill="none" stroke="' + color + '" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>' +
-        '<rect x="' + (x(0.74) - 3.5) + '" y="' + (y(0.15) - 3.5) + '" width="7" height="7" transform="rotate(45 ' + x(0.74) + ' ' + y(0.15) + ')" fill="' + color + '"/>' +
-        '<text x="' + (W - PAD) + '" y="' + (y(0.15) - 8) + '" text-anchor="end" fill="#6E6A68" font-size="10.5" ' + MONO + '>макс. +' + p.capPct + '%</text>' +
-        '<text x="' + x(0.19) + '" y="' + (y(0.85) + 14) + '" text-anchor="middle" fill="#A8A29B" font-size="10.5" ' + MONO + '>премия ' + String(p.premiumPct).replace(".", ",") + '%</text>';
-    } else if (p.type === "digital") {
-      const base = y(0.62), up = y(0.18), bx = x(0.56);
-      el = '<line x1="' + PAD + '" y1="' + base + '" x2="' + (W - PAD) + '" y2="' + base + '" stroke="#DDD8D2" stroke-width="1" stroke-dasharray="2 4"/>' +
-        '<text x="' + PAD + '" y="' + (base + 14) + '" fill="#A8A29B" font-size="10.5" ' + MONO + '>номинал 100%</text>' +
-        '<path d="M' + PAD + ' ' + base + ' L' + bx + ' ' + base + ' L' + bx + ' ' + up + ' L' + (W - PAD) + ' ' + up + '" fill="none" stroke="' + color + '" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>' +
-        '<rect x="' + (bx - 3.5) + '" y="' + (up - 3.5) + '" width="7" height="7" transform="rotate(45 ' + bx + ' ' + up + ')" fill="' + color + '"/>' +
-        '<text x="' + (W - PAD) + '" y="' + (up - 8) + '" text-anchor="end" fill="#6E6A68" font-size="10.5" ' + MONO + '>барьер +' + p.barrierPct + '% → купон ' + p.couponPct + '%</text>';
-    }
-    return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="display:block">' + el + '</svg>';
+  function renderPicker() {
+    document.getElementById("pick-list").innerHTML = A.issues.map(iss =>
+      '<button class="pick-i' + (iss.id === issue.id ? " active" : "") + '" data-iss="' + iss.id + '">' +
+        '<div class="d"><span class="t">' + iss.label + '</span><span class="c">' + iss.ideas.length + ' идей</span></div>' +
+        '<div class="s">' + iss.summary + '</div>' +
+      '</button>').join("");
+    document.querySelectorAll(".pick-i").forEach(el => el.addEventListener("click", () => {
+      setPickerOpen(false);
+      selectIssue(el.getAttribute("data-iss"), null);
+    }));
   }
 
-  document.getElementById("ideas").innerHTML = D.ideas.map(i => {
-    const c = (FAM[i.family] || FAM.warrant).color;
-    return '<article class="idea" style="--fc:' + c + '">' +
-      '<div class="idea-top"><div>' +
-        '<div class="idea-kind">Идея · ' + i.kind + '</div>' +
-        '<h2>' + i.name + '</h2>' +
-        '<div class="idea-under">' + i.underlying + '</div>' +
-      '</div></div>' +
-      '<div class="hypothesis"><span class="k">Гипотеза</span>' + i.hypothesis + '</div>' +
-      '<div class="idea-grid">' +
-        '<div>' +
-          '<div class="block"><div class="k">Рыночная ситуация</div><p>' + i.situation + '</p></div>' +
-          '<div class="block"><div class="k">Факторы</div><ul>' + i.factors.map(f => '<li>' + f + '</li>').join("") + '</ul></div>' +
-          (i.conclusion ? '<div class="block"><div class="k">Вывод</div><p>' + i.conclusion + '</p></div>' : '') +
-          '<div class="block"><div class="k">Как заработать</div><p>' + i.how + '</p></div>' +
-        '</div>' +
-        '<div class="side">' +
-          '<div class="side-chart">' + payoffSvg(i.payoff, c) + '<div class="cap">' + i.payout + '</div></div>' +
-          i.params.map(p => '<div class="param"><span class="k">' + p[0] + '</span><span class="v">' + p[1] + '</span></div>').join("") +
-          (S && S.isFxSensitive(i.underlying) ? '<div style="padding:9px 12px;border-left:3px solid #E96516;background:#FBEFE3;border-radius:0 7px 7px 0;font-size:11.5px;line-height:1.45;color:#8A5A22">' + S.LEGAL.fx + '</div>' : '') +
-        '</div>' +
-      '</div>' +
-    '</article>';
-  }).join("");
+  function buildTOC() {
+    document.getElementById("toc").innerHTML = A.sections.map(s => {
+      const items = issue.ideas.filter(i => i.family === s.key);
+      if (!items.length) return "";
+      return '<div class="toc-sec" style="color:' + s.color + '">' + s.label + '</div>' +
+        items.map(i => '<button class="toc-i" data-id="' + i.id + '" style="--fc:' + DF.colorOf(i.family) + '">' +
+          '<span class="num">' + num(i.id) + '</span>' +
+          '<span class="tx"><span class="nm">' + i.name + '</span><br><span class="mv">' + i.metric.v + ' · ' + i.metric.k + '</span></span>' +
+        '</button>').join("");
+    }).join("");
+    document.querySelectorAll(".toc-i").forEach(el => el.addEventListener("click", () => show(el.getAttribute("data-id"))));
+  }
+
+  function show(id) {
+    const i = order.find(x => x.id === id) || order[0];
+    const c = DF.colorOf(i.family);
+    const art = document.getElementById("article");
+    art.style.setProperty("--fc", c);
+    art.innerHTML =
+      '<span class="art-num">' + num(i.id) + '</span><span class="art-kind">' + i.kind + '</span>' +
+      '<h2 class="art-title">' + i.name + '</h2>' +
+      '<div class="art-un">' + i.underlying + '</div>' +
+      '<div class="art-bar"></div>' + DF.detailBody(i);
+    document.querySelectorAll(".toc-i").forEach(el => el.classList.toggle("active", el.getAttribute("data-id") === i.id));
+
+    const idx = order.findIndex(x => x.id === i.id);
+    const prev = document.getElementById("prev"), next = document.getElementById("next");
+    if (idx > 0) { prev.disabled = false; prev.dataset.id = order[idx - 1].id; prev.innerHTML = '<div class="l">← Предыдущая</div><div class="n">' + order[idx - 1].name + '</div>'; } else { prev.disabled = true; prev.innerHTML = ""; }
+    if (idx < order.length - 1) { next.disabled = false; next.dataset.id = order[idx + 1].id; next.innerHTML = '<div class="l">Следующая →</div><div class="n">' + order[idx + 1].name + '</div>'; } else { next.disabled = true; next.innerHTML = ""; }
+
+    history.replaceState(null, "", "#" + issue.id + "/" + i.id);
+  }
+
+  function selectIssue(issueId, ideaId) {
+    issue = A.issues.find(x => x.id === issueId) || A.issues[0];
+    order = [];
+    A.sections.forEach(s => issue.ideas.filter(i => i.family === s.key).forEach(i => order.push(i)));
+    document.getElementById("pick-date").textContent = issue.label;
+    document.getElementById("intro").textContent = issue.intro;
+    document.getElementById("qual").textContent = issue.qualNote;
+    renderPicker();
+    buildTOC();
+    show(order.find(i => i.id === ideaId) ? ideaId : order[0].id);
+    window.scrollTo({ top: 0, behavior: "auto" });
+  }
+
+  function setPickerOpen(open) {
+    document.getElementById("pick").classList.toggle("open", open);
+    document.getElementById("pick-btn").setAttribute("aria-expanded", open ? "true" : "false");
+  }
+  document.getElementById("pick-btn").addEventListener("click", e => { e.stopPropagation(); setPickerOpen(!document.getElementById("pick").classList.contains("open")); });
+  document.addEventListener("click", () => setPickerOpen(false));
+  document.addEventListener("keydown", e => { if (e.key === "Escape") setPickerOpen(false); });
+  document.getElementById("prev").addEventListener("click", e => { show(e.currentTarget.dataset.id); window.scrollTo({ top: 0, behavior: "smooth" }); });
+  document.getElementById("next").addEventListener("click", e => { show(e.currentTarget.dataset.id); window.scrollTo({ top: 0, behavior: "smooth" }); });
+
+  // Deep-link: #issueId  или  #issueId/ideaId
+  const parts = decodeURIComponent(location.hash.slice(1)).split("/");
+  const startIssue = A.issues.find(x => x.id === parts[0]) ? parts[0] : A.issues[0].id;
+  selectIssue(startIssue, parts[1] || null);
 </script>
 </body>
 </html>
