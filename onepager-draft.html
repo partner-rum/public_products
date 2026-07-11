@@ -61,7 +61,7 @@
   .t-blocks i { position: absolute; background: var(--or); display: block; }
 
   /* ── Слайд 2 — описание ── */
-  .c-head { padding: 34px 52px 0; display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; }
+  .c-head { padding: 24px 52px 0; display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; }
   .c-title { font-size: 23px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.12; color: var(--ink); }
   .c-badge { display: inline-block; margin-top: 8px; font-family: var(--m); font-size: 9.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--nav); background: #E4E6F2; border-radius: 5px; padding: 3px 9px; }
   .c-sub { margin-top: 9px; font-size: 11.5px; line-height: 1.45; color: var(--hushed); max-width: 430px; }
@@ -70,17 +70,17 @@
   .c-quote .k { font-size: 9.5px; color: var(--faint); margin-top: 2px; }
   .c-quote .chg { font-family: var(--m); font-size: 11.5px; font-weight: 600; margin-top: 3px; }
 
-  .c-grid { flex: 1; display: grid; grid-template-columns: 1fr 1.06fr; gap: 26px; padding: 16px 52px 0; min-height: 0; }
-  .expl { font-size: 11px; line-height: 1.55; color: var(--hushed); }
-  .callout { background: var(--nav); border-radius: 9px; padding: 13px 15px; }
+  .c-grid { flex: 1; display: grid; grid-template-columns: 1fr 1.06fr; gap: 26px; padding: 12px 52px 0; min-height: 0; align-items: start; }
+  .expl { font-size: 10.5px; line-height: 1.48; color: var(--hushed); }
+  .callout { background: var(--nav); border-radius: 9px; padding: 11px 13px; }
   .callout .lbl { color: #E7A867; }
   .callout .expl { color: #D6D9EC; }
-  .under { margin-top: 14px; }
+  .under { margin-top: 10px; }
   .under .expl b { color: var(--ink); font-weight: 600; }
-  .callout .under { margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.14); }
+  .callout .under { margin-top: 9px; padding-top: 9px; border-top: 1px solid rgba(255,255,255,0.14); }
   .callout .under .expl b { color: #fff; }
-  .params { margin-top: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
-  .param { background: var(--card); border: 1px solid var(--border); border-radius: 7px; padding: 7px 11px; }
+  .params { margin-top: 11px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .param { background: var(--card); border: 1px solid var(--border); border-radius: 7px; padding: 6px 10px; }
   .param .v { font-family: var(--m); font-size: 13px; font-weight: 500; color: var(--ink); }
   .param .v.or { color: var(--or); }
   .param .k { font-size: 9px; color: var(--faint); margin-top: 1px; }
@@ -96,7 +96,7 @@
   .scard .sd { font-size: 9px; color: var(--faint); margin-top: 1px; }
   .scard .sr { font-family: var(--m); font-size: 11.5px; font-weight: 600; white-space: nowrap; }
 
-  .c-foot { padding: 12px 52px 16px; font-size: 8.6px; line-height: 1.5; color: var(--faint); }
+  .c-foot { padding: 10px 52px 14px; font-size: 8.6px; line-height: 1.5; color: var(--faint); }
 
   /* ── Слайд 3 — дисклеймер ── */
   .d-slide { padding: 34px 52px; }
@@ -134,15 +134,19 @@
 
 <div id="deck"></div>
 
-<script src="data/instruments.js"></script>
-<script src="data/lib.js"></script>
+<script src="data/instruments.js?v=fx1"></script>
+<script src="data/lib.js?v=fx1"></script>
 <script>
   const S = window.SITE;
   const qs = new URLSearchParams(location.search);
   const inst = S.findInstrument(qs.get("id"));
   const U = S.underlyingInfo(inst.underlying);
   const nom = inst.minNom, q = inst.quote;
-  const theme = ["a", "b", "c"].includes(qs.get("theme")) ? qs.get("theme") : "a";
+  const theme = ["a", "b", "c"].includes(qs.get("theme")) ? qs.get("theme") : "c";
+
+  // Иностранный базовый актив (валюта не рубль) → нужна оговорка про курс
+  const foreignRe = /S&P|NASDAQ|NVDA|NVIDIA|NBIS|Nebius|BTC|IBIT|GLD|SPY|CSI|URA/i;
+  const isForeign = (U && U.unit === "$") || foreignRe.test(inst.underlying);
 
   document.title = "One-pager — " + S.displayName(inst);
   document.getElementById("back-link").href = "board.html#" + encodeURIComponent(inst.id);
@@ -168,7 +172,7 @@
   }
 
   // ── Диаграммы выплат (navy + orange) ──
-  const CW = 420, CH = 190, PAD = 22;
+  const CW = 420, CH = 158, PAD = 20;
   const MONO = 'font-family="JetBrains Mono, monospace"';
   const C = { line: "#1B2153", or: "#EE7D1B", grid: "#E4E5F0", axis: "#CFD2E4", lab: "#8B90A8", lab2: "#5A6180" };
 
@@ -238,7 +242,8 @@
     const K = inst.strike, K2 = inst.strike2;
     const capPct = isCS ? (K2 - K) / K * 100 : 0;
     const premiumRub = nom * q / 100;
-    const upPct = Math.max(16, Math.ceil((q + 6) / 5) * 5);
+    // Сценарий роста: для CS — 3/4 от потолка, округлённые до «красивых» 5% (потолок 50% → 35%); для CALL — 30%
+    const upPct = isCS ? Math.max(5, Math.floor((capPct * 0.75) / 5) * 5) : 30;
     const payout1 = nom * S.PAYOFF.pct(K * (1 + upPct / 100), K, K2) / 100;
     const net1 = payout1 - premiumRub;
     const params = [["Страйк (K)", S.fmtSmart(K) + "% нач. уровня", false]];
@@ -322,8 +327,7 @@
     '<div class="c-head"><div>' +
         '<div class="c-title">' + name + '</div><span class="c-badge">' + c.badge + '</span>' +
         '<div class="c-sub">' + c.subtitle + '</div></div>' +
-      '<div class="c-quote"><div class="v">' + S.fmt2(q) + '%</div><div class="k">котировка · % от номинала</div>' +
-        '<div class="chg" style="color:' + (chgUp ? "var(--up)" : "var(--down)") + '">' + (chgUp ? "+" : "−") + S.fmt1(Math.abs(inst.chg)) + ' п.п. сегодня</div></div>' +
+      '<div class="c-quote"><div class="v">' + S.fmt2(q) + '%</div><div class="k">котировка · % от номинала</div></div>' +
     '</div>' +
     '<div class="c-grid">' +
       '<div>' + howBlock +
@@ -335,13 +339,13 @@
           '<div class="scen">' + c.scen.map(s => '<div class="scard"><div><div class="st">' + s[0] + '</div><div class="sd">' + s[1] + '</div></div><div class="sr" style="color:' + s[3] + '">' + s[2] + '</div></div>').join("") + '</div></div>' +
       '</div>' +
     '</div>' +
-    '<div class="c-foot">Продукт: структурная облигация на базовый актив ' + inst.underlying + '. Пример иллюстративный, без учёта комиссий и налогов. ' + S.LEGAL.qual + '</div>' +
+    '<div class="c-foot">Пример иллюстративный, без учёта комиссий и налогов.' + (isForeign ? " " + S.LEGAL.fx : "") + '</div>' +
     '</section>';
 
   // ── Слайд 3 — дисклеймер ──
   html += '<section class="slide d-slide" data-v="' + theme + '">' +
     '<div><div class="d-title">Ограничение ответственности</div><div class="d-bar"></div></div>' +
-    '<div class="d-body">' + S.LEGAL.onepager.map(p => "<p>" + p + "</p>").join("") + '</div>' +
+    '<div class="d-body">' + (isForeign ? [S.LEGAL.fx].concat(S.LEGAL.onepager) : S.LEGAL.onepager).map(p => "<p>" + p + "</p>").join("") + '</div>' +
     '<div class="d-meta">' + dateS + ' · Структурные продукты</div>' +
     '</section>';
 
