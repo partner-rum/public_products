@@ -38,21 +38,9 @@
   .btn-solar { background: var(--solar); color: var(--ink) !important; border-radius: 6px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 7px; transition: background .3s ease-in-out; }
   .btn-solar:hover { background: var(--solar-l); }
 
-  /* ── Бегущая строка котировок по базовым активам ── */
-  .ticker { position: relative; overflow: hidden; background: var(--card); border-bottom: 1px solid var(--border); }
-  .ticker::before, .ticker::after { content: ""; position: absolute; top: 0; bottom: 0; width: 52px; z-index: 2; pointer-events: none; }
-  .ticker::before { left: 0; background: linear-gradient(90deg, var(--card), rgba(255,255,255,0)); }
-  .ticker::after { right: 0; background: linear-gradient(270deg, var(--card), rgba(255,255,255,0)); }
-  .ticker-track { display: inline-flex; align-items: center; white-space: nowrap; animation: tk-scroll 60s linear infinite; will-change: transform; }
-  .ticker:hover .ticker-track { animation-play-state: paused; }
-  .tk { display: inline-flex; align-items: center; gap: 9px; padding: 8px 20px; border-right: 1px solid var(--border-soft); }
-  .tk-nm { font-family: var(--f-mono); font-size: 11px; font-weight: 500; letter-spacing: 0.04em; color: var(--ink); }
-  .tk-spark { display: block; opacity: 0.9; }
-  @keyframes tk-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-  @media (prefers-reduced-motion: reduce) {
-    .ticker { overflow-x: auto; }
-    .ticker-track { animation: none; }
-  }
+  /* ── Полоса под шапкой: «пульс» рынка (тёмная, оранжевая линия, без данных) ── */
+  .ticker { position: relative; height: 54px; overflow: hidden; background: #101114; border-bottom: 1px solid #23242B; }
+  .ticker svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 
   .head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin: 26px 0 18px; }
   h1 { margin: 0; font-size: 30px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1; }
@@ -554,26 +542,51 @@
   render();
   if (selected) select(selected, false);
 
-  // ── Бегущая строка: декоративный рыночный фон (без котировок и без данных) ──
-  (function ticker() {
-    const el = document.getElementById("ticker");
-    if (!el) return;
-    // Только названия рынков — не живые цены. Ничего не тянется и не устаревает.
-    // Список правится вручную: добавить/убрать тикер = отредактировать строку ниже.
-    const MARKET = ["S&P 500", "USD/RUB", "SBER", "Brent", "NVDA", "МосБиржа", "BTC",
-      "ОФЗ 26238", "GAZP", "Золото", "NBIS", "CNY/RUB", "NASDAQ 100", "IBIT"];
-    // Стабильный декоративный «пульс», сгенерированный из названия (сид из строки) — не реальные данные.
-    const spark = name => {
-      let s = 0; for (const ch of name) s = (s * 31 + ch.charCodeAt(0)) >>> 0;
-      const rnd = () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
-      const w = 58, ht = 16, n = 12, ys = []; let v = 0.3 + rnd() * 0.4;
-      for (let i = 0; i < n; i++) { v = Math.max(0.12, Math.min(0.88, v + (rnd() - 0.5) * 0.42)); ys.push(v); }
-      const pts = ys.map((val, i) => (i / (n - 1) * (w - 2) + 1).toFixed(1) + "," + (ht - 1 - val * (ht - 2)).toFixed(1)).join(" ");
-      return '<svg class="tk-spark" width="' + w + '" height="' + ht + '" viewBox="0 0 ' + w + ' ' + ht + '" aria-hidden="true"><polyline points="' + pts + '" fill="none" stroke="rgba(12,10,8,0.4)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/></svg>';
-    };
-    const base = MARKET.map(n => '<span class="tk"><span class="tk-nm">' + n + '</span>' + spark(n) + '</span>').join("");
+  // ── Полоса-«пульс»: бесконечно рисующаяся оранжевая линия (декор, без данных) ──
+  (function pulse() {
+    const host = document.getElementById("ticker");
+    if (!host) return;
+    const OR = "#EE7D1B", NS = "http://www.w3.org/2000/svg";
     const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    el.innerHTML = '<div class="ticker-track">' + (reduce ? base : base.repeat(4)) + '</div>';
+    const svg = document.createElementNS(NS, "svg");
+    svg.setAttribute("aria-hidden", "true");
+    host.appendChild(svg);
+    let W = 0, H = 0, N = 0, DX = 0, pts = [], path, halo, tip, acc = 0, prev = 0;
+
+    function build() {
+      W = host.clientWidth || 800; H = host.clientHeight || 54;
+      svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+      N = Math.max(24, Math.round(W / 8)); DX = W / (N - 1);
+      let g = "";
+      for (let gy = 18; gy < H; gy += 18) g += '<line x1="0" y1="' + gy + '" x2="' + W + '" y2="' + gy + '" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>';
+      if (!pts.length) { let v = 0.55; for (let i = 0; i < N; i++) { v = Math.min(0.85, Math.max(0.15, v + (Math.random() - 0.5) * 0.1)); pts.push(v); } }
+      else { const last = pts[pts.length - 1] || 0.5; while (pts.length < N) pts.unshift(last); pts = pts.slice(-N); }
+      svg.innerHTML = g +
+        '<path id="pl-line" fill="none" stroke="' + OR + '" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" style="filter:drop-shadow(0 0 7px rgba(238,125,27,0.5))"/>' +
+        '<circle id="pl-halo" r="9" fill="rgba(238,125,27,0.22)"/><circle id="pl-tip" r="3.4" fill="' + OR + '"/>';
+      path = svg.querySelector("#pl-line"); halo = svg.querySelector("#pl-halo"); tip = svg.querySelector("#pl-tip");
+      draw();
+    }
+    function draw() {
+      let d = "M";
+      for (let i = 0; i < N; i++) d += (i ? " L" : "") + (i * DX).toFixed(1) + " " + (8 + pts[i] * (H - 16)).toFixed(1);
+      path.setAttribute("d", d);
+      const ty = 8 + pts[N - 1] * (H - 16);
+      tip.setAttribute("cx", W - 1); tip.setAttribute("cy", ty);
+      halo.setAttribute("cx", W - 1); halo.setAttribute("cy", ty);
+    }
+    build();
+    if (reduce) { tip.setAttribute("opacity", 0); halo.setAttribute("opacity", 0); return; }
+    let rw = 0;
+    window.addEventListener("resize", () => { clearTimeout(rw); rw = setTimeout(build, 150); });
+    function fr(now) {
+      if (!prev) prev = now;
+      acc += now - prev; prev = now;
+      while (acc > 42) { acc -= 42; const nv = pts[N - 1] + (Math.random() - 0.5) * 0.1 - (pts[N - 1] - 0.5) * 0.03; pts.push(Math.min(0.88, Math.max(0.12, nv))); pts.shift(); }
+      draw();
+      requestAnimationFrame(fr);
+    }
+    requestAnimationFrame(fr);
   })();
 </script>
 </body>
