@@ -61,9 +61,15 @@
   .toc-i .nm { font-size: 14px; font-weight: 600; line-height: 1.3; }
   .toc-i .sub { font-family: var(--f-mono); font-size: 10.5px; color: var(--faint); margin-top: 2px; }
   .toc-i .cnt { font-family: var(--f-mono); font-size: 10.5px; color: var(--faint); white-space: nowrap; }
-  .toc-kids { margin: 2px 0 4px; padding-left: 13px; border-left: 1px solid var(--border-soft); margin-left: 12px; display: flex; flex-direction: column; }
+  .toc-kids { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .3s var(--ease); margin-left: 12px; }
+  .toc-kids.open { grid-template-rows: 1fr; }
+  .toc-kids-in { overflow: hidden; min-height: 0; padding-left: 13px; border-left: 1px solid var(--border-soft); }
   .toc-kids .toc-i { padding: 6px 9px; }
   .toc-kids .toc-i .nm { font-size: 13px; font-weight: 500; }
+  .toc-i .chev { flex: none; color: var(--faint); transition: transform .25s var(--ease); align-self: center; }
+  .toc-i.exp .chev { transform: rotate(180deg); }
+  .toc-i.exp { background: #EEEBE5; }
+  .toc-i.exp.active { background: var(--ink); }
 
   /* Статья */
   .art-kind { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.11em; text-transform: uppercase; color: var(--fc); }
@@ -79,6 +85,10 @@
   .metric .k { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); }
   .metric .v { font-size: 13.5px; color: var(--hushed); margin-top: 4px; line-height: 1.5; }
   .plaque { padding: 11px 14px; border-left: 3px solid var(--down); background: #FBEFE3; border-radius: 0 8px 8px 0; font-size: 13px; line-height: 1.5; color: #8A5A22; margin-bottom: 18px; }
+  .usecase { display: flex; gap: 12px; align-items: flex-start; background: #F7F8DE; border: 1px solid #E6EAB4; border-left: 3px solid var(--solar); border-radius: 0 10px 10px 0; padding: 13px 16px; margin-bottom: 20px; }
+  .usecase .ic { flex: none; line-height: 0; margin-top: 1px; }
+  .usecase .k { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.11em; text-transform: uppercase; color: #6E6A2E; margin-bottom: 5px; }
+  .usecase .v { font-size: 15px; line-height: 1.55; color: var(--ink); font-weight: 500; text-wrap: pretty; }
   .boardlink { display: inline-flex; align-items: center; gap: 7px; margin-top: 4px; font-size: 14px; font-weight: 600; color: var(--fc); }
   .backmx { display: inline-flex; align-items: center; gap: 7px; background: none; border: none; cursor: pointer; font-family: var(--f-body); font-size: 13px; color: var(--hushed); padding: 0 0 14px; }
   .backmx:hover { color: var(--ink); }
@@ -132,6 +142,7 @@
     html { scroll-behavior: auto; }
     .pf-line { transition: none !important; } .pf-bar { transition: none !important; }
     .cell, .btn-solar, .topnav a, .seg button { transition: none; }
+    .toc-kids { transition: none; } .toc-i .chev { transition: none; }
   }
   @media (max-width: 960px) {
     .wrap { padding: 0 20px; } .nav-in { padding: 0 20px; }
@@ -355,17 +366,21 @@
     var sub = id === "discount" ? "кредитный риск · дисконт" :
       id === "protection" ? "защита 50–100% · участие" :
       id === "warrants" ? "6 типов · направление × структура" : WSUB[id];
-    return '<button class="toc-i" data-id="' + id + '" style="--fc:' + fam.color + '">' +
+    return '<button class="toc-i" data-id="' + id + '"' + (id === "warrants" ? ' aria-expanded="false"' : '') + ' style="--fc:' + fam.color + '">' +
       '<span class="dot" aria-hidden="true"></span>' +
       '<span class="tx"><span class="nm">' + (id === "warrants" ? "Варранты" : LIB[id].name) + '</span><br><span class="sub">' + sub + '</span></span>' +
-      (id === "warrants" ? '<span class="cnt">6</span>' : '') +
+      (id === "warrants" ? '<svg class="chev" width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 5 L7 9 L11 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>' : '') +
     '</button>';
   }
   document.getElementById("toc").innerHTML =
     tocItem("discount") + tocItem("protection") + tocItem("warrants") +
-    '<div class="toc-kids">' + WTYPES.map(function (k) { return tocItem(k); }).join("") + '</div>';
+    '<div class="toc-kids" id="toc-kids"><div class="toc-kids-in">' + WTYPES.map(function (k) { return tocItem(k); }).join("") + '</div></div>';
 
   // ── Статьи ──
+  function usecaseHTML(d) {
+    return '<div class="usecase"><span class="ic" aria-hidden="true"><svg width="17" height="17" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="6.4" stroke="#7A7A16" stroke-width="1.5"/><circle cx="9" cy="9" r="1.9" fill="#7A7A16"/></svg></span>' +
+      '<div><div class="k">Когда уместен</div><div class="v">' + d.whenToUse + '</div></div></div>';
+  }
   function metricsHTML(d) {
     return '<div class="metrics">' +
       '<div class="metric"><div class="k">Макс. прибыль</div><div class="v">' + d.profit + '</div></div>' +
@@ -396,10 +411,10 @@
     }
     var d = LIB[id];
     var kind = famKey === "discount" ? "Продукт · консервативный" : famKey === "protection" ? "Продукт · сбалансированный" : "Варрант · активный";
-    var left = '<div class="kv"><div class="k">Как работает</div><div class="v">' + d.how + '</div></div>' +
+    var left = usecaseHTML(d) +
+      '<div class="kv"><div class="k">Как работает</div><div class="v">' + d.how + '</div></div>' +
       metricsHTML(d) +
       '<div class="plaque">' + d.risk + '</div>' +
-      '<div class="kv"><div class="k">Когда уместен</div><div class="v">' + d.whenToUse + '</div></div>' +
       boardLink(fam, "Смотреть выпуски на доске");
     var viz;
     if (id === "protection") {
@@ -480,6 +495,10 @@
     bindArticle(id);
     animate(art);
     document.querySelectorAll(".toc-i").forEach(function (el) { el.classList.toggle("active", el.getAttribute("data-id") === id); });
+    var warr = (id === "warrants" || WTYPES.indexOf(id) >= 0);
+    var kids = document.getElementById("toc-kids"), par = document.querySelector('.toc-i[data-id="warrants"]');
+    if (kids) kids.classList.toggle("open", warr);
+    if (par) { par.classList.toggle("exp", warr); par.setAttribute("aria-expanded", warr ? "true" : "false"); }
 
     var idx = ORDER.indexOf(id);
     var prev = document.getElementById("prev"), next = document.getElementById("next");
@@ -494,7 +513,16 @@
   }
 
   document.querySelectorAll(".toc-i").forEach(function (el) {
-    el.addEventListener("click", function () { select(el.getAttribute("data-id"), true); });
+    el.addEventListener("click", function () {
+      var id = el.getAttribute("data-id");
+      var kids = document.getElementById("toc-kids");
+      // Повторный клик по раскрытым «Варрантам» — свернуть список
+      if (id === "warrants" && current === "warrants" && kids.classList.contains("open")) {
+        kids.classList.remove("open"); el.classList.remove("exp"); el.setAttribute("aria-expanded", "false");
+        return;
+      }
+      select(id, true);
+    });
   });
   document.getElementById("prev").addEventListener("click", function (e) { select(e.currentTarget.dataset.id, true); });
   document.getElementById("next").addEventListener("click", function (e) { select(e.currentTarget.dataset.id, true); });
