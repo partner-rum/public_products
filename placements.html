@@ -7,106 +7,115 @@
 <meta name="description" content="Размещённые выпуски структурных облигаций: базовые активы, параметры выплат, даты размещения и погашения.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Prata&family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --night: #33121C; --night2: #47182A;
-    --paper: #F2EFE9; --card: #FCFBF8;
-    --ink: #221B1E; --fog: #6E6266;
-    --hair: #E0D9D2; --hair2: #EAE4DD;
-    --gold: #C09246; --gold-dark: #A87C33;
-    --accent: #6B2A3C;
+    --canvas: #F4F2F0; --card: #FFFFFF;
+    --black: #1A1919;
+    --ink: #0C0A08; --hushed: rgba(12,10,8,0.6); --faint: rgba(12,10,8,0.38);
+    --border: #D2CECB; --border-soft: #E0DCD6;
+    --solar: #E4F222; --solar-l: #F5FF78;
     --spruce: #2E6E56; --steel: #33608C; --amber: #B3801F;
-    --f-disp: 'Prata', Georgia, serif;
+    --up: #1F7A53; --down: #E96516;
     --f-body: 'Onest', system-ui, sans-serif;
     --f-mono: 'JetBrains Mono', Consolas, monospace;
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
   }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--f-body); -webkit-font-smoothing: antialiased; }
+  body { margin: 0; background: var(--canvas); color: var(--ink); font-family: var(--f-body); -webkit-font-smoothing: antialiased; }
   a { text-decoration: none; color: inherit; }
-  a:focus-visible, button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; border-radius: 4px; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 4px; }
   .wrap { max-width: 1160px; margin: 0 auto; padding: 0 44px 64px; }
 
-  .topbar { background: var(--night); color: #F2EAE6; }
-  .topbar-in { max-width: 1160px; margin: 0 auto; padding: 18px 44px; display: flex; justify-content: space-between; align-items: center; }
-  .brand { display: flex; align-items: center; gap: 11px; }
-  .brand-name { font-size: 15px; font-weight: 600; }
-  .topnav { display: flex; gap: 26px; font-size: 14px; font-weight: 500; }
-  .topnav a { color: #CDB4BB; }
-  .topnav a:hover { color: #FFFFFF; }
+  .nav { position: sticky; top: 0; z-index: 20; background: rgba(244,242,240,0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); }
+  .nav-in { max-width: 1160px; margin: 0 auto; padding: 0 44px; height: 62px; display: flex; align-items: center; gap: 12px; }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand-name { font-size: 14.5px; font-weight: 600; }
+  .topnav { margin-left: auto; display: flex; align-items: center; gap: 22px; font-size: 14px; font-weight: 500; }
+  .topnav a { color: var(--hushed); transition: color .2s; }
+  .topnav a:hover { color: var(--ink); }
+  .topnav a[aria-current="page"] { color: var(--ink); font-weight: 600; }
+  .btn-solar { background: var(--solar); color: var(--ink) !important; border-radius: 6px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 7px; transition: background .3s ease-in-out; }
+  .btn-solar:hover { background: var(--solar-l); }
 
-  .crumbs { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--fog); padding: 26px 0 0; }
+  .crumbs { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--hushed); padding: 26px 0 0; }
   .crumbs a:hover { color: var(--ink); }
-  .crumbs .sep { color: #C2B8B2; }
+  .crumbs .sep { color: #C4BFB8; }
   .crumbs .here { color: var(--ink); font-weight: 500; }
 
   .head { display: flex; flex-direction: column; gap: 12px; max-width: 800px; margin-top: 24px; }
-  h1 { margin: 0; font-family: var(--f-disp); font-size: 34px; font-weight: 400; letter-spacing: 0.002em; }
-  .desc { font-size: 15px; line-height: 1.6; color: #4A3F43; text-wrap: pretty; }
+  h1 { margin: 0; font-family: var(--f-body); font-size: 34px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1; }
+  .desc { font-size: 15px; line-height: 1.6; color: var(--hushed); text-wrap: pretty; }
 
   .controls { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; margin: 26px 0 12px; }
   .kinds { display: flex; gap: 6px; }
-  .kf { border: 1px solid var(--hair); background: var(--card); border-radius: 999px; padding: 7px 16px; font-size: 13.5px; font-weight: 500; color: var(--fog); cursor: pointer; font-family: var(--f-body); }
+  .kf { border: 1px solid var(--border); background: var(--card); border-radius: 6px; padding: 7px 16px; font-size: 13.5px; font-weight: 500; color: var(--hushed); cursor: pointer; font-family: var(--f-body); }
   .kf:hover { color: var(--ink); }
-  .kf.active { background: var(--night); border-color: var(--night); color: #F2EAE6; font-weight: 600; }
+  .kf.active { background: var(--black); border-color: var(--black); color: #F4F2F0; font-weight: 600; }
   .kf .n { font-family: var(--f-mono); font-size: 11px; opacity: 0.75; margin-left: 5px; }
-  .matured-toggle { display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--fog); cursor: pointer; user-select: none; }
-  .matured-toggle input { accent-color: var(--gold-dark); width: 15px; height: 15px; cursor: pointer; }
+  .matured-toggle { display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--hushed); cursor: pointer; user-select: none; }
+  .matured-toggle input { accent-color: var(--black); width: 15px; height: 15px; cursor: pointer; }
 
-  .count { font-family: var(--f-mono); font-size: 12px; color: var(--fog); margin: 0 0 10px; }
+  .count { font-family: var(--f-mono); font-size: 12px; color: var(--hushed); margin: 0 0 10px; }
 
-  .table { background: var(--card); border: 1px solid var(--hair); border-radius: 14px; overflow: hidden; }
-  .thead { display: grid; grid-template-columns: 1.6fr 1.4fr 1fr 1fr 0.75fr 0.85fr 0.85fr; background: #F5F0EA; border-bottom: 1px solid var(--hair); }
-  .th { padding: 11px 18px; font-family: var(--f-mono); font-size: 10.5px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fog); }
+  .table { background: var(--card); border: 1px solid var(--border-soft); border-radius: 12px; overflow: hidden; }
+  .thead { display: grid; grid-template-columns: 1.6fr 1.4fr 1fr 1fr 0.75fr 0.85fr 0.85fr; background: #EFECE6; border-bottom: 1px solid var(--border-soft); }
+  .th { padding: 11px 18px; font-family: var(--f-mono); font-size: 10.5px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--hushed); }
   .r { text-align: right; }
-  .row { display: grid; grid-template-columns: 1.6fr 1.4fr 1fr 1fr 0.75fr 0.85fr 0.85fr; align-items: center; width: 100%; border: none; border-top: 1px solid var(--hair2); background: transparent; text-align: left; cursor: pointer; font-family: var(--f-body); color: var(--ink); padding: 0; }
-  .row:hover { background: #F6F1EB; }
-  .row.open { background: #F6F1EB; }
+  .row { display: grid; grid-template-columns: 1.6fr 1.4fr 1fr 1fr 0.75fr 0.85fr 0.85fr; align-items: center; width: 100%; border: none; border-top: 1px solid #E7E3DD; background: transparent; text-align: left; cursor: pointer; font-family: var(--f-body); color: var(--ink); padding: 0; }
+  .row:hover { background: #FAF8F5; }
+  .row.open { background: #FAF8F5; }
   .cell { padding: 13px 18px; }
   .serial { font-size: 14px; font-weight: 600; }
-  .isin { font-family: var(--f-mono); font-size: 11px; color: #A39A94; margin-top: 3px; }
-  .asset { font-size: 13.5px; color: #3A3238; }
-  .fxtag { font-family: var(--f-mono); font-size: 10px; color: var(--gold-dark); background: #F3E9D8; border-radius: 4px; padding: 1px 5px; margin-left: 6px; }
+  .isin { font-family: var(--f-mono); font-size: 11px; color: #A8A29B; margin-top: 3px; }
+  .asset { font-size: 13.5px; color: var(--hushed); }
+  .fxtag { font-family: var(--f-mono); font-size: 10px; color: #6E6A68; background: #EFECE6; border-radius: 4px; padding: 1px 5px; margin-left: 6px; }
   .kind-chip { display: inline-block; font-size: 11.5px; font-weight: 600; border-radius: 999px; padding: 3px 10px; }
   .param { font-family: var(--f-mono); font-size: 13.5px; text-align: right; }
-  .dt { font-size: 13px; color: #3A3238; text-align: right; }
-  .dt small { display: block; font-size: 10.5px; color: #A39A94; }
-  .matured .serial, .matured .asset, .matured .param, .matured .dt { color: #A39A94; }
+  .dt { font-size: 13px; color: var(--hushed); text-align: right; }
+  .dt small { display: block; font-size: 10.5px; color: #A8A29B; }
+  .matured .serial, .matured .asset, .matured .param, .matured .dt { color: #A8A29B; }
 
-  .details { display: none; border-top: 1px dashed var(--hair2); background: #FAF7F2; padding: 16px 18px 18px; }
+  .details { display: none; border-top: 1px dashed #E7E3DD; background: #FAF8F5; padding: 16px 18px 18px; }
   .details.open { display: block; }
   .dfacts { display: flex; gap: 26px; flex-wrap: wrap; }
   .dfact { min-width: 140px; }
-  .dfact .k { font-size: 10.5px; letter-spacing: 0.07em; text-transform: uppercase; color: #95898E; margin-bottom: 4px; }
+  .dfact .k { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: #A8A29B; margin-bottom: 4px; }
   .dfact .v { font-size: 13.5px; line-height: 1.45; }
   .dfact .v.mono { font-family: var(--f-mono); font-size: 13px; }
 
-  .disclaimer { margin-top: 24px; font-size: 12.5px; line-height: 1.55; color: #95898E; max-width: 640px; }
-  .updated { font-family: var(--f-mono); font-size: 11.5px; color: #95898E; margin-top: 8px; }
+  .disclaimer { margin-top: 24px; font-size: 12.5px; line-height: 1.55; color: #A8A29B; max-width: 640px; }
+  .updated { font-family: var(--f-mono); font-size: 11.5px; color: #A8A29B; margin-top: 8px; }
 
   @media (max-width: 900px) {
     .wrap { padding: 0 20px 48px; }
-    .topbar-in { padding: 14px 20px; flex-direction: column; align-items: flex-start; gap: 10px; }
-    .topnav { gap: 18px; font-size: 13.5px; }
     h1 { font-size: 27px; }
     .thead, .row { grid-template-columns: 1.6fr 1.2fr 1fr; }
     .th:nth-child(n+4), .cell:nth-child(n+4) { display: none; }
+  }
+  @media (max-width: 860px) {
+    .nav-in { height: auto; flex-wrap: wrap; padding: 12px 20px; row-gap: 10px; }
+    .topnav { margin-left: 0; width: 100%; gap: 16px; font-size: 13.5px; }
   }
 </style>
 </head>
 <body>
 
-<header class="topbar">
-  <div class="topbar-in">
+<header class="nav">
+  <div class="nav-in">
     <a class="brand" href="index.html" aria-label="На главную">
-      <svg width="26" height="26" viewBox="0 0 26 26" fill="none" aria-hidden="true">
-        <path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#C09246"/>
+      <svg width="22" height="22" viewBox="0 0 26 26" fill="none" aria-hidden="true">
+        <path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#1A1919"/>
       </svg>
       <span class="brand-name">Структурные продукты</span>
     </a>
     <nav class="topnav">
-      <a href="board.html?type=warrant">Доска инструментов</a>
       <a href="digest.html">Дайджест</a>
+      <a href="placements.html" aria-current="page">Выпуски</a>
+      <a href="about.html">Об устройстве</a>
+      <a class="btn-solar" href="board.html?type=warrant">Доска
+        <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
     </nav>
   </div>
 </header>
@@ -160,7 +169,7 @@
   const fmtD = s => s ? s.split("-").reverse().join(".") : "—";
   const fmtN = v => v == null ? "—" : String(v).replace(".", ",").replace("-", "−");
   const fmtPerf = v => v == null ? null : (v > 0 ? "+" : "") + fmtN(v) + "%";
-  const perfColor = v => v > 0 ? "#2E7D57" : (v < 0 ? "#B4483C" : "#6E6266");
+  const perfColor = v => v > 0 ? "#1F7A53" : (v < 0 ? "#E96516" : "#6E6A68");
 
   document.getElementById("updated").textContent = fmtD(D.updated);
 
@@ -219,7 +228,7 @@
         '<div class="cell"><span class="asset">' + i.basket.map(b => b.n).join(", ") + '</span>' + (i.fx ? '<span class="fxtag">FX</span>' : '') + '</div>' +
         '<div class="cell"><span class="kind-chip" style="color:' + k.fg + ';background:' + k.bg + '">' + k.label + '</span></div>' +
         '<div class="cell param">' + keyParam(i) + '</div>' +
-        '<div class="cell param" style="color:' + (i.perfPct != null ? perfColor(i.perfPct) : "#A39A94") + ';font-weight:600">' + (fmtPerf(i.perfPct) || "—") + '</div>' +
+        '<div class="cell param" style="color:' + (i.perfPct != null ? perfColor(i.perfPct) : "#A8A29B") + ';font-weight:600">' + (fmtPerf(i.perfPct) || "—") + '</div>' +
         '<div class="cell dt">' + fmtD(i.issueStart) + '</div>' +
         '<div class="cell dt">' + fmtD(i.maturity) + (i.matured ? '<small>погашен</small>' : '') + '</div>' +
       '</button>' +
