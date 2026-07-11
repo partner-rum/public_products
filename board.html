@@ -38,6 +38,22 @@
   .btn-solar { background: var(--solar); color: var(--ink) !important; border-radius: 6px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 7px; transition: background .3s ease-in-out; }
   .btn-solar:hover { background: var(--solar-l); }
 
+  /* ── Бегущая строка котировок по базовым активам ── */
+  .ticker { position: relative; overflow: hidden; background: var(--card); border-bottom: 1px solid var(--border); }
+  .ticker::before, .ticker::after { content: ""; position: absolute; top: 0; bottom: 0; width: 52px; z-index: 2; pointer-events: none; }
+  .ticker::before { left: 0; background: linear-gradient(90deg, var(--card), rgba(255,255,255,0)); }
+  .ticker::after { right: 0; background: linear-gradient(270deg, var(--card), rgba(255,255,255,0)); }
+  .ticker-track { display: inline-flex; align-items: center; white-space: nowrap; animation: tk-scroll 60s linear infinite; will-change: transform; }
+  .ticker:hover .ticker-track { animation-play-state: paused; }
+  .tk { display: inline-flex; align-items: center; gap: 9px; padding: 8px 20px; border-right: 1px solid var(--border-soft); }
+  .tk-nm { font-family: var(--f-mono); font-size: 11px; font-weight: 500; letter-spacing: 0.04em; color: var(--ink); }
+  .tk-spark { display: block; opacity: 0.9; }
+  @keyframes tk-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  @media (prefers-reduced-motion: reduce) {
+    .ticker { overflow-x: auto; }
+    .ticker-track { animation: none; }
+  }
+
   .head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin: 26px 0 18px; }
   h1 { margin: 0; font-size: 30px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1; }
   .count { font-family: var(--f-mono); font-size: 12px; color: var(--hushed); }
@@ -157,6 +173,8 @@
     </nav>
   </div>
 </header>
+
+<div class="ticker" id="ticker" aria-hidden="true"></div>
 
 <div class="wrap">
   <div class="head">
@@ -536,6 +554,28 @@
   }
   render();
   if (selected) select(selected, false);
+
+  // ── Бегущая строка: декоративный рыночный фон (без котировок и без данных) ──
+  (function ticker() {
+    const el = document.getElementById("ticker");
+    if (!el) return;
+    // Только названия рынков — не живые цены. Ничего не тянется и не устаревает.
+    // Список правится вручную: добавить/убрать тикер = отредактировать строку ниже.
+    const MARKET = ["S&P 500", "USD/RUB", "SBER", "Brent", "NVDA", "МосБиржа", "BTC",
+      "ОФЗ 26238", "GAZP", "Золото", "NBIS", "CNY/RUB", "NASDAQ 100", "IBIT"];
+    // Стабильный декоративный «пульс», сгенерированный из названия (сид из строки) — не реальные данные.
+    const spark = name => {
+      let s = 0; for (const ch of name) s = (s * 31 + ch.charCodeAt(0)) >>> 0;
+      const rnd = () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
+      const w = 58, ht = 16, n = 12, ys = []; let v = 0.3 + rnd() * 0.4;
+      for (let i = 0; i < n; i++) { v = Math.max(0.12, Math.min(0.88, v + (rnd() - 0.5) * 0.42)); ys.push(v); }
+      const pts = ys.map((val, i) => (i / (n - 1) * (w - 2) + 1).toFixed(1) + "," + (ht - 1 - val * (ht - 2)).toFixed(1)).join(" ");
+      return '<svg class="tk-spark" width="' + w + '" height="' + ht + '" viewBox="0 0 ' + w + ' ' + ht + '" aria-hidden="true"><polyline points="' + pts + '" fill="none" stroke="rgba(12,10,8,0.4)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/></svg>';
+    };
+    const base = MARKET.map(n => '<span class="tk"><span class="tk-nm">' + n + '</span>' + spark(n) + '</span>').join("");
+    const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    el.innerHTML = '<div class="ticker-track">' + (reduce ? base : base.repeat(4)) + '</div>';
+  })();
 </script>
 </body>
 </html>
