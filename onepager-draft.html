@@ -64,9 +64,12 @@
   .col.between { justify-content: space-between; gap: 14px; }
 
   .expl { font-size: 10.5px; line-height: 1.55; color: var(--hushed); }
-  .info { background: var(--card); border: 1px solid var(--border); border-radius: 9px; padding: 13px 15px; }
-  .info .expl b { color: var(--ink); font-weight: 600; }
-  .under { margin-top: 11px; padding-top: 11px; border-top: 1px solid var(--line); }
+  .callout { background: var(--nav); border-radius: 10px; padding: 14px 16px; }
+  .callout .lbl { color: #E7A867; }
+  .callout .expl { color: #D2D6EC; }
+  .callout .expl b { color: #fff; font-weight: 600; }
+  .under { margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.16); }
+  .under .expl { color: #E4E7F4; }
 
   .params { display: grid; gap: 8px; }
   .params.c2 { grid-template-columns: 1fr 1fr; }
@@ -280,7 +283,7 @@
 
   // ── Строительные блоки слайда 2 ──
   const howHTML =
-    '<div class="info"><div class="lbl">Как устроен продукт</div><div class="expl">' + c.explainer + '</div>' +
+    '<div class="callout"><div class="lbl">Как устроен продукт</div><div class="expl">' + c.explainer + '</div>' +
       '<div class="under"><div class="lbl">О базовом активе · ' + inst.underlying + '</div>' +
         '<div class="expl">' + underDesc() + '</div></div></div>';
   const chartHTML = '<div class="chart-box"><div class="ct">Диаграмма выплат</div>' + c.chart() + '<div class="chart-cap">' + c.chartCap + '</div></div>';
