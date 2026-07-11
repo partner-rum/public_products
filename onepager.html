@@ -47,6 +47,7 @@
   .t-title { font-size: 46px; font-weight: 600; letter-spacing: -0.025em; line-height: 1.08; max-width: 780px; color: #FFFFFF; }
   .t-bar { margin-top: 20px; width: 68px; height: 5px; background: var(--or); }
   .t-meta { font-family: var(--m); font-size: 11px; letter-spacing: 0.04em; color: #9CA1C4; }
+  .t-blocks { position: absolute; inset: 0; pointer-events: none; }
   .t-blocks i { position: absolute; background: var(--or); display: block; }
 
   /* ── Слайд 2 — описание ── */
@@ -169,12 +170,17 @@
     if (K2) capMark = '<line x1="' + PAD + '" y1="' + y(cap) + '" x2="' + (CW - PAD) + '" y2="' + y(cap) + '" stroke="' + C.grid + '" stroke-width="1" stroke-dasharray="2 4"/>' +
       '<rect x="' + (x(K2) - 4) + '" y="' + (y(cap) - 4) + '" width="8" height="8" transform="rotate(45 ' + x(K2) + ' ' + y(cap) + ')" fill="' + C.line + '"/>' +
       '<text x="' + x(K2) + '" y="' + (y(cap) - 8) + '" text-anchor="middle" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>K₂ ' + S.fmtSmart(K2) + ' · макс. ' + S.fmtSmart(cap) + '%</text>';
+    // Простой колл: потолка нет — линия уходит вверх со стрелкой на конце + подпись
+    const pathMarker = K2 ? "" : ' marker-end="url(#up-arrow)"';
+    const upMark = K2 ? "" :
+      '<text x="' + (CW - PAD) + '" y="11" text-anchor="end" fill="' + C.line + '" font-size="10" ' + MONO + '>рост не ограничен</text>';
     const beEnd = x(sBe) > CW * 0.72;
     return '<svg viewBox="0 0 ' + CW + ' ' + CH + '" width="100%" style="display:block">' +
+      '<defs><marker id="up-arrow" markerWidth="11" markerHeight="10" refX="1.5" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L10 5 L0 10 Z" fill="' + C.line + '"/></marker></defs>' +
       '<line x1="' + PAD + '" y1="' + y(0) + '" x2="' + (CW - PAD) + '" y2="' + y(0) + '" stroke="' + C.grid + '" stroke-width="1"/>' +
       '<line x1="' + PAD + '" y1="' + y(q) + '" x2="' + (CW - PAD) + '" y2="' + y(q) + '" stroke="' + C.or + '" stroke-width="1" stroke-dasharray="4 4"/>' +
       '<text x="' + (PAD + 2) + '" y="' + (y(q) - 5) + '" fill="' + C.or + '" font-size="10" ' + MONO + '>премия ' + S.fmt1(q) + '%</text>' + capMark +
-      '<path d="' + line + '" fill="none" stroke="' + C.line + '" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>' +
+      '<path d="' + line + '" fill="none" stroke="' + C.line + '" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"' + pathMarker + '/>' + upMark +
       '<rect x="' + (x(K) - 4) + '" y="' + (y(0) - 4) + '" width="8" height="8" transform="rotate(45 ' + x(K) + ' ' + y(0) + ')" fill="' + C.line + '"/>' +
       '<text x="' + x(K) + '" y="' + (y(0) + 15) + '" text-anchor="middle" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>K ' + S.fmtSmart(K) + '</text>' +
       '<circle cx="' + x(sBe) + '" cy="' + y(q) + '" r="4" fill="' + C.or + '"/>' +
@@ -233,7 +239,7 @@
       chart: chWarrant, params,
       chartCap: isCS
         ? "Выплата в % от номинала; уровень БА — в % от начального. Выше K₂ не растёт (макс. " + S.fmtSmart(capPct) + "%). Пунктир — премия; б/у — безубыток."
-        : "Выплата в % от номинала; уровень БА — в % от начального. Пунктир — премия; б/у — точка безубытка.",
+        : "Выплата в % от номинала; уровень БА — в % от начального. Рост выплаты не ограничен потолком. Пунктир — премия; б/у — безубыток.",
       exIntro: "Номинал " + S.fmtInt(nom) + " ₽ · премия " + S.fmt2(q) + "% = " + S.fmtInt(premiumRub) + " ₽",
       scen: [
         [inst.underlying + " вырос на " + upPct + "%", "выплата " + S.fmtInt(payout1) + " ₽", (net1 >= 0 ? "+" : "−") + S.fmtInt(Math.abs(net1)) + " ₽", net1 >= 0 ? "var(--up)" : "var(--down)"],
