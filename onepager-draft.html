@@ -88,10 +88,11 @@
   .chart-box { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 11px 14px 8px; }
   .chart-box .ct { font-size: 11px; font-weight: 600; color: var(--nav); margin-bottom: 3px; }
   .chart-cap { margin-top: 5px; font-size: 9px; line-height: 1.4; color: var(--faint); }
-  .example { margin-top: 12px; }
-  .ex-intro { font-size: 10px; color: var(--hushed); margin-bottom: 6px; }
-  .scen { display: flex; flex-direction: column; gap: 5px; }
-  .scard { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; background: var(--card); border: 1px solid var(--border); border-radius: 7px; padding: 7px 11px; }
+  .example { margin-top: 11px; }
+  .ex-intro { font-size: 10px; color: var(--hushed); margin-bottom: 5px; }
+  .scen { display: flex; flex-direction: column; gap: 4px; }
+  .scard { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; background: var(--card); border: 1px solid var(--border); border-radius: 7px; padding: 6px 11px; }
+  .fx-inline { margin-top: 7px; padding: 6px 10px; border-left: 3px solid var(--or); background: var(--or-soft); border-radius: 0 5px 5px 0; font-size: 9px; line-height: 1.4; font-weight: 500; color: #7A4A12; }
   .scard .st { font-size: 10.5px; font-weight: 600; color: var(--ink); }
   .scard .sd { font-size: 9px; color: var(--faint); margin-top: 1px; }
   .scard .sr { font-family: var(--m); font-size: 11.5px; font-weight: 600; white-space: nowrap; }
@@ -147,6 +148,7 @@
   // Иностранный базовый актив (валюта не рубль) → нужна оговорка про курс
   const foreignRe = /S&P|NASDAQ|NVDA|NVIDIA|NBIS|Nebius|BTC|IBIT|GLD|SPY|CSI|URA/i;
   const isForeign = (U && U.unit === "$") || foreignRe.test(inst.underlying);
+  const fxShort = "Расчёт в валюте базового актива — изменение курса рубля к ней не учтено.";
 
   document.title = "One-pager — " + S.displayName(inst);
   document.getElementById("back-link").href = "board.html#" + encodeURIComponent(inst.id);
@@ -172,7 +174,7 @@
   }
 
   // ── Диаграммы выплат (navy + orange) ──
-  const CW = 420, CH = 158, PAD = 20;
+  const CW = 420, CH = 134, PAD = 18;
   const MONO = 'font-family="JetBrains Mono, monospace"';
   const C = { line: "#1B2153", or: "#EE7D1B", grid: "#E4E5F0", axis: "#CFD2E4", lab: "#8B90A8", lab2: "#5A6180" };
 
@@ -248,7 +250,8 @@
     const net1 = payout1 - premiumRub;
     const params = [["Страйк (K)", S.fmtSmart(K) + "% нач. уровня", false]];
     if (isCS) params.push(["Потолок (K₂)", S.fmtSmart(K2) + "% · до " + S.fmtSmart(capPct) + "%", false]);
-    params.push(["Срок", inst.tenor, false], ["Экспирация", inst.expiry, false], ["Премия", S.fmt2(q) + "% номинала", true]);
+    else params.push(["Макс. убыток", "премия", false]);
+    params.push(["Срок", inst.tenor, false], ["Мин. номинал", S.fmtInt(nom) + " ₽", false]);
     c = {
       badge: isCS ? "Колл-спред · структурная облигация" : "CALL · структурная облигация",
       subtitle: "Заработать на росте " + inst.underlying + " с полной экспозицией на номинал и риском, ограниченным премией.",
@@ -272,7 +275,7 @@
       subtitle: "Покупка дешевле номинала, погашение по 100% — доход зафиксирован в день сделки.",
       chart: chDiscount,
       chartCap: "Покупка дешевле номинала, погашение по 100%. Доход — разница, зафиксированная в момент покупки.",
-      params: [["Цена покупки", S.fmt2(q) + "% номинала", false], ["Доходность", S.fmt1(S.yieldAnnual(inst)) + "% год.", true], ["Погашение", inst.expiry, false], ["Осталось", S.daysTo(inst.expiry) + " дн.", false]],
+      params: [["Доходность", S.fmt1(S.yieldAnnual(inst)) + "% год.", true], ["Выплата", "100% номинала", false], ["Осталось", S.daysTo(inst.expiry) + " дн.", false], ["Мин. номинал", S.fmtInt(nom) + " ₽", false]],
       exIntro: "Номинал " + S.fmtInt(nom) + " ₽ · покупка по " + S.fmt2(q) + "% = " + S.fmtInt(buyRub) + " ₽",
       scen: [
         ["Дождались погашения", "выплата 100% номинала", "+" + S.fmtInt(nom - buyRub) + " ₽", "var(--up)"],
@@ -290,7 +293,7 @@
       subtitle: "Участие в росте " + inst.underlying + " с возвратом 100% номинала при любом сценарии.",
       chart: chProtection,
       chartCap: "Выплата в % от номинала: не ниже 100% при любом сценарии, выше S₀ — участие в росте.",
-      params: [["Защита капитала", "100%", false], ["Участие в росте", part + "%", true], ["Нач. уровень S₀", S.fmtSmart(inst.strike), false], ["Экспирация", inst.expiry, false]],
+      params: [["Защита капитала", "100%", false], ["Участие в росте", part + "%", true], ["Нач. уровень S₀", S.fmtSmart(inst.strike), false], ["Мин. номинал", S.fmtInt(nom) + " ₽", false]],
       exIntro: "Номинал " + S.fmtInt(nom) + " ₽ · вход по " + S.fmt2(q) + "% = " + S.fmtInt(entryRub) + " ₽",
       scen: [
         [inst.underlying + " вырос на " + upPct + "%", "выплата 100% + участие", "+" + S.fmtInt(payoutUp - entryRub) + " ₽", "var(--up)"],
@@ -336,10 +339,11 @@
       '<div>' +
         '<div class="chart-box"><div class="ct">Диаграмма выплат</div>' + c.chart() + '<div class="chart-cap">' + c.chartCap + '</div></div>' +
         '<div class="example"><div class="lbl">Пример расчёта</div><div class="ex-intro">' + c.exIntro + '</div>' +
-          '<div class="scen">' + c.scen.map(s => '<div class="scard"><div><div class="st">' + s[0] + '</div><div class="sd">' + s[1] + '</div></div><div class="sr" style="color:' + s[3] + '">' + s[2] + '</div></div>').join("") + '</div></div>' +
+          '<div class="scen">' + c.scen.map(s => '<div class="scard"><div><div class="st">' + s[0] + '</div><div class="sd">' + s[1] + '</div></div><div class="sr" style="color:' + s[3] + '">' + s[2] + '</div></div>').join("") + '</div>' +
+          (isForeign ? '<div class="fx-inline">' + fxShort + '</div>' : '') + '</div>' +
       '</div>' +
     '</div>' +
-    '<div class="c-foot">Пример иллюстративный, без учёта комиссий и налогов.' + (isForeign ? " " + S.LEGAL.fx : "") + '</div>' +
+    '<div class="c-foot">Пример иллюстративный, без учёта комиссий и налогов.</div>' +
     '</section>';
 
   // ── Слайд 3 — дисклеймер ──
