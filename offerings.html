@@ -230,7 +230,7 @@
       ? '<span class="badge live"><span class="dot"></span>Идёт размещение</span>'
       : '<span class="badge up"><span class="dot"></span>' + o.statusLabel + '</span>';
     var tiles = tile(fmt2(o.price) + "%", "цена размещения", true) + tile(o.redeem + "%", "погашение") +
-      tile("~" + fmt2(o.ytm) + "%", "доходность к погашению") + tile(o.tenor, "срок") +
+      tile(o.nominal.toLocaleString("ru-RU") + " " + o.currency, "номинал") + tile(o.tenor, "срок") +
       tile(o.placement, "старт размещения") + tile(o.maturity, "погашение") +
       tile(o.isin, "ISIN") + tile(o.venue, "площадка");
     var docs = o.docs.map(d => '<a class="doc" href="' + d.file + '" target="_blank" rel="noopener" download><span class="ic">' + docIcon + '</span>' +
