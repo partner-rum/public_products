@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Доска инструментов — структурные продукты</title>
-<meta name="description" content="Доска инструментов: котировки в процентах от номинала, ключевые параметры и сроки.">
+<title>Текущие продукты — структурные продукты</title>
+<meta name="description" content="Текущие продукты: котировки в процентах от номинала, диаграммы выплат и параметры по каждому инструменту.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -24,11 +24,11 @@
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--canvas); color: var(--ink); font-family: var(--f-body); -webkit-font-smoothing: antialiased; }
   a { text-decoration: none; color: inherit; }
-  a:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 4px; }
-  .wrap { max-width: 1160px; margin: 0 auto; padding: 0 44px; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 4px; }
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 0 44px 40px; }
 
   .nav { position: sticky; top: 0; z-index: 20; background: rgba(244,242,240,0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); }
-  .nav-in { max-width: 1160px; margin: 0 auto; padding: 0 44px; height: 62px; display: flex; align-items: center; gap: 12px; }
+  .nav-in { max-width: 1280px; margin: 0 auto; padding: 0 44px; height: 62px; display: flex; align-items: center; gap: 12px; }
   .brand { display: flex; align-items: center; gap: 10px; }
   .brand-name { font-size: 14.5px; font-weight: 600; }
   .topnav { margin-left: auto; display: flex; align-items: center; gap: 22px; font-size: 14px; font-weight: 500; }
@@ -38,64 +38,102 @@
   .btn-solar { background: var(--solar); color: var(--ink) !important; border-radius: 6px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 7px; transition: background .3s ease-in-out; }
   .btn-solar:hover { background: var(--solar-l); }
 
-  .crumbs { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--hushed); padding: 26px 0 0; }
-  .crumbs a:hover { color: var(--ink); }
-  .crumbs .sep { color: #C4BFB8; }
-  .crumbs .here { color: var(--ink); font-weight: 500; }
+  .head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin: 26px 0 18px; }
+  h1 { margin: 0; font-size: 30px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1; }
+  .count { font-family: var(--f-mono); font-size: 12px; color: var(--hushed); }
 
-  /* Переключатель семейств */
-  .fams { display: flex; gap: 6px; margin: 22px 0 30px; border-bottom: 1px solid var(--border-soft); }
-  .fam { position: relative; padding: 10px 16px 12px; font-size: 14px; font-weight: 500; color: var(--hushed); border-bottom: 2px solid transparent; margin-bottom: -1px; }
-  .fam:hover { color: var(--ink); }
-  .fam.active { color: var(--ink); font-weight: 600; border-bottom-color: var(--fc); }
-  .fam .n { font-family: var(--f-mono); font-size: 11px; color: var(--faint); margin-left: 6px; }
+  .layout { display: grid; grid-template-columns: 380px minmax(0, 1fr); gap: 20px; align-items: start; }
 
-  .head { display: flex; flex-direction: column; gap: 12px; max-width: 760px; }
-  .head-row { display: flex; align-items: center; gap: 14px; }
-  h1 { margin: 0; font-size: 34px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1; }
-  .chip { font-size: 12px; font-weight: 600; border-radius: 999px; padding: 4px 11px; }
-  .desc { font-size: 15px; line-height: 1.6; color: var(--hushed); text-wrap: pretty; }
+  /* ── Список слева ── */
+  .aside { position: sticky; top: 78px; display: flex; flex-direction: column; max-height: calc(100dvh - 100px); }
+  .controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+  .search { width: 100%; border: 1px solid var(--border); border-radius: 6px; background: var(--card); padding: 10px 12px; font-family: var(--f-body); font-size: 14px; color: var(--ink); }
+  .search::placeholder { color: var(--faint); }
+  .search:focus { outline: 2px solid var(--ink); outline-offset: 1px; }
+  .chips { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .kf { border: 1px solid var(--border); background: var(--card); border-radius: 6px; padding: 6px 12px; font-size: 12.5px; font-weight: 500; color: var(--hushed); cursor: pointer; font-family: var(--f-body); }
+  .kf:hover { color: var(--ink); }
+  .kf.active { background: var(--black); border-color: var(--black); color: #F4F2F0; font-weight: 600; }
+  .kf .n { font-family: var(--f-mono); font-size: 10.5px; opacity: 0.75; margin-left: 4px; }
 
-  .count { font-family: var(--f-mono); font-size: 12px; color: var(--hushed); margin: 28px 0 10px; }
+  .list { background: var(--card); border: 1px solid var(--border-soft); border-radius: 12px; overflow-y: auto; flex: 1; min-height: 0; }
+  .group-h { display: flex; align-items: center; gap: 9px; width: 100%; border: none; border-top: 1px solid var(--border-soft); background: #EFECE6; cursor: pointer; font-family: var(--f-body); color: var(--ink); padding: 11px 14px; text-align: left; position: sticky; top: 0; z-index: 2; }
+  .group-h:first-child { border-top: none; }
+  .group-h .chev { transition: transform .2s var(--ease); color: var(--hushed); font-size: 11px; }
+  .group-h.open .chev { transform: rotate(90deg); }
+  .group-h .name { font-size: 13.5px; font-weight: 600; }
+  .group-h .gc { margin-left: auto; font-family: var(--f-mono); font-size: 11px; color: var(--hushed); }
+  .group-items { display: none; }
+  .group-items.open { display: block; }
+  .item { display: block; width: 100%; text-align: left; border: none; border-top: 1px solid #F0EDE8; border-left: 3px solid transparent; background: transparent; cursor: pointer; font-family: var(--f-body); color: var(--ink); padding: 10px 14px 10px 12px; }
+  .item:hover { background: #FAF8F5; }
+  .item.active { background: #FAF8F5; border-left-color: var(--solar); }
+  .item .r1 { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+  .item .nm { font-size: 13.5px; font-weight: 600; }
+  .item .q { font-family: var(--f-mono); font-size: 12px; white-space: nowrap; }
+  .item .r2 { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-top: 3px; }
+  .item .sub { font-family: var(--f-mono); font-size: 10.5px; color: #A8A29B; }
+  .item .chg { font-family: var(--f-mono); font-size: 11px; font-weight: 600; }
+  .empty-list { padding: 22px 14px; font-size: 13px; color: var(--faint); }
 
-  .table { background: var(--card); border: 1px solid var(--border-soft); border-radius: 12px; overflow: hidden; }
-  .thead, .row { display: grid; grid-template-columns: 2fr 1.1fr 1fr 0.9fr 1fr 1fr; align-items: center; }
-  .thead { background: #EFECE6; border-bottom: 1px solid var(--border-soft); }
-  .th { padding: 11px 18px; font-family: var(--f-mono); font-size: 10.5px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--hushed); }
-  .row { border-top: 1px solid #E7E3DD; }
-  .row:first-child { border-top: none; }
-  .row:hover { background: #FAF8F5; }
-  .cell { padding: 14px 18px; }
-  .num { text-align: right; font-family: var(--f-mono); }
-  .r { text-align: right; }
-  .name { font-size: 14px; font-weight: 600; }
-  .sub { font-family: var(--f-mono); font-size: 11px; color: var(--faint); margin-top: 3px; }
-  .asset { font-size: 13.5px; color: var(--ink); }
-  .asset-sub { font-size: 11.5px; color: var(--faint); margin-top: 3px; }
-  .group { padding: 18px 18px 8px; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--hushed); border-top: 1px solid #E7E3DD; }
-  .mx .group { display: flex; align-items: baseline; gap: 10px; padding: 16px 18px 12px; font-size: 16px; font-weight: 700; letter-spacing: -0.005em; text-transform: none; color: var(--ink); background: #EFECE6; border-top: 1px solid var(--border-soft); }
-  .group-meta { font-family: var(--f-mono); font-weight: 400; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); font-size: 10.5px; }
-  /* Матрица варрантов: строки — пэйоффы, колонки — сроки */
-  .mx .thead, .mx .row { grid-template-columns: 1.4fr 1fr 1fr 1fr; }
-  .mx .row:hover { background: transparent; }
-  .th-sub { font-family: var(--f-mono); font-size: 10.5px; font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--faint); margin-top: 3px; }
-  a.mx-cell:hover, a.mx-label:hover { background: #FAF8F5; }
-  a.mx-label .name { border-bottom: 1px dotted #C4BFB8; padding-bottom: 1px; display: inline-block; }
-  .mx-quote { font-family: var(--f-mono); font-size: 14.5px; }
-  .mx-none { color: var(--faint); }
-  .disclaimer { margin-top: 24px; font-size: 12.5px; line-height: 1.5; color: var(--faint); max-width: 560px; }
-  .pagefoot { padding-bottom: 64px; }
+  /* ── Паспорт справа ── */
+  .panel-wrap { position: sticky; top: 78px; }
+  .panel { background: var(--card); border: 1px solid var(--border-soft); border-radius: 12px; padding: 26px 28px; max-height: calc(100dvh - 100px); overflow-y: auto; }
+  .panel-close { display: none; }
+
+  .pp-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; flex-wrap: wrap; }
+  .pp-title { font-size: 23px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.15; }
+  .badge { display: inline-block; margin-top: 7px; font-family: var(--f-mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink); background: #E9E6E0; border-radius: 6px; padding: 3px 8px; }
+  .pp-sub { margin-top: 8px; font-size: 13px; color: var(--hushed); max-width: 480px; }
+  .quote-block { text-align: right; }
+  .quote-big { font-family: var(--f-mono); font-size: 30px; font-weight: 500; letter-spacing: -0.02em; }
+  .quote-sub { font-size: 11.5px; color: var(--faint); margin-top: 2px; }
+  .quote-chg { font-family: var(--f-mono); font-size: 13px; font-weight: 600; margin-top: 3px; }
+
+  .chart-box { margin-top: 18px; border: 1px solid #F0EDE8; border-radius: 10px; padding: 14px 16px 10px; }
+  .chart-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+  .chart-title { font-size: 13.5px; font-weight: 600; }
+  .tabs { display: flex; gap: 4px; background: #E9E5DF; border-radius: 8px; padding: 3px; }
+  .tab { border: none; border-radius: 6px; padding: 5px 13px; font-size: 12.5px; font-weight: 500; cursor: pointer; background: transparent; color: var(--hushed); font-family: var(--f-body); }
+  .tab.active { font-weight: 600; background: var(--card); color: var(--ink); box-shadow: 0 1px 2px rgba(24,25,30,0.14); }
+  .chart-caption { margin-top: 8px; font-size: 11.5px; line-height: 1.5; color: #A8A29B; }
+
+  .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 14px; }
+  .metric { background: var(--canvas); border-radius: 8px; padding: 10px 12px; }
+  .metric .v { font-family: var(--f-mono); font-size: 13.5px; }
+  .metric .k { margin-top: 3px; font-family: var(--f-mono); font-size: 9px; letter-spacing: 0.09em; text-transform: uppercase; color: #A8A29B; }
+
+  .sec { margin-top: 20px; }
+  .sec .h { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: #6E6A68; padding-bottom: 8px; border-bottom: 1px solid #E7E3DD; margin-bottom: 4px; }
+  .sec .intro { font-size: 13px; color: var(--hushed); margin: 8px 0 2px; }
+  .scenario { display: grid; grid-template-columns: 1.3fr 1.3fr 0.6fr; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid #F0EDE8; }
+  .scenario .l { font-size: 13.5px; font-weight: 600; }
+  .scenario .d { font-size: 12.5px; color: var(--hushed); }
+  .scenario .r { text-align: right; font-family: var(--f-mono); font-size: 13.5px; }
+  .explainer { font-size: 13.5px; line-height: 1.65; color: var(--hushed); margin: 10px 0 0; text-wrap: pretty; }
+  .facts { display: flex; gap: 22px; flex-wrap: wrap; margin-top: 14px; }
+  .fact { min-width: 140px; max-width: 220px; }
+  .fact .k { font-size: 10.5px; color: #A8A29B; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 3px; }
+  .fact .v { font-size: 13px; line-height: 1.45; }
+
+  .pp-actions { margin-top: 22px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  .btn-pdf { display: inline-flex; align-items: center; gap: 8px; background: var(--solar); color: var(--ink); border-radius: 6px; padding: 9px 16px; font-size: 13.5px; font-weight: 500; transition: background .3s ease-in-out; }
+  .btn-pdf:hover { background: var(--solar-l); }
+  .placeholder { display: grid; place-items: center; min-height: 300px; color: var(--faint); font-size: 14px; }
+  .disclaimer { margin-top: 20px; font-size: 12px; line-height: 1.5; color: #A8A29B; }
 
   @media (max-width: 900px) {
-    .wrap { padding: 0 20px; }
-    h1 { font-size: 27px; }
-    .fams { overflow-x: auto; }
-    .fam { white-space: nowrap; }
-    .thead, .row { grid-template-columns: 1.6fr 1fr 1fr; }
-    .th:nth-child(n+4), .cell:nth-child(n+4) { display: none; }
-    .mx .thead, .mx .row { grid-template-columns: 1.2fr 1fr 1fr 1fr; }
-    .mx .th:nth-child(n+4), .mx .cell:nth-child(n+4) { display: block; }
-    .mx .th, .mx .cell { padding: 12px 10px; }
+    .wrap { padding: 0 16px 32px; }
+    .layout { grid-template-columns: 1fr; }
+    .aside { position: static; max-height: none; }
+    .list { max-height: 60dvh; }
+    .panel-wrap { display: none; position: fixed; inset: 0; z-index: 40; background: var(--canvas); padding: 14px; overflow: auto; }
+    .panel-wrap.open { display: block; }
+    .panel { max-height: none; }
+    .panel-close { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 12px; border: 1px solid var(--border); background: var(--card); border-radius: 6px; padding: 8px 14px; font-family: var(--f-body); font-size: 13.5px; cursor: pointer; }
+    .metrics { grid-template-columns: repeat(2, 1fr); }
+    .scenario { grid-template-columns: 1fr; gap: 3px; }
+    .scenario .r { text-align: left; }
   }
   @media (max-width: 860px) {
     .nav-in { height: auto; flex-wrap: wrap; padding: 12px 20px; row-gap: 10px; }
@@ -117,135 +155,398 @@
       <a href="digest.html">Дайджест</a>
       <a href="placements.html">Выпуски</a>
       <a href="about.html">Об устройстве</a>
-      <a class="btn-solar" href="board.html?type=warrant">Доска
+      <a class="btn-solar" href="board.html" aria-current="page">Доска
         <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </a>
     </nav>
   </div>
 </header>
 
-<div class="wrap pagefoot">
-
-  <div class="crumbs">
-    <a href="index.html">Главная</a>
-    <span class="sep">/</span>
-    <span class="here" id="crumb-type"></span>
-  </div>
-
-  <nav class="fams" id="fams" aria-label="Семейства продуктов"></nav>
-
+<div class="wrap">
   <div class="head">
-    <div class="head-row">
-      <h1 id="type-title"></h1>
-      <span class="chip" id="type-chip"></span>
-    </div>
-    <div class="desc" id="type-desc"></div>
+    <h1>Текущие продукты</h1>
+    <span class="count" id="count"></span>
   </div>
 
-  <div class="count" id="count"></div>
+  <div class="layout">
+    <aside class="aside">
+      <div class="controls">
+        <input class="search" id="search" type="search" placeholder="Поиск: название, тикер, актив…" aria-label="Поиск по инструментам">
+        <div class="chips" id="kinds"></div>
+      </div>
+      <div class="list" id="list"></div>
+    </aside>
 
-  <div class="table">
-    <div class="thead" id="thead">
-      <div class="th">Инструмент</div>
-      <div class="th">Базовый актив</div>
-      <div class="th r">Котировка, % ном.</div>
-      <div class="th r">Изм., п.п.</div>
-      <div class="th r" id="param-label"></div>
-      <div class="th r">Экспирация</div>
+    <div class="panel-wrap" id="panel-wrap">
+      <button class="panel-close" id="panel-close">← К списку</button>
+      <div class="panel" id="panel"><div class="placeholder">Выберите инструмент в списке слева</div></div>
+      <div class="disclaimer">Не является индивидуальной инвестиционной рекомендацией. Котировки — демонстрационные. Пример расчёта иллюстративный, без учёта комиссий и налогов.</div>
     </div>
-    <div id="rows"></div>
   </div>
-
-  <div class="disclaimer">Не является индивидуальной инвестиционной рекомендацией. Котировки — демонстрационные.</div>
-
 </div>
 
 <script src="data/instruments.js"></script>
 <script src="data/lib.js"></script>
 <script>
   const S = window.SITE;
-  const qs = new URLSearchParams(location.search);
-  const type = S.TYPES[qs.get("type")] ? qs.get("type") : "warrant";
-  const t = S.TYPES[type];
-  const FAM_COLORS = { discount: "#2E6E56", protection: "#33608C", warrant: "#B3801F" };
+  const TYPE_LABEL = { discount: "Дисконтные облигации", protection: "Защита капитала", warrant: "Варранты" };
 
-  document.title = t.title + " — структурные продукты";
-  document.getElementById("crumb-type").textContent = t.title;
-  document.getElementById("type-title").textContent = t.title;
-  const chip = document.getElementById("type-chip");
-  chip.textContent = t.chip;
-  chip.style.color = t.chipFg;
-  chip.style.background = t.chipBg;
-  document.getElementById("type-desc").textContent = t.desc;
-  document.getElementById("param-label").textContent = t.paramLabel;
+  let type = "all", q = "", selected = null, mode = "payoff";
+  const openGroups = new Set();
 
-  // Переключатель семейств с количеством инструментов
-  document.getElementById("fams").innerHTML = Object.keys(S.TYPES).map(k =>
-    '<a class="fam' + (k === type ? " active" : "") + '" style="--fc:' + FAM_COLORS[k] + '" href="board.html?type=' + k + '">' +
-      S.TYPES[k].title + '<span class="n">' + S.instrumentsOfType(k).length + '</span></a>').join("");
+  // ?type= из старых ссылок предвыбирает семейство
+  const qsType = new URLSearchParams(location.search).get("type");
+  if (S.TYPES[qsType]) type = qsType;
 
-  const list = S.instrumentsOfType(type);
-  document.getElementById("count").textContent = "инструментов: " + list.length;
-  const rowsEl = document.getElementById("rows");
+  // --- Графики (SVG строками, Ramp-палитра) ---
+  const W = 560, H = 270, PAD = 26;
+  const MONO = 'font-family="JetBrains Mono, monospace"';
+  const C = { line: "#1A1919", gold: "#B3801F", grid: "#E5E1DB", axis: "#CFC9C2", lab: "#A8A29B", lab2: "#6E6A68" };
 
-  if (type === "warrant") {
-    // Матрица: группа — БА; строки — пэйоффы; колонки — сроки.
-    // Экспирация одна на срок, поэтому показывается один раз — в шапке колонки.
-    document.querySelector(".table").classList.add("mx");
-
-    const tenors = [];
-    list.forEach(r => { if (!tenors.some(t => t.tenor === r.tenor)) tenors.push({ tenor: r.tenor, expiry: r.expiry }); });
-
-    const groups = [];
-    list.forEach(r => {
-      let g = groups.find(x => x.u === r.underlying);
-      if (!g) { g = { u: r.underlying, cls: r.cls, uRef: r.uRef, cells: {} }; groups.push(g); }
-      g.cells[r.structure + "|" + r.tenor] = r;
-    });
-
-    const STRUCTS = [
-      { key: "call", label: "CALL 100", sub: "рост без потолка" },
-      { key: "cs",   label: "CS 100–150", sub: "рост до +50%" }
-    ];
-
-    document.getElementById("thead").innerHTML =
-      '<div class="th">Пэйофф<div class="th-sub">цена — премия, % ном.</div></div>' +
-      tenors.map(t => '<div class="th r">' + t.tenor + '</div>').join("");
-
-    rowsEl.innerHTML = groups.map(g =>
-      '<div class="group">' + g.u + '<span class="group-meta">' + g.cls + '</span></div>' +
-      STRUCTS.map(s => {
-        const first = tenors.map(t => g.cells[s.key + "|" + t.tenor]).find(Boolean);
-        return '<div class="row">' +
-          '<a class="cell mx-label" href="instrument.html?id=' + encodeURIComponent(first ? first.id : "") + '">' +
-            '<div class="name">' + s.label + '</div><div class="asset-sub">' + s.sub + '</div></a>' +
-          tenors.map(t => {
-            const r = g.cells[s.key + "|" + t.tenor];
-            if (!r) return '<div class="cell r mx-none">—</div>';
-            return '<a class="cell r mx-cell" href="instrument.html?id=' + encodeURIComponent(r.id) + '">' +
-              '<div class="mx-quote">' + S.fmt2(r.quote) + '%</div></a>';
-          }).join("") + '</div>';
-      }).join("")
-    ).join("");
-  } else {
-    let lastGroup = null;
-    rowsEl.innerHTML = list.map(r => {
-      const up = r.chg > 0;
-      let head = "";
-      if (list.length > 6 && r.underlying !== lastGroup) {
-        head = '<div class="group">' + r.underlying + '</div>';
-        lastGroup = r.underlying;
-      }
-      return head + '<a class="row" href="instrument.html?id=' + encodeURIComponent(r.id) + '">' +
-        '<div class="cell"><div class="name">' + S.displayName(r) + '</div></div>' +
-        '<div class="cell"><div class="asset">' + r.underlying + '</div><div class="asset-sub">' + r.cls + '</div></div>' +
-        '<div class="cell num" style="font-size:14px">' + S.fmt2(r.quote) + '%</div>' +
-        '<div class="cell r" style="font-size:13.5px;font-weight:600;color:' + (up ? "#1F7A53" : "#E96516") + '">' + (up ? "+" : "−") + S.fmt1(Math.abs(r.chg)) + '</div>' +
-        '<div class="cell num" style="font-size:13.5px;color:var(--hushed)">' + S.paramValue(r) + '</div>' +
-        '<div class="cell r" style="font-size:13.5px;color:var(--hushed)">' + r.expiry + '</div>' +
-      '</a>';
-    }).join("");
+  function chartUnderlying(inst, U) {
+    const data = U.history;
+    const PADL = 56, PADR = 26, PADT = 24, PADB = 40;
+    const min = Math.min(...data), max = Math.max(...data), rng = (max - min) || 1;
+    const x = i => PADL + (i / (data.length - 1)) * (W - PADL - PADR);
+    const y = v => PADT + (1 - (v - min) / rng) * (H - PADT - PADB);
+    const pts = data.map((v, i) => [x(i), y(v)]);
+    const line = pts.map((p, i) => (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" ");
+    const area = line + " L" + x(data.length - 1).toFixed(1) + " " + (H - PADB) + " L" + PADL + " " + (H - PADB) + " Z";
+    let grid = "";
+    for (let g = 0; g <= 3; g++) {
+      const val = max - (g / 3) * (max - min);
+      const gy = y(val);
+      grid += '<line x1="' + PADL + '" y1="' + gy.toFixed(1) + '" x2="' + (W - PADR) + '" y2="' + gy.toFixed(1) + '" stroke="' + C.grid + '" stroke-width="1"/>' +
+        '<text x="' + (PADL - 7) + '" y="' + (gy + 4).toFixed(1) + '" text-anchor="end" fill="' + C.lab + '" font-size="10" ' + MONO + '>' + S.fmtSmart(val) + '</text>';
+    }
+    const MONTHS = ["янв", "фев", "мар", "апр", "май", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"];
+    const now = new Date();
+    let xlab = "";
+    for (let i = 0; i < data.length; i++) {
+      if ((data.length - 1 - i) % 2) continue;
+      const d = new Date(now.getFullYear(), now.getMonth() - (data.length - 1 - i), 1);
+      xlab += '<text x="' + x(i).toFixed(1) + '" y="' + (H - PADB + 18) + '" text-anchor="middle" fill="' + C.lab + '" font-size="10" ' + MONO + '>' + MONTHS[d.getMonth()] + '</text>';
+    }
+    const axes = '<line x1="' + PADL + '" y1="' + (H - PADB) + '" x2="' + (W - PADR) + '" y2="' + (H - PADB) + '" stroke="' + C.axis + '" stroke-width="1"/>' +
+      '<line x1="' + PADL + '" y1="' + PADT + '" x2="' + PADL + '" y2="' + (H - PADB) + '" stroke="' + C.axis + '" stroke-width="1"/>' +
+      '<text x="' + (PADL - 7) + '" y="13" text-anchor="end" fill="' + C.lab + '" font-size="10" ' + MONO + '>' + (U.unit || "") + '</text>';
+    const last = pts[pts.length - 1];
+    const label = inst.uRef || (S.fmtSmart(data[data.length - 1]) + (U.unit ? " " + U.unit : ""));
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="display:block">' + grid + axes + xlab +
+      '<defs><linearGradient id="fillu" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0%" stop-color="' + C.line + '" stop-opacity="0.10"/><stop offset="100%" stop-color="' + C.line + '" stop-opacity="0"/></linearGradient></defs>' +
+      '<path d="' + area + '" fill="url(#fillu)"/>' +
+      '<path d="' + line + '" fill="none" stroke="' + C.line + '" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>' +
+      '<circle cx="' + last[0] + '" cy="' + last[1] + '" r="4" fill="' + C.line + '"/>' +
+      '<text x="' + (W - PADR) + '" y="' + (last[1] - 11) + '" text-anchor="end" fill="' + C.line + '" font-size="11" ' + MONO + '>' + label + '</text>' +
+      '</svg>';
   }
+
+  function chartWarrant(inst) {
+    const K = inst.strike, K2 = inst.strike2, q = inst.quote;
+    const cap = K2 ? (K2 - K) / K * 100 : 0;
+    const sBe = K * (1 + q / 100);
+    const s0 = K * 0.8;
+    const s1 = K2 ? K2 * 1.18 : Math.max(K * 1.32, sBe * 1.15);
+    const yMax = K2 ? cap + 10 : Math.max(34, S.PAYOFF.pct(s1, K) + 6);
+    const x = s => PAD + ((s - s0) / (s1 - s0)) * (W - PAD * 2);
+    const y = v => H - PAD - (v / yMax) * (H - PAD * 2);
+    let line = "M" + x(s0).toFixed(1) + " " + y(0).toFixed(1) + " L" + x(K).toFixed(1) + " " + y(0).toFixed(1);
+    if (K2) line += " L" + x(K2).toFixed(1) + " " + y(cap).toFixed(1) + " L" + x(s1).toFixed(1) + " " + y(cap).toFixed(1);
+    else line += " L" + x(s1).toFixed(1) + " " + y(S.PAYOFF.pct(s1, K)).toFixed(1);
+    let capMark = "";
+    if (K2) {
+      capMark = '<line x1="' + PAD + '" y1="' + y(cap) + '" x2="' + (W - PAD) + '" y2="' + y(cap) + '" stroke="' + C.grid + '" stroke-width="1" stroke-dasharray="2 4"/>' +
+        '<rect x="' + (x(K2) - 4) + '" y="' + (y(cap) - 4) + '" width="8" height="8" transform="rotate(45 ' + x(K2) + ' ' + y(cap) + ')" fill="' + C.line + '"/>' +
+        '<text x="' + x(K2) + '" y="' + (y(cap) - 9) + '" text-anchor="middle" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>K₂ ' + S.fmtSmart(K2) + ' · макс. ' + S.fmtSmart(cap) + '%</text>';
+    }
+    const beEnd = x(sBe) > W * 0.72;
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="display:block">' +
+      '<line x1="' + PAD + '" y1="' + y(0) + '" x2="' + (W - PAD) + '" y2="' + y(0) + '" stroke="' + C.grid + '" stroke-width="1"/>' +
+      '<line x1="' + PAD + '" y1="' + y(q) + '" x2="' + (W - PAD) + '" y2="' + y(q) + '" stroke="' + C.gold + '" stroke-width="1" stroke-dasharray="4 4"/>' +
+      '<text x="' + (PAD + 2) + '" y="' + (y(q) - 6) + '" fill="' + C.gold + '" font-size="10" ' + MONO + '>премия ' + S.fmt1(q) + '%</text>' +
+      capMark +
+      '<path d="' + line + '" fill="none" stroke="' + C.line + '" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>' +
+      '<rect x="' + (x(K) - 4) + '" y="' + (y(0) - 4) + '" width="8" height="8" transform="rotate(45 ' + x(K) + ' ' + y(0) + ')" fill="' + C.line + '"/>' +
+      '<text x="' + x(K) + '" y="' + (y(0) + 16) + '" text-anchor="middle" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>K ' + S.fmtSmart(K) + '</text>' +
+      '<circle cx="' + x(sBe) + '" cy="' + y(q) + '" r="4" fill="' + C.gold + '"/>' +
+      '<text x="' + (x(sBe) + (beEnd ? -7 : 7)) + '" y="' + (y(q) + 15) + '"' + (beEnd ? ' text-anchor="end"' : '') + ' fill="' + C.gold + '" font-size="10" ' + MONO + '>б/у ' + S.fmtSmart(sBe) + '</text>' +
+      '</svg>';
+  }
+
+  function chartDiscount(inst) {
+    const q = inst.quote;
+    const base = H - 46, pxPer = (H - 96) / 110, barW = 100;
+    const x1 = W * 0.31 - barW / 2, x2 = W * 0.69 - barW / 2;
+    const h1 = q * pxPer, h2 = 100 * pxPer;
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="display:block">' +
+      '<line x1="' + PAD + '" y1="' + base + '" x2="' + (W - PAD) + '" y2="' + base + '" stroke="' + C.axis + '" stroke-width="1"/>' +
+      '<line x1="' + (x1 + barW / 2) + '" y1="' + (base - h1) + '" x2="' + (x2 + barW) + '" y2="' + (base - h1) + '" stroke="' + C.gold + '" stroke-width="1" stroke-dasharray="4 4"/>' +
+      '<rect x="' + x1 + '" y="' + (base - h1) + '" width="' + barW + '" height="' + h1 + '" rx="7" fill="#DAD5CE"/>' +
+      '<rect x="' + x2 + '" y="' + (base - h2) + '" width="' + barW + '" height="' + h2 + '" rx="7" fill="' + C.line + '"/>' +
+      '<text x="' + (x1 + barW / 2) + '" y="' + (base - h1 - 9) + '" text-anchor="middle" fill="' + C.lab2 + '" font-size="12" ' + MONO + '>' + S.fmt2(q) + '%</text>' +
+      '<text x="' + (x2 + barW / 2) + '" y="' + (base - h2 - 9) + '" text-anchor="middle" fill="' + C.line + '" font-size="12" ' + MONO + '>100%</text>' +
+      '<text x="' + ((x1 + barW + x2) / 2) + '" y="' + (base - h1 - 8) + '" text-anchor="middle" fill="' + C.gold + '" font-size="10" ' + MONO + '>доход +' + S.fmt2(100 - q) + ' п.п.</text>' +
+      '<text x="' + (x1 + barW / 2) + '" y="' + (base + 17) + '" text-anchor="middle" fill="' + C.lab2 + '" font-size="11">Покупка сегодня</text>' +
+      '<text x="' + (x2 + barW / 2) + '" y="' + (base + 17) + '" text-anchor="middle" fill="' + C.lab2 + '" font-size="11">Погашение ' + inst.expiry + '</text>' +
+      '</svg>';
+  }
+
+  function chartProtection(inst) {
+    const part = inst.participation, yMin = 88, yMax = 130;
+    const x = rel => PAD + ((rel - 0.7) / (1.4 - 0.7)) * (W - PAD * 2);
+    const y = v => H - PAD - ((v - yMin) / (yMax - yMin)) * (H - PAD * 2);
+    const endVal = 100 + part * 40;
+    const line = "M" + x(0.7).toFixed(1) + " " + y(100).toFixed(1) + " L" + x(1.0).toFixed(1) + " " + y(100).toFixed(1) + " L" + x(1.4).toFixed(1) + " " + y(endVal).toFixed(1);
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="display:block">' +
+      '<line x1="' + PAD + '" y1="' + y(100) + '" x2="' + (W - PAD) + '" y2="' + y(100) + '" stroke="' + C.axis + '" stroke-width="1" stroke-dasharray="4 4"/>' +
+      '<text x="' + (PAD + 2) + '" y="' + (y(100) + 15) + '" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>защита 100%</text>' +
+      '<path d="' + line + '" fill="none" stroke="' + C.line + '" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>' +
+      '<rect x="' + (x(1.0) - 4) + '" y="' + (y(100) - 4) + '" width="8" height="8" transform="rotate(45 ' + x(1.0) + ' ' + y(100) + ')" fill="' + C.line + '"/>' +
+      '<text x="' + x(1.0) + '" y="' + (y(100) + 16) + '" text-anchor="middle" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>S₀</text>' +
+      '<text x="' + x(1.24) + '" y="' + (y(100 + part * 24) - 11) + '" fill="' + C.line + '" font-size="10" ' + MONO + '>участие ' + Math.round(part * 100) + '%</text>' +
+      '</svg>';
+  }
+
+  // --- Контент паспорта (без дублей: котировка и изменение — только в шапке) ---
+  function buildContent(inst) {
+    const nom = inst.minNom;
+    if (inst.type === "warrant") {
+      const isCS = inst.structure === "cs";
+      const K = inst.strike, K2 = inst.strike2;
+      const premiumRub = nom * inst.quote / 100;
+      const upPct = Math.max(16, Math.ceil((inst.quote + 6) / 5) * 5);
+      const payout1 = nom * S.PAYOFF.pct(K * (1 + upPct / 100), K, K2) / 100;
+      const net1 = payout1 - premiumRub;
+      const capPct = isCS ? (K2 - K) / K * 100 : 0;
+      const capRub = nom * capPct / 100;
+      const metrics = [[S.fmtSmart(K) + "%", "страйк (K)"]];
+      if (isCS) metrics.push([S.fmtSmart(K2) + "%", "потолок (K₂)"]);
+      metrics.push([inst.tenor, "срок"], [inst.expiry, "экспирация"]);
+      if (inst.uRef) metrics.push([inst.uRef, inst.underlying + " сегодня"]);
+      metrics.push([S.fmtInt(nom) + " ₽", "мин. номинал"]);
+      const scen = [
+        [inst.underlying + " вырос на " + upPct + "%", "Выплата " + S.fmtInt(payout1) + " ₽", (net1 >= 0 ? "+" : "−") + S.fmtInt(Math.abs(net1)) + " ₽", net1 >= 0 ? "#1F7A53" : "#E96516"]
+      ];
+      if (isCS) {
+        const capNet = capRub - premiumRub;
+        scen.push([inst.underlying + " вырос на 70% — выше потолка", "Выплата " + S.fmtInt(capRub) + " ₽ — максимум", (capNet >= 0 ? "+" : "−") + S.fmtInt(Math.abs(capNet)) + " ₽", capNet >= 0 ? "#1F7A53" : "#E96516"]);
+      }
+      scen.push([inst.underlying + " не вырос", "Выплаты нет", "−" + S.fmtInt(premiumRub) + " ₽", "#E96516"]);
+      return {
+        badge: isCS ? "КОЛЛ-СПРЕД · ВАРРАНТ" : "CALL · ВАРРАНТ",
+        subtitle: (isCS ? "Колл-спред на рост: " : "Варрант на рост: ") + inst.underlying + " · котировка — премия и максимальный риск покупателя",
+        payoff: () => chartWarrant(inst),
+        payoffCaption: isCS
+          ? "Выплата на экспирацию в % от номинала; уровень БА — в % от начального. Выше K₂ выплата не растёт. Пунктир — премия; б/у — безубыточность."
+          : "Выплата на экспирацию в % от номинала; уровень БА — в % от начального. Пунктир — премия; б/у — безубыточность.",
+        metrics,
+        exampleIntro: "Номинал " + S.fmtInt(nom) + " ₽ · премия " + S.fmt2(inst.quote) + "% = " + S.fmtInt(premiumRub) + " ₽",
+        scenarios: scen,
+        explainer: isCS
+          ? "Колл-спред — CALL с потолком выплаты. Страйк K фиксируется по уровню базового актива в день покупки (100%), рост засчитывается до K₂ = " + S.fmtSmart(K2) + "%: максимальная выплата — " + S.fmtSmart(capPct) + "% номинала. За счёт ограничения премия ниже, чем у обычного CALL. Если актив не вырос — выплаты нет, потеря ограничена премией."
+          : "CALL-варрант — право на выплату, равную росту базового актива. Страйк K фиксируется по уровню актива в день покупки (100%). Если на экспирацию актив выше страйка, выплата — Ном × рост. Если роста нет — выплаты нет, потеря ограничена премией.",
+        facts: [
+          ["Формула выплаты", S.PAYOFF.formula(inst)],
+          ["Стиль", "Европейский — выплата на дату экспирации"],
+          ["Максимальный убыток", "Уплаченная премия"]
+        ]
+      };
+    }
+    if (inst.type === "discount") {
+      const buyRub = nom * inst.quote / 100;
+      return {
+        badge: "ДИСКОНТНАЯ ОБЛИГАЦИЯ",
+        subtitle: "Покупка дешевле номинала, погашение по 100% — доход зафиксирован в день сделки",
+        payoff: () => chartDiscount(inst),
+        payoffCaption: "Покупка дешевле номинала, погашение по 100%. Доход — разница, зафиксированная в момент покупки.",
+        metrics: [
+          [S.fmt1(S.yieldAnnual(inst)) + "%", "доходность годовых"],
+          ["100%", "выплата на погашение"],
+          [inst.expiry, "погашение"],
+          [S.daysTo(inst.expiry) + " дн.", "осталось"],
+          [S.fmtInt(nom) + " ₽", "мин. номинал"]
+        ],
+        exampleIntro: "Номинал " + S.fmtInt(nom) + " ₽ · покупка по " + S.fmt2(inst.quote) + "% = " + S.fmtInt(buyRub) + " ₽",
+        scenarios: [
+          ["Дождались погашения " + inst.expiry, "Выплата " + S.fmtInt(nom) + " ₽ — 100% номинала", "+" + S.fmtInt(nom - buyRub) + " ₽", "#1F7A53"],
+          ["Продали раньше срока", "По текущей рыночной цене", "по рынку", "#6E6A68"]
+        ],
+        explainer: "Облигация покупается дешевле номинала — сегодня по " + S.fmt2(inst.quote) + "% от него. На дату погашения выплачивается полный номинал. Весь доход — дисконт: разница между ценой покупки и номиналом, известная в день сделки. Купонов нет.",
+        facts: [
+          ["Формула выплаты", "100% номинала на погашение"],
+          ["Купоны", "Нет — весь доход в дисконте"],
+          ["Риск", "Кредитное качество эмитента"]
+        ]
+      };
+    }
+    const entryRub = nom * inst.quote / 100;
+    const upPct = 20;
+    const payoutUp = nom * (1 + inst.participation * upPct / 100);
+    const partS = Math.round(inst.participation * 100) + "%";
+    return {
+      badge: "НОТА · ЗАЩИТА КАПИТАЛА",
+      subtitle: "Нота с защитой капитала: " + inst.underlying + " · 100% номинала при любом сценарии",
+      payoff: () => chartProtection(inst),
+      payoffCaption: "Выплата на экспирацию в % от номинала: не ниже 100% при любом сценарии, выше S₀ — участие в росте.",
+      metrics: [
+        ["100%", "защита капитала"],
+        [partS, "участие в росте"],
+        [S.fmtSmart(inst.strike), "нач. уровень (S₀)"],
+        [inst.expiry, "экспирация"],
+        [S.fmtInt(nom) + " ₽", "мин. номинал"]
+      ],
+      exampleIntro: "Номинал " + S.fmtInt(nom) + " ₽ · вход по " + S.fmt2(inst.quote) + "% = " + S.fmtInt(entryRub) + " ₽",
+      scenarios: [
+        [inst.underlying + " вырос на " + upPct + "%", "Выплата " + S.fmtInt(payoutUp) + " ₽ — 100% + участие", "+" + S.fmtInt(payoutUp - entryRub) + " ₽", "#1F7A53"],
+        [inst.underlying + " упал на 15%", "Сработала защита: выплата " + S.fmtInt(nom) + " ₽", "−" + S.fmtInt(entryRub - nom) + " ₽", "#E96516"]
+      ],
+      explainer: "Нота возвращает 100% номинала при любом сценарии. Если базовый актив на дату экспирации выше начального уровня S₀, дополнительно выплачивается " + partS + " его роста. Если актив упал — вы получаете номинал целиком.",
+      facts: [
+        ["Формула выплаты", "100% + " + partS + " × max(S/S₀ − 1; 0)"],
+        ["Стиль", "Европейский — выплата на дату экспирации"],
+        ["Риск", "Кредитный риск эмитента ноты"]
+      ]
+    };
+  }
+
+  function passportHTML(inst) {
+    const c = buildContent(inst);
+    const U = S.underlyingInfo(inst.underlying);
+    const chgUp = inst.chg > 0;
+    return '<div class="pp-top"><div>' +
+        '<div class="pp-title">' + S.displayName(inst) + '</div>' +
+        '<span class="badge">' + c.badge + '</span>' +
+        '<div class="pp-sub">' + c.subtitle + '</div>' +
+      '</div>' +
+      '<div class="quote-block">' +
+        '<div class="quote-big">' + S.fmt2(inst.quote) + '%</div>' +
+        '<div class="quote-sub">котировка · % от номинала</div>' +
+        '<div class="quote-chg" style="color:' + (chgUp ? "#1F7A53" : "#E96516") + '">' + (chgUp ? "+" : "−") + S.fmt1(Math.abs(inst.chg)) + ' п.п. сегодня</div>' +
+      '</div></div>' +
+      '<div class="chart-box">' +
+        '<div class="chart-head"><span class="chart-title" id="chart-title"></span>' +
+        (U ? '<div class="tabs"><button class="tab" id="tab-payoff">Выплата</button><button class="tab" id="tab-under">Базовый актив</button></div>' : '') +
+        '</div><div id="chart"></div><div class="chart-caption" id="chart-caption"></div>' +
+      '</div>' +
+      '<div class="metrics">' + c.metrics.map(m => '<div class="metric"><div class="v">' + m[0] + '</div><div class="k">' + m[1] + '</div></div>').join("") + '</div>' +
+      '<div class="sec"><div class="h">Пример расчёта</div><div class="intro">' + c.exampleIntro + '</div>' +
+        c.scenarios.map(s => '<div class="scenario"><div class="l">' + s[0] + '</div><div class="d">' + s[1] + '</div><div class="r" style="color:' + s[3] + '">' + s[2] + '</div></div>').join("") + '</div>' +
+      '<div class="sec"><div class="h">Как устроен продукт</div><div class="explainer">' + c.explainer + '</div>' +
+        '<div class="facts">' + c.facts.map(f => '<div class="fact"><div class="k">' + f[0] + '</div><div class="v">' + f[1] + '</div></div>').join("") + '</div></div>' +
+      '<div class="pp-actions"><a class="btn-pdf" href="onepager.html?id=' + encodeURIComponent(inst.id) + '&print=1">' +
+        '<svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M7 1 V9 M7 9 L4 6 M7 9 L10 6" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 12 H12" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round"/></svg>' +
+        'Скачать one-pager (PDF)</a></div>';
+  }
+
+  function setMode(m, inst, c, U) {
+    mode = m;
+    const tp = document.getElementById("tab-payoff"), tu = document.getElementById("tab-under");
+    if (tp) { tp.className = "tab" + (m === "payoff" ? " active" : ""); }
+    if (tu) { tu.className = "tab" + (m === "under" ? " active" : ""); }
+    document.getElementById("chart-title").textContent = m === "payoff" ? "Диаграмма выплат" : "Базовый актив — " + inst.underlying;
+    document.getElementById("chart-caption").textContent = m === "payoff" ? c.payoffCaption : (U.desc + " Динамика за 12 месяцев; данные — демо.");
+    document.getElementById("chart").innerHTML = m === "payoff" ? c.payoff() : chartUnderlying(inst, U);
+  }
+
+  function select(id, fromUser) {
+    selected = id;
+    const inst = S.INSTRUMENTS.find(r => r.id === id);
+    if (!inst) return;
+    document.getElementById("panel").innerHTML = passportHTML(inst);
+    const c = buildContent(inst), U = S.underlyingInfo(inst.underlying);
+    const tp = document.getElementById("tab-payoff"), tu = document.getElementById("tab-under");
+    if (tp) tp.addEventListener("click", () => setMode("payoff", inst, c, U));
+    if (tu) tu.addEventListener("click", () => setMode("under", inst, c, U));
+    setMode("payoff", inst, c, U);
+    document.querySelectorAll(".item").forEach(el =>
+      el.classList.toggle("active", el.getAttribute("data-id") === id));
+    history.replaceState(null, "", "#" + id);
+    if (fromUser && window.matchMedia("(max-width: 900px)").matches) {
+      document.getElementById("panel-wrap").classList.add("open");
+    }
+  }
+
+  // Короткое имя в списке — без повторения базового актива (он в заголовке группы)
+  function shortName(r) {
+    if (r.type === "warrant") return (r.structure === "cs" ? "CS 100–150" : "CALL 100") + " · " + r.tenor;
+    if (r.type === "discount") return "Дисконтная облигация";
+    return "Защита капитала · участие " + Math.round(r.participation * 100) + "%";
+  }
+
+  function filtered() {
+    const needle = q.trim().toLowerCase();
+    return S.INSTRUMENTS.filter(r =>
+      (type === "all" || r.type === type) &&
+      (!needle || (r.name + " " + r.id + " " + r.underlying).toLowerCase().includes(needle)));
+  }
+
+  function itemHTML(r) {
+    const up = r.chg > 0;
+    return '<button class="item' + (r.id === selected ? " active" : "") + '" data-id="' + r.id + '">' +
+      '<div class="r1"><span class="nm">' + shortName(r) + '</span><span class="q">' + S.fmt2(r.quote) + '%</span></div>' +
+      '<div class="r2"><span class="sub">' + r.id + '</span>' +
+      '<span class="chg" style="color:' + (up ? "#1F7A53" : "#E96516") + '">' + (up ? "+" : "−") + S.fmt1(Math.abs(r.chg)) + '</span></div>' +
+    '</button>';
+  }
+
+  function render() {
+    const list = filtered();
+    document.getElementById("count").textContent = "инструментов: " + list.length;
+
+    const groups = new Map();
+    list.forEach(r => {
+      if (!groups.has(r.underlying)) groups.set(r.underlying, []);
+      groups.get(r.underlying).push(r);
+    });
+    const sorted = [...groups.entries()].sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0], "ru"));
+    const searching = q.trim().length > 0;
+
+    document.getElementById("list").innerHTML = sorted.length ? sorted.map(([name, items], gi) => {
+      const open = searching || openGroups.has(name) || (openGroups.size === 0 && gi === 0);
+      return '<button class="group-h' + (open ? " open" : "") + '" data-g="' + name.replace(/"/g, "&quot;") + '" aria-expanded="' + open + '">' +
+          '<span class="chev">▶</span><span class="name">' + name + '</span><span class="gc">' + items.length + '</span></button>' +
+        '<div class="group-items' + (open ? " open" : "") + '">' + items.map(itemHTML).join("") + '</div>';
+    }).join("") : '<div class="empty-list">Ничего не найдено — измените фильтр или запрос.</div>';
+
+    document.querySelectorAll(".group-h").forEach(el => el.addEventListener("click", () => {
+      const g = el.getAttribute("data-g");
+      if (openGroups.size === 0 && sorted.length) openGroups.add(sorted[0][0]);
+      if (openGroups.has(g)) openGroups.delete(g); else openGroups.add(g);
+      render();
+    }));
+    document.querySelectorAll(".item").forEach(el =>
+      el.addEventListener("click", () => select(el.getAttribute("data-id"), true)));
+
+    if (list.length && (!selected || !list.some(r => r.id === selected))) {
+      const first = sorted[0] && sorted[0][1][0];
+      if (first) select(first.id, false);
+    }
+  }
+
+  // Фильтр по семейству
+  const counts = { all: S.INSTRUMENTS.length };
+  S.INSTRUMENTS.forEach(r => counts[r.type] = (counts[r.type] || 0) + 1);
+  document.getElementById("kinds").innerHTML = ["all", "warrant", "discount", "protection"].map(t =>
+    '<button class="kf' + (t === type ? " active" : "") + '" data-k="' + t + '">' +
+    (t === "all" ? "Все" : TYPE_LABEL[t]) + '<span class="n">' + (counts[t] || 0) + '</span></button>').join("");
+  document.querySelectorAll(".kf").forEach(b => b.addEventListener("click", () => {
+    type = b.getAttribute("data-k");
+    document.querySelectorAll(".kf").forEach(x => x.classList.toggle("active", x === b));
+    render();
+  }));
+  document.getElementById("search").addEventListener("input", e => { q = e.target.value; render(); });
+  document.getElementById("panel-close").addEventListener("click", () =>
+    document.getElementById("panel-wrap").classList.remove("open"));
+
+  // Deep-link: #id инструмента → открыть его группу
+  const hash = decodeURIComponent(location.hash.slice(1));
+  if (hash) {
+    const r = S.INSTRUMENTS.find(x => x.id === hash);
+    if (r) { selected = hash; openGroups.add(r.underlying); if (type !== "all" && r.type !== type) type = "all"; }
+  }
+  render();
+  if (selected) select(selected, false);
 </script>
 </body>
 </html>
