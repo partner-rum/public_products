@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>One-pager — черновики</title>
+<title>One-pager — компоновки</title>
 <meta name="robots" content="noindex">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -38,81 +38,69 @@
   .qual { font-family: var(--m); font-size: 9px; line-height: 1.55; letter-spacing: 0.02em; text-align: right; }
   .lbl { font-family: var(--m); font-size: 9px; letter-spacing: 0.13em; text-transform: uppercase; color: var(--or); margin-bottom: 6px; }
 
-  /* ── Слайд 1 — титул ── */
-  .t-slide { padding: 34px 52px; justify-content: space-between; }
-  .t-slide[data-v="a"] { background: linear-gradient(158deg, #0D1026 0%, #1B2153 58%, #283067 100%); color: #F3F4FB; }
-  .t-slide[data-v="c"] { background: #1B2153; color: #F3F4FB; }
-  .t-slide[data-v="b"] { background: var(--ivory); color: var(--ink); }
+  /* ── Слайд 1 — титул (C: navy + оранжевые блоки) ── */
+  .t-slide { padding: 34px 52px; justify-content: space-between; background: var(--nav); color: #F3F4FB; }
   .t-top { display: flex; justify-content: space-between; align-items: flex-start; }
-  .t-slide[data-v="b"] .qual { color: var(--faint); }
-  .t-slide:not([data-v="b"]) .qual { color: #9CA1C4; }
-  .t-mid { }
+  .t-top .brand { color: #F3F4FB; }
+  .t-top .qual { color: #9CA1C4; }
   .t-badge { font-family: var(--m); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--or); margin-bottom: 12px; }
-  .t-title { font-size: 46px; font-weight: 600; letter-spacing: -0.025em; line-height: 1.08; max-width: 780px; }
-  .t-slide[data-v="b"] .t-title { color: var(--nav); }
-  .t-slide:not([data-v="b"]) .t-title { color: #FFFFFF; }
+  .t-title { font-size: 46px; font-weight: 600; letter-spacing: -0.025em; line-height: 1.08; max-width: 780px; color: #FFFFFF; }
   .t-bar { margin-top: 20px; width: 68px; height: 5px; background: var(--or); }
-  .t-bot { display: flex; justify-content: space-between; align-items: flex-end; }
-  .t-meta { font-family: var(--m); font-size: 11px; letter-spacing: 0.04em; }
-  .t-slide[data-v="b"] .t-meta { color: var(--faint); }
-  .t-slide:not([data-v="b"]) .t-meta { color: #9CA1C4; }
-  /* оранжевые блоки для темы C */
-  .t-blocks { position: absolute; top: 0; right: 0; }
+  .t-meta { font-family: var(--m); font-size: 11px; letter-spacing: 0.04em; color: #9CA1C4; }
   .t-blocks i { position: absolute; background: var(--or); display: block; }
 
   /* ── Слайд 2 — описание ── */
-  .c-head { padding: 24px 52px 0; display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; }
+  .c-head { padding: 20px 52px 0; display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; }
   .c-title { font-size: 23px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.12; color: var(--ink); }
   .c-badge { display: inline-block; margin-top: 8px; font-family: var(--m); font-size: 9.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--nav); background: #E4E6F2; border-radius: 5px; padding: 3px 9px; }
-  .c-sub { margin-top: 9px; font-size: 11.5px; line-height: 1.45; color: var(--hushed); max-width: 430px; }
+  .c-sub { margin-top: 9px; font-size: 11.5px; line-height: 1.45; color: var(--hushed); max-width: 440px; }
   .c-quote { text-align: right; flex: none; }
   .c-quote .v { font-family: var(--m); font-size: 26px; font-weight: 600; letter-spacing: -0.02em; color: var(--nav); }
   .c-quote .k { font-size: 9.5px; color: var(--faint); margin-top: 2px; }
-  .c-quote .chg { font-family: var(--m); font-size: 11.5px; font-weight: 600; margin-top: 3px; }
 
-  .c-grid { flex: 1; display: grid; grid-template-columns: 1fr 1.06fr; gap: 26px; padding: 12px 52px 0; min-height: 0; align-items: start; }
-  .expl { font-size: 10.5px; line-height: 1.48; color: var(--hushed); }
-  .callout { background: var(--nav); border-radius: 9px; padding: 11px 13px; }
+  .c-body { flex: 1; min-height: 0; padding: 13px 52px 0; display: flex; flex-direction: column; justify-content: space-between; gap: 10px; }
+  .c-row { display: grid; grid-template-columns: 1fr 1.04fr; gap: 22px; align-items: start; }
+  .c-row.ex { grid-template-columns: 1.15fr 1fr; }
+
+  .expl { font-size: 10.5px; line-height: 1.5; color: var(--hushed); }
+  .callout { background: var(--nav); border-radius: 9px; padding: 12px 14px; }
   .callout .lbl { color: #E7A867; }
   .callout .expl { color: #D6D9EC; }
-  .under { margin-top: 10px; }
-  .under .expl b { color: var(--ink); font-weight: 600; }
-  .callout .under { margin-top: 9px; padding-top: 9px; border-top: 1px solid rgba(255,255,255,0.14); }
+  .callout .under { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.14); }
   .callout .under .expl b { color: #fff; }
-  .params { margin-top: 11px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-  .param { background: var(--card); border: 1px solid var(--border); border-radius: 7px; padding: 6px 10px; }
-  .param .v { font-family: var(--m); font-size: 13px; font-weight: 500; color: var(--ink); }
-  .param .v.or { color: var(--or); }
-  .param .k { font-size: 9px; color: var(--faint); margin-top: 1px; }
 
-  .chart-box { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 11px 14px 8px; }
+  .params { display: grid; gap: 8px; }
+  .params.c2 { grid-template-columns: 1fr 1fr; }
+  .params.c4 { grid-template-columns: repeat(4, 1fr); }
+  .param { background: var(--card); border: 1px solid var(--border); border-radius: 7px; padding: 7px 11px; }
+  .param .v { font-family: var(--m); font-size: 14px; font-weight: 500; color: var(--ink); }
+  .param .v.or { color: var(--or); }
+  .param .k { font-size: 9px; color: var(--faint); margin-top: 2px; }
+
+  .chart-box { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 9px 13px 7px; }
   .chart-box .ct { font-size: 11px; font-weight: 600; color: var(--nav); margin-bottom: 3px; }
   .chart-cap { margin-top: 5px; font-size: 9px; line-height: 1.4; color: var(--faint); }
-  .example { margin-top: 11px; }
-  .ex-intro { font-size: 10px; color: var(--hushed); margin-bottom: 5px; }
-  .scen { display: flex; flex-direction: column; gap: 4px; }
-  .scard { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; background: var(--card); border: 1px solid var(--border); border-radius: 7px; padding: 6px 11px; }
-  .fx-inline { margin-top: 7px; padding: 6px 10px; border-left: 3px solid var(--or); background: var(--or-soft); border-radius: 0 5px 5px 0; font-size: 9px; line-height: 1.4; font-weight: 500; color: #7A4A12; }
+
+  .example .lbl { margin-bottom: 6px; }
+  .ex-intro { font-size: 10px; color: var(--hushed); margin-bottom: 6px; }
+  .scen { display: grid; gap: 6px; }
+  .scen.c1 { grid-template-columns: 1fr; }
+  .scen.c2 { grid-template-columns: 1fr 1fr; }
+  .scard { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; background: var(--card); border: 1px solid var(--border); border-radius: 7px; padding: 8px 12px; }
   .scard .st { font-size: 10.5px; font-weight: 600; color: var(--ink); }
   .scard .sd { font-size: 9px; color: var(--faint); margin-top: 1px; }
   .scard .sr { font-family: var(--m); font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+  .fx-inline { margin-top: 8px; padding: 7px 11px; border-left: 3px solid var(--or); background: var(--or-soft); border-radius: 0 6px 6px 0; font-size: 9.5px; line-height: 1.4; font-weight: 500; color: #7A4A12; }
 
-  .c-foot { padding: 10px 52px 14px; font-size: 8.6px; line-height: 1.5; color: var(--faint); }
+  .c-foot { padding: 12px 52px 16px; font-size: 8.6px; line-height: 1.5; color: var(--faint); }
 
-  /* ── Слайд 3 — дисклеймер ── */
-  .d-slide { padding: 34px 52px; }
-  .d-slide[data-v="a"], .d-slide[data-v="c"] { background: var(--nav); color: #E7E9F4; }
-  .d-slide[data-v="b"] { background: var(--ivory); color: var(--ink); }
+  /* ── Слайд 3 — дисклеймер (navy) ── */
+  .d-slide { padding: 34px 52px; background: var(--nav); color: #E7E9F4; }
   .d-title { font-size: 25px; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 4px; }
-  .d-slide[data-v="b"] .d-title { color: var(--nav); }
   .d-bar { width: 56px; height: 4px; background: var(--or); margin-bottom: 18px; }
   .d-body { flex: 1; column-count: 2; column-gap: 34px; }
-  .d-body p { margin: 0 0 11px; font-size: 10.2px; line-height: 1.6; break-inside: avoid; }
-  .d-slide[data-v="b"] .d-body p { color: var(--hushed); }
-  .d-slide:not([data-v="b"]) .d-body p { color: rgba(231,233,244,0.86); }
-  .d-meta { font-family: var(--m); font-size: 9px; }
-  .d-slide[data-v="b"] .d-meta { color: var(--faint); }
-  .d-slide:not([data-v="b"]) .d-meta { color: #9CA1C4; }
+  .d-body p { margin: 0 0 11px; font-size: 10.2px; line-height: 1.6; break-inside: avoid; color: rgba(231,233,244,0.86); }
+  .d-meta { font-family: var(--m); font-size: 9px; color: #9CA1C4; }
 
   @media print {
     @page { size: 10in 5.625in; margin: 0; }
@@ -127,25 +115,24 @@
 
 <div class="toolbar">
   <a id="back-link" href="board.html">← К инструменту</a>
-  <div class="themes" id="themes"></div>
+  <div class="themes" id="layouts"></div>
   <span class="sp"></span>
-  <span style="font-size:12px;color:#8B90A8">версии темы — A / B / C</span>
+  <span style="font-size:12px;color:#8B90A8">компоновки — 1 / 2 / 3</span>
   <button class="btn-print" onclick="window.print()">Сохранить как PDF</button>
 </div>
 
 <div id="deck"></div>
 
-<script src="data/instruments.js?v=fx1"></script>
-<script src="data/lib.js?v=fx1"></script>
+<script src="data/instruments.js?v=fx2"></script>
+<script src="data/lib.js?v=fx2"></script>
 <script>
   const S = window.SITE;
   const qs = new URLSearchParams(location.search);
   const inst = S.findInstrument(qs.get("id"));
   const U = S.underlyingInfo(inst.underlying);
   const nom = inst.minNom, q = inst.quote;
-  const theme = ["a", "b", "c"].includes(qs.get("theme")) ? qs.get("theme") : "c";
+  const layout = ["1", "2", "3"].includes(qs.get("layout")) ? qs.get("layout") : "1";
 
-  // Иностранный базовый актив (валюта не рубль) → нужна оговорка про курс
   const foreignRe = /S&P|NASDAQ|NVDA|NVIDIA|NBIS|Nebius|BTC|IBIT|GLD|SPY|CSI|URA/i;
   const isForeign = (U && U.unit === "$") || foreignRe.test(inst.underlying);
   const fxShort = "Расчёт в валюте базового актива — изменение курса рубля к ней не учтено.";
@@ -158,14 +145,12 @@
   const starSvg = (s, f) => '<svg width="' + s + '" height="' + s + '" viewBox="0 0 26 26" fill="none"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="' + f + '"/></svg>';
   const QUAL = "Только для квалифицированных инвесторов<br>Не является инвестиционной рекомендацией";
 
-  // Переключатель тем
-  const TNAME = { a: "A · Навигатор", b: "B · Светлая", c: "C · Насыщенная" };
-  document.getElementById("themes").innerHTML = ["a", "b", "c"].map(t => {
-    const u = new URLSearchParams(location.search); u.set("theme", t);
-    return '<a class="' + (t === theme ? "on" : "") + '" href="?' + u.toString() + '">' + TNAME[t] + '</a>';
+  const LNAME = { "1": "1 · Расчёт снизу", "2": "2 · Параметры сверху", "3": "3 · Две зоны" };
+  document.getElementById("layouts").innerHTML = ["1", "2", "3"].map(t => {
+    const u = new URLSearchParams(location.search); u.set("layout", t);
+    return '<a class="' + (t === layout ? "on" : "") + '" href="?' + u.toString() + '">' + LNAME[t] + '</a>';
   }).join("");
 
-  // Описание базового актива (с фолбэком)
   function underDesc() {
     if (U && U.desc) return U.desc;
     const u = inst.underlying;
@@ -173,8 +158,8 @@
     return u + " — базовый актив, от динамики которого зависит выплата по продукту.";
   }
 
-  // ── Диаграммы выплат (navy + orange) ──
-  const CW = 420, CH = 134, PAD = 18;
+  // ── Диаграммы выплат ──
+  const CW = 420, CH = 112, PAD = 16;
   const MONO = 'font-family="JetBrains Mono, monospace"';
   const C = { line: "#1B2153", or: "#EE7D1B", grid: "#E4E5F0", axis: "#CFD2E4", lab: "#8B90A8", lab2: "#5A6180" };
 
@@ -192,21 +177,21 @@
     let capMark = "";
     if (K2) capMark = '<line x1="' + PAD + '" y1="' + y(cap) + '" x2="' + (CW - PAD) + '" y2="' + y(cap) + '" stroke="' + C.grid + '" stroke-width="1" stroke-dasharray="2 4"/>' +
       '<rect x="' + (x(K2) - 4) + '" y="' + (y(cap) - 4) + '" width="8" height="8" transform="rotate(45 ' + x(K2) + ' ' + y(cap) + ')" fill="' + C.line + '"/>' +
-      '<text x="' + x(K2) + '" y="' + (y(cap) - 9) + '" text-anchor="middle" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>K₂ ' + S.fmtSmart(K2) + ' · макс. ' + S.fmtSmart(cap) + '%</text>';
+      '<text x="' + x(K2) + '" y="' + (y(cap) - 8) + '" text-anchor="middle" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>K₂ ' + S.fmtSmart(K2) + ' · макс. ' + S.fmtSmart(cap) + '%</text>';
     const beEnd = x(sBe) > CW * 0.72;
     return '<svg viewBox="0 0 ' + CW + ' ' + CH + '" width="100%" style="display:block">' +
       '<line x1="' + PAD + '" y1="' + y(0) + '" x2="' + (CW - PAD) + '" y2="' + y(0) + '" stroke="' + C.grid + '" stroke-width="1"/>' +
       '<line x1="' + PAD + '" y1="' + y(q) + '" x2="' + (CW - PAD) + '" y2="' + y(q) + '" stroke="' + C.or + '" stroke-width="1" stroke-dasharray="4 4"/>' +
-      '<text x="' + (PAD + 2) + '" y="' + (y(q) - 6) + '" fill="' + C.or + '" font-size="10" ' + MONO + '>премия ' + S.fmt1(q) + '%</text>' + capMark +
+      '<text x="' + (PAD + 2) + '" y="' + (y(q) - 5) + '" fill="' + C.or + '" font-size="10" ' + MONO + '>премия ' + S.fmt1(q) + '%</text>' + capMark +
       '<path d="' + line + '" fill="none" stroke="' + C.line + '" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>' +
       '<rect x="' + (x(K) - 4) + '" y="' + (y(0) - 4) + '" width="8" height="8" transform="rotate(45 ' + x(K) + ' ' + y(0) + ')" fill="' + C.line + '"/>' +
-      '<text x="' + x(K) + '" y="' + (y(0) + 16) + '" text-anchor="middle" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>K ' + S.fmtSmart(K) + '</text>' +
+      '<text x="' + x(K) + '" y="' + (y(0) + 15) + '" text-anchor="middle" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>K ' + S.fmtSmart(K) + '</text>' +
       '<circle cx="' + x(sBe) + '" cy="' + y(q) + '" r="4" fill="' + C.or + '"/>' +
-      '<text x="' + (x(sBe) + (beEnd ? -7 : 7)) + '" y="' + (y(q) + 15) + '"' + (beEnd ? ' text-anchor="end"' : '') + ' fill="' + C.or + '" font-size="10" ' + MONO + '>б/у ' + S.fmtSmart(sBe) + '</text>' +
+      '<text x="' + (x(sBe) + (beEnd ? -7 : 7)) + '" y="' + (y(q) + 14) + '"' + (beEnd ? ' text-anchor="end"' : '') + ' fill="' + C.or + '" font-size="10" ' + MONO + '>б/у ' + S.fmtSmart(sBe) + '</text>' +
       '</svg>';
   }
   function chDiscount() {
-    const base = CH - 40, pxPer = (CH - 84) / 110, barW = 84;
+    const base = CH - 34, pxPer = (CH - 74) / 110, barW = 78;
     const x1 = CW * 0.31 - barW / 2, x2 = CW * 0.69 - barW / 2;
     const h1 = q * pxPer, h2 = 100 * pxPer;
     return '<svg viewBox="0 0 ' + CW + ' ' + CH + '" width="100%" style="display:block">' +
@@ -214,11 +199,11 @@
       '<line x1="' + (x1 + barW / 2) + '" y1="' + (base - h1) + '" x2="' + (x2 + barW) + '" y2="' + (base - h1) + '" stroke="' + C.or + '" stroke-width="1" stroke-dasharray="4 4"/>' +
       '<rect x="' + x1 + '" y="' + (base - h1) + '" width="' + barW + '" height="' + h1 + '" rx="6" fill="#C6C9DE"/>' +
       '<rect x="' + x2 + '" y="' + (base - h2) + '" width="' + barW + '" height="' + h2 + '" rx="6" fill="' + C.line + '"/>' +
-      '<text x="' + (x1 + barW / 2) + '" y="' + (base - h1 - 8) + '" text-anchor="middle" fill="' + C.lab2 + '" font-size="12" ' + MONO + '>' + S.fmt2(q) + '%</text>' +
-      '<text x="' + (x2 + barW / 2) + '" y="' + (base - h2 - 8) + '" text-anchor="middle" fill="' + C.line + '" font-size="12" ' + MONO + '>100%</text>' +
-      '<text x="' + ((x1 + barW + x2) / 2) + '" y="' + (base - h1 - 7) + '" text-anchor="middle" fill="' + C.or + '" font-size="10" ' + MONO + '>+' + S.fmt2(100 - q) + ' п.п.</text>' +
-      '<text x="' + (x1 + barW / 2) + '" y="' + (base + 16) + '" text-anchor="middle" fill="' + C.lab2 + '" font-size="10">Покупка</text>' +
-      '<text x="' + (x2 + barW / 2) + '" y="' + (base + 16) + '" text-anchor="middle" fill="' + C.lab2 + '" font-size="10">Погашение</text>' +
+      '<text x="' + (x1 + barW / 2) + '" y="' + (base - h1 - 7) + '" text-anchor="middle" fill="' + C.lab2 + '" font-size="12" ' + MONO + '>' + S.fmt2(q) + '%</text>' +
+      '<text x="' + (x2 + barW / 2) + '" y="' + (base - h2 - 7) + '" text-anchor="middle" fill="' + C.line + '" font-size="12" ' + MONO + '>100%</text>' +
+      '<text x="' + ((x1 + barW + x2) / 2) + '" y="' + (base - h1 - 6) + '" text-anchor="middle" fill="' + C.or + '" font-size="10" ' + MONO + '>+' + S.fmt2(100 - q) + ' п.п.</text>' +
+      '<text x="' + (x1 + barW / 2) + '" y="' + (base + 15) + '" text-anchor="middle" fill="' + C.lab2 + '" font-size="10">Покупка</text>' +
+      '<text x="' + (x2 + barW / 2) + '" y="' + (base + 15) + '" text-anchor="middle" fill="' + C.lab2 + '" font-size="10">Погашение</text>' +
       '</svg>';
   }
   function chProtection() {
@@ -229,11 +214,11 @@
     const line = "M" + x(0.7).toFixed(1) + " " + y(100).toFixed(1) + " L" + x(1.0).toFixed(1) + " " + y(100).toFixed(1) + " L" + x(1.4).toFixed(1) + " " + y(endVal).toFixed(1);
     return '<svg viewBox="0 0 ' + CW + ' ' + CH + '" width="100%" style="display:block">' +
       '<line x1="' + PAD + '" y1="' + y(100) + '" x2="' + (CW - PAD) + '" y2="' + y(100) + '" stroke="' + C.axis + '" stroke-width="1" stroke-dasharray="4 4"/>' +
-      '<text x="' + (PAD + 2) + '" y="' + (y(100) + 15) + '" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>защита 100%</text>' +
+      '<text x="' + (PAD + 2) + '" y="' + (y(100) + 14) + '" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>защита 100%</text>' +
       '<path d="' + line + '" fill="none" stroke="' + C.line + '" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>' +
       '<rect x="' + (x(1.0) - 4) + '" y="' + (y(100) - 4) + '" width="8" height="8" transform="rotate(45 ' + x(1.0) + ' ' + y(100) + ')" fill="' + C.line + '"/>' +
-      '<text x="' + x(1.0) + '" y="' + (y(100) + 16) + '" text-anchor="middle" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>S₀</text>' +
-      '<text x="' + x(1.24) + '" y="' + (y(100 + part * 24) - 11) + '" fill="' + C.or + '" font-size="10" ' + MONO + '>участие ' + Math.round(part * 100) + '%</text>' +
+      '<text x="' + x(1.0) + '" y="' + (y(100) + 15) + '" text-anchor="middle" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>S₀</text>' +
+      '<text x="' + x(1.24) + '" y="' + (y(100 + part * 24) - 10) + '" fill="' + C.or + '" font-size="10" ' + MONO + '>участие ' + Math.round(part * 100) + '%</text>' +
       '</svg>';
   }
 
@@ -244,7 +229,6 @@
     const K = inst.strike, K2 = inst.strike2;
     const capPct = isCS ? (K2 - K) / K * 100 : 0;
     const premiumRub = nom * q / 100;
-    // Сценарий роста: для CS — 3/4 от потолка, округлённые до «красивых» 5% (потолок 50% → 35%); для CALL — 30%
     const upPct = isCS ? Math.max(5, Math.floor((capPct * 0.75) / 5) * 5) : 30;
     const payout1 = nom * S.PAYOFF.pct(K * (1 + upPct / 100), K, K2) / 100;
     const net1 = payout1 - premiumRub;
@@ -304,50 +288,56 @@
   }
 
   const name = S.displayName(inst);
-  const chgUp = inst.chg > 0;
-  const isC = theme === "c";
+
+  // ── Строительные блоки слайда 2 ──
+  const howHTML =
+    '<div class="callout"><div class="lbl">Как устроен продукт</div><div class="expl">' + c.explainer + '</div>' +
+      '<div class="under"><div class="lbl">Базовый актив · ' + inst.underlying + '</div>' +
+        '<div class="expl"><b>' + inst.underlying + '.</b> ' + underDesc() + '</div></div></div>';
+  const chartHTML = '<div class="chart-box"><div class="ct">Диаграмма выплат</div>' + c.chart() + '<div class="chart-cap">' + c.chartCap + '</div></div>';
+  const paramsHTML = cols => '<div class="params c' + cols + '">' + c.params.map(p =>
+    '<div class="param"><div class="v' + (p[2] ? " or" : "") + '">' + p[1] + '</div><div class="k">' + p[0] + '</div></div>').join("") + '</div>';
+  const exampleHTML = scenCols => '<div class="example"><div class="lbl">Пример расчёта</div><div class="ex-intro">' + c.exIntro + '</div>' +
+    '<div class="scen c' + scenCols + '">' + c.scen.map(s => '<div class="scard"><div><div class="st">' + s[0] + '</div><div class="sd">' + s[1] + '</div></div><div class="sr" style="color:' + s[3] + '">' + s[2] + '</div></div>').join("") + '</div>' +
+    (isForeign ? '<div class="fx-inline">' + fxShort + '</div>' : '') + '</div>';
+
+  let bodyHTML;
+  if (layout === "2") {
+    // Параметры сверху полосой → блок «как устроен | диаграмма» → пример полосой
+    bodyHTML = paramsHTML(4) +
+      '<div class="c-row">' + howHTML + chartHTML + '</div>' +
+      exampleHTML(2);
+  } else if (layout === "3") {
+    // Верх: «как устроен | диаграмма». Низ: пример (шире) | параметры 2×2
+    bodyHTML = '<div class="c-row">' + howHTML + chartHTML + '</div>' +
+      '<div class="c-row ex">' + exampleHTML(1) + paramsHTML(2) + '</div>';
+  } else {
+    // 1: «как устроен | диаграмма» → параметры полосой → пример полосой
+    bodyHTML = '<div class="c-row">' + howHTML + chartHTML + '</div>' +
+      paramsHTML(4) + exampleHTML(2);
+  }
+
   let html = "";
 
-  // ── Слайд 1 — титул ──
-  const starFill = theme === "b" ? "#EE7D1B" : "#EE7D1B";
-  const blocks = isC ? '<div class="t-blocks"><i style="top:150px;right:0;width:56px;height:104px"></i><i style="top:264px;right:0;width:28px;height:28px;opacity:.5"></i></div>' : "";
-  html += '<section class="slide t-slide" data-v="' + theme + '">' + blocks +
-    '<div class="t-top"><div class="brand">' + starSvg(20, starFill) + ' Структурные продукты</div>' +
-      '<div class="qual">' + QUAL + '</div></div>' +
-    '<div class="t-mid"><div class="t-badge">' + c.badge + '</div>' +
-      '<div class="t-title">' + name + '</div><div class="t-bar"></div></div>' +
-    '<div class="t-bot"><div class="t-meta">' + dateS + '</div></div>' +
+  // Слайд 1 — титул
+  html += '<section class="slide t-slide">' +
+    '<div class="t-blocks"><i style="top:150px;right:0;width:56px;height:104px"></i><i style="top:264px;right:0;width:28px;height:28px;opacity:.5"></i></div>' +
+    '<div class="t-top"><div class="brand">' + starSvg(20, "#EE7D1B") + ' Структурные продукты</div><div class="qual">' + QUAL + '</div></div>' +
+    '<div><div class="t-badge">' + c.badge + '</div><div class="t-title">' + name + '</div><div class="t-bar"></div></div>' +
+    '<div class="t-meta">' + dateS + '</div>' +
     '</section>';
 
-  // ── Слайд 2 — описание ──
-  const howBlock =
-    '<div class="' + (isC ? "callout" : "") + '">' +
-      '<div class="lbl">Как устроен продукт</div><div class="expl">' + c.explainer + '</div>' +
-      '<div class="under"><div class="lbl">Базовый актив · ' + inst.underlying + '</div>' +
-        '<div class="expl"><b>' + inst.underlying + '.</b> ' + underDesc() + '</div></div>' +
-    '</div>';
-  html += '<section class="slide" data-v="' + theme + '">' +
-    '<div class="c-head"><div>' +
-        '<div class="c-title">' + name + '</div><span class="c-badge">' + c.badge + '</span>' +
-        '<div class="c-sub">' + c.subtitle + '</div></div>' +
-      '<div class="c-quote"><div class="v">' + S.fmt2(q) + '%</div><div class="k">котировка · % от номинала</div></div>' +
-    '</div>' +
-    '<div class="c-grid">' +
-      '<div>' + howBlock +
-        '<div class="params">' + c.params.map(p => '<div class="param"><div class="v' + (p[2] ? " or" : "") + '">' + p[1] + '</div><div class="k">' + p[0] + '</div></div>').join("") + '</div>' +
-      '</div>' +
-      '<div>' +
-        '<div class="chart-box"><div class="ct">Диаграмма выплат</div>' + c.chart() + '<div class="chart-cap">' + c.chartCap + '</div></div>' +
-        '<div class="example"><div class="lbl">Пример расчёта</div><div class="ex-intro">' + c.exIntro + '</div>' +
-          '<div class="scen">' + c.scen.map(s => '<div class="scard"><div><div class="st">' + s[0] + '</div><div class="sd">' + s[1] + '</div></div><div class="sr" style="color:' + s[3] + '">' + s[2] + '</div></div>').join("") + '</div>' +
-          (isForeign ? '<div class="fx-inline">' + fxShort + '</div>' : '') + '</div>' +
-      '</div>' +
-    '</div>' +
+  // Слайд 2 — описание
+  html += '<section class="slide">' +
+    '<div class="c-head"><div><div class="c-title">' + name + '</div><span class="c-badge">' + c.badge + '</span>' +
+      '<div class="c-sub">' + c.subtitle + '</div></div>' +
+      '<div class="c-quote"><div class="v">' + S.fmt2(q) + '%</div><div class="k">котировка · % от номинала</div></div></div>' +
+    '<div class="c-body">' + bodyHTML + '</div>' +
     '<div class="c-foot">Пример иллюстративный, без учёта комиссий и налогов.</div>' +
     '</section>';
 
-  // ── Слайд 3 — дисклеймер ──
-  html += '<section class="slide d-slide" data-v="' + theme + '">' +
+  // Слайд 3 — дисклеймер
+  html += '<section class="slide d-slide">' +
     '<div><div class="d-title">Ограничение ответственности</div><div class="d-bar"></div></div>' +
     '<div class="d-body">' + (isForeign ? [S.LEGAL.fx].concat(S.LEGAL.onepager) : S.LEGAL.onepager).map(p => "<p>" + p + "</p>").join("") + '</div>' +
     '<div class="d-meta">' + dateS + ' · Структурные продукты</div>' +
