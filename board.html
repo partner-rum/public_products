@@ -71,9 +71,6 @@
   .item .r1 { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
   .item .nm { font-size: 13.5px; font-weight: 600; }
   .item .q { font-family: var(--f-mono); font-size: 12px; white-space: nowrap; }
-  .item .r2 { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-top: 3px; }
-  .item .sub { font-family: var(--f-mono); font-size: 10.5px; color: #A8A29B; }
-  .item .chg { font-family: var(--f-mono); font-size: 11px; font-weight: 600; }
   .empty-list { padding: 22px 14px; font-size: 13px; color: var(--faint); }
 
   /* ── Паспорт справа ── */
@@ -88,7 +85,6 @@
   .quote-block { text-align: right; }
   .quote-big { font-family: var(--f-mono); font-size: 30px; font-weight: 500; letter-spacing: -0.02em; }
   .quote-sub { font-size: 11.5px; color: var(--faint); margin-top: 2px; }
-  .quote-chg { font-family: var(--f-mono); font-size: 13px; font-weight: 600; margin-top: 3px; }
 
   .chart-box { margin-top: 18px; border: 1px solid #F0EDE8; border-radius: 10px; padding: 14px 16px 10px; }
   .chart-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
@@ -410,7 +406,6 @@
   function passportHTML(inst) {
     const c = buildContent(inst);
     const U = S.underlyingInfo(inst.underlying);
-    const chgUp = inst.chg > 0;
     return '<div class="pp-top"><div>' +
         '<div class="pp-title">' + S.displayName(inst) + '</div>' +
         '<span class="badge">' + c.badge + '</span>' +
@@ -419,7 +414,6 @@
       '<div class="quote-block">' +
         '<div class="quote-big">' + S.fmt2(inst.quote) + '%</div>' +
         '<div class="quote-sub">котировка · % от номинала</div>' +
-        '<div class="quote-chg" style="color:' + (chgUp ? "#1F7A53" : "#E96516") + '">' + (chgUp ? "+" : "−") + S.fmt1(Math.abs(inst.chg)) + ' п.п. сегодня</div>' +
       '</div></div>' +
       '<div class="chart-box">' +
         '<div class="chart-head"><span class="chart-title" id="chart-title"></span>' +
@@ -480,11 +474,8 @@
   }
 
   function itemHTML(r) {
-    const up = r.chg > 0;
     return '<button class="item' + (r.id === selected ? " active" : "") + '" data-id="' + r.id + '">' +
       '<div class="r1"><span class="nm">' + shortName(r) + '</span><span class="q">' + S.fmt2(r.quote) + '%</span></div>' +
-      '<div class="r2"><span class="sub">' + r.id + '</span>' +
-      '<span class="chg" style="color:' + (up ? "#1F7A53" : "#E96516") + '">' + (up ? "+" : "−") + S.fmt1(Math.abs(r.chg)) + '</span></div>' +
     '</button>';
   }
 
