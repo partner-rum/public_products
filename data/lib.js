@@ -138,6 +138,14 @@ window.SITE = (function () {
 
   function underlyingLong(name) { return UNDERLYING_LONG[name] || null; }
 
-  return { TYPES, INSTRUMENTS, PAYOFF, LEGAL, displayName, findInstrument, instrumentsOfType, underlyingInfo, underlyingLong, yieldAnnual, paramValue, history, fmtInt, fmt2, fmt1, fmtSmart, daysTo };
+  // Чувствителен ли инструмент к валютному курсу: базовый актив в иностранной валюте.
+  // Валютные пары (USD/RUB, CNY/RUB) исключаем — там курс и есть базовый актив.
+  function isFxSensitive(name) {
+    const n = String(name || "");
+    if (/USD\s*\/?\s*RUB|CNY\s*\/?\s*RUB|USDRUB|CNYRUB|валют|курс/i.test(n)) return false;
+    return /S&P|NASDAQ|NVDA|NVIDIA|NBIS|Nebius|BTC|IBIT|GLD|SPY|COPX|CSI|URA|Uranium|Bitcoin|Gold|USD|\$/i.test(n);
+  }
+
+  return { TYPES, INSTRUMENTS, PAYOFF, LEGAL, displayName, findInstrument, instrumentsOfType, underlyingInfo, underlyingLong, isFxSensitive, yieldAnnual, paramValue, history, fmtInt, fmt2, fmt1, fmtSmart, daysTo };
 
 })();

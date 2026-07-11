@@ -185,8 +185,8 @@
   </div>
 </div>
 
-<script src="data/instruments.js"></script>
-<script src="data/lib.js"></script>
+<script src="data/instruments.js?v=fx4"></script>
+<script src="data/lib.js?v=fx4"></script>
 <script>
   const S = window.SITE;
   const TYPE_LABEL = { discount: "Дисконтные облигации", protection: "Защита капитала", warrant: "Варранты" };
@@ -347,7 +347,6 @@
           ? "Колл-спред — CALL с потолком выплаты. Страйк K фиксируется по уровню базового актива в день покупки (100%), рост засчитывается до K₂ = " + S.fmtSmart(K2) + "%: максимальная выплата — " + S.fmtSmart(capPct) + "% номинала. За счёт ограничения премия ниже, чем у обычного CALL. Если актив не вырос — выплаты нет, потеря ограничена премией."
           : "CALL-варрант — право на выплату, равную росту базового актива. Страйк K фиксируется по уровню актива в день покупки (100%). Если на экспирацию актив выше страйка, выплата — Ном × рост. Если роста нет — выплаты нет, потеря ограничена премией.",
         facts: [
-          ["Формула выплаты", S.PAYOFF.formula(inst)],
           ["Стиль", "Европейский — выплата на дату экспирации"],
           ["Максимальный убыток", "Уплаченная премия"]
         ]
@@ -374,7 +373,6 @@
         ],
         explainer: "Облигация покупается дешевле номинала — сегодня по " + S.fmt2(inst.quote) + "% от него. На дату погашения выплачивается полный номинал. Весь доход — дисконт: разница между ценой покупки и номиналом, известная в день сделки. Купонов нет.",
         facts: [
-          ["Формула выплаты", "100% номинала на погашение"],
           ["Купоны", "Нет — весь доход в дисконте"],
           ["Риск", "Кредитное качество эмитента"]
         ]
@@ -403,7 +401,6 @@
       ],
       explainer: "Нота возвращает 100% номинала при любом сценарии. Если базовый актив на дату экспирации выше начального уровня S₀, дополнительно выплачивается " + partS + " его роста. Если актив упал — вы получаете номинал целиком.",
       facts: [
-        ["Формула выплаты", "100% + " + partS + " × max(S/S₀ − 1; 0)"],
         ["Стиль", "Европейский — выплата на дату экспирации"],
         ["Риск", "Кредитный риск эмитента ноты"]
       ]
@@ -431,7 +428,8 @@
       '</div>' +
       '<div class="metrics">' + c.metrics.map(m => '<div class="metric"><div class="v">' + m[0] + '</div><div class="k">' + m[1] + '</div></div>').join("") + '</div>' +
       '<div class="sec"><div class="h">Пример расчёта</div><div class="intro">' + c.exampleIntro + '</div>' +
-        c.scenarios.map(s => '<div class="scenario"><div class="l">' + s[0] + '</div><div class="d">' + s[1] + '</div><div class="r" style="color:' + s[3] + '">' + s[2] + '</div></div>').join("") + '</div>' +
+        c.scenarios.map(s => '<div class="scenario"><div class="l">' + s[0] + '</div><div class="d">' + s[1] + '</div><div class="r" style="color:' + s[3] + '">' + s[2] + '</div></div>').join("") +
+        (S.isFxSensitive(inst.underlying) ? '<div style="margin-top:12px;padding:9px 13px;border-left:3px solid #E96516;background:#FBEFE3;border-radius:0 7px 7px 0;font-size:12.5px;line-height:1.5;color:#8A5A22">' + S.LEGAL.fx + '</div>' : '') + '</div>' +
       '<div class="sec"><div class="h">Как устроен продукт</div><div class="explainer">' + c.explainer + '</div>' +
         '<div class="facts">' + c.facts.map(f => '<div class="fact"><div class="k">' + f[0] + '</div><div class="v">' + f[1] + '</div></div>').join("") + '</div></div>' +
       '<div class="pp-actions"><a class="btn-pdf" href="onepager.html?id=' + encodeURIComponent(inst.id) + '&print=1">' +

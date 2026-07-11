@@ -181,8 +181,8 @@
 
 </div>
 
-<script src="data/instruments.js"></script>
-<script src="data/lib.js"></script>
+<script src="data/instruments.js?v=fx4"></script>
+<script src="data/lib.js?v=fx4"></script>
 <script>
   const S = window.SITE;
   const inst = S.findInstrument(new URLSearchParams(location.search).get("id"));
@@ -336,7 +336,6 @@
     }
     wScen.push([inst.underlying + " не вырос", "Выплаты нет", "−" + S.fmtInt(premiumRub) + " ₽", "#E96516"]);
     const wFacts = [
-      ["Формула выплаты", S.PAYOFF.formula(inst)],
       ["Страйк", "100% — уровень БА в день покупки"]
     ];
     if (isCS) wFacts.push(["Потолок", "K₂ = " + S.fmtSmart(K2) + "%: выплата не выше " + S.fmtSmart(capPct) + "% номинала"]);
@@ -384,7 +383,6 @@
         ["Продали раньше срока", "По текущей рыночной цене", "по рынку", "#6E6A68"]
       ],
       facts: [
-        ["Формула выплаты", "100% номинала на погашение"],
         ["Котировка", "В процентах от номинала"],
         ["Доход", "Дисконт: номинал минус цена покупки"],
         ["Купоны", "Нет — весь доход в дисконте"],
@@ -418,7 +416,6 @@
         [inst.underlying + " упал на 15%", "Сработала защита: выплата " + S.fmtInt(nom) + " ₽", "−" + S.fmtInt(entryRub - nom) + " ₽", "#E96516"]
       ],
       facts: [
-        ["Формула выплаты", "100% + " + Math.round(inst.participation * 100) + "% × max(S/S₀ − 1; 0)"],
         ["Защита", "100% номинала при любом сценарии"],
         ["Котировка", "В процентах от номинала"],
         ["Стиль", "Европейский — выплата на дату экспирации"],
@@ -447,7 +444,8 @@
 
   document.getElementById("example-intro").textContent = content.exampleIntro;
   document.getElementById("scenarios").innerHTML = content.scenarios.map(s =>
-    '<div class="scenario"><div class="l">' + s[0] + '</div><div class="d">' + s[1] + '</div><div class="r" style="color:' + s[3] + '">' + s[2] + '</div></div>').join("");
+    '<div class="scenario"><div class="l">' + s[0] + '</div><div class="d">' + s[1] + '</div><div class="r" style="color:' + s[3] + '">' + s[2] + '</div></div>').join("") +
+    (S.isFxSensitive(inst.underlying) ? '<div style="margin-top:12px;padding:9px 13px;border-left:3px solid #E96516;background:#FBEFE3;border-radius:0 7px 7px 0;font-size:12.5px;line-height:1.5;color:#8A5A22">' + S.LEGAL.fx + '</div>' : '');
 
   document.getElementById("explainer").textContent = content.explainer;
   document.getElementById("facts").innerHTML = content.facts.map(f =>

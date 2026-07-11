@@ -166,8 +166,10 @@
   </div>
 </div>
 
+<script src="data/lib.js?v=fx4"></script>
 <script src="data/placements.js"></script>
 <script>
+  const S = window.SITE;
   const D = window.PLACEMENTS_DATA;
   const TODAY = new Date().toISOString().slice(0, 10);
   const KINDS = {
@@ -228,7 +230,8 @@
         '<div class="tile"><div class="v">' + fmtD(i.maturity) + '</div><div class="k">погашение</div></div>' +
       '</div>' +
       '<div class="sec"><div class="h">Базовый актив</div>' + assets + '</div>' +
-      '<div class="sec"><div class="h">Параметры выплаты</div>' + kv(pay) + '</div>' +
+      '<div class="sec"><div class="h">Параметры выплаты</div>' + kv(pay) +
+        (i.fx ? '<div style="margin-top:12px;padding:9px 13px;border-left:3px solid #E96516;background:#FBEFE3;border-radius:0 7px 7px 0;font-size:12.5px;line-height:1.5;color:#8A5A22">' + S.LEGAL.fx + '</div>' : '') + '</div>' +
       '<div class="sec"><div class="h">Даты</div>' + kv([
         ["Размещение", fmtD(i.issueStart), true],
         ["Начальная фиксация", fmtD(i.dates.initialFixing), true],
@@ -330,7 +333,17 @@
   const hash = location.hash.slice(1);
   if (hash) {
     const i = issues.find(x => x.isin === hash);
-    if (i) { selected = hash; openGroups.add(assetOf(i)); }
+    if (i) {
+      selected = hash;
+      openGroups.add(assetOf(i));
+      // Погашенные скрыты по умолчанию — если ссылка ведёт на такой, показываем их,
+      // иначе выбор молча слетает на первый видимый выпуск.
+      if (i.matured) {
+        showMatured = true;
+        const cb = document.getElementById("show-matured");
+        if (cb) cb.checked = true;
+      }
+    }
   }
   render();
   if (selected) select(selected);
