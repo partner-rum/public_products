@@ -14,7 +14,7 @@
     --ink: #0C0A08; --hushed: rgba(12,10,8,0.6); --faint: rgba(12,10,8,0.62);
     --border: #D2CECB; --border-soft: #E0DCD6;
     --solar: #E4F222; --solar-l: #F5FF78;
-    --spruce: #2E6E56; --steel: #33608C; --amber: #B3801F;
+    --spruce: #2E6E56; --steel: #33608C; --amber: #B3801F; --amber-t: #8A5A22;
     --up: #1F7A53; --down: #E96516;
     --f-body: 'Onest', system-ui, sans-serif; --f-mono: 'JetBrains Mono', Consolas, monospace;
     --ease: cubic-bezier(0.16, 1, 0.3, 1);
@@ -24,10 +24,13 @@
   body { margin: 0; background: var(--canvas); color: var(--ink); font-family: var(--f-body); -webkit-font-smoothing: antialiased; }
   a { text-decoration: none; color: inherit; }
   a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 4px; }
-  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 44px; }
+  .wrap { max-width: 1160px; margin: 0 auto; padding: 0 44px; }
+
+  .skip { position: absolute; left: -9999px; top: 0; z-index: 100; background: var(--ink); color: #fff; padding: 10px 16px; border-radius: 0 0 8px 0; font-size: 14px; }
+  .skip:focus { left: 0; }
 
   .nav { position: sticky; top: 0; z-index: 30; background: rgba(244,242,240,0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); }
-  .nav-in { max-width: 1120px; margin: 0 auto; padding: 0 44px; height: 62px; display: flex; align-items: center; gap: 12px; }
+  .nav-in { max-width: 1160px; margin: 0 auto; padding: 0 44px; height: 62px; display: flex; align-items: center; gap: 12px; }
   .brand { display: flex; align-items: center; gap: 10px; } .brand-name { font-size: 14.5px; font-weight: 600; }
   .topnav { margin-left: auto; display: flex; align-items: center; gap: 22px; font-size: 14px; font-weight: 500; }
   .topnav a { color: var(--hushed); transition: color .2s; } .topnav a:hover { color: var(--ink); }
@@ -35,78 +38,89 @@
   .btn-solar { background: var(--solar); color: var(--ink) !important; border-radius: 6px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 7px; transition: background .3s ease-in-out; }
   .btn-solar:hover { background: var(--solar-l); }
 
-  .page-head { padding: 56px 0 8px; }
-  .page-head h1 { margin: 0 0 16px; font-size: clamp(32px, 4.5vw, 46px); font-weight: 400; line-height: 1.08; letter-spacing: -0.02em; text-wrap: balance; }
-  .page-head p { margin: 0; font-size: 16.5px; line-height: 1.6; color: var(--hushed); max-width: 640px; text-wrap: pretty; }
+  .page-head { padding: 46px 0 4px; }
+  .page-head h1 { margin: 0 0 14px; font-size: clamp(32px, 4.5vw, 44px); font-weight: 400; line-height: 1.08; letter-spacing: -0.02em; text-wrap: balance; }
+  .page-head p { margin: 0; font-size: 16px; line-height: 1.6; color: var(--hushed); max-width: 640px; text-wrap: pretty; }
 
-  .principles { display: grid; grid-template-columns: repeat(3, 1fr); padding: 44px 0 8px; }
-  .principle { padding: 4px 28px 22px 0; }
-  .principle + .principle { border-left: 1px solid var(--border-soft); padding-left: 28px; }
-  .principle .k { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #6E6A68; margin-bottom: 10px; }
-  .principle .v { font-size: 14.5px; line-height: 1.6; color: var(--hushed); text-wrap: pretty; }
+  .principles { display: grid; grid-template-columns: repeat(3, 1fr); padding: 34px 0 0; }
+  .principle { padding: 4px 26px 8px 0; }
+  .principle + .principle { border-left: 1px solid var(--border-soft); padding-left: 26px; }
+  .principle .k { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #6E6A68; margin-bottom: 8px; }
+  .principle .v { font-size: 13.5px; line-height: 1.55; color: var(--hushed); text-wrap: pretty; }
 
-  /* Липкая навигация по главам */
-  .chapnav { position: sticky; top: 62px; z-index: 20; background: rgba(244,242,240,0.9); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); margin-top: 34px; }
-  .chapnav-in { max-width: 1120px; margin: 0 auto; padding: 0 44px; display: flex; gap: 8px; height: 52px; align-items: center; }
-  .chapnav a { font-size: 13.5px; color: var(--hushed); padding: 7px 14px; border-radius: 20px; display: inline-flex; align-items: center; gap: 8px; transition: background .2s, color .2s; }
-  .chapnav a .d { width: 8px; height: 8px; border-radius: 50%; background: var(--fc); }
-  .chapnav a:hover { color: var(--ink); }
-  .chapnav a.on { background: var(--ink); color: #fff; }
+  /* ── Содержание (общее) + статья (частное) ── */
+  .layout { display: grid; grid-template-columns: 296px minmax(0, 1fr); gap: 40px; align-items: start; margin-top: 34px; }
+  .toc { position: sticky; top: 82px; }
+  .toc-h { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint); margin-bottom: 8px; }
+  .toc-i { display: flex; gap: 11px; align-items: baseline; width: 100%; text-align: left; background: none; border: none; cursor: pointer; padding: 8px 9px; border-radius: 8px; font-family: var(--f-body); color: var(--ink); }
+  .toc-i:hover { background: #EEEBE5; }
+  .toc-i.active { background: var(--ink); color: #fff; }
+  .toc-i.active .sub, .toc-i.active .cnt { color: rgba(255,255,255,0.72); }
+  .toc-i .dot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--fc); position: relative; top: -1px; }
+  .toc-i .tx { flex: 1; min-width: 0; }
+  .toc-i .nm { font-size: 14px; font-weight: 600; line-height: 1.3; }
+  .toc-i .sub { font-family: var(--f-mono); font-size: 10.5px; color: var(--faint); margin-top: 2px; }
+  .toc-i .cnt { font-family: var(--f-mono); font-size: 10.5px; color: var(--faint); white-space: nowrap; }
+  .toc-kids { margin: 2px 0 4px; padding-left: 13px; border-left: 1px solid var(--border-soft); margin-left: 12px; display: flex; flex-direction: column; }
+  .toc-kids .toc-i { padding: 6px 9px; }
+  .toc-kids .toc-i .nm { font-size: 13px; font-weight: 500; }
 
-  .chap { padding: 52px 0 8px; scroll-margin-top: 128px; }
-  .chap-head { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 4px; }
-  .chap-k { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--fc); }
-  .chap h2 { margin: 6px 0 0; font-size: 30px; font-weight: 400; letter-spacing: -0.02em; }
-  .chap-lead { margin: 12px 0 26px; font-size: 15.5px; line-height: 1.6; color: var(--hushed); max-width: 660px; text-wrap: pretty; }
-
-  .card { background: var(--card); border: 1px solid var(--border-soft); border-top: 3px solid var(--fc); border-radius: 14px; }
-  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
-  .two .txt { padding: 26px 30px; } .two .viz { padding: 22px 26px; border-left: 1px solid var(--border-soft); display: flex; flex-direction: column; justify-content: center; }
-  .kv { margin: 0 0 16px; } .kv:last-child { margin-bottom: 0; }
-  .kv .k { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: 0.11em; text-transform: uppercase; color: #6E6A68; margin-bottom: 6px; }
-  .kv .v { font-size: 14.5px; line-height: 1.6; color: var(--hushed); text-wrap: pretty; }
-  .kv .v b { color: var(--ink); font-weight: 600; }
-  .plaque { margin-top: 4px; padding: 11px 14px; border-left: 3px solid var(--down); background: #FBEFE3; border-radius: 0 8px 8px 0; font-size: 13px; line-height: 1.5; color: #8A5A22; }
-  .metrics { display: flex; gap: 22px; flex-wrap: wrap; margin-top: 4px; }
+  /* Статья */
+  .art-kind { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.11em; text-transform: uppercase; color: var(--fc); }
+  .art-title { margin: 10px 0 6px; font-size: clamp(27px, 3.4vw, 37px); font-weight: 400; letter-spacing: -0.02em; line-height: 1.1; max-width: 620px; }
+  .art-sub { font-size: 15px; line-height: 1.55; color: var(--hushed); max-width: 640px; text-wrap: pretty; }
+  .art-bar { width: 56px; height: 4px; background: var(--fc); margin: 16px 0 22px; }
+  .art-grid { display: grid; grid-template-columns: 1.25fr 1fr; gap: 28px; align-items: start; }
+  .kv { margin: 0 0 18px; } .kv:last-child { margin-bottom: 0; }
+  .kv .k { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: 0.11em; text-transform: uppercase; color: #6E6A68; margin-bottom: 7px; }
+  .kv .v { font-size: 14.5px; line-height: 1.62; color: var(--hushed); text-wrap: pretty; }
+  .metrics { display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 18px; }
+  .metric { min-width: 150px; flex: 1; }
   .metric .k { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); }
-  .metric .v { font-size: 13.5px; color: var(--hushed); margin-top: 3px; max-width: 240px; line-height: 1.45; }
-  .boardlink { display: inline-flex; align-items: center; gap: 7px; margin-top: 18px; font-size: 14px; font-weight: 600; color: var(--fc); }
+  .metric .v { font-size: 13.5px; color: var(--hushed); margin-top: 4px; line-height: 1.5; }
+  .plaque { padding: 11px 14px; border-left: 3px solid var(--down); background: #FBEFE3; border-radius: 0 8px 8px 0; font-size: 13px; line-height: 1.5; color: #8A5A22; margin-bottom: 18px; }
+  .boardlink { display: inline-flex; align-items: center; gap: 7px; margin-top: 4px; font-size: 14px; font-weight: 600; color: var(--fc); }
+  .backmx { display: inline-flex; align-items: center; gap: 7px; background: none; border: none; cursor: pointer; font-family: var(--f-body); font-size: 13px; color: var(--hushed); padding: 0 0 14px; }
+  .backmx:hover { color: var(--ink); }
 
-  .pf { background: var(--canvas); border-radius: 10px; padding: 12px 14px 8px; }
+  .viz { background: var(--card); border: 1px solid var(--border-soft); border-top: 3px solid var(--fc); border-radius: 12px; padding: 18px 20px 14px; }
   .pf svg { display: block; width: 100%; height: auto; }
-  .pf-cap { font-size: 12px; line-height: 1.45; color: var(--faint); margin-top: 8px; text-wrap: pretty; }
+  .pf-axis { font-family: var(--f-mono); font-size: 10.5px; color: #5F5B54; text-align: right; margin-top: 3px; }
+  .pf-cap { font-size: 12px; line-height: 1.5; color: var(--faint); margin-top: 10px; text-wrap: pretty; }
   .pf-line { transition: stroke-dashoffset 1.05s var(--ease); }
   .pf-bar { transform-box: fill-box; transform-origin: bottom; transform: scaleY(0); transition: transform .8s var(--ease); }
   .pf.grown .pf-bar { transform: scaleY(1); }
 
-  /* Защита: интерактив */
-  .prot-ctrls { display: flex; flex-wrap: wrap; gap: 22px; margin-bottom: 16px; }
+  .prot-ctrls { display: flex; flex-wrap: wrap; gap: 18px; margin-bottom: 14px; }
   .ctrl .k { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); margin-bottom: 7px; }
   .seg { display: inline-flex; background: #ECE8E1; border-radius: 9px; padding: 3px; gap: 2px; }
-  .seg button { border: none; background: none; cursor: pointer; font-family: var(--f-mono); font-size: 13px; color: var(--hushed); padding: 6px 13px; border-radius: 7px; transition: background .18s, color .18s; }
+  .seg button { border: none; background: none; cursor: pointer; font-family: var(--f-mono); font-size: 12.5px; color: var(--hushed); padding: 6px 12px; border-radius: 7px; transition: background .18s, color .18s; }
   .seg button.on { background: var(--card); color: var(--steel); font-weight: 600; box-shadow: 0 1px 3px rgba(12,10,8,0.1); }
-  .prot-read { font-size: 13.5px; line-height: 1.55; color: var(--hushed); margin-top: 10px; text-wrap: pretty; }
+  .prot-read { font-size: 13px; line-height: 1.55; color: var(--hushed); margin-top: 12px; text-wrap: pretty; }
   .prot-read b { color: var(--ink); }
 
-  /* Варранты: матрица + деталь */
-  .mx { display: grid; grid-template-columns: 92px 1fr 1fr 1fr; gap: 10px; }
+  /* Матрица варрантов (обзор) */
+  .mx { display: grid; grid-template-columns: 86px 1fr 1fr 1fr; gap: 10px; margin-top: 4px; }
   .mx .hd { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: 0.04em; color: #6E6A68; display: flex; align-items: flex-end; padding-bottom: 6px; }
   .mx .rl { display: flex; flex-direction: column; justify-content: center; }
-  .mx .rl .t { font-size: 15px; font-weight: 600; color: #8A5A22; }
+  .mx .rl .t { font-size: 15px; font-weight: 600; color: var(--amber-t); }
   .mx .rl .s { font-family: var(--f-mono); font-size: 10px; color: var(--faint); margin-top: 2px; }
-  .cell { background: var(--card); border: 1px solid var(--border-soft); border-radius: 11px; padding: 10px 11px 8px; cursor: pointer; text-align: left; font-family: var(--f-body); transition: box-shadow .18s, transform .18s, border-color .18s; }
+  .cell { background: var(--card); border: 1px solid var(--border-soft); border-radius: 11px; padding: 10px 11px 9px; cursor: pointer; text-align: left; font-family: var(--f-body); transition: box-shadow .18s, transform .18s, border-color .18s; }
   .cell:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(12,10,8,0.07); }
-  .cell.on { border-color: var(--amber); box-shadow: 0 0 0 1px var(--amber); }
   .cell svg { display: block; width: 100%; height: auto; }
   .cell svg text { display: none; }
-  .cell .nm { font-size: 13px; font-weight: 600; margin-top: 6px; }
-  .cell .tg { font-size: 11px; line-height: 1.35; color: var(--hushed); margin-top: 2px; }
-  .wdetail { margin-top: 16px; background: var(--card); border: 1px solid var(--border-soft); border-top: 3px solid var(--amber); border-radius: 14px; display: grid; grid-template-columns: 1fr 380px; gap: 0; }
-  .wdetail .txt { padding: 24px 28px; } .wdetail .viz { padding: 20px 24px; border-left: 1px solid var(--border-soft); display: flex; flex-direction: column; justify-content: center; }
-  .wdetail h3 { margin: 0 0 3px; font-size: 21px; font-weight: 600; letter-spacing: -0.01em; }
-  .wdetail .sub { font-size: 13.5px; color: var(--hushed); margin-bottom: 16px; }
+  .cell .nm { font-size: 13px; font-weight: 600; margin-top: 7px; }
+  .cell .tg { font-size: 11.5px; line-height: 1.4; color: var(--hushed); margin-top: 2px; }
+  .cell .more { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; color: var(--amber-t); margin-top: 8px; }
 
-  footer { margin-top: 68px; background: var(--canvas); border-top: 1px solid var(--border); color: var(--hushed); }
+  .nextprev { display: flex; justify-content: space-between; gap: 14px; margin-top: 34px; border-top: 1px solid var(--border); padding-top: 18px; }
+  .np { background: none; border: none; cursor: pointer; font-family: var(--f-body); color: var(--hushed); text-align: left; padding: 6px 0; max-width: 46%; }
+  .np:hover { color: var(--ink); } .np.r { text-align: right; }
+  .np .l { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); }
+  .np .n { font-size: 14.5px; margin-top: 3px; }
+  .np[disabled] { visibility: hidden; }
+
+  footer { margin-top: 64px; background: var(--canvas); border-top: 1px solid var(--border); color: var(--hushed); }
   .footer-in { padding: 34px 0 44px; display: flex; justify-content: space-between; gap: 32px; flex-wrap: wrap; }
   .footer-brand .row { display: flex; align-items: center; gap: 10px; color: var(--ink); font-size: 14px; font-weight: 600; }
   .footer-brand .sub { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); margin-top: 8px; }
@@ -120,24 +134,19 @@
     .cell, .btn-solar, .topnav a, .seg button { transition: none; }
   }
   @media (max-width: 960px) {
-    .wrap { padding: 0 20px; } .nav-in, .chapnav-in { padding-left: 20px; padding-right: 20px; }
-    .principles { grid-template-columns: 1fr; padding-top: 32px; }
-    .principle + .principle { border-left: none; border-top: 1px solid var(--border-soft); padding-left: 0; padding-top: 20px; }
-    .two, .wdetail { grid-template-columns: 1fr; }
-    .two .viz, .wdetail .viz { border-left: none; border-top: 1px solid var(--border-soft); }
+    .wrap { padding: 0 20px; } .nav-in { padding: 0 20px; }
+    .principles { grid-template-columns: 1fr; padding-top: 26px; }
+    .principle + .principle { border-left: none; border-top: 1px solid var(--border-soft); padding-left: 0; padding-top: 18px; }
+    .layout { grid-template-columns: 1fr; gap: 22px; }
+    .toc { position: static; }
+    .art-grid { grid-template-columns: 1fr; }
     .mx { grid-template-columns: 1fr; }
     .mx .hd, .mx .rl { display: none; }
-    .chapnav-in { overflow-x: auto; }
   }
-  @media (max-width: 560px) { .mx { grid-template-columns: 1fr; } }
   @media (max-width: 860px) {
     .nav-in { height: auto; flex-wrap: wrap; padding: 12px 20px; row-gap: 10px; }
     .topnav { margin-left: 0; width: 100%; gap: 16px; font-size: 13.5px; }
-    .chapnav { position: static; }
-    .chap { scroll-margin-top: 20px; }
   }
-  .skip { position: absolute; left: -9999px; top: 0; z-index: 100; background: var(--ink); color: #fff; padding: 10px 16px; border-radius: 0 0 8px 0; font-size: 14px; }
-  .skip:focus { left: 0; }
 </style>
 </head>
 <body>
@@ -163,7 +172,7 @@
 
 <section class="wrap page-head">
   <h1>Как это работает</h1>
-  <p>Библиотека продуктов: как устроен каждый тип — дисконтные облигации, ноты с защитой капитала и варранты. По каждому — профиль выплаты, риск и сценарии, известные заранее.</p>
+  <p>Библиотека продуктов. Выберите инструмент в содержании — по каждому: как устроен, профиль выплаты, риск и когда уместен.</p>
 </section>
 
 <section class="wrap principles">
@@ -172,88 +181,16 @@
   <div class="principle"><div class="k">Срок</div><div class="v">Дата экспирации и порядок расчёта фиксированы. Вы заранее знаете, когда и по какому правилу произойдёт выплата.</div></div>
 </section>
 
-<nav class="chapnav" aria-label="Разделы библиотеки">
-  <div class="chapnav-in">
-    <a href="#discount" data-c="discount" style="--fc:#2E6E56"><span class="d"></span>Дисконтные</a>
-    <a href="#protection" data-c="protection" style="--fc:#33608C"><span class="d"></span>Защита капитала</a>
-    <a href="#warrants" data-c="warrants" style="--fc:#B3801F"><span class="d"></span>Варранты</a>
-  </div>
-</nav>
-
-<main class="wrap" id="content">
-
-  <!-- Дисконтные -->
-  <section class="chap" id="discount" style="--fc:#2E6E56">
-    <div class="chap-head"><div><div class="chap-k">01 · консервативный</div><h2 id="t-discount-name">Дисконтные облигации</h2></div></div>
-    <div class="chap-lead" id="t-discount-tagline"></div>
-    <div class="card two">
-      <div class="txt">
-        <div class="kv"><div class="k">Как работает</div><div class="v" id="t-discount-how"></div></div>
-        <div class="plaque" id="t-discount-risk"></div>
-        <div class="metrics" style="margin-top:16px">
-          <div class="metric"><div class="k">Доход</div><div class="v" id="t-discount-profit"></div></div>
-          <div class="metric"><div class="k">Риск убытка</div><div class="v" id="t-discount-loss"></div></div>
-        </div>
-        <a class="boardlink" href="board.html?type=discount">Смотреть выпуски на доске
-          <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#2E6E56" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
-      </div>
-      <div class="viz"><div class="pf" id="pf-discount"></div><div class="pf-cap" id="t-discount-payoffNote"></div></div>
-    </div>
-  </section>
-
-  <!-- Защита капитала -->
-  <section class="chap" id="protection" style="--fc:#33608C">
-    <div class="chap-head"><div><div class="chap-k">02 · сбалансированный</div><h2 id="t-protection-name">Защита капитала</h2></div></div>
-    <div class="chap-lead" id="t-protection-tagline"></div>
-    <div class="card two">
-      <div class="txt">
-        <div class="kv"><div class="k">Как работает</div><div class="v" id="t-protection-how"></div></div>
-        <div class="prot-ctrls">
-          <div class="ctrl"><div class="k">Уровень защиты</div>
-            <div class="seg" id="seg-level" role="radiogroup" aria-label="Уровень защиты, %"><button data-v="50" role="radio" aria-checked="false" aria-label="Защита 50%">50</button><button data-v="70" role="radio" aria-checked="false" aria-label="Защита 70%">70</button><button data-v="90" class="on" role="radio" aria-checked="true" aria-label="Защита 90%">90</button><button data-v="100" role="radio" aria-checked="false" aria-label="Защита 100%">100</button></div>
-          </div>
-          <div class="ctrl"><div class="k">Участие</div>
-            <div class="seg" id="seg-dir" role="radiogroup" aria-label="Направление участия"><button data-v="up" class="on" role="radio" aria-checked="true" aria-label="Участие в росте">↑ в росте</button><button data-v="down" role="radio" aria-checked="false" aria-label="Участие в падении">↓ в падении</button></div>
-          </div>
-        </div>
-        <div class="prot-read" id="prot-read" aria-live="polite"></div>
-        <div class="plaque" id="t-protection-risk" style="margin-top:14px"></div>
-        <a class="boardlink" href="board.html?type=protection">Смотреть выпуски на доске
-          <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#33608C" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
-      </div>
-      <div class="viz"><div class="pf" id="pf-protection"></div><div class="pf-cap" id="t-protection-payoffNote"></div></div>
-    </div>
-  </section>
-
-  <!-- Варранты -->
-  <section class="chap" id="warrants" style="--fc:#B3801F">
-    <div class="chap-head"><div><div class="chap-k">03 · активный</div><h2>Варранты</h2></div></div>
-    <div class="chap-lead">Ставка на движение базового актива за ограниченную премию. Шесть типов — комбинации направления (CALL — рост, PUT — падение) и структуры (базовый, с потолком, с барьером KO). Выберите ячейку, чтобы увидеть описание и профиль выплаты.</div>
-    <div class="mx">
-      <div class="hd"></div><div class="hd">Базовый</div><div class="hd">С потолком</div><div class="hd">С барьером KO</div>
-      <div class="rl"><span class="t">CALL</span><span class="s">ставка на рост</span></div>
-      <div id="mx-call"></div><div id="mx-callspread"></div><div id="mx-callko"></div>
-      <div class="rl"><span class="t">PUT</span><span class="s">ставка на падение</span></div>
-      <div id="mx-put"></div><div id="mx-putspread"></div><div id="mx-putko"></div>
-    </div>
-    <div class="wdetail" id="wdetail" aria-live="polite">
-      <div class="txt">
-        <h3 id="w-name"></h3><div class="sub" id="w-tagline"></div>
-        <div class="kv"><div class="k">Как работает</div><div class="v" id="w-how"></div></div>
-        <div class="metrics">
-          <div class="metric"><div class="k">Макс. прибыль</div><div class="v" id="w-profit"></div></div>
-          <div class="metric"><div class="k">Макс. убыток</div><div class="v" id="w-loss"></div></div>
-        </div>
-        <div class="plaque" id="w-risk" style="margin-top:16px"></div>
-        <div class="kv" style="margin-top:16px"><div class="k">Когда уместен</div><div class="v" id="w-when"></div></div>
-      </div>
-      <div class="viz"><div class="pf" id="pf-warrant"></div><div class="pf-cap" id="w-payoffNote"></div></div>
-    </div>
-    <a class="boardlink" href="board.html?type=warrant">Смотреть варранты на доске
-      <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#B3801F" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
-  </section>
-
-</main>
+<div class="wrap layout" id="content">
+  <aside class="toc" aria-label="Содержание библиотеки">
+    <div class="toc-h">Содержание</div>
+    <div id="toc"></div>
+  </aside>
+  <main>
+    <article id="article"></article>
+    <div class="nextprev"><button class="np" id="prev"></button><button class="np r" id="next"></button></div>
+  </main>
+</div>
 
 <footer>
   <div class="wrap footer-in">
@@ -287,45 +224,54 @@
     putko: {"name":"PUT с барьером KO","tagline":"Ставка на снижение дешевле обычного PUT — ценой досрочного гашения при касании барьера.","how":"PUT даёт право заработать на снижении базового актива ниже страйка. От обычного PUT отличается барьером KO, заданным при выпуске: если за время жизни опциона актив касается барьера, опцион досрочно прекращает действие и гаснет. Из-за этого ограничения премия ниже, чем у классического PUT. При касании возможен небольшой ребейт, оговорённый заранее.","risk":"Главный риск — касание барьера KO: опцион гаснет досрочно, и право на выплату теряется, даже если до этого актив снижался (возможен небольшой ребейт). Максимальный убыток ограничен уплаченной премией.","profit":"Ограничена. Реализуется, только если за время жизни опциона актив ни разу не коснулся барьера; тем больше, чем глубже снижение к этому уровню.","loss":"Уплаченная премия (за вычетом ребейта, если он предусмотрен).","whenToUse":"При ставке на умеренное снижение, когда резкого провала до уровня барьера не ожидается.","payoffNote":"Выплата тем больше, чем ниже актив опустился под страйк; но при касании барьера KO опцион гаснет и право на выплату обнуляется."}
   };
 
-  // ── Движок пэйоффов (профиль прибыли от уровня БА) ──
+  var FAM = {
+    discount:   { label: "Консервативный", color: "#2E6E56", board: "board.html?type=discount" },
+    protection: { label: "Сбалансированный", color: "#33608C", board: "board.html?type=protection" },
+    warrant:    { label: "Активный", color: "#B3801F", text: "#8A5A22", board: "board.html?type=warrant" }
+  };
+  var WTYPES = ["call", "callspread", "callko", "put", "putspread", "putko"];
+  var WSUB = { call: "рост · без потолка", callspread: "рост · потолок K₂", callko: "рост · барьер KO", put: "падение · без потолка", putspread: "падение · потолок", putko: "падение · барьер KO" };
+  var ORDER = ["discount", "protection", "warrants"].concat(WTYPES);
+  var TITLE = { warrants: "Варранты" };
+  function nameOf(id) { return id === "warrants" ? "Варранты — обзор" : LIB[id].name; }
+  function famOf(id) { return id === "discount" ? "discount" : id === "protection" ? "protection" : "warrant"; }
+
+  // ── Движок пэйоффов ──
   var W = 340, H = 178, PADX = 24, TOP = 26, ZERO = 108, PREM = 134, CAP = 62;
-  var COL = { discount: "#2E6E56", protection: "#33608C", warrant: "#B3801F" };
   var GRID = "#DDD8D2", AX = "#B7B1A8", LAB = "#5F5B54", KOc = "#C24E0A";
   var MONO = 'font-family="JetBrains Mono, monospace"';
   function xu(u) { return (PADX + (u / 2) * (W - 2 * PADX)); }
   function svgWrap(inner) { return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="display:block" aria-hidden="true" focusable="false">' + inner + '</svg>'; }
-  function axes(labels) {
-    var s = '<line x1="' + PADX + '" y1="' + ZERO + '" x2="' + (W - PADX) + '" y2="' + ZERO + '" stroke="' + AX + '" stroke-width="1"/>';
-    s += '<text x="' + PADX + '" y="' + (H - 4) + '" font-size="11" ' + MONO + ' fill="' + LAB + '">базовый актив →</text>';
-    return s;
+  function axes() {
+    return '<line x1="' + PADX + '" y1="' + ZERO + '" x2="' + (W - PADX) + '" y2="' + ZERO + '" stroke="' + AX + '" stroke-width="1"/>';
   }
   function line(d, color) { return '<path class="pf-line" d="' + d + '" fill="none" stroke="' + color + '" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>'; }
   function strike(u, y, label) {
     return '<rect x="' + (xu(u) - 4) + '" y="' + (y - 4) + '" width="8" height="8" transform="rotate(45 ' + xu(u) + ' ' + y + ')" fill="#5A5750"/>' +
       '<text x="' + xu(u) + '" y="' + (H - 16) + '" text-anchor="middle" font-size="11" ' + MONO + ' fill="' + LAB + '">' + label + '</text>';
   }
-  function premLine(color) {
+  function premLine() {
     return '<line x1="' + PADX + '" y1="' + PREM + '" x2="' + (W - PADX) + '" y2="' + PREM + '" stroke="' + GRID + '" stroke-width="1" stroke-dasharray="3 4"/>' +
-      '<text x="' + (PADX + 2) + '" y="' + (PREM - 5) + '" font-size="11" ' + MONO + ' fill="' + LAB + '">−премия</text>';
+      '<text x="' + (PADX + 2) + '" y="' + (PREM - 6) + '" font-size="11" ' + MONO + ' fill="' + LAB + '">−премия</text>';
   }
   function koBarrier(u) {
     return '<line x1="' + xu(u) + '" y1="' + TOP + '" x2="' + xu(u) + '" y2="' + (PREM + 6) + '" stroke="' + KOc + '" stroke-width="1.4" stroke-dasharray="3 3"/>' +
-      '<text x="' + xu(u) + '" y="' + (TOP - 4) + '" text-anchor="middle" font-size="11" ' + MONO + ' fill="' + KOc + '">барьер KO</text>';
+      '<text x="' + xu(u) + '" y="' + (TOP - 6) + '" text-anchor="middle" font-size="11" ' + MONO + ' fill="' + KOc + '">барьер KO</text>';
   }
 
   function payoff(kind, opt) {
     opt = opt || {};
-    var c = opt.color || COL.warrant, inner = "";
+    var c = opt.color || FAM.warrant.color, inner = "";
     if (kind === "discount") {
       var base = H - 22, top100 = TOP + 6, bw = 74, x1 = W * 0.30 - bw / 2, x2 = W * 0.68 - bw / 2;
       var h50 = (base - top100) * 0.5, h100 = (base - top100);
       inner = '<line x1="' + PADX + '" y1="' + top100 + '" x2="' + (W - PADX) + '" y2="' + top100 + '" stroke="' + GRID + '" stroke-width="1" stroke-dasharray="3 4"/>' +
-        '<text x="' + (W - PADX) + '" y="' + (top100 - 5) + '" text-anchor="end" font-size="11" ' + MONO + ' fill="' + LAB + '">номинал 100%</text>' +
+        '<text x="' + (W - PADX) + '" y="' + (top100 - 6) + '" text-anchor="end" font-size="11" ' + MONO + ' fill="' + LAB + '">номинал 100%</text>' +
         '<rect class="pf-bar" x="' + x1 + '" y="' + (base - h50) + '" width="' + bw + '" height="' + h50 + '" rx="3" fill="#BFC7BE"/>' +
-        '<rect class="pf-bar" x="' + x2 + '" y="' + (base - h100) + '" width="' + bw + '" height="' + h100 + '" rx="3" fill="' + COL.discount + '"/>' +
-        '<text x="' + (x1 + bw / 2) + '" y="' + (base + 13) + '" text-anchor="middle" font-size="11" ' + MONO + ' fill="' + LAB + '">вход 50%</text>' +
-        '<text x="' + (x2 + bw / 2) + '" y="' + (base + 13) + '" text-anchor="middle" font-size="11" ' + MONO + ' fill="' + COL.discount + '">погашение 100%</text>' +
-        '<text x="' + ((x1 + x2 + bw) / 2) + '" y="' + (base - h50 - 7) + '" text-anchor="middle" font-size="10" ' + MONO + ' fill="' + COL.discount + '">+50 п.п.</text>';
+        '<rect class="pf-bar" x="' + x2 + '" y="' + (base - h100) + '" width="' + bw + '" height="' + h100 + '" rx="3" fill="' + FAM.discount.color + '"/>' +
+        '<text x="' + (x1 + bw / 2) + '" y="' + (base + 14) + '" text-anchor="middle" font-size="11" ' + MONO + ' fill="' + LAB + '">вход 50%</text>' +
+        '<text x="' + (x2 + bw / 2) + '" y="' + (base + 14) + '" text-anchor="middle" font-size="11" ' + MONO + ' fill="' + FAM.discount.color + '">погашение 100%</text>' +
+        '<text x="' + ((x1 + x2 + bw) / 2) + '" y="' + (base - h50 - 8) + '" text-anchor="middle" font-size="11" ' + MONO + ' fill="' + FAM.discount.color + '">+50 п.п.</text>';
       return svgWrap(inner);
     }
     if (kind === "protection") {
@@ -333,22 +279,31 @@
       var part = { 100: 22, 90: 40, 70: 60, 50: 80 }[level] || 40;
       function yv(v) { return (H - 20) - ((v - 40) / (190 - 40)) * ((H - 20) - TOP); }
       var yPar = yv(100), yLvl = yv(level), yTop = yv(100 + part);
-      inner = '<line x1="' + PADX + '" y1="' + yPar + '" x2="' + (W - PADX) + '" y2="' + yPar + '" stroke="' + GRID + '" stroke-width="1" stroke-dasharray="3 4"/>' +
-        '<text x="' + (W - PADX) + '" y="' + (yPar - 5) + '" text-anchor="end" font-size="11" ' + MONO + ' fill="' + LAB + '">номинал 100%</text>' +
-        '<line x1="' + PADX + '" y1="' + yLvl + '" x2="' + (W - PADX) + '" y2="' + yLvl + '" stroke="' + c + '" stroke-width="1" stroke-dasharray="2 4" opacity="0.7"/>' +
-        '<text x="' + (PADX + 2) + '" y="' + (yLvl - 5) + '" font-size="11" ' + MONO + ' fill="' + c + '">защита ' + level + '%</text>';
+      // Уровень защиты (пунктир + подпись слева).
+      // При участии в падении слева проходит нисходящая линия — подпись уводим ПОД пунктир.
+      var yLblZ = dir === "up" ? (yLvl - 6) : (yLvl + 15);
+      inner = '<line x1="' + PADX + '" y1="' + yLvl + '" x2="' + (W - PADX) + '" y2="' + yLvl + '" stroke="' + c + '" stroke-width="1" stroke-dasharray="2 4" opacity="0.7"/>' +
+        '<text x="' + (PADX + 2) + '" y="' + yLblZ + '" font-size="11" ' + MONO + ' fill="' + c + '">защита ' + level + '%</text>';
+      // Номинал: не рисуем отдельно при защите 100% (совпадает с уровнем защиты)
+      if (level !== 100) {
+        inner += '<line x1="' + PADX + '" y1="' + yPar + '" x2="' + (W - PADX) + '" y2="' + yPar + '" stroke="' + GRID + '" stroke-width="1" stroke-dasharray="3 4"/>';
+        // Подпись «номинал 100%» справа: при росте линия уходит вверх → подпись ПОД пунктиром; при падении — НАД
+        inner += '<text x="' + (W - PADX) + '" y="' + (dir === "up" ? (yPar + 15) : (yPar - 6)) + '" text-anchor="end" font-size="11" ' + MONO + ' fill="' + LAB + '">номинал 100%</text>';
+      }
       var d;
       if (dir === "up") d = "M" + xu(0) + " " + yLvl + " L" + xu(0.55) + " " + yLvl + " L" + xu(1) + " " + yPar + " L" + xu(2) + " " + yTop;
       else d = "M" + xu(0) + " " + yTop + " L" + xu(1) + " " + yPar + " L" + xu(1.45) + " " + yLvl + " L" + xu(2) + " " + yLvl;
       inner += '<rect x="' + (xu(1) - 4) + '" y="' + (yPar - 4) + '" width="8" height="8" transform="rotate(45 ' + xu(1) + ' ' + yPar + ')" fill="#5A5750"/>' +
         '<text x="' + xu(1) + '" y="' + (H - 4) + '" text-anchor="middle" font-size="11" ' + MONO + ' fill="' + LAB + '">S₀ · старт</text>';
-      inner += '<text x="' + (dir === "up" ? xu(1.7) : xu(0.3)) + '" y="' + Math.max(TOP + 10, yTop + 12) + '" text-anchor="middle" font-size="11" ' + MONO + ' fill="' + c + '">участие</text>';
-      inner += line(d, c);
+      // Подпись «участие» — над концом линии (не пересекает её)
+      var pl = dir === "up"
+        ? '<text x="' + (xu(2) - 4) + '" y="' + Math.max(TOP - 6, yTop - 10) + '" text-anchor="end" font-size="11" ' + MONO + ' fill="' + c + '">участие</text>'
+        : '<text x="' + (xu(0) + 4) + '" y="' + Math.max(TOP - 6, yTop - 10) + '" text-anchor="start" font-size="11" ' + MONO + ' fill="' + c + '">участие</text>';
+      inner += pl + line(d, c);
       return svgWrap(inner);
     }
-    // варранты — профиль прибыли
-    inner = axes() + premLine(c);
-    var d2, be;
+    inner = axes() + premLine();
+    var d2;
     if (kind === "call") {
       d2 = "M" + xu(0) + " " + PREM + " L" + xu(1) + " " + PREM + " L" + xu(2) + " " + TOP;
       inner += strike(1, PREM, "страйк K");
@@ -372,10 +327,9 @@
     return svgWrap(inner);
   }
 
-  // ── Анимация: прорисовка линий / рост столбцов ──
-  function animate(box) {
-    if (!box) return;
-    box.querySelectorAll(".pf-line").forEach(function (p) {
+  function animate(scope) {
+    if (!scope) return;
+    scope.querySelectorAll(".pf-line").forEach(function (p) {
       var len = p.getTotalLength();
       p.style.strokeDasharray = len;
       if (REDUCED) { p.style.strokeDashoffset = 0; return; }
@@ -384,95 +338,170 @@
       p.getBoundingClientRect();
       requestAnimationFrame(function () { p.style.transition = ""; p.style.strokeDashoffset = 0; });
     });
-    var pf = box.querySelector(".pf") || (box.classList && box.classList.contains("pf") ? box : null);
-    if (pf) pf.classList.add("grown");
+    scope.querySelectorAll(".pf").forEach(function (pf) {
+      pf.classList.remove("grown");
+      if (REDUCED) { pf.classList.add("grown"); return; }
+      pf.getBoundingClientRect();
+      requestAnimationFrame(function () { pf.classList.add("grown"); });
+    });
   }
 
-  // ── Заполнение текста ──
-  function fill(id, val) { var e = document.getElementById(id); if (e) e.textContent = val; }
-  ["discount", "protection"].forEach(function (k) {
-    var d = LIB[k];
-    fill("t-" + k + "-name", d.name); fill("t-" + k + "-tagline", d.tagline);
-    fill("t-" + k + "-how", d.how); fill("t-" + k + "-risk", d.risk);
-    fill("t-" + k + "-profit", d.profit); fill("t-" + k + "-loss", d.loss);
-    fill("t-" + k + "-payoffNote", d.payoffNote);
-  });
-
-  // Дисконт — статичная диаграмма
-  document.getElementById("pf-discount").innerHTML = payoff("discount");
-
-  // Защита — интерактив
+  // ── Содержание ──
   var pLevel = 90, pDir = "up";
-  var pfProt = document.getElementById("pf-protection");
-  function renderProt() {
-    pfProt.innerHTML = payoff("protection", { level: pLevel, dir: pDir, color: COL.protection });
+  var art = document.getElementById("article");
+
+  function tocItem(id, indent) {
+    var fam = FAM[famOf(id)];
+    var sub = id === "discount" ? "кредитный риск · дисконт" :
+      id === "protection" ? "защита 50–100% · участие" :
+      id === "warrants" ? "6 типов · направление × структура" : WSUB[id];
+    return '<button class="toc-i" data-id="' + id + '" style="--fc:' + fam.color + '">' +
+      '<span class="dot" aria-hidden="true"></span>' +
+      '<span class="tx"><span class="nm">' + (id === "warrants" ? "Варранты" : LIB[id].name) + '</span><br><span class="sub">' + sub + '</span></span>' +
+      (id === "warrants" ? '<span class="cnt">6</span>' : '') +
+    '</button>';
+  }
+  document.getElementById("toc").innerHTML =
+    tocItem("discount") + tocItem("protection") + tocItem("warrants") +
+    '<div class="toc-kids">' + WTYPES.map(function (k) { return tocItem(k); }).join("") + '</div>';
+
+  // ── Статьи ──
+  function metricsHTML(d) {
+    return '<div class="metrics">' +
+      '<div class="metric"><div class="k">Макс. прибыль</div><div class="v">' + d.profit + '</div></div>' +
+      '<div class="metric"><div class="k">Макс. убыток</div><div class="v">' + d.loss + '</div></div>' +
+    '</div>';
+  }
+  function headHTML(kind, title, sub) {
+    return '<div class="art-kind">' + kind + '</div><h2 class="art-title">' + title + '</h2>' +
+      '<div class="art-sub">' + sub + '</div><div class="art-bar"></div>';
+  }
+  function boardLink(fam, label) {
+    return '<a class="boardlink" href="' + fam.board + '">' + label +
+      '<svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>';
+  }
+
+  function articleHTML(id) {
+    var famKey = famOf(id), fam = FAM[famKey];
+    if (id === "warrants") {
+      return headHTML("Семейство · активный", "Варранты", "Ставка на движение базового актива за ограниченную премию. Шесть типов — комбинации направления (CALL — рост, PUT — падение) и структуры (базовый, с потолком, с барьером KO). Выберите тип, чтобы открыть его описание.") +
+        '<div class="mx">' +
+          '<div class="hd"></div><div class="hd">Базовый</div><div class="hd">С потолком</div><div class="hd">С барьером KO</div>' +
+          '<div class="rl"><span class="t">CALL</span><span class="s">ставка на рост</span></div>' +
+          WTYPES.slice(0, 3).map(cellHTML).join("") +
+          '<div class="rl"><span class="t">PUT</span><span class="s">ставка на падение</span></div>' +
+          WTYPES.slice(3).map(cellHTML).join("") +
+        '</div>' +
+        '<div style="margin-top:20px">' + boardLink(fam, "Смотреть варранты на доске") + '</div>';
+    }
+    var d = LIB[id];
+    var kind = famKey === "discount" ? "Продукт · консервативный" : famKey === "protection" ? "Продукт · сбалансированный" : "Варрант · активный";
+    var left = '<div class="kv"><div class="k">Как работает</div><div class="v">' + d.how + '</div></div>' +
+      metricsHTML(d) +
+      '<div class="plaque">' + d.risk + '</div>' +
+      '<div class="kv"><div class="k">Когда уместен</div><div class="v">' + d.whenToUse + '</div></div>' +
+      boardLink(fam, "Смотреть выпуски на доске");
+    var viz;
+    if (id === "protection") {
+      viz = '<div class="prot-ctrls">' +
+        '<div class="ctrl"><div class="k">Уровень защиты</div><div class="seg" id="seg-level" role="radiogroup" aria-label="Уровень защиты, %">' +
+          [50, 70, 90, 100].map(function (v) { return '<button data-v="' + v + '" role="radio" aria-checked="' + (v === pLevel) + '"' + (v === pLevel ? ' class="on"' : '') + ' aria-label="Защита ' + v + '%">' + v + '</button>'; }).join("") +
+        '</div></div>' +
+        '<div class="ctrl"><div class="k">Участие</div><div class="seg" id="seg-dir" role="radiogroup" aria-label="Направление участия">' +
+          '<button data-v="up" role="radio" aria-checked="' + (pDir === "up") + '"' + (pDir === "up" ? ' class="on"' : '') + ' aria-label="Участие в росте">↑ в росте</button>' +
+          '<button data-v="down" role="radio" aria-checked="' + (pDir === "down") + '"' + (pDir === "down" ? ' class="on"' : '') + ' aria-label="Участие в падении">↓ в падении</button>' +
+        '</div></div></div>' +
+        '<div class="pf" id="pf-main">' + payoff("protection", { level: pLevel, dir: pDir, color: fam.color }) + '</div>' +
+        '<div class="pf-axis">уровень базового актива →</div>' +
+        '<div class="pf-cap">' + d.payoffNote + '</div>' +
+        '<div class="prot-read" id="prot-read" aria-live="polite"></div>';
+    } else {
+      viz = '<div class="pf" id="pf-main">' + payoff(id, { color: fam.color }) + '</div>' +
+        (id === "discount" ? "" : '<div class="pf-axis">уровень базового актива →</div>') +
+        '<div class="pf-cap">' + d.payoffNote + '</div>';
+    }
+    var back = famKey === "warrant" ? '<button class="backmx" data-back="warrants">← Ко всем варрантам (матрица)</button>' : "";
+    return back + headHTML(kind, d.name, d.tagline) +
+      '<div class="art-grid"><div>' + left + '</div><div class="viz" style="--fc:' + fam.color + '">' + viz + '</div></div>';
+  }
+
+  function cellHTML(k) {
+    return '<button class="cell" data-cell="' + k + '" aria-label="' + LIB[k].name + ' — открыть описание">' +
+      payoff(k, { color: FAM.warrant.color }) +
+      '<div class="nm">' + LIB[k].name + '</div><div class="tg">' + LIB[k].tagline + '</div>' +
+      '<span class="more">Как работает →</span>' +
+    '</button>';
+  }
+
+  // ── Выбор ──
+  var current = null;
+  function protRead() {
+    var el = document.getElementById("prot-read");
+    if (!el) return;
     var dirTxt = pDir === "up" ? "росте" : "падении";
-    document.getElementById("prot-read").innerHTML = "При защите <b>" + pLevel + "%</b> и участии в <b>" + dirTxt + "</b>: в неблагоприятном сценарии возвращается не менее " + pLevel + "% номинала" + (pLevel < 100 ? " (риск до " + (100 - pLevel) + "% рыночного убытка)" : " (полная защита)") + ", а выгодное движение приносит долю " + (pDir === "up" ? "роста" : "снижения") + " базового актива. Ниже защита — выше коэффициент участия.";
-    animate(pfProt);
+    el.innerHTML = "При защите <b>" + pLevel + "%</b> и участии в <b>" + dirTxt + "</b>: в неблагоприятном сценарии возвращается не менее " + pLevel + "% номинала" + (pLevel < 100 ? " (риск до " + (100 - pLevel) + "% рыночного убытка)" : " (полная защита)") + ", а выгодное движение приносит долю " + (pDir === "up" ? "роста" : "снижения") + " базового актива. Ниже защита — выше коэффициент участия.";
   }
-  document.getElementById("seg-level").addEventListener("click", function (e) {
-    var b = e.target.closest("button"); if (!b) return;
-    pLevel = parseInt(b.getAttribute("data-v"), 10);
-    this.querySelectorAll("button").forEach(function (x) { var on = x === b; x.classList.toggle("on", on); x.setAttribute("aria-checked", on ? "true" : "false"); });
-    renderProt();
-  });
-  document.getElementById("seg-dir").addEventListener("click", function (e) {
-    var b = e.target.closest("button"); if (!b) return;
-    pDir = b.getAttribute("data-v");
-    this.querySelectorAll("button").forEach(function (x) { var on = x === b; x.classList.toggle("on", on); x.setAttribute("aria-checked", on ? "true" : "false"); });
-    renderProt();
-  });
-
-  // Варранты — матрица + деталь
-  var WMINI = { call: "call", put: "put", callspread: "callspread", putspread: "putspread", callko: "callko", putko: "putko" };
-  Object.keys(WMINI).forEach(function (k) {
-    var cell = document.createElement("button");
-    cell.className = "cell"; cell.setAttribute("data-w", k); cell.setAttribute("aria-pressed", "false"); cell.setAttribute("aria-controls", "wdetail");
-    cell.innerHTML = payoff(k, { color: COL.warrant }) + '<div class="nm">' + LIB[k].name + '</div><div class="tg">' + LIB[k].tagline + '</div>';
-    document.getElementById("mx-" + k).replaceWith(cell);
-    cell.id = "mx-" + k;
-  });
-  var pfWarr = document.getElementById("pf-warrant");
-  function selectW(k) {
-    var d = LIB[k];
-    fill("w-name", d.name); fill("w-tagline", d.tagline); fill("w-how", d.how);
-    fill("w-profit", d.profit); fill("w-loss", d.loss); fill("w-risk", d.risk);
-    fill("w-when", d.whenToUse); fill("w-payoffNote", d.payoffNote);
-    pfWarr.innerHTML = payoff(k, { color: COL.warrant });
-    document.querySelectorAll(".cell").forEach(function (c) { var on = c.getAttribute("data-w") === k; c.classList.toggle("on", on); c.setAttribute("aria-pressed", on ? "true" : "false"); });
-    animate(pfWarr);
+  function bindArticle(id) {
+    if (id === "warrants") {
+      art.querySelectorAll("[data-cell]").forEach(function (c) {
+        c.addEventListener("click", function () { select(c.getAttribute("data-cell"), true); });
+      });
+    }
+    var back = art.querySelector("[data-back]");
+    if (back) back.addEventListener("click", function () { select("warrants", true); });
+    if (id === "protection") {
+      protRead();
+      art.querySelector("#seg-level").addEventListener("click", function (e) {
+        var b = e.target.closest("button"); if (!b) return;
+        pLevel = parseInt(b.getAttribute("data-v"), 10);
+        this.querySelectorAll("button").forEach(function (x) { var on = x === b; x.classList.toggle("on", on); x.setAttribute("aria-checked", on ? "true" : "false"); });
+        redrawProt();
+      });
+      art.querySelector("#seg-dir").addEventListener("click", function (e) {
+        var b = e.target.closest("button"); if (!b) return;
+        pDir = b.getAttribute("data-v");
+        this.querySelectorAll("button").forEach(function (x) { var on = x === b; x.classList.toggle("on", on); x.setAttribute("aria-checked", on ? "true" : "false"); });
+        redrawProt();
+      });
+    }
   }
-  document.querySelectorAll(".cell").forEach(function (c) {
-    c.addEventListener("click", function () { selectW(c.getAttribute("data-w")); });
+  function redrawProt() {
+    var pf = document.getElementById("pf-main");
+    pf.innerHTML = payoff("protection", { level: pLevel, dir: pDir, color: FAM.protection.color });
+    protRead();
+    animate(pf.parentNode);
+  }
+
+  function select(id, fromUser) {
+    if (ORDER.indexOf(id) < 0) id = ORDER[0];
+    current = id;
+    art.innerHTML = articleHTML(id);
+    art.style.setProperty("--fc", FAM[famOf(id)].color);
+    bindArticle(id);
+    animate(art);
+    document.querySelectorAll(".toc-i").forEach(function (el) { el.classList.toggle("active", el.getAttribute("data-id") === id); });
+
+    var idx = ORDER.indexOf(id);
+    var prev = document.getElementById("prev"), next = document.getElementById("next");
+    if (idx > 0) { prev.disabled = false; prev.dataset.id = ORDER[idx - 1]; prev.innerHTML = '<div class="l">← Предыдущий</div><div class="n">' + nameOf(ORDER[idx - 1]) + '</div>'; } else { prev.disabled = true; prev.innerHTML = ""; }
+    if (idx < ORDER.length - 1) { next.disabled = false; next.dataset.id = ORDER[idx + 1]; next.innerHTML = '<div class="l">Следующий →</div><div class="n">' + nameOf(ORDER[idx + 1]) + '</div>'; } else { next.disabled = true; next.innerHTML = ""; }
+
+    history.replaceState(null, "", "#" + id);
+    if (fromUser) {
+      var top = document.getElementById("content").getBoundingClientRect().top + window.scrollY - 78;
+      if (window.scrollY > top) window.scrollTo({ top: top, behavior: REDUCED ? "auto" : "smooth" });
+    }
+  }
+
+  document.querySelectorAll(".toc-i").forEach(function (el) {
+    el.addEventListener("click", function () { select(el.getAttribute("data-id"), true); });
   });
+  document.getElementById("prev").addEventListener("click", function (e) { select(e.currentTarget.dataset.id, true); });
+  document.getElementById("next").addEventListener("click", function (e) { select(e.currentTarget.dataset.id, true); });
 
-  // ── Появление по скроллу: анимируем пэйофф при входе главы в экран ──
-  var io = new IntersectionObserver(function (entries) {
-    entries.forEach(function (en) {
-      if (!en.isIntersecting) return;
-      animate(en.target.querySelector(".pf"));
-      io.unobserve(en.target);
-    });
-  }, { threshold: 0.25 });
-  ["discount", "protection", "warrants"].forEach(function (k) { io.observe(document.getElementById(k)); });
+  var hash = decodeURIComponent(location.hash.slice(1));
+  select(ORDER.indexOf(hash) >= 0 ? hash : "discount", false);
 
-  // первичный рендер
-  renderProt();
-  selectW("call");
-
-  // ── Скролл-спай для навигации по главам ──
-  var links = {};
-  document.querySelectorAll(".chapnav a").forEach(function (a) { links[a.getAttribute("data-c")] = a; });
-  var spy = new IntersectionObserver(function (entries) {
-    entries.forEach(function (en) {
-      if (en.isIntersecting) {
-        Object.keys(links).forEach(function (k) { links[k].classList.toggle("on", k === en.target.id); });
-      }
-    });
-  }, { rootMargin: "-130px 0px -60% 0px" });
-  ["discount", "protection", "warrants"].forEach(function (k) { spy.observe(document.getElementById(k)); });
-
-  // дата обновления
   var u = (window.SITE_DATA || {}).updated;
   if (u) document.getElementById("updated").textContent = u.split("-").reverse().join(".");
 })();
