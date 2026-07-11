@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>One-pager — черновики</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ivory: #F4F2F0; --card: #FFFFFF;
+    --nav: #1B2153; --nav2: #283067; --nav-deep: #0D1026;
+    --or: #EE7D1B; --or-soft: #FBEAD6;
+    --ink: #20233F; --hushed: #5A6180; --faint: #8B90A8;
+    --border: #DCDEEC; --line: #EAEBF4;
+    --up: #1E7C4F; --down: #C0561A;
+    --f: 'Onest', system-ui, sans-serif;
+    --m: 'JetBrains Mono', Consolas, monospace;
+  }
+  * { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
+  body { margin: 0; background: #4A4E63; font-family: var(--f); -webkit-font-smoothing: antialiased; }
+
+  .toolbar { position: sticky; top: 0; z-index: 10; background: var(--nav-deep); color: #E7E9F4; display: flex; align-items: center; gap: 14px; padding: 11px 22px; }
+  .toolbar a { color: #AEB3D0; text-decoration: none; font-size: 14px; }
+  .toolbar a:hover { color: #fff; }
+  .themes { display: flex; gap: 6px; }
+  .themes a { border: 1px solid #3A4068; border-radius: 6px; padding: 5px 12px; font-size: 12.5px; }
+  .themes a.on { background: var(--or); border-color: var(--or); color: #1A1206; font-weight: 600; }
+  .toolbar .sp { margin-left: auto; }
+  .btn-print { background: var(--or); border: none; color: #1A1206; font-family: var(--f); font-size: 14px; font-weight: 600; padding: 9px 18px; border-radius: 7px; cursor: pointer; }
+  .btn-print:hover { background: #F58E33; }
+
+  .slide { position: relative; width: 960px; height: 540px; margin: 18px auto; background: var(--ivory); overflow: hidden; box-shadow: 0 12px 36px rgba(13,16,38,0.5); display: flex; flex-direction: column; }
+
+  .brand { display: flex; align-items: center; gap: 9px; font-size: 13px; font-weight: 600; }
+  .qual { font-family: var(--m); font-size: 9px; line-height: 1.55; letter-spacing: 0.02em; text-align: right; }
+  .lbl { font-family: var(--m); font-size: 9px; letter-spacing: 0.13em; text-transform: uppercase; color: var(--or); margin-bottom: 6px; }
+
+  /* ── Слайд 1 — титул ── */
+  .t-slide { padding: 34px 52px; justify-content: space-between; }
+  .t-slide[data-v="a"] { background: linear-gradient(158deg, #0D1026 0%, #1B2153 58%, #283067 100%); color: #F3F4FB; }
+  .t-slide[data-v="c"] { background: #1B2153; color: #F3F4FB; }
+  .t-slide[data-v="b"] { background: var(--ivory); color: var(--ink); }
+  .t-top { display: flex; justify-content: space-between; align-items: flex-start; }
+  .t-slide[data-v="b"] .qual { color: var(--faint); }
+  .t-slide:not([data-v="b"]) .qual { color: #9CA1C4; }
+  .t-mid { }
+  .t-badge { font-family: var(--m); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--or); margin-bottom: 12px; }
+  .t-title { font-size: 46px; font-weight: 600; letter-spacing: -0.025em; line-height: 1.08; max-width: 780px; }
+  .t-slide[data-v="b"] .t-title { color: var(--nav); }
+  .t-slide:not([data-v="b"]) .t-title { color: #FFFFFF; }
+  .t-bar { margin-top: 20px; width: 68px; height: 5px; background: var(--or); }
+  .t-bot { display: flex; justify-content: space-between; align-items: flex-end; }
+  .t-meta { font-family: var(--m); font-size: 11px; letter-spacing: 0.04em; }
+  .t-slide[data-v="b"] .t-meta { color: var(--faint); }
+  .t-slide:not([data-v="b"]) .t-meta { color: #9CA1C4; }
+  /* оранжевые блоки для темы C */
+  .t-blocks { position: absolute; top: 0; right: 0; }
+  .t-blocks i { position: absolute; background: var(--or); display: block; }
+
+  /* ── Слайд 2 — описание ── */
+  .c-head { padding: 34px 52px 0; display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; }
+  .c-title { font-size: 23px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.12; color: var(--ink); }
+  .c-badge { display: inline-block; margin-top: 8px; font-family: var(--m); font-size: 9.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--nav); background: #E4E6F2; border-radius: 5px; padding: 3px 9px; }
+  .c-sub { margin-top: 9px; font-size: 11.5px; line-height: 1.45; color: var(--hushed); max-width: 430px; }
+  .c-quote { text-align: right; flex: none; }
+  .c-quote .v { font-family: var(--m); font-size: 26px; font-weight: 600; letter-spacing: -0.02em; color: var(--nav); }
+  .c-quote .k { font-size: 9.5px; color: var(--faint); margin-top: 2px; }
+  .c-quote .chg { font-family: var(--m); font-size: 11.5px; font-weight: 600; margin-top: 3px; }
+
+  .c-grid { flex: 1; display: grid; grid-template-columns: 1fr 1.06fr; gap: 26px; padding: 16px 52px 0; min-height: 0; }
+  .expl { font-size: 11px; line-height: 1.55; color: var(--hushed); }
+  .callout { background: var(--nav); border-radius: 9px; padding: 13px 15px; }
+  .callout .lbl { color: #E7A867; }
+  .callout .expl { color: #D6D9EC; }
+  .under { margin-top: 14px; }
+  .under .expl b { color: var(--ink); font-weight: 600; }
+  .callout .under { margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.14); }
+  .callout .under .expl b { color: #fff; }
+  .params { margin-top: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+  .param { background: var(--card); border: 1px solid var(--border); border-radius: 7px; padding: 7px 11px; }
+  .param .v { font-family: var(--m); font-size: 13px; font-weight: 500; color: var(--ink); }
+  .param .v.or { color: var(--or); }
+  .param .k { font-size: 9px; color: var(--faint); margin-top: 1px; }
+
+  .chart-box { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 11px 14px 8px; }
+  .chart-box .ct { font-size: 11px; font-weight: 600; color: var(--nav); margin-bottom: 3px; }
+  .chart-cap { margin-top: 5px; font-size: 9px; line-height: 1.4; color: var(--faint); }
+  .example { margin-top: 12px; }
+  .ex-intro { font-size: 10px; color: var(--hushed); margin-bottom: 6px; }
+  .scen { display: flex; flex-direction: column; gap: 5px; }
+  .scard { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; background: var(--card); border: 1px solid var(--border); border-radius: 7px; padding: 7px 11px; }
+  .scard .st { font-size: 10.5px; font-weight: 600; color: var(--ink); }
+  .scard .sd { font-size: 9px; color: var(--faint); margin-top: 1px; }
+  .scard .sr { font-family: var(--m); font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+
+  .c-foot { padding: 12px 52px 16px; font-size: 8.6px; line-height: 1.5; color: var(--faint); }
+
+  /* ── Слайд 3 — дисклеймер ── */
+  .d-slide { padding: 34px 52px; }
+  .d-slide[data-v="a"], .d-slide[data-v="c"] { background: var(--nav); color: #E7E9F4; }
+  .d-slide[data-v="b"] { background: var(--ivory); color: var(--ink); }
+  .d-title { font-size: 25px; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 4px; }
+  .d-slide[data-v="b"] .d-title { color: var(--nav); }
+  .d-bar { width: 56px; height: 4px; background: var(--or); margin-bottom: 18px; }
+  .d-body { flex: 1; column-count: 2; column-gap: 34px; }
+  .d-body p { margin: 0 0 11px; font-size: 10.2px; line-height: 1.6; break-inside: avoid; }
+  .d-slide[data-v="b"] .d-body p { color: var(--hushed); }
+  .d-slide:not([data-v="b"]) .d-body p { color: rgba(231,233,244,0.86); }
+  .d-meta { font-family: var(--m); font-size: 9px; }
+  .d-slide[data-v="b"] .d-meta { color: var(--faint); }
+  .d-slide:not([data-v="b"]) .d-meta { color: #9CA1C4; }
+
+  @media print {
+    @page { size: 10in 5.625in; margin: 0; }
+    body { background: #fff; }
+    .toolbar { display: none !important; }
+    .slide { margin: 0; box-shadow: none; page-break-after: always; }
+    .slide:last-child { page-break-after: auto; }
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar">
+  <a id="back-link" href="board.html">← К инструменту</a>
+  <div class="themes" id="themes"></div>
+  <span class="sp"></span>
+  <span style="font-size:12px;color:#8B90A8">версии темы — A / B / C</span>
+  <button class="btn-print" onclick="window.print()">Сохранить как PDF</button>
+</div>
+
+<div id="deck"></div>
+
+<script src="data/instruments.js"></script>
+<script src="data/lib.js"></script>
+<script>
+  const S = window.SITE;
+  const qs = new URLSearchParams(location.search);
+  const inst = S.findInstrument(qs.get("id"));
+  const U = S.underlyingInfo(inst.underlying);
+  const nom = inst.minNom, q = inst.quote;
+  const theme = ["a", "b", "c"].includes(qs.get("theme")) ? qs.get("theme") : "a";
+
+  document.title = "One-pager — " + S.displayName(inst);
+  document.getElementById("back-link").href = "board.html#" + encodeURIComponent(inst.id);
+
+  const today = new Date();
+  const dateS = ("0" + today.getDate()).slice(-2) + "." + ("0" + (today.getMonth() + 1)).slice(-2) + "." + today.getFullYear();
+  const starSvg = (s, f) => '<svg width="' + s + '" height="' + s + '" viewBox="0 0 26 26" fill="none"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="' + f + '"/></svg>';
+  const QUAL = "Только для квалифицированных инвесторов<br>Не является инвестиционной рекомендацией";
+
+  // Переключатель тем
+  const TNAME = { a: "A · Навигатор", b: "B · Светлая", c: "C · Насыщенная" };
+  document.getElementById("themes").innerHTML = ["a", "b", "c"].map(t => {
+    const u = new URLSearchParams(location.search); u.set("theme", t);
+    return '<a class="' + (t === theme ? "on" : "") + '" href="?' + u.toString() + '">' + TNAME[t] + '</a>';
+  }).join("");
+
+  // Описание базового актива (с фолбэком)
+  function underDesc() {
+    if (U && U.desc) return U.desc;
+    const u = inst.underlying;
+    if (/ОФЗ/i.test(u)) return "Облигации федерального займа (ОФЗ) — государственные рублёвые облигации Минфина России, базовый ориентир доходности локального долгового рынка.";
+    return u + " — базовый актив, от динамики которого зависит выплата по продукту.";
+  }
+
+  // ── Диаграммы выплат (navy + orange) ──
+  const CW = 420, CH = 190, PAD = 22;
+  const MONO = 'font-family="JetBrains Mono, monospace"';
+  const C = { line: "#1B2153", or: "#EE7D1B", grid: "#E4E5F0", axis: "#CFD2E4", lab: "#8B90A8", lab2: "#5A6180" };
+
+  function chWarrant() {
+    const K = inst.strike, K2 = inst.strike2;
+    const cap = K2 ? (K2 - K) / K * 100 : 0;
+    const sBe = K * (1 + q / 100), s0 = K * 0.8;
+    const s1 = K2 ? K2 * 1.18 : Math.max(K * 1.32, sBe * 1.15);
+    const yMax = K2 ? cap + 10 : Math.max(34, S.PAYOFF.pct(s1, K) + 6);
+    const x = s => PAD + ((s - s0) / (s1 - s0)) * (CW - PAD * 2);
+    const y = v => CH - PAD - (v / yMax) * (CH - PAD * 2);
+    let line = "M" + x(s0).toFixed(1) + " " + y(0).toFixed(1) + " L" + x(K).toFixed(1) + " " + y(0).toFixed(1);
+    if (K2) line += " L" + x(K2).toFixed(1) + " " + y(cap).toFixed(1) + " L" + x(s1).toFixed(1) + " " + y(cap).toFixed(1);
+    else line += " L" + x(s1).toFixed(1) + " " + y(S.PAYOFF.pct(s1, K)).toFixed(1);
+    let capMark = "";
+    if (K2) capMark = '<line x1="' + PAD + '" y1="' + y(cap) + '" x2="' + (CW - PAD) + '" y2="' + y(cap) + '" stroke="' + C.grid + '" stroke-width="1" stroke-dasharray="2 4"/>' +
+      '<rect x="' + (x(K2) - 4) + '" y="' + (y(cap) - 4) + '" width="8" height="8" transform="rotate(45 ' + x(K2) + ' ' + y(cap) + ')" fill="' + C.line + '"/>' +
+      '<text x="' + x(K2) + '" y="' + (y(cap) - 9) + '" text-anchor="middle" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>K₂ ' + S.fmtSmart(K2) + ' · макс. ' + S.fmtSmart(cap) + '%</text>';
+    const beEnd = x(sBe) > CW * 0.72;
+    return '<svg viewBox="0 0 ' + CW + ' ' + CH + '" width="100%" style="display:block">' +
+      '<line x1="' + PAD + '" y1="' + y(0) + '" x2="' + (CW - PAD) + '" y2="' + y(0) + '" stroke="' + C.grid + '" stroke-width="1"/>' +
+      '<line x1="' + PAD + '" y1="' + y(q) + '" x2="' + (CW - PAD) + '" y2="' + y(q) + '" stroke="' + C.or + '" stroke-width="1" stroke-dasharray="4 4"/>' +
+      '<text x="' + (PAD + 2) + '" y="' + (y(q) - 6) + '" fill="' + C.or + '" font-size="10" ' + MONO + '>премия ' + S.fmt1(q) + '%</text>' + capMark +
+      '<path d="' + line + '" fill="none" stroke="' + C.line + '" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>' +
+      '<rect x="' + (x(K) - 4) + '" y="' + (y(0) - 4) + '" width="8" height="8" transform="rotate(45 ' + x(K) + ' ' + y(0) + ')" fill="' + C.line + '"/>' +
+      '<text x="' + x(K) + '" y="' + (y(0) + 16) + '" text-anchor="middle" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>K ' + S.fmtSmart(K) + '</text>' +
+      '<circle cx="' + x(sBe) + '" cy="' + y(q) + '" r="4" fill="' + C.or + '"/>' +
+      '<text x="' + (x(sBe) + (beEnd ? -7 : 7)) + '" y="' + (y(q) + 15) + '"' + (beEnd ? ' text-anchor="end"' : '') + ' fill="' + C.or + '" font-size="10" ' + MONO + '>б/у ' + S.fmtSmart(sBe) + '</text>' +
+      '</svg>';
+  }
+  function chDiscount() {
+    const base = CH - 40, pxPer = (CH - 84) / 110, barW = 84;
+    const x1 = CW * 0.31 - barW / 2, x2 = CW * 0.69 - barW / 2;
+    const h1 = q * pxPer, h2 = 100 * pxPer;
+    return '<svg viewBox="0 0 ' + CW + ' ' + CH + '" width="100%" style="display:block">' +
+      '<line x1="' + PAD + '" y1="' + base + '" x2="' + (CW - PAD) + '" y2="' + base + '" stroke="' + C.axis + '" stroke-width="1"/>' +
+      '<line x1="' + (x1 + barW / 2) + '" y1="' + (base - h1) + '" x2="' + (x2 + barW) + '" y2="' + (base - h1) + '" stroke="' + C.or + '" stroke-width="1" stroke-dasharray="4 4"/>' +
+      '<rect x="' + x1 + '" y="' + (base - h1) + '" width="' + barW + '" height="' + h1 + '" rx="6" fill="#C6C9DE"/>' +
+      '<rect x="' + x2 + '" y="' + (base - h2) + '" width="' + barW + '" height="' + h2 + '" rx="6" fill="' + C.line + '"/>' +
+      '<text x="' + (x1 + barW / 2) + '" y="' + (base - h1 - 8) + '" text-anchor="middle" fill="' + C.lab2 + '" font-size="12" ' + MONO + '>' + S.fmt2(q) + '%</text>' +
+      '<text x="' + (x2 + barW / 2) + '" y="' + (base - h2 - 8) + '" text-anchor="middle" fill="' + C.line + '" font-size="12" ' + MONO + '>100%</text>' +
+      '<text x="' + ((x1 + barW + x2) / 2) + '" y="' + (base - h1 - 7) + '" text-anchor="middle" fill="' + C.or + '" font-size="10" ' + MONO + '>+' + S.fmt2(100 - q) + ' п.п.</text>' +
+      '<text x="' + (x1 + barW / 2) + '" y="' + (base + 16) + '" text-anchor="middle" fill="' + C.lab2 + '" font-size="10">Покупка</text>' +
+      '<text x="' + (x2 + barW / 2) + '" y="' + (base + 16) + '" text-anchor="middle" fill="' + C.lab2 + '" font-size="10">Погашение</text>' +
+      '</svg>';
+  }
+  function chProtection() {
+    const part = inst.participation, yMin = 88, yMax = 130;
+    const x = rel => PAD + ((rel - 0.7) / (1.4 - 0.7)) * (CW - PAD * 2);
+    const y = v => CH - PAD - ((v - yMin) / (yMax - yMin)) * (CH - PAD * 2);
+    const endVal = 100 + part * 40;
+    const line = "M" + x(0.7).toFixed(1) + " " + y(100).toFixed(1) + " L" + x(1.0).toFixed(1) + " " + y(100).toFixed(1) + " L" + x(1.4).toFixed(1) + " " + y(endVal).toFixed(1);
+    return '<svg viewBox="0 0 ' + CW + ' ' + CH + '" width="100%" style="display:block">' +
+      '<line x1="' + PAD + '" y1="' + y(100) + '" x2="' + (CW - PAD) + '" y2="' + y(100) + '" stroke="' + C.axis + '" stroke-width="1" stroke-dasharray="4 4"/>' +
+      '<text x="' + (PAD + 2) + '" y="' + (y(100) + 15) + '" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>защита 100%</text>' +
+      '<path d="' + line + '" fill="none" stroke="' + C.line + '" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>' +
+      '<rect x="' + (x(1.0) - 4) + '" y="' + (y(100) - 4) + '" width="8" height="8" transform="rotate(45 ' + x(1.0) + ' ' + y(100) + ')" fill="' + C.line + '"/>' +
+      '<text x="' + x(1.0) + '" y="' + (y(100) + 16) + '" text-anchor="middle" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>S₀</text>' +
+      '<text x="' + x(1.24) + '" y="' + (y(100 + part * 24) - 11) + '" fill="' + C.or + '" font-size="10" ' + MONO + '>участие ' + Math.round(part * 100) + '%</text>' +
+      '</svg>';
+  }
+
+  // ── Контент ──
+  let c = {};
+  if (inst.type === "warrant") {
+    const isCS = inst.structure === "cs";
+    const K = inst.strike, K2 = inst.strike2;
+    const capPct = isCS ? (K2 - K) / K * 100 : 0;
+    const premiumRub = nom * q / 100;
+    const upPct = Math.max(16, Math.ceil((q + 6) / 5) * 5);
+    const payout1 = nom * S.PAYOFF.pct(K * (1 + upPct / 100), K, K2) / 100;
+    const net1 = payout1 - premiumRub;
+    const params = [["Страйк (K)", S.fmtSmart(K) + "% нач. уровня", false]];
+    if (isCS) params.push(["Потолок (K₂)", S.fmtSmart(K2) + "% · до " + S.fmtSmart(capPct) + "%", false]);
+    params.push(["Срок", inst.tenor, false], ["Экспирация", inst.expiry, false], ["Премия", S.fmt2(q) + "% номинала", true]);
+    c = {
+      badge: isCS ? "Колл-спред · структурная облигация" : "CALL · структурная облигация",
+      subtitle: "Заработать на росте " + inst.underlying + " с полной экспозицией на номинал и риском, ограниченным премией.",
+      chart: chWarrant, params,
+      chartCap: isCS
+        ? "Выплата в % от номинала; уровень БА — в % от начального. Выше K₂ не растёт (макс. " + S.fmtSmart(capPct) + "%). Пунктир — премия; б/у — безубыток."
+        : "Выплата в % от номинала; уровень БА — в % от начального. Пунктир — премия; б/у — точка безубытка.",
+      exIntro: "Номинал " + S.fmtInt(nom) + " ₽ · премия " + S.fmt2(q) + "% = " + S.fmtInt(premiumRub) + " ₽",
+      scen: [
+        [inst.underlying + " вырос на " + upPct + "%", "выплата " + S.fmtInt(payout1) + " ₽", (net1 >= 0 ? "+" : "−") + S.fmtInt(Math.abs(net1)) + " ₽", net1 >= 0 ? "var(--up)" : "var(--down)"],
+        [inst.underlying + " не вырос", "выплаты нет — максимум убытка", "−" + S.fmtInt(premiumRub) + " ₽", "var(--down)"]
+      ],
+      explainer: isCS
+        ? "Колл-спред — CALL с потолком выплаты. Страйк фиксируется по уровню актива в день покупки, рост засчитывается до K₂. Инвестор платит только премию (" + S.fmt2(q) + "% номинала) и получает экспозицию на весь номинал. Если актив не вырос — теряется только премия."
+        : "CALL-варрант — право на выплату, равную росту базового актива сверх страйка. Инвестор платит только премию (" + S.fmt2(q) + "% номинала) и получает экспозицию на весь номинал без маржин-коллов. Если актив не вырос — теряется только премия."
+    };
+  } else if (inst.type === "discount") {
+    const buyRub = nom * q / 100;
+    c = {
+      badge: "Дисконтная облигация",
+      subtitle: "Покупка дешевле номинала, погашение по 100% — доход зафиксирован в день сделки.",
+      chart: chDiscount,
+      chartCap: "Покупка дешевле номинала, погашение по 100%. Доход — разница, зафиксированная в момент покупки.",
+      params: [["Цена покупки", S.fmt2(q) + "% номинала", false], ["Доходность", S.fmt1(S.yieldAnnual(inst)) + "% год.", true], ["Погашение", inst.expiry, false], ["Осталось", S.daysTo(inst.expiry) + " дн.", false]],
+      exIntro: "Номинал " + S.fmtInt(nom) + " ₽ · покупка по " + S.fmt2(q) + "% = " + S.fmtInt(buyRub) + " ₽",
+      scen: [
+        ["Дождались погашения", "выплата 100% номинала", "+" + S.fmtInt(nom - buyRub) + " ₽", "var(--up)"],
+        ["Продали раньше срока", "по текущей рыночной цене", "по рынку", "var(--nav)"]
+      ],
+      explainer: "Облигация покупается дешевле номинала — по " + S.fmt2(q) + "% от него. На дату погашения выплачивается полный номинал, 100%. Весь доход — дисконт: разница между ценой покупки и номиналом, известная в день сделки. Купонов нет; основной риск — кредитное качество эмитента."
+    };
+  } else {
+    const entryRub = nom * q / 100;
+    const part = Math.round(inst.participation * 100);
+    const upPct = 20;
+    const payoutUp = nom * (1 + inst.participation * upPct / 100);
+    c = {
+      badge: "Нота · защита капитала",
+      subtitle: "Участие в росте " + inst.underlying + " с возвратом 100% номинала при любом сценарии.",
+      chart: chProtection,
+      chartCap: "Выплата в % от номинала: не ниже 100% при любом сценарии, выше S₀ — участие в росте.",
+      params: [["Защита капитала", "100%", false], ["Участие в росте", part + "%", true], ["Нач. уровень S₀", S.fmtSmart(inst.strike), false], ["Экспирация", inst.expiry, false]],
+      exIntro: "Номинал " + S.fmtInt(nom) + " ₽ · вход по " + S.fmt2(q) + "% = " + S.fmtInt(entryRub) + " ₽",
+      scen: [
+        [inst.underlying + " вырос на " + upPct + "%", "выплата 100% + участие", "+" + S.fmtInt(payoutUp - entryRub) + " ₽", "var(--up)"],
+        [inst.underlying + " упал", "сработала защита — 100% номинала", S.fmtInt(nom) + " ₽", "var(--nav)"]
+      ],
+      explainer: "Нота возвращает 100% номинала при любом сценарии. Если базовый актив на дату экспирации выше начального уровня S₀, дополнительно выплачивается " + part + "% его роста. Если актив упал — вы получаете номинал целиком. Основной риск — кредитный риск эмитента ноты."
+    };
+  }
+
+  const name = S.displayName(inst);
+  const chgUp = inst.chg > 0;
+  const isC = theme === "c";
+  let html = "";
+
+  // ── Слайд 1 — титул ──
+  const starFill = theme === "b" ? "#EE7D1B" : "#EE7D1B";
+  const blocks = isC ? '<div class="t-blocks"><i style="top:150px;right:0;width:56px;height:104px"></i><i style="top:264px;right:0;width:28px;height:28px;opacity:.5"></i></div>' : "";
+  html += '<section class="slide t-slide" data-v="' + theme + '">' + blocks +
+    '<div class="t-top"><div class="brand">' + starSvg(20, starFill) + ' Структурные продукты</div>' +
+      '<div class="qual">' + QUAL + '</div></div>' +
+    '<div class="t-mid"><div class="t-badge">' + c.badge + '</div>' +
+      '<div class="t-title">' + name + '</div><div class="t-bar"></div></div>' +
+    '<div class="t-bot"><div class="t-meta">' + dateS + '</div></div>' +
+    '</section>';
+
+  // ── Слайд 2 — описание ──
+  const howBlock =
+    '<div class="' + (isC ? "callout" : "") + '">' +
+      '<div class="lbl">Как устроен продукт</div><div class="expl">' + c.explainer + '</div>' +
+      '<div class="under"><div class="lbl">Базовый актив · ' + inst.underlying + '</div>' +
+        '<div class="expl"><b>' + inst.underlying + '.</b> ' + underDesc() + '</div></div>' +
+    '</div>';
+  html += '<section class="slide" data-v="' + theme + '">' +
+    '<div class="c-head"><div>' +
+        '<div class="c-title">' + name + '</div><span class="c-badge">' + c.badge + '</span>' +
+        '<div class="c-sub">' + c.subtitle + '</div></div>' +
+      '<div class="c-quote"><div class="v">' + S.fmt2(q) + '%</div><div class="k">котировка · % от номинала</div>' +
+        '<div class="chg" style="color:' + (chgUp ? "var(--up)" : "var(--down)") + '">' + (chgUp ? "+" : "−") + S.fmt1(Math.abs(inst.chg)) + ' п.п. сегодня</div></div>' +
+    '</div>' +
+    '<div class="c-grid">' +
+      '<div>' + howBlock +
+        '<div class="params">' + c.params.map(p => '<div class="param"><div class="v' + (p[2] ? " or" : "") + '">' + p[1] + '</div><div class="k">' + p[0] + '</div></div>').join("") + '</div>' +
+      '</div>' +
+      '<div>' +
+        '<div class="chart-box"><div class="ct">Диаграмма выплат</div>' + c.chart() + '<div class="chart-cap">' + c.chartCap + '</div></div>' +
+        '<div class="example"><div class="lbl">Пример расчёта</div><div class="ex-intro">' + c.exIntro + '</div>' +
+          '<div class="scen">' + c.scen.map(s => '<div class="scard"><div><div class="st">' + s[0] + '</div><div class="sd">' + s[1] + '</div></div><div class="sr" style="color:' + s[3] + '">' + s[2] + '</div></div>').join("") + '</div></div>' +
+      '</div>' +
+    '</div>' +
+    '<div class="c-foot">Продукт: структурная облигация на базовый актив ' + inst.underlying + '. Пример иллюстративный, без учёта комиссий и налогов. ' + S.LEGAL.qual + '</div>' +
+    '</section>';
+
+  // ── Слайд 3 — дисклеймер ──
+  html += '<section class="slide d-slide" data-v="' + theme + '">' +
+    '<div><div class="d-title">Ограничение ответственности</div><div class="d-bar"></div></div>' +
+    '<div class="d-body">' + S.LEGAL.onepager.map(p => "<p>" + p + "</p>").join("") + '</div>' +
+    '<div class="d-meta">' + dateS + ' · Структурные продукты</div>' +
+    '</section>';
+
+  document.getElementById("deck").innerHTML = html;
+
+  if (qs.get("print") === "1") {
+    (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve())
+      .then(() => setTimeout(() => window.print(), 400));
+  }
+</script>
+</body>
+</html>
