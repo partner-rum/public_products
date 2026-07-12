@@ -10,12 +10,12 @@
 <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --canvas: #F4F2F0; --card: #FFFFFF;
+    --canvas: #0B0C10; --card: #14161C; --panel-2: #191B22; --tile: rgba(255,255,255,0.045);
     --black: #1A1919;
-    --ink: #0C0A08; --hushed: rgba(12,10,8,0.6); --faint: rgba(12,10,8,0.38);
-    --border: #D2CECB; --border-soft: #E0DCD6;
-    --solar: #E4F222; --solar-l: #F5FF78;
-    --up: #1F7A53; --down: #E96516;
+    --ink: #F2F3F7; --hushed: rgba(242,243,247,0.64); --faint: rgba(242,243,247,0.42);
+    --border: rgba(255,255,255,0.11); --border-soft: rgba(255,255,255,0.07);
+    --solar: #EE7D1B; --solar-l: #F58E33;
+    --up: #55C08A; --down: #EE7D1B;
     --f-body: 'Onest', system-ui, sans-serif;
     --f-mono: 'JetBrains Mono', Consolas, monospace;
     --ease: cubic-bezier(0.16, 1, 0.3, 1);
@@ -26,7 +26,7 @@
   a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 4px; }
   .wrap { max-width: 1280px; margin: 0 auto; padding: 0 44px 40px; }
 
-  .nav { position: sticky; top: 0; z-index: 20; background: rgba(244,242,240,0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); }
+  .nav { position: sticky; top: 0; z-index: 20; background: rgba(11,12,16,0.82); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); }
   .nav-in { max-width: 1280px; margin: 0 auto; padding: 0 44px; height: 62px; display: flex; align-items: center; gap: 12px; }
   .brand { display: flex; align-items: center; gap: 10px; }
   .brand-name { font-size: 14.5px; font-weight: 600; }
@@ -34,7 +34,7 @@
   .topnav a { color: var(--hushed); transition: color .2s; }
   .topnav a:hover { color: var(--ink); }
   .topnav a[aria-current="page"] { color: var(--ink); font-weight: 600; }
-  .btn-solar { background: var(--solar); color: var(--ink) !important; border-radius: 6px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 7px; transition: background .3s ease-in-out; }
+  .btn-solar { background: var(--solar); color: #0C0A08 !important; border-radius: 6px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 7px; transition: background .3s ease-in-out; }
   .btn-solar:hover { background: var(--solar-l); }
 
   .head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin: 26px 0 18px; }
@@ -51,13 +51,13 @@
   .chips { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
   .kf { border: 1px solid var(--border); background: var(--card); border-radius: 6px; padding: 6px 12px; font-size: 12.5px; font-weight: 500; color: var(--hushed); cursor: pointer; font-family: var(--f-body); }
   .kf:hover { color: var(--ink); }
-  .kf.active { background: var(--black); border-color: var(--black); color: #F4F2F0; font-weight: 600; }
+  .kf.active { background: rgba(238,125,27,0.16); border-color: var(--solar); color: var(--ink); font-weight: 600; }
   .kf .n { font-family: var(--f-mono); font-size: 10.5px; opacity: 0.75; margin-left: 4px; }
   .matured-toggle { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--hushed); cursor: pointer; user-select: none; margin-left: auto; }
-  .matured-toggle input { accent-color: var(--black); width: 14px; height: 14px; cursor: pointer; }
+  .matured-toggle input { accent-color: var(--solar); width: 14px; height: 14px; cursor: pointer; }
 
   .list { background: var(--card); border: 1px solid var(--border-soft); border-radius: 12px; overflow-y: auto; flex: 1; min-height: 0; }
-  .group-h { display: flex; align-items: center; gap: 9px; width: 100%; border: none; border-top: 1px solid var(--border-soft); background: #EFECE6; cursor: pointer; font-family: var(--f-body); color: var(--ink); padding: 11px 14px; text-align: left; position: sticky; top: 0; z-index: 2; }
+  .group-h { display: flex; align-items: center; gap: 9px; width: 100%; border: none; border-top: 1px solid var(--border-soft); background: var(--panel-2); cursor: pointer; font-family: var(--f-body); color: var(--ink); padding: 11px 14px; text-align: left; position: sticky; top: 0; z-index: 2; }
   .group-h:first-child { border-top: none; }
   .group-h .chev { transition: transform .2s var(--ease); color: var(--hushed); font-size: 11px; }
   .group-h.open .chev { transform: rotate(90deg); }
@@ -65,16 +65,16 @@
   .group-h .gc { margin-left: auto; font-family: var(--f-mono); font-size: 11px; color: var(--hushed); }
   .group-items { display: none; }
   .group-items.open { display: block; }
-  .item { display: block; width: 100%; text-align: left; border: none; border-top: 1px solid #F0EDE8; border-left: 3px solid transparent; background: transparent; cursor: pointer; font-family: var(--f-body); color: var(--ink); padding: 10px 14px 10px 12px; }
-  .item:hover { background: #FAF8F5; }
-  .item.active { background: #FAF8F5; border-left-color: var(--solar); }
+  .item { display: block; width: 100%; text-align: left; border: none; border-top: 1px solid rgba(255,255,255,0.07); border-left: 3px solid transparent; background: transparent; cursor: pointer; font-family: var(--f-body); color: var(--ink); padding: 10px 14px 10px 12px; }
+  .item:hover { background: rgba(255,255,255,0.05); }
+  .item.active { background: rgba(255,255,255,0.05); border-left-color: var(--solar); }
   .item .r1 { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
   .item .serial { font-size: 13.5px; font-weight: 600; }
   .item .param { font-family: var(--f-mono); font-size: 11.5px; color: var(--hushed); white-space: nowrap; }
   .item .r2 { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-top: 3px; }
-  .item .isin { font-family: var(--f-mono); font-size: 10.5px; color: #A8A29B; }
+  .item .isin { font-family: var(--f-mono); font-size: 10.5px; color: rgba(255,255,255,0.44); }
   .item .perf { font-family: var(--f-mono); font-size: 11.5px; font-weight: 600; }
-  .item.matured .serial { color: #A8A29B; }
+  .item.matured .serial { color: rgba(255,255,255,0.44); }
   .empty-list { padding: 22px 14px; font-size: 13px; color: var(--faint); }
 
   .panel-wrap { position: sticky; top: 78px; }
@@ -82,26 +82,26 @@
   .panel-close { display: none; }
   .pp-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; flex-wrap: wrap; }
   .pp-title { font-size: 24px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1; }
-  .pp-sub { margin-top: 5px; font-family: var(--f-mono); font-size: 11.5px; color: #A8A29B; display: flex; gap: 10px; flex-wrap: wrap; }
+  .pp-sub { margin-top: 5px; font-family: var(--f-mono); font-size: 11.5px; color: rgba(255,255,255,0.44); display: flex; gap: 10px; flex-wrap: wrap; }
   .kind-chip { display: inline-block; font-size: 11.5px; font-weight: 600; border-radius: 999px; padding: 3px 10px; white-space: nowrap; }
   .status { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hushed); }
   .status.live::before { content: "●"; color: var(--up); margin-right: 5px; font-size: 9px; }
-  .status.matured::before { content: "●"; color: #A8A29B; margin-right: 5px; font-size: 9px; }
+  .status.matured::before { content: "●"; color: rgba(255,255,255,0.44); margin-right: 5px; font-size: 9px; }
   .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 20px 0 4px; }
-  .tile { background: var(--canvas); border-radius: 8px; padding: 12px 14px; }
+  .tile { background: var(--tile); border-radius: 8px; padding: 12px 14px; }
   .tile .v { font-family: var(--f-mono); font-size: 16px; font-weight: 500; }
-  .tile .k { margin-top: 4px; font-family: var(--f-mono); font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase; color: #A8A29B; }
+  .tile .k { margin-top: 4px; font-family: var(--f-mono); font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(255,255,255,0.44); }
   .sec { margin-top: 20px; }
-  .sec .h { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: #6E6A68; padding-bottom: 8px; border-bottom: 1px solid #E7E3DD; margin-bottom: 4px; }
-  .kv { display: flex; justify-content: space-between; gap: 18px; padding: 8px 0; border-bottom: 1px solid #F0EDE8; font-size: 13.5px; }
+  .sec .h { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--hushed); padding-bottom: 8px; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
+  .kv { display: flex; justify-content: space-between; gap: 18px; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.07); font-size: 13.5px; }
   .kv .k { color: var(--hushed); }
   .kv .v { text-align: right; }
   .kv .v.mono { font-family: var(--f-mono); font-size: 13px; }
-  .asset-line { display: flex; justify-content: space-between; align-items: baseline; gap: 14px; flex-wrap: wrap; padding: 9px 0; border-bottom: 1px solid #F0EDE8; font-size: 13.5px; }
+  .asset-line { display: flex; justify-content: space-between; align-items: baseline; gap: 14px; flex-wrap: wrap; padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,0.07); font-size: 13.5px; }
   .asset-line b { font-weight: 600; }
   .asset-line .fx-note { font-family: var(--f-mono); font-size: 12.5px; color: var(--hushed); }
   .placeholder { display: grid; place-items: center; min-height: 300px; color: var(--faint); font-size: 14px; }
-  .disclaimer { margin-top: 20px; font-size: 12px; line-height: 1.5; color: #A8A29B; }
+  .disclaimer { margin-top: 20px; font-size: 12px; line-height: 1.5; color: rgba(255,255,255,0.44); }
 
   @media (max-width: 900px) {
     .wrap { padding: 0 16px 32px; }
@@ -125,7 +125,7 @@
   <div class="nav-in">
     <a class="brand" href="index.html" aria-label="На главную">
       <svg width="22" height="22" viewBox="0 0 26 26" fill="none" aria-hidden="true">
-        <path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#1A1919"/>
+        <path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/>
       </svg>
       <span class="brand-name">Структурные продукты</span>
     </a>
@@ -174,13 +174,13 @@
   const D = window.PLACEMENTS_DATA;
   const TODAY = new Date().toISOString().slice(0, 10);
   const KINDS = {
-    coupon:        { label: "Купонный", fg: "#B3801F", bg: "#F2E7CF" },
-    participation: { label: "Участие в росте", fg: "#33608C", bg: "#DCE6F0" }
+    coupon:        { label: "Купонный", fg: "#EE7D1B", bg: "rgba(238,125,27,0.16)" },
+    participation: { label: "Участие в росте", fg: "#4F86E6", bg: "rgba(79,134,230,0.16)" }
   };
   const fmtD = s => s ? s.split("-").reverse().join(".") : "—";
   const fmtN = v => v == null ? "—" : String(v).replace(".", ",").replace("-", "−");
   const fmtPerf = v => v == null ? null : (v > 0 ? "+" : "") + fmtN(v) + "%";
-  const perfColor = v => v > 0 ? "#1F7A53" : (v < 0 ? "#E96516" : "#6E6A68");
+  const perfColor = v => v > 0 ? "#55C08A" : (v < 0 ? "#EE7D1B" : "rgba(242,243,247,0.64)");
 
   const issues = D.issues.map(i => ({ ...i, matured: i.maturity && i.maturity < TODAY }));
   let kind = "all", showMatured = false, q = "", selected = null;
@@ -227,12 +227,12 @@
       '<span class="kind-chip" style="color:' + k.fg + ';background:' + k.bg + '">' + k.label + '</span></div>' +
       '<div class="tiles">' +
         '<div class="tile"><div class="v">' + keyParam(i).replace(/^(купон|участие) /, "") + '</div><div class="k">' + (i.kind === "coupon" ? "купон годовых" : "участие в росте") + '</div></div>' +
-        '<div class="tile"><div class="v" style="color:' + (i.perfPct != null ? perfColor(i.perfPct) : "#A8A29B") + '">' + (fmtPerf(i.perfPct) || "—") + '</div><div class="k">динамика БА</div></div>' +
+        '<div class="tile"><div class="v" style="color:' + (i.perfPct != null ? perfColor(i.perfPct) : "rgba(255,255,255,0.44)") + '">' + (fmtPerf(i.perfPct) || "—") + '</div><div class="k">динамика БА</div></div>' +
         '<div class="tile"><div class="v">' + fmtD(i.maturity) + '</div><div class="k">погашение</div></div>' +
       '</div>' +
       '<div class="sec"><div class="h">Базовый актив</div>' + assets + '</div>' +
       '<div class="sec"><div class="h">Параметры выплаты</div>' + kv(pay) +
-        (i.fx ? '<div style="margin-top:12px;padding:9px 13px;border-left:3px solid #E96516;background:#FBEFE3;border-radius:0 7px 7px 0;font-size:12.5px;line-height:1.5;color:#8A5A22">' + S.LEGAL.fx + '</div>' : '') + '</div>' +
+        (i.fx ? '<div style="margin-top:12px;padding:9px 13px;border-left:3px solid #EE7D1B;background:rgba(238,125,27,0.12);border-radius:0 7px 7px 0;font-size:12.5px;line-height:1.5;color:#E7B98D">' + S.LEGAL.fx + '</div>' : '') + '</div>' +
       '<div class="sec"><div class="h">Даты</div>' + kv([
         ["Размещение", fmtD(i.issueStart), true],
         ["Начальная фиксация", fmtD(i.dates.initialFixing), true],
@@ -273,7 +273,7 @@
     return '<button class="item' + (i.matured ? " matured" : "") + (i.isin === selected ? " active" : "") + '" data-isin="' + i.isin + '">' +
       '<div class="r1"><span class="serial">' + i.serial + '</span><span class="param">' + keyParam(i) + '</span></div>' +
       '<div class="r2"><span class="isin">' + i.isin + '</span>' +
-      '<span class="perf" style="color:' + (i.perfPct != null ? perfColor(i.perfPct) : "#A8A29B") + '">' + (fmtPerf(i.perfPct) || "—") + '</span></div>' +
+      '<span class="perf" style="color:' + (i.perfPct != null ? perfColor(i.perfPct) : "rgba(255,255,255,0.44)") + '">' + (fmtPerf(i.perfPct) || "—") + '</span></div>' +
     '</button>';
   }
 

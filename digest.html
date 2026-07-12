@@ -10,10 +10,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --canvas: #F4F2F0; --card: #FFFFFF; --black: #1A1919;
-    --ink: #0C0A08; --hushed: rgba(12,10,8,0.6); --faint: rgba(12,10,8,0.38);
-    --border: #D2CECB; --border-soft: #E0DCD6;
-    --solar: #E4F222; --solar-l: #F5FF78; --up: #1F7A53; --down: #E96516;
+    --canvas: #0B0C10; --card: #14161C; --panel-2: #191B22; --tile: rgba(255,255,255,0.045);
+    --black: #1A1919;
+    --ink: #F2F3F7; --hushed: rgba(242,243,247,0.64); --faint: rgba(242,243,247,0.42);
+    --border: rgba(255,255,255,0.11); --border-soft: rgba(255,255,255,0.07);
+    --solar: #EE7D1B; --solar-l: #F58E33; --up: #55C08A; --down: #EE7D1B;
     --f-body: 'Onest', system-ui, sans-serif; --f-mono: 'JetBrains Mono', Consolas, monospace;
     --ease: cubic-bezier(0.16, 1, 0.3, 1);
   }
@@ -23,17 +24,17 @@
   a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 4px; }
   .wrap { max-width: 1180px; margin: 0 auto; padding: 0 44px 56px; }
 
-  .nav { position: sticky; top: 0; z-index: 30; background: rgba(244,242,240,0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); }
+  .nav { position: sticky; top: 0; z-index: 30; background: rgba(11,12,16,0.82); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); }
   .nav-in { max-width: 1180px; margin: 0 auto; padding: 0 44px; height: 62px; display: flex; align-items: center; gap: 12px; }
   .brand { display: flex; align-items: center; gap: 10px; } .brand-name { font-size: 14.5px; font-weight: 600; }
   .topnav { margin-left: auto; display: flex; align-items: center; gap: 22px; font-size: 14px; font-weight: 500; }
   .topnav a { color: var(--hushed); transition: color .2s; } .topnav a:hover { color: var(--ink); }
   .topnav a[aria-current="page"] { color: var(--ink); font-weight: 600; }
-  .btn-solar { background: var(--solar); color: var(--ink) !important; border-radius: 6px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 7px; transition: background .3s; }
+  .btn-solar { background: var(--solar); color: #0C0A08 !important; border-radius: 6px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 7px; transition: background .3s; }
   .btn-solar:hover { background: var(--solar-l); }
 
   .crumbs { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--hushed); padding: 24px 0 22px; }
-  .crumbs .sep { color: #C4BFB8; } .crumbs .here { color: var(--ink); font-weight: 500; }
+  .crumbs .sep { color: var(--faint); } .crumbs .here { color: var(--ink); font-weight: 500; }
 
   .head { margin-bottom: 6px; }
   .head-row { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
@@ -43,16 +44,16 @@
   /* Переключатель выпусков (архив) */
   .pick { position: relative; }
   .pick-btn { display: inline-flex; align-items: center; gap: 10px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 8px 13px; font-family: var(--f-body); font-size: 14px; color: var(--ink); cursor: pointer; }
-  .pick-btn:hover { border-color: #BBB5AE; }
+  .pick-btn:hover { border-color: rgba(255,255,255,0.22); }
   .pick-btn .lbl { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--faint); }
   .pick-btn .cv { color: var(--hushed); transition: transform .25s var(--ease); }
   .pick.open .cv { transform: rotate(180deg); }
-  .pick-menu { position: absolute; top: calc(100% + 6px); left: 0; z-index: 40; min-width: 320px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 18px 44px rgba(12,10,8,0.16); padding: 6px; display: none; }
+  .pick-menu { position: absolute; top: calc(100% + 6px); left: 0; z-index: 40; min-width: 320px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 18px 44px rgba(0,0,0,0.5); padding: 6px; display: none; }
   .pick.open .pick-menu { display: block; }
   .pick-mh { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); padding: 8px 12px 6px; }
   .pick-i { display: block; width: 100%; text-align: left; background: none; border: none; border-radius: 8px; padding: 10px 12px; cursor: pointer; font-family: var(--f-body); color: var(--ink); }
-  .pick-i:hover { background: #F2EFEA; }
-  .pick-i.active { background: #EFEBE4; }
+  .pick-i:hover { background: rgba(255,255,255,0.05); }
+  .pick-i.active { background: rgba(255,255,255,0.09); }
   .pick-i .d { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
   .pick-i .d .t { font-size: 14.5px; font-weight: 600; }
   .pick-i .d .c { font-family: var(--f-mono); font-size: 11px; color: var(--faint); white-space: nowrap; }
@@ -66,8 +67,8 @@
   .toc-h { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint); margin-bottom: 8px; }
   .toc-sec { font-size: 12px; font-weight: 600; margin: 16px 0 6px; }
   .toc-i { display: flex; gap: 12px; align-items: baseline; width: 100%; text-align: left; background: none; border: none; cursor: pointer; padding: 7px 8px; border-radius: 8px; font-family: var(--f-body); color: var(--ink); }
-  .toc-i:hover { background: #EEEBE5; }
-  .toc-i.active { background: var(--ink); color: #fff; }
+  .toc-i:hover { background: rgba(255,255,255,0.05); }
+  .toc-i.active { background: #262A33; color: var(--ink); }
   .toc-i.active .num, .toc-i.active .mv { color: rgba(255,255,255,0.72); }
   .toc-i .num { font-family: var(--f-mono); font-size: 11px; color: var(--faint); flex: none; width: 20px; }
   .toc-i .tx { flex: 1; min-width: 0; }
@@ -105,7 +106,7 @@
 
 <header class="nav">
   <div class="nav-in">
-    <a class="brand" href="index.html" aria-label="На главную"><svg width="22" height="22" viewBox="0 0 26 26" fill="none"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#1A1919"/></svg><span class="brand-name">Структурные продукты</span></a>
+    <a class="brand" href="index.html" aria-label="На главную"><svg width="22" height="22" viewBox="0 0 26 26" fill="none"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg><span class="brand-name">Структурные продукты</span></a>
     <nav class="topnav">
       <a href="digest.html" aria-current="page">Дайджест</a>
       <a href="offerings.html">Размещения</a>
@@ -135,7 +136,7 @@
     <div class="intro" id="intro"></div>
   </div>
 
-  <div class="qual"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M7 0 L8.4 5.6 L14 7 L8.4 8.4 L7 14 L5.6 8.4 L0 7 L5.6 5.6 Z" fill="#1A1919"/></svg><span id="qual"></span></div>
+  <div class="qual"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M7 0 L8.4 5.6 L14 7 L8.4 8.4 L7 14 L5.6 8.4 L0 7 L5.6 5.6 Z" fill="#EE7D1B"/></svg><span id="qual"></span></div>
 
   <div class="layout">
     <aside class="toc"><div class="toc-h">Содержание</div><div id="toc"></div></aside>
@@ -148,7 +149,7 @@
 </div>
 
 <script src="data/lib.js?v=fx4"></script>
-<script src="data/digest.js?v=arch1"></script>
+<script src="data/digest.js?v=dark1"></script>
 <script>
   const A = window.DIGEST_ARCHIVE;
   let issue = null, order = [];

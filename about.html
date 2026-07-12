@@ -10,12 +10,12 @@
 <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --canvas: #F4F2F0; --card: #FFFFFF; --black: #1A1919;
-    --ink: #0C0A08; --hushed: rgba(12,10,8,0.6); --faint: rgba(12,10,8,0.62);
-    --border: #D2CECB; --border-soft: #E0DCD6;
-    --solar: #E4F222; --solar-l: #F5FF78;
-    --spruce: #2E6E56; --steel: #33608C; --amber: #B3801F; --amber-t: #8A5A22;
-    --up: #1F7A53; --down: #E96516;
+    --canvas: #0B0C10; --card: #14161C; --panel-2: #191B22; --tile: rgba(255,255,255,0.045); --black: #1A1919;
+    --ink: #F2F3F7; --hushed: rgba(242,243,247,0.64); --faint: rgba(242,243,247,0.42);
+    --border: rgba(255,255,255,0.11); --border-soft: rgba(255,255,255,0.07);
+    --solar: #EE7D1B; --solar-l: #F58E33;
+    --spruce: #5E9B82; --steel: #4F86E6; --amber: #E0A24A; --amber-t: #E0A24A;
+    --up: #55C08A; --down: #EE7D1B;
     --f-body: 'Onest', system-ui, sans-serif; --f-mono: 'JetBrains Mono', Consolas, monospace;
     --ease: cubic-bezier(0.16, 1, 0.3, 1);
   }
@@ -26,16 +26,16 @@
   a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 4px; }
   .wrap { max-width: 1160px; margin: 0 auto; padding: 0 44px; }
 
-  .skip { position: absolute; left: -9999px; top: 0; z-index: 100; background: var(--ink); color: #fff; padding: 10px 16px; border-radius: 0 0 8px 0; font-size: 14px; }
+  .skip { position: absolute; left: -9999px; top: 0; z-index: 100; background: var(--solar); color: #0C0A08; padding: 10px 16px; border-radius: 0 0 8px 0; font-size: 14px; }
   .skip:focus { left: 0; }
 
-  .nav { position: sticky; top: 0; z-index: 30; background: rgba(244,242,240,0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); }
+  .nav { position: sticky; top: 0; z-index: 30; background: rgba(11,12,16,0.82); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); }
   .nav-in { max-width: 1160px; margin: 0 auto; padding: 0 44px; height: 62px; display: flex; align-items: center; gap: 12px; }
   .brand { display: flex; align-items: center; gap: 10px; } .brand-name { font-size: 14.5px; font-weight: 600; }
   .topnav { margin-left: auto; display: flex; align-items: center; gap: 22px; font-size: 14px; font-weight: 500; }
   .topnav a { color: var(--hushed); transition: color .2s; } .topnav a:hover { color: var(--ink); }
   .topnav a[aria-current="page"] { color: var(--ink); font-weight: 600; }
-  .btn-solar { background: var(--solar); color: var(--ink) !important; border-radius: 6px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 7px; transition: background .3s ease-in-out; }
+  .btn-solar { background: var(--solar); color: #0C0A08 !important; border-radius: 6px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 7px; transition: background .3s ease-in-out; }
   .btn-solar:hover { background: var(--solar-l); }
 
   .page-head { padding: 46px 0 4px; }
@@ -45,7 +45,7 @@
   .principles { display: grid; grid-template-columns: repeat(3, 1fr); padding: 34px 0 0; }
   .principle { padding: 4px 26px 8px 0; }
   .principle + .principle { border-left: 1px solid var(--border-soft); padding-left: 26px; }
-  .principle .k { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #6E6A68; margin-bottom: 8px; }
+  .principle .k { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); margin-bottom: 8px; }
   .principle .v { font-size: 13.5px; line-height: 1.55; color: var(--hushed); text-wrap: pretty; }
 
   /* ── Содержание (общее) + статья (частное) ── */
@@ -53,9 +53,9 @@
   .toc { position: sticky; top: 82px; }
   .toc-h { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint); margin-bottom: 8px; }
   .toc-i { display: flex; gap: 11px; align-items: baseline; width: 100%; text-align: left; background: none; border: none; cursor: pointer; padding: 8px 9px; border-radius: 8px; font-family: var(--f-body); color: var(--ink); }
-  .toc-i:hover { background: #EEEBE5; }
-  .toc-i.active { background: var(--ink); color: #fff; }
-  .toc-i.active .sub, .toc-i.active .cnt { color: rgba(255,255,255,0.72); }
+  .toc-i:hover { background: rgba(255,255,255,0.05); }
+  .toc-i.active { background: rgba(238,125,27,0.16); color: var(--ink); }
+  .toc-i.active .sub, .toc-i.active .cnt { color: rgba(242,243,247,0.72); }
   .toc-i .dot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--fc); position: relative; top: -1px; }
   .toc-i .tx { flex: 1; min-width: 0; }
   .toc-i .nm { font-size: 14px; font-weight: 600; line-height: 1.3; }
@@ -68,8 +68,8 @@
   .toc-kids .toc-i .nm { font-size: 13px; font-weight: 500; }
   .toc-i .chev { flex: none; color: var(--faint); transition: transform .25s var(--ease); align-self: center; }
   .toc-i.exp .chev { transform: rotate(180deg); }
-  .toc-i.exp { background: #EEEBE5; }
-  .toc-i.exp.active { background: var(--ink); }
+  .toc-i.exp { background: rgba(255,255,255,0.05); }
+  .toc-i.exp.active { background: rgba(238,125,27,0.16); }
 
   /* Статья */
   .art-kind { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.11em; text-transform: uppercase; color: var(--fc); }
@@ -78,16 +78,16 @@
   .art-bar { width: 56px; height: 4px; background: var(--fc); margin: 16px 0 22px; }
   .art-grid { display: grid; grid-template-columns: 1.25fr 1fr; gap: 28px; align-items: start; }
   .kv { margin: 0 0 18px; } .kv:last-child { margin-bottom: 0; }
-  .kv .k { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: 0.11em; text-transform: uppercase; color: #6E6A68; margin-bottom: 7px; }
+  .kv .k { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: 0.11em; text-transform: uppercase; color: var(--faint); margin-bottom: 7px; }
   .kv .v { font-size: 14.5px; line-height: 1.62; color: var(--hushed); text-wrap: pretty; }
   .metrics { display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 18px; }
   .metric { min-width: 150px; flex: 1; }
   .metric .k { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); }
   .metric .v { font-size: 13.5px; color: var(--hushed); margin-top: 4px; line-height: 1.5; }
-  .plaque { padding: 11px 14px; border-left: 3px solid var(--down); background: #FBEFE3; border-radius: 0 8px 8px 0; font-size: 13px; line-height: 1.5; color: #8A5A22; margin-bottom: 18px; }
-  .usecase { display: flex; gap: 12px; align-items: flex-start; background: #F7F8DE; border: 1px solid #E6EAB4; border-left: 3px solid var(--solar); border-radius: 0 10px 10px 0; padding: 13px 16px; margin-bottom: 20px; }
+  .plaque { padding: 11px 14px; border-left: 3px solid var(--down); background: rgba(238,125,27,0.12); border-radius: 0 8px 8px 0; font-size: 13px; line-height: 1.5; color: #E7B98D; margin-bottom: 18px; }
+  .usecase { display: flex; gap: 12px; align-items: flex-start; background: rgba(238,125,27,0.12); border: 1px solid rgba(238,125,27,0.22); border-left: 3px solid var(--solar); border-radius: 0 10px 10px 0; padding: 13px 16px; margin-bottom: 20px; }
   .usecase .ic { flex: none; line-height: 0; margin-top: 1px; }
-  .usecase .k { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.11em; text-transform: uppercase; color: #6E6A2E; margin-bottom: 5px; }
+  .usecase .k { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.11em; text-transform: uppercase; color: var(--solar); margin-bottom: 5px; }
   .usecase .v { font-size: 15px; line-height: 1.55; color: var(--ink); font-weight: 500; text-wrap: pretty; }
   .boardlink { display: inline-flex; align-items: center; gap: 7px; margin-top: 4px; font-size: 14px; font-weight: 600; color: var(--fc); }
   .backmx { display: inline-flex; align-items: center; gap: 7px; background: none; border: none; cursor: pointer; font-family: var(--f-body); font-size: 13px; color: var(--hushed); padding: 0 0 14px; }
@@ -95,7 +95,7 @@
 
   .viz { background: var(--card); border: 1px solid var(--border-soft); border-top: 3px solid var(--fc); border-radius: 12px; padding: 18px 20px 14px; }
   .pf svg { display: block; width: 100%; height: auto; }
-  .pf-axis { font-family: var(--f-mono); font-size: 10.5px; color: #5F5B54; text-align: right; margin-top: 3px; }
+  .pf-axis { font-family: var(--f-mono); font-size: 10.5px; color: var(--faint); text-align: right; margin-top: 3px; }
   .pf-cap { font-size: 12px; line-height: 1.5; color: var(--faint); margin-top: 10px; text-wrap: pretty; }
   .pf-line { transition: stroke-dashoffset 1.05s var(--ease); }
   .pf-bar { transform-box: fill-box; transform-origin: bottom; transform: scaleY(0); transition: transform .8s var(--ease); }
@@ -103,20 +103,20 @@
 
   .prot-ctrls { display: flex; flex-wrap: wrap; gap: 18px; margin-bottom: 14px; }
   .ctrl .k { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); margin-bottom: 7px; }
-  .seg { display: inline-flex; background: #ECE8E1; border-radius: 9px; padding: 3px; gap: 2px; }
+  .seg { display: inline-flex; background: rgba(255,255,255,0.06); border-radius: 9px; padding: 3px; gap: 2px; }
   .seg button { border: none; background: none; cursor: pointer; font-family: var(--f-mono); font-size: 12.5px; color: var(--hushed); padding: 6px 12px; border-radius: 7px; transition: background .18s, color .18s; }
-  .seg button.on { background: var(--card); color: var(--steel); font-weight: 600; box-shadow: 0 1px 3px rgba(12,10,8,0.1); }
+  .seg button.on { background: #262A33; color: var(--steel); font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.35); }
   .prot-read { font-size: 13px; line-height: 1.55; color: var(--hushed); margin-top: 12px; text-wrap: pretty; }
   .prot-read b { color: var(--ink); }
 
   /* Матрица варрантов (обзор) */
   .mx { display: grid; grid-template-columns: 86px 1fr 1fr 1fr; gap: 10px; margin-top: 4px; }
-  .mx .hd { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: 0.04em; color: #6E6A68; display: flex; align-items: flex-end; padding-bottom: 6px; }
+  .mx .hd { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: 0.04em; color: var(--faint); display: flex; align-items: flex-end; padding-bottom: 6px; }
   .mx .rl { display: flex; flex-direction: column; justify-content: center; }
   .mx .rl .t { font-size: 15px; font-weight: 600; color: var(--amber-t); }
   .mx .rl .s { font-family: var(--f-mono); font-size: 10px; color: var(--faint); margin-top: 2px; }
   .cell { background: var(--card); border: 1px solid var(--border-soft); border-radius: 11px; padding: 10px 11px 9px; cursor: pointer; text-align: left; font-family: var(--f-body); transition: box-shadow .18s, transform .18s, border-color .18s; }
-  .cell:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(12,10,8,0.07); }
+  .cell:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.4); }
   .cell svg { display: block; width: 100%; height: auto; }
   .cell svg text { display: none; }
   .cell .nm { font-size: 13px; font-weight: 600; margin-top: 7px; }
@@ -167,7 +167,7 @@
 <header class="nav">
   <div class="nav-in">
     <a class="brand" href="index.html" aria-label="На главную">
-      <svg width="22" height="22" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#1A1919"/></svg>
+      <svg width="22" height="22" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>
       <span class="brand-name">Структурные продукты</span>
     </a>
     <nav class="topnav">
@@ -207,7 +207,7 @@
 <footer>
   <div class="wrap footer-in">
     <div class="footer-brand">
-      <div class="row"><svg width="18" height="18" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#1A1919"/></svg>Структурные продукты</div>
+      <div class="row"><svg width="18" height="18" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>Структурные продукты</div>
       <div class="sub">Витрина инструментов</div>
     </div>
     <div class="footer-right">
@@ -237,9 +237,9 @@
   };
 
   var FAM = {
-    discount:   { label: "Консервативный", color: "#2E6E56", board: "board.html?type=discount" },
-    protection: { label: "Сбалансированный", color: "#33608C", board: "board.html?type=protection" },
-    warrant:    { label: "Активный", color: "#B3801F", text: "#8A5A22", board: "board.html?type=warrant" }
+    discount:   { label: "Консервативный", color: "#5E9B82", board: "board.html?type=discount" },
+    protection: { label: "Сбалансированный", color: "#4F86E6", board: "board.html?type=protection" },
+    warrant:    { label: "Активный", color: "#E0A24A", text: "#E0A24A", board: "board.html?type=warrant" }
   };
   var WTYPES = ["call", "callspread", "callko", "put", "putspread", "putko"];
   var WSUB = { call: "рост · без потолка", callspread: "рост · потолок K₂", callko: "рост · барьер KO", put: "падение · без потолка", putspread: "падение · потолок", putko: "падение · барьер KO" };
@@ -250,7 +250,7 @@
 
   // ── Движок пэйоффов ──
   var W = 340, H = 178, PADX = 24, TOP = 26, ZERO = 108, PREM = 134, CAP = 62;
-  var GRID = "#DDD8D2", AX = "#B7B1A8", LAB = "#5F5B54", KOc = "#C24E0A";
+  var GRID = "rgba(255,255,255,0.09)", AX = "rgba(255,255,255,0.17)", LAB = "rgba(255,255,255,0.68)", KOc = "#EE7D1B";
   var MONO = 'font-family="JetBrains Mono, monospace"';
   function xu(u) { return (PADX + (u / 2) * (W - 2 * PADX)); }
   function svgWrap(inner) { return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="display:block" aria-hidden="true" focusable="false">' + inner + '</svg>'; }
@@ -259,7 +259,7 @@
   }
   function line(d, color) { return '<path class="pf-line" d="' + d + '" fill="none" stroke="' + color + '" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>'; }
   function strike(u, y, label) {
-    return '<rect x="' + (xu(u) - 4) + '" y="' + (y - 4) + '" width="8" height="8" transform="rotate(45 ' + xu(u) + ' ' + y + ')" fill="#5A5750"/>' +
+    return '<rect x="' + (xu(u) - 4) + '" y="' + (y - 4) + '" width="8" height="8" transform="rotate(45 ' + xu(u) + ' ' + y + ')" fill="#E7E9F0"/>' +
       '<text x="' + xu(u) + '" y="' + (H - 16) + '" text-anchor="middle" font-size="11" ' + MONO + ' fill="' + LAB + '">' + label + '</text>';
   }
   function premLine() {
@@ -279,11 +279,11 @@
       var h50 = (base - top100) * 0.5, h100 = (base - top100);
       inner = '<line x1="' + PADX + '" y1="' + top100 + '" x2="' + (W - PADX) + '" y2="' + top100 + '" stroke="' + GRID + '" stroke-width="1" stroke-dasharray="3 4"/>' +
         '<text x="' + (W - PADX) + '" y="' + (top100 - 6) + '" text-anchor="end" font-size="11" ' + MONO + ' fill="' + LAB + '">номинал 100%</text>' +
-        '<rect class="pf-bar" x="' + x1 + '" y="' + (base - h50) + '" width="' + bw + '" height="' + h50 + '" rx="3" fill="#BFC7BE"/>' +
-        '<rect class="pf-bar" x="' + x2 + '" y="' + (base - h100) + '" width="' + bw + '" height="' + h100 + '" rx="3" fill="' + FAM.discount.color + '"/>' +
+        '<rect class="pf-bar" x="' + x1 + '" y="' + (base - h50) + '" width="' + bw + '" height="' + h50 + '" rx="3" fill="rgba(255,255,255,0.22)"/>' +
+        '<rect class="pf-bar" x="' + x2 + '" y="' + (base - h100) + '" width="' + bw + '" height="' + h100 + '" rx="3" fill="#E7E9F0"/>' +
         '<text x="' + (x1 + bw / 2) + '" y="' + (base + 14) + '" text-anchor="middle" font-size="11" ' + MONO + ' fill="' + LAB + '">вход 50%</text>' +
-        '<text x="' + (x2 + bw / 2) + '" y="' + (base + 14) + '" text-anchor="middle" font-size="11" ' + MONO + ' fill="' + FAM.discount.color + '">погашение 100%</text>' +
-        '<text x="' + ((x1 + x2 + bw) / 2) + '" y="' + (base - h50 - 8) + '" text-anchor="middle" font-size="11" ' + MONO + ' fill="' + FAM.discount.color + '">+50 п.п.</text>';
+        '<text x="' + (x2 + bw / 2) + '" y="' + (base + 14) + '" text-anchor="middle" font-size="11" ' + MONO + ' fill="#E7E9F0">погашение 100%</text>' +
+        '<text x="' + ((x1 + x2 + bw) / 2) + '" y="' + (base - h50 - 8) + '" text-anchor="middle" font-size="11" ' + MONO + ' fill="#EE7D1B">+50 п.п.</text>';
       return svgWrap(inner);
     }
     if (kind === "protection") {
@@ -294,8 +294,8 @@
       // Уровень защиты (пунктир + подпись слева).
       // При участии в падении слева проходит нисходящая линия — подпись уводим ПОД пунктир.
       var yLblZ = dir === "up" ? (yLvl - 6) : (yLvl + 15);
-      inner = '<line x1="' + PADX + '" y1="' + yLvl + '" x2="' + (W - PADX) + '" y2="' + yLvl + '" stroke="' + c + '" stroke-width="1" stroke-dasharray="2 4" opacity="0.7"/>' +
-        '<text x="' + (PADX + 2) + '" y="' + yLblZ + '" font-size="11" ' + MONO + ' fill="' + c + '">защита ' + level + '%</text>';
+      inner = '<line x1="' + PADX + '" y1="' + yLvl + '" x2="' + (W - PADX) + '" y2="' + yLvl + '" stroke="rgba(255,255,255,0.17)" stroke-width="1" stroke-dasharray="2 4"/>' +
+        '<text x="' + (PADX + 2) + '" y="' + yLblZ + '" font-size="11" ' + MONO + ' fill="rgba(255,255,255,0.68)">защита ' + level + '%</text>';
       // Номинал: не рисуем отдельно при защите 100% (совпадает с уровнем защиты)
       if (level !== 100) {
         inner += '<line x1="' + PADX + '" y1="' + yPar + '" x2="' + (W - PADX) + '" y2="' + yPar + '" stroke="' + GRID + '" stroke-width="1" stroke-dasharray="3 4"/>';
@@ -305,13 +305,13 @@
       var d;
       if (dir === "up") d = "M" + xu(0) + " " + yLvl + " L" + xu(0.55) + " " + yLvl + " L" + xu(1) + " " + yPar + " L" + xu(2) + " " + yTop;
       else d = "M" + xu(0) + " " + yTop + " L" + xu(1) + " " + yPar + " L" + xu(1.45) + " " + yLvl + " L" + xu(2) + " " + yLvl;
-      inner += '<rect x="' + (xu(1) - 4) + '" y="' + (yPar - 4) + '" width="8" height="8" transform="rotate(45 ' + xu(1) + ' ' + yPar + ')" fill="#5A5750"/>' +
+      inner += '<rect x="' + (xu(1) - 4) + '" y="' + (yPar - 4) + '" width="8" height="8" transform="rotate(45 ' + xu(1) + ' ' + yPar + ')" fill="#E7E9F0"/>' +
         '<text x="' + xu(1) + '" y="' + (H - 4) + '" text-anchor="middle" font-size="11" ' + MONO + ' fill="' + LAB + '">S₀ · старт</text>';
       // Подпись «участие» — над концом линии (не пересекает её)
       var pl = dir === "up"
-        ? '<text x="' + (xu(2) - 4) + '" y="' + Math.max(TOP - 6, yTop - 10) + '" text-anchor="end" font-size="11" ' + MONO + ' fill="' + c + '">участие</text>'
-        : '<text x="' + (xu(0) + 4) + '" y="' + Math.max(TOP - 6, yTop - 10) + '" text-anchor="start" font-size="11" ' + MONO + ' fill="' + c + '">участие</text>';
-      inner += pl + line(d, c);
+        ? '<text x="' + (xu(2) - 4) + '" y="' + Math.max(TOP - 6, yTop - 10) + '" text-anchor="end" font-size="11" ' + MONO + ' fill="#EE7D1B">участие</text>'
+        : '<text x="' + (xu(0) + 4) + '" y="' + Math.max(TOP - 6, yTop - 10) + '" text-anchor="start" font-size="11" ' + MONO + ' fill="#EE7D1B">участие</text>';
+      inner += pl + line(d, "#E7E9F0");
       return svgWrap(inner);
     }
     inner = axes() + premLine();
@@ -335,7 +335,7 @@
       d2 = "M" + xu(0) + " " + PREM + " L" + xu(0.45) + " " + PREM + " L" + xu(0.45) + " " + (TOP + 14) + " L" + xu(1) + " " + PREM + " L" + xu(2) + " " + PREM;
       inner += strike(1, PREM, "K") + koBarrier(0.45);
     }
-    inner += line(d2, c);
+    inner += line(d2, "#E7E9F0");
     return svgWrap(inner);
   }
 
@@ -379,7 +379,7 @@
 
   // ── Статьи ──
   function usecaseHTML(d) {
-    return '<div class="usecase"><span class="ic" aria-hidden="true"><svg width="17" height="17" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="6.4" stroke="#7A7A16" stroke-width="1.5"/><circle cx="9" cy="9" r="1.9" fill="#7A7A16"/></svg></span>' +
+    return '<div class="usecase"><span class="ic" aria-hidden="true"><svg width="17" height="17" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="6.4" stroke="#EE7D1B" stroke-width="1.5"/><circle cx="9" cy="9" r="1.9" fill="#EE7D1B"/></svg></span>' +
       '<div><div class="k">Когда уместен</div><div class="v">' + d.whenToUse + '</div></div></div>';
   }
   function metricsHTML(d) {

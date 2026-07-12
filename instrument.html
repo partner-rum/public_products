@@ -10,13 +10,13 @@
 <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --canvas: #F4F2F0; --card: #FFFFFF;
+    --canvas: #0B0C10; --card: #14161C; --panel-2: #191B22; --tile: rgba(255,255,255,0.045);
     --black: #1A1919;
-    --ink: #0C0A08; --hushed: rgba(12,10,8,0.6); --faint: rgba(12,10,8,0.38);
-    --border: #D2CECB; --border-soft: #E0DCD6;
-    --solar: #E4F222; --solar-l: #F5FF78;
-    --spruce: #2E6E56; --steel: #33608C; --amber: #B3801F;
-    --up: #1F7A53; --down: #E96516;
+    --ink: #F2F3F7; --hushed: rgba(242,243,247,0.64); --faint: rgba(242,243,247,0.42);
+    --border: rgba(255,255,255,0.11); --border-soft: rgba(255,255,255,0.07);
+    --solar: #EE7D1B; --solar-l: #F58E33;
+    --spruce: #5E9B82; --steel: #4F86E6; --amber: #E0A24A;
+    --up: #55C08A; --down: #EE7D1B;
     --f-body: 'Onest', system-ui, sans-serif;
     --f-mono: 'JetBrains Mono', Consolas, monospace;
     --ease: cubic-bezier(0.16, 1, 0.3, 1);
@@ -27,7 +27,7 @@
   a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
   .wrap { max-width: 1080px; margin: 0 auto; padding: 0 44px 64px; }
 
-  .nav { position: sticky; top: 0; z-index: 20; background: rgba(244,242,240,0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); }
+  .nav { position: sticky; top: 0; z-index: 20; background: rgba(11,12,16,0.82); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); }
   .nav-in { max-width: 1080px; margin: 0 auto; padding: 0 44px; height: 62px; display: flex; align-items: center; gap: 12px; }
   .brand { display: flex; align-items: center; gap: 10px; }
   .brand-name { font-size: 14.5px; font-weight: 600; }
@@ -35,18 +35,18 @@
   .topnav a { color: var(--hushed); transition: color .2s; }
   .topnav a:hover { color: var(--ink); }
   .topnav a[aria-current="page"] { color: var(--ink); font-weight: 600; }
-  .btn-solar { background: var(--solar); color: var(--ink) !important; border-radius: 6px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 7px; transition: background .3s ease-in-out; }
+  .btn-solar { background: var(--solar); color: #0C0A08 !important; border-radius: 6px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 7px; transition: background .3s ease-in-out; }
   .btn-solar:hover { background: var(--solar-l); }
 
   .crumbs { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--hushed); padding: 26px 0 28px; }
   .crumbs a:hover { color: var(--ink); }
-  .crumbs .sep { color: #C4BFB8; }
+  .crumbs .sep { color: var(--faint); }
   .crumbs .here { color: var(--ink); font-weight: 500; }
 
   .head { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; flex-wrap: wrap; margin-bottom: 30px; }
   .title-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
   h1 { margin: 0; font-family: var(--f-body); font-size: 28px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1; }
-  .badge { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink); background: #E9E6E0; border-radius: 6px; padding: 4px 9px; }
+  .badge { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink); background: rgba(255,255,255,0.08); border-radius: 6px; padding: 4px 9px; }
   .subtitle { font-size: 14px; color: var(--hushed); }
   .btn-pdf { margin-top: 14px; display: inline-flex; align-items: center; gap: 8px; background: var(--solar); color: var(--ink); border-radius: 6px; padding: 9px 16px; font-size: 13.5px; font-weight: 500; transition: background .3s ease-in-out; }
   .btn-pdf:hover { background: var(--solar-l); }
@@ -59,11 +59,11 @@
   .grid { display: grid; grid-template-columns: 1.55fr 1fr; gap: 20px; align-items: stretch; }
   .panel { background: var(--card); border: 1px solid var(--border-soft); border-radius: 14px; padding: 22px 24px; }
   .chart-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
-  .chart-title { font-size: 15px; font-weight: 600; color: #3F4147; }
-  .tabs { display: flex; gap: 4px; background: #E7E5E0; border-radius: 10px; padding: 4px; }
+  .chart-title { font-size: 15px; font-weight: 600; color: var(--ink); }
+  .tabs { display: flex; gap: 4px; background: rgba(255,255,255,0.06); border-radius: 10px; padding: 4px; }
   .tab { border: none; border-radius: 7px; padding: 6px 16px; font-size: 13px; font-weight: 500; cursor: pointer; background: transparent; color: var(--hushed); font-family: var(--f-body); }
-  .tab.active { font-weight: 600; background: var(--card); color: var(--ink); box-shadow: 0 1px 2px rgba(24,25,30,0.16); }
-  .chart-caption { margin-top: 16px; font-size: 12.5px; line-height: 1.5; color: #A8A29B; }
+  .tab.active { font-weight: 600; background: #262A33; color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,0.35); }
+  .chart-caption { margin-top: 16px; font-size: 12.5px; line-height: 1.5; color: rgba(255,255,255,0.44); }
 
   .metrics { display: flex; flex-direction: column; gap: 10px; }
   .metric { background: var(--card); border: 1px solid var(--border-soft); border-radius: 12px; padding: 13px 17px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
@@ -71,16 +71,16 @@
   .metric .v { font-family: var(--f-mono); font-size: 14.5px; text-align: right; }
 
   .section { margin-top: 20px; background: var(--card); border: 1px solid var(--border-soft); border-radius: 14px; padding: 26px 28px; }
-  .section h2 { margin: 0 0 6px; font-family: var(--f-mono); font-size: 11px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: #6E6A68; }
+  .section h2 { margin: 0 0 6px; font-family: var(--f-mono); font-size: 11px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--hushed); }
   .intro { font-size: 14px; color: var(--hushed); margin: 10px 0 8px; }
-  .scenario { display: grid; grid-template-columns: 1.4fr 1.2fr 0.8fr; gap: 16px; align-items: center; padding: 14px 0; border-top: 1px solid #E7E3DD; }
+  .scenario { display: grid; grid-template-columns: 1.4fr 1.2fr 0.8fr; gap: 16px; align-items: center; padding: 14px 0; border-top: 1px solid rgba(255,255,255,0.07); }
   .scenario .l { font-size: 14.5px; font-weight: 600; }
   .scenario .d { font-size: 13.5px; color: var(--hushed); }
   .scenario .r { text-align: right; font-family: var(--f-mono); font-size: 15px; }
   .explainer { font-size: 14.5px; line-height: 1.68; color: var(--hushed); max-width: 760px; text-wrap: pretty; margin: 12px 0 0; }
-  .facts { display: flex; gap: 28px; flex-wrap: wrap; margin-top: 22px; padding-top: 22px; border-top: 1px solid #E7E3DD; }
+  .facts { display: flex; gap: 28px; flex-wrap: wrap; margin-top: 22px; padding-top: 22px; border-top: 1px solid rgba(255,255,255,0.07); }
   .fact { display: flex; flex-direction: column; gap: 5px; min-width: 150px; max-width: 220px; }
-  .fact .k { font-size: 11px; color: #A8A29B; text-transform: uppercase; letter-spacing: 0.06em; }
+  .fact .k { font-size: 11px; color: rgba(255,255,255,0.44); text-transform: uppercase; letter-spacing: 0.06em; }
   .fact .v { font-size: 14px; line-height: 1.45; }
 
   @media (max-width: 900px) {
@@ -105,7 +105,7 @@
   <div class="nav-in">
     <a class="brand" href="index.html" aria-label="На главную">
       <svg width="22" height="22" viewBox="0 0 26 26" fill="none" aria-hidden="true">
-        <path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#1A1919"/>
+        <path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/>
       </svg>
       <span class="brand-name">Структурные продукты</span>
     </a>
@@ -196,7 +196,7 @@
   // --- Графики (SVG строками) ---
   const W = 620, H = 300, PAD = 28;
   const MONO = 'font-family="JetBrains Mono, monospace"';
-  const C = { line: "#1A1919", gold: "#B3801F", grid: "#E5E1DB", axis: "#CFC9C2", lab: "#A8A29B", lab2: "#6E6A68", quote: "#1A1919" };
+  const C = { line: "#E7E9F0", gold: "#EE7D1B", grid: "rgba(255,255,255,0.09)", axis: "rgba(255,255,255,0.17)", lab: "rgba(255,255,255,0.46)", lab2: "rgba(255,255,255,0.68)", quote: "#E7E9F0" };
 
   function chartUnderlying() {
     const data = U.history;
@@ -279,7 +279,7 @@
     return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="display:block">' +
       '<line x1="' + PAD + '" y1="' + base + '" x2="' + (W - PAD) + '" y2="' + base + '" stroke="' + C.axis + '" stroke-width="1"/>' +
       '<line x1="' + (x1 + barW / 2) + '" y1="' + (base - h1) + '" x2="' + (x2 + barW) + '" y2="' + (base - h1) + '" stroke="' + C.gold + '" stroke-width="1" stroke-dasharray="4 4"/>' +
-      '<rect x="' + x1 + '" y="' + (base - h1) + '" width="' + barW + '" height="' + h1 + '" rx="8" fill="#DAD5CE"/>' +
+      '<rect x="' + x1 + '" y="' + (base - h1) + '" width="' + barW + '" height="' + h1 + '" rx="8" fill="rgba(255,255,255,0.22)"/>' +
       '<rect x="' + x2 + '" y="' + (base - h2) + '" width="' + barW + '" height="' + h2 + '" rx="8" fill="' + C.line + '"/>' +
       '<text x="' + (x1 + barW / 2) + '" y="' + (base - h1 - 10) + '" text-anchor="middle" fill="' + C.lab2 + '" font-size="13" ' + MONO + '>' + S.fmt2(q) + '%</text>' +
       '<text x="' + (x2 + barW / 2) + '" y="' + (base - h2 - 10) + '" text-anchor="middle" fill="' + C.line + '" font-size="13" ' + MONO + '>100%</text>' +
@@ -329,13 +329,13 @@
     if (inst.uRef) wMetrics.push([inst.underlying + " сегодня", inst.uRef]);
     wMetrics.push(["Мин. номинал", S.fmtInt(nom) + " ₽"]);
     const wScen = [
-      [inst.underlying + " вырос на " + upPct + "%", "Выплата " + S.fmtInt(payout1) + " ₽", (net1 >= 0 ? "+" : "−") + S.fmtInt(Math.abs(net1)) + " ₽", net1 >= 0 ? "#1F7A53" : "#E96516"]
+      [inst.underlying + " вырос на " + upPct + "%", "Выплата " + S.fmtInt(payout1) + " ₽", (net1 >= 0 ? "+" : "−") + S.fmtInt(Math.abs(net1)) + " ₽", net1 >= 0 ? "#55C08A" : "#EE7D1B"]
     ];
     if (isCS) {
       const capNet = capRub - premiumRub;
-      wScen.push([inst.underlying + " вырос на 70% — выше потолка", "Выплата " + S.fmtInt(capRub) + " ₽ — максимум", (capNet >= 0 ? "+" : "−") + S.fmtInt(Math.abs(capNet)) + " ₽", capNet >= 0 ? "#1F7A53" : "#E96516"]);
+      wScen.push([inst.underlying + " вырос на 70% — выше потолка", "Выплата " + S.fmtInt(capRub) + " ₽ — максимум", (capNet >= 0 ? "+" : "−") + S.fmtInt(Math.abs(capNet)) + " ₽", capNet >= 0 ? "#55C08A" : "#EE7D1B"]);
     }
-    wScen.push([inst.underlying + " не вырос", "Выплаты нет", "−" + S.fmtInt(premiumRub) + " ₽", "#E96516"]);
+    wScen.push([inst.underlying + " не вырос", "Выплаты нет", "−" + S.fmtInt(premiumRub) + " ₽", "#EE7D1B"]);
     const wFacts = [
       ["Страйк", "100% — уровень БА в день покупки"]
     ];
@@ -380,8 +380,8 @@
       ],
       exampleIntro: "Номинал " + S.fmtInt(nom) + " ₽ · покупка по " + S.fmt2(inst.quote) + "% = " + S.fmtInt(buyRub) + " ₽",
       scenarios: [
-        ["Дождались погашения " + inst.expiry, "Выплата " + S.fmtInt(nom) + " ₽ — 100% номинала", "+" + S.fmtInt(nom - buyRub) + " ₽", "#1F7A53"],
-        ["Продали раньше срока", "По текущей рыночной цене", "по рынку", "#6E6A68"]
+        ["Дождались погашения " + inst.expiry, "Выплата " + S.fmtInt(nom) + " ₽ — 100% номинала", "+" + S.fmtInt(nom - buyRub) + " ₽", "#55C08A"],
+        ["Продали раньше срока", "По текущей рыночной цене", "по рынку", "rgba(255,255,255,0.60)"]
       ],
       facts: [
         ["Котировка", "В процентах от номинала"],
@@ -413,8 +413,8 @@
       ],
       exampleIntro: "Номинал " + S.fmtInt(nom) + " ₽ · вход по " + S.fmt2(inst.quote) + "% = " + S.fmtInt(entryRub) + " ₽",
       scenarios: [
-        [inst.underlying + " вырос на " + upPct + "%", "Выплата " + S.fmtInt(payoutUp) + " ₽ — 100% + участие", "+" + S.fmtInt(payoutUp - entryRub) + " ₽", "#1F7A53"],
-        [inst.underlying + " упал на 15%", "Сработала защита: выплата " + S.fmtInt(nom) + " ₽", "−" + S.fmtInt(entryRub - nom) + " ₽", "#E96516"]
+        [inst.underlying + " вырос на " + upPct + "%", "Выплата " + S.fmtInt(payoutUp) + " ₽ — 100% + участие", "+" + S.fmtInt(payoutUp - entryRub) + " ₽", "#55C08A"],
+        [inst.underlying + " упал на 15%", "Сработала защита: выплата " + S.fmtInt(nom) + " ₽", "−" + S.fmtInt(entryRub - nom) + " ₽", "#EE7D1B"]
       ],
       facts: [
         ["Защита", "100% номинала при любом сценарии"],
@@ -438,7 +438,7 @@
   document.getElementById("quote").textContent = S.fmt2(inst.quote) + "%";
   const chgEl = document.getElementById("quote-chg");
   chgEl.textContent = (inst.chg > 0 ? "+" : "−") + S.fmt1(Math.abs(inst.chg)) + " п.п. сегодня";
-  chgEl.style.color = inst.chg > 0 ? "#1F7A53" : "#E96516";
+  chgEl.style.color = inst.chg > 0 ? "#55C08A" : "#EE7D1B";
 
   document.getElementById("metrics").innerHTML = content.metrics.map(m =>
     '<div class="metric"><span class="k">' + m[0] + '</span><span class="v">' + m[1] + '</span></div>').join("");
@@ -446,7 +446,7 @@
   document.getElementById("example-intro").textContent = content.exampleIntro;
   document.getElementById("scenarios").innerHTML = content.scenarios.map(s =>
     '<div class="scenario"><div class="l">' + s[0] + '</div><div class="d">' + s[1] + '</div><div class="r" style="color:' + s[3] + '">' + s[2] + '</div></div>').join("") +
-    (S.isFxSensitive(inst.underlying) ? '<div style="margin-top:12px;padding:9px 13px;border-left:3px solid #E96516;background:#FBEFE3;border-radius:0 7px 7px 0;font-size:12.5px;line-height:1.5;color:#8A5A22">' + S.LEGAL.fx + '</div>' : '');
+    (S.isFxSensitive(inst.underlying) ? '<div style="margin-top:12px;padding:9px 13px;border-left:3px solid #EE7D1B;background:rgba(238,125,27,0.12);border-radius:0 7px 7px 0;font-size:12.5px;line-height:1.5;color:#E7B98D">' + S.LEGAL.fx + '</div>' : '');
 
   document.getElementById("explainer").textContent = content.explainer;
   document.getElementById("facts").innerHTML = content.facts.map(f =>

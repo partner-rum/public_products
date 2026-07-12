@@ -3,10 +3,10 @@
 // Каждая идея: hypothesis → situation → factors → (conclusion) → how → payout + params + payoff.
 window.DIGEST_ARCHIVE = {
   sections: [
-    { key: "warrant",    label: "Варранты",       note: "Рычаг на рост актива, риск ограничен премией", color: "#B3801F" },
-    { key: "coupon",     label: "Купоны",          note: "Фиксированный доход при заданном условии",       color: "#33608C" },
-    { key: "protection", label: "Защита капитала", note: "Участие в росте с возвратом номинала",           color: "#2E6E56" },
-    { key: "portfolio",  label: "Портфель",        note: "Диверсифицированные стратегии",                  color: "#55606B" }
+    { key: "warrant",    label: "Варранты",       note: "Рычаг на рост актива, риск ограничен премией", color: "#E0A24A" },
+    { key: "coupon",     label: "Купоны",          note: "Фиксированный доход при заданном условии",       color: "#4F86E6" },
+    { key: "protection", label: "Защита капитала", note: "Участие в росте с возвратом номинала",           color: "#5E9B82" },
+    { key: "portfolio",  label: "Портфель",        note: "Диверсифицированные стратегии",                  color: "#8A93A6" }
   ],
   issues: [
     {
@@ -232,7 +232,7 @@ window.DF = (function () {
     "Базовый актив номинирован в иностранной валюте — выплата и пример расчёта приведены без учёта изменения валютного курса.";
   const colorMap = {};
   A.sections.forEach(s => colorMap[s.key] = s.color);
-  const colorOf = fam => colorMap[fam] || "#6E6A68";
+  const colorOf = fam => colorMap[fam] || "rgba(255,255,255,0.60)";
   const sectionOf = fam => A.sections.find(s => s.key === fam) || { label: fam, color: colorOf(fam) };
 
   function payoffSvg(p, color) {
@@ -241,33 +241,33 @@ window.DF = (function () {
     let el = "";
     if (p.type === "callcap") {
       const line = "M" + x(0) + " " + y(0.85) + " L" + x(0.38) + " " + y(0.85) + " L" + x(0.74) + " " + y(0.15) + " L" + x(1) + " " + y(0.15);
-      el = '<line x1="' + PAD + '" y1="' + y(0.15) + '" x2="' + (W - PAD) + '" y2="' + y(0.15) + '" stroke="#DDD8D2" stroke-width="1" stroke-dasharray="2 4"/>' +
+      el = '<line x1="' + PAD + '" y1="' + y(0.15) + '" x2="' + (W - PAD) + '" y2="' + y(0.15) + '" stroke="rgba(255,255,255,0.17)" stroke-width="1" stroke-dasharray="2 4"/>' +
         '<path d="' + line + '" fill="none" stroke="' + color + '" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>' +
         '<rect x="' + (x(0.74) - 3.5) + '" y="' + (y(0.15) - 3.5) + '" width="7" height="7" transform="rotate(45 ' + x(0.74) + ' ' + y(0.15) + ')" fill="' + color + '"/>' +
-        '<text x="' + (W - PAD) + '" y="' + (y(0.15) - 8) + '" text-anchor="end" fill="#6E6A68" font-size="10.5" ' + MONO + '>макс. +' + p.capPct + '%</text>' +
-        (p.premiumPct ? '<text x="' + x(0.19) + '" y="' + (y(0.85) + 14) + '" text-anchor="middle" fill="#A8A29B" font-size="10.5" ' + MONO + '>премия ' + String(p.premiumPct).replace(".", ",") + '%</text>' : "");
+        '<text x="' + (W - PAD) + '" y="' + (y(0.15) - 8) + '" text-anchor="end" fill="rgba(255,255,255,0.60)" font-size="10.5" ' + MONO + '>макс. +' + p.capPct + '%</text>' +
+        (p.premiumPct ? '<text x="' + x(0.19) + '" y="' + (y(0.85) + 14) + '" text-anchor="middle" fill="rgba(255,255,255,0.46)" font-size="10.5" ' + MONO + '>премия ' + String(p.premiumPct).replace(".", ",") + '%</text>' : "");
     } else if (p.type === "call") {
       const line = "M" + x(0) + " " + y(0.85) + " L" + x(0.38) + " " + y(0.85) + " L" + x(0.97) + " " + y(0.14);
       el = '<path d="' + line + '" fill="none" stroke="' + color + '" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>' +
-        '<text x="' + (W - PAD) + '" y="' + (y(0.14) + 2) + '" text-anchor="end" fill="#6E6A68" font-size="10.5" ' + MONO + '>рост без потолка</text>' +
-        (p.premiumPct ? '<text x="' + x(0.19) + '" y="' + (y(0.85) + 14) + '" text-anchor="middle" fill="#A8A29B" font-size="10.5" ' + MONO + '>премия ' + String(p.premiumPct).replace(".", ",") + '%</text>' : "");
+        '<text x="' + (W - PAD) + '" y="' + (y(0.14) + 2) + '" text-anchor="end" fill="rgba(255,255,255,0.60)" font-size="10.5" ' + MONO + '>рост без потолка</text>' +
+        (p.premiumPct ? '<text x="' + x(0.19) + '" y="' + (y(0.85) + 14) + '" text-anchor="middle" fill="rgba(255,255,255,0.46)" font-size="10.5" ' + MONO + '>премия ' + String(p.premiumPct).replace(".", ",") + '%</text>' : "");
     } else if (p.type === "digital") {
       const base = y(0.62), up = y(0.18), bx = x(0.56);
-      el = '<line x1="' + PAD + '" y1="' + base + '" x2="' + (W - PAD) + '" y2="' + base + '" stroke="#DDD8D2" stroke-width="1" stroke-dasharray="2 4"/>' +
-        '<text x="' + PAD + '" y="' + (base + 14) + '" fill="#A8A29B" font-size="10.5" ' + MONO + '>номинал 100%</text>' +
+      el = '<line x1="' + PAD + '" y1="' + base + '" x2="' + (W - PAD) + '" y2="' + base + '" stroke="rgba(255,255,255,0.17)" stroke-width="1" stroke-dasharray="2 4"/>' +
+        '<text x="' + PAD + '" y="' + (base + 14) + '" fill="rgba(255,255,255,0.46)" font-size="10.5" ' + MONO + '>номинал 100%</text>' +
         '<path d="M' + PAD + ' ' + base + ' L' + bx + ' ' + base + ' L' + bx + ' ' + up + ' L' + (W - PAD) + ' ' + up + '" fill="none" stroke="' + color + '" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>' +
         '<rect x="' + (bx - 3.5) + '" y="' + (up - 3.5) + '" width="7" height="7" transform="rotate(45 ' + bx + ' ' + up + ')" fill="' + color + '"/>' +
-        '<text x="' + (W - PAD) + '" y="' + (up - 8) + '" text-anchor="end" fill="#6E6A68" font-size="10.5" ' + MONO + '>' + (p.barrierPct ? "барьер +" + p.barrierPct + "% → " : "") + "купон " + p.couponPct + '%</text>';
+        '<text x="' + (W - PAD) + '" y="' + (up - 8) + '" text-anchor="end" fill="rgba(255,255,255,0.60)" font-size="10.5" ' + MONO + '>' + (p.barrierPct ? "барьер +" + p.barrierPct + "% → " : "") + "купон " + p.couponPct + '%</text>';
     } else if (p.type === "protected") {
       const floor = y(0.6), up = y(0.18), bx = x(0.5);
-      el = '<line x1="' + PAD + '" y1="' + floor + '" x2="' + (W - PAD) + '" y2="' + floor + '" stroke="#DDD8D2" stroke-width="1" stroke-dasharray="2 4"/>' +
-        '<text x="' + PAD + '" y="' + (floor + 14) + '" fill="#A8A29B" font-size="10.5" ' + MONO + '>защита 100%</text>' +
+      el = '<line x1="' + PAD + '" y1="' + floor + '" x2="' + (W - PAD) + '" y2="' + floor + '" stroke="rgba(255,255,255,0.17)" stroke-width="1" stroke-dasharray="2 4"/>' +
+        '<text x="' + PAD + '" y="' + (floor + 14) + '" fill="rgba(255,255,255,0.46)" font-size="10.5" ' + MONO + '>защита 100%</text>' +
         '<path d="M' + PAD + ' ' + floor + ' L' + bx + ' ' + floor + ' L' + x(0.86) + ' ' + up + ' L' + (W - PAD) + ' ' + up + '" fill="none" stroke="' + color + '" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>' +
-        (p.capPct ? '<text x="' + (W - PAD) + '" y="' + (up - 8) + '" text-anchor="end" fill="#6E6A68" font-size="10.5" ' + MONO + '>участие до ' + p.capPct + '%</text>' : "");
+        (p.capPct ? '<text x="' + (W - PAD) + '" y="' + (up - 8) + '" text-anchor="end" fill="rgba(255,255,255,0.60)" font-size="10.5" ' + MONO + '>участие до ' + p.capPct + '%</text>' : "");
     } else {
       const line = "M" + x(0) + " " + y(0.8) + " C" + x(0.35) + " " + y(0.72) + " " + x(0.6) + " " + y(0.42) + " " + x(1) + " " + y(0.2);
       el = '<path d="' + line + '" fill="none" stroke="' + color + '" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>' +
-        '<text x="' + (W - PAD) + '" y="' + (y(0.2) - 8) + '" text-anchor="end" fill="#6E6A68" font-size="10.5" ' + MONO + '>стоимость портфеля</text>';
+        '<text x="' + (W - PAD) + '" y="' + (y(0.2) - 8) + '" text-anchor="end" fill="rgba(255,255,255,0.60)" font-size="10.5" ' + MONO + '>стоимость портфеля</text>';
     }
     return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="display:block">' + el + '</svg>';
   }
@@ -289,22 +289,22 @@ window.DF = (function () {
   }
 
   const CSS = '.df-detail{}' +
-    '.df-hypo{margin:0 0 22px;padding:16px 20px;background:#EDEAE4;border-radius:10px;font-size:16.5px;line-height:1.55;color:var(--ink);text-wrap:pretty}' +
-    '.df-hypo .k{display:block;font-family:var(--f-mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#6E6A68;margin-bottom:7px}' +
+    '.df-hypo{margin:0 0 22px;padding:16px 20px;background:rgba(255,255,255,0.05);border-radius:10px;font-size:16.5px;line-height:1.55;color:var(--ink);text-wrap:pretty}' +
+    '.df-hypo .k{display:block;font-family:var(--f-mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,0.60);margin-bottom:7px}' +
     '.df-grid{display:grid;grid-template-columns:1.5fr 1fr;gap:30px;align-items:start}' +
     '.df-block{margin-bottom:20px}' +
-    '.df-block .k{font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#6E6A68;margin-bottom:9px}' +
+    '.df-block .k{font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,0.60);margin-bottom:9px}' +
     '.df-block p{margin:0;font-size:14.5px;line-height:1.65;color:var(--hushed);text-wrap:pretty}' +
     '.df-block ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:7px}' +
     '.df-block li{font-size:14px;line-height:1.55;color:var(--hushed)}' +
     '.df-block li::marker{color:var(--fc)}' +
     '.df-side{display:flex;flex-direction:column;gap:10px}' +
-    '.df-chart{background:var(--canvas);border-radius:10px;padding:14px 16px 10px}' +
+    '.df-chart{background:rgba(255,255,255,0.04);border-radius:10px;padding:14px 16px 10px}' +
     '.df-chart .cap{font-size:11.5px;color:var(--faint);margin-top:8px;line-height:1.45}' +
-    '.df-param{background:var(--canvas);border-radius:10px;padding:11px 15px;display:flex;justify-content:space-between;align-items:center;gap:12px}' +
+    '.df-param{background:rgba(255,255,255,0.04);border-radius:10px;padding:11px 15px;display:flex;justify-content:space-between;align-items:center;gap:12px}' +
     '.df-param .k{font-size:13px;color:var(--hushed)}' +
     '.df-param .v{font-family:var(--f-mono);font-size:13.5px;text-align:right}' +
-    '.df-fx{padding:9px 12px;border-left:3px solid var(--down);background:#FBEFE3;border-radius:0 7px 7px 0;font-size:11.5px;line-height:1.45;color:#8A5A22}' +
+    '.df-fx{padding:9px 12px;border-left:3px solid var(--down);background:rgba(238,125,27,0.12);border-radius:0 7px 7px 0;font-size:11.5px;line-height:1.45;color:#E7B98D}' +
     '@media (max-width:820px){.df-grid{grid-template-columns:1fr}}';
   const st = document.createElement("style");
   st.textContent = CSS;
