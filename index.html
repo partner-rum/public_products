@@ -38,14 +38,44 @@
   .btn-solar { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; background: var(--solar); color: var(--ink); border-radius: 6px; padding: 10px 16px; font-size: 13.5px; font-weight: 500; transition: background .3s ease-in-out; }
   .btn-solar:hover { background: var(--solar-l); }
 
-  .scene { position: relative; z-index: 1; max-width: 1140px; margin: 0 auto; padding: 0 44px 30px; min-height: calc(100dvh - 63px); display: flex; flex-direction: column; }
+  .scene { position: relative; z-index: 1; max-width: 1140px; margin: 0 auto; padding: 0 44px 30px; }
 
   .hero { padding: 68px 0 48px; }
+
+  /* ── Витрина-герой: девиз слева + 3D-кристаллы разделов справа ── */
+  .hero-split { position: relative; z-index: 1; display: grid;
+    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr); align-items: center; gap: 18px;
+    min-height: calc(100dvh - 63px - 58px); padding: 20px 0 6px; }
+  .hero-copy { max-width: 520px; }
+  .hero-copy h1 { font-size: clamp(32px, 3.6vw, 50px); }
+  .hero-copy .hint { margin-top: 30px; display: inline-flex; align-items: center; gap: 9px;
+    font-family: var(--f-mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); }
+  .hero-copy .hint .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--solar); animation: hint-pulse 2.6s var(--ease) infinite; }
+  @keyframes hint-pulse { 0% { box-shadow: 0 0 0 0 rgba(228,242,34,.55); } 70% { box-shadow: 0 0 0 10px rgba(228,242,34,0); } 100% { box-shadow: 0 0 0 0 rgba(228,242,34,0); } }
+
+  .hero-stage { position: relative; width: 100%; height: min(70vh, 560px); overflow: visible; }
+  .hero-stage::before { content: ""; position: absolute; z-index: 0; inset: -8% -6% -12% -10%;
+    background: radial-gradient(58% 54% at 54% 42%, rgba(255,255,255,.9), rgba(255,255,255,.3) 54%, rgba(255,255,255,0) 78%); pointer-events: none; }
+  .hero-stage canvas { position: absolute; inset: 0; z-index: 1; display: block; width: 100% !important; height: 100% !important; }
+  .stage-label { position: absolute; top: 0; left: 0; z-index: 2; opacity: 0; pointer-events: none;
+    text-align: center; white-space: nowrap; will-change: transform, opacity; transition: opacity .25s ease; }
+  .stage-label .nm { font-size: 12.5px; font-weight: 600; letter-spacing: -.01em; color: var(--ink);
+    padding: 2px 9px; border-radius: 6px; background: rgba(244,242,240,0.66); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); transition: background .25s ease, color .25s ease; }
+  .stage-label .mt { display: block; font-family: var(--f-mono); font-size: 9px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); margin-top: 3px; opacity: 0; transform: translateY(-2px); transition: opacity .25s ease, transform .25s ease; }
+  .stage-label.hot .nm { background: var(--ink); color: #fff; }
+  .stage-label.hot .mt { opacity: 1; transform: none; }
+
+  .hero-stage[data-fallback="1"] { display: none; }
+  .hero-split[data-fallback="1"] { grid-template-columns: 1fr; min-height: auto; }
+  .hero-split[data-fallback="1"] .hint { display: none; }
+  .rows-eyebrow { font-family: var(--f-mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--hushed); margin: 4px 0 0; }
+  @media (prefers-reduced-motion: reduce) { .hero-copy .hint .dot { animation: none; } }
+  @media (max-width: 860px) { .hero-split { grid-template-columns: 1fr; min-height: auto; padding: 6px 0; } .hero-stage { display: none; } .hero-copy .hint { display: none; } }
   .eyebrow { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--hushed); margin-bottom: 22px; }
   h1 { margin: 0; font-size: clamp(38px, 5.8vw, 66px); font-weight: 400; line-height: 1.05; letter-spacing: -0.02em; max-width: 1000px; text-wrap: balance; }
   .sub { margin: 22px 0 0; font-size: 17px; line-height: 1.5; color: var(--hushed); max-width: 531px; text-wrap: pretty; }
 
-  .rows { border-top: 1px solid var(--border); margin-top: auto; }
+  .rows { border-top: 1px solid var(--border); margin-top: 6px; }
   .row { display: grid; grid-template-columns: minmax(220px, 1.1fr) 2fr auto auto; align-items: center; gap: 24px; padding: 21px 2px; border-bottom: 1px solid var(--border); transition: background .3s ease-in-out, padding .35s var(--ease); }
   .row .t { font-size: clamp(20px, 2.3vw, 27px); font-weight: 400; letter-spacing: -0.015em; }
   .row .d { font-size: 14px; line-height: 1.5; color: var(--hushed); max-width: 480px; }
@@ -132,12 +162,17 @@
 </header>
 
 <div class="scene">
-  <div class="hero">
-    <div class="eyebrow rise">Структурные облигации · для квалифицированных инвесторов</div>
-    <h1 class="rise" style="animation-delay:.08s">Доходность любит расчёт. Формула выплаты известна до сделки.</h1>
-    <p class="sub rise" style="animation-delay:.16s">Свежие идеи, живые котировки и размещённые выпуски — всё в одном месте, с параметрами и примерами расчёта в рублях.</p>
-  </div>
+  <section class="hero-split">
+    <div class="hero-copy">
+      <div class="eyebrow rise">Структурные облигации · для квалифицированных инвесторов</div>
+      <h1 class="rise" style="animation-delay:.08s">Доходность любит расчёт. Формула выплаты известна до сделки.</h1>
+      <p class="sub rise" style="animation-delay:.16s">Свежие идеи, живые котировки и размещённые выпуски — всё в одном месте, с параметрами и примерами расчёта в рублях.</p>
+      <div class="hint rise" style="animation-delay:.24s" aria-hidden="true"><span class="dot"></span>Наведите на кристалл — раздел откликнется</div>
+    </div>
+    <div class="hero-stage" id="stage" aria-hidden="true"></div>
+  </section>
 
+  <div class="rows-eyebrow rise" style="animation-delay:.5s">Разделы витрины</div>
   <nav class="rows" aria-label="Разделы">
     <a class="row rise" style="animation-delay:.26s" href="digest.html">
       <span class="t">Дайджест</span>
@@ -383,6 +418,163 @@
       requestAnimationFrame(frame);
     }
     requestAnimationFrame(frame);
+  })();
+</script>
+
+<script type="importmap">
+{ "imports": { "three": "./libs/three.module.js" } }
+</script>
+<script type="module">
+  // ── Витрина-герой: 3D-кристаллы разделов (стекло + предмет внутри), парение + наклон за курсором ──
+  import * as THREE from 'three';
+
+  (function () {
+    const mount = document.getElementById('stage');
+    const split = document.querySelector('.hero-split');
+    if (!mount) return;
+
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const small = window.matchMedia('(max-width: 860px)').matches;
+
+    let glOK = false;
+    try { const t = document.createElement('canvas'); glOK = !!(window.WebGLRenderingContext && (t.getContext('webgl2') || t.getContext('webgl'))); } catch (e) {}
+    if (!glOK) { mount.dataset.fallback = '1'; if (split) split.dataset.fallback = '1'; return; }
+    if (small) return; // на телефоне работает список разделов ниже
+
+    const D = window.DIGEST, S = window.SITE_DATA, P = window.PLACEMENTS_DATA;
+    const CRYSTALS = [
+      { href: 'digest.html',             name: 'Дайджест',            metric: (D && D.date) ? ('идеи от ' + D.date) : 'идеи недели', inner: 'pages', color: 0xE4F222, pos: [-1.72,  1.50,  0.00], scale: 0.95 },
+      { href: 'offerings.html',          name: 'На размещении',       metric: 'первичный рынок',                                    inner: 'coin',  color: 0xEE7D1B, pos: [ 1.60,  1.70, -0.70], scale: 1.05 },
+      { href: 'board.html?type=warrant', name: 'Текущие продукты',    metric: (S && S.instruments) ? (S.instruments.length + ' инструментов') : 'котировки', inner: 'bars', color: 0x33608C, pos: [ 2.05, -0.55,  0.30], scale: 1.00 },
+      { href: 'placements.html',         name: 'Размещённые выпуски', metric: (P && P.issues) ? (P.issues.length + ' выпуска') : 'выпуски', inner: 'ingot', color: 0xCB922E, pos: [-1.98, -1.32, -0.40], scale: 0.90 },
+      { href: 'about.html',              name: 'Библиотека',          metric: 'как это работает',                                   inner: 'book',  color: 0x3E7CC4, pos: [ 0.12, -0.10,  0.95], scale: 1.16 },
+    ];
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
+    camera.position.set(0, 0, 8.6);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.05;
+    mount.appendChild(renderer.domElement);
+
+    // мягкое студийное окружение для стекла
+    function envTexture() {
+      const cv = document.createElement('canvas'); cv.width = 512; cv.height = 256;
+      const g = cv.getContext('2d');
+      const grad = g.createLinearGradient(0, 0, 0, 256);
+      grad.addColorStop(0, '#ffffff'); grad.addColorStop(0.5, '#ecebe7'); grad.addColorStop(1, '#c9c6c1');
+      g.fillStyle = grad; g.fillRect(0, 0, 512, 256);
+      const blob = (x, y, r, col) => { const rg = g.createRadialGradient(x, y, 0, x, y, r); rg.addColorStop(0, col); rg.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = rg; g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill(); };
+      blob(120, 54, 120, 'rgba(255,255,255,0.95)');
+      blob(392, 70, 150, 'rgba(255,248,236,0.9)');
+      blob(256, 220, 180, 'rgba(150,180,220,0.45)');
+      const tex = new THREE.CanvasTexture(cv);
+      tex.mapping = THREE.EquirectangularReflectionMapping; tex.colorSpace = THREE.SRGBColorSpace;
+      const pm = new THREE.PMREMGenerator(renderer);
+      const rt = pm.fromEquirectangular(tex);
+      tex.dispose(); pm.dispose();
+      return rt.texture;
+    }
+    const env = envTexture();
+    scene.environment = env;
+    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+    const key = new THREE.DirectionalLight(0xffffff, 1.7); key.position.set(3, 5, 6); scene.add(key);
+    const rim = new THREE.DirectionalLight(0xbcd0ff, 0.7); rim.position.set(-5, -2, 3); scene.add(rim);
+
+    const world = new THREE.Group(); scene.add(world);
+    const gemGeo = new THREE.IcosahedronGeometry(0.82, 0);
+
+    const glassMat = () => new THREE.MeshPhysicalMaterial({
+      transmission: 1.0, thickness: 1.1, roughness: 0.05, ior: 1.52, metalness: 0,
+      clearcoat: 1, clearcoatRoughness: 0.06, envMap: env, envMapIntensity: 1.25,
+      transparent: true, color: 0xffffff, attenuationColor: new THREE.Color(0xdde6ef), attenuationDistance: 3.2, flatShading: true,
+    });
+    const innerMat = (color, metal) => new THREE.MeshStandardMaterial({
+      color, emissive: color, emissiveIntensity: 0.26,
+      roughness: metal ? 0.28 : 0.42, metalness: metal ? 0.7 : 0.25, envMap: env, envMapIntensity: 0.85,
+    });
+
+    function buildInner(kind, color) {
+      const gr = new THREE.Group();
+      if (kind === 'pages') { const m = innerMat(color, false); for (let i = 0; i < 3; i++) { const b = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.045, 0.46), m); b.position.y = (i - 1) * 0.11; b.rotation.y = (i - 1) * 0.16; gr.add(b); } }
+      else if (kind === 'coin') { const c = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.36, 0.1, 48), innerMat(color, true)); c.rotation.set(1.25, 0, 0.25); gr.add(c); }
+      else if (kind === 'bars') { const hs = [0.42, 0.66, 0.52], cols = [innerMat(0x1F7A53, false), innerMat(0xEE7D1B, false), innerMat(0x1F7A53, false)]; for (let i = 0; i < 3; i++) { const h = hs[i]; const b = new THREE.Mesh(new THREE.BoxGeometry(0.15, h, 0.15), cols[i]); b.position.set((i - 1) * 0.24, h / 2 - 0.34, 0); gr.add(b); } }
+      else if (kind === 'ingot') { const b = new THREE.Mesh(new THREE.BoxGeometry(0.66, 0.24, 0.34), innerMat(color, true)); b.rotation.set(0.16, 0.5, 0.06); gr.add(b); }
+      else if (kind === 'book') { const cover = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.7, 0.13), innerMat(color, false)); const pages = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.62, 0.15), innerMat(0xF4F2F0, false)); cover.rotation.y = 0.4; pages.rotation.y = 0.4; gr.add(cover); gr.add(pages); }
+      return gr;
+    }
+
+    const crystals = [], labels = [];
+    CRYSTALS.forEach((data, i) => {
+      const cg = new THREE.Group(); cg.position.set(data.pos[0], data.pos[1], data.pos[2]);
+      const glass = new THREE.Mesh(gemGeo, glassMat()); glass.scale.setScalar(data.scale); glass.userData.index = i;
+      const inner = buildInner(data.inner, data.color); inner.scale.setScalar(data.scale);
+      const anchor = new THREE.Object3D(); anchor.position.set(0, -0.98 * data.scale, 0);
+      cg.add(glass); cg.add(inner); cg.add(anchor); cg.rotation.y = Math.random() * Math.PI * 2;
+      world.add(cg);
+      crystals.push({ data, cg, glass, inner, anchor, baseY: data.pos[1], scale: data.scale, cur: data.scale, target: data.scale, emisTarget: 0.26, spd: 0.5 + i * 0.12, ph: i * 1.3 });
+      const el = document.createElement('div'); el.className = 'stage-label';
+      el.innerHTML = '<span class="nm">' + data.name + '</span><span class="mt">' + data.metric + '</span>';
+      mount.appendChild(el); labels.push(el);
+    });
+
+    function resize() { const w = mount.clientWidth || 1, h = mount.clientHeight || 1; camera.aspect = w / h; camera.updateProjectionMatrix(); renderer.setSize(w, h, false); }
+
+    const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), tmp = new THREE.Vector3();
+    const parTarget = { x: 0, y: 0 }, par = { x: 0, y: 0 };
+    let hovered = -1;
+
+    function setNDC(e) { const r = mount.getBoundingClientRect(); const x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height; ndc.set(x * 2 - 1, -(y * 2 - 1)); parTarget.x = x * 2 - 1; parTarget.y = y * 2 - 1; }
+    function pick() { ray.setFromCamera(ndc, camera); const h = ray.intersectObjects(crystals.map(c => c.glass), false); return h.length ? h[0].object.userData.index : -1; }
+    function applyHover() { crystals.forEach((c, i) => { const on = i === hovered; c.target = on ? c.scale * 1.28 : c.scale; c.emisTarget = on ? 0.62 : 0.26; labels[i].classList.toggle('hot', on); }); mount.style.cursor = hovered >= 0 ? 'pointer' : 'default'; }
+
+    mount.addEventListener('pointermove', (e) => { setNDC(e); const h = pick(); if (h !== hovered) { hovered = h; applyHover(); if (reduced) renderOnce(); } });
+    mount.addEventListener('pointerleave', () => { parTarget.x = 0; parTarget.y = 0; if (hovered !== -1) { hovered = -1; applyHover(); if (reduced) renderOnce(); } });
+    mount.addEventListener('click', () => { const i = pick(); if (i >= 0) window.location.href = crystals[i].data.href; });
+
+    function projectLabels() {
+      const w = mount.clientWidth, h = mount.clientHeight;
+      crystals.forEach((c, i) => {
+        c.anchor.getWorldPosition(tmp); tmp.project(camera);
+        const sx = (tmp.x * 0.5 + 0.5) * w, sy = (-tmp.y * 0.5 + 0.5) * h;
+        const el = labels[i];
+        el.style.transform = 'translate(-50%,6px) translate(' + sx.toFixed(1) + 'px,' + sy.toFixed(1) + 'px)';
+        el.style.opacity = tmp.z < 1 ? '1' : '0';
+      });
+    }
+
+    const clock = new THREE.Clock();
+    function step() {
+      const t = clock.getElapsedTime();
+      if (!reduced) {
+        par.x += (parTarget.x - par.x) * 0.06; par.y += (parTarget.y - par.y) * 0.06;
+        world.rotation.y = par.x * 0.4; world.rotation.x = -par.y * 0.26;
+        crystals.forEach(c => { c.cg.position.y = c.baseY + Math.sin(t * c.spd + c.ph) * 0.11; c.cg.rotation.y += 0.0016; c.inner.rotation.y -= 0.004; });
+      }
+      crystals.forEach(c => {
+        const k = reduced ? 1 : 0.14;
+        c.cur += (c.target - c.cur) * k; c.glass.scale.setScalar(c.cur); c.inner.scale.setScalar(c.cur);
+        c.inner.traverse(o => { if (o.material && o.material.emissiveIntensity !== undefined) o.material.emissiveIntensity += (c.emisTarget - o.material.emissiveIntensity) * k; });
+      });
+      projectLabels();
+      renderer.render(scene, camera);
+    }
+
+    let raf = 0, running = false;
+    function loop() { if (!running) return; step(); raf = requestAnimationFrame(loop); }
+    function start() { if (running || reduced) return; running = true; raf = requestAnimationFrame(loop); }
+    function stop() { running = false; if (raf) cancelAnimationFrame(raf); raf = 0; }
+    function renderOnce() { step(); }
+
+    resize();
+    window.addEventListener('resize', () => { resize(); renderOnce(); });
+    if ('IntersectionObserver' in window) new IntersectionObserver((es) => { es.forEach(en => { if (en.isIntersecting) { reduced ? renderOnce() : start(); } else stop(); }); }, { threshold: 0.05 }).observe(mount);
+    else if (!reduced) start();
+    document.addEventListener('visibilitychange', () => { if (document.hidden) stop(); else if (!reduced) start(); });
+    reduced ? renderOnce() : start();
   })();
 </script>
 </body>
