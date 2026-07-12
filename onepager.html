@@ -127,18 +127,33 @@
 
 <script src="data/instruments.js?v=fx4"></script>
 <script src="data/lib.js?v=fx4"></script>
+<script src="data/offerings.js?v=cln1"></script>
 <script>
   const S = window.SITE;
   const qs = new URLSearchParams(location.search);
-  const inst = S.findInstrument(qs.get("id"));
-  const U = S.underlyingInfo(inst.underlying);
-  const nom = inst.minNom, q = inst.quote;
 
-  const isForeign = S.isFxSensitive(inst.underlying);
+  // Режим размещения: ?offering=<id> строит one-pager из data/offerings.js (напр. структурная CLN).
+  const OFF = window.OFFERINGS;
+  const offId = qs.get("offering");
+  const offering = (offId && OFF && OFF.items) ? OFF.items.find(o => o.id === offId) : null;
+
+  let inst, nom, q, name, backHref, backText, isForeign;
+  if (offering) {
+    q = offering.price; nom = 1000000; name = offering.name;
+    inst = { type: "offering", underlying: offering.reference, expiry: offering.maturity };
+    isForeign = false;
+    backHref = "offerings.html"; backText = "← К размещению";
+  } else {
+    inst = S.findInstrument(qs.get("id"));
+    nom = inst.minNom; q = inst.quote; name = S.displayName(inst);
+    isForeign = S.isFxSensitive(inst.underlying);
+    backHref = "board.html#" + encodeURIComponent(inst.id); backText = "← К инструменту";
+  }
+  const U = S.underlyingInfo(inst.underlying);
   const fxShort = "Расчёт в валюте базового актива — изменение курса рубля к ней не учтено.";
 
-  document.title = "One-pager — " + S.displayName(inst);
-  document.getElementById("back-link").href = "board.html#" + encodeURIComponent(inst.id);
+  document.title = "One-pager — " + name;
+  { const bl = document.getElementById("back-link"); bl.href = backHref; bl.textContent = backText; }
 
   const today = new Date();
   const dateS = ("0" + today.getDate()).slice(-2) + "." + ("0" + (today.getMonth() + 1)).slice(-2) + "." + today.getFullYear();
@@ -238,7 +253,30 @@
 
   // ── Контент ──
   let c = {};
-  if (inst.type === "warrant") {
+  if (offering) {
+    const buyRub = nom * q / 100;
+    c = {
+      badge: offering.kind,
+      subtitle: offering.teaser,
+      quoteK: "цена размещения · % от номинала",
+      chart: chDiscount,
+      chartCap: "Покупка по " + S.fmt2(q) + "% номинала, погашение по 100% — при отсутствии кредитного события по " + offering.reference + ". Доход — дисконт, зафиксированный в день сделки.",
+      params: [
+        ["Дисконт к погашению", "+" + S.fmt2(100 - q) + " п.п.", true],
+        ["Погашение", "100% номинала", false],
+        ["Привязка", offering.reference, false],
+        ["Срок", offering.tenor, false]
+      ],
+      exIntro: "Номинал " + S.fmtInt(nom) + " ₽ · покупка по " + S.fmt2(q) + "% = " + S.fmtInt(buyRub) + " ₽",
+      scen: [
+        ["Нет кредитного события", "погашение 100% номинала", "+" + S.fmtInt(nom - buyRub) + " ₽", "var(--up)"],
+        ["Кредитное событие · " + offering.reference, "выплата ниже номинала", "вплоть до 0 ₽", "var(--down)"]
+      ],
+      explainer: "Дисконтная структурная облигация (CLN) с привязкой к кредитному качеству " + offering.reference + ". Покупается по " + S.fmt2(q) + "% номинала; при отсутствии кредитного события по контрольному лицу погашается по 100% номинала. Доход — дисконт, зафиксированный в день сделки; купона нет.",
+      underLabel: "Главный риск · кредитное событие",
+      underDesc: "Кредитный риск на контрольное лицо — " + offering.reference + ". При кредитном событии (банкротство, неплатёж, реструктуризация обязательства) выплата при погашении может быть меньше номинала — вплоть до нуля."
+    };
+  } else if (inst.type === "warrant") {
     const isCS = inst.structure === "cs";
     const K = inst.strike, K2 = inst.strike2;
     const capPct = isCS ? (K2 - K) / K * 100 : 0;
@@ -337,13 +375,11 @@
     };
   }
 
-  const name = S.displayName(inst);
-
   // ── Строительные блоки слайда 2 ──
   const howHTML =
     '<div class="callout"><div class="lbl">Как устроен продукт</div><div class="expl">' + c.explainer + '</div>' +
-      '<div class="under"><div class="lbl">О базовом активе · ' + inst.underlying + '</div>' +
-        '<div class="expl">' + underDesc() + '</div></div></div>';
+      '<div class="under"><div class="lbl">' + (c.underLabel || ('О базовом активе · ' + inst.underlying)) + '</div>' +
+        '<div class="expl">' + (c.underDesc || underDesc()) + '</div></div></div>';
   const chartHTML = '<div class="chart-box"><div class="ct">Диаграмма выплат</div>' + c.chart() + '<div class="chart-cap">' + c.chartCap + '</div></div>';
   const paramsHTML = cols => '<div class="params c' + cols + '">' + c.params.map(p =>
     '<div class="param"><div class="v' + (p[2] ? " or" : "") + '">' + p[1] + '</div><div class="k">' + p[0] + '</div></div>').join("") + '</div>';
@@ -372,7 +408,7 @@
   html += '<section class="slide">' +
     '<div class="c-head"><div><div class="c-title">' + name + '</div><span class="c-badge">' + c.badge + '</span>' +
       '<div class="c-sub">' + c.subtitle + '</div></div>' +
-      '<div class="c-quote"><div class="v">' + S.fmt2(q) + '%</div><div class="k">котировка · % от номинала</div></div></div>' +
+      '<div class="c-quote"><div class="v">' + S.fmt2(q) + '%</div><div class="k">' + (c.quoteK || "котировка · % от номинала") + '</div></div></div>' +
     '<div class="c-body">' + bodyHTML + '</div>' +
     '<div class="c-foot">Пример иллюстративный, без учёта комиссий и налогов.</div>' +
     '</section>';
