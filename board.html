@@ -191,6 +191,7 @@
 
 <script src="data/instruments.js?v=fx4"></script>
 <script src="data/lib.js?v=fx4"></script>
+<script src="share.js?v=1"></script>
 <script>
   const S = window.SITE;
   const TYPE_LABEL = { discount: "Дисконтные облигации", protection: "Защита капитала", warrant: "Варранты" };
@@ -436,7 +437,7 @@
         '<div class="facts">' + c.facts.map(f => '<div class="fact"><div class="k">' + f[0] + '</div><div class="v">' + f[1] + '</div></div>').join("") + '</div></div>' +
       '<div class="pp-actions"><a class="btn-pdf" href="onepager.html?id=' + encodeURIComponent(inst.id) + '&print=1">' +
         '<svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M7 1 V9 M7 9 L4 6 M7 9 L10 6" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 12 H12" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round"/></svg>' +
-        'Скачать one-pager (PDF)</a></div>';
+        'Скачать one-pager (PDF)</a><span class="sh-host" id="sh-host"></span></div>';
   }
 
   function setMode(m, inst, c, U) {
@@ -454,6 +455,11 @@
     const inst = S.INSTRUMENTS.find(r => r.id === id);
     if (!inst) return;
     document.getElementById("panel").innerHTML = passportHTML(inst);
+    const shHost = document.getElementById("sh-host");
+    if (shHost && window.Share) {
+      const opUrl = new URL("onepager.html?id=" + encodeURIComponent(inst.id), location.href).href;
+      Share.attach(shHost, { url: opUrl, pdf: opUrl + "&print=1", title: S.displayName(inst) });
+    }
     const c = buildContent(inst), U = S.underlyingInfo(inst.underlying);
     const tp = document.getElementById("tab-payoff"), tu = document.getElementById("tab-under");
     if (tp) tp.addEventListener("click", () => setMode("payoff", inst, c, U));

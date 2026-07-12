@@ -121,6 +121,7 @@
   <a id="back-link" href="board.html">← К инструменту</a>
   <span class="sp"></span>
   <span style="font-size:12px;color:#8B90A8">Если PDF без цвета — включите «Фоновая графика» в диалоге печати</span>
+  <span class="sh-host" id="sh-host" style="margin-right:4px"></span>
   <button class="btn-print" onclick="window.print()">Сохранить как PDF</button>
 </div>
 
@@ -129,6 +130,7 @@
 <script src="data/instruments.js?v=fx4"></script>
 <script src="data/lib.js?v=fx4"></script>
 <script src="data/offerings.js?v=cln1"></script>
+<script src="share.js?v=1"></script>
 <script>
   const S = window.SITE;
   const qs = new URLSearchParams(location.search);
@@ -422,6 +424,14 @@
     '</section>';
 
   document.getElementById("deck").innerHTML = html;
+
+  { const shHost = document.getElementById("sh-host");
+    if (shHost && window.Share) {
+      const shareUrl = offering
+        ? new URL("onepager.html?offering=" + encodeURIComponent(offering.id), location.href).href
+        : new URL("onepager.html?id=" + encodeURIComponent(inst.id), location.href).href;
+      Share.attach(shHost, { url: shareUrl, title: name });
+    } }
 
   if (qs.get("print") === "1") {
     (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve())

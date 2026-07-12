@@ -89,6 +89,11 @@
   .np[disabled] { visibility: hidden; }
 
   .foot { margin-top: 30px; font-size: 12px; line-height: 1.5; color: var(--faint); max-width: 700px; }
+  .art-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; margin-bottom: 2px; }
+  .art-meta { display: flex; align-items: baseline; }
+  body.client .topnav, body.client .crumbs, body.client .head, body.client .toc, body.client .nextprev, body.client .art-tools, body.client .df-sell { display: none !important; }
+  body.client .layout { grid-template-columns: 1fr; margin-top: 8px; }
+  body.client .qual { margin-top: 22px; }
 
   @media (max-width: 900px) {
     .wrap { padding: 0 18px 40px; } .nav-in { padding-left: 18px; padding-right: 18px; }
@@ -150,8 +155,10 @@
 
 <script src="data/lib.js?v=fx4"></script>
 <script src="data/digest.js?v=sales2"></script>
+<script src="share.js?v=1"></script>
 <script>
   const A = window.DIGEST_ARCHIVE;
+  if (new URLSearchParams(location.search).get("view") === "client") document.body.classList.add("client");
   let issue = null, order = [];
 
   function num(id) { return String(order.findIndex(i => i.id === id) + 1).padStart(2, "0"); }
@@ -187,10 +194,15 @@
     const art = document.getElementById("article");
     art.style.setProperty("--fc", c);
     art.innerHTML =
-      '<span class="art-num">' + num(i.id) + '</span><span class="art-kind">' + i.kind + '</span>' +
+      '<div class="art-head"><div class="art-meta"><span class="art-num">' + num(i.id) + '</span><span class="art-kind">' + i.kind + '</span></div><span class="art-tools" id="art-tools"></span></div>' +
       '<h2 class="art-title">' + i.name + '</h2>' +
       '<div class="art-un">' + i.underlying + '</div>' +
       '<div class="art-bar"></div>' + DF.detailBody(i);
+    const shHost = document.getElementById("art-tools");
+    if (shHost && window.Share) {
+      const cu = location.origin + location.pathname + "?view=client#" + issue.id + "/" + i.id;
+      Share.attach(shHost, { url: cu, title: i.name });
+    }
     document.querySelectorAll(".toc-i").forEach(el => el.classList.toggle("active", el.getAttribute("data-id") === i.id));
 
     const idx = order.findIndex(x => x.id === i.id);
