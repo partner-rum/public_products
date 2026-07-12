@@ -321,7 +321,7 @@ window.DF = (function () {
           '<ul>' + idea.factors.map(f => '<li>' + f + '</li>').join("") + '</ul>' +
           (idea.conclusion ? '<p class="concl">' + idea.conclusion + '</p>' : "") +
         '</div>' +
-        '<div class="df-block"><div class="k">Как заработать</div><p>' + idea.how + '</p></div>' +
+        '<div class="df-earn"><div class="k">Как заработать</div><p>' + idea.how + '</p></div>' +
         '<div class="df-risk"><div class="k">Риск</div><p>' + riskOf(idea) + '</p></div>' +
       '</div><div class="df-side">' +
         '<div class="df-chart">' + payoffSvg(idea.payoff, c) + '<div class="cap">' + idea.payout + '</div></div>' +
@@ -350,9 +350,12 @@ window.DF = (function () {
     '.df-sell{margin:0 0 20px;padding:14px 18px;background:rgba(238,125,27,0.10);border-left:3px solid var(--solar);border-radius:0 10px 10px 0}' +
     '.df-sell .k{display:block;font-family:var(--f-mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--solar);margin-bottom:6px}' +
     '.df-sell p{margin:0;font-size:14.5px;line-height:1.55;color:var(--ink);text-wrap:pretty}' +
-    '.df-risk{margin-top:2px;padding:12px 16px;background:rgba(255,255,255,0.03);border-left:3px solid rgba(255,255,255,0.18);border-radius:0 10px 10px 0}' +
-    '.df-risk .k{display:block;font-family:var(--f-mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);margin-bottom:6px}' +
-    '.df-risk p{margin:0;font-size:13px;line-height:1.5;color:var(--hushed);text-wrap:pretty}' +
+    '.df-earn{margin:0 0 14px;padding:14px 18px;background:rgba(85,192,138,0.10);border-left:3px solid var(--up);border-radius:0 10px 10px 0}' +
+    '.df-earn .k{display:block;font-family:var(--f-mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--up);margin-bottom:6px}' +
+    '.df-earn p{margin:0;font-size:14.5px;line-height:1.55;color:var(--ink);text-wrap:pretty}' +
+    '.df-risk{margin-top:0;padding:14px 18px;background:rgba(224,112,90,0.12);border-left:3px solid #E0705A;border-radius:0 10px 10px 0}' +
+    '.df-risk .k{display:block;font-family:var(--f-mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#E0705A;margin-bottom:6px}' +
+    '.df-risk p{margin:0;font-size:13.5px;line-height:1.5;color:rgba(242,243,247,0.82);text-wrap:pretty}' +
     '.df-params{display:flex;flex-direction:column;gap:8px}' +
     '.df-block p.concl{margin-top:12px;color:var(--ink)}' +
     '@media (max-width:820px){.df-grid{grid-template-columns:1fr}}';
