@@ -203,20 +203,37 @@
       '<text x="' + (x2 + barW / 2) + '" y="' + (base + 15) + '" text-anchor="middle" fill="' + C.lab2 + '" font-size="10">Погашение</text>' +
       '</svg>';
   }
-  function chProtection() {
-    const part = inst.participation, yMin = 88, yMax = 130;
-    const x = rel => PAD + ((rel - 0.7) / (1.4 - 0.7)) * (CW - PAD * 2);
+  function chProtection(cfg) {
+    const part = cfg.part, floor = cfg.floor, cap = cfg.cap;   // part 0..1; floor %; cap = макс. рост БА, % (или null)
+    const capPay = cap != null ? 100 + part * cap : null;
+    const pay = up => { let v = 100 + part * up; if (v < floor) v = floor; if (capPay != null && v > capPay) v = capPay; return v; };
+    const upMin = -30, upMax = 40;
+    const x = up => PAD + ((up - upMin) / (upMax - upMin)) * (CW - PAD * 2);
+    const yLo = Math.min(floor, 100), yHi = Math.max(pay(upMax), 100), span = Math.max(yHi - yLo, 1);
+    const yMin = yLo - span * 0.16, yMax = yHi + span * 0.20;
     const y = v => CH - PAD - ((v - yMin) / (yMax - yMin)) * (CH - PAD * 2);
-    const endVal = 100 + part * 40;
-    const line = "M" + x(0.7).toFixed(1) + " " + y(100).toFixed(1) + " L" + x(1.0).toFixed(1) + " " + y(100).toFixed(1) + " L" + x(1.4).toFixed(1) + " " + y(endVal).toFixed(1);
-    return '<svg viewBox="0 0 ' + CW + ' ' + CH + '" width="100%" style="display:block">' +
-      '<line x1="' + PAD + '" y1="' + y(100) + '" x2="' + (CW - PAD) + '" y2="' + y(100) + '" stroke="' + C.axis + '" stroke-width="1" stroke-dasharray="4 4"/>' +
-      '<text x="' + (PAD + 2) + '" y="' + (y(100) + 14) + '" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>защита 100%</text>' +
-      '<path d="' + line + '" fill="none" stroke="' + C.line + '" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>' +
-      '<rect x="' + (x(1.0) - 4) + '" y="' + (y(100) - 4) + '" width="8" height="8" transform="rotate(45 ' + x(1.0) + ' ' + y(100) + ')" fill="' + C.line + '"/>' +
-      '<text x="' + x(1.0) + '" y="' + (y(100) + 15) + '" text-anchor="middle" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>S₀</text>' +
-      '<text x="' + x(1.24) + '" y="' + (y(100 + part * 24) - 10) + '" fill="' + C.or + '" font-size="10" ' + MONO + '>участие ' + Math.round(part * 100) + '%</text>' +
-      '</svg>';
+    const upFloor = part ? (floor - 100) / part : 0;
+    let bps = [upMin, 0, upMax];
+    if (upFloor > upMin && upFloor < upMax) bps.push(upFloor);
+    if (cap != null && cap > 0 && cap < upMax) bps.push(cap);
+    bps = Array.from(new Set(bps)).sort((a, b) => a - b);
+    const line = "M" + bps.map(u => x(u).toFixed(1) + " " + y(pay(u)).toFixed(1)).join(" L");
+    const uncapped = cap == null;
+    const midUp = (0 + (cap != null ? cap : upMax * 0.85)) / 2;
+    let svg = '<svg viewBox="0 0 ' + CW + ' ' + CH + '" width="100%" style="display:block">';
+    if (uncapped) svg += '<defs><marker id="up-arr" markerWidth="11" markerHeight="10" refX="1.5" refY="5" orient="auto" markerUnits="userSpaceOnUse"><path d="M0 0 L10 5 L0 10 Z" fill="' + C.line + '"/></marker></defs>';
+    svg += '<line x1="' + PAD + '" y1="' + y(floor) + '" x2="' + (CW - PAD) + '" y2="' + y(floor) + '" stroke="' + C.axis + '" stroke-width="1" stroke-dasharray="4 4"/>' +
+      '<text x="' + (PAD + 2) + '" y="' + (y(floor) - 6) + '" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>' + (floor >= 100 ? 'защита 100%' : 'мин. ' + S.fmtSmart(floor) + '%') + '</text>';
+    if (cap != null) svg += '<line x1="' + PAD + '" y1="' + y(capPay) + '" x2="' + (CW - PAD) + '" y2="' + y(capPay) + '" stroke="' + C.axis + '" stroke-width="1" stroke-dasharray="2 4"/>' +
+      '<text x="' + (PAD + 2) + '" y="' + (y(capPay) - 5) + '" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>потолок ' + S.fmtSmart(capPay) + '%</text>' +
+      '<rect x="' + (x(cap) - 4) + '" y="' + (y(capPay) - 4) + '" width="8" height="8" transform="rotate(45 ' + x(cap) + ' ' + y(capPay) + ')" fill="' + C.line + '"/>';
+    svg += '<path d="' + line + '" fill="none" stroke="' + C.line + '" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"' + (uncapped ? ' marker-end="url(#up-arr)"' : '') + '/>';
+    if (uncapped) svg += '<text x="' + (CW - PAD) + '" y="11" text-anchor="end" fill="' + C.line + '" font-size="10" ' + MONO + '>рост не ограничен</text>';
+    svg += '<rect x="' + (x(0) - 4) + '" y="' + (y(100) - 4) + '" width="8" height="8" transform="rotate(45 ' + x(0) + ' ' + y(100) + ')" fill="' + C.line + '"/>' +
+      '<text x="' + x(0) + '" y="' + (y(100) + 15) + '" text-anchor="middle" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>S₀</text>';
+    if (floor < 100 && upFloor > upMin) svg += '<rect x="' + (x(upFloor) - 3.5) + '" y="' + (y(floor) - 3.5) + '" width="7" height="7" transform="rotate(45 ' + x(upFloor) + ' ' + y(floor) + ')" fill="#C0561A"/>';
+    svg += '<text x="' + x(midUp) + '" y="' + (y(pay(midUp)) - 9) + '" text-anchor="middle" fill="' + C.or + '" font-size="10" ' + MONO + '>участие ' + Math.round(part * 100) + '%</text>';
+    return svg + '</svg>';
   }
 
   // ── Контент ──
@@ -265,22 +282,58 @@
       explainer: "Облигация покупается дешевле номинала — по " + S.fmt2(q) + "% от него. На дату погашения выплачивается полный номинал, 100%. Весь доход — дисконт: разница между ценой покупки и номиналом, известная в день сделки. Купонов нет; основной риск — кредитное качество эмитента."
     };
   } else {
+    // Защита капитала. Конфиг из полей инструмента + опциональные override в URL (?protect / ?part / ?cap).
+    const numq = k => { const v = parseFloat(qs.get(k)); return isFinite(v) ? v : null; };
+    let part = inst.participation != null ? inst.participation : 0.6;   // 0..1
+    let floor = inst.protectionPct != null ? inst.protectionPct : 100;  // % защиты капитала
+    let cap = inst.cap != null ? inst.cap : null;                       // потолок = макс. рост БА, % (или null)
+    const oPart = numq("part"); if (oPart != null && oPart > 0) part = oPart / 100;
+    const oProt = numq("protect"); if (oProt != null && oProt > 0 && oProt <= 100) floor = oProt;
+    const oCap = numq("cap"); if (oCap != null) cap = oCap > 0 ? oCap : null;
+
+    const clamp = (v, lo, hi) => { v = Math.max(v, lo); if (hi != null) v = Math.min(v, hi); return v; };
+    const capPay = cap != null ? Math.round(100 + part * cap) : null;
+    const partPct = Math.round(part * 100);
     const entryRub = nom * q / 100;
-    const part = Math.round(inst.participation * 100);
-    const upPct = 20;
-    const payoutUp = nom * (1 + inst.participation * upPct / 100);
+    const upPct = 20, downPct = 20;
+    const payUpPct = clamp(100 + part * upPct, floor, capPay);
+    const payUpRub = nom * payUpPct / 100, netUp = payUpRub - entryRub;
+    const payDownPct = clamp(100 - part * downPct, floor, capPay);
+    const downRub = nom * payDownPct / 100;
+
+    let subtitle, chartCap, explainer;
+    if (floor >= 100 && cap == null) subtitle = "Возврат 100% номинала при любом падении и участие в росте " + inst.underlying + " без потолка.";
+    else if (floor >= 100) subtitle = "Полная защита номинала и участие в росте " + inst.underlying + " — с потолком выплаты " + capPay + "%.";
+    else if (cap == null) subtitle = "Гарантированный минимум " + S.fmtSmart(floor) + "% номинала и участие в росте " + inst.underlying + " без потолка.";
+    else subtitle = "Гарантированный минимум " + S.fmtSmart(floor) + "% номинала и участие в росте " + inst.underlying + " с потолком " + capPay + "%.";
+
+    chartCap = "Выплата в % от номинала. " +
+      (floor >= 100 ? "Ниже S₀ — не меньше 100%." : "Гарантированный минимум — " + S.fmtSmart(floor) + "% (макс. убыток " + S.fmtSmart(100 - floor) + "%).") +
+      " Выше S₀ — " + partPct + "% роста" + (cap != null ? " до потолка " + capPay + "%." : ", без потолка.");
+
+    explainer = "Нота возвращает " + (floor >= 100 ? "100% номинала при любом сценарии" : "не менее " + S.fmtSmart(floor) + "% номинала (риск ограничен " + S.fmtSmart(100 - floor) + "%)") +
+      ". Если " + inst.underlying + " вырос — " + (partPct === 100 ? "засчитывается весь его рост" : "сверху выплачивается " + partPct + "% его роста") +
+      (cap != null ? ", но не выше потолка " + capPay + "% номинала" : ", без ограничения сверху") + ". Основной риск — кредитный риск эмитента ноты.";
+
     c = {
       badge: "Нота · защита капитала",
-      subtitle: "Участие в росте " + inst.underlying + " с возвратом 100% номинала при любом сценарии.",
-      chart: chProtection,
-      chartCap: "Выплата в % от номинала: не ниже 100% при любом сценарии, выше S₀ — участие в росте.",
-      params: [["Защита капитала", "100%", false], ["Участие в росте", part + "%", true], ["Нач. уровень S₀", S.fmtSmart(inst.strike), false], ["Стиль", "европейский", false]],
+      subtitle: subtitle,
+      chart: () => chProtection({ part: part, floor: floor, cap: cap }),
+      chartCap: chartCap,
+      params: [
+        ["Защита капитала", S.fmtSmart(floor) + "%", false],
+        ["Участие в росте", partPct + "%", true],
+        ["Потолок", cap != null ? "+" + S.fmtSmart(cap) + "%" : "нет", false],
+        ["Срок · погашение", inst.expiry, false]
+      ],
       exIntro: "Номинал " + S.fmtInt(nom) + " ₽ · вход по " + S.fmt2(q) + "% = " + S.fmtInt(entryRub) + " ₽",
       scen: [
-        [inst.underlying + " вырос на " + upPct + "%", "выплата 100% + участие", "+" + S.fmtInt(payoutUp - entryRub) + " ₽", "var(--up)"],
-        [inst.underlying + " упал", "сработала защита — 100% номинала", S.fmtInt(nom) + " ₽", "var(--nav)"]
+        [inst.underlying + " вырос на " + upPct + "%", "выплата " + S.fmtSmart(payUpPct) + "% номинала", (netUp >= 0 ? "+" : "−") + S.fmtInt(Math.abs(netUp)) + " ₽", netUp >= 0 ? "var(--up)" : "var(--down)"],
+        floor >= 100
+          ? [inst.underlying + " упал", "защита — 100% номинала", S.fmtInt(downRub) + " ₽", "var(--nav)"]
+          : [inst.underlying + " упал на " + downPct + "%", "минимум — " + S.fmtSmart(floor) + "% номинала", S.fmtInt(downRub) + " ₽", "var(--down)"]
       ],
-      explainer: "Нота возвращает 100% номинала при любом сценарии. Если базовый актив на дату экспирации выше начального уровня S₀, дополнительно выплачивается " + part + "% его роста. Если актив упал — вы получаете номинал целиком. Основной риск — кредитный риск эмитента ноты."
+      explainer: explainer
     };
   }
 

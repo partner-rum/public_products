@@ -27,7 +27,8 @@ import sys
 #
 # Поля по типам:
 #   discount   — id, type, name, underlying, cls, expiry, quote, chg, minNom
-#   protection — + spot, strike (нач. уровень S0), participation (0..1), protectionPct
+#   protection — + spot, strike (нач. уровень S0), participation (0..1), protectionPct,
+#                опц. cap (потолок = макс. учитываемый рост БА, %; нет поля = без потолка)
 #   warrant    — собирается сеткой ниже: структура (call / cs) × БА × срок.
 #                Страйки варрантов — в % от начального уровня БА:
 #                100 = уровень в день покупки, 150 = плюс 50%.
