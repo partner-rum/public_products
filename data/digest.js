@@ -31,7 +31,7 @@ window.DIGEST_ARCHIVE = {
           conclusion: "Дефицит предложения и тренд на ИИ и электрификацию делают медь интересной для инвестиций.",
           how: "Варрант на COPX: инвестор оплачивает только часть номинала и получает рычаг на рост ETF без маржин-коллов. Если актив не вырос — потеря ограничена уплаченной премией.",
           payout: "Выплата роста базового актива (максимум 30%), рассчитанного от номинала; вложенные средства не возвращаются.",
-          params: [["Базовый актив", "COPX (ETF)"], ["Срок", "0,5 года"], ["Цена бумаги", "150 ₽ (15%)"], ["Номинал", "1 000 ₽"], ["Потолок выплаты", "30% роста"]],
+          p: { asset: "COPX (ETF)", price: "150 ₽ · 15% ном.", upside: "рост актива, потолок +30%", protection: "нет" },
           payoff: { type: "callcap", capPct: 30, premiumPct: 15 }
         },
         {
@@ -51,7 +51,7 @@ window.DIGEST_ARCHIVE = {
           conclusion: null,
           how: "Заработок на росте IBIT (ETF) с эффектом большой сделки при меньших вложениях. Продукт повторяет CALL: маржин-колл отсутствует, нет риска ликвидации позиции.",
           payout: "Выплата до 50% роста базового актива, рассчитанного от номинала; вложенные средства не возвращаются.",
-          params: [["Базовый актив", "IBIT (ETF)"], ["Срок", "24 месяца"], ["Цена бумаги", "200 ₽ (20%)"], ["Номинал", "1 000 ₽"], ["Лимит роста", "50%"]],
+          p: { asset: "IBIT (ETF)", price: "200 ₽ · 20% ном.", upside: "рост актива, лимит +50%", protection: "нет" },
           payoff: { type: "callcap", capPct: 50, premiumPct: 20 }
         },
         {
@@ -70,7 +70,7 @@ window.DIGEST_ARCHIVE = {
           conclusion: "В 2025 году варрант на индекс RWMD принёс клиентам 40% в абсолюте за 2,5 месяца. Румберг обеспечивает ликвидность на вторичном рынке.",
           how: "Варрант даёт заработать на росте индекса RWMD, если при погашении его значение выше начального.",
           payout: "Выплата роста базового актива, рассчитанного от номинала; вложенные средства не возвращаются.",
-          params: [["Базовый актив", "Индекс RWMD"], ["Срок", "24 месяца"], ["Цена бумаги", "188 ₽ (18,8%)"], ["Номинал", "1 000 ₽"]],
+          p: { asset: "Индекс RWMD", price: "188 ₽ · 18,8% ном.", upside: "рост индекса, без потолка", protection: "нет" },
           payoff: { type: "call", premiumPct: 18.8 }
         },
         {
@@ -89,7 +89,7 @@ window.DIGEST_ARCHIVE = {
           conclusion: "Рынок AI — долгосрочный структурный тренд; Nebius уже заключил AI-контракты с Meta и Microsoft на десятки млрд долларов.",
           how: "Структурная облигация выплачивает фиксированный купон и даёт участие в росте акций Nebius. При росте — участие в динамике (до 20%); при снижении выплата номинала уменьшается пропорционально падению.",
           payout: "Купон фиксированный. При росте — участие в динамике (макс. 20%) плюс валютная переоценка. При снижении номинал уменьшается пропорционально падению.",
-          params: [["Базовый актив", "Nebius + USD/RUB"], ["Срок", "12 месяцев"], ["Купон", "20% в рублях"], ["Барьер роста", "20% + валютная переоценка"]],
+          p: { asset: "Nebius + USD/RUB", price: "по номиналу", upside: "купон + участие до +20% и валютная переоценка", protection: "нет" },
           payoff: { type: "callcap", capPct: 20, premiumPct: 0 }
         },
         {
@@ -109,7 +109,7 @@ window.DIGEST_ARCHIVE = {
           conclusion: "Даже умеренный рост спроса на юань может привести к ослаблению рубля и росту CNY/RUB. Большинство аналитиков ожидают снижения курса рубля в этом году.",
           how: "Структурная облигация выплачивает купон при погашении, если курс CNY/RUB вырос до заданного уровня. Капитал защищён на 100%.",
           payout: "Купон 19% при погашении, если CNY/RUB вырос на 10% и более. Защита капитала — 100%.",
-          params: [["Базовый актив", "CNY/RUB"], ["Срок", "12 месяцев"], ["Купон", "19% в рублях"], ["Барьер купона", "+10% по CNY/RUB"], ["Защита капитала", "100%"]],
+          p: { asset: "CNY/RUB", price: "по номиналу", upside: "купон 19% при росте +10% по CNY/RUB", protection: "100%" },
           payoff: { type: "digital", couponPct: 19, barrierPct: 10 }
         },
         {
@@ -128,7 +128,7 @@ window.DIGEST_ARCHIVE = {
           conclusion: "При позитивных геополитических изменениях ОФЗ способны быстро восстановить рост от снижения ставки. Консолидированный прогноз — снижение ставки до 14,1%.",
           how: "Структурная облигация с выплатой купона 19% через 12 месяцев. Купон выплачивается даже при сохранении цены ОФЗ 26248; при снижении цены выплата номинала уменьшается пропорционально.",
           payout: "Купон 19% при сохранении или росте цены ОФЗ 26248. При снижении номинал уменьшается пропорционально падению.",
-          params: [["Базовый актив", "ОФЗ 26248"], ["Срок", "12 месяцев"], ["Купон", "19% в рублях"], ["Условие купона", "сохранение или рост цены"]],
+          p: { asset: "ОФЗ 26248", price: "по номиналу", upside: "купон 19% при сохранении/росте цены", protection: "нет" },
           payoff: { type: "digital", couponPct: 19, barrierPct: 0 }
         },
         {
@@ -147,7 +147,7 @@ window.DIGEST_ARCHIVE = {
           conclusion: null,
           how: "Структурная облигация с защитой капитала, позволяющая участвовать в росте BTC (IBIT ETF). Доход выплачивается при погашении.",
           payout: "Участие в росте 100% (лимит 50%) плюс валютная переоценка. Защита капитала 100%: при падении возвращается номинал.",
-          params: [["Базовый актив", "IBIT (ETF)"], ["Срок", "24 месяца"], ["Участие", "100% (лимит 50%)"], ["Защита капитала", "100%"]],
+          p: { asset: "IBIT (ETF)", price: "по номиналу", upside: "участие 100%, до +50%", protection: "100%" },
           payoff: { type: "protected", capPct: 50 }
         },
         {
@@ -167,7 +167,7 @@ window.DIGEST_ARCHIVE = {
           conclusion: "Комбинация текущей доходности и потенциала снижения ставок создаёт условия для опережающей доходности стратегии. Консолидированный прогноз — снижение ставки до 14,1%.",
           how: "Добавляя стратегию на ОФЗ, инвестор получает диверсифицированный набор облигаций с реинвестированием купонов. Доход формируется за счёт изменения стоимости портфеля и реинвестирования купонных выплат.",
           payout: "Выплата равна стоимости портфеля на момент погашения.",
-          params: [["Базовый актив", "Портфель ОФЗ"], ["Срок", "3 года"], ["Доход", "стоимость портфеля + купоны"]],
+          p: { asset: "Портфель ОФЗ", price: "по номиналу", upside: "стоимость портфеля + купоны", protection: "нет" },
           payoff: { type: "line" }
         }
       ]
@@ -194,7 +194,7 @@ window.DIGEST_ARCHIVE = {
           conclusion: "Ограниченное предложение и тренд на ИИ и электрификацию экономики делают медь интересной для инвестиций.",
           how: "Варрант на COPX: инвестор оплачивает только часть номинала и получает рычаг на рост ETF — без маржин-коллов. Если актив не вырос, потеря ограничена уплаченной премией.",
           payout: "Выплата роста базового актива (максимум 30% роста), рассчитанного от номинала; вложенные средства не возвращаются.",
-          params: [["Базовый актив", "COPX (ETF)"], ["Срок", "0,5 года"], ["Цена бумаги", "150 ₽ (15%)"], ["Номинал", "1 000 ₽"], ["Потолок выплаты", "30% роста"]],
+          p: { asset: "COPX (ETF)", price: "150 ₽ · 15% ном.", upside: "рост актива, потолок +30%", protection: "нет" },
           payoff: { type: "callcap", capPct: 30, premiumPct: 15 }
         },
         {
@@ -213,7 +213,7 @@ window.DIGEST_ARCHIVE = {
           conclusion: "Даже умеренный рост спроса на юань может привести к ослаблению рубля и росту курса CNY/RUB.",
           how: "Структурная облигация выплачивает купон при погашении, если курс CNY/RUB вырос до заданного уровня. Капитал защищён полностью: при любом сценарии возвращается 100% номинала.",
           payout: "Купон 19% выплачивается при погашении, если курс CNY/RUB вырос на 10% и более. Защита капитала — 100%.",
-          params: [["Базовый актив", "CNY/RUB"], ["Срок", "12 месяцев"], ["Купон", "19% в рублях"], ["Барьер выплаты купона", "+10% по CNY/RUB"], ["Защита капитала", "100%"]],
+          p: { asset: "CNY/RUB", price: "по номиналу", upside: "купон 19% при росте +10% по CNY/RUB", protection: "100%" },
           payoff: { type: "digital", couponPct: 19, barrierPct: 10 }
         }
       ]
@@ -272,18 +272,60 @@ window.DF = (function () {
     return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="display:block">' + el + '</svg>';
   }
 
+  // Кому продавать — авто-шаблон по типу продукта (переопределяется полем idea.audience).
+  function audienceOf(idea) {
+    if (idea.audience) return idea.audience;
+    const a = (idea.p && idea.p.asset) || idea.underlying;
+    const prot = idea.p && /100/.test(idea.p.protection || "");
+    if (idea.family === "warrant") return "Клиентам, кто верит в рост «" + a + "» и хочет усиленную экспозицию при ограниченном риске: оплачивается только премия, без маржин-коллов.";
+    if (idea.family === "coupon") return prot
+      ? "Клиентам, кто хочет заранее известный купон по «" + a + "» с полной защитой капитала."
+      : "Клиентам, кто хочет заранее известный купон по «" + a + "» и мирится со снижением номинала, если актив упадёт.";
+    if (idea.family === "protection") return "Осторожным клиентам: полная защита капитала плюс участие в росте «" + a + "».";
+    return "Клиентам, кто хочет диверсифицированную облигационную стратегию с прогнозируемым горизонтом.";
+  }
+  // Риск — авто-шаблон по типу продукта (переопределяется полем idea.risk).
+  function riskOf(idea) {
+    if (idea.risk) return idea.risk;
+    const prot = idea.p && /100/.test(idea.p.protection || "");
+    if (idea.family === "warrant") return "Риск ограничен премией: если базовый актив не вырос к погашению, премия теряется полностью, вложенные средства не возвращаются.";
+    if (idea.family === "coupon") return prot
+      ? "Капитал защищён на 100% — при любом сценарии возвращается номинал. Основной риск — кредитное качество эмитента ноты."
+      : "Если базовый актив снизится, выплата номинала уменьшается пропорционально падению. Дополнительно — кредитный риск эмитента ноты.";
+    if (idea.family === "protection") return "Защита капитала 100%: при падении возвращается номинал. Основной риск — кредитное качество эмитента ноты.";
+    return "Стоимость портфеля колеблется вместе с рынком облигаций — итоговый доход не гарантирован.";
+  }
+  // Единый набор параметров: сейлзы заполняют одинаковые поля через idea.p.
+  function paramRows(idea) {
+    if (!idea.p) return idea.params || [];
+    const p = idea.p;
+    return [
+      ["Базовый актив", p.asset || idea.underlying],
+      ["Тип продукта", idea.kind || sectionOf(idea.family).label],
+      ["Цена входа", p.price || "—"],
+      ["Номинал", p.nominal || "1 000 ₽"],
+      ["Срок", idea.tenor || "—"],
+      ["Потенциал дохода", p.upside || "—"],
+      ["Защита капитала", p.protection || "нет"]
+    ];
+  }
+
   function detailBody(idea) {
     const c = colorOf(idea.family);
     return '<div class="df-detail" style="--fc:' + c + '">' +
       '<div class="df-hypo"><span class="k">Гипотеза</span>' + idea.hypothesis + '</div>' +
       '<div class="df-grid"><div class="df-main">' +
-        '<div class="df-block"><div class="k">Рыночная ситуация</div><p>' + idea.situation + '</p></div>' +
-        '<div class="df-block"><div class="k">Факторы</div><ul>' + idea.factors.map(f => '<li>' + f + '</li>').join("") + '</ul></div>' +
-        (idea.conclusion ? '<div class="df-block"><div class="k">Вывод</div><p>' + idea.conclusion + '</p></div>' : "") +
+        '<div class="df-sell"><div class="k">Кому подходит</div><p>' + audienceOf(idea) + '</p></div>' +
+        '<div class="df-block"><div class="k">Почему сработает</div>' +
+          (idea.situation ? '<p>' + idea.situation + '</p>' : "") +
+          '<ul>' + idea.factors.map(f => '<li>' + f + '</li>').join("") + '</ul>' +
+          (idea.conclusion ? '<p class="concl">' + idea.conclusion + '</p>' : "") +
+        '</div>' +
         '<div class="df-block"><div class="k">Как заработать</div><p>' + idea.how + '</p></div>' +
+        '<div class="df-risk"><div class="k">Риск</div><p>' + riskOf(idea) + '</p></div>' +
       '</div><div class="df-side">' +
         '<div class="df-chart">' + payoffSvg(idea.payoff, c) + '<div class="cap">' + idea.payout + '</div></div>' +
-        idea.params.map(p => '<div class="df-param"><span class="k">' + p[0] + '</span><span class="v">' + p[1] + '</span></div>').join("") +
+        '<div class="df-params">' + paramRows(idea).map(r => '<div class="df-param"><span class="k">' + r[0] + '</span><span class="v">' + r[1] + '</span></div>').join("") + '</div>' +
         (idea.fx ? '<div class="df-fx">' + FXT + '</div>' : "") +
       '</div></div></div>';
   }
@@ -305,6 +347,14 @@ window.DF = (function () {
     '.df-param .k{font-size:13px;color:var(--hushed)}' +
     '.df-param .v{font-family:var(--f-mono);font-size:13.5px;text-align:right}' +
     '.df-fx{padding:9px 12px;border-left:3px solid var(--down);background:rgba(238,125,27,0.12);border-radius:0 7px 7px 0;font-size:11.5px;line-height:1.45;color:#E7B98D}' +
+    '.df-sell{margin:0 0 20px;padding:14px 18px;background:rgba(238,125,27,0.10);border-left:3px solid var(--solar);border-radius:0 10px 10px 0}' +
+    '.df-sell .k{display:block;font-family:var(--f-mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--solar);margin-bottom:6px}' +
+    '.df-sell p{margin:0;font-size:14.5px;line-height:1.55;color:var(--ink);text-wrap:pretty}' +
+    '.df-risk{margin-top:2px;padding:12px 16px;background:rgba(255,255,255,0.03);border-left:3px solid rgba(255,255,255,0.18);border-radius:0 10px 10px 0}' +
+    '.df-risk .k{display:block;font-family:var(--f-mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);margin-bottom:6px}' +
+    '.df-risk p{margin:0;font-size:13px;line-height:1.5;color:var(--hushed);text-wrap:pretty}' +
+    '.df-params{display:flex;flex-direction:column;gap:8px}' +
+    '.df-block p.concl{margin-top:12px;color:var(--ink)}' +
     '@media (max-width:820px){.df-grid{grid-template-columns:1fr}}';
   const st = document.createElement("style");
   st.textContent = CSS;
