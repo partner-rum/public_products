@@ -7,7 +7,7 @@
 <meta name="description" content="Карточка инструмента: котировка, диаграмма выплат, пример расчёта и условия.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Rubik:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --canvas: #0B0C10; --card: #14161C; --panel-2: #191B22; --tile: rgba(255,255,255,0.045);
@@ -19,6 +19,7 @@
     --up: #55C08A; --down: #EE7D1B;
     --f-body: 'Onest', system-ui, sans-serif;
     --f-mono: 'JetBrains Mono', Consolas, monospace;
+    --display: 'Rubik', 'Onest', system-ui, sans-serif;
     --ease: cubic-bezier(0.16, 1, 0.3, 1);
   }
   * { box-sizing: border-box; }
@@ -45,7 +46,7 @@
 
   .head { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; flex-wrap: wrap; margin-bottom: 30px; }
   .title-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
-  h1 { margin: 0; font-family: var(--f-body); font-size: 28px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1; }
+  h1 { margin: 0; font-family: var(--display); font-size: 28px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1; }
   .badge { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink); background: rgba(255,255,255,0.08); border-radius: 6px; padding: 4px 9px; }
   .subtitle { font-size: 14px; color: var(--hushed); }
   .btn-pdf { margin-top: 14px; display: inline-flex; align-items: center; gap: 8px; background: var(--solar); color: var(--ink); border-radius: 6px; padding: 9px 16px; font-size: 13.5px; font-weight: 500; transition: background .3s ease-in-out; }

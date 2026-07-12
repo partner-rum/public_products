@@ -7,7 +7,7 @@
 <meta name="description" content="Выпуски, которые мы размещаем сейчас или готовим к размещению: параметры, профиль выплаты и материалы по выпуску.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Rubik:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --canvas: #0B0C10; --card: #14161C; --panel-2: #191B22; --tile: rgba(255,255,255,0.045); --black: #1A1919;
@@ -16,7 +16,7 @@
     --solar: #EE7D1B; --solar-l: #F58E33;
     --spruce: #5E9B82; --steel: #4F86E6; --amber: #E0A24A;
     --up: #55C08A; --down: #EE7D1B;
-    --f-body: 'Onest', system-ui, sans-serif; --f-mono: 'JetBrains Mono', Consolas, monospace;
+    --f-body: 'Onest', system-ui, sans-serif; --f-mono: 'JetBrains Mono', Consolas, monospace; --display:'Rubik','Onest',system-ui,sans-serif;
     --ease: cubic-bezier(0.16, 1, 0.3, 1);
   }
   * { box-sizing: border-box; }
@@ -38,7 +38,7 @@
   .crumbs .sep { color: rgba(242,243,247,0.42); } .crumbs .here { color: var(--ink); font-weight: 500; }
   .head { margin-bottom: 8px; }
   .head-row { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
-  h1 { margin: 0; font-size: 32px; font-weight: 400; letter-spacing: -0.02em; }
+  h1 { margin: 0; font-family:var(--display); font-size: 32px; font-weight: 400; letter-spacing: -0.02em; }
   .count { font-family: var(--f-mono); font-size: 13px; color: var(--hushed); }
   .intro { margin-top: 8px; font-size: 14.5px; line-height: 1.55; color: var(--hushed); max-width: 640px; text-wrap: pretty; }
 
@@ -68,7 +68,7 @@
   .panel { border: 1px solid var(--border-soft); border-top: 3px solid var(--fc); border-radius: 14px; background: var(--card); padding: 26px 30px; }
   .o-kind { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fc); }
   .o-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; flex-wrap: wrap; }
-  .o-name { margin: 7px 0 4px; font-size: 25px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.15; }
+  .o-name { margin: 7px 0 4px; font-family:var(--display); font-size: 25px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.15; }
   .o-ref { font-size: 13.5px; color: var(--hushed); } .o-ref b { color: var(--ink); font-weight: 600; }
   .badge { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 600; border-radius: 20px; padding: 6px 13px; white-space: nowrap; }
   .badge.up { background: rgba(255,255,255,0.08); color: var(--ink); border: 1px solid var(--border); }

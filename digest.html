@@ -7,7 +7,7 @@
 <meta name="description" content="Дайджест инвестиционных идей: гипотеза, рыночная ситуация, факторы и параметры выпуска. С архивом прошлых выпусков.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Rubik:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --canvas: #0B0C10; --card: #14161C; --panel-2: #191B22; --tile: rgba(255,255,255,0.045);
@@ -15,7 +15,7 @@
     --ink: #F2F3F7; --hushed: rgba(242,243,247,0.64); --faint: rgba(242,243,247,0.42);
     --border: rgba(255,255,255,0.11); --border-soft: rgba(255,255,255,0.07);
     --solar: #EE7D1B; --solar-l: #F58E33; --up: #55C08A; --down: #EE7D1B;
-    --f-body: 'Onest', system-ui, sans-serif; --f-mono: 'JetBrains Mono', Consolas, monospace;
+    --f-body: 'Onest', system-ui, sans-serif; --f-mono: 'JetBrains Mono', Consolas, monospace; --display: 'Rubik', 'Onest', system-ui, sans-serif;
     --ease: cubic-bezier(0.16, 1, 0.3, 1);
   }
   * { box-sizing: border-box; }
@@ -38,7 +38,7 @@
 
   .head { margin-bottom: 6px; }
   .head-row { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
-  h1 { margin: 0; font-size: 34px; font-weight: 400; letter-spacing: -0.02em; }
+  h1 { margin: 0; font-family: var(--display); font-size: 34px; font-weight: 400; letter-spacing: -0.02em; }
   .intro { margin-top: 10px; font-size: 15px; line-height: 1.6; color: var(--hushed); max-width: 680px; }
 
   /* Переключатель выпусков (архив) */
@@ -77,7 +77,7 @@
 
   .art-num { font-family: var(--f-mono); font-size: 13px; color: var(--fc); letter-spacing: 0.05em; }
   .art-kind { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); margin-left: 10px; }
-  .art-title { margin: 12px 0 6px; font-size: 40px; font-weight: 400; letter-spacing: -0.025em; line-height: 1.08; max-width: 640px; }
+  .art-title { margin: 12px 0 6px; font-family: var(--display); font-size: 40px; font-weight: 400; letter-spacing: -0.025em; line-height: 1.08; max-width: 640px; }
   .art-un { font-size: 15px; color: var(--hushed); margin-bottom: 8px; }
   .art-bar { width: 60px; height: 4px; background: var(--fc); margin: 16px 0 24px; }
 

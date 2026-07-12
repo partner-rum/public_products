@@ -7,7 +7,7 @@
 <meta name="description" content="Размещённые выпуски структурных облигаций: базовые активы, параметры выплат, фиксинги и динамика.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Rubik:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --canvas: #0B0C10; --card: #14161C; --panel-2: #191B22; --tile: rgba(255,255,255,0.045);
@@ -18,6 +18,7 @@
     --up: #55C08A; --down: #EE7D1B;
     --f-body: 'Onest', system-ui, sans-serif;
     --f-mono: 'JetBrains Mono', Consolas, monospace;
+    --display: 'Rubik', 'Onest', system-ui, sans-serif;
     --ease: cubic-bezier(0.16, 1, 0.3, 1);
   }
   * { box-sizing: border-box; }
@@ -38,7 +39,7 @@
   .btn-solar:hover { background: var(--solar-l); }
 
   .head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin: 26px 0 18px; }
-  h1 { margin: 0; font-size: 30px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1; }
+  h1 { margin: 0; font-family: var(--display); font-size: 30px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1; }
   .count { font-family: var(--f-mono); font-size: 12px; color: var(--hushed); }
 
   .layout { display: grid; grid-template-columns: 400px minmax(0, 1fr); gap: 20px; align-items: start; }
@@ -81,7 +82,7 @@
   .panel { background: var(--card); border: 1px solid var(--border-soft); border-radius: 12px; padding: 26px 28px; max-height: calc(100dvh - 100px); overflow-y: auto; }
   .panel-close { display: none; }
   .pp-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; flex-wrap: wrap; }
-  .pp-title { font-size: 24px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1; }
+  .pp-title { font-family: var(--display); font-size: 24px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1; }
   .pp-sub { margin-top: 5px; font-family: var(--f-mono); font-size: 11.5px; color: rgba(255,255,255,0.44); display: flex; gap: 10px; flex-wrap: wrap; }
   .kind-chip { display: inline-block; font-size: 11.5px; font-weight: 600; border-radius: 999px; padding: 3px 10px; white-space: nowrap; }
   .status { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hushed); }

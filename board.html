@@ -7,7 +7,7 @@
 <meta name="description" content="Текущие продукты: котировки в процентах от номинала, диаграммы выплат и параметры по каждому инструменту.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Rubik:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --canvas: #0B0C10; --card: #14161C; --panel-2: #191B22; --tile: rgba(255,255,255,0.045);
@@ -19,6 +19,7 @@
     --up: #55C08A; --down: #EE7D1B;
     --f-body: 'Onest', system-ui, sans-serif;
     --f-mono: 'JetBrains Mono', Consolas, monospace;
+    --display: 'Rubik', 'Onest', system-ui, sans-serif;
     --ease: cubic-bezier(0.16, 1, 0.3, 1);
   }
   * { box-sizing: border-box; }
@@ -43,7 +44,7 @@
   .ticker svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 
   .head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin: 26px 0 18px; }
-  h1 { margin: 0; font-size: 30px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1; }
+  h1 { margin: 0; font-family: var(--display); font-size: 30px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1; }
   .count { font-family: var(--f-mono); font-size: 12px; color: var(--hushed); }
 
   .layout { display: grid; grid-template-columns: 380px minmax(0, 1fr); gap: 20px; align-items: start; }
@@ -83,7 +84,7 @@
   .panel-close { display: none; }
 
   .pp-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; flex-wrap: wrap; }
-  .pp-title { font-size: 23px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.15; }
+  .pp-title { font-family: var(--display); font-size: 23px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.15; }
   .badge { display: inline-block; margin-top: 7px; font-family: var(--f-mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink); background: rgba(255,255,255,0.08); border-radius: 6px; padding: 3px 8px; }
   .pp-sub { margin-top: 8px; font-size: 13px; color: var(--hushed); max-width: 480px; }
   .quote-block { text-align: right; }

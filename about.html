@@ -7,7 +7,7 @@
 <meta name="description" content="Библиотека продуктов: как работают дисконтные облигации, ноты с защитой капитала и варранты (CALL, PUT, спреды, барьеры KO). Профиль выплаты, риск и срок — известны заранее.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Rubik:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --canvas: #0B0C10; --card: #14161C; --panel-2: #191B22; --tile: rgba(255,255,255,0.045); --black: #1A1919;
@@ -16,7 +16,7 @@
     --solar: #EE7D1B; --solar-l: #F58E33;
     --spruce: #5E9B82; --steel: #4F86E6; --amber: #E0A24A; --amber-t: #E0A24A;
     --up: #55C08A; --down: #EE7D1B;
-    --f-body: 'Onest', system-ui, sans-serif; --f-mono: 'JetBrains Mono', Consolas, monospace;
+    --f-body: 'Onest', system-ui, sans-serif; --f-mono: 'JetBrains Mono', Consolas, monospace; --display:'Rubik','Onest',system-ui,sans-serif;
     --ease: cubic-bezier(0.16, 1, 0.3, 1);
   }
   * { box-sizing: border-box; }
@@ -39,7 +39,7 @@
   .btn-solar:hover { background: var(--solar-l); }
 
   .page-head { padding: 46px 0 4px; }
-  .page-head h1 { margin: 0 0 14px; font-size: clamp(32px, 4.5vw, 44px); font-weight: 400; line-height: 1.08; letter-spacing: -0.02em; text-wrap: balance; }
+  .page-head h1 { margin: 0 0 14px; font-family: var(--display); font-size: clamp(32px, 4.5vw, 44px); font-weight: 400; line-height: 1.08; letter-spacing: -0.02em; text-wrap: balance; }
   .page-head p { margin: 0; font-size: 16px; line-height: 1.6; color: var(--hushed); max-width: 640px; text-wrap: pretty; }
 
   .principles { display: grid; grid-template-columns: repeat(3, 1fr); padding: 34px 0 0; }
@@ -73,7 +73,7 @@
 
   /* Статья */
   .art-kind { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.11em; text-transform: uppercase; color: var(--fc); }
-  .art-title { margin: 10px 0 6px; font-size: clamp(27px, 3.4vw, 37px); font-weight: 400; letter-spacing: -0.02em; line-height: 1.1; max-width: 620px; }
+  .art-title { margin: 10px 0 6px; font-family: var(--display); font-size: clamp(27px, 3.4vw, 37px); font-weight: 400; letter-spacing: -0.02em; line-height: 1.1; max-width: 620px; }
   .art-sub { font-size: 15px; line-height: 1.55; color: var(--hushed); max-width: 640px; text-wrap: pretty; }
   .art-bar { width: 56px; height: 4px; background: var(--fc); margin: 16px 0 22px; }
   .art-grid { display: grid; grid-template-columns: 1.25fr 1fr; gap: 28px; align-items: start; }

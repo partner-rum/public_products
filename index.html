@@ -9,14 +9,14 @@
 <meta name="format-detection" content="telephone=no">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Rubik:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
   /* Вариант C «Тёмный терминал»: космос Revolut — тьма, свечение Rumberg (синий+оранжевый), живой тикер */
   :root {
     --bg:#0B0C10; --panel:rgba(255,255,255,0.04); --line:rgba(255,255,255,0.09);
     --tx:#F2F3F7; --mut:#A0A5B8; --dim:#666C82;
     --solar:#EE7D1B; --solar-l:#F58E33; --blue:#4F86E6; --or:#EE7D1B; --up:#55C08A;
-    --f:'Onest',system-ui,sans-serif; --m:'JetBrains Mono',Consolas,monospace;
+    --f:'Onest',system-ui,sans-serif; --m:'JetBrains Mono',Consolas,monospace; --display:'Rubik','Onest',system-ui,sans-serif;
     --ease:cubic-bezier(0.16,1,0.3,1);
   }
   * { box-sizing:border-box; }
@@ -45,7 +45,7 @@
 
   .hero { padding:66px 0 40px; }
   .kicker { font-family:var(--m); font-size:10.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--dim); margin-bottom:20px; }
-  h1 { margin:0; font-size:clamp(36px,5vw,60px); font-weight:600; line-height:1.06; letter-spacing:-0.02em; max-width:860px; }
+  h1 { margin:0; font-family:var(--display); font-size:clamp(36px,5vw,60px); font-weight:600; line-height:1.06; letter-spacing:-0.02em; max-width:860px; }
   h1 .lm { color:var(--solar); }
   .sub { margin:20px 0 0; font-size:16px; line-height:1.55; color:var(--mut); max-width:540px; }
 
@@ -60,7 +60,7 @@
   .srow { display:grid; grid-template-columns:44px 1fr auto 32px; align-items:center; gap:22px; padding:26px 6px; border-bottom:1px solid var(--line); position:relative; transition:background .25s ease-in-out; }
   .srow::before { content:""; position:absolute; left:-14px; top:22%; bottom:22%; width:3px; background:var(--solar); border-radius:2px; transform:scaleY(0); transition:transform .3s var(--ease); }
   .srow .no { font-family:var(--m); font-size:11px; color:var(--dim); }
-  .srow .st { font-size:clamp(21px,2.4vw,29px); font-weight:500; letter-spacing:-0.015em; transition:color .25s; }
+  .srow .st { font-family:var(--display); font-size:clamp(21px,2.4vw,29px); font-weight:600; letter-spacing:-0.015em; transition:color .25s; }
   .srow .sd { display:block; margin-top:5px; font-size:12.5px; font-weight:400; line-height:1.45; color:var(--dim); max-width:520px; }
   .srow .sm { font-family:var(--m); font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--dim); white-space:nowrap; text-align:right; transition:color .25s; }
   .srow .go svg path { stroke:var(--dim); transition:stroke .25s; }
@@ -113,7 +113,7 @@
   .intro .fin .star { width: 86px; height: 86px; transform: scale(.3); opacity: 0; }
   .intro.brandon .star { animation: intro-pop .55s var(--ease) forwards; }
   @keyframes intro-pop { 0% { transform: scale(.3); opacity: 0; } 62% { transform: scale(1.07); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
-  .intro .fin .nm { font-size: clamp(22px, 3.4vw, 34px); font-weight: 600; color: #fff; letter-spacing: -0.02em; opacity: 0; transform: translateY(10px); transition: opacity .45s ease .12s, transform .45s var(--ease) .12s; }
+  .intro .fin .nm { font-family: var(--display); font-size: clamp(22px, 3.4vw, 34px); font-weight: 600; color: #fff; letter-spacing: -0.02em; opacity: 0; transform: translateY(10px); transition: opacity .45s ease .12s, transform .45s var(--ease) .12s; }
   .intro.brandon .nm { opacity: 1; transform: none; }
   .intro .fin .bar { width: 64px; height: 4px; background: #4F86E6; transform: scaleX(0); transform-origin: left; transition: transform .5s var(--ease) .22s; }
   .intro.brandon .bar { transform: scaleX(1); }
