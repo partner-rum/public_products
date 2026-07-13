@@ -8,9 +8,7 @@ board.html           — доска инструментов (board.html?type=wa
 instrument.html      — карточка инструмента (instrument.html?id=W-SBER-310-0327)
 digest.html          — дайджест: инвестидеи недели
 onepager.html        — one-pager инструмента для PDF (onepager.html?id=...&print=1)
-placements.html      — размещённые выпуски (данные из бэкофиса api.bo)
-fetch_placements.py  — выгрузка выпусков из api.bo → data/placements.js
-                       (креды в .bo_creds, прод только читаем; запуск: python fetch_placements.py)
+placements.html      — размещённые выпуски (данные из внутреннего бэкофиса)
 data/instruments.js  — ДАННЫЕ (котировки, инструменты) — генерируется update_site.py
 data/digest.js       — ДАННЫЕ дайджеста (идеи недели)
 data/lib.js          — тексты типов продуктов, формула выплаты, форматирование
