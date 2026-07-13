@@ -207,7 +207,7 @@
 
 <script src="data/instruments.js?v=fx4"></script>
 <script src="data/lib.js?v=fx4"></script>
-<script src="share.js?v=3"></script>
+<script src="share.js?v=4"></script>
 <script>
   const S = window.SITE;
   const TYPE_LABEL = { discount: "Дисконтные облигации", protection: "Защита капитала", warrant: "Варранты" };
@@ -341,12 +341,9 @@
       const net1 = payout1 - premiumRub;
       const capPct = isCS ? (K2 - K) / K * 100 : 0;
       const capRub = nom * capPct / 100;
-      const metrics = [
-        [S.fmtSmart(K) + "%", "страйк (K)"],
-        [inst.tenor, "срок"],
-        [S.fmt2(inst.quote) + "% ном.", "цена входа"],
-        [inst.underlying, "базовый актив"]
-      ];
+      const metrics = isCS
+        ? [[S.fmtSmart(K) + "%", "страйк (K)"], [S.fmtSmart(K2) + "%", "потолок (K₂)"], [inst.tenor, "срок"], [S.fmt2(inst.quote) + "% ном.", "цена входа"]]
+        : [[S.fmtSmart(K) + "%", "страйк (K)"], [inst.tenor, "срок"], [S.fmt2(inst.quote) + "% ном.", "цена входа"], [inst.underlying, "базовый актив"]];
       const scen = [
         [inst.underlying + " вырос на " + upPct + "%", "Выплата " + S.fmtInt(payout1) + " ₽", (net1 >= 0 ? "+" : "−") + S.fmtInt(Math.abs(net1)) + " ₽", net1 >= 0 ? "#55C08A" : "#EE7D1B"]
       ];
@@ -521,11 +518,9 @@
     const c = buildContent(inst), U = S.underlyingInfo(inst.underlying);
     const shHost = document.getElementById("sh-host");
     if (shHost && window.Share) {
-      const opUrl = new URL("onepager.html?id=" + encodeURIComponent(inst.id), location.href).href;
-      const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
-      const rows = (c.metrics || []).filter(m => m[1] !== "базовый актив").map(m => "• " + cap(m[1]) + ": " + m[0]);
-      const shareText = S.displayName(inst) + "\n\n" + c.subtitle + "\n\n" + rows.join("\n");
-      Share.attach(shHost, { url: opUrl, pdf: opUrl + "&print=1", title: S.displayName(inst), text: shareText });
+      const siteUrl = new URL(".", location.href).href;
+      const params = (c.metrics || []).filter(m => m[1] !== "базовый актив").map(m => [m[1], m[0]]);
+      Share.attach(shHost, { url: siteUrl, title: S.displayName(inst), name: S.displayName(inst), pitch: c.subtitle, params });
     }
     wireCalc(inst);
     const tp = document.getElementById("tab-payoff"), tu = document.getElementById("tab-under");

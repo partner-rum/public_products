@@ -130,7 +130,7 @@
 <script src="data/instruments.js?v=fx4"></script>
 <script src="data/lib.js?v=fx4"></script>
 <script src="data/offerings.js?v=cln1"></script>
-<script src="share.js?v=3"></script>
+<script src="share.js?v=4"></script>
 <script>
   const S = window.SITE;
   const qs = new URLSearchParams(location.search);
@@ -427,12 +427,9 @@
 
   { const shHost = document.getElementById("sh-host");
     if (shHost && window.Share) {
-      const shareUrl = offering
-        ? new URL("onepager.html?offering=" + encodeURIComponent(offering.id), location.href).href
-        : new URL("onepager.html?id=" + encodeURIComponent(inst.id), location.href).href;
-      const rows = ["• Цена входа: " + S.fmt2(q) + "% ном."].concat((c.params || []).map(p => "• " + p[0] + ": " + p[1]));
-      const shareText = name + "\n\n" + c.subtitle + "\n\n" + rows.join("\n");
-      Share.attach(shHost, { url: shareUrl, title: name, text: shareText });
+      const siteUrl = new URL(".", location.href).href;
+      const params = [["Цена входа", S.fmt2(q) + "% ном."]].concat((c.params || []).map(p => [p[0], p[1]]));
+      Share.attach(shHost, { url: siteUrl, title: name, name: name, pitch: c.subtitle, params: params });
     } }
 
   if (qs.get("print") === "1") {

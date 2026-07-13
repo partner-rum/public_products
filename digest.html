@@ -155,7 +155,7 @@
 
 <script src="data/lib.js?v=fx4"></script>
 <script src="data/digest.js?v=sales2"></script>
-<script src="share.js?v=3"></script>
+<script src="share.js?v=4"></script>
 <script>
   const A = window.DIGEST_ARCHIVE;
   if (new URLSearchParams(location.search).get("view") === "client") document.body.classList.add("client");
@@ -200,11 +200,10 @@
       '<div class="art-bar"></div>' + DF.detailBody(i);
     const shHost = document.getElementById("art-tools");
     if (shHost && window.Share) {
-      const cu = location.origin + location.pathname + "?view=client#" + issue.id + "/" + i.id;
+      const siteUrl = new URL(".", location.href).href;
       const p = i.p || {};
-      const rows = [p.price ? "• Цена входа: " + p.price : null, p.upside ? "• Потенциал: " + p.upside : null, p.protection ? "• Защита: " + p.protection : null].filter(Boolean);
-      const shareText = i.name + (i.teaser ? "\n\n" + i.teaser : "") + (rows.length ? "\n\n" + rows.join("\n") : "");
-      Share.attach(shHost, { url: cu, title: i.name, text: shareText });
+      const params = [["Цена входа", p.price], ["Потенциал", p.upside], ["Защита", p.protection]];
+      Share.attach(shHost, { url: siteUrl, title: i.name, name: i.name, pitch: i.teaser, params: params });
     }
     document.querySelectorAll(".toc-i").forEach(el => el.classList.toggle("active", el.getAttribute("data-id") === i.id));
 

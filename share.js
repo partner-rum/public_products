@@ -1,7 +1,9 @@
 // Общий модуль «Поделиться»: кнопка + меню (ссылка / Telegram / WhatsApp / PDF) + тост.
 // Подключается на дайджест, доску и one-pager. Хосты тёмные — палитра светлая.
-// Использование: Share.attach(hostEl, { url, pdf, title, text }).
-// text — тело сообщения для Telegram/WhatsApp (описание продукта с параметрами); по умолчанию = title.
+// Использование: Share.attach(hostEl, { url, pdf, title, name, pitch, params }).
+// url — ссылка (всегда на сайт). name — заголовок, pitch — суть в одну фразу,
+// params — [[label, value], ...]; текст сообщения собирается с эмодзи и переносами.
+// Можно передать готовый text — тогда он используется как есть.
 window.Share = (function () {
   var IC = {
     share: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5 15.4 17.5M15.4 6.5 8.6 10.5"/></svg>',
@@ -36,20 +38,46 @@ window.Share = (function () {
     var st = document.createElement("style"); st.textContent = CSS; document.head.appendChild(st);
   }
 
+  function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
+  function emojiFor(label) {
+    var l = (label || "").toLowerCase();
+    if (l.indexOf("цена") >= 0 || l.indexOf("премия") >= 0) return "💰";
+    if (l.indexOf("срок") >= 0) return "⏳";
+    if (l.indexOf("страйк") >= 0) return "🎯";
+    if (l.indexOf("потолок") >= 0) return "🚧";
+    if (l.indexOf("убыток") >= 0 || l.indexOf("риск") >= 0) return "⚠️";
+    if (l.indexOf("экспозиц") >= 0) return "📊";
+    if (l.indexOf("доходност") >= 0) return "📈";
+    if (l.indexOf("выплата") >= 0) return "💵";
+    if (l.indexOf("защита") >= 0) return "🛡️";
+    if (l.indexOf("участие") >= 0) return "📈";
+    if (l.indexOf("потенциал") >= 0) return "🚀";
+    if (l.indexOf("дисконт") >= 0) return "🏷️";
+    if (l.indexOf("привязк") >= 0) return "🔗";
+    if (l.indexOf("погашени") >= 0) return "📅";
+    if (l.indexOf("купон") >= 0) return "🎟️";
+    return "🔹";
+  }
+  function buildText(opts, title) {
+    var rows = (opts.params || []).filter(function (p) { return p && p[1]; })
+      .map(function (p) { return emojiFor(p[0]) + " " + cap(p[0]) + ": " + p[1]; });
+    return (opts.name || title) + (opts.pitch ? "\n\n" + opts.pitch : "") + (rows.length ? "\n\n" + rows.join("\n") : "");
+  }
+
   function attach(host, opts) {
     if (!host) return;
     injectCSS();
     var url = opts.url || location.href;
     var pdf = opts.pdf || null;
     var title = opts.title || document.title;
-    var text = opts.text || title;
+    var text = opts.text || buildText(opts, title);
     var u = encodeURIComponent(url), t = encodeURIComponent(text);
     var wrap = document.createElement("div");
     wrap.className = "sh";
     wrap.innerHTML =
       '<button class="sh-btn" type="button" aria-haspopup="true" aria-label="Поделиться">' + IC.share + 'Поделиться</button>' +
       '<div class="sh-menu" role="menu">' +
-        '<button class="sh-mi" type="button" data-copy role="menuitem"><span class="ic">' + IC.link + '</span><span>Скопировать ссылку<small>клиентский вид</small></span></button>' +
+        '<button class="sh-mi" type="button" data-copy role="menuitem"><span class="ic">' + IC.link + '</span><span>Скопировать ссылку<small>на сайт</small></span></button>' +
         '<a class="sh-mi" role="menuitem" target="_blank" rel="noopener" href="https://t.me/share/url?url=' + u + '&text=' + t + '"><span class="ic tg">' + IC.tg + '</span><span>Отправить в Telegram</span></a>' +
         '<a class="sh-mi" role="menuitem" target="_blank" rel="noopener" href="https://wa.me/?text=' + t + '%20' + u + '"><span class="ic wa">' + IC.wa + '</span><span>Отправить в WhatsApp</span></a>' +
         (pdf ? '<div class="sh-sep"></div><a class="sh-mi" role="menuitem" target="_blank" rel="noopener" href="' + pdf + '"><span class="ic pdf">' + IC.pdf + '</span><span>One-pager (PDF)</span></a>' : "") +
