@@ -202,8 +202,8 @@
     if (shHost && window.Share) {
       const cu = location.origin + location.pathname + "?view=client#" + issue.id + "/" + i.id;
       const p = i.p || {};
-      const paramLine = [p.price ? "Цена входа: " + p.price : null, p.upside ? "Потенциал: " + p.upside : null, p.protection ? "Защита: " + p.protection : null].filter(Boolean).join(" · ");
-      const shareText = i.name + (i.teaser ? "\n" + i.teaser : "") + (paramLine ? "\n" + paramLine : "");
+      const rows = [p.price ? "• Цена входа: " + p.price : null, p.upside ? "• Потенциал: " + p.upside : null, p.protection ? "• Защита: " + p.protection : null].filter(Boolean);
+      const shareText = i.name + (i.teaser ? "\n\n" + i.teaser : "") + (rows.length ? "\n\n" + rows.join("\n") : "");
       Share.attach(shHost, { url: cu, title: i.name, text: shareText });
     }
     document.querySelectorAll(".toc-i").forEach(el => el.classList.toggle("active", el.getAttribute("data-id") === i.id));

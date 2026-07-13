@@ -357,7 +357,7 @@
       scen.push([inst.underlying + " не вырос", "Выплаты нет", "−" + S.fmtInt(premiumRub) + " ₽", "#EE7D1B"]);
       return {
         badge: isCS ? "КОЛЛ-СПРЕД · ВАРРАНТ" : "CALL · ВАРРАНТ",
-        subtitle: (isCS ? "Колл-спред на рост: " : "Варрант на рост: ") + inst.underlying + " · котировка — премия и максимальный риск покупателя",
+        subtitle: (isCS ? "Колл-спред на рост " : "Варрант на рост ") + inst.underlying + " — риск ограничен уплаченной премией",
         payoff: () => chartWarrant(inst),
         payoffCaption: isCS
           ? "Выплата на экспирацию в % от номинала; уровень БА — в % от начального. Выше K₂ выплата не растёт. Пунктир — премия; б/у — безубыточность."
@@ -522,8 +522,9 @@
     const shHost = document.getElementById("sh-host");
     if (shHost && window.Share) {
       const opUrl = new URL("onepager.html?id=" + encodeURIComponent(inst.id), location.href).href;
-      const paramLine = (c.metrics || []).map(m => m[1] + ": " + m[0]).join(" · ");
-      const shareText = S.displayName(inst) + "\n" + c.subtitle + (paramLine ? "\n" + paramLine : "");
+      const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+      const rows = (c.metrics || []).filter(m => m[1] !== "базовый актив").map(m => "• " + cap(m[1]) + ": " + m[0]);
+      const shareText = S.displayName(inst) + "\n\n" + c.subtitle + "\n\n" + rows.join("\n");
       Share.attach(shHost, { url: opUrl, pdf: opUrl + "&print=1", title: S.displayName(inst), text: shareText });
     }
     wireCalc(inst);
