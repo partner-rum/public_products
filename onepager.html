@@ -130,7 +130,7 @@
 <script src="data/instruments.js?v=fx4"></script>
 <script src="data/lib.js?v=fx4"></script>
 <script src="data/offerings.js?v=cln1"></script>
-<script src="share.js?v=4"></script>
+<script src="share.js?v=5"></script>
 <script>
   const S = window.SITE;
   const qs = new URLSearchParams(location.search);
@@ -427,9 +427,11 @@
 
   { const shHost = document.getElementById("sh-host");
     if (shHost && window.Share) {
-      const siteUrl = new URL(".", location.href).href;
+      const prodUrl = offering
+        ? new URL("offerings.html", location.href).href
+        : new URL("instrument.html?id=" + encodeURIComponent(inst.id), location.href).href;
       const params = [["Цена входа", S.fmt2(q) + "% ном."]].concat((c.params || []).map(p => [p[0], p[1]]));
-      Share.attach(shHost, { url: siteUrl, title: name, name: name, pitch: c.subtitle, params: params });
+      Share.attach(shHost, { url: prodUrl, title: name, name: name, pitch: c.subtitle, params: params });
     } }
 
   if (qs.get("print") === "1") {

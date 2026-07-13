@@ -207,7 +207,7 @@
 
 <script src="data/instruments.js?v=fx4"></script>
 <script src="data/lib.js?v=fx4"></script>
-<script src="share.js?v=4"></script>
+<script src="share.js?v=5"></script>
 <script>
   const S = window.SITE;
   const TYPE_LABEL = { discount: "Дисконтные облигации", protection: "Защита капитала", warrant: "Варранты" };
@@ -518,9 +518,9 @@
     const c = buildContent(inst), U = S.underlyingInfo(inst.underlying);
     const shHost = document.getElementById("sh-host");
     if (shHost && window.Share) {
-      const siteUrl = new URL(".", location.href).href;
+      const prodUrl = new URL("instrument.html?id=" + encodeURIComponent(inst.id), location.href).href;
       const params = (c.metrics || []).filter(m => m[1] !== "базовый актив").map(m => [m[1], m[0]]);
-      Share.attach(shHost, { url: siteUrl, title: S.displayName(inst), name: S.displayName(inst), pitch: c.subtitle, params });
+      Share.attach(shHost, { url: prodUrl, title: S.displayName(inst), name: S.displayName(inst), pitch: c.subtitle, params });
     }
     wireCalc(inst);
     const tp = document.getElementById("tab-payoff"), tu = document.getElementById("tab-under");

@@ -77,7 +77,7 @@ window.Share = (function () {
     wrap.innerHTML =
       '<button class="sh-btn" type="button" aria-haspopup="true" aria-label="Поделиться">' + IC.share + 'Поделиться</button>' +
       '<div class="sh-menu" role="menu">' +
-        '<button class="sh-mi" type="button" data-copy role="menuitem"><span class="ic">' + IC.link + '</span><span>Скопировать ссылку<small>на сайт</small></span></button>' +
+        '<button class="sh-mi" type="button" data-copy role="menuitem"><span class="ic">' + IC.link + '</span><span>Скопировать ссылку<small>страница продукта</small></span></button>' +
         '<a class="sh-mi" role="menuitem" target="_blank" rel="noopener" href="https://t.me/share/url?url=' + u + '&text=' + t + '"><span class="ic tg">' + IC.tg + '</span><span>Отправить в Telegram</span></a>' +
         '<a class="sh-mi" role="menuitem" target="_blank" rel="noopener" href="https://wa.me/?text=' + t + '%20' + u + '"><span class="ic wa">' + IC.wa + '</span><span>Отправить в WhatsApp</span></a>' +
         (pdf ? '<div class="sh-sep"></div><a class="sh-mi" role="menuitem" target="_blank" rel="noopener" href="' + pdf + '"><span class="ic pdf">' + IC.pdf + '</span><span>One-pager (PDF)</span></a>' : "") +
