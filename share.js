@@ -1,6 +1,7 @@
 // Общий модуль «Поделиться»: кнопка + меню (ссылка / Telegram / WhatsApp / PDF) + тост.
 // Подключается на дайджест, доску и one-pager. Хосты тёмные — палитра светлая.
-// Использование: Share.attach(hostEl, { url, pdf, title }).
+// Использование: Share.attach(hostEl, { url, pdf, title, text }).
+// text — тело сообщения для Telegram/WhatsApp (описание продукта с параметрами); по умолчанию = title.
 window.Share = (function () {
   var IC = {
     share: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5 15.4 17.5M15.4 6.5 8.6 10.5"/></svg>',
@@ -41,7 +42,8 @@ window.Share = (function () {
     var url = opts.url || location.href;
     var pdf = opts.pdf || null;
     var title = opts.title || document.title;
-    var u = encodeURIComponent(url), t = encodeURIComponent(title);
+    var text = opts.text || title;
+    var u = encodeURIComponent(url), t = encodeURIComponent(text);
     var wrap = document.createElement("div");
     wrap.className = "sh";
     wrap.innerHTML =

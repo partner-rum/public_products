@@ -130,7 +130,7 @@
 <script src="data/instruments.js?v=fx4"></script>
 <script src="data/lib.js?v=fx4"></script>
 <script src="data/offerings.js?v=cln1"></script>
-<script src="share.js?v=2"></script>
+<script src="share.js?v=3"></script>
 <script>
   const S = window.SITE;
   const qs = new URLSearchParams(location.search);
@@ -430,7 +430,9 @@
       const shareUrl = offering
         ? new URL("onepager.html?offering=" + encodeURIComponent(offering.id), location.href).href
         : new URL("onepager.html?id=" + encodeURIComponent(inst.id), location.href).href;
-      Share.attach(shHost, { url: shareUrl, title: name });
+      const paramLine = (c.params || []).map(p => p[0] + ": " + p[1]).join(" · ");
+      const shareText = name + "\n" + c.subtitle + (paramLine ? "\n" + paramLine : "");
+      Share.attach(shHost, { url: shareUrl, title: name, text: shareText });
     } }
 
   if (qs.get("print") === "1") {

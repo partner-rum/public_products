@@ -207,7 +207,7 @@
 
 <script src="data/instruments.js?v=fx4"></script>
 <script src="data/lib.js?v=fx4"></script>
-<script src="share.js?v=2"></script>
+<script src="share.js?v=3"></script>
 <script>
   const S = window.SITE;
   const TYPE_LABEL = { discount: "Дисконтные облигации", protection: "Защита капитала", warrant: "Варранты" };
@@ -519,12 +519,14 @@
     const inst = S.INSTRUMENTS.find(r => r.id === id);
     if (!inst) return;
     document.getElementById("panel").innerHTML = passportHTML(inst);
+    const c = buildContent(inst), U = S.underlyingInfo(inst.underlying);
     const shHost = document.getElementById("sh-host");
     if (shHost && window.Share) {
       const opUrl = new URL("onepager.html?id=" + encodeURIComponent(inst.id), location.href).href;
-      Share.attach(shHost, { url: opUrl, pdf: opUrl + "&print=1", title: S.displayName(inst) });
+      const paramLine = (c.metrics || []).map(m => m[1] + ": " + m[0]).join(" · ");
+      const shareText = S.displayName(inst) + "\n" + c.subtitle + (paramLine ? "\n" + paramLine : "");
+      Share.attach(shHost, { url: opUrl, pdf: opUrl + "&print=1", title: S.displayName(inst), text: shareText });
     }
-    const c = buildContent(inst), U = S.underlyingInfo(inst.underlying);
     wireCalc(inst);
     const tp = document.getElementById("tab-payoff"), tu = document.getElementById("tab-under");
     if (tp) tp.addEventListener("click", () => setMode("payoff", inst, c, U));

@@ -155,7 +155,7 @@
 
 <script src="data/lib.js?v=fx4"></script>
 <script src="data/digest.js?v=sales2"></script>
-<script src="share.js?v=2"></script>
+<script src="share.js?v=3"></script>
 <script>
   const A = window.DIGEST_ARCHIVE;
   if (new URLSearchParams(location.search).get("view") === "client") document.body.classList.add("client");
@@ -201,7 +201,10 @@
     const shHost = document.getElementById("art-tools");
     if (shHost && window.Share) {
       const cu = location.origin + location.pathname + "?view=client#" + issue.id + "/" + i.id;
-      Share.attach(shHost, { url: cu, title: i.name });
+      const p = i.p || {};
+      const paramLine = [p.price ? "Цена входа: " + p.price : null, p.upside ? "Потенциал: " + p.upside : null, p.protection ? "Защита: " + p.protection : null].filter(Boolean).join(" · ");
+      const shareText = i.name + (i.teaser ? "\n" + i.teaser : "") + (paramLine ? "\n" + paramLine : "");
+      Share.attach(shHost, { url: cu, title: i.name, text: shareText });
     }
     document.querySelectorAll(".toc-i").forEach(el => el.classList.toggle("active", el.getAttribute("data-id") === i.id));
 
