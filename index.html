@@ -49,12 +49,16 @@
   h1 .lm { color:var(--solar); }
   .sub { margin:20px 0 0; font-size:16px; line-height:1.55; color:var(--mut); max-width:540px; }
 
-  .tape-box { border-top:1px solid var(--line); border-bottom:1px solid var(--line); overflow:hidden; padding:11px 0; margin:8px 0 6px; }
-  .tape { display:flex; gap:44px; white-space:nowrap; width:max-content; font-family:var(--m); font-size:12px; animation:slide 46s linear infinite; }
-  .tape .it { display:flex; gap:10px; align-items:baseline; }
-  .tape .nm { color:var(--dim); }
-  .tape .qt { color:var(--tx); }
-  .tape .up { color:var(--up); } .tape .dn { color:var(--or); }
+  /* Лента «можем запустить сейчас»: подпись сверху + выделенная полоса каталога продуктов */
+  .tape-cap { display:flex; align-items:center; gap:9px; font-family:var(--m); font-size:11px; letter-spacing:.13em; text-transform:uppercase; margin:24px 0 9px; color:var(--solar); }
+  .tape-cap .tdot { width:7px; height:7px; border-radius:50%; background:var(--solar); box-shadow:0 0 0 4px rgba(238,125,27,0.16); flex:none; animation:tpulse 2.2s ease-in-out infinite; }
+  .tape-cap .tsub { color:var(--dim); }
+  @keyframes tpulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:.5; transform:scale(.85); } }
+  .tape-box { position:relative; border:1px solid var(--line); border-left:2px solid var(--solar); border-radius:12px; background:var(--panel); overflow:hidden; padding:12px 0; margin:0 0 8px; }
+  .tape { display:flex; gap:38px; white-space:nowrap; width:max-content; font-family:var(--m); font-size:12px; animation:slide 52s linear infinite; }
+  .tape .it { display:flex; align-items:baseline; }
+  .tape .sym { color:var(--tx); font-weight:500; }
+  .tape .nm { color:var(--mut); }
   @keyframes slide { to { transform:translateX(-50%); } }
 
   .srow { display:grid; grid-template-columns:44px 1fr auto 32px; align-items:center; gap:22px; padding:26px 6px; border-bottom:1px solid var(--line); position:relative; transition:background .25s ease-in-out; }
@@ -79,7 +83,7 @@
   @keyframes rise { to { opacity:1; transform:none; } }
 
 
-  @media (prefers-reduced-motion: reduce) { .rise { animation:none; opacity:1; transform:none; } .tape { animation:none; } .srow, .srow::before, .srow .st, .srow .sm, .srow .go svg { transition:none; } }
+  @media (prefers-reduced-motion: reduce) { .rise { animation:none; opacity:1; transform:none; } .tape { animation:none; } .tape-cap .tdot { animation:none; } .srow, .srow::before, .srow .st, .srow .sm, .srow .go svg { transition:none; } }
   @media (max-width: 860px) {
     .nav-in, .wrap { padding-left:20px; padding-right:20px; }
     .hero { padding:46px 0 30px; }
@@ -137,9 +141,10 @@
   <section class="hero">
     <div class="kicker rise">Структурные облигации · для квалифицированных инвесторов</div>
     <h1 class="rise" style="animation-delay:.07s">Доходность любит <span class="lm">расчёт</span>.<br>Формула выплаты известна до сделки.</h1>
-    <p class="sub rise" style="animation-delay:.14s">Свежие идеи, живые котировки и размещённые выпуски — всё в одном месте, с параметрами и примерами расчёта в рублях.</p>
+    <p class="sub rise" style="animation-delay:.14s">Свежие идеи, готовые к запуску продукты и размещённые выпуски — всё в одном месте, с параметрами и примерами расчёта в рублях.</p>
   </section>
 
+  <div class="tape-cap rise" style="animation-delay:.18s"><span class="tdot"></span>Можем запустить сейчас<span class="tsub">· текущие продукты под клиента</span></div>
   <div class="tape-box rise" style="animation-delay:.2s" aria-hidden="true"><div class="tape" id="tape"></div></div>
 
   <nav aria-label="Разделы">
@@ -290,11 +295,13 @@
     document.getElementById("m3").textContent = window.PLACEMENTS_DATA.issues.length + " выпуска";
     document.getElementById("m4").textContent = "данные: " + window.SITE_DATA.updated.split("-").reverse().join(".");
 
-    // Живой тикер из данных доски (контент дублируется для бесшовной ленты)
+    // Каталог продуктов «можем запустить» — без котировок и дельт (данные не ведём).
+    // Имя делим по «·»: первый сегмент ярче, остальное приглушено (ритм тикера, но статично).
     var items = window.SITE_DATA.instruments.slice(0, 12).map(function (r) {
-      var up = (r.chg || 0) >= 0;
-      return '<span class="it"><span class="nm">' + r.name + '</span><span class="qt">' + S.fmt2(r.quote) + '%</span>' +
-        '<span class="' + (up ? 'up' : 'dn') + '">' + (up ? '+' : '−') + Math.abs(r.chg).toFixed(1) + '</span></span>';
+      var parts = String(r.name).split(" · ");
+      var head = parts.shift();
+      var rest = parts.length ? '<span class="nm"> · ' + parts.join(" · ") + '</span>' : '';
+      return '<span class="it"><span class="sym">' + head + '</span>' + rest + '</span>';
     }).join("");
     document.getElementById("tape").innerHTML = items + items;
   } catch (e) {}
