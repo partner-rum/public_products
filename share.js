@@ -16,8 +16,9 @@ window.Share = (function () {
     '.sh-btn{display:inline-flex;align-items:center;gap:7px;background:transparent;border:1px solid rgba(255,255,255,0.14);color:#F2F3F7;border-radius:8px;padding:8px 13px;font-family:inherit;font-size:13px;cursor:pointer;transition:border-color .2s,background .2s}' +
     '.sh-btn:hover{border-color:rgba(255,255,255,0.28);background:rgba(255,255,255,0.05)}' +
     '.sh-btn svg{display:block}' +
-    '.sh-menu{position:absolute;right:0;top:calc(100% + 8px);z-index:60;width:238px;background:#1B1D26;border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:6px;box-shadow:0 16px 40px rgba(0,0,0,0.55);opacity:0;transform:translateY(-4px);pointer-events:none;transition:opacity .18s ease,transform .18s cubic-bezier(0.16,1,0.3,1)}' +
+    '.sh-menu{position:absolute;right:0;top:calc(100% + 8px);z-index:60;width:238px;max-width:calc(100vw - 24px);background:#1B1D26;border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:6px;box-shadow:0 16px 40px rgba(0,0,0,0.55);opacity:0;transform:translateY(-4px);pointer-events:none;transition:opacity .18s ease,transform .18s cubic-bezier(0.16,1,0.3,1)}' +
     '.sh.open .sh-menu{opacity:1;transform:none;pointer-events:auto}' +
+    '.sh.align-left .sh-menu,.sh.align-left .sh-toast{right:auto;left:0}' +
     '.sh-mi{display:flex;align-items:center;gap:11px;width:100%;text-align:left;background:none;border:none;border-radius:8px;padding:10px 11px;cursor:pointer;font-family:inherit;font-size:13.5px;color:#F2F3F7;text-decoration:none}' +
     '.sh-mi:hover{background:rgba(255,255,255,0.06)}' +
     '.sh-mi .ic{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;flex:none;background:rgba(255,255,255,0.06)}' +
@@ -56,7 +57,15 @@ window.Share = (function () {
     host.appendChild(wrap);
 
     var btn = wrap.querySelector(".sh-btn"), toast = wrap.querySelector(".sh-toast");
-    btn.addEventListener("click", function (e) { e.stopPropagation(); wrap.classList.toggle("open"); });
+    btn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      if (!wrap.classList.contains("open")) {
+        var r = btn.getBoundingClientRect();
+        // открываем меню в ту сторону, где больше места (иначе уезжает за край на телефоне)
+        wrap.classList.toggle("align-left", r.left < window.innerWidth / 2);
+      }
+      wrap.classList.toggle("open");
+    });
     document.addEventListener("click", function (e) { if (!wrap.contains(e.target)) wrap.classList.remove("open"); });
     document.addEventListener("keydown", function (e) { if (e.key === "Escape") wrap.classList.remove("open"); });
     wrap.querySelector("[data-copy]").addEventListener("click", function () {
