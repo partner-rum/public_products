@@ -39,9 +39,12 @@
   .btn-solar { background: var(--solar); color: #0C0A08 !important; border-radius: 6px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 7px; transition: background .3s ease-in-out; }
   .btn-solar:hover { background: var(--solar-l); }
 
-  /* ── Полоса под шапкой: «пульс» рынка (тёмная, оранжевая линия, без данных) ── */
+  /* ── Полоса под шапкой: синусоида-фон + лента мотивирующих фраз ── */
   .ticker { position: relative; height: 54px; overflow: hidden; background: #101114; border-bottom: 1px solid #23242B; }
-  .ticker svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .ticker svg.tk-sine { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 0; }
+  .tk-rot { position: absolute; inset: 0; z-index: 2; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+  .tk-rot span { position: absolute; font-family: var(--f-body); font-size: 14.5px; color: var(--ink); opacity: 0; transition: opacity .6s ease; text-align: center; padding: 0 20px; letter-spacing: -0.005em; }
+  .tk-rot span.on { opacity: 1; }
 
   .head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin: 26px 0 18px; }
   h1 { margin: 0; font-family: var(--display); font-size: 30px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1; }
@@ -177,7 +180,7 @@
   </div>
 </header>
 
-<div class="ticker" id="ticker" aria-hidden="true"></div>
+<div class="ticker" id="ticker" aria-hidden="true"><svg class="tk-sine" id="tk-sine"></svg><div class="tk-rot" id="tk-rot"></div></div>
 
 <div class="wrap">
   <div class="head">
@@ -612,51 +615,50 @@
   render();
   if (selected) select(selected, false);
 
-  // ── Полоса-«пульс»: бесконечно рисующаяся оранжевая линия (декор, без данных) ──
-  (function pulse() {
-    const host = document.getElementById("ticker");
-    if (!host) return;
-    const OR = "#EE7D1B", NS = "http://www.w3.org/2000/svg";
-    const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const svg = document.createElementNS(NS, "svg");
-    svg.setAttribute("aria-hidden", "true");
-    host.appendChild(svg);
-    let W = 0, H = 0, N = 0, DX = 0, pts = [], path, halo, tip, acc = 0, prev = 0;
+  // ── Полоса под шапкой: синусоида-фон + лента мотивирующих фраз (декор) ──
+  (function ribbon() {
+    var PHRASES = [
+      "Доходность любит расчёт",
+      "Риск известен до сделки",
+      "Доход по формуле, а не по удаче",
+      "Идея = гипотеза + цифры",
+      "Защита или рычаг — под вашу цель",
+      "Считай сценарий до сделки — прямо здесь",
+      "Каждая идея — с примером в рублях",
+      "Рычаг на рост — риск лишь в премии",
+      "Капитал под защитой при любом сценарии",
+      "Рынок вознаграждает подготовленных"
+    ];
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    function build() {
-      W = host.clientWidth || 800; H = host.clientHeight || 54;
-      svg.setAttribute("viewBox", "0 0 " + W + " " + H);
-      N = Math.max(24, Math.round(W / 8)); DX = W / (N - 1);
-      let g = "";
-      for (let gy = 18; gy < H; gy += 18) g += '<line x1="0" y1="' + gy + '" x2="' + W + '" y2="' + gy + '" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>';
-      if (!pts.length) { let v = 0.55; for (let i = 0; i < N; i++) { v = Math.min(0.85, Math.max(0.15, v + (Math.random() - 0.5) * 0.1)); pts.push(v); } }
-      else { const last = pts[pts.length - 1] || 0.5; while (pts.length < N) pts.unshift(last); pts = pts.slice(-N); }
-      svg.innerHTML = g +
-        '<path id="pl-line" fill="none" stroke="' + OR + '" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" style="filter:drop-shadow(0 0 7px rgba(238,125,27,0.5))"/>' +
-        '<circle id="pl-halo" r="9" fill="rgba(238,125,27,0.22)"/><circle id="pl-tip" r="3.4" fill="' + OR + '"/>';
-      path = svg.querySelector("#pl-line"); halo = svg.querySelector("#pl-halo"); tip = svg.querySelector("#pl-tip");
-      draw();
+    // лента фраз
+    var rot = document.getElementById("tk-rot");
+    if (rot) {
+      PHRASES.forEach(function (p, i) { var s = document.createElement("span"); s.textContent = p; if (i === 0) s.className = "on"; rot.appendChild(s); });
+      if (!reduce && PHRASES.length > 1) {
+        var k = 0, spans = rot.querySelectorAll("span");
+        setInterval(function () { spans[k].classList.remove("on"); k = (k + 1) % spans.length; spans[k].classList.add("on"); }, 3600);
+      }
     }
+
+    // синусоида на фоне (приглушённая, тихо дрейфует)
+    var svg = document.getElementById("tk-sine");
+    if (!svg) return;
+    var NS = "http://www.w3.org/2000/svg", path = document.createElementNS(NS, "path");
+    path.setAttribute("fill", "none"); path.setAttribute("stroke", "rgba(238,125,27,0.30)"); path.setAttribute("stroke-width", "1.6"); path.setAttribute("stroke-linecap", "round");
+    svg.appendChild(path);
+    var W = 1000, H = 54, phase = 0;
+    function size() { W = svg.clientWidth || 1000; svg.setAttribute("viewBox", "0 0 " + W + " " + H); }
     function draw() {
-      let d = "M";
-      for (let i = 0; i < N; i++) d += (i ? " L" : "") + (i * DX).toFixed(1) + " " + (8 + pts[i] * (H - 16)).toFixed(1);
+      var cy = H / 2, amp = 13, cycles = 3, d = "", x;
+      for (x = 0; x <= W; x += 6) d += (x === 0 ? "M" : "L") + x.toFixed(1) + " " + (cy + Math.sin(x / W * cycles * 6.2832 + phase) * amp).toFixed(1) + " ";
       path.setAttribute("d", d);
-      const ty = 8 + pts[N - 1] * (H - 16);
-      tip.setAttribute("cx", W - 1); tip.setAttribute("cy", ty);
-      halo.setAttribute("cx", W - 1); halo.setAttribute("cy", ty);
     }
-    build();
-    if (reduce) { tip.setAttribute("opacity", 0); halo.setAttribute("opacity", 0); return; }
-    let rw = 0;
-    window.addEventListener("resize", () => { clearTimeout(rw); rw = setTimeout(build, 150); });
-    function fr(now) {
-      if (!prev) prev = now;
-      acc += now - prev; prev = now;
-      while (acc > 42) { acc -= 42; const nv = pts[N - 1] + (Math.random() - 0.5) * 0.1 - (pts[N - 1] - 0.5) * 0.03; pts.push(Math.min(0.88, Math.max(0.12, nv))); pts.shift(); }
-      draw();
-      requestAnimationFrame(fr);
-    }
-    requestAnimationFrame(fr);
+    size(); draw();
+    var rw = 0;
+    window.addEventListener("resize", function () { clearTimeout(rw); rw = setTimeout(function () { size(); draw(); }, 150); });
+    if (reduce) return;
+    (function fr() { phase -= 0.018; draw(); requestAnimationFrame(fr); })();
   })();
 </script>
 </body>
