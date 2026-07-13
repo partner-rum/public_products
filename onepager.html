@@ -431,7 +431,7 @@
         ? new URL("onepager.html?offering=" + encodeURIComponent(offering.id), location.href).href
         : new URL("onepager.html?id=" + encodeURIComponent(inst.id), location.href).href;
       const paramLine = (c.params || []).map(p => p[0] + ": " + p[1]).join(" · ");
-      const shareText = name + "\n" + c.subtitle + (paramLine ? "\n" + paramLine : "");
+      const shareText = name + "\n" + c.subtitle + "\nЦена входа: " + S.fmt2(q) + "% ном." + (paramLine ? " · " + paramLine : "");
       Share.attach(shHost, { url: shareUrl, title: name, text: shareText });
     } }
 

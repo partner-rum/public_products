@@ -341,11 +341,12 @@
       const net1 = payout1 - premiumRub;
       const capPct = isCS ? (K2 - K) / K * 100 : 0;
       const capRub = nom * capPct / 100;
-      const metrics = [[S.fmtSmart(K) + "%", "страйк (K)"]];
-      if (isCS) metrics.push([S.fmtSmart(K2) + "%", "потолок (K₂)"]);
-      metrics.push([inst.tenor, "срок"], [inst.expiry, "экспирация"]);
-      if (inst.uRef) metrics.push([inst.uRef, inst.underlying + " сегодня"]);
-      metrics.push([S.fmtInt(nom) + " ₽", "мин. номинал"]);
+      const metrics = [
+        [S.fmtSmart(K) + "%", "страйк (K)"],
+        [inst.tenor, "срок"],
+        [S.fmt2(inst.quote) + "% ном.", "цена входа"],
+        [inst.underlying, "базовый актив"]
+      ];
       const scen = [
         [inst.underlying + " вырос на " + upPct + "%", "Выплата " + S.fmtInt(payout1) + " ₽", (net1 >= 0 ? "+" : "−") + S.fmtInt(Math.abs(net1)) + " ₽", net1 >= 0 ? "#55C08A" : "#EE7D1B"]
       ];
@@ -383,9 +384,8 @@
         metrics: [
           [S.fmt1(S.yieldAnnual(inst)) + "%", "доходность годовых"],
           ["100%", "выплата на погашение"],
-          [inst.expiry, "погашение"],
-          [S.daysTo(inst.expiry) + " дн.", "осталось"],
-          [S.fmtInt(nom) + " ₽", "мин. номинал"]
+          [S.fmt2(inst.quote) + "% ном.", "цена входа"],
+          [inst.underlying, "базовый актив"]
         ],
         exampleIntro: "Номинал " + S.fmtInt(nom) + " ₽ · покупка по " + S.fmt2(inst.quote) + "% = " + S.fmtInt(buyRub) + " ₽",
         scenarios: [
@@ -409,11 +409,10 @@
       payoff: () => chartProtection(inst),
       payoffCaption: "Выплата на экспирацию в % от номинала: не ниже 100% при любом сценарии, выше S₀ — участие в росте.",
       metrics: [
-        ["100%", "защита капитала"],
+        [S.fmtSmart(inst.protectionPct != null ? inst.protectionPct : 100) + "%", "защита капитала"],
         [partS, "участие в росте"],
-        [S.fmtSmart(inst.strike), "нач. уровень (S₀)"],
-        [inst.expiry, "экспирация"],
-        [S.fmtInt(nom) + " ₽", "мин. номинал"]
+        [S.fmt2(inst.quote) + "% ном.", "цена входа"],
+        [inst.underlying, "базовый актив"]
       ],
       exampleIntro: "Номинал " + S.fmtInt(nom) + " ₽ · вход по " + S.fmt2(inst.quote) + "% = " + S.fmtInt(entryRub) + " ₽",
       scenarios: [
