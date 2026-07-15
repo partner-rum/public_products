@@ -121,6 +121,7 @@
   <a id="back-link" href="board.html">← К инструменту</a>
   <span class="sp"></span>
   <span style="font-size:12px;color:#8B90A8">Если PDF без цвета — включите «Фоновая графика» в диалоге печати</span>
+  <span class="ct-host" id="ct-host" style="margin-right:8px"></span>
   <span class="sh-host" id="sh-host" style="margin-right:4px"></span>
   <button class="btn-print" onclick="window.print()">Сохранить как PDF</button>
 </div>
@@ -131,6 +132,7 @@
 <script src="data/lib.js?v=fx4"></script>
 <script src="data/offerings.js?v=cln1"></script>
 <script src="share.js?v=5"></script>
+<script src="contact.js?v=3"></script>
 <script>
   const S = window.SITE;
   const qs = new URLSearchParams(location.search);
@@ -432,6 +434,8 @@
         : new URL("instrument.html?id=" + encodeURIComponent(inst.id), location.href).href;
       const params = [["Цена входа", S.fmt2(q) + "% ном."]].concat((c.params || []).map(p => [p[0], p[1]]));
       Share.attach(shHost, { url: prodUrl, title: name, name: name, pitch: c.subtitle, params: params });
+      const ctHost = document.getElementById("ct-host");
+      if (ctHost && window.Contact) Contact.attach(ctHost, { title: name, url: prodUrl, id: offering ? offering.id : inst.id });
     } }
 
   if (qs.get("print") === "1") {

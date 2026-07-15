@@ -1,0 +1,11 @@
+name = "so-leads"
+main = "worker.js"
+compatibility_date = "2026-01-01"
+
+# Секреты НЕ здесь, а через `wrangler secret put`:
+#   wrangler secret put BOT_TOKEN
+#   wrangler secret put CHAT_ID
+#   wrangler secret put WEBHOOK_SECRET   # опционально
+# Необязательные vars можно задать тут:
+# [vars]
+# ALLOW_ORIGIN = "https://partner-rum.github.io"

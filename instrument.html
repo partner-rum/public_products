@@ -52,6 +52,11 @@
   .btn-pdf { margin-top: 14px; display: inline-flex; align-items: center; gap: 8px; background: var(--solar); color: var(--ink); border-radius: 6px; padding: 9px 16px; font-size: 13.5px; font-weight: 500; transition: background .3s ease-in-out; }
   .btn-pdf:hover { background: var(--solar-l); }
   .btn-pdf svg { display: block; }
+  .actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
+  .actions .btn-pdf { margin-top: 0; }
+  .btn-secondary { background: transparent !important; color: var(--ink) !important; border: 1px solid var(--border); font-weight: 500; }
+  .btn-secondary:hover { background: rgba(255,255,255,0.06) !important; }
+  .btn-secondary svg path { stroke: var(--ink) !important; }
   .quote-block { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
   .quote-big { font-family: var(--f-mono); font-size: 36px; font-weight: 500; letter-spacing: -0.02em; }
   .quote-sub { font-size: 12.5px; color: var(--faint); }
@@ -139,13 +144,16 @@
         <span class="badge" id="badge"></span>
       </div>
       <div class="subtitle" id="subtitle"></div>
-      <a class="btn-pdf" id="onepager-link" href="#">
-        <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-          <path d="M7 1 V9 M7 9 L4 6 M7 9 L10 6" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M2 12 H12" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round"/>
-        </svg>
-        Скачать one-pager (PDF)
-      </a>
+      <div class="actions">
+        <span class="ct-host" id="ct-host"></span>
+        <a class="btn-pdf btn-secondary" id="onepager-link" href="#">
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <path d="M7 1 V9 M7 9 L4 6 M7 9 L10 6" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M2 12 H12" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+          Скачать one-pager (PDF)
+        </a>
+      </div>
     </div>
     <div class="quote-block">
       <div class="quote-big" id="quote"></div>
@@ -185,6 +193,7 @@
 
 <script src="data/instruments.js?v=fx4"></script>
 <script src="data/lib.js?v=fx4"></script>
+<script src="contact.js?v=3"></script>
 <script>
   const S = window.SITE;
   const inst = S.findInstrument(new URLSearchParams(location.search).get("id"));
@@ -434,6 +443,7 @@
   document.getElementById("crumb-id").textContent = S.displayName(inst);
   document.getElementById("title").textContent = S.displayName(inst);
   document.getElementById("onepager-link").href = "onepager.html?id=" + encodeURIComponent(inst.id) + "&print=1";
+  if (window.Contact) Contact.attach(document.getElementById("ct-host"), { title: S.displayName(inst), url: location.href, id: inst.id });
   document.getElementById("badge").textContent = content.badge;
   document.getElementById("subtitle").textContent = content.subtitle;
   document.getElementById("quote").textContent = S.fmt2(inst.quote) + "%";

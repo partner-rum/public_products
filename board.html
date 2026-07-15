@@ -123,6 +123,9 @@
   .pp-actions { margin-top: 22px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
   .btn-pdf { display: inline-flex; align-items: center; gap: 8px; background: var(--solar); color: var(--ink); border-radius: 6px; padding: 9px 16px; font-size: 13.5px; font-weight: 500; transition: background .3s ease-in-out; }
   .btn-pdf:hover { background: var(--solar-l); }
+  .btn-secondary { background: transparent !important; color: var(--ink) !important; border: 1px solid var(--border); }
+  .btn-secondary:hover { background: rgba(255,255,255,0.06) !important; }
+  .btn-secondary svg path { stroke: var(--ink) !important; }
   .placeholder { display: grid; place-items: center; min-height: 300px; color: var(--faint); font-size: 14px; }
   .disclaimer { margin-top: 20px; font-size: 12px; line-height: 1.5; color: rgba(255,255,255,0.44); }
 
@@ -208,6 +211,7 @@
 <script src="data/instruments.js?v=fx4"></script>
 <script src="data/lib.js?v=fx4"></script>
 <script src="share.js?v=5"></script>
+<script src="contact.js?v=3"></script>
 <script>
   const S = window.SITE;
   const TYPE_LABEL = { discount: "Дисконтные облигации", protection: "Защита капитала", warrant: "Варранты" };
@@ -495,7 +499,7 @@
         (S.isFxSensitive(inst.underlying) ? '<div style="margin-top:12px;padding:9px 13px;border-left:3px solid #EE7D1B;background:rgba(238,125,27,0.12);border-radius:0 7px 7px 0;font-size:12.5px;line-height:1.5;color:#E7B98D">' + S.LEGAL.fx + '</div>' : '') + '</div>' +
       '<div class="sec"><div class="h">Как устроен продукт</div><div class="explainer">' + c.explainer + '</div>' +
         '<div class="facts">' + c.facts.map(f => '<div class="fact"><div class="k">' + f[0] + '</div><div class="v">' + f[1] + '</div></div>').join("") + '</div></div>' +
-      '<div class="pp-actions"><a class="btn-pdf" href="onepager.html?id=' + encodeURIComponent(inst.id) + '&print=1">' +
+      '<div class="pp-actions"><span class="ct-host" id="ct-host"></span><a class="btn-pdf btn-secondary" href="onepager.html?id=' + encodeURIComponent(inst.id) + '&print=1">' +
         '<svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M7 1 V9 M7 9 L4 6 M7 9 L10 6" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 12 H12" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round"/></svg>' +
         'Скачать one-pager (PDF)</a><span class="sh-host" id="sh-host"></span></div>';
   }
@@ -521,6 +525,11 @@
       const prodUrl = new URL("instrument.html?id=" + encodeURIComponent(inst.id), location.href).href;
       const params = (c.metrics || []).filter(m => m[1] !== "базовый актив").map(m => [m[1], m[0]]);
       Share.attach(shHost, { url: prodUrl, title: S.displayName(inst), name: S.displayName(inst), pitch: c.subtitle, params });
+    }
+    const ctHost = document.getElementById("ct-host");
+    if (ctHost && window.Contact) {
+      const cu = new URL("instrument.html?id=" + encodeURIComponent(inst.id), location.href).href;
+      Contact.attach(ctHost, { title: S.displayName(inst), url: cu, id: inst.id });
     }
     wireCalc(inst);
     const tp = document.getElementById("tab-payoff"), tu = document.getElementById("tab-under");
