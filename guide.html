@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Зачем этот сайт — инструмент продаж структурных продуктов</title>
+<meta name="description" content="Как использовать сайт в продажах: отправить клиенту продукт одной ссылкой, показать трек-рекорд, получить заявку в Telegram.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Rumberg">
+<meta property="og:locale" content="ru_RU">
+<meta property="og:title" content="Зачем этот сайт — инструмент продаж">
+<meta property="og:description" content="Продукт одной ссылкой вместо PDF, готовые аргументы, трек-рекорд и заявки в Telegram.">
+<meta property="og:url" content="https://partner-rum.github.io/public_products/guide.html">
+<meta property="og:image" content="https://partner-rum.github.io/public_products/og-cover.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Rumberg — структурные продукты">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0B0C10">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Rubik:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="metrika.js?v=1"></script>
+<style>
+  :root {
+    --canvas: #0B0C10; --card: #14161C;
+    --ink: #F2F3F7; --hushed: rgba(242,243,247,0.64); --faint: rgba(242,243,247,0.42);
+    --border: rgba(255,255,255,0.11); --border-soft: rgba(255,255,255,0.07);
+    --solar: #EE7D1B; --solar-l: #F58E33;
+    --f-body: 'Onest', system-ui, sans-serif;
+    --f-mono: 'JetBrains Mono', Consolas, monospace;
+    --display: 'Rubik', 'Onest', system-ui, sans-serif;
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--canvas); color: var(--ink); font-family: var(--f-body); -webkit-font-smoothing: antialiased; }
+  a { text-decoration: none; color: inherit; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+
+  .nav { position: sticky; top: 0; z-index: 20; background: rgba(11,12,16,0.82); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); }
+  .nav-in { max-width: 1080px; margin: 0 auto; padding: 0 44px; height: 62px; display: flex; align-items: center; gap: 12px; }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand-name { font-size: 14.5px; font-weight: 600; }
+  .topnav { margin-left: auto; display: flex; align-items: center; gap: 22px; font-size: 14px; font-weight: 500; }
+  .topnav a { color: var(--hushed); transition: color .2s; }
+  .topnav a:hover { color: var(--ink); }
+  .btn-solar { background: var(--solar); color: #0C0A08 !important; border-radius: 6px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 7px; transition: background .3s ease-in-out; }
+  .btn-solar:hover { background: var(--solar-l); }
+
+  .wrap { max-width: 720px; margin: 0 auto; padding: 0 24px 72px; }
+  h1 { margin: 44px 0 12px; font-family: var(--display); font-size: clamp(26px, 4vw, 34px); font-weight: 600; letter-spacing: -0.02em; line-height: 1.12; }
+  .lead { margin: 0 0 8px; font-size: 15px; line-height: 1.6; color: var(--hushed); max-width: 600px; }
+  .lead b { color: var(--ink); font-weight: 600; }
+  .cap { margin: 34px 0 6px; font-family: var(--f-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); display: flex; align-items: center; gap: 8px; }
+  .cap::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--solar); }
+
+  .row { display: block; padding: 20px 4px; border-bottom: 1px solid var(--border-soft); transition: background .2s; }
+  .row:first-of-type { border-top: 1px solid var(--border-soft); }
+  .row .q { font-family: var(--display); font-size: 16.5px; font-weight: 600; transition: color .2s; }
+  .row .q::before { content: "— "; color: var(--solar); }
+  .row .d { margin-top: 7px; font-size: 13.5px; line-height: 1.6; color: var(--hushed); max-width: 600px; }
+  .row .d b { color: var(--ink); font-weight: 500; }
+  .row .go { display: inline-block; margin-top: 9px; font-size: 12.5px; font-weight: 500; color: var(--solar-l); transition: transform .3s var(--ease); }
+  .row:hover { background: rgba(255,255,255,0.025); }
+  .row:hover .q { color: var(--solar); }
+  .row:hover .go { transform: translateX(4px); }
+
+  .flow { margin: 34px 0 0; padding: 18px 20px; background: rgba(238,125,27,0.07); border: 1px solid rgba(238,125,27,0.28); border-radius: 12px; }
+  .flow .fcap { font-family: var(--f-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--solar-l); margin: 0 0 10px; }
+  .flow .fline { font-size: 13.5px; line-height: 1.75; color: rgba(242,243,247,0.85); }
+  .flow .fline b { color: var(--ink); font-weight: 600; }
+  .flow .fline .sep { color: var(--solar); padding: 0 6px; }
+
+  .note { margin: 22px 0 0; font-size: 11.5px; line-height: 1.5; color: var(--faint); }
+
+  @media (max-width: 640px) {
+    .nav-in { padding: 0 20px; }
+    .topnav { gap: 14px; font-size: 13px; }
+    .topnav a:not(.btn-solar) { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="nav-in">
+    <a class="brand" href="index.html" aria-label="На главную">
+      <svg width="22" height="22" viewBox="0 0 26 26" fill="none" aria-hidden="true">
+        <path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/>
+      </svg>
+      <span class="brand-name">Структурные продукты</span>
+    </a>
+    <nav class="topnav">
+      <a href="digest.html">Дайджест</a>
+      <a href="offerings.html">Размещения</a>
+      <a href="placements.html">Выпуски</a>
+      <a href="about.html">Библиотека</a>
+      <a class="btn-solar" href="board.html?type=warrant">Доска
+        <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <h1>Зачем вам этот сайт</h1>
+  <p class="lead">Это инструмент продаж: <b>продукт уходит клиенту одной ссылкой</b> — с параметрами, графиком выплат и примером расчёта, — а заявка возвращается вам в Telegram. Не нужно собирать PDF и пересылать таблицы.</p>
+
+  <div class="cap">Ситуации, которые сайт закрывает</div>
+
+  <a class="row" href="board.html">
+    <div class="q">«А что у вас есть прямо сейчас?»</div>
+    <div class="d">Доска прайсинга: все текущие продукты с котировками в процентах от номинала. Открываете при клиенте — отвечаете за минуту.</div>
+    <span class="go">Открыть доску &rarr;</span>
+  </a>
+
+  <a class="row" href="board.html">
+    <div class="q">«Пришлите что-нибудь посмотреть»</div>
+    <div class="d">Выбираете продукт — на его странице жмёте <b>«Поделиться»</b>: готовое сообщение с названием, сутью и параметрами для Telegram или WhatsApp собирается за 10 секунд. Клиент получает ссылку на живую страницу, а не вложение.</div>
+    <span class="go">Выбрать продукт &rarr;</span>
+  </a>
+
+  <a class="row" href="digest.html">
+    <div class="q">«Почему сейчас хорошая точка входа?»</div>
+    <div class="d">Дайджест недели: гипотеза, рыночная ситуация и факторы — готовая аргументация для звонка. Обновляется каждую неделю.</div>
+    <span class="go">Читать дайджест &rarr;</span>
+  </a>
+
+  <a class="row" href="offerings.html">
+    <div class="q">«Во что можно зайти на размещении?»</div>
+    <div class="d">Раздел «На размещении»: выпуски, которые мы размещаем прямо сейчас или готовим, — с параметрами и материалами.</div>
+    <span class="go">Смотреть размещения &rarr;</span>
+  </a>
+
+  <a class="row" href="placements.html">
+    <div class="q">«А что вы уже делали?»</div>
+    <div class="d">Размещённые выпуски — ваш трек-рекорд: фиксинги, динамика и эмиссионные документы (КУВ, КИД) по каждому выпуску. Доверие цифрами, а не словами.</div>
+    <span class="go">Показать выпуски &rarr;</span>
+  </a>
+
+  <a class="row" href="about.html">
+    <div class="q">«Я не понимаю, как это работает»</div>
+    <div class="d">Библиотека: механика продуктов простыми словами — профили выплат, риск, примеры расчёта. Отправьте клиенту перед встречей, чтобы говорить на одном языке.</div>
+    <span class="go">Открыть библиотеку &rarr;</span>
+  </a>
+
+  <div class="flow">
+    <div class="fcap">Оптимальный сценарий</div>
+    <div class="fline"><b>Нашли продукт на доске</b><span class="sep">&rarr;</span><b>«Поделиться»</b> — ссылка ушла клиенту<span class="sep">&rarr;</span>клиент смотрит и жмёт <b>«Обсудить продукт»</b><span class="sep">&rarr;</span>заявка с контактом у нас в Telegram. Лид не теряется.</div>
+  </div>
+
+  <p class="note">Информация предназначена для квалифицированных инвесторов и не является индивидуальной инвестиционной рекомендацией.</p>
+</div>
+
+</body>
+</html>
