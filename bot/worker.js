@@ -49,12 +49,14 @@ async function handleLead(request, env, cors) {
   const name = String(data.name || "").trim().slice(0, 200);
   const contact = String(data.contact || "").trim().slice(0, 200);
   const product = String(data.product || "").trim().slice(0, 300);
+  const segment = String(data.segment || "").trim().slice(0, 100);
   const page = String(data.url || "").trim().slice(0, 500);
   if (!contact) return json({ ok: false, error: "no_contact" }, 422, cors);
 
   const text =
     "🟠 <b>Заявка с сайта</b>\n" +
     (product ? "Продукт: " + esc(product) + "\n" : "") +
+    (segment ? "Категория: " + esc(segment) + "\n" : "") +
     (name ? "Имя: " + esc(name) + "\n" : "") +
     "Контакт: " + esc(contact) +
     (page ? "\nСтраница: " + esc(page) : "");

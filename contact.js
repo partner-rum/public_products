@@ -35,6 +35,9 @@ window.Contact = (function () {
     '.ct-inp{width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.14);border-radius:9px;padding:10px 12px;color:#F2F3F7;font-family:inherit;font-size:13.5px;outline:none}' +
     '.ct-inp::placeholder{color:rgba(242,243,247,0.4)}' +
     '.ct-inp:focus{border-color:rgba(238,125,27,0.6)}' +
+    '.ct-sel{appearance:none;-webkit-appearance:none;cursor:pointer;padding-right:34px;background-image:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%23A0A5B8%27 stroke-width=%272.5%27%3E%3Cpath d=%27M6 9l6 6 6-6%27/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}' +
+    '.ct-sel:invalid{color:rgba(242,243,247,0.42)}' +
+    '.ct-form option{background:#1B1D26;color:#F2F3F7}' +
     '.ct-send{margin-top:2px;background:#EE7D1B;color:#0C0A08;border:none;border-radius:9px;padding:11px;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;transition:background .2s}' +
     '.ct-send:hover{background:#F58E33}' +
     '.ct-send:disabled{opacity:.6;cursor:default}' +
@@ -77,6 +80,12 @@ window.Contact = (function () {
         tgRow + waRow +
         '<div class="ct-sep"><span>' + sepText + '</span></div>' +
         '<form class="ct-form" novalidate>' +
+          '<select class="ct-inp ct-sel" name="segment" required>' +
+            '<option value="" disabled selected>Кто вы? (обязательно)</option>' +
+            '<option value="Частный инвестор">Частный инвестор</option>' +
+            '<option value="Финансовый институт">Финансовый институт</option>' +
+            '<option value="Агент">Агент</option>' +
+          '</select>' +
           '<input class="ct-inp" name="name" placeholder="Ваше имя" autocomplete="name">' +
           '<input class="ct-inp" name="contact" placeholder="Телефон или @Telegram" autocomplete="tel">' +
           '<button class="ct-send" type="submit">Оставить заявку</button>' +
@@ -110,9 +119,11 @@ window.Contact = (function () {
 
     form.addEventListener("submit", function (e) {
       e.preventDefault();
-      var contactEl = form.querySelector('[name="contact"]'),
+      var segEl = form.querySelector('[name="segment"]'),
+          contactEl = form.querySelector('[name="contact"]'),
           nameEl = form.querySelector('[name="name"]');
       var contact = contactEl.value.trim();
+      if (!segEl.value) { segEl.focus(); return; }
       if (!contact) { contactEl.focus(); return; }
 
       // Демо-режим (бот ещё не подключён): показываем успех локально.
@@ -123,7 +134,7 @@ window.Contact = (function () {
         return;
       }
 
-      var payload = { name: nameEl.value.trim(), contact: contact, product: title, url: url };
+      var payload = { segment: segEl.value, name: nameEl.value.trim(), contact: contact, product: title, url: url };
       sendBtn.disabled = true;
       var oldLabel = sendBtn.textContent;
       sendBtn.textContent = "Отправляем…";
