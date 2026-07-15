@@ -1,7 +1,7 @@
 // Файл сгенерирован скриптом выгрузки — руками не править.
-// Источник: внутренний бэкофис (только чтение). Обновлено: 2026-07-10
+// Источник: внутренний бэкофис (только чтение). Обновлено: 2026-07-15
 window.PLACEMENTS_DATA = {
- "updated": "2026-07-10",
+ "updated": "2026-07-15",
  "issues": [
   {
    "isin": "RU000A10CVH5",
@@ -15,6 +15,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2026-07-02",
    "maturity": "2027-07-14",
    "fx": false,
+   "bid": 93.47,
    "kind": "coupon",
    "wrapper": "NOTE",
    "basket": [
@@ -60,6 +61,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2026-06-25",
    "maturity": "2031-07-31",
    "fx": false,
+   "bid": 50.35,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -100,6 +102,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2026-06-16",
    "maturity": "2029-02-13",
    "fx": true,
+   "bid": 50.84,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -140,6 +143,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2026-06-08",
    "maturity": "2029-06-18",
    "fx": false,
+   "bid": 9.36,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -180,6 +184,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2026-04-23",
    "maturity": "2027-04-29",
    "fx": false,
+   "bid": 90.05,
    "kind": "coupon",
    "wrapper": "NOTE",
    "basket": [
@@ -225,6 +230,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2026-03-31",
    "maturity": "2027-04-08",
    "fx": false,
+   "bid": 92.79,
    "kind": "coupon",
    "wrapper": "NOTE",
    "basket": [
@@ -270,6 +276,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2026-03-06",
    "maturity": "2027-03-17",
    "fx": false,
+   "bid": 93.26,
    "kind": "coupon",
    "wrapper": "NOTE",
    "basket": [
@@ -315,6 +322,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2026-02-09",
    "maturity": "2027-02-17",
    "fx": false,
+   "bid": 97.39,
    "kind": "coupon",
    "wrapper": "NOTE",
    "basket": [
@@ -360,6 +368,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2026-01-22",
    "maturity": "2027-02-18",
    "fx": true,
+   "bid": 77.57,
    "kind": "coupon",
    "wrapper": "NOTE",
    "basket": [
@@ -405,6 +414,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2025-12-25",
    "maturity": "2028-12-25",
    "fx": false,
+   "bid": null,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -442,6 +452,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2025-12-15",
    "maturity": "2026-12-11",
    "fx": false,
+   "bid": 88.72,
    "kind": "coupon",
    "wrapper": "NOTE",
    "basket": [
@@ -487,6 +498,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2025-12-10",
    "maturity": "2027-12-20",
    "fx": false,
+   "bid": 2.56,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -527,6 +539,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2025-11-27",
    "maturity": "2026-12-23",
    "fx": false,
+   "bid": 92.71,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -567,6 +580,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2025-11-25",
    "maturity": "2026-12-17",
    "fx": true,
+   "bid": 94.65,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -607,6 +621,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2025-11-25",
    "maturity": "2026-12-17",
    "fx": true,
+   "bid": 93.83,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -647,6 +662,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2025-11-20",
    "maturity": "2026-12-17",
    "fx": false,
+   "bid": 100.42,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -687,6 +703,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2025-11-18",
    "maturity": "2026-12-14",
    "fx": true,
+   "bid": 93.88,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -727,6 +744,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2025-11-13",
    "maturity": "2026-11-17",
    "fx": false,
+   "bid": 93.86,
    "kind": "coupon",
    "wrapper": "NOTE",
    "basket": [
@@ -768,6 +786,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2025-11-05",
    "maturity": "2027-10-29",
    "fx": false,
+   "bid": null,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -805,6 +824,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2025-10-09",
    "maturity": "2027-10-21",
    "fx": false,
+   "bid": 3.91,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -845,6 +865,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2025-10-07",
    "maturity": "2026-10-20",
    "fx": false,
+   "bid": 106.96,
    "kind": "coupon",
    "wrapper": "NOTE",
    "basket": [
@@ -890,6 +911,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2025-09-25",
    "maturity": "2027-10-06",
    "fx": false,
+   "bid": 2.79,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -930,6 +952,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2025-09-10",
    "maturity": "2027-09-21",
    "fx": false,
+   "bid": null,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -970,6 +993,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2025-09-09",
    "maturity": "2027-09-16",
    "fx": false,
+   "bid": null,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -1010,6 +1034,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2025-09-04",
    "maturity": "2027-09-15",
    "fx": false,
+   "bid": null,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -1050,6 +1075,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2025-09-03",
    "maturity": "2027-09-09",
    "fx": false,
+   "bid": null,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -1087,6 +1113,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2025-09-02",
    "maturity": "2027-09-09",
    "fx": false,
+   "bid": null,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -1127,6 +1154,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2025-08-22",
    "maturity": "2027-09-01",
    "fx": false,
+   "bid": null,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -1164,6 +1192,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2025-08-22",
    "maturity": "2027-09-02",
    "fx": false,
+   "bid": null,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -1204,6 +1233,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2025-08-20",
    "maturity": "2027-08-24",
    "fx": false,
+   "bid": null,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -1241,6 +1271,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2025-08-14",
    "maturity": "2028-08-22",
    "fx": true,
+   "bid": 76.26,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -1281,6 +1312,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2025-08-08",
    "maturity": "2028-08-18",
    "fx": false,
+   "bid": 2.1,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -1321,6 +1353,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2025-08-06",
    "maturity": "2028-08-15",
    "fx": false,
+   "bid": 87.22,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -1361,6 +1394,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2025-07-22",
    "maturity": "2028-07-31",
    "fx": false,
+   "bid": 79.76,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -1401,6 +1435,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2025-07-16",
    "maturity": "2028-07-25",
    "fx": false,
+   "bid": 80.35,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -1441,6 +1476,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2025-07-16",
    "maturity": "2028-07-25",
    "fx": false,
+   "bid": 85.02,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -1481,6 +1517,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2025-06-04",
    "maturity": "2027-02-17",
    "fx": true,
+   "bid": 91.66,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -1521,6 +1558,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2025-06-03",
    "maturity": "2028-06-12",
    "fx": true,
+   "bid": 85.63,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -1561,6 +1599,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2025-05-06",
    "maturity": "2028-05-19",
    "fx": true,
+   "bid": 95.18,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -1601,6 +1640,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2025-04-25",
    "maturity": "2027-05-07",
    "fx": true,
+   "bid": 92.17,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -1641,6 +1681,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2025-04-25",
    "maturity": "2026-05-08",
    "fx": true,
+   "bid": null,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -1681,6 +1722,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2025-03-27",
    "maturity": "2026-04-06",
    "fx": false,
+   "bid": null,
    "kind": "coupon",
    "wrapper": "WARRANT",
    "basket": [
@@ -1753,6 +1795,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2025-03-26",
    "maturity": "2027-01-29",
    "fx": false,
+   "bid": 136.73,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -1793,6 +1836,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2025-02-27",
    "maturity": "2027-03-11",
    "fx": false,
+   "bid": null,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -1830,6 +1874,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2025-02-21",
    "maturity": "2028-03-07",
    "fx": false,
+   "bid": 92.32,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -1870,6 +1915,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2024-12-27",
    "maturity": "2026-12-25",
    "fx": false,
+   "bid": null,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -1907,6 +1953,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2024-11-29",
    "maturity": "2026-12-04",
    "fx": false,
+   "bid": null,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -1944,6 +1991,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2024-10-14",
    "maturity": "2027-10-26",
    "fx": false,
+   "bid": null,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -1984,6 +2032,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2024-09-25",
    "maturity": "2026-09-30",
    "fx": false,
+   "bid": null,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -2021,6 +2070,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2024-08-05",
    "maturity": "2026-08-03",
    "fx": false,
+   "bid": 41.22,
    "kind": "coupon",
    "wrapper": "NOTE",
    "basket": [
@@ -2066,6 +2116,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2024-08-05",
    "maturity": "2026-08-03",
    "fx": false,
+   "bid": null,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -2106,6 +2157,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2024-07-08",
    "maturity": "2027-07-13",
    "fx": false,
+   "bid": null,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -2146,6 +2198,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2024-07-02",
    "maturity": "2027-07-06",
    "fx": false,
+   "bid": null,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -2183,6 +2236,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2024-04-24",
    "maturity": "2027-04-28",
    "fx": false,
+   "bid": null,
    "kind": "participation",
    "wrapper": null,
    "basket": [

@@ -103,6 +103,10 @@
   .status { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hushed); }
   .status.live::before { content: "●"; color: var(--up); margin-right: 5px; font-size: 9px; }
   .status.matured::before { content: "●"; color: rgba(255,255,255,0.44); margin-right: 5px; font-size: 9px; }
+  .pp-bid { display: inline-flex; align-items: baseline; gap: 9px; margin-top: 13px; padding: 8px 14px; border-radius: 10px; background: rgba(85,192,138,0.12); border: 1px solid rgba(85,192,138,0.42); }
+  .pp-bid .lbl { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--up); }
+  .pp-bid .val { font-family: var(--f-mono); font-size: 19px; font-weight: 600; color: var(--up); line-height: 1; }
+  .pp-bid .u { font-size: 11px; color: rgba(85,192,138,0.72); }
   .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 20px 0 4px; }
   .tile { background: var(--tile); border-radius: 8px; padding: 12px 14px; }
   .tile .v { font-family: var(--f-mono); font-size: 16px; font-weight: 500; }
@@ -249,6 +253,7 @@
     return '<div class="pp-top"><div>' +
         '<div class="pp-title">' + i.serial + '</div>' +
         '<div class="pp-sub"><span>' + i.isin + '</span><span class="status ' + (i.matured ? "matured" : "live") + '">' + (i.matured ? "погашен" : "в обращении") + '</span></div>' +
+        (!i.matured && i.bid != null ? '<div class="pp-bid"><span class="lbl">Bid</span><span class="val">' + fmtN(i.bid) + '%</span><span class="u">от номинала</span></div>' : '') +
       '</div>' +
       '<span class="kind-chip" style="color:' + k.fg + ';background:' + k.bg + '">' + k.label + '</span></div>' +
       '<div class="tiles">' +
