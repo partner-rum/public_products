@@ -65,6 +65,17 @@
     ".ca-send:hover{background:#F58E33;}.ca-send:disabled{opacity:.4;cursor:default;}" +
     ".ca-send svg{width:17px;height:17px;}" +
     ".ca-note{margin:7px 2px 0;font-size:10px;line-height:1.4;color:rgba(242,243,247,.38);text-align:center;}" +
+    /* — кнопка и форма «Обсудить с Румбергом» — */
+    ".ca-discuss{width:100%;margin-bottom:8px;background:none;border:1px solid rgba(238,125,27,.4);color:#F58E33;border-radius:11px;padding:9px;font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:background .15s,border-color .15s;}" +
+    ".ca-discuss:hover{background:rgba(238,125,27,.08);border-color:rgba(238,125,27,.7);}" +
+    ".ca-discuss svg{width:15px;height:15px;}" +
+    ".ca-lead{align-self:stretch;background:rgba(238,125,27,.06);border:1px solid rgba(238,125,27,.3);border-radius:14px;padding:13px 14px;display:flex;flex-direction:column;gap:8px;}" +
+    ".ca-lead-t{font-size:13px;line-height:1.5;color:#F2F3F7;}" +
+    ".ca-lead input{background:#0B0C10;border:1px solid rgba(255,255,255,.14);border-radius:10px;color:#F2F3F7;font-family:inherit;font-size:13px;padding:9px 11px;outline:none;}" +
+    ".ca-lead input:focus{border-color:rgba(238,125,27,.6);}" +
+    ".ca-lead-send{background:#EE7D1B;color:#0C0A08;border:0;border-radius:10px;padding:9px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;}" +
+    ".ca-lead-send:hover{background:#F58E33;}.ca-lead-send:disabled{opacity:.5;cursor:default;}" +
+    ".ca-lead-ok{font-size:13px;line-height:1.55;color:#F2F3F7;}.ca-lead-ok a{color:#F58E33;}" +
     "@media(max-width:480px){.ca-panel{right:8px;bottom:8px;height:calc(100dvh - 16px);}}";
 
   function inject() {
@@ -82,6 +93,7 @@
     '<svg width="18" height="18" viewBox="0 0 26 26" fill="none" aria-hidden="true">' +
     '<path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>';
   var ICON_SEND = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>';
+  var ICON_CHAT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-3.9-.9L3 21l1.9-5.6A8.5 8.5 0 0 1 12.5 3 8.38 8.38 0 0 1 21 11.5z"/></svg>';
 
   var msgs = [];         // {role, content}
   var busy = false;
@@ -136,6 +148,45 @@
     return 'Чат-ассистент пока доступен не во всех регионах. Но я подключу вас к менеджеру — ' +
       'напишите в Telegram: <a href="https://t.me/' + CFG.botUser + '" target="_blank" rel="noopener">@' + CFG.botUser +
       '</a>, ответим на любой вопрос по продуктам.';
+  }
+
+  function showLeadForm() {
+    var existing = els.log.querySelector(".ca-lead-contact");
+    if (existing) { existing.focus(); els.log.scrollTop = els.log.scrollHeight; return; }
+    var box = document.createElement("div");
+    box.className = "ca-lead";
+    box.innerHTML =
+      '<div class="ca-lead-t">Оставьте контакт — менеджер Rumberg свяжется и ответит детально. Диалог с ассистентом приложим.</div>' +
+      '<input class="ca-lead-name" placeholder="Имя (необязательно)" aria-label="Имя">' +
+      '<input class="ca-lead-contact" placeholder="Telegram, телефон или email" aria-label="Контакт">' +
+      '<button class="ca-lead-send" type="button">Отправить заявку</button>';
+    els.log.appendChild(box);
+    els.log.scrollTop = els.log.scrollHeight;
+    var contactEl = box.querySelector(".ca-lead-contact");
+    var nameEl = box.querySelector(".ca-lead-name");
+    var btn = box.querySelector(".ca-lead-send");
+    contactEl.focus();
+    btn.addEventListener("click", function () {
+      var contact = contactEl.value.trim();
+      if (!contact) { contactEl.focus(); return; }
+      btn.disabled = true; btn.textContent = "Отправляем…";
+      var transcript = msgs.slice(-8).map(function (m) {
+        return (m.role === "user" ? "Клиент" : "Ассистент") + ": " + m.content;
+      }).join("\n");
+      fetch(CFG.endpoint.replace(/\/chat$/, "/lead"), {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: nameEl.value.trim(), contact: contact, product: "Вопрос из AI-чата", url: location.href, chat: transcript })
+      })
+        .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
+        .then(function (d) {
+          if (!d || !d.ok) throw 0;
+          box.innerHTML = '<div class="ca-lead-ok">Готово! Менеджер Rumberg свяжется с вами. Можно и сразу написать: <a href="https://t.me/' + CFG.botUser + '" target="_blank" rel="noopener">@' + CFG.botUser + '</a></div>';
+          goal("chat_lead");
+        })
+        .catch(function () {
+          box.innerHTML = '<div class="ca-lead-ok">Не получилось отправить. Напишите напрямую: <a href="https://t.me/' + CFG.botUser + '" target="_blank" rel="noopener">@' + CFG.botUser + '</a></div>';
+        });
+    });
   }
 
   function send() {
@@ -202,7 +253,9 @@
         '<div class="ca-sub">Rumberg · структурные продукты</div></div>' +
         '<button class="ca-x" aria-label="Закрыть">&times;</button></div>' +
       '<div class="ca-log"></div>' +
-      '<div class="ca-foot"><div class="ca-row">' +
+      '<div class="ca-foot">' +
+        '<button class="ca-discuss" type="button">' + ICON_CHAT + 'Обсудить с Румбергом</button>' +
+        '<div class="ca-row">' +
         '<textarea class="ca-in" rows="1" placeholder="Спросите про продукт…" aria-label="Сообщение"></textarea>' +
         '<button class="ca-send" aria-label="Отправить">' + ICON_SEND + '</button>' +
       '</div><div class="ca-note">Отвечает ИИ — может ошибаться · Не является индивидуальной инвестиционной рекомендацией</div></div>';
@@ -224,6 +277,7 @@
 
     btn.addEventListener("click", open);
     panel.querySelector(".ca-x").addEventListener("click", close);
+    panel.querySelector(".ca-discuss").addEventListener("click", showLeadForm);
     els.send.addEventListener("click", send);
     els.input.addEventListener("keydown", function (e) {
       if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }

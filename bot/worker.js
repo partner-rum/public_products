@@ -62,6 +62,7 @@ async function handleLead(request, env, cors) {
   const product = String(data.product || "").trim().slice(0, 300);
   const segment = String(data.segment || "").trim().slice(0, 100);
   const page = String(data.url || "").trim().slice(0, 500);
+  const chat = String(data.chat || "").trim().slice(0, 1500);
   if (!contact) return json({ ok: false, error: "no_contact" }, 422, cors);
 
   const text =
@@ -70,7 +71,8 @@ async function handleLead(request, env, cors) {
     (segment ? "Категория: " + esc(segment) + "\n" : "") +
     (name ? "Имя: " + esc(name) + "\n" : "") +
     "Контакт: " + esc(contact) +
-    (page ? "\nСтраница: " + esc(page) : "");
+    (page ? "\nСтраница: " + esc(page) : "") +
+    (chat ? "\n\n<b>Диалог с ассистентом:</b>\n" + esc(chat) : "");
 
   const r = await tg(env, "sendMessage", {
     chat_id: env.CHAT_ID, text, parse_mode: "HTML", disable_web_page_preview: true,
@@ -80,18 +82,70 @@ async function handleLead(request, env, cors) {
 }
 
 // --- Чат-ассистент (консьерж по сайту) → Claude API ---
-const SYSTEM_PROMPT = `Ты — вежливый ассистент-консьерж на сайте компании Rumberg, витрине структурных продуктов для квалифицированных инвесторов. Отвечай по-русски, кратко и по делу (2–5 предложений), дружелюбно и профессионально.
+const SYSTEM_PROMPT = `Ты — AI-ассистент-консьерж на сайте компании Rumberg, витрине структурных продуктов для квалифицированных инвесторов. Отвечай по-русски, дружелюбно и профессионально, по делу.
 
-Что ты делаешь:
-- простыми словами объясняешь, как устроены структурные продукты (дисконтные облигации, ноты с защитой капитала, автоколлы, барьерные ноты, call-spread и варранты): профиль выплаты, риск, срок;
-- подсказываешь, где что на сайте: «Дайджест» — инвестидея недели; «На размещении» — выпуски, которые размещаем прямо сейчас; «Текущие продукты» (доска) — прайсинг и параметры; «Размещённые выпуски» — что уже сделали, с эмиссионными документами; «Библиотека» — как работают продукты;
-- если клиент заинтересовался конкретным продуктом — предлагаешь нажать «Обсудить продукт» на странице продукта: заявка уходит менеджеру в Telegram.
+У тебя есть АКТУАЛЬНЫЙ КАТАЛОГ (ниже в этом промпте) — твой источник правды о продуктах:
+- спрашивают текущие продукты (в т.ч. по базовому активу — «на ОФЗ», «на индекс», «в долларах») — найди подходящие в разделе ТЕКУЩИЕ ПРОДУКТЫ и перечисли компактным списком: название · базовый актив · цена · срок;
+- дают ISIN или название выпуска — найди его в разделе РАЗМЕЩЁННЫЕ ВЫПУСКИ и расскажи параметры (базовый актив, купон/участие, срок, Bid если есть);
+- если в каталоге ничего не нашлось — честно скажи, что не нашёл, и предложи уточнить у менеджера. НИКОГДА не выдумывай ISIN, цены, купоны или выпуски, которых нет в каталоге.
+
+Также простыми словами объясняешь, как устроены структурные продукты (дисконтные облигации, ноты с защитой капитала, автоколлы, барьерные ноты, call-spread, варранты): профиль выплаты, риск, срок.
+
+Разделы сайта: «Дайджест» — инвестидея недели; «На размещении» — выпуски, которые размещаем сейчас; «Текущие продукты» (доска) — прайсинг; «Размещённые выпуски» — что уже сделали, с документами; «Библиотека» — как работают продукты. Заинтересовался продуктом — предложи нажать «Обсудить продукт» на странице или кнопку «Обсудить с Румбергом» в чате: заявка уйдёт менеджеру.
 
 Строгие правила:
-- НЕ давай индивидуальных инвестиционных рекомендаций и прогнозов доходности, не советуй «покупать/продавать». При таких просьбах мягко поясни, что не даёшь инвестсоветов, и предложи обсудить с менеджером.
-- НЕ выдумывай конкретные цены, купоны, гарантии или названия выпусков, которых не знаешь. За актуальными цифрами направляй на доску/дайджест или к менеджеру.
-- При уместности напоминай, что информация — для квалифицированных инвесторов и не является индивидуальной инвестиционной рекомендацией.
-- Отвечай только на темы структурных продуктов и этого сайта; на посторонние вопросы вежливо возвращай к теме.`;
+- НЕ давай индивидуальных инвестиционных рекомендаций и прогнозов доходности, не советуй «покупать/продавать». Мягко поясни, что не даёшь инвестсоветов, и предложи менеджера.
+- Конкретные цифры бери только из каталога; вне каталога — не выдумывай.
+- При уместности напоминай: информация для квалифицированных инвесторов и не является индивидуальной инвестиционной рекомендацией.
+- Отвечай только про структурные продукты и этот сайт; на постороннее вежливо возвращай к теме.`;
+
+// Живой каталог с сайта (кэш в изоляте, TTL 5 мин). Парсим сгенерированные JSON-файлы.
+let CATALOG = { text: "", at: 0 };
+
+async function fetchDataObj(url) {
+  const r = await fetch(url);
+  if (!r.ok) return null;
+  const t = await r.text();
+  const s = t.indexOf("{"), e = t.lastIndexOf("}");
+  if (s < 0 || e < 0) return null;
+  try { return JSON.parse(t.slice(s, e + 1)); } catch { return null; }
+}
+
+async function buildCatalog(env) {
+  const now = Date.now();
+  if (CATALOG.text && now - CATALOG.at < 5 * 60 * 1000) return CATALOG.text;
+  const base = (env.SITE_BASE || "https://partner-rum.github.io/public_products/").replace(/\/?$/, "/");
+  const [site, plc] = await Promise.all([
+    fetchDataObj(base + "data/instruments.js"),
+    fetchDataObj(base + "data/placements.js"),
+  ]);
+  const lines = [];
+  const instr = (site && site.instruments) || [];
+  if (instr.length) {
+    lines.push("ТЕКУЩИЕ ПРОДУКТЫ (доска, можно предложить сейчас):");
+    for (const p of instr) {
+      lines.push("- " + [p.name, p.underlying && "базовый актив: " + p.underlying,
+        p.quote != null && "цена " + p.quote + "%", p.expiry && "срок до " + p.expiry,
+        "id " + p.id].filter(Boolean).join(" · "));
+    }
+  }
+  const iss = (plc && plc.issues) || [];
+  if (iss.length) {
+    lines.push("", "РАЗМЕЩЁННЫЕ ВЫПУСКИ (уже размещены; поиск по ISIN):");
+    for (const i of iss) {
+      const assets = (i.basket || []).map((b) => b.n).filter(Boolean).join(", ");
+      const kind = i.kind === "participation" ? "участие в росте" : "купонный/автоколл";
+      const pay = i.kind === "participation"
+        ? (i.payoff && i.payoff.participationPct != null && "участие " + i.payoff.participationPct + "%")
+        : (i.payoff && i.payoff.couponPa != null && "купон " + i.payoff.couponPa + "% годовых");
+      lines.push("- " + [i.serial, "ISIN " + i.isin, kind, assets && "актив: " + assets,
+        pay, i.maturity && "погашение " + i.maturity,
+        i.bid != null && "Bid " + i.bid + "%"].filter(Boolean).join(" · "));
+    }
+  }
+  CATALOG = { text: lines.join("\n"), at: now };
+  return CATALOG.text;
+}
 
 async function handleChat(request, env, cors) {
   // Защита от абуза: только с нашего сайта (если задан ALLOW_ORIGIN)
@@ -124,7 +178,11 @@ async function handleChat(request, env, cors) {
 
   const pageTitle = String((data.page && data.page.title) || "").slice(0, 200);
   const pageUrl = String((data.page && data.page.url) || "").slice(0, 300);
-  const system = SYSTEM_PROMPT + (pageTitle ? `\n\nСейчас клиент на странице: «${pageTitle}»${pageUrl ? " (" + pageUrl + ")" : ""}.` : "");
+  let catalog = "";
+  try { catalog = await buildCatalog(env); } catch (e) { catalog = ""; }
+  const system = SYSTEM_PROMPT +
+    (catalog ? "\n\n=== АКТУАЛЬНЫЙ КАТАЛОГ ===\n" + catalog : "") +
+    (pageTitle ? `\n\nСейчас клиент на странице: «${pageTitle}»${pageUrl ? " (" + pageUrl + ")" : ""}.` : "");
 
   const provider = (env.CHAT_PROVIDER || "yandex").toLowerCase();
   let reply;
@@ -145,7 +203,7 @@ async function callYandex(system, messages, env) {
   const model = (env.YANDEX_MODEL || "yandexgpt/latest").trim();
   const body = {
     modelUri: "gpt://" + folder + "/" + model,
-    completionOptions: { stream: false, temperature: 0.3, maxTokens: "500" },
+    completionOptions: { stream: false, temperature: 0.3, maxTokens: "800" },
     messages: [{ role: "system", text: system }].concat(
       messages.map((m) => ({ role: m.role, text: m.content }))
     ),
