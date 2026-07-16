@@ -155,6 +155,7 @@ window.Contact = (function () {
           wrap.classList.remove("open");
           showToast(true, "Заявка принята — менеджер свяжется с вами");
           form.reset();
+          if (typeof window.ym === "function") { try { window.ym(110759242, "reachGoal", "lead_submit"); } catch (e) {} }
         } else {
           showToast(false, "Не удалось отправить. Напишите нам в Telegram или WhatsApp.");
         }
