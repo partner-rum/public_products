@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>О компании — Rumberg</title>
+<meta name="description" content="Rumberg — структурные продукты и секьюритизация активов для квалифицированных инвесторов и финансовых институтов. Юридические лица, контакты, официальный сайт.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Rumberg">
+<meta property="og:locale" content="ru_RU">
+<meta property="og:title" content="О компании — Rumberg">
+<meta property="og:description" content="Структурные продукты и секьюритизация активов для квалифицированных инвесторов и финансовых институтов.">
+<meta property="og:url" content="https://partner-rum.github.io/public_products/company.html">
+<meta property="og:image" content="https://partner-rum.github.io/public_products/og-cover.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Rumberg — структурные продукты">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0B0C10">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Rubik:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="metrika.js?v=2"></script>
+<style>
+  :root {
+    --canvas: #0B0C10; --card: #14161C;
+    --ink: #F2F3F7; --hushed: rgba(242,243,247,0.64); --faint: rgba(242,243,247,0.42);
+    --border: rgba(255,255,255,0.11); --border-soft: rgba(255,255,255,0.07);
+    --solar: #EE7D1B; --solar-l: #F58E33;
+    --f-body: 'Onest', system-ui, sans-serif;
+    --f-mono: 'JetBrains Mono', Consolas, monospace;
+    --display: 'Rubik', 'Onest', system-ui, sans-serif;
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--canvas); color: var(--ink); font-family: var(--f-body); -webkit-font-smoothing: antialiased; }
+  a { text-decoration: none; color: inherit; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+
+  .nav { position: sticky; top: 0; z-index: 20; background: rgba(11,12,16,0.82); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); }
+  .nav-in { max-width: 1080px; margin: 0 auto; padding: 0 44px; height: 62px; display: flex; align-items: center; gap: 12px; }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand-name { font-size: 14.5px; font-weight: 600; }
+  .topnav { margin-left: auto; display: flex; align-items: center; gap: 22px; font-size: 14px; font-weight: 500; }
+  .topnav a { color: var(--hushed); transition: color .2s; }
+  .topnav a:hover { color: var(--ink); }
+  .btn-solar { background: var(--solar); color: #0C0A08 !important; border-radius: 6px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 7px; transition: background .3s ease-in-out; }
+  .btn-solar:hover { background: var(--solar-l); }
+
+  .wrap { max-width: 720px; margin: 0 auto; padding: 0 24px 72px; }
+  h1 { margin: 44px 0 14px; font-family: var(--display); font-size: clamp(26px, 4vw, 34px); font-weight: 600; letter-spacing: -0.02em; line-height: 1.12; }
+  .lead { margin: 0 0 8px; font-size: 15.5px; line-height: 1.65; color: var(--hushed); max-width: 620px; }
+  .lead b { color: var(--ink); font-weight: 600; }
+
+  .cap { margin: 34px 0 10px; font-family: var(--f-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); display: flex; align-items: center; gap: 8px; }
+  .cap::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--solar); }
+
+  .entity { padding: 16px 0; border-bottom: 1px solid var(--border-soft); }
+  .entity:first-of-type { border-top: 1px solid var(--border-soft); }
+  .entity .n { font-family: var(--display); font-size: 16px; font-weight: 600; }
+  .entity .d { margin-top: 5px; font-size: 13.5px; line-height: 1.55; color: var(--hushed); }
+  .entity .ogrn { font-family: var(--f-mono); font-size: 12.5px; color: var(--faint); margin-top: 4px; }
+
+  .kv { display: flex; gap: 14px; padding: 10px 0; border-bottom: 1px solid var(--border-soft); font-size: 14px; }
+  .kv:first-of-type { border-top: 1px solid var(--border-soft); }
+  .kv .k { flex: none; width: 110px; color: var(--faint); }
+  .kv .v a { color: var(--solar-l); }
+
+  .links { display: flex; gap: 12px; flex-wrap: wrap; margin: 30px 0 0; }
+  .lbtn { display: inline-flex; align-items: center; gap: 8px; border-radius: 12px; padding: 12px 18px; font-size: 14px; font-weight: 500; transition: background .15s, border-color .15s; }
+  .lbtn.primary { background: var(--solar); color: #0C0A08; }
+  .lbtn.primary:hover { background: var(--solar-l); }
+  .lbtn.ghost { border: 1px solid var(--border); color: var(--ink); }
+  .lbtn.ghost:hover { border-color: rgba(255,255,255,0.32); }
+
+  .note { margin: 26px 0 0; font-size: 11.5px; line-height: 1.55; color: var(--faint); }
+
+  @media (max-width: 640px) {
+    .nav-in { padding: 0 20px; }
+    .topnav { gap: 14px; font-size: 13px; }
+    .topnav a:not(.btn-solar) { display: none; }
+    .kv { flex-direction: column; gap: 2px; } .kv .k { width: auto; }
+  }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="nav-in">
+    <a class="brand" href="index.html" aria-label="На главную">
+      <svg width="22" height="22" viewBox="0 0 26 26" fill="none" aria-hidden="true">
+        <path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/>
+      </svg>
+      <span class="brand-name">Структурные продукты</span>
+    </a>
+    <nav class="topnav">
+      <a href="digest.html">Дайджест</a>
+      <a href="offerings.html">Размещения</a>
+      <a href="placements.html">Выпуски</a>
+      <a href="about.html">Библиотека</a>
+      <a class="btn-solar" href="board.html?type=warrant">Доска
+        <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <h1>О компании</h1>
+  <p class="lead">Готовые инвестиционные решения и альтернативные инвестиции для <b>квалифицированных инвесторов и финансовых институтов</b>. Этот сайт — витрина продуктов; полная информация о группе — на официальном сайте.</p>
+
+  <div class="cap">Юридические лица</div>
+  <div class="entity">
+    <div class="n">ООО «Румберг Капитал»</div>
+    <div class="d">В реестре аккредитованных управляющих компаний Банка России с 05.09.2022.</div>
+    <div class="ogrn">ОГРН 1227700346610</div>
+  </div>
+  <div class="entity">
+    <div class="n">АО «Румберг Технологиз»</div>
+    <div class="d">Участник Московского инновационного кластера.</div>
+    <div class="ogrn">ОГРН 1237700069420</div>
+  </div>
+
+  <div class="cap">Контакты</div>
+  <div class="kv"><span class="k">Отдел продаж</span><span class="v"><a href="mailto:sales@rumberg.ru">sales@rumberg.ru</a></span></div>
+  <div class="kv"><span class="k">Пресса</span><span class="v"><a href="mailto:press@rumberg.ru">press@rumberg.ru</a></span></div>
+  <div class="kv"><span class="k">Адрес</span><span class="v">125040, Москва, ул. Ленинградская, д. 15, корп. 9, помещение 5/1</span></div>
+
+  <div class="links">
+    <a class="lbtn primary" href="https://rumbergcapital.com/" target="_blank" rel="noopener">Официальный сайт rumbergcapital.com</a>
+  </div>
+
+  <p class="note">Информация предназначена для квалифицированных инвесторов и не является индивидуальной инвестиционной рекомендацией, офертой или гарантией доходности. Инвестиции в структурные продукты связаны с риском, включая риск частичной или полной потери вложенных средств.</p>
+</div>
+
+<script src="chat.js?v=6"></script>
+</body>
+</html>
