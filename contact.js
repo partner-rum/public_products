@@ -134,7 +134,8 @@ window.Contact = (function () {
         return;
       }
 
-      var payload = { segment: segEl.value, name: nameEl.value.trim(), contact: contact, product: title, url: url };
+      var ref = ""; try { ref = localStorage.getItem("so_ref") || ""; } catch (e) {}
+      var payload = { segment: segEl.value, name: nameEl.value.trim(), contact: contact, product: title, url: url, ref: ref };
       sendBtn.disabled = true;
       var oldLabel = sendBtn.textContent;
       sendBtn.textContent = "Отправляем…";

@@ -65,10 +65,12 @@ async function handleLead(request, env, cors) {
   const segment = String(data.segment || "").trim().slice(0, 100);
   const page = String(data.url || "").trim().slice(0, 500);
   const chat = String(data.chat || "").trim().slice(0, 1500);
+  const ref = String(data.ref || "").trim().slice(0, 60);
   if (!contact) return json({ ok: false, error: "no_contact" }, 422, cors);
 
   const text =
     "🟠 <b>Заявка с сайта</b>\n" +
+    (ref ? "Сейлз: " + esc(ref) + "\n" : "") +
     (product ? "Продукт: " + esc(product) + "\n" : "") +
     (segment ? "Категория: " + esc(segment) + "\n" : "") +
     (name ? "Имя: " + esc(name) + "\n" : "") +

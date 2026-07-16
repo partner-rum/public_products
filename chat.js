@@ -175,9 +175,10 @@
       var transcript = msgs.slice(-8).map(function (m) {
         return (m.role === "user" ? "Клиент" : "Ассистент") + ": " + m.content;
       }).join("\n");
+      var ref = ""; try { ref = localStorage.getItem("so_ref") || ""; } catch (e) {}
       fetch(CFG.endpoint.replace(/\/chat$/, "/lead"), {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: nameEl.value.trim(), contact: contact, product: "Вопрос из AI-чата", url: location.href, chat: transcript })
+        body: JSON.stringify({ name: nameEl.value.trim(), contact: contact, product: "Вопрос из AI-чата", url: location.href, chat: transcript, ref: ref })
       })
         .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
         .then(function (d) {
