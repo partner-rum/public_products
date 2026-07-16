@@ -10,6 +10,7 @@
     endpoint: "https://so-leads.ruslan-sabirov.workers.dev/chat",
     botUser: "Rumberb_Sales_Team_bot",
     metrikaId: 110759242,
+    msgLimit: 10,   // максимум вопросов за сессию, дальше — кнопка «Написать в Telegram»
     greeting: "Здравствуйте! Я AI-ассистент Rumberg: объясню, как устроены структурные продукты, и подскажу, где что на сайте.",
     suggestions: [
       "Чем автоколл отличается от ноты с защитой капитала?",
@@ -97,6 +98,7 @@
 
   var msgs = [];         // {role, content}
   var busy = false;
+  var locked = false;    // достигнут лимит вопросов
   var els = {};
 
   function goal(name) {
@@ -189,8 +191,24 @@
     });
   }
 
+  function lockChat() {
+    if (locked) return;
+    locked = true;
+    els.input.disabled = true;
+    els.input.placeholder = "Лимит вопросов достигнут";
+    els.send.disabled = true;
+    var box = document.createElement("div");
+    box.className = "ca-lead";
+    box.innerHTML =
+      '<div class="ca-lead-t">Вы задали максимум вопросов в этом чате. Чтобы продолжить и обсудить детали — свяжитесь с менеджером Rumberg в Telegram.</div>' +
+      '<a class="ca-lead-send" style="text-decoration:none;text-align:center;display:block" href="https://t.me/' + CFG.botUser + '" target="_blank" rel="noopener">Написать в Telegram</a>';
+    els.log.appendChild(box);
+    els.log.scrollTop = els.log.scrollHeight;
+    goal("chat_limit");
+  }
+
   function send() {
-    if (busy) return;
+    if (busy || locked) return;
     var text = els.input.value.trim();
     if (!text) return;
     els.input.value = ""; els.input.style.height = "auto";
@@ -198,6 +216,7 @@
     msgs.push({ role: "user", content: text });
     addMsg("user", text);
     goal("chat_send");
+    var qCount = msgs.filter(function (m) { return m.role === "user"; }).length;
     busy = true; els.send.disabled = true;
     var typing = showTyping();
 
@@ -214,6 +233,7 @@
           msgs.push({ role: "assistant", content: r }); addMsg("assistant", r);
         }
         busy = false; els.send.disabled = false; els.input.focus();
+        if (qCount >= CFG.msgLimit) lockChat();
       }, 700);
       return;
     }
@@ -235,11 +255,13 @@
         typing.remove();
         var d = addMsg("assistant", ""); d.innerHTML = fallbackReply();
       })
-      .finally(function () { busy = false; els.send.disabled = false; els.input.focus(); });
+      .finally(function () { busy = false; els.send.disabled = false; els.input.focus(); if (qCount >= CFG.msgLimit) lockChat(); });
   }
 
   function build() {
     inject();
+    var limOv = parseInt(((location.search.match(/[?&]chatlimit=(\d+)/) || [])[1]) || "0", 10);
+    if (limOv > 0) CFG.msgLimit = limOv;  // локальное демо: ?chatlimit=2
     var btn = document.createElement("button");
     btn.className = "ca-btn"; btn.setAttribute("aria-label", "Открыть AI-ассистента");
     btn.innerHTML = ICON_STARS + '<span class="ca-ai">AI</span>';
