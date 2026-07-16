@@ -139,10 +139,12 @@ async function handleChat(request, env, cors) {
 
 // YandexGPT (Yandex Cloud Foundation Models) — основной провайдер /chat
 async function callYandex(system, messages, env) {
-  if (!env.YANDEX_API_KEY || !env.YANDEX_FOLDER_ID) throw new Error("not_configured");
-  const model = env.YANDEX_MODEL || "yandexgpt/latest";
+  const key = (env.YANDEX_API_KEY || "").trim();
+  const folder = (env.YANDEX_FOLDER_ID || "").trim();
+  if (!key || !folder) throw new Error("not_configured");
+  const model = (env.YANDEX_MODEL || "yandexgpt/latest").trim();
   const body = {
-    modelUri: "gpt://" + env.YANDEX_FOLDER_ID + "/" + model,
+    modelUri: "gpt://" + folder + "/" + model,
     completionOptions: { stream: false, temperature: 0.3, maxTokens: "500" },
     messages: [{ role: "system", text: system }].concat(
       messages.map((m) => ({ role: m.role, text: m.content }))
@@ -150,10 +152,13 @@ async function callYandex(system, messages, env) {
   };
   const r = await fetch("https://llm.api.cloud.yandex.net/foundationModels/v1/completion", {
     method: "POST",
-    headers: { "Authorization": "Api-Key " + env.YANDEX_API_KEY, "Content-Type": "application/json" },
+    headers: { "Authorization": "Api-Key " + key, "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  if (!r.ok) throw new Error("upstream_" + r.status);
+  if (!r.ok) {
+    const t = await r.text().catch(() => "");
+    throw new Error("upstream_" + r.status + ": " + t.slice(0, 300));
+  }
   const data = await r.json();
   const alt = data && data.result && data.result.alternatives && data.result.alternatives[0];
   return ((alt && alt.message && alt.message.text) || "").trim();
