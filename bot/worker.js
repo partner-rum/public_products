@@ -155,10 +155,7 @@ async function callYandex(system, messages, env) {
     headers: { "Authorization": "Api-Key " + key, "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  if (!r.ok) {
-    const t = await r.text().catch(() => "");
-    throw new Error("upstream_" + r.status + ": " + t.slice(0, 300));
-  }
+  if (!r.ok) throw new Error("upstream_" + r.status);
   const data = await r.json();
   const alt = data && data.result && data.result.alternatives && data.result.alternatives[0];
   return ((alt && alt.message && alt.message.text) || "").trim();
