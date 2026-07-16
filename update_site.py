@@ -150,15 +150,30 @@ DATA_REL_PATH = "data/instruments.js"
 DATA_LOCAL_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), *DATA_REL_PATH.split("/"))
 
 
-def render_js() -> str:
-    """Собирает содержимое data/instruments.js."""
+def extract_sales_items(js_text: str) -> list:
+    """Достаёт из текущего instruments.js продукты, добавленные сейлзами через админку
+    (помечены "src": "sales"). Они дописываются в конец при каждой перегенерации,
+    чтобы запуск скрипта их не затирал."""
+    try:
+        body = js_text[js_text.index("{"): js_text.rindex("}") + 1]
+        data = json.loads(body)
+    except (ValueError, KeyError):
+        return []
+    return [i for i in data.get("instruments", []) if i.get("src") == "sales"]
+
+
+def render_js(sales_items: list) -> str:
+    """Собирает содержимое data/instruments.js: сгенерированные + сейлзовые."""
+    gen_ids = {i["id"] for i in INSTRUMENTS}
+    extra = [i for i in sales_items if i.get("id") not in gen_ids]
     payload = {
         "updated": datetime.date.today().isoformat(),
-        "instruments": INSTRUMENTS,
+        "instruments": INSTRUMENTS + extra,
         "underlyings": UNDERLYINGS_INFO,
     }
     return (
         "// Файл сгенерирован update_site.py — руками не править (перезапишется при следующем запуске).\n"
+        "// Продукты с \"src\": \"sales\" добавлены через админку и сохраняются при перегенерации.\n"
         "// Обновлено: " + payload["updated"] + "\n"
         "window.SITE_DATA = " + json.dumps(payload, ensure_ascii=False, indent=2) + ";\n"
     )
@@ -166,9 +181,13 @@ def render_js() -> str:
 
 def write_local() -> None:
     os.makedirs(os.path.dirname(DATA_LOCAL_PATH), exist_ok=True)
+    sales = []
+    if os.path.exists(DATA_LOCAL_PATH):
+        with open(DATA_LOCAL_PATH, encoding="utf-8") as f:
+            sales = extract_sales_items(f.read())
     with open(DATA_LOCAL_PATH, "w", encoding="utf-8") as f:
-        f.write(render_js())
-    print("OK: записан", DATA_LOCAL_PATH)
+        f.write(render_js(sales))
+    print("OK: записан", DATA_LOCAL_PATH, f"(+{len(sales)} от сейлзов)" if sales else "")
     print("Проверьте локально: откройте index.html в браузере.")
 
 
@@ -182,13 +201,21 @@ def push_to_github() -> None:
     api = f"https://api.github.com/repos/{repo}/contents/{DATA_REL_PATH}"
     headers = {"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json"}
 
-    # sha текущей версии файла — нужен GitHub для обновления
+    # Текущая версия файла НА GITHUB — источник правды для merge: сейлзы могли добавить
+    # продукты через админку, которых ещё нет в локальной копии. sha нужен для обновления.
     r = requests.get(api, headers=headers, params={"ref": branch})
-    sha = r.json().get("sha") if r.status_code == 200 else None
+    sha, sales = None, []
+    if r.status_code == 200:
+        sha = r.json().get("sha")
+        try:
+            remote_text = base64.b64decode(r.json()["content"]).decode("utf-8")
+            sales = extract_sales_items(remote_text)
+        except Exception:
+            sales = []
 
     body = {
         "message": "Обновление котировок " + datetime.datetime.now().strftime("%d.%m.%Y %H:%M"),
-        "content": base64.b64encode(render_js().encode("utf-8")).decode("ascii"),
+        "content": base64.b64encode(render_js(sales).encode("utf-8")).decode("ascii"),
         "branch": branch,
     }
     if sha:
@@ -196,7 +223,8 @@ def push_to_github() -> None:
 
     r = requests.put(api, headers=headers, json=body)
     r.raise_for_status()
-    print(f"OK: запушено в {repo} ({branch}) — сайт обновится через 1–2 минуты.")
+    print(f"OK: запушено в {repo} ({branch}) — сайт обновится через 1–2 минуты."
+          + (f" Сохранено продуктов от сейлзов: {len(sales)}." if sales else ""))
 
 
 if __name__ == "__main__":

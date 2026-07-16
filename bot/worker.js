@@ -17,11 +17,19 @@
 //                            (открыто для всех). Чтобы ограничить — задай "RU" или "RU,BY": тем клиентам
 //                            /chat вернёт region_unavailable, и виджет предложит Telegram.
 //
+//   --- админка сейлзов (добавление продуктов на сайт) ---
+//   SALES_KEYS      — персональные ключи сейлзов: "andrey:ключ1,polina:ключ2" (секрет)
+//   ADMIN_CHAT_ID   — личный chat_id Руслана (модератора) — карточки на аппрув идут сюда, не в группу
+//   GITHUB_TOKEN    — fine-grained токен ТОЛЬКО на этот репозиторий, права Contents: Read and write (секрет)
+//   GITHUB_REPO     — напр. "partner-rum/public_products"; GITHUB_BRANCH — по умолчанию "main"
+//   WEBHOOK_SECRET  — ОБЯЗАТЕЛЕН для кнопок ✅/❌: без него /tg не защищён от поддельных approve
+//
 // Маршруты:
-//   POST /lead  — форма-заявка с сайта  → сообщение в CHAT_ID
-//   POST /chat  — сообщение чат-ассистента → Claude API → ответ обратно на сайт
-//   POST /tg    — (опц.) вебхук Telegram: /start <id> приветствует клиента и шлёт лид в CHAT_ID,
-//                 обычные сообщения бот пересылает в CHAT_ID
+//   POST /lead   — форма-заявка с сайта  → сообщение в CHAT_ID
+//   POST /chat   — сообщение чат-ассистента → Claude API → ответ обратно на сайт
+//   POST /submit — админка сейлзов: продукт → карточка с кнопками ✅/❌ в ADMIN_CHAT_ID
+//   POST /tg     — вебхук Telegram: callback-кнопки модерации (✅ публикует коммитом в GitHub),
+//                  /start <id> приветствует клиента и шлёт лид в CHAT_ID, прочее пересылает в CHAT_ID
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -34,6 +42,7 @@ export default {
 
     if (url.pathname === "/lead" && request.method === "POST") return handleLead(request, env, cors);
     if (url.pathname === "/chat" && request.method === "POST") return handleChat(request, env, cors);
+    if (url.pathname === "/submit" && request.method === "POST") return handleSubmit(request, env, cors);
     if (url.pathname === "/tg" && request.method === "POST") return handleTelegram(request, env);
 
     return new Response("OK", { status: 200, headers: cors });
@@ -253,6 +262,227 @@ async function callClaude(system, messages, env) {
   return (data.content || []).filter((b) => b.type === "text").map((b) => b.text).join("\n").trim();
 }
 
+// ============================================================================
+// Админка сейлзов: /submit → карточка модератору → ✅ коммит в GitHub
+// ============================================================================
+
+// Белые списки полей по разделам — в публичные файлы попадает только это.
+const SUBMIT_SECTIONS = {
+  board: {
+    label: "Текущие продукты (доска)",
+    file: "data/instruments.js",
+    str: ["id", "type", "structure", "name", "underlying", "cls", "uRef", "tenor", "expiry"],
+    num: ["spot", "strike", "strike2", "participation", "protectionPct", "cap", "quote", "chg", "minNom"],
+    required: ["id", "type", "name", "underlying", "cls", "expiry", "quote"],
+  },
+  offering: {
+    label: "На размещении",
+    file: "data/offerings.js",
+    str: ["id", "family", "kind", "name", "status", "statusLabel", "teaser", "issuer", "serial",
+          "isin", "reference", "currency", "placement", "maturity", "tenor", "venue", "how", "risk"],
+    num: ["nominal", "price", "redeem"],
+    arr: ["dealers"],
+    required: ["id", "family", "kind", "name", "status", "teaser", "issuer", "serial", "price", "how", "risk"],
+  },
+  digest: {
+    label: "Дайджест (идея недели)",
+    file: "data/digest.js",
+    str: ["id", "family", "kind", "name", "underlying", "teaser", "tenor",
+          "hypothesis", "situation", "conclusion", "how", "payout"],
+    num: [],
+    arr: ["factors"],
+    obj: { metric: ["v", "k"], p: ["asset", "price", "upside", "protection"],
+           payoff: null /* отдельная обработка: type + числа */ },
+    bool: ["fx"],
+    required: ["id", "family", "kind", "name", "underlying", "teaser", "hypothesis", "how", "payout"],
+  },
+};
+
+function cleanStr(v, max) { return String(v == null ? "" : v).trim().slice(0, max || 600); }
+function cleanNum(v) { const n = Number(v); return isFinite(n) ? n : null; }
+
+function sanitizeItem(section, raw) {
+  const cfg = SUBMIT_SECTIONS[section];
+  const out = {};
+  for (const k of cfg.str) { const v = cleanStr(raw[k]); if (v) out[k] = v; }
+  for (const k of cfg.num || []) { const v = cleanNum(raw[k]); if (v != null) out[k] = v; }
+  for (const k of cfg.bool || []) { if (raw[k] === true || raw[k] === "true") out[k] = true; }
+  for (const k of cfg.arr || []) {
+    if (Array.isArray(raw[k])) {
+      const a = raw[k].map((x) => cleanStr(x, 200)).filter(Boolean).slice(0, 8);
+      if (a.length) out[k] = a;
+    }
+  }
+  if (cfg.obj) {
+    for (const [k, fields] of Object.entries(cfg.obj)) {
+      const src = raw[k];
+      if (!src || typeof src !== "object") continue;
+      if (k === "payoff") {
+        const t = cleanStr(src.type, 20);
+        if (["call", "callcap", "digital", "protected"].includes(t)) {
+          const p = { type: t };
+          for (const nk of ["capPct", "premiumPct", "couponPct", "barrierPct"]) {
+            const v = cleanNum(src[nk]); if (v != null) p[nk] = v;
+          }
+          out.payoff = p;
+        }
+        continue;
+      }
+      const o = {};
+      for (const f of fields) { const v = cleanStr(src[f], 200); if (v) o[f] = v; }
+      if (Object.keys(o).length) out[k] = o;
+    }
+  }
+  if (out.id) out.id = out.id.toLowerCase().replace(/[^\w.-]+/g, "-").slice(0, 60);
+  const missing = cfg.required.filter((k) => out[k] == null || out[k] === "");
+  return { item: out, missing };
+}
+
+async function handleSubmit(request, env, cors) {
+  if (!env.SALES_KEYS || !env.ADMIN_CHAT_ID) return json({ ok: false, error: "not_configured" }, 503, cors);
+  let data;
+  try { data = await request.json(); } catch { return json({ ok: false, error: "bad_json" }, 400, cors); }
+
+  // Персональный ключ → имя сейлза
+  const key = cleanStr(data.key, 100);
+  let author = null;
+  for (const pair of env.SALES_KEYS.split(",")) {
+    const i = pair.indexOf(":");
+    if (i > 0 && pair.slice(i + 1).trim() === key && key) { author = pair.slice(0, i).trim(); break; }
+  }
+  if (!author) return json({ ok: false, error: "bad_key" }, 403, cors);
+
+  const section = cleanStr(data.section, 20);
+  if (!SUBMIT_SECTIONS[section]) return json({ ok: false, error: "bad_section" }, 422, cors);
+  const { item, missing } = sanitizeItem(section, data.item || {});
+  if (missing.length) return json({ ok: false, error: "missing: " + missing.join(", ") }, 422, cors);
+
+  const payload = JSON.stringify({ s: section, by: author, item });
+  if (payload.length > 3400) return json({ ok: false, error: "too_long" }, 422, cors);
+
+  const cfg = SUBMIT_SECTIONS[section];
+  const brief = [item.name, item.underlying, item.isin, item.price != null ? "цена " + item.price : null,
+    item.quote != null ? "котировка " + item.quote : null].filter(Boolean).join(" · ");
+  const text =
+    "🆕 <b>Заявка на публикацию</b>\n" +
+    "Раздел: <b>" + esc(cfg.label) + "</b> · от <b>" + esc(author) + "</b>\n" +
+    esc(brief) + "\n\n" +
+    "<pre>" + esc(payload) + "</pre>";
+
+  const r = await tg(env, "sendMessage", {
+    chat_id: env.ADMIN_CHAT_ID, text, parse_mode: "HTML", disable_web_page_preview: true,
+    reply_markup: { inline_keyboard: [[
+      { text: "✅ Опубликовать", callback_data: "pub" },
+      { text: "❌ Отклонить", callback_data: "rej" },
+    ]] },
+  });
+  if (!r.ok) return json({ ok: false, error: "telegram_failed" }, 502, cors);
+  return json({ ok: true }, 200, cors);
+}
+
+// --- Публикация: правка data-файла в GitHub через Contents API ---
+function b64encodeUtf8(str) {
+  const bytes = new TextEncoder().encode(str);
+  let bin = "";
+  for (let i = 0; i < bytes.length; i += 8192) bin += String.fromCharCode(...bytes.subarray(i, i + 8192));
+  return btoa(bin);
+}
+function b64decodeUtf8(b64) {
+  const bin = atob(b64.replace(/\n/g, ""));
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new TextDecoder().decode(bytes);
+}
+
+function ghHeaders(env) {
+  return { "Authorization": "Bearer " + env.GITHUB_TOKEN, "Accept": "application/vnd.github+json",
+           "User-Agent": "so-leads-worker", "Content-Type": "application/json" };
+}
+
+function uniqueId(id, taken) {
+  let out = id, n = 2;
+  while (taken.has(out)) { out = id + "-" + n; n++; }
+  return out;
+}
+
+const FILE_HEADERS = {
+  "data/instruments.js":
+    '// Файл сгенерирован update_site.py — руками не править (перезапишется при следующем запуске).\n' +
+    '// Продукты с "src": "sales" добавлены через админку и сохраняются при перегенерации.\n',
+  "data/offerings.js":
+    '// ТЕКУЩИЕ РАЗМЕЩЕНИЯ (первичный рынок): выпуски, которые размещаем сейчас или готовим.\n' +
+    '// Файл может обновляться автоматикой (админка сейлзов) — тело window.OFFERINGS должно\n' +
+    '// оставаться СТРОГИМ JSON (двойные кавычки, без комментариев внутри). Новый выпуск = объект\n' +
+    '// в НАЧАЛО items[]. status: "upcoming" | "live". Материалы кладём в docs/.\n',
+  "data/digest.js":
+    '// Данные дайджеста. Файл может обновляться автоматикой (админка сейлзов) — руками правь аккуратно:\n' +
+    '// тело window.DIGEST_ARCHIVE должно оставаться СТРОГИМ JSON (двойные кавычки, без комментариев внутри).\n' +
+    '// Новый недельный выпуск = объект в НАЧАЛО issues. issues[0] — всегда актуальный.\n',
+};
+
+function renderDataFile(path, obj) {
+  const today = new Date().toISOString().slice(0, 10);
+  if (path === "data/instruments.js") {
+    obj.updated = today;
+    return FILE_HEADERS[path] + "// Обновлено: " + today + "\n" +
+      "window.SITE_DATA = " + JSON.stringify(obj, null, 2) + ";\n";
+  }
+  if (path === "data/offerings.js") {
+    obj.updated = today;
+    return FILE_HEADERS[path] + "window.OFFERINGS = " + JSON.stringify(obj, null, 1) + ";\n";
+  }
+  // digest
+  return FILE_HEADERS[path] + "window.DIGEST_ARCHIVE = " + JSON.stringify(obj, null, 1) + ";\n\n" +
+    "// Обратная совместимость: index.html читает window.DIGEST.date (последний выпуск).\n" +
+    "window.DIGEST = window.DIGEST_ARCHIVE.issues[0];\n";
+}
+
+async function publishItem(env, payload) {
+  const { s: section, by, item } = payload;
+  const cfg = SUBMIT_SECTIONS[section];
+  if (!cfg) throw new Error("bad_section");
+  if (!env.GITHUB_TOKEN || !env.GITHUB_REPO) throw new Error("github_not_configured");
+  const branch = env.GITHUB_BRANCH || "main";
+  const api = "https://api.github.com/repos/" + env.GITHUB_REPO + "/contents/" + cfg.file;
+
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const g = await fetch(api + "?ref=" + branch, { headers: ghHeaders(env) });
+    if (!g.ok) throw new Error("github_get_" + g.status);
+    const meta = await g.json();
+    const text = b64decodeUtf8(meta.content);
+    const obj = JSON.parse(text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1));
+
+    if (section === "board") {
+      const taken = new Set(obj.instruments.map((i) => i.id));
+      item.id = uniqueId(item.id, taken);
+      item.src = "sales";
+      obj.instruments.push(item);
+    } else if (section === "offering") {
+      const taken = new Set(obj.items.map((i) => i.id));
+      item.id = uniqueId(item.id, taken);
+      obj.items.unshift(item);
+    } else {
+      const ideas = obj.issues[0].ideas;
+      const taken = new Set(ideas.map((i) => i.id));
+      item.id = uniqueId(item.id, taken);
+      ideas.push(item);
+    }
+
+    const put = await fetch(api, {
+      method: "PUT", headers: ghHeaders(env),
+      body: JSON.stringify({
+        message: "Админка: " + cfg.label + " — " + (item.name || item.id) + " (от " + by + ")",
+        content: b64encodeUtf8(renderDataFile(cfg.file, obj)),
+        sha: meta.sha, branch,
+      }),
+    });
+    if (put.ok) return item;
+    if (put.status !== 409 && put.status !== 422) throw new Error("github_put_" + put.status);
+    // sha устарел (параллельная правка) — перечитываем и пробуем ещё раз
+  }
+  throw new Error("github_conflict");
+}
+
 // --- (опц.) Вебхук бота: клиент нажал «Написать в Telegram» ---
 async function handleTelegram(request, env) {
   if (env.WEBHOOK_SECRET && request.headers.get("X-Telegram-Bot-Api-Secret-Token") !== env.WEBHOOK_SECRET) {
@@ -260,6 +490,50 @@ async function handleTelegram(request, env) {
   }
   let update;
   try { update = await request.json(); } catch { return new Response("ok"); }
+
+  // --- Кнопки модерации админки (✅ Опубликовать / ❌ Отклонить) ---
+  const cb = update.callback_query;
+  if (cb) {
+    const answer = (textMsg, alert) => tg(env, "answerCallbackQuery",
+      { callback_query_id: cb.id, text: textMsg || "", show_alert: !!alert });
+    // жмёт кнопки только модератор
+    if (!env.ADMIN_CHAT_ID || String(cb.from && cb.from.id) !== String(env.ADMIN_CHAT_ID)) {
+      await answer("Недостаточно прав"); return new Response("ok");
+    }
+    const msgText = (cb.message && cb.message.text) || "";
+    const at = msgText.indexOf('{"s":');
+    const end = msgText.lastIndexOf("}");
+    if (at < 0 || end < at) { await answer("Не нашёл данные заявки", true); return new Response("ok"); }
+    let payload;
+    try { payload = JSON.parse(msgText.slice(at, end + 1)); } catch { await answer("Данные повреждены", true); return new Response("ok"); }
+    const label = (SUBMIT_SECTIONS[payload.s] || {}).label || payload.s;
+    const title = (payload.item && payload.item.name) || "";
+
+    if (cb.data === "rej") {
+      await tg(env, "editMessageText", {
+        chat_id: cb.message.chat.id, message_id: cb.message.message_id, parse_mode: "HTML",
+        text: "❌ <b>Отклонено</b> · " + esc(label) + "\n" + esc(title) + " (от " + esc(payload.by) + ")",
+      });
+      await answer("Отклонено");
+      return new Response("ok");
+    }
+    if (cb.data === "pub") {
+      try {
+        const published = await publishItem(env, payload);
+        await tg(env, "editMessageText", {
+          chat_id: cb.message.chat.id, message_id: cb.message.message_id, parse_mode: "HTML",
+          text: "✅ <b>Опубликовано</b> · " + esc(label) + "\n" + esc(published.name || published.id) +
+            " (от " + esc(payload.by) + ")\nСайт обновится через 1–3 минуты.",
+        });
+        await answer("Опубликовано");
+      } catch (e) {
+        await answer("Ошибка публикации: " + String(e && e.message || e).slice(0, 150), true);
+      }
+      return new Response("ok");
+    }
+    await answer("");
+    return new Response("ok");
+  }
 
   const msg = update.message;
   if (msg && msg.text) {

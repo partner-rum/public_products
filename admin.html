@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Добавить продукт — Rumberg</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Rubik:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --canvas:#0B0C10; --card:#14161C; --ink:#F2F3F7; --hushed:rgba(242,243,247,.64);
+    --faint:rgba(242,243,247,.42); --border:rgba(255,255,255,.12); --border-soft:rgba(255,255,255,.07);
+    --solar:#EE7D1B; --solar-l:#F58E33; --up:#55C08A; --down:#E0705A;
+    --f:'Onest',system-ui,sans-serif; --m:'JetBrains Mono',Consolas,monospace; --display:'Rubik','Onest',sans-serif;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--canvas); color:var(--ink); font-family:var(--f); -webkit-font-smoothing:antialiased; }
+  a { color:inherit; text-decoration:none; }
+  .wrap { max-width:720px; margin:0 auto; padding:0 20px 80px; }
+
+  .top { display:flex; align-items:center; gap:10px; padding:18px 0 6px; }
+  .top svg { flex:none; }
+  .top .t { font-family:var(--display); font-weight:600; font-size:16px; }
+  .top .s { font-size:12px; color:var(--faint); margin-top:1px; }
+
+  h1 { margin:22px 0 6px; font-family:var(--display); font-size:26px; font-weight:600; letter-spacing:-.02em; }
+  .lead { margin:0 0 20px; font-size:13.5px; line-height:1.55; color:var(--hushed); }
+
+  .keyrow { display:flex; gap:10px; margin:0 0 22px; }
+  .keyrow input { flex:1; }
+
+  .tabs { display:flex; gap:6px; flex-wrap:wrap; margin:0 0 20px; }
+  .tab { border:1px solid var(--border); background:var(--card); color:var(--hushed); border-radius:9px;
+         padding:9px 15px; font-family:var(--f); font-size:13.5px; font-weight:500; cursor:pointer; }
+  .tab.on { background:rgba(238,125,27,.14); border-color:var(--solar); color:var(--ink); font-weight:600; }
+
+  form { display:none; }
+  form.on { display:block; }
+
+  .grp { margin:0 0 16px; padding:16px; background:var(--card); border:1px solid var(--border-soft); border-radius:14px; }
+  .grp .gt { font-family:var(--m); font-size:10.5px; letter-spacing:.13em; text-transform:uppercase; color:var(--faint); margin:0 0 12px; }
+  .row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .row3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+  @media (max-width:560px){ .row,.row3 { grid-template-columns:1fr; } }
+
+  label { display:block; margin:0 0 10px; }
+  label .k { display:block; font-size:12px; color:var(--hushed); margin:0 0 5px; }
+  label .k b { color:var(--solar-l); font-weight:600; }
+  input, select, textarea {
+    width:100%; background:rgba(255,255,255,.05); border:1px solid var(--border); border-radius:10px;
+    color:var(--ink); font-family:var(--f); font-size:13.5px; padding:9px 12px; outline:none;
+  }
+  textarea { resize:vertical; min-height:64px; line-height:1.5; }
+  input:focus, select:focus, textarea:focus { border-color:rgba(238,125,27,.6); }
+  select { appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23888' fill='none' stroke-width='1.5'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; }
+  .hint { font-size:11px; color:var(--faint); margin-top:4px; line-height:1.45; }
+
+  .send { width:100%; margin-top:6px; background:var(--solar); color:#0C0A08; border:0; border-radius:12px;
+          padding:13px; font-family:var(--f); font-size:14.5px; font-weight:600; cursor:pointer; }
+  .send:hover { background:var(--solar-l); }
+  .send:disabled { opacity:.5; cursor:default; }
+
+  .msg { display:none; margin:14px 0 0; padding:13px 16px; border-radius:12px; font-size:13.5px; line-height:1.5; }
+  .msg.ok { display:block; background:rgba(85,192,138,.1); border:1px solid rgba(85,192,138,.4); }
+  .msg.err { display:block; background:rgba(224,112,90,.1); border:1px solid rgba(224,112,90,.45); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <svg width="22" height="22" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>
+    <div><div class="t">Rumberg · админка</div><div class="s">добавление продуктов на сайт</div></div>
+  </div>
+
+  <h1>Добавить продукт</h1>
+  <p class="lead">Заполни форму — заявка уйдёт Руслану на одобрение. После его ✅ продукт появится на сайте через пару минут. Поля с <b style="color:var(--solar-l)">*</b> обязательны.</p>
+
+  <div class="keyrow">
+    <label style="flex:1;margin:0"><span class="k">Ваш персональный ключ <b>*</b></span>
+      <input id="key" type="password" placeholder="выдаётся Русланом" autocomplete="off">
+    </label>
+  </div>
+
+  <div class="tabs">
+    <button class="tab on" data-f="f-board" type="button">Текущий продукт</button>
+    <button class="tab" data-f="f-offering" type="button">На размещении</button>
+    <button class="tab" data-f="f-digest" type="button">Идея в дайджест</button>
+  </div>
+
+  <!-- ══════════ ТЕКУЩИЙ ПРОДУКТ (доска) ══════════ -->
+  <form id="f-board" class="on">
+    <div class="grp"><div class="gt">Что за продукт</div>
+      <label><span class="k">Тип <b>*</b></span>
+        <select name="type">
+          <option value="discount">Дисконтная облигация</option>
+          <option value="protection">Защита капитала</option>
+          <option value="warrant">Варрант (CALL / колл-спред)</option>
+        </select>
+      </label>
+      <label><span class="k">Название <b>*</b></span><input name="name" placeholder="CALL 100 · Газпром · 1 год" maxlength="80"></label>
+      <div class="row">
+        <label><span class="k">Базовый актив <b>*</b></span><input name="underlying" placeholder="Газпром (GAZP)" maxlength="60"></label>
+        <label><span class="k">Класс актива <b>*</b></span>
+          <select name="cls"><option>Облигации</option><option>Индекс</option><option>Акции США</option><option>Акции РФ</option><option>Товары</option><option>Валюта</option><option>Крипто</option></select>
+        </label>
+      </div>
+    </div>
+
+    <div class="grp"><div class="gt">Условия</div>
+      <div class="row3">
+        <label><span class="k">Экспирация <b>*</b></span><input name="expiry" placeholder="18.12.2027" maxlength="10"></label>
+        <label><span class="k">Котировка, % ном. <b>*</b></span><input name="quote" type="number" step="0.01" placeholder="96.80"></label>
+        <label><span class="k">Мин. номинал, ₽</span><input name="minNom" type="number" value="1000000"></label>
+      </div>
+      <div id="b-protection" style="display:none">
+        <div class="row">
+          <label><span class="k">Нач. уровень БА (S0) <b>*</b></span><input name="strike" type="number" step="0.01" placeholder="3285"></label>
+          <label><span class="k">Участие в росте, 0–1 <b>*</b></span><input name="participation" type="number" step="0.05" placeholder="0.6"></label>
+        </div>
+        <div class="row">
+          <label><span class="k">Защита номинала, %</span><input name="protectionPct" type="number" value="100"></label>
+          <label><span class="k">Потолок роста, % (пусто = нет)</span><input name="cap" type="number" placeholder=""></label>
+        </div>
+      </div>
+      <div id="b-warrant" style="display:none">
+        <div class="row">
+          <label><span class="k">Структура <b>*</b></span>
+            <select name="structure"><option value="call">CALL 100 (рост без потолка)</option><option value="cs">Колл-спред 100–150</option></select>
+          </label>
+          <label><span class="k">Текущий уровень БА (текстом)</span><input name="uRef" placeholder="$54,80 или 6 320 пт" maxlength="30"></label>
+        </div>
+        <label><span class="k">Срок (подпись)</span><input name="tenor" placeholder="1 год" maxlength="20"></label>
+      </div>
+    </div>
+    <button class="send" type="submit">Отправить на одобрение</button>
+    <div class="msg" id="m-board"></div>
+  </form>
+
+  <!-- ══════════ НА РАЗМЕЩЕНИИ ══════════ -->
+  <form id="f-offering">
+    <div class="grp"><div class="gt">Выпуск</div>
+      <label><span class="k">Название <b>*</b></span><input name="name" placeholder="Дисконтная облигация на ВЭБ.РФ" maxlength="90"></label>
+      <div class="row">
+        <label><span class="k">Семейство <b>*</b></span>
+          <select name="family"><option value="discount">Дисконтная</option><option value="coupon">Купонная</option><option value="participation">Участие в росте</option></select>
+        </label>
+        <label><span class="k">Тип (подпись) <b>*</b></span><input name="kind" placeholder="Дисконтная структурная облигация · CLN" maxlength="80"></label>
+      </div>
+      <div class="row">
+        <label><span class="k">Серия <b>*</b></span><input name="serial" placeholder="СП-2-31-CLN-3" maxlength="40"></label>
+        <label><span class="k">ISIN</span><input name="isin" placeholder="RU000A10EM61" maxlength="12"></label>
+      </div>
+      <div class="row">
+        <label><span class="k">Эмитент <b>*</b></span><input name="issuer" placeholder="СФО «Теллуриум»" maxlength="60"></label>
+        <label><span class="k">Контрольное лицо / БА</span><input name="reference" placeholder="ВЭБ.РФ" maxlength="60"></label>
+      </div>
+      <div class="row">
+        <label><span class="k">Статус <b>*</b></span>
+          <select name="status"><option value="upcoming">Готовим (upcoming)</option><option value="live">Идёт размещение (live)</option></select>
+        </label>
+        <label><span class="k">Подпись статуса</span><input name="statusLabel" placeholder="Старт 14.07.2026" maxlength="40"></label>
+      </div>
+      <label><span class="k">Тизер (1–2 предложения) <b>*</b></span><textarea name="teaser" maxlength="240" placeholder="Покупка по 58,82% номинала, погашение по 100% через 5 лет — если…"></textarea></label>
+    </div>
+
+    <div class="grp"><div class="gt">Параметры</div>
+      <div class="row3">
+        <label><span class="k">Валюта</span><select name="currency"><option>₽</option><option>$</option><option>€</option></select></label>
+        <label><span class="k">Номинал</span><input name="nominal" type="number" value="1000"></label>
+        <label><span class="k">Цена, % ном. <b>*</b></span><input name="price" type="number" step="0.01" placeholder="58.82"></label>
+      </div>
+      <div class="row3">
+        <label><span class="k">Погашение, % ном.</span><input name="redeem" type="number" value="100"></label>
+        <label><span class="k">Дата размещения</span><input name="placement" placeholder="14.07.2026" maxlength="10"></label>
+        <label><span class="k">Дата погашения</span><input name="maturity" placeholder="14.07.2031" maxlength="10"></label>
+      </div>
+      <div class="row">
+        <label><span class="k">Срок (подпись)</span><input name="tenor" placeholder="5 лет" maxlength="20"></label>
+        <label><span class="k">Площадка</span><select name="venue"><option>Внебиржевой</option><option>МосБиржа</option></select></label>
+      </div>
+      <label><span class="k">Дилеры (через запятую)</span><input name="dealers" placeholder="Банк ВТБ, Сбербанк КИБ, ФИНАМ" maxlength="200"></label>
+    </div>
+
+    <div class="grp"><div class="gt">Описание</div>
+      <label><span class="k">Как работает <b>*</b></span><textarea name="how" maxlength="600" placeholder="Покупается с дисконтом — по 58,82% номинала — и при отсутствии кредитного события…"></textarea></label>
+      <label><span class="k">Риски <b>*</b></span><textarea name="risk" maxlength="500" placeholder="Кредитный риск на контрольное лицо…"></textarea></label>
+    </div>
+    <button class="send" type="submit">Отправить на одобрение</button>
+    <div class="msg" id="m-offering"></div>
+  </form>
+
+  <!-- ══════════ ИДЕЯ В ДАЙДЖЕСТ ══════════ -->
+  <form id="f-digest">
+    <div class="grp"><div class="gt">Идея</div>
+      <label><span class="k">Название <b>*</b></span><input name="name" placeholder="Варрант на производителей меди" maxlength="80"></label>
+      <div class="row">
+        <label><span class="k">Секция <b>*</b></span>
+          <select name="family"><option value="warrant">Варранты</option><option value="coupon">Купоны</option><option value="protection">Защита капитала</option><option value="portfolio">Портфель</option></select>
+        </label>
+        <label><span class="k">Тип (подпись) <b>*</b></span><input name="kind" placeholder="Варрант" maxlength="40"></label>
+      </div>
+      <label><span class="k">Базовый актив <b>*</b></span><input name="underlying" placeholder="COPX · ETF на добытчиков меди" maxlength="80"></label>
+      <div class="row">
+        <label><span class="k">Ключевая цифра (для карточки)</span><input name="metric_v" placeholder="+30%" maxlength="12"></label>
+        <label><span class="k">Подпись цифры</span><input name="metric_k" placeholder="потолок роста" maxlength="30"></label>
+      </div>
+      <div class="row">
+        <label><span class="k">Срок (подпись)</span><input name="tenor" placeholder="0,5 года" maxlength="20"></label>
+        <label style="display:flex;align-items:center;gap:8px;margin-top:20px"><input type="checkbox" name="fx" style="width:16px;height:16px"> <span style="font-size:13px;color:var(--hushed)">валютный БА (FX-дисклеймер)</span></label>
+      </div>
+      <label><span class="k">Тизер <b>*</b></span><textarea name="teaser" maxlength="220" placeholder="Рычаг на рост меди: электрификация, дефицит предложения…"></textarea></label>
+    </div>
+
+    <div class="grp"><div class="gt">Аргументация</div>
+      <label><span class="k">Гипотеза <b>*</b></span><textarea name="hypothesis" maxlength="250" placeholder="Медь — ключевой металл электрификации мировой экономики."></textarea></label>
+      <label><span class="k">Рыночная ситуация</span><textarea name="situation" maxlength="400"></textarea></label>
+      <label><span class="k">Факторы — по одному на строку</span><textarea name="factors" maxlength="900" placeholder="Рост инвестиций в энергосети&#10;Ограниченное предложение&#10;Спрос со стороны ИИ"></textarea></label>
+      <label><span class="k">Вывод (необязательно)</span><textarea name="conclusion" maxlength="250"></textarea></label>
+    </div>
+
+    <div class="grp"><div class="gt">Механика и выплата</div>
+      <label><span class="k">Как работает <b>*</b></span><textarea name="how" maxlength="500"></textarea></label>
+      <label><span class="k">Выплата (описание) <b>*</b></span><textarea name="payout" maxlength="350" placeholder="Выплата роста базового актива (максимум 30%)…"></textarea></label>
+      <div class="row">
+        <label><span class="k">Актив (подпись)</span><input name="p_asset" placeholder="COPX (ETF)" maxlength="50"></label>
+        <label><span class="k">Цена (подпись)</span><input name="p_price" placeholder="150 ₽ · 15% ном." maxlength="50"></label>
+      </div>
+      <div class="row">
+        <label><span class="k">Апсайд (подпись)</span><input name="p_upside" placeholder="рост актива, потолок +30%" maxlength="60"></label>
+        <label><span class="k">Защита (подпись)</span><input name="p_protection" placeholder="нет / 100% номинала" maxlength="40"></label>
+      </div>
+      <label><span class="k">График выплаты</span>
+        <select name="payoff_type">
+          <option value="">без графика</option>
+          <option value="callcap">Рост с потолком (callcap)</option>
+          <option value="call">Рост без потолка (call)</option>
+          <option value="digital">Купон при условии (digital)</option>
+          <option value="protected">Защита + участие (protected)</option>
+        </select>
+      </label>
+      <div class="row3" id="d-payoff" style="display:none">
+        <label data-p="capPct"><span class="k">Потолок/участие, %</span><input name="payoff_capPct" type="number" placeholder="30"></label>
+        <label data-p="premiumPct"><span class="k">Премия, % ном.</span><input name="payoff_premiumPct" type="number" step="0.1" placeholder="15"></label>
+        <label data-p="couponPct"><span class="k">Купон, %</span><input name="payoff_couponPct" type="number" step="0.1"></label>
+        <label data-p="barrierPct"><span class="k">Барьер, +%</span><input name="payoff_barrierPct" type="number" step="0.1"></label>
+      </div>
+      <div class="hint">Идея добавится в конец текущего выпуска дайджеста (после одобрения).</div>
+    </div>
+    <button class="send" type="submit">Отправить на одобрение</button>
+    <div class="msg" id="m-digest"></div>
+  </form>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var ENDPOINT = "https://so-leads.ruslan-sabirov.workers.dev/submit";
+
+  // ── ключ сейлза: запоминаем в браузере ──
+  var keyEl = document.getElementById("key");
+  try { keyEl.value = localStorage.getItem("so_admin_key") || ""; } catch (e) {}
+  keyEl.addEventListener("input", function () { try { localStorage.setItem("so_admin_key", keyEl.value); } catch (e) {} });
+
+  // ── табы ──
+  document.querySelectorAll(".tab").forEach(function (t) {
+    t.addEventListener("click", function () {
+      document.querySelectorAll(".tab").forEach(function (x) { x.classList.remove("on"); });
+      document.querySelectorAll("form").forEach(function (f) { f.classList.remove("on"); });
+      t.classList.add("on");
+      document.getElementById(t.getAttribute("data-f")).classList.add("on");
+    });
+  });
+
+  // ── условные поля ──
+  var fBoard = document.getElementById("f-board");
+  fBoard.type.addEventListener("change", function () {
+    document.getElementById("b-protection").style.display = fBoard.type.value === "protection" ? "" : "none";
+    document.getElementById("b-warrant").style.display = fBoard.type.value === "warrant" ? "" : "none";
+  });
+  var fDigest = document.getElementById("f-digest");
+  var PAYOFF_FIELDS = { callcap: ["capPct", "premiumPct"], call: ["premiumPct"], digital: ["couponPct", "barrierPct"], protected: ["capPct"] };
+  fDigest.payoff_type.addEventListener("change", function () {
+    var t = fDigest.payoff_type.value, box = document.getElementById("d-payoff");
+    box.style.display = t ? "" : "none";
+    box.querySelectorAll("label").forEach(function (l) {
+      l.style.display = t && PAYOFF_FIELDS[t].indexOf(l.getAttribute("data-p")) >= 0 ? "" : "none";
+    });
+  });
+
+  // ── утилиты ──
+  var TR = { а:"a",б:"b",в:"v",г:"g",д:"d",е:"e",ё:"e",ж:"zh",з:"z",и:"i",й:"y",к:"k",л:"l",м:"m",н:"n",о:"o",п:"p",р:"r",с:"s",т:"t",у:"u",ф:"f",х:"h",ц:"c",ч:"ch",ш:"sh",щ:"sch",ъ:"",ы:"y",ь:"",э:"e",ю:"yu",я:"ya" };
+  function slug(s) {
+    return String(s || "").toLowerCase().split("").map(function (ch) { return TR[ch] != null ? TR[ch] : ch; }).join("")
+      .replace(/[^\w.-]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "").slice(0, 50);
+  }
+  function val(form, name) { var el = form[name]; return el ? String(el.value || "").trim() : ""; }
+  function num(form, name) { var v = val(form, name); return v === "" ? null : Number(v); }
+  function put(obj, k, v) { if (v !== "" && v != null && !(typeof v === "number" && isNaN(v))) obj[k] = v; }
+
+  function submit(section, form, msgEl, build) {
+    var key = keyEl.value.trim();
+    msgEl.className = "msg";
+    if (!key) { msgEl.className = "msg err"; msgEl.textContent = "Введите ваш персональный ключ (в самом верху страницы)."; keyEl.focus(); return; }
+    var item;
+    try { item = build(); } catch (e) { msgEl.className = "msg err"; msgEl.textContent = String(e.message || e); return; }
+    var btn = form.querySelector(".send");
+    btn.disabled = true; btn.textContent = "Отправляем…";
+    fetch(ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key: key, section: section, item: item }) })
+      .then(function (r) { return r.json().then(function (d) { return { s: r.status, d: d }; }); })
+      .then(function (x) {
+        if (x.d && x.d.ok) { msgEl.className = "msg ok"; msgEl.textContent = "Отправлено на одобрение ✅ После ✅ Руслана продукт появится на сайте через пару минут."; form.reset(); fBoard.type.dispatchEvent(new Event("change")); fDigest.payoff_type.dispatchEvent(new Event("change")); }
+        else if (x.d && x.d.error === "bad_key") { msgEl.className = "msg err"; msgEl.textContent = "Ключ не подошёл — проверьте или спросите у Руслана."; }
+        else { msgEl.className = "msg err"; msgEl.textContent = "Ошибка: " + ((x.d && x.d.error) || x.s) + ". Проверьте обязательные поля."; }
+      })
+      .catch(function () { msgEl.className = "msg err"; msgEl.textContent = "Сеть недоступна — попробуйте ещё раз."; })
+      .finally(function () { btn.disabled = false; btn.textContent = "Отправить на одобрение"; });
+  }
+
+  function req(form, fields) {
+    var miss = fields.filter(function (f) { return !val(form, f); });
+    if (miss.length) throw new Error("Заполните обязательные поля: " + miss.length + " шт. (помечены *)");
+  }
+
+  // ── ТЕКУЩИЙ ПРОДУКТ ──
+  fBoard.addEventListener("submit", function (e) {
+    e.preventDefault();
+    submit("board", fBoard, document.getElementById("m-board"), function () {
+      req(fBoard, ["name", "underlying", "expiry", "quote"]);
+      var type = val(fBoard, "type");
+      var item = { type: type, name: val(fBoard, "name"), underlying: val(fBoard, "underlying"),
+                   cls: val(fBoard, "cls"), expiry: val(fBoard, "expiry") };
+      put(item, "quote", num(fBoard, "quote"));
+      item.chg = 0;
+      put(item, "minNom", num(fBoard, "minNom") || 1000000);
+      if (type === "protection") {
+        req(fBoard, ["strike", "participation"]);
+        put(item, "spot", num(fBoard, "strike"));
+        put(item, "strike", num(fBoard, "strike"));
+        put(item, "participation", num(fBoard, "participation"));
+        put(item, "protectionPct", num(fBoard, "protectionPct") || 100);
+        put(item, "cap", num(fBoard, "cap"));
+      }
+      if (type === "warrant") {
+        item.structure = val(fBoard, "structure");
+        put(item, "uRef", val(fBoard, "uRef"));
+        item.spot = 100; item.strike = 100;
+        if (item.structure === "cs") item.strike2 = 150;
+        put(item, "tenor", val(fBoard, "tenor"));
+      }
+      var pfx = type === "discount" ? "d" : type === "protection" ? "p" : "w";
+      item.id = pfx + "-" + slug(item.underlying) + "-" + slug(item.expiry).replace(/\./g, "") + "-s";
+      return item;
+    });
+  });
+
+  // ── НА РАЗМЕЩЕНИИ ──
+  var fOff = document.getElementById("f-offering");
+  fOff.addEventListener("submit", function (e) {
+    e.preventDefault();
+    submit("offering", fOff, document.getElementById("m-offering"), function () {
+      req(fOff, ["name", "kind", "serial", "issuer", "teaser", "price", "how", "risk"]);
+      var item = { family: val(fOff, "family"), kind: val(fOff, "kind"), name: val(fOff, "name"),
+                   status: val(fOff, "status"), teaser: val(fOff, "teaser"), issuer: val(fOff, "issuer"),
+                   serial: val(fOff, "serial"), currency: val(fOff, "currency"),
+                   venue: val(fOff, "venue"), how: val(fOff, "how"), risk: val(fOff, "risk") };
+      put(item, "statusLabel", val(fOff, "statusLabel"));
+      put(item, "isin", val(fOff, "isin").toUpperCase());
+      put(item, "reference", val(fOff, "reference"));
+      put(item, "nominal", num(fOff, "nominal") || 1000);
+      put(item, "price", num(fOff, "price"));
+      put(item, "redeem", num(fOff, "redeem") || 100);
+      put(item, "placement", val(fOff, "placement"));
+      put(item, "maturity", val(fOff, "maturity"));
+      put(item, "tenor", val(fOff, "tenor"));
+      var dealers = val(fOff, "dealers").split(",").map(function (s) { return s.trim(); }).filter(Boolean);
+      if (dealers.length) item.dealers = dealers;
+      item.id = slug(item.serial || item.name);
+      return item;
+    });
+  });
+
+  // ── ИДЕЯ В ДАЙДЖЕСТ ──
+  fDigest.addEventListener("submit", function (e) {
+    e.preventDefault();
+    submit("digest", fDigest, document.getElementById("m-digest"), function () {
+      req(fDigest, ["name", "kind", "underlying", "teaser", "hypothesis", "how", "payout"]);
+      var item = { family: val(fDigest, "family"), kind: val(fDigest, "kind"), name: val(fDigest, "name"),
+                   underlying: val(fDigest, "underlying"), teaser: val(fDigest, "teaser"),
+                   hypothesis: val(fDigest, "hypothesis"), how: val(fDigest, "how"), payout: val(fDigest, "payout") };
+      if (fDigest.fx.checked) item.fx = true;
+      put(item, "tenor", val(fDigest, "tenor"));
+      put(item, "situation", val(fDigest, "situation"));
+      put(item, "conclusion", val(fDigest, "conclusion"));
+      var factors = val(fDigest, "factors").split("\n").map(function (s) { return s.trim(); }).filter(Boolean);
+      if (factors.length) item.factors = factors;
+      var metric = {}; put(metric, "v", val(fDigest, "metric_v")); put(metric, "k", val(fDigest, "metric_k"));
+      if (metric.v) item.metric = metric;
+      var p = {}; put(p, "asset", val(fDigest, "p_asset")); put(p, "price", val(fDigest, "p_price"));
+      put(p, "upside", val(fDigest, "p_upside")); put(p, "protection", val(fDigest, "p_protection"));
+      if (Object.keys(p).length) item.p = p;
+      var pt = val(fDigest, "payoff_type");
+      if (pt) {
+        var payoff = { type: pt };
+        ["capPct", "premiumPct", "couponPct", "barrierPct"].forEach(function (k) {
+          var v = num(fDigest, "payoff_" + k); if (v != null) payoff[k] = v;
+        });
+        item.payoff = payoff;
+      }
+      item.id = slug(item.name);
+      return item;
+    });
+  });
+})();
+</script>
+</body>
+</html>
