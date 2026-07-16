@@ -11,6 +11,8 @@
 //   YANDEX_MODEL      — (опц.) модель Yandex, по умолчанию "yandexgpt/latest" (последняя Pro); напр. "yandexgpt/rc".
 //   ANTHROPIC_API_KEY — (claude, запасной) ключ Claude API. Нужен только при CHAT_PROVIDER=claude.
 //   CHAT_MODEL        — (опц.) модель Claude, по умолчанию claude-haiku-4-5.
+//   CHAT_RATE_LIMIT   — (опц.) биндинг Rate Limiting (Worker → Settings → Bindings → Rate limiting)
+//                        для антиспама на /chat, напр. 15 запросов / 60 сек с одного IP. При превышении — 429.
 //   CHAT_BLOCKED_COUNTRIES — (опц.) страны (ISO-2, через запятую), где AI-чат отключён. По умолчанию ПУСТО
 //                            (открыто для всех). Чтобы ограничить — задай "RU" или "RU,BY": тем клиентам
 //                            /chat вернёт region_unavailable, и виджет предложит Telegram.
@@ -156,6 +158,15 @@ async function handleChat(request, env, cors) {
   const origin = request.headers.get("Origin") || "";
   if (env.ALLOW_ORIGIN && env.ALLOW_ORIGIN !== "*" && origin && origin !== env.ALLOW_ORIGIN) {
     return json({ ok: false, error: "forbidden_origin" }, 403, cors);
+  }
+
+  // Антиспам по IP (если настроен биндинг Rate Limiting CHAT_RATE_LIMIT; иначе шаг пропускается)
+  if (env.CHAT_RATE_LIMIT) {
+    const ip = request.headers.get("CF-Connecting-IP") || "anon";
+    try {
+      const rl = await env.CHAT_RATE_LIMIT.limit({ key: ip });
+      if (rl && rl.success === false) return json({ ok: false, error: "rate_limited" }, 429, cors);
+    } catch (e) { /* биндинг недоступен — не блокируем */ }
   }
 
   // Гео-гейт: страна клиента (Cloudflare проставляет request.cf.country). Для стран из
