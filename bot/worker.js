@@ -1,13 +1,19 @@
 // Cloudflare Worker: заявки с сайта + Telegram-бот → лиды в Telegram менеджеру/группе продаж.
 //
 // Секреты (задаются командой `wrangler secret put ...`, В КОД НЕ ПОПАДАЮТ):
-//   BOT_TOKEN       — токен бота от @BotFather
-//   CHAT_ID         — id чата/группы продаж, куда падают заявки (напр. -1001234567890)
-//   WEBHOOK_SECRET  — (опц.) секрет вебхука Telegram; если задан — проверяется заголовок
-//   ALLOW_ORIGIN    — (опц.) домен сайта для CORS, напр. https://partner-rum.github.io. По умолчанию "*"
+//   BOT_TOKEN         — токен бота от @BotFather
+//   CHAT_ID           — id чата/группы продаж, куда падают заявки (напр. -1001234567890)
+//   WEBHOOK_SECRET    — (опц.) секрет вебхука Telegram; если задан — проверяется заголовок
+//   ALLOW_ORIGIN      — (опц.) домен сайта для CORS, напр. https://partner-rum.github.io. По умолчанию "*"
+//   ANTHROPIC_API_KEY — (для /chat) ключ Claude API (console.anthropic.com). Без него /chat отвечает 503.
+//   CHAT_MODEL        — (опц.) модель для /chat, по умолчанию claude-haiku-4-5
+//   CHAT_BLOCKED_COUNTRIES — (опц.) страны (ISO-2, через запятую), где AI-чат отключён. По умолчанию ПУСТО
+//                            (открыто для всех). Чтобы ограничить — задай "RU" или "RU,BY": тем клиентам
+//                            /chat вернёт region_unavailable, и виджет предложит Telegram.
 //
 // Маршруты:
 //   POST /lead  — форма-заявка с сайта  → сообщение в CHAT_ID
+//   POST /chat  — сообщение чат-ассистента → Claude API → ответ обратно на сайт
 //   POST /tg    — (опц.) вебхук Telegram: /start <id> приветствует клиента и шлёт лид в CHAT_ID,
 //                 обычные сообщения бот пересылает в CHAT_ID
 export default {
@@ -21,6 +27,7 @@ export default {
     if (request.method === "OPTIONS") return new Response(null, { headers: cors });
 
     if (url.pathname === "/lead" && request.method === "POST") return handleLead(request, env, cors);
+    if (url.pathname === "/chat" && request.method === "POST") return handleChat(request, env, cors);
     if (url.pathname === "/tg" && request.method === "POST") return handleTelegram(request, env);
 
     return new Response("OK", { status: 200, headers: cors });
@@ -66,6 +73,85 @@ async function handleLead(request, env, cors) {
   });
   if (!r.ok) return json({ ok: false, error: "telegram_failed" }, 502, cors);
   return json({ ok: true }, 200, cors);
+}
+
+// --- Чат-ассистент (консьерж по сайту) → Claude API ---
+const SYSTEM_PROMPT = `Ты — вежливый ассистент-консьерж на сайте компании Rumberg, витрине структурных продуктов для квалифицированных инвесторов. Отвечай по-русски, кратко и по делу (2–5 предложений), дружелюбно и профессионально.
+
+Что ты делаешь:
+- простыми словами объясняешь, как устроены структурные продукты (дисконтные облигации, ноты с защитой капитала, автоколлы, барьерные ноты, call-spread и варранты): профиль выплаты, риск, срок;
+- подсказываешь, где что на сайте: «Дайджест» — инвестидея недели; «На размещении» — выпуски, которые размещаем прямо сейчас; «Текущие продукты» (доска) — прайсинг и параметры; «Размещённые выпуски» — что уже сделали, с эмиссионными документами; «Библиотека» — как работают продукты;
+- если клиент заинтересовался конкретным продуктом — предлагаешь нажать «Обсудить продукт» на странице продукта: заявка уходит менеджеру в Telegram.
+
+Строгие правила:
+- НЕ давай индивидуальных инвестиционных рекомендаций и прогнозов доходности, не советуй «покупать/продавать». При таких просьбах мягко поясни, что не даёшь инвестсоветов, и предложи обсудить с менеджером.
+- НЕ выдумывай конкретные цены, купоны, гарантии или названия выпусков, которых не знаешь. За актуальными цифрами направляй на доску/дайджест или к менеджеру.
+- При уместности напоминай, что информация — для квалифицированных инвесторов и не является индивидуальной инвестиционной рекомендацией.
+- Отвечай только на темы структурных продуктов и этого сайта; на посторонние вопросы вежливо возвращай к теме.`;
+
+async function handleChat(request, env, cors) {
+  // Защита от абуза: только с нашего сайта (если задан ALLOW_ORIGIN)
+  const origin = request.headers.get("Origin") || "";
+  if (env.ALLOW_ORIGIN && env.ALLOW_ORIGIN !== "*" && origin && origin !== env.ALLOW_ORIGIN) {
+    return json({ ok: false, error: "forbidden_origin" }, 403, cors);
+  }
+
+  // Гео-гейт: страна клиента (Cloudflare проставляет request.cf.country). Для стран из
+  // списка AI-чат отключаем — виджет покажет вежливый фолбэк в Telegram. Список — через env.
+  const blocked = (env.CHAT_BLOCKED_COUNTRIES || "").split(",").map((s) => s.trim().toUpperCase()).filter(Boolean);
+  const country = (request.cf && request.cf.country) || "";
+  if (country && blocked.includes(country)) {
+    return json({ ok: false, error: "region_unavailable" }, 200, cors);
+  }
+
+  if (!env.ANTHROPIC_API_KEY) return json({ ok: false, error: "not_configured" }, 503, cors);
+
+  let data;
+  try { data = await request.json(); } catch { return json({ ok: false, error: "bad_json" }, 400, cors); }
+
+  // История: не более 20 последних сообщений, каждое ≤ 2000 символов
+  const raw = Array.isArray(data.messages) ? data.messages.slice(-20) : [];
+  const messages = [];
+  for (const m of raw) {
+    const role = m && m.role === "assistant" ? "assistant" : "user";
+    const content = (m && typeof m.content === "string" ? m.content : "").trim().slice(0, 2000);
+    if (content) messages.push({ role, content });
+  }
+  if (!messages.length) return json({ ok: false, error: "empty" }, 422, cors);
+  if (messages[messages.length - 1].role !== "user") return json({ ok: false, error: "last_not_user" }, 422, cors);
+
+  const pageTitle = String((data.page && data.page.title) || "").slice(0, 200);
+  const pageUrl = String((data.page && data.page.url) || "").slice(0, 300);
+  const system = SYSTEM_PROMPT + (pageTitle ? `\n\nСейчас клиент на странице: «${pageTitle}»${pageUrl ? " (" + pageUrl + ")" : ""}.` : "");
+
+  let r;
+  try {
+    r = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "x-api-key": env.ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        model: env.CHAT_MODEL || "claude-haiku-4-5",
+        max_tokens: 500,
+        system,
+        messages,
+      }),
+    });
+  } catch {
+    return json({ ok: false, error: "upstream_unreachable" }, 502, cors);
+  }
+  if (!r.ok) return json({ ok: false, error: "upstream_" + r.status }, 502, cors);
+
+  const payload = await r.json();
+  const reply = (payload.content || [])
+    .filter((b) => b.type === "text")
+    .map((b) => b.text)
+    .join("\n")
+    .trim();
+  return json({ ok: true, reply: reply || "Извините, не удалось сформировать ответ." }, 200, cors);
 }
 
 // --- (опц.) Вебхук бота: клиент нажал «Написать в Telegram» ---
