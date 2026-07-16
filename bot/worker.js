@@ -5,8 +5,12 @@
 //   CHAT_ID           — id чата/группы продаж, куда падают заявки (напр. -1001234567890)
 //   WEBHOOK_SECRET    — (опц.) секрет вебхука Telegram; если задан — проверяется заголовок
 //   ALLOW_ORIGIN      — (опц.) домен сайта для CORS, напр. https://partner-rum.github.io. По умолчанию "*"
-//   ANTHROPIC_API_KEY — (для /chat) ключ Claude API (console.anthropic.com). Без него /chat отвечает 503.
-//   CHAT_MODEL        — (опц.) модель для /chat, по умолчанию claude-haiku-4-5
+//   CHAT_PROVIDER     — (опц.) провайдер ИИ для /chat: "yandex" (по умолчанию) или "claude".
+//   YANDEX_API_KEY    — (yandex) API-ключ сервисного аккаунта Yandex Cloud (роль ai.languageModels.user).
+//   YANDEX_FOLDER_ID  — (yandex) идентификатор каталога (folder) в Yandex Cloud.
+//   YANDEX_MODEL      — (опц.) модель Yandex, по умолчанию "yandexgpt/latest" (последняя Pro); напр. "yandexgpt/rc".
+//   ANTHROPIC_API_KEY — (claude, запасной) ключ Claude API. Нужен только при CHAT_PROVIDER=claude.
+//   CHAT_MODEL        — (опц.) модель Claude, по умолчанию claude-haiku-4-5.
 //   CHAT_BLOCKED_COUNTRIES — (опц.) страны (ISO-2, через запятую), где AI-чат отключён. По умолчанию ПУСТО
 //                            (открыто для всех). Чтобы ограничить — задай "RU" или "RU,BY": тем клиентам
 //                            /chat вернёт region_unavailable, и виджет предложит Telegram.
@@ -104,8 +108,6 @@ async function handleChat(request, env, cors) {
     return json({ ok: false, error: "region_unavailable" }, 200, cors);
   }
 
-  if (!env.ANTHROPIC_API_KEY) return json({ ok: false, error: "not_configured" }, 503, cors);
-
   let data;
   try { data = await request.json(); } catch { return json({ ok: false, error: "bad_json" }, 400, cors); }
 
@@ -124,34 +126,54 @@ async function handleChat(request, env, cors) {
   const pageUrl = String((data.page && data.page.url) || "").slice(0, 300);
   const system = SYSTEM_PROMPT + (pageTitle ? `\n\nСейчас клиент на странице: «${pageTitle}»${pageUrl ? " (" + pageUrl + ")" : ""}.` : "");
 
-  let r;
+  const provider = (env.CHAT_PROVIDER || "yandex").toLowerCase();
+  let reply;
   try {
-    r = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "x-api-key": env.ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        model: env.CHAT_MODEL || "claude-haiku-4-5",
-        max_tokens: 500,
-        system,
-        messages,
-      }),
-    });
-  } catch {
-    return json({ ok: false, error: "upstream_unreachable" }, 502, cors);
+    reply = provider === "claude" ? await callClaude(system, messages, env) : await callYandex(system, messages, env);
+  } catch (e) {
+    const msg = String((e && e.message) || e);
+    return json({ ok: false, error: msg }, msg === "not_configured" ? 503 : 502, cors);
   }
-  if (!r.ok) return json({ ok: false, error: "upstream_" + r.status }, 502, cors);
-
-  const payload = await r.json();
-  const reply = (payload.content || [])
-    .filter((b) => b.type === "text")
-    .map((b) => b.text)
-    .join("\n")
-    .trim();
   return json({ ok: true, reply: reply || "Извините, не удалось сформировать ответ." }, 200, cors);
+}
+
+// YandexGPT (Yandex Cloud Foundation Models) — основной провайдер /chat
+async function callYandex(system, messages, env) {
+  if (!env.YANDEX_API_KEY || !env.YANDEX_FOLDER_ID) throw new Error("not_configured");
+  const model = env.YANDEX_MODEL || "yandexgpt/latest";
+  const body = {
+    modelUri: "gpt://" + env.YANDEX_FOLDER_ID + "/" + model,
+    completionOptions: { stream: false, temperature: 0.3, maxTokens: "500" },
+    messages: [{ role: "system", text: system }].concat(
+      messages.map((m) => ({ role: m.role, text: m.content }))
+    ),
+  };
+  const r = await fetch("https://llm.api.cloud.yandex.net/foundationModels/v1/completion", {
+    method: "POST",
+    headers: { "Authorization": "Api-Key " + env.YANDEX_API_KEY, "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) throw new Error("upstream_" + r.status);
+  const data = await r.json();
+  const alt = data && data.result && data.result.alternatives && data.result.alternatives[0];
+  return ((alt && alt.message && alt.message.text) || "").trim();
+}
+
+// Claude (Anthropic) — запасной провайдер (CHAT_PROVIDER=claude)
+async function callClaude(system, messages, env) {
+  if (!env.ANTHROPIC_API_KEY) throw new Error("not_configured");
+  const r = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "x-api-key": env.ANTHROPIC_API_KEY,
+      "anthropic-version": "2023-06-01",
+      "content-type": "application/json",
+    },
+    body: JSON.stringify({ model: env.CHAT_MODEL || "claude-haiku-4-5", max_tokens: 500, system, messages }),
+  });
+  if (!r.ok) throw new Error("upstream_" + r.status);
+  const data = await r.json();
+  return (data.content || []).filter((b) => b.type === "text").map((b) => b.text).join("\n").trim();
 }
 
 // --- (опц.) Вебхук бота: клиент нажал «Написать в Telegram» ---
