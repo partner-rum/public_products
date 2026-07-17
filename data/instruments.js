@@ -425,23 +425,6 @@ window.SITE_DATA = {
       "quote": 14.2,
       "chg": 0.1,
       "minNom": 1000000
-    },
-    {
-      "id": "w-sber-250-s",
-      "type": "warrant",
-      "structure": "call",
-      "name": "Call SBER 100",
-      "underlying": "SBER",
-      "cls": "Акции РФ",
-      "uRef": "300",
-      "tenor": "1",
-      "expiry": "250",
-      "spot": 100,
-      "strike": 100,
-      "quote": 100,
-      "chg": 0,
-      "minNom": 1000000,
-      "src": "sales"
     }
   ],
   "underlyings": {
