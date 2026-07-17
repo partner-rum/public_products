@@ -54,8 +54,17 @@
   }
   textarea { resize:vertical; min-height:64px; line-height:1.5; }
   input:focus, select:focus, textarea:focus { border-color:rgba(238,125,27,.6); }
-  select { appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23888' fill='none' stroke-width='1.5'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; }
+  select { appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23888' fill='none' stroke-width='1.5'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; padding-right:34px; }
+  option { background:#14161C; color:#F2F3F7; }   /* иначе в раскрытом списке белым по белому */
   .hint { font-size:11px; color:var(--faint); margin-top:4px; line-height:1.45; }
+  .rm-row { display:flex; align-items:center; gap:10px; padding:11px 0; border-bottom:1px solid var(--border-soft); }
+  .rm-row:last-child { border-bottom:0; }
+  .rm-row .nm { flex:1; font-size:13.5px; line-height:1.35; }
+  .rm-row .sec { font-family:var(--m); font-size:9.5px; color:var(--faint); text-transform:uppercase; letter-spacing:.11em; margin-top:2px; }
+  .rm-row button { flex:none; border:1px solid rgba(224,112,90,.5); background:none; color:var(--down); border-radius:8px; padding:7px 14px; font-family:var(--f); font-size:12.5px; font-weight:500; cursor:pointer; }
+  .rm-row button:hover { background:rgba(224,112,90,.12); }
+  .rm-row button:disabled { opacity:.5; cursor:default; }
+  .rm-empty { font-size:13px; color:var(--faint); padding:8px 2px; line-height:1.5; }
 
   .send { width:100%; margin-top:6px; background:var(--solar); color:#0C0A08; border:0; border-radius:12px;
           padding:13px; font-family:var(--f); font-size:14.5px; font-weight:600; cursor:pointer; }
@@ -87,6 +96,7 @@
     <button class="tab on" data-f="f-board" type="button">Текущий продукт</button>
     <button class="tab" data-f="f-offering" type="button">На размещении</button>
     <button class="tab" data-f="f-digest" type="button">Идея в дайджест</button>
+    <button class="tab" data-f="f-remove" type="button">Снять с сайта</button>
   </div>
 
   <!-- ══════════ ТЕКУЩИЙ ПРОДУКТ (доска) ══════════ -->
@@ -251,6 +261,15 @@
     <button class="send" type="submit">Отправить на одобрение</button>
     <div class="msg" id="m-digest"></div>
   </form>
+
+  <!-- ══════════ СНЯТЬ С САЙТА ══════════ -->
+  <form id="f-remove" onsubmit="return false">
+    <div class="grp"><div class="gt">Снять продукт с сайта</div>
+      <div class="hint" style="margin:0 0 12px">Показаны продукты, добавленные через админку (доска), а также выпуски «На размещении» и идеи текущего дайджеста. Снятие тоже уходит Руслану на одобрение.</div>
+      <div id="rm-list"><div class="rm-empty">Загрузка…</div></div>
+    </div>
+    <div class="msg" id="m-remove"></div>
+  </form>
 </div>
 
 <script>
@@ -269,9 +288,66 @@
       document.querySelectorAll(".tab").forEach(function (x) { x.classList.remove("on"); });
       document.querySelectorAll("form").forEach(function (f) { f.classList.remove("on"); });
       t.classList.add("on");
-      document.getElementById(t.getAttribute("data-f")).classList.add("on");
+      var target = t.getAttribute("data-f");
+      document.getElementById(target).classList.add("on");
+      if (target === "f-remove") loadRemovable();
     });
   });
+
+  function esc(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+  function dataObj(text) { try { return JSON.parse(text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1)); } catch (e) { return null; } }
+
+  function loadRemovable() {
+    var box = document.getElementById("rm-list");
+    box.innerHTML = '<div class="rm-empty">Загрузка…</div>';
+    var bust = "?cb=" + Date.now();
+    Promise.all([
+      fetch("data/instruments.js" + bust).then(function (r) { return r.text(); }),
+      fetch("data/offerings.js" + bust).then(function (r) { return r.text(); }),
+      fetch("data/digest.js" + bust).then(function (r) { return r.text(); }),
+    ]).then(function (t) {
+      var rows = [];
+      var si = dataObj(t[0]);
+      ((si && si.instruments) || []).filter(function (i) { return i.src === "sales"; })
+        .forEach(function (i) { rows.push({ section: "board", id: i.id, name: i.name, label: "Доска" }); });
+      var of = dataObj(t[1]);
+      ((of && of.items) || []).forEach(function (i) { rows.push({ section: "offering", id: i.id, name: i.name, label: "Размещение" }); });
+      var dg = dataObj(t[2]);
+      ((dg && dg.issues && dg.issues[0] && dg.issues[0].ideas) || [])
+        .forEach(function (i) { rows.push({ section: "digest", id: i.id, name: i.name, label: "Дайджест" }); });
+
+      if (!rows.length) { box.innerHTML = '<div class="rm-empty">Снимать пока нечего: на доске нет продуктов из админки, размещения и идеи дайджеста пусты.</div>'; return; }
+      box.innerHTML = "";
+      rows.forEach(function (row) {
+        var el = document.createElement("div");
+        el.className = "rm-row";
+        el.innerHTML = '<div class="nm">' + esc(row.name || row.id) + '<div class="sec">' + row.label + '</div></div>';
+        var b = document.createElement("button");
+        b.type = "button"; b.textContent = "Снять";
+        b.addEventListener("click", function () { removeItem(row, b); });
+        el.appendChild(b);
+        box.appendChild(el);
+      });
+    }).catch(function () { box.innerHTML = '<div class="rm-empty">Не удалось загрузить список — обновите страницу.</div>'; });
+  }
+
+  function removeItem(row, btn) {
+    var key = keyEl.value.trim();
+    var msgEl = document.getElementById("m-remove");
+    msgEl.className = "msg";
+    if (!key) { msgEl.className = "msg err"; msgEl.textContent = "Введите ваш ключ вверху страницы."; keyEl.focus(); return; }
+    if (!confirm("Отправить заявку на снятие «" + (row.name || row.id) + "»? Продукт исчезнет с сайта после одобрения Русланом.")) return;
+    btn.disabled = true; btn.textContent = "…";
+    fetch(ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key: key, action: "remove", section: row.section, id: row.id, name: row.name }) })
+      .then(function (r) { return r.json().then(function (d) { return { s: r.status, d: d }; }); })
+      .then(function (x) {
+        if (x.d && x.d.ok) { msgEl.className = "msg ok"; msgEl.textContent = "Заявка на снятие «" + (row.name || row.id) + "» отправлена. После ✅ Руслана продукт исчезнет с сайта."; btn.textContent = "Отправлено"; }
+        else if (x.d && x.d.error === "bad_key") { msgEl.className = "msg err"; msgEl.textContent = "Ключ не подошёл."; btn.disabled = false; btn.textContent = "Снять"; }
+        else { msgEl.className = "msg err"; msgEl.textContent = "Ошибка: " + ((x.d && x.d.error) || x.s); btn.disabled = false; btn.textContent = "Снять"; }
+      })
+      .catch(function () { msgEl.className = "msg err"; msgEl.textContent = "Сеть недоступна — попробуйте ещё раз."; btn.disabled = false; btn.textContent = "Снять"; });
+  }
 
   // ── условные поля ──
   var fBoard = document.getElementById("f-board");

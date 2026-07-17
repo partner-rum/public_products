@@ -354,6 +354,28 @@ async function handleSubmit(request, env, cors) {
 
   const section = cleanStr(data.section, 20);
   if (!SUBMIT_SECTIONS[section]) return json({ ok: false, error: "bad_section" }, 422, cors);
+
+  // Снятие продукта с сайта — заявка тоже идёт через аппрув модератора
+  if (data.action === "remove") {
+    const rmId = cleanStr(data.id, 60);
+    const rmName = cleanStr(data.name, 120);
+    if (!rmId) return json({ ok: false, error: "no_id" }, 422, cors);
+    const rpayload = JSON.stringify({ s: section, by: author, rm: rmId });
+    const rtext =
+      "🗑 <b>Заявка на снятие</b>\n" +
+      "Раздел: <b>" + esc(SUBMIT_SECTIONS[section].label) + "</b> · от <b>" + esc(author) + "</b>\n" +
+      esc(rmName || rmId) + "\n\n<pre>" + esc(rpayload) + "</pre>";
+    const rr = await tg(env, "sendMessage", {
+      chat_id: env.ADMIN_CHAT_ID, text: rtext, parse_mode: "HTML", disable_web_page_preview: true,
+      reply_markup: { inline_keyboard: [[
+        { text: "✅ Снять", callback_data: "pub" },
+        { text: "❌ Отклонить", callback_data: "rej" },
+      ]] },
+    });
+    if (!rr.ok) return json({ ok: false, error: "telegram_failed" }, 502, cors);
+    return json({ ok: true }, 200, cors);
+  }
+
   const { item, missing } = sanitizeItem(section, data.item || {});
   if (missing.length) return json({ ok: false, error: "missing: " + missing.join(", ") }, 422, cors);
 
@@ -452,31 +474,45 @@ async function publishItem(env, payload) {
     const text = b64decodeUtf8(meta.content);
     const obj = JSON.parse(text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1));
 
-    if (section === "board") {
-      const taken = new Set(obj.instruments.map((i) => i.id));
-      item.id = uniqueId(item.id, taken);
-      item.src = "sales";
-      obj.instruments.push(item);
-    } else if (section === "offering") {
-      const taken = new Set(obj.items.map((i) => i.id));
-      item.id = uniqueId(item.id, taken);
-      obj.items.unshift(item);
+    let commitMsg, result;
+    if (payload.rm) {
+      const arr = section === "board" ? obj.instruments : section === "offering" ? obj.items : obj.issues[0].ideas;
+      const kept = arr.filter((i) => i.id !== payload.rm);
+      if (kept.length === arr.length) throw new Error("not_found");
+      if (section === "board") obj.instruments = kept;
+      else if (section === "offering") obj.items = kept;
+      else obj.issues[0].ideas = kept;
+      commitMsg = "Админка: снят " + payload.rm + " (от " + by + ")";
+      result = { removed: payload.rm };
     } else {
-      const ideas = obj.issues[0].ideas;
-      const taken = new Set(ideas.map((i) => i.id));
-      item.id = uniqueId(item.id, taken);
-      ideas.push(item);
+      if (section === "board") {
+        const taken = new Set(obj.instruments.map((i) => i.id));
+        item.id = uniqueId(item.id, taken);
+        item.src = "sales";
+        obj.instruments.push(item);
+      } else if (section === "offering") {
+        const taken = new Set(obj.items.map((i) => i.id));
+        item.id = uniqueId(item.id, taken);
+        obj.items.unshift(item);
+      } else {
+        const ideas = obj.issues[0].ideas;
+        const taken = new Set(ideas.map((i) => i.id));
+        item.id = uniqueId(item.id, taken);
+        ideas.push(item);
+      }
+      commitMsg = "Админка: " + cfg.label + " — " + (item.name || item.id) + " (от " + by + ")";
+      result = item;
     }
 
     const put = await fetch(api, {
       method: "PUT", headers: ghHeaders(env),
       body: JSON.stringify({
-        message: "Админка: " + cfg.label + " — " + (item.name || item.id) + " (от " + by + ")",
+        message: commitMsg,
         content: b64encodeUtf8(renderDataFile(cfg.file, obj)),
         sha: meta.sha, branch,
       }),
     });
-    if (put.ok) return item;
+    if (put.ok) return result;
     if (put.status !== 409 && put.status !== 422) throw new Error("github_put_" + put.status);
     // sha устарел (параллельная правка) — перечитываем и пробуем ещё раз
   }
@@ -507,7 +543,7 @@ async function handleTelegram(request, env) {
     let payload;
     try { payload = JSON.parse(msgText.slice(at, end + 1)); } catch { await answer("Данные повреждены", true); return new Response("ok"); }
     const label = (SUBMIT_SECTIONS[payload.s] || {}).label || payload.s;
-    const title = (payload.item && payload.item.name) || "";
+    const title = (payload.item && payload.item.name) || payload.rm || "";
 
     if (cb.data === "rej") {
       await tg(env, "editMessageText", {
@@ -520,14 +556,15 @@ async function handleTelegram(request, env) {
     if (cb.data === "pub") {
       try {
         const published = await publishItem(env, payload);
+        const head = payload.rm ? "🗑 <b>Снято</b> · " : "✅ <b>Опубликовано</b> · ";
+        const what = payload.rm ? payload.rm : (published.name || published.id);
         await tg(env, "editMessageText", {
           chat_id: cb.message.chat.id, message_id: cb.message.message_id, parse_mode: "HTML",
-          text: "✅ <b>Опубликовано</b> · " + esc(label) + "\n" + esc(published.name || published.id) +
-            " (от " + esc(payload.by) + ")\nСайт обновится через 1–3 минуты.",
+          text: head + esc(label) + "\n" + esc(what) + " (от " + esc(payload.by) + ")\nСайт обновится через 1–3 минуты.",
         });
-        await answer("Опубликовано");
+        await answer(payload.rm ? "Снято" : "Опубликовано");
       } catch (e) {
-        await answer("Ошибка публикации: " + String(e && e.message || e).slice(0, 150), true);
+        await answer("Ошибка: " + String(e && e.message || e).slice(0, 150), true);
       }
       return new Response("ok");
     }
