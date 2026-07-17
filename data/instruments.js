@@ -425,6 +425,23 @@ window.SITE_DATA = {
       "quote": 14.2,
       "chg": 0.1,
       "minNom": 1000000
+    },
+    {
+      "id": "w-sber-250-s",
+      "type": "warrant",
+      "structure": "call",
+      "name": "Call SBER 100",
+      "underlying": "SBER",
+      "cls": "Акции РФ",
+      "uRef": "300",
+      "tenor": "1",
+      "expiry": "250",
+      "spot": 100,
+      "strike": 100,
+      "quote": 100,
+      "chg": 0,
+      "minNom": 1000000,
+      "src": "sales"
     }
   ],
   "underlyings": {
@@ -451,11 +468,11 @@ window.SITE_DATA = {
       "desc": "Длинная ОФЗ с постоянным купоном, погашение в 2041 году. Цена растёт при снижении ключевой ставки.",
       "history": [
         57.2,
-        58.0,
+        58,
         58.9,
         59.6,
         60.4,
-        61.0,
+        61,
         61.8,
         62.3,
         62.9,
