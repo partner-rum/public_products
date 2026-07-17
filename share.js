@@ -39,29 +39,12 @@ window.Share = (function () {
   }
 
   function cap(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
-  function emojiFor(label) {
-    var l = (label || "").toLowerCase();
-    if (l.indexOf("цена") >= 0 || l.indexOf("премия") >= 0) return "💰";
-    if (l.indexOf("срок") >= 0) return "⏳";
-    if (l.indexOf("страйк") >= 0) return "🎯";
-    if (l.indexOf("потолок") >= 0) return "🚧";
-    if (l.indexOf("убыток") >= 0 || l.indexOf("риск") >= 0) return "⚠️";
-    if (l.indexOf("экспозиц") >= 0) return "📊";
-    if (l.indexOf("доходност") >= 0) return "📈";
-    if (l.indexOf("выплата") >= 0) return "💵";
-    if (l.indexOf("защита") >= 0) return "🛡️";
-    if (l.indexOf("участие") >= 0) return "📈";
-    if (l.indexOf("потенциал") >= 0) return "🚀";
-    if (l.indexOf("дисконт") >= 0) return "🏷️";
-    if (l.indexOf("привязк") >= 0) return "🔗";
-    if (l.indexOf("погашени") >= 0) return "📅";
-    if (l.indexOf("купон") >= 0) return "🎟️";
-    return "🔹";
-  }
+  // Сообщение — выдержка из термшита: параметры строками «— Ключ: значение», без эмодзи.
+  // Эмодзи-буллеты — первый признак «бот-текста»; квальному инвестору шлём документ, а не сторис.
   function buildText(opts, title) {
     var rows = (opts.params || []).filter(function (p) { return p && p[1]; })
-      .map(function (p) { return emojiFor(p[0]) + " " + cap(p[0]) + ": " + p[1]; });
-    return (opts.name || title) + (opts.pitch ? "\n\n" + opts.pitch : "") + (rows.length ? "\n\n" + rows.join("\n") : "");
+      .map(function (p) { return "— " + cap(p[0]) + ": " + p[1]; });
+    return (opts.name || title) + (opts.pitch ? "\n" + opts.pitch : "") + (rows.length ? "\n\n" + rows.join("\n") : "");
   }
 
   function attach(host, opts) {

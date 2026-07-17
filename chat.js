@@ -20,21 +20,17 @@
   };
 
   var css = "" +
-    /* — кнопка-орб: тёмный круг, вращающееся градиентное кольцо, звёзды-искры, бейдж AI — */
-    ".ca-btn{position:fixed;right:20px;bottom:20px;z-index:300;width:58px;height:58px;border:0;border-radius:50%;background:#101114;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 30px rgba(0,0,0,.5),0 0 22px rgba(238,125,27,.22);transition:transform .18s,box-shadow .18s;}" +
-    ".ca-btn::before{content:\"\";position:absolute;inset:-2px;border-radius:50%;background:conic-gradient(from 0deg,#EE7D1B,#4F86E6,#EE7D1B);z-index:-1;animation:caSpin 7s linear infinite;}" +
-    "@keyframes caSpin{to{transform:rotate(360deg);}}" +
-    ".ca-btn:hover{transform:translateY(-2px);box-shadow:0 14px 34px rgba(0,0,0,.55),0 0 30px rgba(238,125,27,.32);}" +
+    /* — кнопка: тёмный круг с тонкой линией и фирменной звездой; без свечений и вращений — */
+    ".ca-btn{position:fixed;right:20px;bottom:20px;z-index:300;width:56px;height:56px;border:1px solid rgba(255,255,255,.18);border-radius:50%;background:#101114;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 28px rgba(0,0,0,.5);transition:border-color .18s;}" +
+    ".ca-btn:hover{border-color:rgba(238,125,27,.65);}" +
     ".ca-btn svg{display:block;}" +
-    ".ca-btn .ca-ai{position:absolute;top:-4px;right:-4px;background:#4F86E6;color:#fff;font-family:'Onest',system-ui,sans-serif;font-size:9px;font-weight:700;letter-spacing:.05em;padding:2px 6px;border-radius:999px;border:2px solid #0B0C10;}" +
+    ".ca-btn .ca-ai{position:absolute;top:-5px;right:-5px;background:#0B0C10;color:#8FB3F0;font-family:'JetBrains Mono',monospace;font-size:8.5px;font-weight:500;letter-spacing:.06em;padding:2px 5px;border-radius:4px;border:1px solid rgba(79,134,230,.5);}" +
     ".ca-btn.hide{display:none;}" +
-    "@media(prefers-reduced-motion:reduce){.ca-btn::before{animation:none;}}" +
     /* — панель — */
     ".ca-panel{position:fixed;right:20px;bottom:20px;z-index:301;width:376px;max-width:calc(100vw - 32px);height:560px;max-height:calc(100dvh - 40px);background:#14161C;border:1px solid rgba(255,255,255,.12);border-radius:18px;box-shadow:0 24px 70px rgba(0,0,0,.55);display:flex;flex-direction:column;overflow:hidden;font-family:'Onest',system-ui,sans-serif;opacity:0;transform:translateY(14px) scale(.98);transition:opacity .2s,transform .2s;pointer-events:none;}" +
     ".ca-panel.on{opacity:1;transform:none;pointer-events:auto;}" +
-    ".ca-head{display:flex;align-items:center;gap:11px;padding:13px 16px;border-bottom:1px solid rgba(255,255,255,.09);flex:none;background:linear-gradient(180deg,rgba(238,125,27,.06),rgba(79,134,230,.04) 80%,transparent);}" +
-    ".ca-ava{position:relative;width:38px;height:38px;border-radius:12px;background:#0B0C10;display:flex;align-items:center;justify-content:center;flex:none;}" +
-    ".ca-ava::before{content:\"\";position:absolute;inset:-1.5px;border-radius:13px;background:conic-gradient(from 40deg,#EE7D1B,#4F86E6,#EE7D1B);z-index:-1;}" +
+    ".ca-head{display:flex;align-items:center;gap:11px;padding:13px 16px;border-bottom:1px solid rgba(255,255,255,.09);flex:none;background:#14161C;}" +
+    ".ca-ava{width:38px;height:38px;border-radius:10px;background:#0B0C10;border:1px solid rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;flex:none;}" +
     ".ca-ttl-row{display:flex;align-items:center;gap:7px;}" +
     ".ca-ttl{font-family:'Rubik','Onest',sans-serif;font-weight:600;font-size:14.5px;color:#F2F3F7;}" +
     ".ca-chip{font-size:9px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#8FB3F0;background:rgba(79,134,230,.14);border:1px solid rgba(79,134,230,.42);border-radius:5px;padding:2px 6px;}" +
@@ -52,11 +48,12 @@
     ".ca-sug{display:flex;flex-direction:column;gap:8px;align-items:flex-start;}" +
     ".ca-sug button{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.03);color:rgba(242,243,247,.85);border-radius:12px;padding:8px 12px;font-family:inherit;font-size:12.5px;line-height:1.4;cursor:pointer;text-align:left;transition:border-color .15s,color .15s,background .15s;}" +
     ".ca-sug button:hover{border-color:rgba(238,125,27,.6);color:#fff;background:rgba(238,125,27,.06);}" +
-    ".ca-sug button i{font-style:normal;color:#EE7D1B;margin-right:7px;}" +
-    /* — «думает» — */
-    ".ca-typing{align-self:flex-start;display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(255,255,255,.05);border-radius:14px;border-bottom-left-radius:5px;font-size:12px;color:rgba(242,243,247,.55);}" +
-    ".ca-typing .st{color:#EE7D1B;animation:caPulse 1.1s ease-in-out infinite;}" +
-    "@keyframes caPulse{0%,100%{opacity:.35;transform:scale(.9);}50%{opacity:1;transform:scale(1.08);}}" +
+    ".ca-sug button svg{flex:none;margin-right:8px;vertical-align:-1px;}" +
+    /* — «думает»: мигающий блок-курсор терминала вместо спаркла — */
+    ".ca-typing{align-self:flex-start;display:flex;align-items:center;gap:2px;padding:10px 14px;background:rgba(255,255,255,.05);border-radius:14px;border-bottom-left-radius:5px;font-size:12px;color:rgba(242,243,247,.55);font-family:'JetBrains Mono',monospace;}" +
+    ".ca-typing .cur{color:#EE7D1B;animation:caCaret 1s steps(1) infinite;}" +
+    "@keyframes caCaret{50%{opacity:0;}}" +
+    "@media(prefers-reduced-motion:reduce){.ca-typing .cur{animation:none;}}" +
     /* — низ — */
     ".ca-foot{flex:none;border-top:1px solid rgba(255,255,255,.09);padding:10px 12px;}" +
     ".ca-row{display:flex;gap:8px;align-items:flex-end;}" +
@@ -85,13 +82,15 @@
     document.head.appendChild(s);
   }
 
-  /* фирменная 4-лучевая звезда + малая искра (мотив ИИ, а не пузырь чата) */
+  /* фирменная 4-лучевая звезда (одна, без «искр-компаньонов» — это знак дома, не спарклы) */
   var ICON_STARS =
-    '<svg width="30" height="30" viewBox="0 0 30 30" fill="none" aria-hidden="true">' +
-    '<path d="M13 4 L15.4 12.6 L24 15 L15.4 17.4 L13 26 L10.6 17.4 L2 15 L10.6 12.6 Z" fill="#EE7D1B"/>' +
-    '<path d="M23 3 L24.1 6.9 L28 8 L24.1 9.1 L23 13 L21.9 9.1 L18 8 L21.9 6.9 Z" fill="#4F86E6"/></svg>';
+    '<svg width="24" height="24" viewBox="0 0 26 26" fill="none" aria-hidden="true">' +
+    '<path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>';
   var ICON_STAR_SM =
     '<svg width="18" height="18" viewBox="0 0 26 26" fill="none" aria-hidden="true">' +
+    '<path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>';
+  var ICON_STAR_XS =
+    '<svg width="9" height="9" viewBox="0 0 26 26" fill="none" aria-hidden="true">' +
     '<path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>';
   var ICON_SEND = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>';
   var ICON_CHAT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-3.9-.9L3 21l1.9-5.6A8.5 8.5 0 0 1 12.5 3 8.38 8.38 0 0 1 21 11.5z"/></svg>';
@@ -124,7 +123,7 @@
     CFG.suggestions.forEach(function (q) {
       var b = document.createElement("button");
       b.type = "button";
-      b.innerHTML = "<i>✦</i>" + esc(q);
+      b.innerHTML = ICON_STAR_XS + esc(q);
       b.addEventListener("click", function () { els.input.value = q; send(); });
       box.appendChild(b);
     });
@@ -136,7 +135,7 @@
   function showTyping() {
     var t = document.createElement("div");
     t.className = "ca-typing";
-    t.innerHTML = '<span class="st">✦</span>думаю…';
+    t.innerHTML = 'думаю<span class="cur">▍</span>';
     els.log.appendChild(t); els.log.scrollTop = els.log.scrollHeight;
     return t;
   }
