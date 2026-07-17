@@ -28,7 +28,7 @@
     --border: rgba(255,255,255,0.11); --border-soft: rgba(255,255,255,0.07);
     --solar: #EE7D1B; --solar-l: #F58E33;
     --spruce: #5E9B82; --steel: #4F86E6; --amber: #E0A24A;
-    --up: #55C08A; --down: #E15C5C;
+    --up: #55C08A; --down: #EE7D1B;
     --f-body: 'Onest', system-ui, sans-serif;
     --f-mono: 'JetBrains Mono', Consolas, monospace;
     --display: 'Rubik', 'Onest', system-ui, sans-serif;
@@ -51,10 +51,12 @@
   .btn-solar { background: var(--solar); color: #0C0A08 !important; border-radius: 6px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 7px; transition: background .3s ease-in-out; }
   .btn-solar:hover { background: var(--solar-l); }
 
-  /* ── Полоса под шапкой: строка состояния данных (вместо ленты лозунгов) ── */
-  .ticker { display: flex; align-items: center; justify-content: center; height: 40px; background: #101114; border-bottom: 1px solid #23242B; }
-  .tk-line { font-family: var(--f-mono); font-size: 12px; color: var(--hushed); letter-spacing: .03em; padding: 0 20px; text-align: center; font-variant-numeric: tabular-nums; }
-  .tk-line b { color: var(--ink); font-weight: 500; }
+  /* ── Полоса под шапкой: синусоида-фон + лента мотивирующих фраз ── */
+  .ticker { position: relative; height: 54px; overflow: hidden; background: #101114; border-bottom: 1px solid #23242B; }
+  .ticker svg.tk-sine { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 0; }
+  .tk-rot { position: absolute; inset: 0; z-index: 2; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+  .tk-rot span { position: absolute; font-family: var(--f-body); font-size: 14.5px; color: var(--ink); opacity: 0; transition: opacity .6s ease; text-align: center; padding: 0 20px; letter-spacing: -0.005em; }
+  .tk-rot span.on { opacity: 1; }
 
   .head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin: 26px 0 18px; }
   h1 { margin: 0; font-family: var(--display); font-size: 30px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1; }
@@ -194,7 +196,7 @@
   </div>
 </header>
 
-<div class="ticker" id="ticker"><div class="tk-line" id="tk-line"></div></div>
+<div class="ticker" id="ticker" aria-hidden="true"><svg class="tk-sine" id="tk-sine"></svg><div class="tk-rot" id="tk-rot"></div></div>
 
 <div class="wrap">
   <div class="head">
@@ -221,7 +223,7 @@
 
 <script src="data/instruments.js?v=fx4"></script>
 <script src="data/lib.js?v=fx4"></script>
-<script src="share.js?v=6"></script>
+<script src="share.js?v=5"></script>
 <script src="contact.js?v=6"></script>
 <script>
   const S = window.SITE;
@@ -632,13 +634,50 @@
   render();
   if (selected) select(selected, false);
 
-  // ── Полоса под шапкой: строка состояния данных (лозунги и синусоида убраны) ──
-  (function status() {
-    var el = document.getElementById("tk-line");
-    if (!el) return;
-    var upd = (window.SITE_DATA && window.SITE_DATA.updated || "").split("-").reverse().join(".");
-    el.innerHTML = (upd ? "данные от <b>" + upd + "</b> · " : "") +
-      "<b>" + S.INSTRUMENTS.length + "</b> инструментов · котировки в % от номинала";
+  // ── Полоса под шапкой: синусоида-фон + лента мотивирующих фраз (декор) ──
+  (function ribbon() {
+    var PHRASES = [
+      "Доходность любит расчёт",
+      "Риск известен до сделки",
+      "Доход по формуле, а не по удаче",
+      "Идея = гипотеза + цифры",
+      "Защита или рычаг — под вашу цель",
+      "Считай сценарий до сделки — прямо здесь",
+      "Каждая идея — с примером в рублях",
+      "Рычаг на рост — риск лишь в премии",
+      "Капитал под защитой при любом сценарии",
+      "Рынок вознаграждает подготовленных"
+    ];
+    var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    // лента фраз
+    var rot = document.getElementById("tk-rot");
+    if (rot) {
+      PHRASES.forEach(function (p, i) { var s = document.createElement("span"); s.textContent = p; if (i === 0) s.className = "on"; rot.appendChild(s); });
+      if (!reduce && PHRASES.length > 1) {
+        var k = 0, spans = rot.querySelectorAll("span");
+        setInterval(function () { spans[k].classList.remove("on"); k = (k + 1) % spans.length; spans[k].classList.add("on"); }, 3600);
+      }
+    }
+
+    // синусоида на фоне (приглушённая, тихо дрейфует)
+    var svg = document.getElementById("tk-sine");
+    if (!svg) return;
+    var NS = "http://www.w3.org/2000/svg", path = document.createElementNS(NS, "path");
+    path.setAttribute("fill", "none"); path.setAttribute("stroke", "rgba(238,125,27,0.30)"); path.setAttribute("stroke-width", "1.6"); path.setAttribute("stroke-linecap", "round");
+    svg.appendChild(path);
+    var W = 1000, H = 54, phase = 0;
+    function size() { W = svg.clientWidth || 1000; svg.setAttribute("viewBox", "0 0 " + W + " " + H); }
+    function draw() {
+      var cy = H / 2, amp = 13, cycles = 3, d = "", x;
+      for (x = 0; x <= W; x += 6) d += (x === 0 ? "M" : "L") + x.toFixed(1) + " " + (cy + Math.sin(x / W * cycles * 6.2832 + phase) * amp).toFixed(1) + " ";
+      path.setAttribute("d", d);
+    }
+    size(); draw();
+    var rw = 0;
+    window.addEventListener("resize", function () { clearTimeout(rw); rw = setTimeout(function () { size(); draw(); }, 150); });
+    if (reduce) return;
+    (function fr() { phase -= 0.018; draw(); requestAnimationFrame(fr); })();
   })();
 </script>
 <script src="chat.js?v=7"></script>
