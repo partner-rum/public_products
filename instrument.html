@@ -101,6 +101,20 @@
   .fact .k { font-size: 11px; color: rgba(255,255,255,0.44); text-transform: uppercase; letter-spacing: 0.06em; }
   .fact .v { font-size: 14px; line-height: 1.45; }
 
+  /* Калькулятор выплаты — перенесён с доски, чтобы клиент по ссылке мог прикинуть сам */
+  .calc { background: var(--tile); border: 1px solid var(--border-soft); border-radius: 10px; padding: 15px 16px; }
+  .calc-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 13px; }
+  .calc-l { font-size: 13px; color: var(--hushed); }
+  .calc-l b { color: var(--ink); font-family: var(--f-mono); font-weight: 500; }
+  .calc-input { width: 150px; background: var(--card); border: 1px solid var(--border); border-radius: 7px; padding: 8px 11px; color: var(--ink); font-family: var(--f-mono); font-size: 14px; text-align: right; }
+  .calc-input:focus { outline: 2px solid var(--solar); outline-offset: 1px; }
+  .calc-range { flex: 1; max-width: 58%; accent-color: var(--solar); cursor: pointer; }
+  .calc-out { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 2px; }
+  .calc-o { background: var(--card); border: 1px solid var(--border-soft); border-radius: 8px; padding: 11px 13px; }
+  .calc-o .v { font-family: var(--f-mono); font-size: 19px; font-weight: 600; letter-spacing: -0.01em; }
+  .calc-o .k { font-size: 10px; color: var(--faint); margin-top: 3px; }
+  .calc-note { margin-top: 11px; font-size: 11.5px; line-height: 1.45; color: var(--faint); }
+
   @media (max-width: 900px) {
     .wrap { padding: 0 20px 48px; }
     .nav-in { height: auto; flex-wrap: wrap; padding: 12px 20px; row-gap: 10px; }
@@ -188,6 +202,11 @@
       <div class="chart-caption" id="chart-caption"></div>
     </div>
     <div class="metrics" id="metrics"></div>
+  </div>
+
+  <div class="section" id="calc-section">
+    <h2>Калькулятор выплаты</h2>
+    <div class="calc" id="calc-mount"></div>
   </div>
 
   <div class="section">
@@ -476,6 +495,52 @@
   document.getElementById("explainer").textContent = content.explainer;
   document.getElementById("facts").innerHTML = content.facts.map(f =>
     '<div class="fact"><div class="k">' + f[0] + '</div><div class="v">' + f[1] + '</div></div>').join("");
+
+  // --- Калькулятор выплаты (перенос с доски: клиент сам двигает ползунок) ---
+  function calcMove(inst) {
+    if (inst.type === "warrant") { const cs = inst.structure === "cs"; const cap = cs ? Math.round((inst.strike2 - inst.strike) / inst.strike * 100) : 0; return { min: -30, max: cs ? cap + 15 : 60, val: cs ? cap : 30 }; }
+    if (inst.type === "protection") return { min: -30, max: 50, val: 20 };
+    return null;
+  }
+  function calcPct(inst, move) {
+    if (inst.type === "warrant") { const lvl = inst.strike * (1 + move / 100); return S.PAYOFF.pct(lvl, inst.strike, inst.strike2); }
+    if (inst.type === "protection") { const p = inst.participation, floor = inst.protectionPct || 100; let v = 100 + p * move; if (v < floor) v = floor; if (inst.cap != null) v = Math.min(v, 100 + p * inst.cap); return v; }
+    return 100;
+  }
+  function calcInner(inst) {
+    const nom0 = inst.minNom || 1000000, price0 = Math.round(nom0 * inst.quote / 100), cfg = calcMove(inst);
+    const slider = cfg ? '<div class="calc-row"><label class="calc-l">' + inst.underlying + ': <b id="calc-mv"></b></label>' +
+      '<input class="calc-range" id="calc-move" type="range" min="' + cfg.min + '" max="' + cfg.max + '" value="' + cfg.val + '" step="1" aria-label="Сценарий по базовому активу"></div>' : '';
+    return '<div class="calc-row"><label class="calc-l" for="calc-amt">Сумма вложения, ₽</label>' +
+        '<input class="calc-input" id="calc-amt" type="number" inputmode="numeric" min="0" step="1000" value="' + price0 + '"></div>' +
+      slider +
+      '<div class="calc-out"><div class="calc-o"><div class="v" id="calc-payout"></div><div class="k">выплата при погашении</div></div>' +
+        '<div class="calc-o"><div class="v" id="calc-net"></div><div class="k">результат</div></div></div>' +
+      '<div class="calc-note" id="calc-note"></div>';
+  }
+  function wireCalc(inst) {
+    const amt = document.getElementById("calc-amt"); if (!amt) return;
+    const move = document.getElementById("calc-move"), mvOut = document.getElementById("calc-mv");
+    const payoutEl = document.getElementById("calc-payout"), netEl = document.getElementById("calc-net"), noteEl = document.getElementById("calc-note");
+    const prot = inst.protectionPct || 100;
+    function run() {
+      const amount = Math.max(0, +amt.value || 0), nominal = inst.quote ? amount * 100 / inst.quote : 0;
+      const m = move ? +move.value : 0;
+      if (mvOut) mvOut.textContent = (m >= 0 ? "+" : "") + m + "%";
+      const payout = nominal * calcPct(inst, m) / 100, net = payout - amount;
+      payoutEl.textContent = S.fmtInt(Math.round(payout)) + " ₽";
+      netEl.textContent = (net >= 0 ? "+" : "−") + S.fmtInt(Math.round(Math.abs(net))) + " ₽";
+      netEl.style.color = net >= 0 ? "#55C08A" : "#E0705A";
+      if (inst.type === "warrant") noteEl.textContent = "Экспозиция на номинал " + S.fmtInt(Math.round(nominal)) + " ₽ за премию = сумму вложения. Если " + inst.underlying + " не вырос — выплаты нет, премия теряется.";
+      else if (inst.type === "protection") noteEl.textContent = "Номинал " + S.fmtInt(Math.round(nominal)) + " ₽. Защита " + prot + "%: при падении возвращается " + prot + "% номинала.";
+      else noteEl.textContent = "Номинал " + S.fmtInt(Math.round(nominal)) + " ₽. При погашении — 100% номинала (если нет кредитного события). Доход зафиксирован дисконтом.";
+    }
+    amt.addEventListener("input", run);
+    if (move) move.addEventListener("input", run);
+    run();
+  }
+  if (inst.quote != null) { document.getElementById("calc-mount").innerHTML = calcInner(inst); wireCalc(inst); }
+  else document.getElementById("calc-section").style.display = "none";
 
   function setMode(m) {
     mode = m;
