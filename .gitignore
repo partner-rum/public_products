@@ -22,3 +22,4 @@ fetch_placements.py
 # Внутренняя документация проекта и локальный конфиг MCP — не публиковать
 CLAUDE.md
 .mcp.json
+_demo/
