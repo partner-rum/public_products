@@ -4,7 +4,7 @@
 //   BOT_TOKEN         — токен бота от @BotFather
 //   CHAT_ID           — id чата/группы продаж, куда падают заявки (напр. -1001234567890)
 //   WEBHOOK_SECRET    — (опц.) секрет вебхука Telegram; если задан — проверяется заголовок
-//   ALLOW_ORIGIN      — (опц.) домен сайта для CORS, напр. https://partner-rum.github.io. По умолчанию "*"
+//   ALLOW_ORIGIN      — (опц.) домен сайта для CORS, напр. https://invest.rumberg.ru. По умолчанию "*"
 //   CHAT_PROVIDER     — (опц.) провайдер ИИ для /chat: "yandex" (по умолчанию) или "claude".
 //   YANDEX_API_KEY    — (yandex) API-ключ сервисного аккаунта Yandex Cloud (роль ai.languageModels.user).
 //   YANDEX_FOLDER_ID  — (yandex) идентификатор каталога (folder) в Yandex Cloud.
@@ -133,7 +133,7 @@ async function fetchDataObj(url) {
 async function buildCatalog(env) {
   const now = Date.now();
   if (CATALOG.text && now - CATALOG.at < 5 * 60 * 1000) return CATALOG.text;
-  const base = (env.SITE_BASE || "https://partner-rum.github.io/public_products/").replace(/\/?$/, "/");
+  const base = (env.SITE_BASE || "https://invest.rumberg.ru/").replace(/\/?$/, "/");
   const [site, plc] = await Promise.all([
     fetchDataObj(base + "data/instruments.js"),
     fetchDataObj(base + "data/placements.js"),
