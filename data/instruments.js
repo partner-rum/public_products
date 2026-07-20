@@ -1,8 +1,8 @@
 // Файл сгенерирован update_site.py — руками не править (перезапишется при следующем запуске).
 // Продукты с "src": "sales" добавлены через админку и сохраняются при перегенерации.
-// Обновлено: 2026-07-17
+// Обновлено: 2026-07-20
 window.SITE_DATA = {
-  "updated": "2026-07-17",
+  "updated": "2026-07-20",
   "instruments": [
     {
       "id": "D-OFZ-1226",
@@ -425,6 +425,18 @@ window.SITE_DATA = {
       "quote": 14.2,
       "chg": 0.1,
       "minNom": 1000000
+    },
+    {
+      "id": "d-gazp-20072027-s",
+      "type": "discount",
+      "name": "Call 100 GAZP",
+      "underlying": "GAZP",
+      "cls": "Акции РФ",
+      "expiry": "20.07.2027",
+      "quote": 15,
+      "chg": 0,
+      "minNom": 1000000,
+      "src": "sales"
     }
   ],
   "underlyings": {
