@@ -64,7 +64,6 @@ TEMPLATE = """<!DOCTYPE html>
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#0B0C10">
 <link rel="canonical" href="{base}/instrument.html?id={id}">
-<meta http-equiv="refresh" content="0; url=/instrument.html?id={id}">
 <script>location.replace("/instrument.html?id={id}");</script>
 <style>html,body{{margin:0;height:100%}}body{{background:#0B0C10;color:rgba(242,243,247,.6);font-family:'Onest',system-ui,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px}}a{{color:#EE7D1B}}</style>
 </head>
