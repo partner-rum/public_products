@@ -427,6 +427,66 @@ function uniqueId(id, taken) {
   return out;
 }
 
+// --- Персональные превью продуктов: p/<id>.html с og-тегами + редирект на карточку ---
+// Скрапер превью (Telegram) не исполняет JS, поэтому нужна статичная страница на продукт.
+// Шаблон 1:1 с make_product_pages.py — чтобы массовая регенерация не давала лишних диффов.
+const SHELL_BASE = "https://invest.rumberg.ru";
+const SHELL_TYPE_LABEL = { discount: "Дисконтная облигация", protection: "Нота с защитой капитала", warrant: "Варрант" };
+function shellEsc(s) { return String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+function shellDesc(item) {
+  const tl = SHELL_TYPE_LABEL[item.type] || "Структурный продукт";
+  const ua = item.underlying || "";
+  const parts = [tl + (ua ? " на " + ua : "")];
+  if (item.quote != null) parts.push("котировка " + String(item.quote).replace(".", ",") + "% от номинала");
+  parts.push("Rumberg — структурные продукты для квалифицированных инвесторов");
+  return parts.join(" · ");
+}
+function productShell(item) {
+  const id = item.id, title = shellEsc(item.name || id), desc = shellEsc(shellDesc(item)), B = SHELL_BASE;
+  return [
+    '<!DOCTYPE html>', '<html lang="ru">', '<head>', '<meta charset="utf-8">',
+    '<meta name="viewport" content="width=device-width, initial-scale=1">',
+    '<title>' + title + ' — Rumberg</title>',
+    '<meta name="description" content="' + desc + '">',
+    '<meta property="og:type" content="website">', '<meta property="og:site_name" content="Rumberg">',
+    '<meta property="og:locale" content="ru_RU">',
+    '<meta property="og:title" content="' + title + '">',
+    '<meta property="og:description" content="' + desc + '">',
+    '<meta property="og:url" content="' + B + '/p/' + id + '.html">',
+    '<meta property="og:image" content="' + B + '/og-cover.png">',
+    '<meta property="og:image:width" content="1200">', '<meta property="og:image:height" content="630">',
+    '<meta property="og:image:alt" content="Rumberg — структурные продукты">',
+    '<meta name="twitter:card" content="summary_large_image">',
+    '<meta name="theme-color" content="#0B0C10">',
+    '<link rel="canonical" href="' + B + '/instrument.html?id=' + id + '">',
+    '<meta http-equiv="refresh" content="0; url=/instrument.html?id=' + id + '">',
+    '<script>location.replace("/instrument.html?id=' + id + '");</script>',
+    "<style>html,body{margin:0;height:100%}body{background:#0B0C10;color:rgba(242,243,247,.6);font-family:'Onest',system-ui,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px}a{color:#EE7D1B}</style>",
+    '</head>',
+    '<body>Открываем продукт… <a href="/instrument.html?id=' + id + '">перейти вручную</a></body>',
+    '</html>', '',
+  ].join("\n");
+}
+// Создать/обновить файл в репо (GET sha при наличии, затем PUT).
+async function upsertFile(env, path, contentStr, message, branch) {
+  const api = "https://api.github.com/repos/" + env.GITHUB_REPO + "/contents/" + path;
+  let sha;
+  const g = await fetch(api + "?ref=" + branch, { headers: ghHeaders(env) });
+  if (g.ok) sha = (await g.json()).sha;
+  const body = { message, content: b64encodeUtf8(contentStr), branch };
+  if (sha) body.sha = sha;
+  const put = await fetch(api, { method: "PUT", headers: ghHeaders(env), body: JSON.stringify(body) });
+  if (!put.ok) throw new Error("shell_put_" + put.status);
+}
+async function deleteFile(env, path, message, branch) {
+  const api = "https://api.github.com/repos/" + env.GITHUB_REPO + "/contents/" + path;
+  const g = await fetch(api + "?ref=" + branch, { headers: ghHeaders(env) });
+  if (!g.ok) return; // файла нет — нечего удалять
+  const del = await fetch(api, { method: "DELETE", headers: ghHeaders(env),
+    body: JSON.stringify({ message, sha: (await g.json()).sha, branch }) });
+  if (!del.ok) throw new Error("shell_del_" + del.status);
+}
+
 const FILE_HEADERS = {
   "data/instruments.js":
     '// Файл сгенерирован update_site.py — руками не править (перезапишется при следующем запуске).\n' +
@@ -512,7 +572,17 @@ async function publishItem(env, payload) {
         sha: meta.sha, branch,
       }),
     });
-    if (put.ok) return result;
+    if (put.ok) {
+      // Продукты доски: создаём/удаляем страницу превью p/<id>.html. Не критично для публикации —
+      // если сорвётся, продукт всё равно опубликован (превью подхватится при массовой регенерации).
+      if (section === "board") {
+        try {
+          if (payload.rm) await deleteFile(env, "p/" + payload.rm + ".html", "Админка: убрана страница превью " + payload.rm, branch);
+          else await upsertFile(env, "p/" + item.id + ".html", productShell(item), "Админка: страница превью " + item.id, branch);
+        } catch (e) { /* превью — необязательное */ }
+      }
+      return result;
+    }
     if (put.status !== 409 && put.status !== 422) throw new Error("github_put_" + put.status);
     // sha устарел (параллельная правка) — перечитываем и пробуем ещё раз
   }
