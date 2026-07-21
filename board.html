@@ -353,14 +353,16 @@
       const isCS = inst.structure === "cs";
       const K = inst.strike, K2 = inst.strike2;
       const premiumRub = nom * inst.quote / 100;
+      const spot = inst.spot || 100;
+      const strikeTxt = "Страйк — " + S.fmtSmart(K) + "% уровня базового актива в день покупки" + (K > 100 ? " (на " + S.fmtSmart(K - 100) + "% выше)" : "") + ".";
       const upPct = Math.max(16, Math.ceil((inst.quote + 6) / 5) * 5);
-      const payout1 = nom * S.PAYOFF.pct(K * (1 + upPct / 100), K, K2) / 100;
+      const payout1 = nom * S.PAYOFF.pct(spot * (1 + upPct / 100), K, K2) / 100;
       const net1 = payout1 - premiumRub;
       const capPct = isCS ? (K2 - K) / K * 100 : 0;
       const capRub = nom * capPct / 100;
       const metrics = isCS
-        ? [[S.fmtSmart(K) + "%", "страйк (K)"], [S.fmtSmart(K2) + "%", "потолок (K₂)"], [inst.tenor, "срок"], [S.fmt2(inst.quote) + "% ном.", "цена входа"]]
-        : [[S.fmtSmart(K) + "%", "страйк (K)"], [inst.tenor, "срок"], [S.fmt2(inst.quote) + "% ном.", "цена входа"], [inst.underlying, "базовый актив"]];
+        ? [[S.fmtSmart(K) + "%", "страйк (K)"], [S.fmtSmart(K2) + "%", "потолок (K₂)"], [inst.tenor, "срок"], [S.fmt2(inst.quote) + "% ном.", "цена входа"], [inst.currency || "RUB", "валюта"]]
+        : [[S.fmtSmart(K) + "%", "страйк (K)"], [inst.tenor, "срок"], [S.fmt2(inst.quote) + "% ном.", "цена входа"], [inst.currency || "RUB", "валюта"], [inst.underlying, "базовый актив"]];
       const scen = [
         [inst.underlying + " вырос на " + upPct + "%", "Выплата " + S.fmtInt(payout1) + " ₽", (net1 >= 0 ? "+" : "−") + S.fmtInt(Math.abs(net1)) + " ₽", net1 >= 0 ? "#55C08A" : "#EE7D1B"]
       ];
@@ -381,7 +383,7 @@
         scenarios: scen,
         explainer: isCS
           ? "Колл-спред — CALL с потолком выплаты. Страйк K фиксируется по уровню базового актива в день покупки (100%), рост засчитывается до K₂ = " + S.fmtSmart(K2) + "%: максимальная выплата — " + S.fmtSmart(capPct) + "% номинала. За счёт ограничения премия ниже, чем у обычного CALL. Если актив не вырос — выплаты нет, потеря ограничена премией."
-          : "CALL-варрант — право на выплату, равную росту базового актива. Страйк K фиксируется по уровню актива в день покупки (100%). Если на экспирацию актив выше страйка, выплата — Ном × рост. Если роста нет — выплаты нет, потеря ограничена премией.",
+          : "CALL-варрант — право на выплату при росте базового актива выше страйка. " + strikeTxt + " Если на экспирацию актив выше страйка, выплата растёт вместе с ним. Если нет — выплаты нет, потеря ограничена премией.",
         facts: [
           ["Стиль", "Европейский — выплата на дату экспирации"],
           ["Максимальный убыток", "Уплаченная премия"]
@@ -448,7 +450,7 @@
     return null;
   }
   function calcPct(inst, move) {
-    if (inst.type === "warrant") { const lvl = inst.strike * (1 + move / 100); return S.PAYOFF.pct(lvl, inst.strike, inst.strike2); }
+    if (inst.type === "warrant") { const lvl = (inst.spot || 100) * (1 + move / 100); return S.PAYOFF.pct(lvl, inst.strike, inst.strike2); }
     if (inst.type === "protection") { const p = inst.participation, floor = inst.protectionPct || 100; let v = 100 + p * move; if (v < floor) v = floor; if (inst.cap != null) v = Math.min(v, 100 + p * inst.cap); return v; }
     return 100;
   }
@@ -498,7 +500,7 @@
       '</div>' +
       '<div class="quote-block">' +
         '<div class="quote-big">' + S.fmt2(inst.quote) + '%</div>' +
-        '<div class="quote-sub">котировка · % от номинала</div>' +
+        '<div class="quote-sub">котировка · % от номинала · ' + (inst.currency || "RUB") + '</div>' +
       '</div></div>' +
       '<div class="chart-box">' +
         '<div class="chart-head"><span class="chart-title" id="chart-title"></span>' +
