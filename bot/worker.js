@@ -5,7 +5,8 @@
 //   CHAT_ID           — id чата/группы продаж, куда падают заявки (напр. -1001234567890)
 //   WEBHOOK_SECRET    — (опц.) секрет вебхука Telegram; если задан — проверяется заголовок
 //   ALLOW_ORIGIN      — (опц.) домен сайта для CORS, напр. https://invest.rumberg.ru. По умолчанию "*"
-//   CHAT_PROVIDER     — (опц.) провайдер ИИ для /chat: "yandex" (по умолчанию) или "claude".
+//   CHAT_PROVIDER     — (опц.) провайдер ИИ для /chat: "yandex" (по умолчанию), "deepseek" или "claude".
+//   DEEPSEEK_API_KEY  — (deepseek) ключ platform.deepseek.com. DEEPSEEK_MODEL — по умолчанию "deepseek-chat".
 //   YANDEX_API_KEY    — (yandex) API-ключ сервисного аккаунта Yandex Cloud (роль ai.languageModels.user).
 //   YANDEX_FOLDER_ID  — (yandex) идентификатор каталога (folder) в Yandex Cloud.
 //   YANDEX_MODEL      — (опц.) модель Yandex, по умолчанию "yandexgpt/latest" (последняя Pro); напр. "yandexgpt/rc".
@@ -213,7 +214,9 @@ async function handleChat(request, env, cors) {
   const provider = (env.CHAT_PROVIDER || "yandex").toLowerCase();
   let reply;
   try {
-    reply = provider === "claude" ? await callClaude(system, messages, env) : await callYandex(system, messages, env);
+    if (provider === "deepseek") reply = await callDeepSeek(system, messages, env);
+    else if (provider === "claude") reply = await callClaude(system, messages, env);
+    else reply = await callYandex(system, messages, env);
   } catch (e) {
     const msg = String((e && e.message) || e);
     return json({ ok: false, error: msg }, msg === "not_configured" ? 503 : 502, cors);
@@ -243,6 +246,28 @@ async function callYandex(system, messages, env) {
   const data = await r.json();
   const alt = data && data.result && data.result.alternatives && data.result.alternatives[0];
   return ((alt && alt.message && alt.message.text) || "").trim();
+}
+
+// DeepSeek (OpenAI-совместимый API) — провайдер /chat (CHAT_PROVIDER=deepseek)
+async function callDeepSeek(system, messages, env) {
+  const key = (env.DEEPSEEK_API_KEY || "").trim();
+  if (!key) throw new Error("not_configured");
+  const model = (env.DEEPSEEK_MODEL || "deepseek-chat").trim();
+  const r = await fetch("https://api.deepseek.com/chat/completions", {
+    method: "POST",
+    headers: { "Authorization": "Bearer " + key, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model,
+      messages: [{ role: "system", content: system }].concat(
+        messages.map((m) => ({ role: m.role, content: m.content }))
+      ),
+      temperature: 0.3, max_tokens: 800, stream: false,
+    }),
+  });
+  if (!r.ok) throw new Error("upstream_" + r.status);
+  const data = await r.json();
+  const c = data && data.choices && data.choices[0];
+  return ((c && c.message && c.message.content) || "").trim();
 }
 
 // Claude (Anthropic) — запасной провайдер (CHAT_PROVIDER=claude)
