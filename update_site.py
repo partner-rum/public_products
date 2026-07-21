@@ -111,6 +111,11 @@ def build_warrants():
 
 INSTRUMENTS = INSTRUMENTS_BASE + build_warrants()
 
+# Показывать ли график динамики базового актива в карточке. Пока данные демонстрационные —
+# держим ВЫКЛ, чтобы на боевом не было ложной динамики (диаграмма выплаты не зависит от этого).
+# Ставить True, когда в UNDERLYINGS_INFO.history появятся РЕАЛЬНЫЕ ряды (см. fetch_underlyings.py).
+EMIT_UNDERLYINGS = False
+
 # --- Базовые активы: описание и динамика для карточки инструмента ------------
 # history — 12 значений за последние 12 месяцев, последнее = текущий уровень.
 # Значения демонстрационные (для линии динамики). IBIT добавится, когда придёт уровень.
@@ -181,7 +186,7 @@ def render_js(sales_items: list) -> str:
     payload = {
         "updated": datetime.date.today().isoformat(),
         "instruments": INSTRUMENTS + extra,
-        "underlyings": UNDERLYINGS_INFO,
+        "underlyings": UNDERLYINGS_INFO if EMIT_UNDERLYINGS else {},
     }
     return (
         "// Файл сгенерирован update_site.py — руками не править (перезапишется при следующем запуске).\n"
