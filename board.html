@@ -563,7 +563,7 @@
 
   // Короткое имя в списке — без повторения базового актива (он в заголовке группы)
   function shortName(r) {
-    if (r.type === "warrant") return (r.structure === "cs" ? "CS 100–150" : "CALL 100") + " · " + r.tenor;
+    if (r.type === "warrant") return (r.structure === "cs" ? "CS 100–150" : "CALL " + S.fmtSmart(r.strike)) + " · " + r.tenor;
     if (r.type === "discount") return "Дисконтная облигация";
     return "Защита капитала · участие " + Math.round(r.participation * 100) + "%";
   }

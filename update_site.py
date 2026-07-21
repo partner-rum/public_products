@@ -45,7 +45,7 @@ WARRANT_UNDERLYINGS = {
     "NVDA":   dict(short="NVDA",      underlying="NVIDIA (NVDA)",       cls="Акции США",  currency="USD", uRef="$206"),
     "SPY":    dict(short="SPY",       underlying="S&P 500 (SPY)",       cls="Индекс",     currency="USD", uRef="$747"),
     "GLD":    dict(short="GLD",       underlying="Золото (GLD)",        cls="Товары",     currency="USD", uRef="$374"),
-    "IBIT":   dict(short="IBIT",      underlying="Bitcoin (IBIT)",      cls="Крипто",     currency="USD", uRef=""),  # TODO: уровень IBIT ($)
+    "IBIT":   dict(short="IBIT",      underlying="Bitcoin (IBIT)",      cls="Крипто",     currency="USD", uRef="$37"),
     "CSI300": dict(short="CSI 300",   underlying="CSI 300",             cls="Индекс",     currency="USD", uRef="4 739 пт"),
     "HSI":    dict(short="Hang Seng", underlying="Hang Seng",           cls="Индекс",     currency="USD", uRef="25 132 пт"),
 }
@@ -149,6 +149,11 @@ UNDERLYINGS_INFO = {
         unit="пт",
         desc="Гонконгский фондовый индекс крупнейших компаний Hong Kong Stock Exchange, включая ведущих китайских технологических и финансовых эмитентов. Ключевой ориентир азиатского рынка.",
         history=[20800, 21400, 22100, 22700, 23400, 22900, 23800, 24300, 24700, 24950, 25040, 25132],
+    ),
+    "Bitcoin (IBIT)": dict(
+        unit="$",
+        desc="iShares Bitcoin Trust (IBIT) от BlackRock — спотовый биржевой фонд на биткоин; цена акции следует за курсом BTC за вычетом комиссии фонда. Экспозиция на крупнейшую криптовалюту через биржевую оболочку. Торгуется на NASDAQ в долларах.",
+        history=[24, 27, 30, 33, 29, 32, 35, 34, 36, 35, 36, 37],
     ),
 }
 

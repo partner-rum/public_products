@@ -289,6 +289,7 @@ window.SITE_DATA = {
       "cls": "Крипто",
       "currency": "USD",
       "strike": 100,
+      "uRef": "$37",
       "spot": 100,
       "tenor": "2 года",
       "expiry": "21.07.2028",
@@ -305,6 +306,7 @@ window.SITE_DATA = {
       "cls": "Крипто",
       "currency": "USD",
       "strike": 100,
+      "uRef": "$37",
       "spot": 100,
       "tenor": "3 года",
       "expiry": "20.07.2029",
@@ -322,6 +324,7 @@ window.SITE_DATA = {
       "currency": "USD",
       "strike": 100,
       "strike2": 150,
+      "uRef": "$37",
       "spot": 100,
       "tenor": "2 года",
       "expiry": "21.07.2028",
@@ -339,6 +342,7 @@ window.SITE_DATA = {
       "currency": "USD",
       "strike": 100,
       "strike2": 150,
+      "uRef": "$37",
       "spot": 100,
       "tenor": "3 года",
       "expiry": "20.07.2029",
@@ -540,6 +544,24 @@ window.SITE_DATA = {
         24950,
         25040,
         25132
+      ]
+    },
+    "Bitcoin (IBIT)": {
+      "unit": "$",
+      "desc": "iShares Bitcoin Trust (IBIT) от BlackRock — спотовый биржевой фонд на биткоин; цена акции следует за курсом BTC за вычетом комиссии фонда. Экспозиция на крупнейшую криптовалюту через биржевую оболочку. Торгуется на NASDAQ в долларах.",
+      "history": [
+        24,
+        27,
+        30,
+        33,
+        29,
+        32,
+        35,
+        34,
+        36,
+        35,
+        36,
+        37
       ]
     }
   }
