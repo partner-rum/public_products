@@ -53,6 +53,11 @@
   .nav .name { font-size:14px; font-weight:600; }
   .btn-solar { margin-left:auto; display:inline-flex; align-items:center; gap:8px; background:var(--solar); color:#0C0A08; border-radius:6px; padding:9px 15px; font-size:13px; font-weight:600; transition:background .3s ease-in-out; }
   .btn-solar:hover { background:var(--solar-l); }
+  .nav-cta { margin-left:auto; display:flex; align-items:center; gap:10px; }
+  .nav-cta .btn-solar { margin-left:0; }
+  .btn-tg { display:inline-flex; align-items:center; gap:7px; background:var(--panel); border:1px solid var(--line); color:var(--tx); border-radius:6px; padding:8px 13px; font-size:13px; font-weight:600; transition:border-color .2s, background .2s; }
+  .btn-tg:hover { border-color:var(--blue); background:rgba(79,134,230,0.12); }
+  .btn-tg svg { display:block; }
 
   .wrap { position:relative; z-index:1; max-width:1140px; margin:0 auto; padding:0 44px; }
 
@@ -112,6 +117,11 @@
     .srow { grid-template-columns:1fr 32px; }
     .srow .no { display:none; } .srow .sm { display:none; }
   }
+  @media (max-width: 640px) {
+    .nav .name { display:none; }
+    .btn-tg .tg-lbl { display:none; }
+    .btn-tg { padding:8px 10px; }
+  }
 
   /* ── Интро при входе на сайт (один раз за сессию; синий+оранжевый Rumberg, нейтральный фон) ── */
   .intro { position: fixed; inset: 0; z-index: 9999; background: #101114; overflow: hidden; transform: translateY(0); transition: transform .8s var(--ease); }
@@ -154,8 +164,13 @@
   <div class="nav-in">
     <svg width="21" height="21" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>
     <span class="name">Структурные продукты</span>
-    <a class="btn-solar" href="board.html?type=warrant">Открыть доску
-      <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+    <div class="nav-cta">
+      <a class="btn-tg" href="https://t.me/+NHbVOoUI5IBkN2Uy" target="_blank" rel="noopener" aria-label="Наша группа в Telegram">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.27 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z" fill="#4F86E6"/></svg>
+        <span class="tg-lbl">Telegram-группа</span></a>
+      <a class="btn-solar" href="board.html?type=warrant">Открыть доску
+        <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+    </div>
   </div>
 </header>
 
@@ -211,7 +226,7 @@
 </div>
 
 <script src="intro.js?v=3"></script>
-<script src="data/instruments.js"></script>
+<script src="data/instruments.js?v=fx5"></script>
 <script src="data/lib.js?v=fx4"></script>
 <script src="data/digest.js?v=srv2"></script>
 <script src="data/placements.js"></script>
