@@ -377,6 +377,39 @@ async function handleSubmit(request, env, cors) {
   }
   if (!author) return json({ ok: false, error: "bad_key" }, 403, cors);
 
+  // Загрузка PDF-дайджеста: файл сразу коммитится в черновик docs/digest/pending-*.pdf,
+  // модератору уходит карточка ✅/❌; по ✅ файл переезжает в боевое имя + digest.js получает ссылку.
+  if (data.action === "digestpdf") {
+    const date = cleanStr(data.date, 20);
+    const filename = cleanStr(data.filename, 100) || "digest.pdf";
+    const b64 = String(data.content || "").replace(/^data:[^,]*,/, "").replace(/[\r\n\s]/g, "");
+    if (!date) return json({ ok: false, error: "no_date" }, 422, cors);
+    if (!b64 || b64.length < 100) return json({ ok: false, error: "no_file" }, 422, cors);
+    if (b64.length > 28 * 1024 * 1024) return json({ ok: false, error: "too_big" }, 413, cors); // ~21 МБ PDF
+    if (!/^[A-Za-z0-9+/]+=*$/.test(b64.slice(0, 4000))) return json({ ok: false, error: "bad_file" }, 422, cors);
+    if (!env.GITHUB_TOKEN || !env.GITHUB_REPO) return json({ ok: false, error: "github_not_configured" }, 503, cors);
+    const branch = env.GITHUB_BRANCH || "main";
+    const tmp = "docs/digest/pending-" + Date.now() + ".pdf";
+    try {
+      await putFileB64(env, tmp, b64, "Админка: черновик дайджеста (PDF) от " + author, branch);
+    } catch (e) { return json({ ok: false, error: "upload_failed" }, 502, cors); }
+    const kb = Math.round(b64.length * 3 / 4 / 1024);
+    const rpayload = JSON.stringify({ s: "digestpdf", by: author, tmp, date });
+    const rtext =
+      "📄 <b>Дайджест (PDF) на публикацию</b>\n" +
+      "От <b>" + esc(author) + "</b> · выпуск <b>" + esc(date) + "</b> · ~" + kb + " КБ\n" +
+      "Файл: " + esc(filename) + "\n\n<pre>" + esc(rpayload) + "</pre>";
+    const rr = await tg(env, "sendMessage", {
+      chat_id: env.ADMIN_CHAT_ID, text: rtext, parse_mode: "HTML", disable_web_page_preview: true,
+      reply_markup: { inline_keyboard: [[
+        { text: "✅ Опубликовать", callback_data: "pub" },
+        { text: "❌ Отклонить", callback_data: "rej" },
+      ]] },
+    });
+    if (!rr.ok) return json({ ok: false, error: "telegram_failed" }, 502, cors);
+    return json({ ok: true }, 200, cors);
+  }
+
   const section = cleanStr(data.section, 20);
   if (!SUBMIT_SECTIONS[section]) return json({ ok: false, error: "bad_section" }, 422, cors);
 
@@ -491,6 +524,25 @@ function productShell(item) {
     '</html>', '',
   ].join("\n");
 }
+// Бинарные файлы (PDF): контент уже в base64 — кладём/читаем без перекодировки.
+async function putFileB64(env, path, b64, message, branch) {
+  const api = "https://api.github.com/repos/" + env.GITHUB_REPO + "/contents/" + path;
+  let sha;
+  const g = await fetch(api + "?ref=" + branch, { headers: ghHeaders(env) });
+  if (g.ok) sha = (await g.json()).sha;
+  const body = { message, content: b64, branch };
+  if (sha) body.sha = sha;
+  const put = await fetch(api, { method: "PUT", headers: ghHeaders(env), body: JSON.stringify(body) });
+  if (!put.ok) throw new Error("file_put_" + put.status);
+}
+async function getFileB64(env, path, branch) {
+  const api = "https://api.github.com/repos/" + env.GITHUB_REPO + "/contents/" + path;
+  const g = await fetch(api + "?ref=" + branch, { headers: ghHeaders(env) });
+  if (!g.ok) throw new Error("file_get_" + g.status);
+  const meta = await g.json();
+  return { b64: String(meta.content || "").replace(/\n/g, ""), sha: meta.sha };
+}
+
 // Создать/обновить файл в репо (GET sha при наличии, затем PUT).
 async function upsertFile(env, path, contentStr, message, branch) {
   const api = "https://api.github.com/repos/" + env.GITHUB_REPO + "/contents/" + path;
@@ -541,6 +593,41 @@ function renderDataFile(path, obj) {
   return FILE_HEADERS[path] + "window.DIGEST_ARCHIVE = " + JSON.stringify(obj, null, 1) + ";\n\n" +
     "// Обратная совместимость: index.html читает window.DIGEST.date (последний выпуск).\n" +
     "window.DIGEST = window.DIGEST_ARCHIVE.issues[0];\n";
+}
+
+// Публикация PDF-дайджеста по ✅: черновик → боевое имя, ссылка — в issues[0] digest.js, черновик удаляется.
+async function publishDigestPdf(env, payload) {
+  if (!env.GITHUB_TOKEN || !env.GITHUB_REPO) throw new Error("github_not_configured");
+  const branch = env.GITHUB_BRANCH || "main";
+  const tmp = String(payload.tmp || "");
+  if (!/^docs\/digest\/pending-\d+\.pdf$/.test(tmp)) throw new Error("bad_tmp");
+  const date = String(payload.date || "").slice(0, 20);
+  const finalPath = "docs/digest/rumberg-digest-" + (date.replace(/[^0-9]+/g, "-").replace(/^-|-$/g, "") || "new") + ".pdf";
+
+  const file = await getFileB64(env, tmp, branch);
+  await putFileB64(env, finalPath, file.b64, "Админка: дайджест (PDF) " + date + " (от " + payload.by + ")", branch);
+
+  // digest.js: прикрепить PDF к текущему выпуску
+  const api = "https://api.github.com/repos/" + env.GITHUB_REPO + "/contents/data/digest.js";
+  const g = await fetch(api + "?ref=" + branch, { headers: ghHeaders(env) });
+  if (!g.ok) throw new Error("github_get_" + g.status);
+  const meta = await g.json();
+  const text = b64decodeUtf8(meta.content);
+  const obj = JSON.parse(text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1));
+  obj.issues[0].pdf = finalPath;
+  obj.issues[0].pdfName = "Румберг Дайджест " + date + ".pdf";
+  const put = await fetch(api, {
+    method: "PUT", headers: ghHeaders(env),
+    body: JSON.stringify({
+      message: "Админка: PDF-дайджест " + date + " привязан к текущему выпуску (от " + payload.by + ")",
+      content: b64encodeUtf8(renderDataFile("data/digest.js", obj)),
+      sha: meta.sha, branch,
+    }),
+  });
+  if (!put.ok) throw new Error("github_put_" + put.status);
+
+  try { await deleteFile(env, tmp, "Админка: черновик дайджеста опубликован", branch); } catch (e) { /* не критично */ }
+  return { file: finalPath };
 }
 
 async function publishItem(env, payload) {
@@ -636,10 +723,14 @@ async function handleTelegram(request, env) {
     if (at < 0 || end < at) { await answer("Не нашёл данные заявки", true); return new Response("ok"); }
     let payload;
     try { payload = JSON.parse(msgText.slice(at, end + 1)); } catch { await answer("Данные повреждены", true); return new Response("ok"); }
-    const label = (SUBMIT_SECTIONS[payload.s] || {}).label || payload.s;
-    const title = (payload.item && payload.item.name) || payload.rm || "";
+    const isPdf = payload.s === "digestpdf";
+    const label = isPdf ? "Дайджест (PDF)" : (SUBMIT_SECTIONS[payload.s] || {}).label || payload.s;
+    const title = (payload.item && payload.item.name) || payload.rm || (isPdf ? "выпуск " + (payload.date || "") : "");
 
     if (cb.data === "rej") {
+      if (isPdf && payload.tmp) {
+        try { await deleteFile(env, String(payload.tmp), "Админка: черновик дайджеста отклонён", env.GITHUB_BRANCH || "main"); } catch (e) { /* не критично */ }
+      }
       await tg(env, "editMessageText", {
         chat_id: cb.message.chat.id, message_id: cb.message.message_id, parse_mode: "HTML",
         text: "❌ <b>Отклонено</b> · " + esc(label) + "\n" + esc(title) + " (от " + esc(payload.by) + ")",
@@ -649,9 +740,9 @@ async function handleTelegram(request, env) {
     }
     if (cb.data === "pub") {
       try {
-        const published = await publishItem(env, payload);
+        const published = isPdf ? await publishDigestPdf(env, payload) : await publishItem(env, payload);
         const head = payload.rm ? "🗑 <b>Снято</b> · " : "✅ <b>Опубликовано</b> · ";
-        const what = payload.rm ? payload.rm : (published.name || published.id);
+        const what = payload.rm ? payload.rm : (isPdf ? "выпуск " + (payload.date || "") : (published.name || published.id));
         await tg(env, "editMessageText", {
           chat_id: cb.message.chat.id, message_id: cb.message.message_id, parse_mode: "HTML",
           text: head + esc(label) + "\n" + esc(what) + " (от " + esc(payload.by) + ")\nСайт обновится через 1–3 минуты.",

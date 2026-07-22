@@ -254,7 +254,9 @@ window.DIGEST_ARCHIVE = {
       "capPct": 50
      }
     }
-   ]
+   ],
+   "pdf": "docs/digest/rumberg-digest-2026-07-22.pdf",
+   "pdfName": "Румберг Дайджест 22.07.pdf"
   },
   {
    "id": "2026-06-29",

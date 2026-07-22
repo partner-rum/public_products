@@ -96,6 +96,7 @@
     <button class="tab on" data-f="f-board" type="button">Текущий продукт</button>
     <button class="tab" data-f="f-offering" type="button">На размещении</button>
     <button class="tab" data-f="f-digest" type="button">Идея в дайджест</button>
+    <button class="tab" data-f="f-dpdf" type="button">Дайджест (PDF)</button>
     <button class="tab" data-f="f-remove" type="button">Снять с сайта</button>
   </div>
 
@@ -260,6 +261,19 @@
     </div>
     <button class="send" type="submit">Отправить на одобрение</button>
     <div class="msg" id="m-digest"></div>
+  </form>
+
+  <!-- ══════════ ДАЙДЖЕСТ (PDF) ══════════ -->
+  <form id="f-dpdf" onsubmit="return false">
+    <div class="grp"><div class="gt">PDF-выпуск дайджеста</div>
+      <div class="hint" style="margin:0 0 12px">Файл уйдёт Руслану на одобрение. После ✅ кнопка «Скачать дайджест (PDF)» на странице дайджеста начнёт отдавать этот файл.</div>
+      <div class="row">
+        <label><span class="k">Дата выпуска <b>*</b></span><input id="dpdf-date" type="text" placeholder="22.07.2026" maxlength="20"></label>
+        <label><span class="k">Файл PDF, до 20 МБ <b>*</b></span><input id="dpdf-file" type="file" accept="application/pdf,.pdf"></label>
+      </div>
+    </div>
+    <button class="send" type="button" id="dpdf-send">Отправить на одобрение</button>
+    <div class="msg" id="m-dpdf"></div>
   </form>
 
   <!-- ══════════ СНЯТЬ С САЙТА ══════════ -->
@@ -488,6 +502,38 @@
       item.id = slug(item.name);
       return item;
     });
+  });
+
+  // ── Дайджест (PDF): файл → base64 → /submit (модерация как у продуктов) ──
+  document.getElementById("dpdf-send").addEventListener("click", function () {
+    var msgEl = document.getElementById("m-dpdf");
+    var btn = this;
+    msgEl.className = "msg";
+    var key = keyEl.value.trim();
+    if (!key) { msgEl.className = "msg err"; msgEl.textContent = "Введите ваш ключ вверху страницы."; keyEl.focus(); return; }
+    var date = document.getElementById("dpdf-date").value.trim();
+    if (!date) { msgEl.className = "msg err"; msgEl.textContent = "Укажите дату выпуска (например, 22.07.2026)."; return; }
+    var f = document.getElementById("dpdf-file").files[0];
+    if (!f) { msgEl.className = "msg err"; msgEl.textContent = "Выберите PDF-файл."; return; }
+    if (!/pdf$/i.test(f.name) && f.type !== "application/pdf") { msgEl.className = "msg err"; msgEl.textContent = "Нужен файл PDF."; return; }
+    if (f.size > 20 * 1024 * 1024) { msgEl.className = "msg err"; msgEl.textContent = "Файл больше 20 МБ — сожмите PDF."; return; }
+    btn.disabled = true; btn.textContent = "Загружаю…";
+    var done = function (cls, text) { msgEl.className = cls; msgEl.textContent = text; btn.disabled = false; btn.textContent = "Отправить на одобрение"; };
+    var rd = new FileReader();
+    rd.onerror = function () { done("msg err", "Не удалось прочитать файл."); };
+    rd.onload = function () {
+      fetch(ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: key, action: "digestpdf", date: date, filename: f.name, content: String(rd.result) }) })
+        .then(function (r) { return r.json().then(function (d) { return { s: r.status, d: d }; }); })
+        .then(function (x) {
+          if (x.d && x.d.ok) { done("msg ok", "PDF отправлен на одобрение ✅ После ✅ Руслана кнопка скачивания начнёт отдавать этот файл."); document.getElementById("dpdf-file").value = ""; }
+          else if (x.d && x.d.error === "bad_key") done("msg err", "Ключ не подошёл.");
+          else if (x.d && x.d.error === "too_big") done("msg err", "Файл слишком большой.");
+          else done("msg err", "Ошибка: " + ((x.d && x.d.error) || x.s));
+        })
+        .catch(function () { done("msg err", "Сеть недоступна — попробуйте ещё раз."); });
+    };
+    rd.readAsDataURL(f);
   });
 })();
 </script>
