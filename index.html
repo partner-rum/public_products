@@ -72,6 +72,7 @@
   .tape .it { display:flex; align-items:baseline; }
   .tape .sym { color:var(--tx); font-weight:500; }
   .tape .nm { color:var(--mut); }
+  .tape .qt { color:var(--solar); font-weight:500; margin-left:10px; font-variant-numeric:tabular-nums; }
   @keyframes slide { to { transform:translateX(-50%); } }
   /* весь блок «можем запустить сейчас» — ссылка на доску «Текущие продукты» */
   .launch { display:block; }
@@ -319,13 +320,15 @@
     document.getElementById("m3").textContent = window.PLACEMENTS_DATA.issues.length + " выпуска";
     document.getElementById("m4").textContent = "данные: " + window.SITE_DATA.updated.split("-").reverse().join(".");
 
-    // Каталог продуктов «можем запустить» — без котировок и дельт (данные не ведём).
-    // Имя делим по «·»: первый сегмент ярче, остальное приглушено (ритм тикера, но статично).
+    // Каталог продуктов «можем запустить»: имя + котировка (премия, % от номинала).
+    // Имя делим по «·»: первый сегмент ярче, остальное приглушено; котировка — акцентом.
+    var fmtQ = window.SITE && window.SITE.fmt2 ? window.SITE.fmt2 : function (n) { return String(n).replace(".", ","); };
     var items = window.SITE_DATA.instruments.slice(0, 12).map(function (r) {
       var parts = String(r.name).split(" · ");
       var head = parts.shift();
       var rest = parts.length ? '<span class="nm"> · ' + parts.join(" · ") + '</span>' : '';
-      return '<span class="it"><span class="sym">' + head + '</span>' + rest + '</span>';
+      var qt = r.quote != null ? '<span class="qt">' + fmtQ(r.quote) + '%</span>' : '';
+      return '<span class="it"><span class="sym">' + head + '</span>' + rest + qt + '</span>';
     }).join("");
     document.getElementById("tape").innerHTML = items + items;
   } catch (e) {}
