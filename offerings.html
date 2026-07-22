@@ -186,7 +186,7 @@
   </div>
 </footer>
 
-<script src="data/offerings.js?v=srv2"></script>
+<script src="data/offerings.js?v=srv3"></script>
 <script>
 (function () {
   "use strict";
@@ -219,9 +219,9 @@
   function itemHTML(o) {
     var c = famCol(o), st = o.status === "live" ? "live" : "up";
     return '<button class="item' + (o.id === selected ? " active" : "") + '" data-id="' + o.id + '" style="--fc:' + c + '">' +
-      '<div class="r1"><span class="nm">' + o.name + '</span><span class="pr">' + fmt2(o.price) + '%</span></div>' +
+      '<div class="r1"><span class="nm">' + o.name + '</span><span class="pr">' + (o.price != null ? fmt2(o.price) + '%' : '') + '</span></div>' +
       '<div class="r2"><span class="sub">' + o.reference + ' · ' + o.tenor + '</span>' +
-        '<span class="st ' + st + '"><span class="dot"></span>' + (o.status === "live" ? "идёт" : o.statusLabel) + '</span></div>' +
+        '<span class="st ' + st + '"><span class="dot"></span>' + (o.statusLabel || (o.status === "live" ? "идёт" : "")) + '</span></div>' +
     '</button>';
   }
   function renderList() {
@@ -240,15 +240,17 @@
   function detailHTML(o) {
     var c = famCol(o);
     var badge = o.status === "live"
-      ? '<span class="badge live"><span class="dot"></span>Идёт размещение</span>'
+      ? '<span class="badge live"><span class="dot"></span>' + (o.statusLabel || "Идёт размещение") + '</span>'
       : '<span class="badge up"><span class="dot"></span>' + o.statusLabel + '</span>';
-    var tiles = tile(fmt2(o.price) + "%", "цена размещения", true) + tile((o.redeem || 100) + "%", "погашение") +
-      tile(o.nominal.toLocaleString("ru-RU") + " " + o.currency, "номинал") + tile(o.tenor, "срок");
+    var tiles = "";
+    if (o.price != null) tiles += tile(fmt2(o.price) + "%", "цена размещения", true);
+    if (o.redeem != null) tiles += tile(o.redeem + "%", "погашение");
+    tiles += tile(o.nominal.toLocaleString("ru-RU") + " " + o.currency, "номинал") + tile(o.tenor, "срок");
     if (o.placement) tiles += tile(o.placement, "старт размещения");
     if (o.maturity) tiles += tile(o.maturity, "погашение");
     if (o.isin) tiles += tile(o.isin, "ISIN");
     if (o.venue) tiles += tile(o.venue, "площадка");
-    var refLine = "Контрольное лицо: <b>" + o.reference + "</b>" +
+    var refLine = (o.family === "discount" ? "Контрольное лицо: " : "Базовый актив: ") + "<b>" + o.reference + "</b>" +
       (o.issuer ? " · " + o.issuer : "") + (o.serial ? " · " + o.serial : "");
     var aboutBlk = o.about ? '<div class="blk"><div class="k">О компании</div><p>' + o.about + '</p></div>' : "";
     var dealersBlk = (o.dealers && o.dealers.length)
@@ -267,7 +269,7 @@
         '<div class="blk"><div class="k">Главный риск</div><div class="plaque">' + o.risk + '</div></div>' +
         dealersBlk +
       '</div><div>' +
-        '<div class="pf">' + payoff(o.price, c) + '<div class="pf-cap">Покупка по ' + fmt2(o.price) + '% номинала, погашение по 100% при отсутствии кредитного события по ' + o.reference + '.</div></div>' +
+        (o.family === "discount" && o.price != null ? '<div class="pf">' + payoff(o.price, c) + '<div class="pf-cap">Покупка по ' + fmt2(o.price) + '% номинала, погашение по 100% при отсутствии кредитного события по ' + o.reference + '.</div></div>' : "") +
         docsBlk +
       '</div></div>';
   }
