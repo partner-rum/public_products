@@ -186,7 +186,7 @@
   </div>
 </footer>
 
-<script src="data/offerings.js?v=srv1"></script>
+<script src="data/offerings.js?v=srv2"></script>
 <script>
 (function () {
   "use strict";
@@ -242,24 +242,33 @@
     var badge = o.status === "live"
       ? '<span class="badge live"><span class="dot"></span>Идёт размещение</span>'
       : '<span class="badge up"><span class="dot"></span>' + o.statusLabel + '</span>';
-    var tiles = tile(fmt2(o.price) + "%", "цена размещения", true) + tile(o.redeem + "%", "погашение") +
-      tile(o.nominal.toLocaleString("ru-RU") + " " + o.currency, "номинал") + tile(o.tenor, "срок") +
-      tile(o.placement, "старт размещения") + tile(o.maturity, "погашение") +
-      tile(o.isin, "ISIN") + tile(o.venue, "площадка");
-    var docs = o.docs.map(d => '<a class="doc" href="' + d.file + '" target="_blank" rel="noopener" download><span class="ic">' + docIcon + '</span>' +
-      '<span><span class="nm">' + d.name + '</span><span class="mt">' + d.ext + ' · ' + d.size + '</span></span><span class="dl">' + dlIcon + '</span></a>').join("");
+    var tiles = tile(fmt2(o.price) + "%", "цена размещения", true) + tile((o.redeem || 100) + "%", "погашение") +
+      tile(o.nominal.toLocaleString("ru-RU") + " " + o.currency, "номинал") + tile(o.tenor, "срок");
+    if (o.placement) tiles += tile(o.placement, "старт размещения");
+    if (o.maturity) tiles += tile(o.maturity, "погашение");
+    if (o.isin) tiles += tile(o.isin, "ISIN");
+    if (o.venue) tiles += tile(o.venue, "площадка");
+    var refLine = "Контрольное лицо: <b>" + o.reference + "</b>" +
+      (o.issuer ? " · " + o.issuer : "") + (o.serial ? " · " + o.serial : "");
+    var aboutBlk = o.about ? '<div class="blk"><div class="k">О компании</div><p>' + o.about + '</p></div>' : "";
+    var dealersBlk = (o.dealers && o.dealers.length)
+      ? '<div class="blk"><div class="k">Дилеры-ориентиры</div><div class="dealers">' + o.dealers.map(x => '<span>' + x + '</span>').join("") + '</div></div>' : "";
+    var docsBlk = (o.docs && o.docs.length)
+      ? '<div class="docs"><div class="k">Материалы по выпуску</div>' + o.docs.map(d => '<a class="doc" href="' + d.file + '" target="_blank" rel="noopener" download><span class="ic">' + docIcon + '</span>' +
+        '<span><span class="nm">' + d.name + '</span><span class="mt">' + d.ext + ' · ' + d.size + '</span></span><span class="dl">' + dlIcon + '</span></a>').join("") + '</div>' : "";
     return '<div class="o-kind">' + o.kind + '</div>' +
       '<div class="o-top"><div><h2 class="o-name">' + o.name + '</h2>' +
-        '<div class="o-ref">Контрольное лицо: <b>' + o.reference + '</b> · ' + o.issuer + ' · ' + o.serial + '</div></div>' + badge + '</div>' +
+        '<div class="o-ref">' + refLine + '</div></div>' + badge + '</div>' +
       '<div class="o-teaser">' + o.teaser + '</div>' +
       '<div class="tiles">' + tiles + '</div>' +
       '<div class="o-grid"><div>' +
+        aboutBlk +
         '<div class="blk"><div class="k">Как работает</div><p>' + o.how + '</p></div>' +
         '<div class="blk"><div class="k">Главный риск</div><div class="plaque">' + o.risk + '</div></div>' +
-        '<div class="blk"><div class="k">Дилеры-ориентиры</div><div class="dealers">' + o.dealers.map(x => '<span>' + x + '</span>').join("") + '</div></div>' +
+        dealersBlk +
       '</div><div>' +
         '<div class="pf">' + payoff(o.price, c) + '<div class="pf-cap">Покупка по ' + fmt2(o.price) + '% номинала, погашение по 100% при отсутствии кредитного события по ' + o.reference + '.</div></div>' +
-        '<div class="docs"><div class="k">Материалы по выпуску</div>' + docs + '</div>' +
+        docsBlk +
       '</div></div>';
   }
 

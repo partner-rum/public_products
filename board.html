@@ -216,12 +216,12 @@
     <div class="panel-wrap" id="panel-wrap">
       <button class="panel-close" id="panel-close">← К списку</button>
       <div class="panel" id="panel"><div class="placeholder">Выберите инструмент в списке слева</div></div>
-      <div class="disclaimer">Не является индивидуальной инвестиционной рекомендацией. Котировки — демонстрационные. Пример расчёта иллюстративный, без учёта комиссий и налогов.</div>
+      <div class="disclaimer">Не является индивидуальной инвестиционной рекомендацией. Котировки индикативны. Пример расчёта иллюстративный, без учёта комиссий и налогов.</div>
     </div>
   </div>
 </div>
 
-<script src="data/instruments.js?v=fx4"></script>
+<script src="data/instruments.js?v=fx5"></script>
 <script src="data/lib.js?v=fx4"></script>
 <script src="share.js?v=5"></script>
 <script src="contact.js?v=6"></script>
@@ -398,7 +398,7 @@
         payoff: () => chartDiscount(inst),
         payoffCaption: "Покупка дешевле номинала, погашение по 100%. Доход — разница, зафиксированная в момент покупки.",
         metrics: [
-          [S.fmt1(S.yieldAnnual(inst)) + "%", "доходность годовых"],
+          [inst.tenor || "—", "срок"],
           ["100%", "выплата на погашение"],
           [S.fmt2(inst.quote) + "% ном.", "цена входа"],
           [inst.underlying, "базовый актив"]
@@ -408,7 +408,7 @@
           ["Дождались погашения " + inst.expiry, "Выплата " + S.fmtInt(nom) + " ₽ — 100% номинала", "+" + S.fmtInt(nom - buyRub) + " ₽", "#55C08A"],
           ["Продали раньше срока", "По текущей рыночной цене", "по рынку", "rgba(255,255,255,0.60)"]
         ],
-        explainer: "Облигация покупается дешевле номинала — сегодня по " + S.fmt2(inst.quote) + "% от него. На дату погашения выплачивается полный номинал. Весь доход — дисконт: разница между ценой покупки и номиналом, известная в день сделки. Купонов нет.",
+        explainer: (inst.about ? inst.about + " " : "") + "Облигация покупается дешевле номинала — сегодня по " + S.fmt2(inst.quote) + "% от него. На дату погашения выплачивается полный номинал (если по контрольному лицу не наступит кредитное событие). Весь доход — дисконт: разница между ценой покупки и номиналом, известная в день сделки. Купонов нет.",
         facts: [
           ["Купоны", "Нет — весь доход в дисконте"],
           ["Риск", "Кредитное качество эмитента"]
@@ -500,7 +500,7 @@
       '</div>' +
       '<div class="quote-block">' +
         '<div class="quote-big">' + S.fmt2(inst.quote) + '%</div>' +
-        '<div class="quote-sub">котировка · % от номинала · ' + (inst.currency || "RUB") + '</div>' +
+        '<div class="quote-sub">котировка · индикативно · % от номинала · ' + (inst.currency || "RUB") + '</div>' +
       '</div></div>' +
       '<div class="chart-box">' +
         '<div class="chart-head"><span class="chart-title" id="chart-title"></span>' +
@@ -564,7 +564,7 @@
   // Короткое имя в списке — без повторения базового актива (он в заголовке группы)
   function shortName(r) {
     if (r.type === "warrant") return (r.structure === "cs" ? "CS 100–150" : "CALL " + S.fmtSmart(r.strike)) + " · " + r.tenor;
-    if (r.type === "discount") return "Дисконтная облигация";
+    if (r.type === "discount") return (r.underlying || "Дисконтная нота") + " · " + r.tenor;
     return "Защита капитала · участие " + Math.round(r.participation * 100) + "%";
   }
 

@@ -141,7 +141,7 @@
 
 <div id="deck"></div>
 
-<script src="data/instruments.js?v=fx4"></script>
+<script src="data/instruments.js?v=fx5"></script>
 <script src="data/lib.js?v=fx4"></script>
 <script src="data/offerings.js?v=srv1"></script>
 <script src="share.js?v=5"></script>
@@ -276,7 +276,7 @@
     c = {
       badge: offering.kind,
       subtitle: offering.teaser,
-      quoteK: "цена размещения · % от номинала",
+      quoteK: "цена размещения · индикативно · % от номинала",
       chart: chDiscount,
       chartCap: "Покупка по " + S.fmt2(q) + "% номинала, погашение по 100% — при отсутствии кредитного события по " + offering.reference + ". Доход — дисконт, зафиксированный в день сделки.",
       params: [
@@ -329,7 +329,7 @@
       subtitle: "Покупка дешевле номинала, погашение по 100% — доход зафиксирован в день сделки.",
       chart: chDiscount,
       chartCap: "Покупка дешевле номинала, погашение по 100%. Доход — разница, зафиксированная в момент покупки.",
-      params: [["Доходность", S.fmt1(S.yieldAnnual(inst)) + "% год.", true], ["Выплата", "100% номинала", false], ["Осталось", S.daysTo(inst.expiry) + " дн.", false], ["Купоны", "нет", false]],
+      params: [["Выплата", "100% номинала", true], ["Осталось", S.daysTo(inst.expiry) + " дн.", false], ["Купоны", "нет", false]],
       exIntro: "Номинал " + S.fmtInt(nom) + " ₽ · покупка по " + S.fmt2(q) + "% = " + S.fmtInt(buyRub) + " ₽",
       scen: [
         ["Дождались погашения", "выплата 100% номинала", "+" + S.fmtInt(nom - buyRub) + " ₽", "var(--up)"],
@@ -426,7 +426,7 @@
   html += '<section class="slide">' +
     '<div class="c-head"><div><div class="c-title">' + name + '</div><span class="c-badge">' + c.badge + '</span>' +
       '<div class="c-sub">' + c.subtitle + '</div></div>' +
-      '<div class="c-quote"><div class="v">' + S.fmt2(q) + '%</div><div class="k">' + (c.quoteK || "котировка · % от номинала") + '</div></div></div>' +
+      '<div class="c-quote"><div class="v">' + S.fmt2(q) + '%</div><div class="k">' + (c.quoteK || "котировка · индикативно · % от номинала") + '</div></div></div>' +
     '<div class="c-body">' + bodyHTML + '</div>' +
     '<div class="c-foot">Пример иллюстративный, без учёта комиссий и налогов.</div>' +
     '</section>';

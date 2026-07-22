@@ -184,7 +184,7 @@
     </div>
     <div class="quote-block">
       <div class="quote-big" id="quote"></div>
-      <div class="quote-sub" id="quote-sub">котировка · % от номинала</div>
+      <div class="quote-sub" id="quote-sub">котировка · индикативно · % от номинала</div>
       <div class="quote-chg" id="quote-chg"></div>
     </div>
   </div>
@@ -223,7 +223,7 @@
 
 </div>
 
-<script src="data/instruments.js?v=fx4"></script>
+<script src="data/instruments.js?v=fx5"></script>
 <script src="data/lib.js?v=fx4"></script>
 <script src="contact.js?v=6"></script>
 <script src="intro.js?v=3"></script>
@@ -411,14 +411,13 @@
     content = {
       badge: "облигация",
       subtitle: "Дисконтная облигация · Погашение " + inst.expiry + " · Выплата 100% номинала",
-      explainer: "Облигация покупается дешевле номинала — сегодня по " + S.fmt2(inst.quote) + "% от него. На дату погашения выплачивается полный номинал, 100%. Весь доход — это дисконт: разница между ценой покупки и номиналом, известная в день сделки. Купонов нет.",
+      explainer: (inst.about ? inst.about + " " : "") + "Облигация покупается дешевле номинала — сегодня по " + S.fmt2(inst.quote) + "% от него. На дату погашения выплачивается полный номинал, 100% (если по контрольному лицу не наступит кредитное событие). Весь доход — это дисконт: разница между ценой покупки и номиналом, известная в день сделки. Купонов нет.",
       payoff: chartDiscount,
       payoffCaption: "Покупка дешевле номинала, погашение по 100%. Доход — разница, зафиксированная в момент покупки.",
       metrics: [
         ["Котировка", S.fmt2(inst.quote) + "%"],
         ["Изм. за день", (inst.chg > 0 ? "+" : "−") + S.fmt1(Math.abs(inst.chg)) + " п.п."],
         ["Выплата на погашение", "100%"],
-        ["Доходность", S.fmt1(S.yieldAnnual(inst)) + "% год."],
         ["Погашение", inst.expiry],
         ["Осталось", S.daysTo(inst.expiry) + " дн."],
         ["Мин. номинал", S.fmtInt(nom) + " ₽"]
@@ -482,7 +481,7 @@
   document.getElementById("badge").textContent = content.badge;
   document.getElementById("subtitle").textContent = content.subtitle;
   document.getElementById("quote").textContent = S.fmt2(inst.quote) + "%";
-  document.getElementById("quote-sub").textContent = "котировка · % от номинала · " + (inst.currency || "RUB");
+  document.getElementById("quote-sub").textContent = "котировка · индикативно · % от номинала · " + (inst.currency || "RUB");
   const chgEl = document.getElementById("quote-chg");
   chgEl.textContent = (inst.chg > 0 ? "+" : inst.chg < 0 ? "−" : "") + S.fmt1(Math.abs(inst.chg)) + " п.п. сегодня";
   chgEl.style.color = inst.chg > 0 ? "#55C08A" : inst.chg < 0 ? "#EE7D1B" : "rgba(242,243,247,0.42)";
