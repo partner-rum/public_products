@@ -18,7 +18,7 @@ BASE = "https://invest.rumberg.ru"
 
 TYPE_LABEL = {
     "discount": "Дисконтная облигация",
-    "protection": "Нота с защитой капитала",
+    "protection": "Облигация с защитой капитала",
     "warrant": "Варрант",
 }
 

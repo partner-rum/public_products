@@ -223,8 +223,8 @@
 
 </div>
 
-<script src="data/instruments.js?v=fx5"></script>
-<script src="data/lib.js?v=fx5"></script>
+<script src="data/instruments.js?v=fx6"></script>
+<script src="data/lib.js?v=fx6"></script>
 <script src="contact.js?v=6"></script>
 <script src="intro.js?v=3"></script>
 <script>
@@ -441,9 +441,9 @@
     const payoutUp = nom * (1 + inst.participation * upPct / 100);
     const partS = Math.round(inst.participation * 100) + "%";
     content = {
-      badge: "нота · защита капитала",
-      subtitle: "Нота с защитой капитала · " + inst.underlying + " · Экспирация " + inst.expiry,
-      explainer: "Нота возвращает 100% номинала при любом сценарии. Если базовый актив на дату экспирации выше начального уровня S₀, дополнительно выплачивается " + partS + " его роста. Если актив упал — вы получаете номинал целиком.",
+      badge: "облигация · защита капитала",
+      subtitle: "Облигация с защитой капитала · " + inst.underlying + " · Экспирация " + inst.expiry,
+      explainer: "Облигация возвращает 100% номинала при любом сценарии. Если базовый актив на дату экспирации выше начального уровня S₀, дополнительно выплачивается " + partS + " его роста. Если актив упал — вы получаете номинал целиком.",
       payoff: chartProtection,
       payoffCaption: "Выплата на экспирацию в % от номинала: не ниже 100% при любом сценарии, выше S₀ — участие в росте.",
       metrics: [
@@ -464,7 +464,7 @@
         ["Защита", "100% номинала при любом сценарии"],
         ["Котировка", "В процентах от номинала"],
         ["Стиль", "Европейский — выплата на дату экспирации"],
-        ["Риск", "Кредитный риск эмитента ноты"],
+        ["Риск", "Кредитный риск эмитента облигации"],
         ["Мин. номинал", S.fmtInt(nom) + " ₽"]
       ]
     };
@@ -557,7 +557,7 @@
   if (!U) document.querySelector(".tabs").style.display = "none";
   setMode("payoff");
 </script>
-<script src="chat.js?v=7"></script>
+<script src="chat.js?v=8"></script>
 <script src="nav-about.js?v=3"></script>
 </body>
 </html>

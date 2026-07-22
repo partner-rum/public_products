@@ -421,7 +421,7 @@ window.SITE_DATA = {
     {
       "id": "D-VEB-3Y",
       "type": "discount",
-      "name": "Дисконтная нота на ВЭБ.РФ · 3 года",
+      "name": "Дисконтная облигация на ВЭБ.РФ · 3 года",
       "underlying": "ВЭБ.РФ",
       "cls": "Облигации",
       "currency": "RUB",
@@ -436,7 +436,7 @@ window.SITE_DATA = {
     {
       "id": "D-VEB-5Y",
       "type": "discount",
-      "name": "Дисконтная нота на ВЭБ.РФ · 5 лет",
+      "name": "Дисконтная облигация на ВЭБ.РФ · 5 лет",
       "underlying": "ВЭБ.РФ",
       "cls": "Облигации",
       "currency": "RUB",
@@ -451,7 +451,7 @@ window.SITE_DATA = {
     {
       "id": "D-GPN-3Y",
       "type": "discount",
-      "name": "Дисконтная нота на Газпром нефть · 3 года",
+      "name": "Дисконтная облигация на Газпром нефть · 3 года",
       "underlying": "Газпром нефть",
       "cls": "Облигации",
       "currency": "RUB",
@@ -466,7 +466,7 @@ window.SITE_DATA = {
     {
       "id": "D-GPN-5Y",
       "type": "discount",
-      "name": "Дисконтная нота на Газпром нефть · 5 лет",
+      "name": "Дисконтная облигация на Газпром нефть · 5 лет",
       "underlying": "Газпром нефть",
       "cls": "Облигации",
       "currency": "RUB",
@@ -481,7 +481,7 @@ window.SITE_DATA = {
     {
       "id": "D-RUAL-3Y",
       "type": "discount",
-      "name": "Дисконтная нота на РУСАЛ · 3 года",
+      "name": "Дисконтная облигация на РУСАЛ · 3 года",
       "underlying": "РУСАЛ",
       "cls": "Облигации",
       "currency": "RUB",
@@ -496,7 +496,7 @@ window.SITE_DATA = {
     {
       "id": "D-RUAL-5Y",
       "type": "discount",
-      "name": "Дисконтная нота на РУСАЛ · 5 лет",
+      "name": "Дисконтная облигация на РУСАЛ · 5 лет",
       "underlying": "РУСАЛ",
       "cls": "Облигации",
       "currency": "RUB",
@@ -511,7 +511,7 @@ window.SITE_DATA = {
     {
       "id": "D-MGNT-3Y",
       "type": "discount",
-      "name": "Дисконтная нота на Магнит · 3 года",
+      "name": "Дисконтная облигация на Магнит · 3 года",
       "underlying": "Магнит",
       "cls": "Облигации",
       "currency": "RUB",
@@ -526,7 +526,7 @@ window.SITE_DATA = {
     {
       "id": "D-MGNT-5Y",
       "type": "discount",
-      "name": "Дисконтная нота на Магнит · 5 лет",
+      "name": "Дисконтная облигация на Магнит · 5 лет",
       "underlying": "Магнит",
       "cls": "Облигации",
       "currency": "RUB",
@@ -541,7 +541,7 @@ window.SITE_DATA = {
     {
       "id": "D-RTKM-3Y",
       "type": "discount",
-      "name": "Дисконтная нота на Ростелеком · 3 года",
+      "name": "Дисконтная облигация на Ростелеком · 3 года",
       "underlying": "Ростелеком",
       "cls": "Облигации",
       "currency": "RUB",
@@ -556,7 +556,7 @@ window.SITE_DATA = {
     {
       "id": "D-RTKM-5Y",
       "type": "discount",
-      "name": "Дисконтная нота на Ростелеком · 5 лет",
+      "name": "Дисконтная облигация на Ростелеком · 5 лет",
       "underlying": "Ростелеком",
       "cls": "Облигации",
       "currency": "RUB",
@@ -571,7 +571,7 @@ window.SITE_DATA = {
     {
       "id": "D-CHMF-3Y",
       "type": "discount",
-      "name": "Дисконтная нота на Северсталь · 3 года",
+      "name": "Дисконтная облигация на Северсталь · 3 года",
       "underlying": "Северсталь",
       "cls": "Облигации",
       "currency": "RUB",
@@ -586,7 +586,7 @@ window.SITE_DATA = {
     {
       "id": "D-CHMF-5Y",
       "type": "discount",
-      "name": "Дисконтная нота на Северсталь · 5 лет",
+      "name": "Дисконтная облигация на Северсталь · 5 лет",
       "underlying": "Северсталь",
       "cls": "Облигации",
       "currency": "RUB",

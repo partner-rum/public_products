@@ -221,8 +221,8 @@
   </div>
 </div>
 
-<script src="data/instruments.js?v=fx5"></script>
-<script src="data/lib.js?v=fx5"></script>
+<script src="data/instruments.js?v=fx6"></script>
+<script src="data/lib.js?v=fx6"></script>
 <script src="share.js?v=5"></script>
 <script src="contact.js?v=6"></script>
 <script>
@@ -421,7 +421,7 @@
     const partS = Math.round(inst.participation * 100) + "%";
     return {
       badge: "НОТА · ЗАЩИТА КАПИТАЛА",
-      subtitle: "Нота с защитой капитала: " + inst.underlying + " · 100% номинала при любом сценарии",
+      subtitle: "Облигация с защитой капитала: " + inst.underlying + " · 100% номинала при любом сценарии",
       payoff: () => chartProtection(inst),
       payoffCaption: "Выплата на экспирацию в % от номинала: не ниже 100% при любом сценарии, выше S₀ — участие в росте.",
       metrics: [
@@ -435,10 +435,10 @@
         [inst.underlying + " вырос на " + upPct + "%", "Выплата " + S.fmtInt(payoutUp) + " ₽ — 100% + участие", "+" + S.fmtInt(payoutUp - entryRub) + " ₽", "#55C08A"],
         [inst.underlying + " упал на 15%", "Сработала защита: выплата " + S.fmtInt(nom) + " ₽", "−" + S.fmtInt(entryRub - nom) + " ₽", "#EE7D1B"]
       ],
-      explainer: "Нота возвращает 100% номинала при любом сценарии. Если базовый актив на дату экспирации выше начального уровня S₀, дополнительно выплачивается " + partS + " его роста. Если актив упал — вы получаете номинал целиком.",
+      explainer: "Облигация возвращает 100% номинала при любом сценарии. Если базовый актив на дату экспирации выше начального уровня S₀, дополнительно выплачивается " + partS + " его роста. Если актив упал — вы получаете номинал целиком.",
       facts: [
         ["Стиль", "Европейский — выплата на дату экспирации"],
-        ["Риск", "Кредитный риск эмитента ноты"]
+        ["Риск", "Кредитный риск эмитента облигации"]
       ]
     };
   }
@@ -564,7 +564,7 @@
   // Короткое имя в списке — без повторения базового актива (он в заголовке группы)
   function shortName(r) {
     if (r.type === "warrant") return (r.structure === "cs" ? "CS 100–150" : "CALL " + S.fmtSmart(r.strike)) + " · " + r.tenor;
-    if (r.type === "discount") return (r.underlying || "Дисконтная нота") + " · " + r.tenor;
+    if (r.type === "discount") return (r.underlying || "Дисконтная облигация") + " · " + r.tenor;
     return "Защита капитала · участие " + Math.round(r.participation * 100) + "%";
   }
 
@@ -684,7 +684,7 @@
     (function fr() { phase -= 0.018; draw(); requestAnimationFrame(fr); })();
   })();
 </script>
-<script src="chat.js?v=7"></script>
+<script src="chat.js?v=8"></script>
 <script src="nav-about.js?v=3"></script>
 </body>
 </html>

@@ -141,9 +141,9 @@
 
 <div id="deck"></div>
 
-<script src="data/instruments.js?v=fx5"></script>
-<script src="data/lib.js?v=fx5"></script>
-<script src="data/offerings.js?v=srv1"></script>
+<script src="data/instruments.js?v=fx6"></script>
+<script src="data/lib.js?v=fx6"></script>
+<script src="data/offerings.js?v=srv5"></script>
 <script src="share.js?v=5"></script>
 <script src="contact.js?v=6"></script>
 <script>
@@ -367,12 +367,12 @@
       (floor >= 100 ? "Ниже S₀ — не меньше 100%." : "Гарантированный минимум — " + S.fmtSmart(floor) + "% (макс. убыток " + S.fmtSmart(100 - floor) + "%).") +
       " Выше S₀ — " + partPct + "% роста" + (cap != null ? " до потолка " + capPay + "%." : ", без потолка.");
 
-    explainer = "Нота возвращает " + (floor >= 100 ? "100% номинала при любом сценарии" : "не менее " + S.fmtSmart(floor) + "% номинала (риск ограничен " + S.fmtSmart(100 - floor) + "%)") +
+    explainer = "Облигация возвращает " + (floor >= 100 ? "100% номинала при любом сценарии" : "не менее " + S.fmtSmart(floor) + "% номинала (риск ограничен " + S.fmtSmart(100 - floor) + "%)") +
       ". Если " + inst.underlying + " вырос — " + (partPct === 100 ? "засчитывается весь его рост" : "сверху выплачивается " + partPct + "% его роста") +
-      (cap != null ? ", но не выше потолка " + capPay + "% номинала" : ", без ограничения сверху") + ". Основной риск — кредитный риск эмитента ноты.";
+      (cap != null ? ", но не выше потолка " + capPay + "% номинала" : ", без ограничения сверху") + ". Основной риск — кредитный риск эмитента облигации.";
 
     c = {
-      badge: "Нота · защита капитала",
+      badge: "Облигация · защита капитала",
       subtitle: subtitle,
       chart: () => chProtection({ part: part, floor: floor, cap: cap }),
       chartCap: chartCap,
