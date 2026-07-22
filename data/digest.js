@@ -253,6 +253,39 @@ window.DIGEST_ARCHIVE = {
       "type": "protected",
       "capPct": 50
      }
+    },
+    {
+     "id": "varrant-test",
+     "family": "warrant",
+     "kind": "fdfdfdf",
+     "name": "варрант тест",
+     "underlying": "dfdfdfd",
+     "teaser": "авава",
+     "tenor": "1",
+     "hypothesis": "вавава",
+     "situation": "вавава",
+     "conclusion": "вавава",
+     "how": "Варрант",
+     "payout": "ававав",
+     "fx": true,
+     "factors": [
+      "ва",
+      "авав"
+     ],
+     "metric": {
+      "v": "fdfdf",
+      "k": "нет"
+     },
+     "p": {
+      "asset": "COPX ETF",
+      "price": "350",
+      "upside": "fdfdfd",
+      "protection": "нет"
+     },
+     "payoff": {
+      "type": "call",
+      "premiumPct": 35
+     }
     }
    ],
    "pdf": "docs/digest/rumberg-digest-2026-07-22.pdf",
