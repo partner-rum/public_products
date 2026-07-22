@@ -142,7 +142,7 @@
 <div id="deck"></div>
 
 <script src="data/instruments.js?v=fx5"></script>
-<script src="data/lib.js?v=fx4"></script>
+<script src="data/lib.js?v=fx5"></script>
 <script src="data/offerings.js?v=srv1"></script>
 <script src="share.js?v=5"></script>
 <script src="contact.js?v=6"></script>
@@ -190,8 +190,8 @@
 
   function chWarrant() {
     const K = inst.strike, K2 = inst.strike2;
-    const cap = K2 ? (K2 - K) / K * 100 : 0;
-    const sBe = K * (1 + q / 100), s0 = K * 0.8;
+    const cap = K2 ? (K2 - K) : 0;
+    const sBe = K + q, s0 = K * 0.8;
     const s1 = K2 ? K2 * 1.18 : Math.max(K * 1.32, sBe * 1.15);
     const yMax = K2 ? cap + 10 : Math.max(34, S.PAYOFF.pct(s1, K) + 6);
     const x = s => PAD + ((s - s0) / (s1 - s0)) * (CW - PAD * 2);
@@ -297,10 +297,10 @@
   } else if (inst.type === "warrant") {
     const isCS = inst.structure === "cs";
     const K = inst.strike, K2 = inst.strike2;
-    const capPct = isCS ? (K2 - K) / K * 100 : 0;
+    const capPct = isCS ? (K2 - K) : 0;
     const premiumRub = nom * q / 100;
     const upPct = isCS ? Math.max(5, Math.floor((capPct * 0.75) / 5) * 5) : 30;
-    const payout1 = nom * S.PAYOFF.pct(K * (1 + upPct / 100), K, K2) / 100;
+    const payout1 = nom * S.PAYOFF.pct((inst.spot || 100) * (1 + upPct / 100), K, K2) / 100;
     const net1 = payout1 - premiumRub;
     const params = [["Страйк (K)", S.fmtSmart(K) + "% нач. уровня", false]];
     if (isCS) params.push(["Потолок (K₂)", S.fmtSmart(K2) + "% · до " + S.fmtSmart(capPct) + "%", false]);

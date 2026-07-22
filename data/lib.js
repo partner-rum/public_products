@@ -67,11 +67,11 @@ window.SITE = (function () {
       return r && r.structure === "cs" ? "Ном × min(max(S − K; 0); K₂ − K)" : "Ном × max(S − K; 0)";
     },
     // Выплата в % от номинала. S, K, K2 — в % от начального уровня БА.
-    // CALL: (S − K) / K; колл-спред: рост засчитывается не выше K2.
+    // CALL: max(S − K; 0) — рост актива выше страйка; колл-спред: не выше K₂ − K.
     pct(S, K, K2) {
       let v = Math.max(S - K, 0);
       if (K2) v = Math.min(v, K2 - K);
-      return v / K * 100;
+      return v;
     }
   };
 

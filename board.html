@@ -222,7 +222,7 @@
 </div>
 
 <script src="data/instruments.js?v=fx5"></script>
-<script src="data/lib.js?v=fx4"></script>
+<script src="data/lib.js?v=fx5"></script>
 <script src="share.js?v=5"></script>
 <script src="contact.js?v=6"></script>
 <script>
@@ -282,8 +282,8 @@
 
   function chartWarrant(inst) {
     const K = inst.strike, K2 = inst.strike2, q = inst.quote;
-    const cap = K2 ? (K2 - K) / K * 100 : 0;
-    const sBe = K * (1 + q / 100);
+    const cap = K2 ? (K2 - K) : 0;
+    const sBe = K + q;
     const s0 = K * 0.8;
     const s1 = K2 ? K2 * 1.18 : Math.max(K * 1.32, sBe * 1.15);
     const yMax = K2 ? cap + 10 : Math.max(34, S.PAYOFF.pct(s1, K) + 6);
@@ -358,7 +358,7 @@
       const upPct = Math.max(16, Math.ceil((inst.quote + 6) / 5) * 5);
       const payout1 = nom * S.PAYOFF.pct(spot * (1 + upPct / 100), K, K2) / 100;
       const net1 = payout1 - premiumRub;
-      const capPct = isCS ? (K2 - K) / K * 100 : 0;
+      const capPct = isCS ? (K2 - K) : 0;
       const capRub = nom * capPct / 100;
       const metrics = isCS
         ? [[S.fmtSmart(K) + "%", "страйк (K)"], [S.fmtSmart(K2) + "%", "потолок (K₂)"], [inst.tenor, "срок"], [S.fmt2(inst.quote) + "% ном.", "цена входа"], [inst.currency || "RUB", "валюта"]]
