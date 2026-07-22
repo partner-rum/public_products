@@ -382,7 +382,7 @@
     var sub = id === "discount" ? "кредитный риск · дисконт" :
       id === "protection" ? "защита 50–100% · участие" :
       id === "warrants" ? "6 типов · направление × структура" :
-      id === "preipo" ? "до-IPO · доступ через облигацию" : WSUB[id];
+      id === "preipo" ? "Pre-IPO · доступ через облигацию" : WSUB[id];
     return '<button class="toc-i" data-id="' + id + '"' + (id === "warrants" ? ' aria-expanded="false"' : '') + ' style="--fc:' + fam.color + '">' +
       '<span class="dot" aria-hidden="true"></span>' +
       '<span class="tx"><span class="nm">' + (id === "warrants" ? "Варранты" : LIB[id].name) + '</span><br><span class="sub">' + sub + '</span></span>' +
