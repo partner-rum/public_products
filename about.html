@@ -102,6 +102,16 @@
   .usecase .k { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.11em; text-transform: uppercase; color: var(--solar); margin-bottom: 5px; }
   .usecase .v { font-size: 15px; line-height: 1.55; color: var(--ink); font-weight: 500; text-wrap: pretty; }
   .boardlink { display: inline-flex; align-items: center; gap: 7px; margin-top: 4px; font-size: 14px; font-weight: 600; color: var(--fc); }
+  .gloss { margin-top: 26px; border-top: 1px solid var(--border-soft); padding-top: 16px; }
+  .gloss summary { cursor: pointer; font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); list-style: none; display: flex; align-items: center; gap: 8px; }
+  .gloss summary::-webkit-details-marker { display: none; }
+  .gloss summary::before { content: "+"; color: var(--fc); font-size: 15px; line-height: 1; width: 12px; }
+  .gloss[open] summary::before { content: "\2212"; }
+  .gloss summary:hover { color: var(--hushed); }
+  .gloss dl { margin: 16px 0 0; display: grid; gap: 14px; }
+  .gloss dt { font-size: 14px; font-weight: 600; color: var(--ink); }
+  .gloss dt .en { font-family: var(--f-mono); font-size: 11px; font-weight: 400; color: var(--faint); margin-left: 6px; }
+  .gloss dd { margin: 3px 0 0; font-size: 13.5px; line-height: 1.55; color: var(--hushed); text-wrap: pretty; }
   .backmx { display: inline-flex; align-items: center; gap: 7px; background: none; border: none; cursor: pointer; font-family: var(--f-body); font-size: 13px; color: var(--hushed); padding: 0 0 14px; }
   .backmx:hover { color: var(--ink); }
 
@@ -428,7 +438,13 @@
           '<div class="kv"><div class="k">Формат</div><div class="v">Структурная облигация — привычная биржевая обёртка для доступа к непубличным компаниям, без прямого владения долями.</div></div>' +
           '<div class="kv"><div class="k">Горизонт</div><div class="v">Длинный и заранее не фиксированный: доход фиксируется при выходе компании на биржу (IPO) или сделке по её продаже.</div></div>' +
           '<div class="kv"><div class="k">Как зайти</div><div class="v">Продукт формируется индивидуально — обсудите параметры и доступные истории с менеджером Rumberg.</div></div>' +
-        '</div></div>';
+        '</div></div>' +
+        '<details class="gloss"><summary>Термины Pre-IPO</summary><dl>' +
+          '<dt>Оценка<span class="en">valuation</span></dt><dd>Стоимость, по которой компания привлекает инвестиции. У частных компаний это не биржевая цена, а результат переговоров, и обычно она ниже, чем у публичных аналогов.</dd>' +
+          '<dt>Дисконт в оценке</dt><dd>Разница между оценкой частной компании и её будущей публичной ценой. При выходе на биржу дисконт сокращается — именно на этом строится потенциальная доходность pre-IPO.</dd>' +
+          '<dt>Lock-up</dt><dd>Период после IPO (обычно 90–180 дней), когда ранние инвесторы не могут продавать акции. Зафиксировать доход можно только по его окончании.</dd>' +
+          '<dt>Exit<span class="en">выход</span></dt><dd>Момент, когда инвестор продаёт долю и возвращает капитал: продажа компании или выход на биржу через IPO. В этой точке фиксируется результат.</dd>' +
+        '</dl></details>';
     }
     if (id === "warrants") {
       return headHTML("Семейство · активный", "Варранты", "Ставка на движение базового актива за ограниченную премию. Шесть типов — комбинации направления (CALL — рост, PUT — падение) и структуры (базовый, с потолком, с барьером KO). Выберите тип, чтобы открыть его описание.") +
