@@ -23,3 +23,8 @@ fetch_placements.py
 CLAUDE.md
 .mcp.json
 _demo/
+
+# Внутренний инструментарий прайсинга и рыночные выгрузки — НЕ в публичный репозиторий
+Floater_tool.py
+floaters_dashboard.png
+*.xlsx
