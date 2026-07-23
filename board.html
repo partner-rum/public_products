@@ -104,6 +104,7 @@
   .pp-sub { margin-top: 8px; font-size: 13px; color: var(--hushed); max-width: 480px; }
   .quote-block { text-align: right; }
   .quote-big { font-family: var(--f-mono); font-size: 30px; font-weight: 500; letter-spacing: -0.02em; }
+  .quote-big .q-dec { font-size: 0.6em; }
   .quote-sub { font-size: 11.5px; color: var(--faint); margin-top: 2px; }
 
   .chart-box { margin-top: 18px; border: 1px solid rgba(255,255,255,0.07); border-radius: 10px; padding: 14px 16px 10px; }
@@ -222,7 +223,7 @@
 </div>
 
 <script src="data/instruments.js?v=fx6"></script>
-<script src="data/lib.js?v=fx6"></script>
+<script src="data/lib.js?v=fx7"></script>
 <script src="share.js?v=5"></script>
 <script src="contact.js?v=6"></script>
 <script>
@@ -499,7 +500,7 @@
         '<div class="pp-sub">' + c.subtitle + '</div>' +
       '</div>' +
       '<div class="quote-block">' +
-        '<div class="quote-big">' + S.fmt2(inst.quote) + '%</div>' +
+        '<div class="quote-big">' + S.quoteBig(inst.quote) + '</div>' +
         '<div class="quote-sub">котировка · индикативно · % от номинала · ' + (inst.currency || "RUB") + '</div>' +
       '</div></div>' +
       '<div class="chart-box">' +

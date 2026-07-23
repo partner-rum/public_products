@@ -71,6 +71,7 @@
   .btn-secondary svg path { stroke: var(--ink) !important; }
   .quote-block { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
   .quote-big { font-family: var(--f-mono); font-size: 36px; font-weight: 500; letter-spacing: -0.02em; }
+  .quote-big .q-dec { font-size: 0.6em; }
   .quote-sub { font-size: 12.5px; color: var(--faint); }
   .quote-chg { font-size: 14px; font-weight: 600; }
 
@@ -224,7 +225,7 @@
 </div>
 
 <script src="data/instruments.js?v=fx6"></script>
-<script src="data/lib.js?v=fx6"></script>
+<script src="data/lib.js?v=fx7"></script>
 <script src="contact.js?v=6"></script>
 <script src="intro.js?v=3"></script>
 <script>
@@ -480,7 +481,7 @@
   if (window.Contact) Contact.attach(document.getElementById("ct-host"), { title: S.displayName(inst), url: location.href, id: inst.id });
   document.getElementById("badge").textContent = content.badge;
   document.getElementById("subtitle").textContent = content.subtitle;
-  document.getElementById("quote").textContent = S.fmt2(inst.quote) + "%";
+  document.getElementById("quote").innerHTML = S.quoteBig(inst.quote);
   document.getElementById("quote-sub").textContent = "котировка · индикативно · % от номинала · " + (inst.currency || "RUB");
   const chgEl = document.getElementById("quote-chg");
   chgEl.textContent = (inst.chg > 0 ? "+" : inst.chg < 0 ? "−" : "") + S.fmt1(Math.abs(inst.chg)) + " п.п. сегодня";

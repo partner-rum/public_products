@@ -127,6 +127,15 @@ window.SITE = (function () {
     return parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, "\u00A0") + "," + parts[1];
   }
   function fmt1(n) { return n.toFixed(1).replace(".", ","); }
+  // Крупная котировка: целая часть большая, дробь и «%» мельче (иначе запятая
+  // моношрифта висит с большими зазорами). Возвращает HTML — вставлять как innerHTML.
+  function quoteBig(n) {
+    const s = fmt2(n), c = s.indexOf(",");
+    const intp = c >= 0 ? s.slice(0, c) : s;
+    const dec = c >= 0 ? s.slice(c + 1) : "";
+    const tail = (dec && dec !== "00") ? "," + dec + "%" : "%";
+    return intp + '<span class="q-dec">' + tail + '</span>';
+  }
   function fmtSmart(v) {
     if (Math.abs(v) >= 1000) return fmtInt(v);
     return String(parseFloat(v.toFixed(2))).replace(".", ",");
@@ -146,6 +155,6 @@ window.SITE = (function () {
     return /S&P|NASDAQ|NVDA|NVIDIA|NBIS|Nebius|BTC|IBIT|GLD|SPY|COPX|CSI|URA|Uranium|Bitcoin|Gold|USD|\$/i.test(n);
   }
 
-  return { TYPES, INSTRUMENTS, PAYOFF, LEGAL, displayName, findInstrument, instrumentsOfType, underlyingInfo, underlyingLong, isFxSensitive, yieldAnnual, paramValue, history, fmtInt, fmt2, fmt1, fmtSmart, daysTo };
+  return { TYPES, INSTRUMENTS, PAYOFF, LEGAL, displayName, findInstrument, instrumentsOfType, underlyingInfo, underlyingLong, isFxSensitive, yieldAnnual, paramValue, history, fmtInt, fmt2, fmt1, fmtSmart, quoteBig, daysTo };
 
 })();

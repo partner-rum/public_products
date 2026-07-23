@@ -70,6 +70,7 @@
   .c-sub { margin-top: 9px; font-size: 11.5px; line-height: 1.45; color: var(--hushed); max-width: 440px; }
   .c-quote { text-align: right; flex: none; }
   .c-quote .v { font-family: var(--m); font-size: 26px; font-weight: 600; letter-spacing: -0.02em; color: var(--nav); }
+  .c-quote .v .q-dec { font-size: 0.62em; }
   .c-quote .k { font-size: 9.5px; color: var(--faint); margin-top: 2px; }
 
   .c-body { flex: 1; min-height: 0; padding: 14px 52px 0; display: flex; }
@@ -142,7 +143,7 @@
 <div id="deck"></div>
 
 <script src="data/instruments.js?v=fx6"></script>
-<script src="data/lib.js?v=fx6"></script>
+<script src="data/lib.js?v=fx7"></script>
 <script src="data/offerings.js?v=srv6"></script>
 <script src="share.js?v=5"></script>
 <script src="contact.js?v=6"></script>
@@ -426,7 +427,7 @@
   html += '<section class="slide">' +
     '<div class="c-head"><div><div class="c-title">' + name + '</div><span class="c-badge">' + c.badge + '</span>' +
       '<div class="c-sub">' + c.subtitle + '</div></div>' +
-      '<div class="c-quote"><div class="v">' + S.fmt2(q) + '%</div><div class="k">' + (c.quoteK || "котировка · индикативно · % от номинала") + '</div></div></div>' +
+      '<div class="c-quote"><div class="v">' + S.quoteBig(q) + '</div><div class="k">' + (c.quoteK || "котировка · индикативно · % от номинала") + '</div></div></div>' +
     '<div class="c-body">' + bodyHTML + '</div>' +
     '<div class="c-foot">Пример иллюстративный, без учёта комиссий и налогов.</div>' +
     '</section>';
