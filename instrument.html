@@ -224,8 +224,8 @@
 
 </div>
 
-<script src="data/instruments.js?v=fx6"></script>
-<script src="data/lib.js?v=fx7"></script>
+<script src="data/instruments.js?v=fx7"></script>
+<script src="data/lib.js?v=fx8"></script>
 <script src="contact.js?v=6"></script>
 <script src="intro.js?v=3"></script>
 <script>
@@ -349,6 +349,30 @@
       '</svg>';
   }
 
+  function chartBooster() {
+    const K = inst.strike || 100, K2 = inst.strike2 || 110, ku = (inst.ku || 175) / 100;
+    const capPay = K + ku * (K2 - K), maxUp = capPay - 100;
+    const rK = K / 100, rK2 = K2 / 100, rLo = 0.72, rHi = 1.22;
+    const yMin = 68, yMax = capPay + 6;
+    const x = rel => PAD + ((rel - rLo) / (rHi - rLo)) * (W - PAD * 2);
+    const y = v => H - PAD - ((v - yMin) / (yMax - yMin)) * (H - PAD * 2);
+    const d = "M" + x(rLo).toFixed(1) + " " + y(rLo * 100).toFixed(1) +
+      " L" + x(rK).toFixed(1) + " " + y(K).toFixed(1) +
+      " L" + x(rK2).toFixed(1) + " " + y(capPay).toFixed(1) +
+      " L" + x(rHi).toFixed(1) + " " + y(capPay).toFixed(1);
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="display:block">' +
+      '<line x1="' + PAD + '" y1="' + y(100) + '" x2="' + (W - PAD) + '" y2="' + y(100) + '" stroke="' + C.axis + '" stroke-width="1" stroke-dasharray="4 4"/>' +
+      '<text x="' + (W - PAD) + '" y="' + (y(100) + 16) + '" text-anchor="end" fill="' + C.lab2 + '" font-size="11" ' + MONO + '>номинал 100%</text>' +
+      '<line x1="' + PAD + '" y1="' + y(capPay) + '" x2="' + (W - PAD) + '" y2="' + y(capPay) + '" stroke="' + C.grid + '" stroke-width="1" stroke-dasharray="2 4"/>' +
+      '<text x="' + (W - PAD) + '" y="' + (y(capPay) - 8) + '" text-anchor="end" fill="' + C.gold + '" font-size="11" ' + MONO + '>потолок +' + S.fmt1(maxUp) + '%</text>' +
+      '<path d="' + d + '" fill="none" stroke="' + C.line + '" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>' +
+      '<rect x="' + (x(rK) - 4) + '" y="' + (y(K) - 4) + '" width="8" height="8" transform="rotate(45 ' + x(rK) + ' ' + y(K) + ')" fill="' + C.line + '"/>' +
+      '<text x="' + x(rK) + '" y="' + (y(K) + 18) + '" text-anchor="middle" fill="' + C.lab2 + '" font-size="11" ' + MONO + '>S₀</text>' +
+      '<text x="' + x(0.84) + '" y="' + (y(84) - 9) + '" text-anchor="middle" fill="' + C.lab + '" font-size="11" ' + MONO + '>падение 1:1</text>' +
+      '<text x="' + x(rK2 + 0.03) + '" y="' + (y(capPay) + 18) + '" fill="' + C.gold + '" font-size="11" ' + MONO + '>рост ×' + Math.round(ku * 100) + '%</text>' +
+      '</svg>';
+  }
+
   // --- Контент по типу продукта ---
   const nom = inst.minNom;
   let content = {};
@@ -436,6 +460,39 @@
         ["Мин. номинал", S.fmtInt(nom) + " ₽"]
       ]
     };
+  } else if (inst.type === "booster") {
+    const K = inst.strike || 100, K2 = inst.strike2 || 110, ku = (inst.ku || 175) / 100;
+    const capPay = K + ku * (K2 - K), maxUp = capPay - 100, kuS = Math.round(ku * 100) + "%";
+    const bandUp = S.fmtSmart(K2 - 100);
+    const upFull = nom * capPay / 100, up5 = nom * (100 + ku * 5) / 100, downRub = nom * 0.8;
+    content = {
+      badge: "бустер · усиленный рост",
+      subtitle: "Бустер · " + inst.underlying + " · рост ×" + kuS + " до потолка, участие в падении 1:1",
+      explainer: "Бустер даёт усиленное участие в росте базового актива: рост внутри диапазона " + S.fmtSmart(K) + "–" + S.fmtSmart(K2) + "% засчитывается с коэффициентом " + kuS + " — например, при росте актива на " + bandUp + "% выплата достигает максимума +" + S.fmt1(maxUp) + "% к номиналу. Выше диапазона выплата не растёт (потолок). Если актив падает, инвестор участвует в падении один к одному, как если бы держал сам актив. Купонов нет; результат — на дату погашения.",
+      payoff: chartBooster,
+      payoffCaption: "Слева от старта — падение 1:1; справа — рост ×" + kuS + " внутри диапазона " + S.fmtSmart(K) + "–" + S.fmtSmart(K2) + "% до потолка +" + S.fmt1(maxUp) + "%.",
+      metrics: [
+        ["Коэффициент участия", kuS],
+        ["Диапазон роста", S.fmtSmart(K) + "–" + S.fmtSmart(K2) + "%"],
+        ["Макс. выплата", "+" + S.fmt1(maxUp) + "%"],
+        ["Участие в падении", "1:1"],
+        ["Срок", inst.tenor],
+        ["Мин. номинал", S.fmtInt(nom) + " ₽"]
+      ],
+      exampleIntro: "Вход по номиналу " + S.fmtInt(nom) + " ₽ (100%) · базовый актив " + inst.underlying,
+      scenarios: [
+        [inst.underlying + " вырос на " + bandUp + "% и выше", "Выплата " + S.fmtInt(upFull) + " ₽ — потолок", "+" + S.fmtInt(upFull - nom) + " ₽", "#55C08A"],
+        [inst.underlying + " вырос на 5%", "Выплата " + S.fmtInt(up5) + " ₽ (рост ×" + kuS + ")", "+" + S.fmtInt(up5 - nom) + " ₽", "#55C08A"],
+        [inst.underlying + " упал на 20%", "Выплата " + S.fmtInt(downRub) + " ₽ — падение 1:1", "−" + S.fmtInt(nom - downRub) + " ₽", "#EE7D1B"]
+      ],
+      facts: [
+        ["Рост", "×" + kuS + " внутри диапазона до потолка +" + S.fmt1(maxUp) + "%"],
+        ["Падение", "Участие 1:1, как в самом активе"],
+        ["Купоны", "Нет — результат на дату погашения"],
+        ["Риск", "Полное участие в падении базового актива"],
+        ["Мин. номинал", S.fmtInt(nom) + " ₽"]
+      ]
+    };
   } else {
     const entryRub = nom * inst.quote / 100;
     const upPct = 20;
@@ -482,7 +539,7 @@
   document.getElementById("badge").textContent = content.badge;
   document.getElementById("subtitle").textContent = content.subtitle;
   document.getElementById("quote").innerHTML = S.quoteBig(inst.quote);
-  document.getElementById("quote-sub").textContent = "котировка · индикативно · % от номинала · " + (inst.currency || "RUB");
+  document.getElementById("quote-sub").textContent = inst.type === "booster" ? "коэффициент участия · индикативно" : "котировка · индикативно · % от номинала · " + (inst.currency || "RUB");
   const chgEl = document.getElementById("quote-chg");
   chgEl.textContent = (inst.chg > 0 ? "+" : inst.chg < 0 ? "−" : "") + S.fmt1(Math.abs(inst.chg)) + " п.п. сегодня";
   chgEl.style.color = inst.chg > 0 ? "#55C08A" : inst.chg < 0 ? "#EE7D1B" : "rgba(242,243,247,0.42)";
@@ -503,15 +560,18 @@
   function calcMove(inst) {
     if (inst.type === "warrant") { const cs = inst.structure === "cs"; const cap = cs ? Math.round((inst.strike2 - inst.strike) / inst.strike * 100) : 0; return { min: -30, max: cs ? cap + 15 : 60, val: cs ? cap : 30 }; }
     if (inst.type === "protection") return { min: -30, max: 50, val: 20 };
+    if (inst.type === "booster") return { min: -30, max: 25, val: (inst.strike2 || 110) - 100 };
     return null;
   }
   function calcPct(inst, move) {
     if (inst.type === "warrant") { const lvl = (inst.spot || 100) * (1 + move / 100); return S.PAYOFF.pct(lvl, inst.strike, inst.strike2); }
     if (inst.type === "protection") { const p = inst.participation, floor = inst.protectionPct || 100; let v = 100 + p * move; if (v < floor) v = floor; if (inst.cap != null) v = Math.min(v, 100 + p * inst.cap); return v; }
+    if (inst.type === "booster") return S.PAYOFF.booster(100 + move, inst.strike || 100, inst.strike2 || 110, (inst.ku || 175) / 100);
     return 100;
   }
   function calcInner(inst) {
-    const nom0 = inst.minNom || 1000000, price0 = Math.round(nom0 * inst.quote / 100), cfg = calcMove(inst);
+    const nom0 = inst.minNom || 1000000;
+    const price0 = inst.type === "booster" ? nom0 : Math.round(nom0 * inst.quote / 100), cfg = calcMove(inst);
     const slider = cfg ? '<div class="calc-row"><label class="calc-l">' + inst.underlying + ': <b id="calc-mv"></b></label>' +
       '<input class="calc-range" id="calc-move" type="range" min="' + cfg.min + '" max="' + cfg.max + '" value="' + cfg.val + '" step="1" aria-label="Сценарий по базовому активу"></div>' : '';
     return '<div class="calc-row"><label class="calc-l" for="calc-amt">Сумма вложения, ₽</label>' +
@@ -527,7 +587,8 @@
     const payoutEl = document.getElementById("calc-payout"), netEl = document.getElementById("calc-net"), noteEl = document.getElementById("calc-note");
     const prot = inst.protectionPct || 100;
     function run() {
-      const amount = Math.max(0, +amt.value || 0), nominal = inst.quote ? amount * 100 / inst.quote : 0;
+      const amount = Math.max(0, +amt.value || 0);
+      const nominal = inst.type === "booster" ? amount : (inst.quote ? amount * 100 / inst.quote : 0);
       const m = move ? +move.value : 0;
       if (mvOut) mvOut.textContent = (m >= 0 ? "+" : "") + m + "%";
       const payout = nominal * calcPct(inst, m) / 100, net = payout - amount;
@@ -536,6 +597,7 @@
       netEl.style.color = net >= 0 ? "#55C08A" : "#E0705A";
       if (inst.type === "warrant") noteEl.textContent = "Экспозиция на номинал " + S.fmtInt(Math.round(nominal)) + " ₽ за премию = сумму вложения. Если " + inst.underlying + " не вырос — выплаты нет, премия теряется.";
       else if (inst.type === "protection") noteEl.textContent = "Номинал " + S.fmtInt(Math.round(nominal)) + " ₽. Защита " + prot + "%: при падении возвращается " + prot + "% номинала.";
+      else if (inst.type === "booster") noteEl.textContent = "Вложение = номинал " + S.fmtInt(Math.round(nominal)) + " ₽. Рост ×КУ внутри диапазона до потолка; при падении — участие 1:1, как в самом активе.";
       else noteEl.textContent = "Номинал " + S.fmtInt(Math.round(nominal)) + " ₽. При погашении — 100% номинала (если нет кредитного события). Доход зафиксирован дисконтом.";
     }
     amt.addEventListener("input", run);

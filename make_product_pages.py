@@ -20,6 +20,7 @@ TYPE_LABEL = {
     "discount": "Дисконтная облигация",
     "protection": "Облигация с защитой капитала",
     "warrant": "Варрант",
+    "booster": "Бустер",
 }
 
 
@@ -39,7 +40,11 @@ def describe(inst):
     q = inst.get("quote")
     parts = [tl + (" на " + ua if ua else "")]
     if q is not None:
-        parts.append("котировка " + num(q) + "% от номинала")
+        if inst.get("type") == "booster":
+            # у бустера quote = коэффициент участия, не цена
+            parts.append("коэффициент участия " + num(q) + "%")
+        else:
+            parts.append("котировка " + num(q) + "% от номинала")
     parts.append("Rumberg — структурные продукты для квалифицированных инвесторов")
     return " · ".join(parts)
 

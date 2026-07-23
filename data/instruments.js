@@ -1,8 +1,8 @@
 // Файл сгенерирован update_site.py — руками не править (перезапишется при следующем запуске).
 // Продукты с "src": "sales" добавлены через админку и сохраняются при перегенерации.
-// Обновлено: 2026-07-22
+// Обновлено: 2026-07-23
 window.SITE_DATA = {
-  "updated": "2026-07-22",
+  "updated": "2026-07-23",
   "instruments": [
     {
       "id": "W-OFZ238-C100-0728",
@@ -596,6 +596,74 @@ window.SITE_DATA = {
       "chg": 0,
       "minNom": 1000000,
       "about": "«Северсталь» — вертикально интегрированная металлургическая компания: сталь и прокат с собственной сырьевой и энергетической базой.",
+      "src": "sales"
+    },
+    {
+      "id": "B-YDEX-9M",
+      "type": "booster",
+      "name": "Бустер · Яндекс · 9 месяцев",
+      "underlying": "Яндекс (YDEX)",
+      "cls": "Акции РФ",
+      "currency": "RUB",
+      "strike": 100,
+      "strike2": 110,
+      "ku": 175,
+      "tenor": "9 месяцев",
+      "expiry": "23.04.2027",
+      "quote": 175,
+      "chg": 0,
+      "minNom": 1000000,
+      "src": "sales"
+    },
+    {
+      "id": "B-SBER-9M",
+      "type": "booster",
+      "name": "Бустер · Сбербанк · 9 месяцев",
+      "underlying": "Сбербанк (SBER)",
+      "cls": "Акции РФ",
+      "currency": "RUB",
+      "strike": 100,
+      "strike2": 110,
+      "ku": 175,
+      "tenor": "9 месяцев",
+      "expiry": "23.04.2027",
+      "quote": 175,
+      "chg": 0,
+      "minNom": 1000000,
+      "src": "sales"
+    },
+    {
+      "id": "B-LKOH-9M",
+      "type": "booster",
+      "name": "Бустер · Лукойл · 9 месяцев",
+      "underlying": "Лукойл (LKOH)",
+      "cls": "Акции РФ",
+      "currency": "RUB",
+      "strike": 100,
+      "strike2": 110,
+      "ku": 200,
+      "tenor": "9 месяцев",
+      "expiry": "23.04.2027",
+      "quote": 200,
+      "chg": 0,
+      "minNom": 1000000,
+      "src": "sales"
+    },
+    {
+      "id": "B-T-9M",
+      "type": "booster",
+      "name": "Бустер · Т-Банк · 9 месяцев",
+      "underlying": "Т-Банк (T)",
+      "cls": "Акции РФ",
+      "currency": "RUB",
+      "strike": 100,
+      "strike2": 110,
+      "ku": 175,
+      "tenor": "9 месяцев",
+      "expiry": "23.04.2027",
+      "quote": 175,
+      "chg": 0,
+      "minNom": 1000000,
       "src": "sales"
     }
   ],

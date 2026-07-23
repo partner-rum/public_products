@@ -142,8 +142,8 @@
 
 <div id="deck"></div>
 
-<script src="data/instruments.js?v=fx6"></script>
-<script src="data/lib.js?v=fx7"></script>
+<script src="data/instruments.js?v=fx7"></script>
+<script src="data/lib.js?v=fx8"></script>
 <script src="data/offerings.js?v=srv6"></script>
 <script src="share.js?v=5"></script>
 <script src="contact.js?v=6"></script>
@@ -270,6 +270,30 @@
     return svg + '</svg>';
   }
 
+  function chBooster() {
+    const K = inst.strike || 100, K2 = inst.strike2 || 110, ku = (inst.ku || 175) / 100;
+    const capPay = K + ku * (K2 - K);
+    const pay = up => { const s = 100 + up; return s < K ? s : K + ku * (Math.min(s, K2) - K); };
+    const upMin = -30, upMax = 22;
+    const x = up => PAD + ((up - upMin) / (upMax - upMin)) * (CW - PAD * 2);
+    const yLo = pay(upMin), span = Math.max(capPay - yLo, 1);
+    const yMin = yLo - span * 0.14, yMax = capPay + span * 0.20;
+    const y = v => CH - PAD - ((v - yMin) / (yMax - yMin)) * (CH - PAD * 2);
+    const bps = [upMin, 0, K2 - 100, upMax];
+    const line = "M" + bps.map(u => x(u).toFixed(1) + " " + y(pay(u)).toFixed(1)).join(" L");
+    let svg = '<svg viewBox="0 0 ' + CW + ' ' + CH + '" width="100%" style="display:block">' +
+      '<line x1="' + PAD + '" y1="' + y(100) + '" x2="' + (CW - PAD) + '" y2="' + y(100) + '" stroke="' + C.axis + '" stroke-width="1" stroke-dasharray="4 4"/>' +
+      '<text x="' + (CW - PAD) + '" y="' + (y(100) + 13) + '" text-anchor="end" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>номинал 100%</text>' +
+      '<line x1="' + PAD + '" y1="' + y(capPay) + '" x2="' + (CW - PAD) + '" y2="' + y(capPay) + '" stroke="' + C.axis + '" stroke-width="1" stroke-dasharray="2 4"/>' +
+      '<text x="' + (CW - PAD) + '" y="' + (y(capPay) - 5) + '" text-anchor="end" fill="' + C.or + '" font-size="10" ' + MONO + '>потолок +' + S.fmt1(capPay - 100) + '%</text>' +
+      '<path d="' + line + '" fill="none" stroke="' + C.line + '" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>' +
+      '<rect x="' + (x(0) - 4) + '" y="' + (y(100) - 4) + '" width="8" height="8" transform="rotate(45 ' + x(0) + ' ' + y(100) + ')" fill="' + C.line + '"/>' +
+      '<text x="' + x(0) + '" y="' + (y(100) + 14) + '" text-anchor="middle" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>S₀</text>' +
+      '<text x="' + x(-18) + '" y="' + (y(pay(-18)) - 8) + '" text-anchor="middle" fill="' + C.lab + '" font-size="10" ' + MONO + '>падение 1:1</text>' +
+      '<text x="' + x((K2 - 100) + 3) + '" y="' + (y(capPay) + 13) + '" fill="' + C.or + '" font-size="10" ' + MONO + '>×' + Math.round(ku * 100) + '%</text>';
+    return svg + '</svg>';
+  }
+
   // ── Контент ──
   let c = {};
   if (offering) {
@@ -337,6 +361,26 @@
         ["Продали раньше срока", "по текущей рыночной цене", "по рынку", "var(--nav)"]
       ],
       explainer: "Облигация покупается дешевле номинала — по " + S.fmt2(q) + "% от него. На дату погашения выплачивается полный номинал, 100%. Весь доход — дисконт: разница между ценой покупки и номиналом, известная в день сделки. Купонов нет; основной риск — кредитное качество эмитента."
+    };
+  } else if (inst.type === "booster") {
+    const K = inst.strike || 100, K2 = inst.strike2 || 110, ku = (inst.ku || 175) / 100;
+    const capPay = K + ku * (K2 - K), maxUp = capPay - 100, kuS = Math.round(ku * 100) + "%";
+    const bandUp = S.fmtSmart(K2 - 100), upFull = nom * capPay / 100, downRub = nom * 0.8;
+    c = {
+      badge: "Бустер · структурная облигация",
+      subtitle: "Усиленное участие ×" + kuS + " в росте " + inst.underlying + " до потолка — с участием в падении 1:1.",
+      quoteK: "коэффициент участия · индикативно",
+      chart: chBooster,
+      chartCap: "Слева от старта — падение 1:1; справа — рост ×" + kuS + " в диапазоне " + S.fmtSmart(K) + "–" + S.fmtSmart(K2) + "% до потолка +" + S.fmt1(maxUp) + "%.",
+      params: [["Коэффициент участия", kuS, true], ["Диапазон роста", S.fmtSmart(K) + "–" + S.fmtSmart(K2) + "%", false], ["Макс. выплата", "+" + S.fmt1(maxUp) + "%", false], ["Срок", inst.tenor, false]],
+      exIntro: "Вход по номиналу " + S.fmtInt(nom) + " ₽ (100%) · базовый актив " + inst.underlying,
+      scen: [
+        [inst.underlying + " вырос на " + bandUp + "% и выше", "выплата " + S.fmtInt(upFull) + " ₽ — потолок", "+" + S.fmtInt(upFull - nom) + " ₽", "var(--up)"],
+        [inst.underlying + " упал на 20%", "выплата " + S.fmtInt(downRub) + " ₽ — падение 1:1", "−" + S.fmtInt(nom - downRub) + " ₽", "var(--down)"]
+      ],
+      explainer: "Бустер даёт усиленное участие в росте: рост базового актива в диапазоне " + S.fmtSmart(K) + "–" + S.fmtSmart(K2) + "% засчитывается с коэффициентом " + kuS + " (максимум +" + S.fmt1(maxUp) + "% к номиналу), выше — потолок. Если актив падает — участие в падении один к одному, как в самом активе. Купонов нет.",
+      underLabel: "Главный риск · падение актива",
+      underDesc: "Полное участие в падении базового актива: при снижении инвестор несёт убыток один к одному, вплоть до значительной части номинала. Отдельно действует кредитный риск эмитента облигации."
     };
   } else {
     // Защита капитала. Конфиг из полей инструмента + опциональные override в URL (?protect / ?part / ?cap).
