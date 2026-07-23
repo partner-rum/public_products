@@ -95,7 +95,12 @@
   var ICON_SEND = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>';
   var ICON_CHAT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-3.9-.9L3 21l1.9-5.6A8.5 8.5 0 0 1 12.5 3 8.38 8.38 0 0 1 21 11.5z"/></svg>';
 
-  var msgs = [];         // {role, content}
+  var msgs = [];         // {role, content}; живёт в sessionStorage — диалог не теряется при переходах
+  try {
+    var saved = JSON.parse(sessionStorage.getItem("so_chat") || "[]");
+    if (Array.isArray(saved)) msgs = saved.filter(function (m) { return m && m.content && (m.role === "user" || m.role === "assistant"); });
+  } catch (e) {}
+  function saveChat() { try { sessionStorage.setItem("so_chat", JSON.stringify(msgs.slice(-30))); } catch (e) {} }
   var busy = false;
   var locked = false;    // достигнут лимит вопросов
   var els = {};
@@ -214,6 +219,7 @@
     els.input.value = ""; els.input.style.height = "auto";
     if (els.sug) { els.sug.remove(); els.sug = null; }
     msgs.push({ role: "user", content: text });
+    saveChat();
     addMsg("user", text);
     goal("chat_send");
     var qCount = msgs.filter(function (m) { return m.role === "user"; }).length;
@@ -230,7 +236,7 @@
           addMsg("assistant", "").innerHTML = regionReply();
         } else {
           var r = "Кратко: **облигация с защитой капитала** гарантирует возврат не менее заданной доли номинала на погашении и добавляет участие в росте базового актива — риск ограничен. **Автоколл** платит повышенный купон и может досрочно погаситься при росте актива, но защиты номинала обычно нет — риск выше. (демо-ответ)";
-          msgs.push({ role: "assistant", content: r }); addMsg("assistant", r);
+          msgs.push({ role: "assistant", content: r }); saveChat(); addMsg("assistant", r);
         }
         busy = false; els.send.disabled = false; els.input.focus();
         if (qCount >= CFG.msgLimit) lockChat();
@@ -247,7 +253,7 @@
       .then(function (data) {
         typing.remove();
         var reply = (data && data.reply) ? data.reply : "";
-        if (reply) { msgs.push({ role: "assistant", content: reply }); addMsg("assistant", reply); }
+        if (reply) { msgs.push({ role: "assistant", content: reply }); saveChat(); addMsg("assistant", reply); }
         else if (data && data.error === "region_unavailable") { addMsg("assistant", "").innerHTML = regionReply(); }
         else { addMsg("assistant", "").innerHTML = fallbackReply(); }
       })
@@ -292,7 +298,18 @@
     var opened = false;
     function open() {
       panel.classList.add("on"); btn.classList.add("hide");
-      if (!opened) { opened = true; addMsg("assistant", CFG.greeting); showSuggestions(); goal("chat_open"); }
+      if (!opened) {
+        opened = true;
+        addMsg("assistant", CFG.greeting);
+        if (msgs.length) {
+          // Восстанавливаем диалог, начатый на другой странице (sessionStorage)
+          msgs.forEach(function (m) { addMsg(m.role, m.content); });
+          if (msgs.filter(function (m) { return m.role === "user"; }).length >= CFG.msgLimit) lockChat();
+        } else {
+          showSuggestions();
+        }
+        goal("chat_open");
+      }
       setTimeout(function () { els.input.focus(); }, 150);
     }
     function close() { panel.classList.remove("on"); btn.classList.remove("hide"); }

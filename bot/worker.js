@@ -14,6 +14,8 @@
 //   CHAT_MODEL        — (опц.) модель Claude, по умолчанию claude-haiku-4-5.
 //   CHAT_RATE_LIMIT   — (опц.) биндинг Rate Limiting (Worker → Settings → Bindings → Rate limiting)
 //                        для антиспама на /chat, напр. 15 запросов / 60 сек с одного IP. При превышении — 429.
+//   CHAT_LOG_CHAT_ID  — (опц.) id TG-чата/канала для лога вопросов AI-чата (без контактов:
+//                        вопрос/ответ/страница). Не задан — лог не ведётся.
 //   CHAT_BLOCKED_COUNTRIES — (опц.) страны (ISO-2, через запятую), где AI-чат отключён. По умолчанию ПУСТО
 //                            (открыто для всех). Чтобы ограничить — задай "RU" или "RU,BY": тем клиентам
 //                            /chat вернёт region_unavailable, и виджет предложит Telegram.
@@ -32,7 +34,7 @@
 //   POST /tg     — вебхук Telegram: callback-кнопки модерации (✅ публикует коммитом в GitHub),
 //                  /start <id> приветствует клиента и шлёт лид в CHAT_ID, прочее пересылает в CHAT_ID
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const cors = {
       "Access-Control-Allow-Origin": env.ALLOW_ORIGIN || "*",
@@ -42,7 +44,7 @@ export default {
     if (request.method === "OPTIONS") return new Response(null, { headers: cors });
 
     if (url.pathname === "/lead" && request.method === "POST") return handleLead(request, env, cors);
-    if (url.pathname === "/chat" && request.method === "POST") return handleChat(request, env, cors);
+    if (url.pathname === "/chat" && request.method === "POST") return handleChat(request, env, cors, ctx);
     if (url.pathname === "/submit" && request.method === "POST") return handleSubmit(request, env, cors);
     if (url.pathname === "/tg" && request.method === "POST") return handleTelegram(request, env);
 
@@ -120,7 +122,8 @@ const SYSTEM_PROMPT = `Ты — AI-ассистент-консьерж на са
 - Отвечай только про структурные продукты и этот сайт; на постороннее вежливо возвращай к теме.`;
 
 // Живой каталог с сайта (кэш в изоляте, TTL 5 мин). Парсим сгенерированные JSON-файлы.
-let CATALOG = { text: "", at: 0 };
+// Кэшируем и сырые массивы — по ним строится контекст конкретного продукта (см. productContext).
+let CATALOG = { text: "", at: 0, instr: [], offers: [] };
 
 async function fetchDataObj(url) {
   const r = await fetch(url);
@@ -133,11 +136,13 @@ async function fetchDataObj(url) {
 
 async function buildCatalog(env) {
   const now = Date.now();
-  if (CATALOG.text && now - CATALOG.at < 5 * 60 * 1000) return CATALOG.text;
+  if (CATALOG.text && now - CATALOG.at < 5 * 60 * 1000) return CATALOG;
   const base = (env.SITE_BASE || "https://invest.rumberg.ru/").replace(/\/?$/, "/");
-  const [site, plc] = await Promise.all([
+  const [site, plc, off, dig] = await Promise.all([
     fetchDataObj(base + "data/instruments.js"),
     fetchDataObj(base + "data/placements.js"),
+    fetchDataObj(base + "data/offerings.js"),
+    fetchDataObj(base + "data/digest.js"),
   ]);
   const lines = [];
   const instr = (site && site.instruments) || [];
@@ -146,6 +151,23 @@ async function buildCatalog(env) {
     for (const p of instr) {
       lines.push("- " + [p.name, p.underlying && "базовый актив: " + p.underlying,
         p.quote != null && "цена " + p.quote + "%"].filter(Boolean).join(" · "));
+    }
+  }
+  const offers = (off && off.items) || [];
+  if (offers.length) {
+    lines.push("", "НА РАЗМЕЩЕНИИ СЕЙЧАС (первичный рынок):");
+    for (const o of offers) {
+      lines.push("- " + [o.name, o.reference && "базовый актив: " + o.reference,
+        o.price != null && "цена " + o.price + "% номинала", o.tenor && "срок " + o.tenor,
+        o.isin && "ISIN " + o.isin, o.statusLabel].filter(Boolean).join(" · "));
+    }
+  }
+  const idea = dig && dig.issues && dig.issues[0];
+  if (idea && Array.isArray(idea.ideas) && idea.ideas.length) {
+    lines.push("", "ИДЕЯ НЕДЕЛИ (дайджест, раздел «Дайджест» на сайте):");
+    for (const i of idea.ideas) {
+      lines.push("- " + [i.name, i.underlying && "актив: " + i.underlying,
+        i.teaser].filter(Boolean).join(" · "));
     }
   }
   const iss = (plc && plc.issues) || [];
@@ -161,11 +183,50 @@ async function buildCatalog(env) {
         pay, i.bid != null && "Bid " + i.bid + "%"].filter(Boolean).join(" · "));
     }
   }
-  CATALOG = { text: lines.join("\n"), at: now };
-  return CATALOG.text;
+  CATALOG = { text: lines.join("\n"), at: now, instr, offers };
+  return CATALOG;
 }
 
-async function handleChat(request, env, cors) {
+// Контекст продукта, который клиент открыл: по URL страницы находим инструмент доски
+// (instrument.html?id=X, p/X.html) или выпуск первички (offerings.html#id) и даём агенту
+// полные параметры — чтобы отвечал про конкретный продукт, а не каталог вообще.
+function productContext(cat, pageUrl) {
+  if (!pageUrl) return "";
+  let m = pageUrl.match(/instrument\.html\?[^#]*\bid=([\w.-]+)/) || pageUrl.match(/\/p\/([\w.-]+)\.html/);
+  if (m) {
+    const p = (cat.instr || []).find((x) => x.id === decodeURIComponent(m[1]));
+    if (!p) return "";
+    const parts = ["Название: " + p.name, p.underlying && "Базовый актив: " + p.underlying];
+    if (p.type === "warrant") {
+      const cs = p.structure === "cs";
+      parts.push("Тип: " + (cs ? "колл-спред (CALL с потолком)" : "CALL-варрант"));
+      parts.push("Страйк K: " + p.strike + "% от начального уровня" + (p.strike2 ? ", потолок K₂: " + p.strike2 + "%" : ""));
+      if (p.quote != null) parts.push("Котировка (премия): " + p.quote + "% от номинала, индикативно");
+      parts.push("Выплата на экспирацию: max(S − K; 0) в % номинала" + (p.strike2 ? ", но не выше K₂ − K = " + (p.strike2 - p.strike) + "%" : "") +
+        "; безубыток — уровень актива " + (p.strike + (p.quote || 0)) + "%");
+    } else if (p.type === "discount") {
+      if (p.quote != null) parts.push("Цена входа: " + p.quote + "% номинала (индикативно), погашение 100% при отсутствии кредитного события");
+      if (p.about) parts.push("О компании: " + p.about);
+    }
+    if (p.tenor) parts.push("Срок: " + p.tenor + (p.expiry ? " (до " + p.expiry + ")" : ""));
+    if (p.minNom) parts.push("Мин. номинал: " + p.minNom + " ₽");
+    return parts.filter(Boolean).join("\n");
+  }
+  m = pageUrl.match(/offerings\.html#([\w.-]+)/);
+  if (m) {
+    const o = (cat.offers || []).find((x) => x.id === decodeURIComponent(m[1]));
+    if (!o) return "";
+    return [
+      "Название: " + o.name, o.kind && "Тип: " + o.kind, o.reference && "Базовый актив: " + o.reference,
+      o.price != null && "Цена размещения: " + o.price + "% номинала", o.tenor && "Срок: " + o.tenor,
+      o.isin && "ISIN: " + o.isin, o.venue && "Площадка: " + o.venue, o.statusLabel && "Статус: " + o.statusLabel,
+      o.teaser,
+    ].filter(Boolean).join("\n");
+  }
+  return "";
+}
+
+async function handleChat(request, env, cors, ctx) {
   // Защита от абуза: только с нашего сайта (если задан ALLOW_ORIGIN)
   const origin = request.headers.get("Origin") || "";
   if (env.ALLOW_ORIGIN && env.ALLOW_ORIGIN !== "*" && origin && origin !== env.ALLOW_ORIGIN) {
@@ -205,11 +266,13 @@ async function handleChat(request, env, cors) {
 
   const pageTitle = String((data.page && data.page.title) || "").slice(0, 200);
   const pageUrl = String((data.page && data.page.url) || "").slice(0, 300);
-  let catalog = "";
-  try { catalog = await buildCatalog(env); } catch (e) { catalog = ""; }
+  let cat = { text: "", instr: [], offers: [] };
+  try { cat = await buildCatalog(env); } catch (e) { /* каталог необязателен */ }
+  const prodCtx = productContext(cat, pageUrl);
   const system = SYSTEM_PROMPT +
-    (catalog ? "\n\n=== АКТУАЛЬНЫЙ КАТАЛОГ ===\n" + catalog : "") +
-    (pageTitle ? `\n\nСейчас клиент на странице: «${pageTitle}»${pageUrl ? " (" + pageUrl + ")" : ""}.` : "");
+    (cat.text ? "\n\n=== АКТУАЛЬНЫЙ КАТАЛОГ ===\n" + cat.text : "") +
+    (pageTitle ? `\n\nСейчас клиент на странице: «${pageTitle}»${pageUrl ? " (" + pageUrl + ")" : ""}.` : "") +
+    (prodCtx ? "\n\n=== ПРОДУКТ, КОТОРЫЙ КЛИЕНТ СЕЙЧАС СМОТРИТ (отвечай в первую очередь про него) ===\n" + prodCtx : "");
 
   const provider = (env.CHAT_PROVIDER || "yandex").toLowerCase();
   let reply;
@@ -221,6 +284,19 @@ async function handleChat(request, env, cors) {
     const msg = String((e && e.message) || e);
     return json({ ok: false, error: msg }, msg === "not_configured" ? 503 : 502, cors);
   }
+
+  // Лог диалога (без контактов: вопрос/ответ/страница) — в отдельный тихий TG-чат,
+  // если задан CHAT_LOG_CHAT_ID. Не задерживаем ответ клиенту: waitUntil, где доступен.
+  if (env.CHAT_LOG_CHAT_ID && reply) {
+    const q = messages[messages.length - 1].content.slice(0, 600);
+    const logP = tg(env, "sendMessage", {
+      chat_id: env.CHAT_LOG_CHAT_ID, parse_mode: "HTML", disable_web_page_preview: true,
+      text: "💬 <b>AI-чат</b>" + (pageTitle ? " · " + esc(pageTitle) : "") +
+        "\n<b>Q:</b> " + esc(q) + "\n<b>A:</b> " + esc(String(reply).slice(0, 500)),
+    }).catch(() => {});
+    if (ctx && ctx.waitUntil) ctx.waitUntil(logP); else await logP;
+  }
+
   return json({ ok: true, reply: reply || "Извините, не удалось сформировать ответ." }, 200, cors);
 }
 
