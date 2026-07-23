@@ -253,7 +253,7 @@
     return '<div class="pp-top"><div>' +
         '<div class="pp-title">' + i.serial + '</div>' +
         '<div class="pp-sub"><span>' + i.isin + '</span><span class="status ' + (i.matured ? "matured" : "live") + '">' + (i.matured ? "погашен" : "в обращении") + '</span></div>' +
-        (!i.matured && i.bid != null ? '<div class="pp-bid"><span class="lbl">Bid</span><span class="val">' + fmtN(i.bid) + '%</span><span class="u">от номинала</span></div>' : '') +
+        (!i.matured && i.bid != null ? '<div class="pp-bid"><span class="lbl">Bid</span><span class="val">' + fmtN(i.bid) + '%</span><span class="u">индикативно · от номинала</span></div>' : '') +
       '</div>' +
       '<span class="kind-chip" style="color:' + k.fg + ';background:' + k.bg + '">' + k.label + '</span></div>' +
       '<div class="tiles">' +
