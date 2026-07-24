@@ -13,7 +13,6 @@ window.OFFERINGS = {
    "name": "Энергетика будущего",
    "status": "upcoming",
    "statusLabel": "Приём заявок с 12.08.2026",
-   "hidden": true,
    "reference": "Корзина из 8 акций энергетики для ИИ (в USD)",
    "currency": "₽",
    "nominal": 1000,
