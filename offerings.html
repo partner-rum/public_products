@@ -81,6 +81,10 @@
   .o-kind { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fc); }
   .o-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; flex-wrap: wrap; }
   .o-top-right { display: flex; flex-direction: column; align-items: flex-end; gap: 12px; margin-left: auto; }
+  .o-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+  .o-doc-btn { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font-size: 13px; color: var(--ink); background: transparent; transition: border-color .2s, background .2s; }
+  .o-doc-btn:hover { border-color: rgba(255,255,255,0.28); background: rgba(255,255,255,0.05); }
+  .o-doc-btn svg { display: block; flex: none; }
   .o-name { margin: 7px 0 4px; font-family:var(--display); font-size: 25px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.15; }
   .o-ref { font-size: 13.5px; color: var(--hushed); } .o-ref b { color: var(--ink); font-weight: 600; }
   .badge { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 600; border-radius: 20px; padding: 6px 13px; white-space: nowrap; }
@@ -216,7 +220,7 @@
   </div>
 </footer>
 
-<script src="data/offerings.js?v=srv10"></script>
+<script src="data/offerings.js?v=srv11"></script>
 <script src="share.js?v=5"></script>
 <script>
 (function () {
@@ -315,8 +319,14 @@
     var aboutBlk = o.about ? '<div class="blk"><div class="k">О компании</div><p>' + o.about + '</p></div>' : "";
     var dealersBlk = (o.dealers && o.dealers.length)
       ? '<div class="blk"><div class="k">Дилеры-ориентиры</div><div class="dealers">' + o.dealers.map(x => '<span>' + x + '</span>').join("") + '</div></div>' : "";
-    var docsBlk = (o.docs && o.docs.length)
-      ? '<div class="docs"><div class="k">Материалы по выпуску</div>' + o.docs.map(d => '<a class="doc" href="' + d.file + '" target="_blank" rel="noopener" download><span class="ic">' + docIcon + '</span>' +
+    // Документы: помеченные "top" — компактными кнопками в шапке (рядом с «Поделиться»),
+    // остальные — блоком «Материалы по выпуску» ниже.
+    var topDocs = (o.docs || []).filter(d => d.top);
+    var restDocs = (o.docs || []).filter(d => !d.top);
+    var topDocBtns = topDocs.map(d => '<a class="o-doc-btn" href="' + d.file + '" target="_blank" rel="noopener" download>' +
+      docIcon + '<span>' + (d.short || "Материалы") + '</span></a>').join("");
+    var docsBlk = restDocs.length
+      ? '<div class="docs"><div class="k">Материалы по выпуску</div>' + restDocs.map(d => '<a class="doc" href="' + d.file + '" target="_blank" rel="noopener" download><span class="ic">' + docIcon + '</span>' +
         '<span><span class="nm">' + d.name + '</span><span class="mt">' + d.ext + ' · ' + d.size + '</span></span><span class="dl">' + dlIcon + '</span></a>').join("") + '</div>' : "";
     // Видео о продукте (self-host mp4). preload=metadata — 38 МБ не тянутся, пока не нажмут play.
     var videoBlk = o.video
@@ -353,7 +363,7 @@
     return '<div class="o-kind">' + o.kind + '</div>' +
       '<div class="o-top"><div><h2 class="o-name">' + o.name + '</h2>' +
         '<div class="o-ref">' + refLine + '</div>' + partnerLine + '</div>' +
-        '<div class="o-top-right">' + badge + '<span id="o-sh-host"></span></div></div>' +
+        '<div class="o-top-right">' + badge + '<div class="o-actions">' + topDocBtns + '<span id="o-sh-host"></span></div></div></div>' +
       '<div class="o-teaser">' + o.teaser + '</div>' +
       '<div class="tiles">' + tiles + '</div>' +
       '<div class="o-grid"><div>' +

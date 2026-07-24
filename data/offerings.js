@@ -53,7 +53,7 @@ window.OFFERINGS = {
    "video": {"src": "/media/energy-future.mp4", "poster": "/media/energy-future-poster.jpg", "title": "Видео о продукте"},
    "partner": {"name": "АльянсКапитал", "url": "https://alliancecap.ru/", "note": "Румберг совместно с"},
    "docs": [
-    {"name": "Презентация: Энергетика будущего (АльянсКапитал)", "file": "docs/preso-energy-future.pdf", "ext": "PDF", "size": "1,7 МБ"}
+    {"name": "Презентация: Энергетика будущего (АльянсКапитал)", "file": "docs/preso-energy-future.pdf", "ext": "PDF", "size": "1,7 МБ", "top": true, "short": "Презентация"}
    ]
   },
   {
