@@ -83,6 +83,28 @@ def load_instruments():
     return obj["instruments"]
 
 
+def load_offerings():
+    # «На размещении»: шеллы с редиректом на offerings.html#<id> — превью ссылок
+    # с названием выпуска (включая скрытые hidden-выпуски: сам шелл нигде не листится)
+    path = os.path.join(ROOT, "data", "offerings.js")
+    t = open(path, encoding="utf-8").read()
+    obj = json.loads(t[t.index("{"):t.rindex("}") + 1])
+    return obj.get("items", [])
+
+
+def describe_offering(o):
+    kind = o.get("kind") or "Выпуск на размещении"
+    parts = [kind]
+    if o.get("protection") and o["protection"] not in kind:
+        parts.append("защита капитала " + o["protection"])
+    if o.get("participation"):
+        parts.append("участие в росте " + o["participation"])
+    if o.get("tenor"):
+        parts.append(o["tenor"])
+    parts.append("Rumberg — структурные продукты для квалифицированных инвесторов")
+    return " · ".join(parts)
+
+
 def main():
     os.makedirs(OUTDIR, exist_ok=True)
     instruments = load_instruments()
@@ -92,6 +114,14 @@ def main():
         wanted.add(pid)
         html = TEMPLATE.format(title=esc(inst.get("name", pid)), desc=esc(describe(inst)),
                                base=BASE, id=pid)
+        with open(os.path.join(OUTDIR, pid + ".html"), "w", encoding="utf-8", newline="\n") as f:
+            f.write(html)
+    for o in load_offerings():
+        pid = o["id"]
+        wanted.add(pid)
+        html = TEMPLATE.format(title=esc(o.get("name", pid)), desc=esc(describe_offering(o)),
+                               base=BASE, id=pid)
+        html = html.replace('/instrument.html?id=' + pid, '/offerings.html#' + pid)
         with open(os.path.join(OUTDIR, pid + ".html"), "w", encoding="utf-8", newline="\n") as f:
             f.write(html)
     # чистим шеллы снятых продуктов
