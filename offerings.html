@@ -104,6 +104,21 @@
   .pf { background: var(--tile); border-radius: 10px; padding: 14px 16px 10px; }
   .pf svg { display: block; width: 100%; height: auto; }
   .pf-cap { font-size: 11.5px; line-height: 1.45; color: var(--faint); margin-top: 8px; text-wrap: pretty; }
+  /* Видео о продукте: вписываем и вертикальные (9:16), и горизонтальные ролики —
+     ограничиваем по высоте и центрируем, чтобы вертикаль не растягивала колонку */
+  .o-video { display: flex; justify-content: center; background: #000; border: 1px solid var(--border-soft); border-radius: 12px; overflow: hidden; }
+  .o-video video { max-width: 100%; max-height: 60vh; width: auto; height: auto; display: block; }
+  @media (max-width: 920px) { .o-video video { max-height: 72vh; } }
+  /* Состав корзины (для продуктов с несколькими базовыми активами) */
+  .basket { display: flex; flex-direction: column; }
+  .bk-row { display: flex; align-items: baseline; gap: 11px; padding: 8px 0; border-top: 1px solid var(--border-soft); }
+  .bk-row:first-child { border-top: none; }
+  .bk-w { font-family: var(--f-mono); font-size: 13px; color: var(--fc); min-width: 38px; }
+  .bk-nm { font-size: 13.5px; color: var(--ink); flex: 1; }
+  .bk-tk { font-family: var(--f-mono); font-size: 11px; color: var(--faint); }
+  .bk-sec { font-size: 11px; color: var(--hushed); background: var(--tile); border-radius: 5px; padding: 2px 8px; white-space: nowrap; }
+  .o-partner { color: var(--steel); font-weight: 500; white-space: nowrap; }
+  .o-partner:hover { text-decoration: underline; }
   .docs { margin-top: 16px; }
   .docs .k { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: 0.11em; text-transform: uppercase; color: var(--hushed); margin-bottom: 9px; }
   .doc { display: flex; align-items: center; gap: 12px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 11px 13px; margin-bottom: 8px; transition: border-color .18s, box-shadow .18s, transform .18s; }
@@ -187,7 +202,7 @@
   </div>
 </footer>
 
-<script src="data/offerings.js?v=srv6"></script>
+<script src="data/offerings.js?v=srv7"></script>
 <script src="share.js?v=5"></script>
 <script>
 (function () {
@@ -227,12 +242,15 @@
     '</button>';
   }
   function renderList() {
-    var list = D.items.filter(o => filter === "all" || o.status === filter);
-    var counts = { all: D.items.length, live: D.items.filter(o => o.status === "live").length, upcoming: D.items.filter(o => o.status === "upcoming").length };
+    // hidden:true — скрытые выпуски: не в списке и не в счётчике, но доступны по прямой
+    // ссылке offerings#<id> (для предпубликации). Публикация «для всех» = снять флаг.
+    var pub = D.items.filter(o => !o.hidden);
+    var list = pub.filter(o => filter === "all" || o.status === filter);
+    var counts = { all: pub.length, live: pub.filter(o => o.status === "live").length, upcoming: pub.filter(o => o.status === "upcoming").length };
     document.getElementById("filters").innerHTML = ["all", "live", "upcoming"].filter(k => k === "all" || counts[k]).map(k =>
       '<button class="fbtn' + (k === filter ? " on" : "") + '" data-f="' + k + '">' + STF[k] + '<span class="n">' + counts[k] + '</span></button>').join("");
     document.getElementById("list").innerHTML = list.length ? list.map(itemHTML).join("") : '<div style="padding:20px;font-size:13px;color:var(--faint)">Нет выпусков в этой категории.</div>';
-    document.getElementById("count").textContent = D.items.length + " в размещении";
+    document.getElementById("count").textContent = pub.length + " в размещении";
     document.querySelectorAll(".fbtn").forEach(b => b.addEventListener("click", () => { filter = b.getAttribute("data-f"); renderList(); }));
     document.querySelectorAll(".item").forEach(el => el.addEventListener("click", () => select(el.getAttribute("data-id"), true)));
     if (list.length && !list.some(o => o.id === selected)) select(list[0].id, false);
@@ -245,6 +263,8 @@
       ? '<span class="badge live"><span class="dot"></span>' + (o.statusLabel || "Идёт размещение") + '</span>'
       : '<span class="badge up"><span class="dot"></span>' + o.statusLabel + '</span>';
     var tiles = "";
+    if (o.protection) tiles += tile(o.protection, "защита капитала", true);
+    if (o.participation) tiles += tile(o.participation, "участие в росте");
     if (o.price != null) tiles += tile(fmt2(o.price) + "%", "цена размещения", true);
     if (o.redeem != null) tiles += tile(o.redeem + "%", "погашение");
     tiles += tile(o.nominal.toLocaleString("ru-RU") + " " + o.currency, "номинал") + tile(o.tenor, "срок");
@@ -260,6 +280,26 @@
     var docsBlk = (o.docs && o.docs.length)
       ? '<div class="docs"><div class="k">Материалы по выпуску</div>' + o.docs.map(d => '<a class="doc" href="' + d.file + '" target="_blank" rel="noopener" download><span class="ic">' + docIcon + '</span>' +
         '<span><span class="nm">' + d.name + '</span><span class="mt">' + d.ext + ' · ' + d.size + '</span></span><span class="dl">' + dlIcon + '</span></a>').join("") + '</div>' : "";
+    // Видео о продукте (self-host mp4). preload=metadata — 38 МБ не тянутся, пока не нажмут play.
+    var videoBlk = o.video
+      ? '<div class="blk"><div class="k">' + (o.video.title || "Видео о продукте") + '</div>' +
+        '<div class="o-video"><video controls playsinline preload="metadata"' + (o.video.poster ? ' poster="' + o.video.poster + '"' : '') + '>' +
+        '<source src="' + o.video.src + '" type="video/mp4">Ваш браузер не поддерживает видео.</video></div></div>'
+      : "";
+    // Состав корзины (для продуктов с несколькими базовыми активами)
+    var basketBlk = (o.basket && o.basket.length)
+      ? '<div class="blk"><div class="k">Состав корзины</div><div class="basket">' +
+        o.basket.map(b => '<div class="bk-row"><span class="bk-w">' + b.w + '%</span>' +
+          '<span class="bk-nm">' + b.name + ' <span class="bk-tk">' + b.ticker + '</span></span>' +
+          (b.sector ? '<span class="bk-sec">' + b.sector + '</span>' : '') + '</div>').join("") +
+        '</div></div>'
+      : "";
+    // Партнёр по продукту (совместные выпуски со сторонними инвесткомпаниями)
+    var partnerBlk = o.partner
+      ? '<div class="blk"><div class="k">Партнёр по продукту</div><p>' + (o.partner.note || "") +
+        (o.partner.url ? ' <a class="o-partner" href="' + o.partner.url + '" target="_blank" rel="noopener">' + o.partner.name + ' ↗</a>' : "") +
+        '</p></div>'
+      : "";
     return '<div class="o-kind">' + o.kind + '</div>' +
       '<div class="o-top"><div><h2 class="o-name">' + o.name + '</h2>' +
         '<div class="o-ref">' + refLine + '</div></div>' +
@@ -269,9 +309,12 @@
       '<div class="o-grid"><div>' +
         aboutBlk +
         '<div class="blk"><div class="k">Как работает</div><p>' + o.how + '</p></div>' +
+        partnerBlk +
+        basketBlk +
         '<div class="blk"><div class="k">Главный риск</div><div class="plaque">' + o.risk + '</div></div>' +
         dealersBlk +
       '</div><div>' +
+        videoBlk +
         (o.family === "discount" && o.price != null ? '<div class="pf">' + payoff(o.price, c) + '<div class="pf-cap">Покупка по ' + fmt2(o.price) + '% номинала, погашение по 100% при отсутствии кредитного события по ' + o.reference + '.</div></div>' : "") +
         docsBlk +
       '</div></div>';
@@ -295,9 +338,13 @@
   }
   document.getElementById("close").addEventListener("click", () => document.getElementById("panel").classList.remove("open"));
 
+  // Стартовый выпуск берём ДО renderList: авто-выбор первого видимого делает
+  // history.replaceState и перезаписал бы hash. Затем возвращаем выбор на целевой —
+  // работает и для скрытых выпусков по прямой ссылке (offerings#<id>).
+  var startId = decodeURIComponent(location.hash.slice(1));
+  if (!D.items.some(o => o.id === startId)) startId = null;
   renderList();
-  var hash = decodeURIComponent(location.hash.slice(1));
-  if (D.items.some(o => o.id === hash)) select(hash, false);
+  if (startId) select(startId, true);  // true — открыть паспорт-оверлей на мобиле
 })();
 </script>
 <script src="chat.js?v=9"></script>
