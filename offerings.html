@@ -80,6 +80,7 @@
   .panel { border: 1px solid var(--border-soft); border-top: 3px solid var(--fc); border-radius: 14px; background: var(--card); padding: 26px 30px; }
   .o-kind { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fc); }
   .o-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; flex-wrap: wrap; }
+  .o-top-right { display: flex; flex-direction: column; align-items: flex-end; gap: 12px; }
   .o-name { margin: 7px 0 4px; font-family:var(--display); font-size: 25px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.15; }
   .o-ref { font-size: 13.5px; color: var(--hushed); } .o-ref b { color: var(--ink); font-weight: 600; }
   .badge { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 600; border-radius: 20px; padding: 6px 13px; white-space: nowrap; }
@@ -187,6 +188,7 @@
 </footer>
 
 <script src="data/offerings.js?v=srv6"></script>
+<script src="share.js?v=5"></script>
 <script>
 (function () {
   "use strict";
@@ -260,7 +262,8 @@
         '<span><span class="nm">' + d.name + '</span><span class="mt">' + d.ext + ' · ' + d.size + '</span></span><span class="dl">' + dlIcon + '</span></a>').join("") + '</div>' : "";
     return '<div class="o-kind">' + o.kind + '</div>' +
       '<div class="o-top"><div><h2 class="o-name">' + o.name + '</h2>' +
-        '<div class="o-ref">' + refLine + '</div></div>' + badge + '</div>' +
+        '<div class="o-ref">' + refLine + '</div></div>' +
+        '<div class="o-top-right">' + badge + '<span id="o-sh-host"></span></div></div>' +
       '<div class="o-teaser">' + o.teaser + '</div>' +
       '<div class="tiles">' + tiles + '</div>' +
       '<div class="o-grid"><div>' +
@@ -281,6 +284,11 @@
     var panel = document.getElementById("panel");
     panel.style.setProperty("--fc", famCol(o));
     document.getElementById("panel-body").innerHTML = detailHTML(o);
+    var shHost = document.getElementById("o-sh-host");
+    if (shHost && window.Share) {
+      // короткая ссылка без .html; сообщение — только название выпуска (без параметров)
+      Share.attach(shHost, { url: location.origin + "/offerings#" + o.id, title: o.name, name: o.name });
+    }
     document.querySelectorAll(".item").forEach(el => el.classList.toggle("active", el.getAttribute("data-id") === id));
     history.replaceState(null, "", "#" + id);
     if (fromUser && window.matchMedia("(max-width: 920px)").matches) panel.classList.add("open");

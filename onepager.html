@@ -488,8 +488,8 @@
   { const shHost = document.getElementById("sh-host");
     if (shHost && window.Share) {
       const prodUrl = offering
-        ? new URL("offerings.html", location.href).href
-        : new URL("instrument.html?id=" + encodeURIComponent(inst.id), location.href).href;
+        ? new URL("offerings", location.href).href
+        : new URL("instrument?id=" + encodeURIComponent(inst.id), location.href).href;
       const params = [["Цена входа", S.fmt2(q) + "% ном."]].concat((c.params || []).map(p => [p[0], p[1]]));
       Share.attach(shHost, { url: prodUrl, title: name, name: name, pitch: c.subtitle, params: params });
       const ctHost = document.getElementById("ct-host");

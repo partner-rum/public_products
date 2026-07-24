@@ -221,10 +221,10 @@
       '<div class="art-bar"></div>' + DF.detailBody(i);
     const shHost = document.getElementById("art-tools");
     if (shHost && window.Share) {
-      const prodUrl = location.origin + location.pathname + "?view=client#" + issue.id + "/" + i.id;
-      const p = i.p || {};
-      const params = [["Цена входа", p.price], ["Потенциал", p.upside], ["Защита", p.protection]];
-      Share.attach(shHost, { url: prodUrl, title: i.name, name: i.name, pitch: i.teaser, params: params });
+      // Короткая ссылка без .html (GitHub Pages отдаёт digest.html и по /digest). Сообщение —
+      // только название идеи: без параметров и тизера (просьба пользователя).
+      const prodUrl = location.origin + "/digest?view=client#" + issue.id + "/" + i.id;
+      Share.attach(shHost, { url: prodUrl, title: i.name, name: i.name });
     }
     document.querySelectorAll(".toc-i").forEach(el => el.classList.toggle("active", el.getAttribute("data-id") === i.id));
 

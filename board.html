@@ -599,9 +599,10 @@
     const c = buildContent(inst), U = S.underlyingInfo(inst.underlying);
     const shHost = document.getElementById("sh-host");
     if (shHost && window.Share) {
-      // ссылка на p/<id>.html — лёгкую страницу с персональным og-превью (Telegram/WhatsApp
-      // покажут название продукта, а не общую обложку); она мгновенно ведёт на instrument.html
-      const prodUrl = new URL("p/" + encodeURIComponent(inst.id) + ".html", location.href).href;
+      // ссылка на p/<id> — лёгкую страницу с персональным og-превью (Telegram/WhatsApp
+      // покажут название продукта, а не общую обложку); она мгновенно ведёт на instrument.html.
+      // Без .html: GitHub Pages отдаёт p/<id>.html и по короткому пути (проверено на боевом).
+      const prodUrl = new URL("p/" + encodeURIComponent(inst.id), location.href).href;
       const params = (c.metrics || []).filter(m => m[1] !== "базовый актив").map(m => [m[1], m[0]]);
       Share.attach(shHost, { url: prodUrl, title: S.displayName(inst), name: S.displayName(inst), pitch: c.subtitle, params });
     }
