@@ -80,7 +80,7 @@
   .panel { border: 1px solid var(--border-soft); border-top: 3px solid var(--fc); border-radius: 14px; background: var(--card); padding: 26px 30px; }
   .o-kind { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fc); }
   .o-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; flex-wrap: wrap; }
-  .o-top-right { display: flex; flex-direction: column; align-items: flex-end; gap: 12px; }
+  .o-top-right { display: flex; flex-direction: column; align-items: flex-end; gap: 12px; margin-left: auto; }
   .o-name { margin: 7px 0 4px; font-family:var(--display); font-size: 25px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.15; }
   .o-ref { font-size: 13.5px; color: var(--hushed); } .o-ref b { color: var(--ink); font-weight: 600; }
   .badge { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 600; border-radius: 20px; padding: 6px 13px; white-space: nowrap; }
@@ -113,10 +113,11 @@
   .basket { display: flex; flex-direction: column; }
   .bk-row { display: flex; align-items: baseline; gap: 11px; padding: 8px 0; border-top: 1px solid var(--border-soft); }
   .bk-row:first-child { border-top: none; }
-  .bk-w { font-family: var(--f-mono); font-size: 13px; color: var(--fc); min-width: 38px; }
+  .bk-w { font-family: var(--f-mono); font-size: 13px; color: #49D69C; min-width: 38px; } /* фирменный зелёный АльянсКапитал */
   .bk-nm { font-size: 13.5px; color: var(--ink); flex: 1; }
   .bk-tk { font-family: var(--f-mono); font-size: 11px; color: var(--faint); }
   .bk-sec { font-size: 11px; color: var(--hushed); background: var(--tile); border-radius: 5px; padding: 2px 8px; white-space: nowrap; }
+  .o-partner-line { font-size: 13px; color: var(--hushed); margin-top: 5px; }
   .o-partner { color: var(--steel); font-weight: 500; white-space: nowrap; }
   .o-partner:hover { text-decoration: underline; }
   .docs { margin-top: 16px; }
@@ -202,7 +203,7 @@
   </div>
 </footer>
 
-<script src="data/offerings.js?v=srv7"></script>
+<script src="data/offerings.js?v=srv8"></script>
 <script src="share.js?v=5"></script>
 <script>
 (function () {
@@ -210,7 +211,7 @@
   var D = window.OFFERINGS || { items: [] };
   var FAMCOL = { discount: "#5E9B82", protection: "#4F86E6", warrant: "#E0A24A" };
   var fmt2 = v => (Math.round(v * 100) / 100).toString().replace(".", ",");
-  var famCol = o => FAMCOL[o.family] || FAMCOL.discount;
+  var famCol = o => o.accent || FAMCOL[o.family] || FAMCOL.discount;
 
   function payoff(price, color) {
     var W = 300, H = 128, base = H - 22, top = 16, bw = 70;
@@ -264,7 +265,7 @@
       : '<span class="badge up"><span class="dot"></span>' + o.statusLabel + '</span>';
     var tiles = "";
     if (o.protection) tiles += tile(o.protection, "защита капитала", true);
-    if (o.participation) tiles += tile(o.participation, "участие в росте");
+    if (o.participation) tiles += tile(o.participation, "участие в росте", true);
     if (o.price != null) tiles += tile(fmt2(o.price) + "%", "цена размещения", true);
     if (o.redeem != null) tiles += tile(o.redeem + "%", "погашение");
     tiles += tile(o.nominal.toLocaleString("ru-RU") + " " + o.currency, "номинал") + tile(o.tenor, "срок");
@@ -294,22 +295,22 @@
           (b.sector ? '<span class="bk-sec">' + b.sector + '</span>' : '') + '</div>').join("") +
         '</div></div>'
       : "";
-    // Партнёр по продукту (совместные выпуски со сторонними инвесткомпаниями)
-    var partnerBlk = o.partner
-      ? '<div class="blk"><div class="k">Партнёр по продукту</div><p>' + (o.partner.note || "") +
-        (o.partner.url ? ' <a class="o-partner" href="' + o.partner.url + '" target="_blank" rel="noopener">' + o.partner.name + ' ↗</a>' : "") +
-        '</p></div>'
+    // Партнёр — строкой в шапке, под базовым активом (совместные выпуски)
+    var partnerLine = o.partner
+      ? '<div class="o-partner-line">' + (o.partner.note ? o.partner.note + " " : "") +
+        (o.partner.url
+          ? '<a class="o-partner" href="' + o.partner.url + '" target="_blank" rel="noopener">' + o.partner.name + ' ↗</a>'
+          : o.partner.name) + '</div>'
       : "";
     return '<div class="o-kind">' + o.kind + '</div>' +
       '<div class="o-top"><div><h2 class="o-name">' + o.name + '</h2>' +
-        '<div class="o-ref">' + refLine + '</div></div>' +
+        '<div class="o-ref">' + refLine + '</div>' + partnerLine + '</div>' +
         '<div class="o-top-right">' + badge + '<span id="o-sh-host"></span></div></div>' +
       '<div class="o-teaser">' + o.teaser + '</div>' +
       '<div class="tiles">' + tiles + '</div>' +
       '<div class="o-grid"><div>' +
         aboutBlk +
         '<div class="blk"><div class="k">Как работает</div><p>' + o.how + '</p></div>' +
-        partnerBlk +
         basketBlk +
         '<div class="blk"><div class="k">Главный риск</div><div class="plaque">' + o.risk + '</div></div>' +
         dealersBlk +
