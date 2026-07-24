@@ -35,14 +35,14 @@ window.OFFERINGS = {
     "note": "Выплата = 80% + 100% × рост корзины × (FX в конце ÷ FX в начале) × 0,97. Если корзина не выросла — возврат 80% номинала."
    },
    "basket": [
-    {"w": 30, "name": "NextEra Energy", "ticker": "NYSE: NEE", "sector": "ВИЭ"},
-    {"w": 10, "name": "Cameco", "ticker": "NYSE: CCJ", "sector": "Атом"},
-    {"w": 10, "name": "Constellation Energy", "ticker": "NASDAQ: CEG", "sector": "Атом"},
-    {"w": 10, "name": "Oklo", "ticker": "NYSE: OKLO", "sector": "Атом"},
-    {"w": 10, "name": "GE Vernova", "ticker": "NYSE: GEV", "sector": "Инфраструктура"},
-    {"w": 10, "name": "Eaton", "ticker": "NYSE: ETN", "sector": "Инфраструктура"},
-    {"w": 10, "name": "American Electric Power", "ticker": "NASDAQ: AEP", "sector": "Инфраструктура"},
-    {"w": 10, "name": "EQT Corporation", "ticker": "NYSE: EQT", "sector": "Газ"}
+    {"w": 30, "name": "NextEra Energy", "ticker": "NYSE: NEE", "sector": "ВИЭ", "wiki": "https://ru.wikipedia.org/wiki/NextEra_Energy"},
+    {"w": 10, "name": "Cameco", "ticker": "NYSE: CCJ", "sector": "Атом", "wiki": "https://ru.wikipedia.org/wiki/Cameco"},
+    {"w": 10, "name": "Constellation Energy", "ticker": "NASDAQ: CEG", "sector": "Атом", "wiki": "https://ru.wikipedia.org/wiki/Constellation_Energy"},
+    {"w": 10, "name": "Oklo", "ticker": "NYSE: OKLO", "sector": "Атом", "wiki": "https://en.wikipedia.org/wiki/Oklo_Inc."},
+    {"w": 10, "name": "GE Vernova", "ticker": "NYSE: GEV", "sector": "Инфраструктура", "wiki": "https://ru.wikipedia.org/wiki/GE_Vernova"},
+    {"w": 10, "name": "Eaton", "ticker": "NYSE: ETN", "sector": "Инфраструктура", "wiki": "https://ru.wikipedia.org/wiki/Eaton"},
+    {"w": 10, "name": "American Electric Power", "ticker": "NASDAQ: AEP", "sector": "Инфраструктура", "wiki": "https://ru.wikipedia.org/wiki/American_Electric_Power"},
+    {"w": 10, "name": "EQT Corporation", "ticker": "NYSE: EQT", "sector": "Газ", "wiki": "https://en.wikipedia.org/wiki/EQT_Corporation"}
    ],
    "example": {
     "title": "Пример расчёта при погашении",

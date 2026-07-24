@@ -117,6 +117,10 @@
   .bk-nm { font-size: 13.5px; color: var(--ink); flex: 1; }
   .bk-tk { font-family: var(--f-mono); font-size: 11px; color: var(--faint); }
   .bk-sec { font-size: 11px; color: var(--hushed); background: var(--tile); border-radius: 5px; padding: 2px 8px; white-space: nowrap; }
+  .bk-a { color: var(--ink); border-bottom: 1px dotted rgba(255,255,255,0.28); transition: color .15s, border-color .15s; }
+  .bk-a:hover { color: var(--steel); border-bottom-color: var(--steel); }
+  .bk-ext { font-size: 10px; color: var(--faint); margin-left: 3px; }
+  .bk-a:hover .bk-ext { color: var(--steel); }
   /* Пример расчёта при погашении */
   .ex { background: var(--tile); border-radius: 10px; padding: 4px 14px; }
   .ex-row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 8px 0; border-top: 1px solid var(--border-soft); }
@@ -212,7 +216,7 @@
   </div>
 </footer>
 
-<script src="data/offerings.js?v=srv9"></script>
+<script src="data/offerings.js?v=srv10"></script>
 <script src="share.js?v=5"></script>
 <script>
 (function () {
@@ -320,11 +324,14 @@
         '<div class="o-video"><video controls playsinline preload="metadata"' + (o.video.poster ? ' poster="' + o.video.poster + '"' : '') + '>' +
         '<source src="' + o.video.src + '" type="video/mp4">Ваш браузер не поддерживает видео.</video></div></div>'
       : "";
-    // Состав корзины (для продуктов с несколькими базовыми активами)
+    // Состав корзины (для продуктов с несколькими базовыми активами);
+    // имя со ссылкой на Википедию (b.wiki) — открывается в новой вкладке
     var basketBlk = (o.basket && o.basket.length)
       ? '<div class="blk"><div class="k">Состав корзины</div><div class="basket">' +
         o.basket.map(b => '<div class="bk-row"><span class="bk-w">' + b.w + '%</span>' +
-          '<span class="bk-nm">' + b.name + ' <span class="bk-tk">' + b.ticker + '</span></span>' +
+          '<span class="bk-nm">' +
+            (b.wiki ? '<a class="bk-a" href="' + b.wiki + '" target="_blank" rel="noopener">' + b.name + '<span class="bk-ext">↗</span></a>' : b.name) +
+            ' <span class="bk-tk">' + b.ticker + '</span></span>' +
           (b.sector ? '<span class="bk-sec">' + b.sector + '</span>' : '') + '</div>').join("") +
         '</div></div>'
       : "";
