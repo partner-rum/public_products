@@ -315,7 +315,8 @@
     if (o.isin) tiles += tile(o.isin, "ISIN");
     if (o.venue) tiles += tile(o.venue, "площадка");
     var refLine = (o.family === "discount" ? "Контрольное лицо: " : "Базовый актив: ") + "<b>" + o.reference + "</b>" +
-      (o.issuer ? " · " + o.issuer : "") + (o.serial ? " · " + o.serial : "");
+      (o.serial ? " · " + o.serial : "");
+    var issuerLine = o.issuer ? '<div class="o-ref">Эмитент: <b>' + o.issuer + '</b></div>' : "";
     var aboutBlk = o.about ? '<div class="blk"><div class="k">О компании</div><p>' + o.about + '</p></div>' : "";
     var dealersBlk = (o.dealers && o.dealers.length)
       ? '<div class="blk"><div class="k">Дилеры-ориентиры</div><div class="dealers">' + o.dealers.map(x => '<span>' + x + '</span>').join("") + '</div></div>' : "";
@@ -362,7 +363,7 @@
       : "";
     return '<div class="o-kind">' + o.kind + '</div>' +
       '<div class="o-top"><div><h2 class="o-name">' + o.name + '</h2>' +
-        '<div class="o-ref">' + refLine + '</div>' + partnerLine + '</div>' +
+        '<div class="o-ref">' + refLine + '</div>' + issuerLine + partnerLine + '</div>' +
         '<div class="o-top-right">' + badge + '<div class="o-actions">' + topDocBtns + '<span id="o-sh-host"></span></div></div></div>' +
       '<div class="o-teaser">' + o.teaser + '</div>' +
       '<div class="tiles">' + tiles + '</div>' +
