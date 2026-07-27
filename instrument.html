@@ -184,6 +184,7 @@
       <div class="subtitle" id="subtitle"></div>
       <div class="actions">
         <span class="ct-host" id="ct-host"></span>
+        <span class="sh-host" id="sh-host"></span>
         <a class="btn-pdf btn-secondary" id="onepager-link" href="#">
           <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
             <path d="M7 1 V9 M7 9 L4 6 M7 9 L10 6" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
@@ -239,6 +240,7 @@
 <script src="data/instruments.js?v=fx7"></script>
 <script src="data/lib.js?v=fx9"></script>
 <script src="contact.js?v=8"></script>
+<script src="share.js?v=6"></script>
 <script src="intro.js?v=3"></script>
 <script>
   const S = window.SITE;
@@ -566,6 +568,12 @@
   document.getElementById("title").textContent = S.displayName(inst);
   document.getElementById("onepager-link").href = "onepager.html?id=" + encodeURIComponent(inst.id) + "&print=1";
   if (window.Contact) Contact.attach(document.getElementById("ct-host"), { title: S.displayName(inst), url: location.href, id: inst.id });
+  // «Поделиться» отдаёт /p/<id> — лёгкую страницу с персональным og-превью (как на доске),
+  // чтобы сейлз, скопировавший адрес из карточки, слал не обезличенную обложку (A.7).
+  if (window.Share) {
+    var prodUrl = new URL("p/" + encodeURIComponent(inst.id), location.href).href;
+    Share.attach(document.getElementById("sh-host"), { url: prodUrl, title: S.displayName(inst), name: S.displayName(inst), pitch: content.subtitle, params: (content.metrics || []) });
+  }
   document.getElementById("badge").textContent = content.badge;
   document.getElementById("subtitle").textContent = content.subtitle;
   document.getElementById("quote").innerHTML = S.quoteBig(inst.quote);

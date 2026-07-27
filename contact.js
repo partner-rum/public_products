@@ -22,8 +22,10 @@ window.Contact = (function () {
     '.ct-btn{display:inline-flex;align-items:center;gap:8px;background:#EE7D1B;color:#0C0A08;border:none;border-radius:8px;padding:11px 18px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:background .2s}' +
     '.ct-btn:hover{background:#F58E33}' +
     '.ct-btn svg{display:block}' +
-    '.ct-menu{position:absolute;left:0;top:calc(100% + 10px);z-index:70;width:302px;max-width:calc(100vw - 24px);background:#1B1D26;border:1px solid rgba(255,255,255,0.12);border-radius:14px;padding:14px;box-shadow:0 18px 46px rgba(0,0,0,0.55);opacity:0;transform:translateY(-6px);pointer-events:none;transition:opacity .18s ease,transform .18s cubic-bezier(0.16,1,0.3,1)}' +
-    '.ct.open .ct-menu{opacity:1;transform:none;pointer-events:auto}' +
+    // visibility:hidden в закрытом состоянии убирает пункты меню из порядка табуляции
+    // и из дерева скринридера (opacity+pointer-events этого не делали — A.6).
+    '.ct-menu{position:absolute;left:0;top:calc(100% + 10px);z-index:70;width:302px;max-width:calc(100vw - 24px);background:#1B1D26;border:1px solid rgba(255,255,255,0.12);border-radius:14px;padding:14px;box-shadow:0 18px 46px rgba(0,0,0,0.55);opacity:0;visibility:hidden;transform:translateY(-6px);pointer-events:none;transition:opacity .18s ease,transform .18s cubic-bezier(0.16,1,0.3,1),visibility 0s linear .18s}' +
+    '.ct.open .ct-menu{opacity:1;visibility:visible;transform:none;pointer-events:auto;transition:opacity .18s ease,transform .18s cubic-bezier(0.16,1,0.3,1),visibility 0s}' +
     '.ct-lead{font-size:12.5px;line-height:1.45;color:rgba(242,243,247,0.62);margin-bottom:11px}' +
     '.ct-mi{display:flex;align-items:center;gap:11px;width:100%;text-align:left;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:9px;padding:10px 12px;cursor:pointer;font-family:inherit;font-size:13.5px;color:#F2F3F7;text-decoration:none;margin-bottom:7px}' +
     '.ct-mi:hover{background:rgba(255,255,255,0.08)}' +
@@ -35,6 +37,15 @@ window.Contact = (function () {
     '.ct-inp{width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.14);border-radius:9px;padding:10px 12px;color:#F2F3F7;font-family:inherit;font-size:16px;outline:none}' +
     '.ct-inp::placeholder{color:rgba(242,243,247,0.4)}' +
     '.ct-inp:focus{border-color:rgba(238,125,27,0.6)}' +
+    '.ct-inp.invalid{border-color:rgba(224,112,90,0.7)}' +
+    '.ct-err{min-height:0;font-size:11.5px;line-height:1.35;color:#E0705A;margin:-3px 2px 0}' +
+    '.ct-err:empty{display:none}' +
+    '.ct-done{display:flex;flex-direction:column;gap:10px}' +
+    '.ct-done .dh{display:flex;align-items:flex-start;gap:9px;font-size:13.5px;line-height:1.4;color:#F2F3F7}' +
+    '.ct-done .dh .ic{color:#55C08A;flex:none;margin-top:1px}' +
+    '.ct-done .ds{font-size:12px;line-height:1.45;color:rgba(242,243,247,0.62)}' +
+    '.ct-done .da{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.14);border-radius:9px;padding:10px 12px;color:#F2F3F7;text-decoration:none;font-size:13.5px;font-weight:500}' +
+    '.ct-done .da:hover{background:rgba(255,255,255,0.08)}' +
     '.ct-sel{appearance:none;-webkit-appearance:none;cursor:pointer;padding-right:34px;background-image:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%23A0A5B8%27 stroke-width=%272.5%27%3E%3Cpath d=%27M6 9l6 6 6-6%27/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}' +
     '.ct-sel:invalid{color:rgba(242,243,247,0.56)}' +
     '.ct-form option{background:#1B1D26;color:#F2F3F7}' +
@@ -81,14 +92,17 @@ window.Contact = (function () {
         tgRow + waRow +
         '<div class="ct-sep"><span>' + sepText + '</span></div>' +
         '<form class="ct-form" novalidate>' +
-          '<select class="ct-inp ct-sel" name="segment" required>' +
+          '<select class="ct-inp ct-sel" name="segment" required aria-label="Кто вы">' +
             '<option value="" disabled selected>Кто вы? (обязательно)</option>' +
             '<option value="Частный инвестор">Частный инвестор</option>' +
             '<option value="Финансовый институт">Финансовый институт</option>' +
             '<option value="Агент">Агент</option>' +
           '</select>' +
-          '<input class="ct-inp" name="name" placeholder="Ваше имя" autocomplete="name">' +
-          '<input class="ct-inp" name="contact" placeholder="Телефон или @Telegram" autocomplete="tel">' +
+          '<input class="ct-inp" name="name" placeholder="Ваше имя" autocomplete="name" aria-label="Ваше имя">' +
+          // type="text" (не tel): поле принимает и @Telegram, и email — на inputmode="tel"
+          // iOS-клавиатура прячет буквы и @, ввод хендла/почты ломается.
+          '<input class="ct-inp" name="contact" type="text" placeholder="Телефон или @Telegram" autocomplete="tel" aria-label="Телефон, @Telegram или email">' +
+          '<div class="ct-err" role="alert" aria-live="assertive"></div>' +
           '<button class="ct-send" type="submit">Оставить заявку</button>' +
         '</form>' +
         (CFG.endpoint ? "" : '<div class="ct-note">Демо: подключите Telegram-бота (см. bot/README), чтобы заявки приходили менеджеру.</div>') +
@@ -98,10 +112,12 @@ window.Contact = (function () {
     host.appendChild(wrap);
 
     var btn = wrap.querySelector(".ct-btn"),
+        menu = wrap.querySelector(".ct-menu"),
         toast = wrap.querySelector(".ct-toast"),
         tIcon = wrap.querySelector(".ct-tic"),
         tMsg = wrap.querySelector(".ct-tmsg"),
         form = wrap.querySelector(".ct-form"),
+        errEl = wrap.querySelector(".ct-err"),
         sendBtn = wrap.querySelector(".ct-send");
 
     var toastTimer = null;
@@ -114,26 +130,51 @@ window.Contact = (function () {
       toastTimer = setTimeout(function () { toast.classList.remove("on"); }, 3600);
     }
 
+    function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+
+    // Валидность контакта: @-хендл, e-mail или телефон (≥10 цифр).
+    function validContact(v) {
+      v = v.trim();
+      if (/^@[A-Za-z0-9_]{4,}$/.test(v)) return true;
+      if (/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)) return true;
+      return (v.match(/\d/g) || []).length >= 10;
+    }
+    function clearErr() {
+      errEl.textContent = "";
+      form.querySelectorAll(".ct-inp").forEach(function (el) { el.classList.remove("invalid"); el.removeAttribute("aria-invalid"); });
+    }
+    function showErr(field, msg) {
+      errEl.textContent = msg;                 // role="alert" + aria-live — скринридер озвучит
+      if (field) { field.classList.add("invalid"); field.setAttribute("aria-invalid", "true"); field.focus(); }
+    }
+
+    // A.5: вместо исчезающего тоста — карточка на месте формы, не пропадает.
+    function showDone() {
+      menu.innerHTML =
+        '<div class="ct-done" role="status">' +
+          '<div class="dh"><span class="ic">' + IC.check + '</span>' +
+            '<span>Заявка по «' + esc(title) + '» принята. Ответим в течение рабочего дня.</span></div>' +
+          (CFG.botUser ? '<a class="da" target="_blank" rel="noopener" href="https://t.me/' + CFG.botUser + (startPayload ? "?start=" + startPayload : "") + '">' + IC.tg + '<span>Написать в Telegram сейчас</span></a>' : '') +
+        '</div>';
+    }
+
     btn.addEventListener("click", function (e) { e.stopPropagation(); wrap.classList.toggle("open"); });
     document.addEventListener("click", function (e) { if (!wrap.contains(e.target)) wrap.classList.remove("open"); });
     document.addEventListener("keydown", function (e) { if (e.key === "Escape") wrap.classList.remove("open"); });
 
     form.addEventListener("submit", function (e) {
       e.preventDefault();
+      clearErr();
       var segEl = form.querySelector('[name="segment"]'),
           contactEl = form.querySelector('[name="contact"]'),
           nameEl = form.querySelector('[name="name"]');
       var contact = contactEl.value.trim();
-      if (!segEl.value) { segEl.focus(); return; }
-      if (!contact) { contactEl.focus(); return; }
+      if (!segEl.value) { showErr(segEl, "Выберите, кто вы."); return; }
+      if (!contact) { showErr(contactEl, "Оставьте телефон, @Telegram или email — иначе мы не сможем ответить."); return; }
+      if (!validContact(contact)) { showErr(contactEl, "Не похоже на телефон, @Telegram или email. Проверьте, пожалуйста."); return; }
 
       // Демо-режим (бот ещё не подключён): показываем успех локально.
-      if (!CFG.endpoint) {
-        wrap.classList.remove("open");
-        showToast(true, "Заявка принята — менеджер свяжется с вами");
-        form.reset();
-        return;
-      }
+      if (!CFG.endpoint) { showDone(); return; }
 
       var ref = ""; try { ref = localStorage.getItem("so_ref") || ""; } catch (e) {}
       var payload = { segment: segEl.value, name: nameEl.value.trim(), contact: contact, product: title, url: url, ref: ref };
@@ -153,9 +194,7 @@ window.Contact = (function () {
         sendBtn.disabled = false;
         sendBtn.textContent = oldLabel;
         if (ok) {
-          wrap.classList.remove("open");
-          showToast(true, "Заявка принята — менеджер свяжется с вами");
-          form.reset();
+          showDone();
           if (typeof window.ym === "function") { try { window.ym(110759242, "reachGoal", "lead_submit"); } catch (e) {} }
         } else {
           showToast(false, "Не удалось отправить. Напишите нам в Telegram или WhatsApp.");

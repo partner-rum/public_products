@@ -19,8 +19,10 @@ window.Share = (function () {
     '.sh-btn{display:inline-flex;align-items:center;gap:7px;background:transparent;border:1px solid rgba(255,255,255,0.14);color:#F2F3F7;border-radius:8px;padding:8px 13px;font-family:inherit;font-size:13px;cursor:pointer;transition:border-color .2s,background .2s}' +
     '.sh-btn:hover{border-color:rgba(255,255,255,0.28);background:rgba(255,255,255,0.05)}' +
     '.sh-btn svg{display:block}' +
-    '.sh-menu{position:absolute;right:0;top:calc(100% + 8px);z-index:60;width:238px;max-width:calc(100vw - 24px);background:#1B1D26;border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:6px;box-shadow:0 16px 40px rgba(0,0,0,0.55);opacity:0;transform:translateY(-4px);pointer-events:none;transition:opacity .18s ease,transform .18s cubic-bezier(0.16,1,0.3,1)}' +
-    '.sh.open .sh-menu{opacity:1;transform:none;pointer-events:auto}' +
+    // visibility:hidden в закрытом состоянии убирает пункты меню из табуляции и из
+    // дерева скринридера (opacity+pointer-events этого не делали — A.6).
+    '.sh-menu{position:absolute;right:0;top:calc(100% + 8px);z-index:60;width:238px;max-width:calc(100vw - 24px);background:#1B1D26;border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:6px;box-shadow:0 16px 40px rgba(0,0,0,0.55);opacity:0;visibility:hidden;transform:translateY(-4px);pointer-events:none;transition:opacity .18s ease,transform .18s cubic-bezier(0.16,1,0.3,1),visibility 0s linear .18s}' +
+    '.sh.open .sh-menu{opacity:1;visibility:visible;transform:none;pointer-events:auto;transition:opacity .18s ease,transform .18s cubic-bezier(0.16,1,0.3,1),visibility 0s}' +
     '.sh.align-left .sh-menu,.sh.align-left .sh-toast{right:auto;left:0}' +
     '.sh-mi{display:flex;align-items:center;gap:11px;width:100%;text-align:left;background:none;border:none;border-radius:8px;padding:10px 11px;cursor:pointer;font-family:inherit;font-size:13.5px;color:#F2F3F7;text-decoration:none}' +
     '.sh-mi:hover{background:rgba(255,255,255,0.06)}' +

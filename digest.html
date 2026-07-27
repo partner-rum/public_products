@@ -177,6 +177,7 @@
 <script src="data/digest.js?v=srv3"></script>
 <script src="data/digest-lib.js?v=3"></script>
 <script src="share.js?v=6"></script>
+<script src="contact.js?v=8"></script>
 <script>
   const A = window.DIGEST_ARCHIVE;
   if (new URLSearchParams(location.search).get("view") === "client") document.body.classList.add("client");
@@ -218,13 +219,23 @@
       '<div class="art-head"><div class="art-meta"><span class="art-num">' + num(i.id) + '</span><span class="art-kind">' + i.kind + '</span></div><span class="art-tools" id="art-tools"></span></div>' +
       '<h2 class="art-title">' + i.name + '</h2>' +
       '<div class="art-un">' + i.underlying + '</div>' +
-      '<div class="art-bar"></div>' + DF.detailBody(i);
+      '<div class="art-bar"></div>' + DF.detailBody(i) +
+      '<div class="art-cta" style="margin-top:24px"><span class="ct-host" id="art-ct"></span></div>';
     const shHost = document.getElementById("art-tools");
     if (shHost && window.Share) {
       // Короткая ссылка без .html (GitHub Pages отдаёт digest.html и по /digest). Сообщение —
       // только название идеи: без параметров и тизера (просьба пользователя).
       const prodUrl = location.origin + "/digest?view=client#" + issue.id + "/" + i.id;
       Share.attach(shHost, { url: prodUrl, title: i.name, name: i.name });
+    }
+    // Заявка прямо из идеи дайджеста — это то, что рассылают клиентам, а формы тут не было (A.1).
+    if (window.Contact) {
+      Contact.attach(document.getElementById("art-ct"), {
+        title: "Идея дайджеста: " + i.name + " (" + i.underlying + ")",
+        url: location.href.split("#")[0] + "#" + issue.id + "/" + i.id,
+        id: i.id,
+        label: "Обсудить идею"
+      });
     }
     document.querySelectorAll(".toc-i").forEach(el => el.classList.toggle("active", el.getAttribute("data-id") === i.id));
 

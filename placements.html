@@ -197,6 +197,7 @@
 <script src="data/lib.js?v=fx9"></script>
 <script src="data/placements.js"></script>
 <script src="data/placement_docs.js"></script>
+<script src="contact.js?v=8"></script>
 <script>
   const S = window.SITE;
   const D = window.PLACEMENTS_DATA;
@@ -281,7 +282,8 @@
         ["Номинал", i.notional ? Math.round(i.notional) + " " + (i.currency || "") : "—", true],
         ["Рег. номер", i.regNumber || "—", true],
         ["ISIN", i.isin, true]
-      ]) + '</div>' + docsHTML;
+      ]) + '</div>' + docsHTML +
+      '<div class="pp-cta"><span class="ct-host" id="ct-host"></span></div>';
   }
 
   function filtered() {
@@ -297,6 +299,17 @@
     const i = issues.find(x => x.isin === isin);
     if (!i) return;
     document.getElementById("panel").innerHTML = passportHTML(i);
+    // Заявка по конкретному выпуску: в контекст уходят ISIN и, если есть, Bid —
+    // на этой странице возникает «хочу добрать/продать», а формы тут не было (A.1).
+    if (window.Contact) {
+      var bidTxt = (!i.matured && i.bid != null) ? ", текущий Bid " + fmtN(i.bid) + "% (индикативно)" : "";
+      Contact.attach(document.getElementById("ct-host"), {
+        title: i.serial + " · ISIN " + i.isin + bidTxt,
+        url: location.href.split("#")[0] + "#" + isin,
+        id: i.isin,
+        label: "Обсудить выпуск"
+      });
+    }
     document.querySelectorAll(".item").forEach(el =>
       el.classList.toggle("active", el.getAttribute("data-isin") === isin));
     history.replaceState(null, "", "#" + isin);

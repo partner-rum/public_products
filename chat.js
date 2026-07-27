@@ -27,8 +27,10 @@
     ".ca-btn .ca-ai{position:absolute;top:-5px;right:-5px;background:#0B0C10;color:#8FB3F0;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;letter-spacing:.06em;padding:2px 5px;border-radius:4px;border:1px solid rgba(79,134,230,.5);}" +
     ".ca-btn.hide{display:none;}" +
     /* — панель — */
-    ".ca-panel{position:fixed;right:20px;bottom:20px;z-index:301;width:376px;max-width:calc(100vw - 32px);height:560px;max-height:calc(100dvh - 40px);background:#14161C;border:1px solid rgba(255,255,255,.12);border-radius:18px;box-shadow:0 24px 70px rgba(0,0,0,.55);display:flex;flex-direction:column;overflow:hidden;font-family:'Onest',system-ui,sans-serif;opacity:0;transform:translateY(14px) scale(.98);transition:opacity .2s,transform .2s;pointer-events:none;}" +
-    ".ca-panel.on{opacity:1;transform:none;pointer-events:auto;}" +
+    // visibility:hidden в закрытом состоянии убирает содержимое панели из табуляции
+    // и из дерева скринридера (opacity+pointer-events этого не делали — A.6).
+    ".ca-panel{position:fixed;right:20px;bottom:20px;z-index:301;width:376px;max-width:calc(100vw - 32px);height:560px;max-height:calc(100dvh - 40px);background:#14161C;border:1px solid rgba(255,255,255,.12);border-radius:18px;box-shadow:0 24px 70px rgba(0,0,0,.55);display:flex;flex-direction:column;overflow:hidden;font-family:'Onest',system-ui,sans-serif;opacity:0;visibility:hidden;transform:translateY(14px) scale(.98);transition:opacity .2s,transform .2s,visibility 0s linear .2s;pointer-events:none;}" +
+    ".ca-panel.on{opacity:1;visibility:visible;transform:none;pointer-events:auto;transition:opacity .2s,transform .2s,visibility 0s;}" +
     ".ca-head{display:flex;align-items:center;gap:11px;padding:13px 16px;border-bottom:1px solid rgba(255,255,255,.09);flex:none;background:#14161C;}" +
     ".ca-ava{width:38px;height:38px;border-radius:10px;background:#0B0C10;border:1px solid rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;flex:none;}" +
     ".ca-ttl-row{display:flex;align-items:center;gap:7px;}" +
