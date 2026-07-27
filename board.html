@@ -732,8 +732,10 @@
 
   // ── Полоса под шапкой: синусоида-фон + лента мотивирующих фраз (декор) ──
   (function ribbon() {
+    // Убраны: «Доходность любит расчёт» (доходность как метрика — под запретом
+    // правил витрины) и «Капитал под защитой при любом сценарии» (защиты капитала
+    // среди реальных продуктов нет, все могут потерять деньги — вводит в заблуждение).
     var PHRASES = [
-      "Доходность любит расчёт",
       "Риск известен до сделки",
       "Доход по формуле, а не по удаче",
       "Идея = гипотеза + цифры",
@@ -741,7 +743,6 @@
       "Считай сценарий до сделки — прямо здесь",
       "Каждая идея — с примером в рублях",
       "Рычаг на рост — риск лишь в премии",
-      "Капитал под защитой при любом сценарии",
       "Рынок вознаграждает подготовленных"
     ];
     var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -751,8 +752,13 @@
     if (rot) {
       PHRASES.forEach(function (p, i) { var s = document.createElement("span"); s.textContent = p; if (i === 0) s.className = "on"; rot.appendChild(s); });
       if (!reduce && PHRASES.length > 1) {
-        var k = 0, spans = rot.querySelectorAll("span");
-        setInterval(function () { spans[k].classList.remove("on"); k = (k + 1) % spans.length; spans[k].classList.add("on"); }, 3600);
+        var k = 0, spans = rot.querySelectorAll("span"), timer = null;
+        // setInterval с clearInterval: в фоновой вкладке ротацию гасим, чтобы
+        // таймер не тикал вхолостую, и возобновляем при возврате на вкладку.
+        function startRot() { if (timer) return; timer = setInterval(function () { spans[k].classList.remove("on"); k = (k + 1) % spans.length; spans[k].classList.add("on"); }, 3600); }
+        function stopRot() { if (timer) { clearInterval(timer); timer = null; } }
+        startRot();
+        document.addEventListener("visibilitychange", function () { document.hidden ? stopRot() : startRot(); });
       }
     }
 
@@ -778,6 +784,6 @@
 </script>
 <script src="chat.js?v=10"></script>
 <script src="nav-about.js?v=3"></script>
-<script src="qualgate.js?v=1"></script>
+<script src="qualgate.js?v=2"></script>
 </body>
 </html>

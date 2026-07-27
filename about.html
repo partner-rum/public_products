@@ -478,7 +478,7 @@
         '<div style="margin-top:20px">' + boardLink(fam, "Смотреть варранты на доске") + '</div>';
     }
     var d = LIB[id];
-    var kind = famKey === "discount" ? "Продукт · консервативный" : famKey === "protection" ? "Продукт · сбалансированный" : famKey === "booster" ? "Структурная нота · агрессивный" : "Варрант · активный";
+    var kind = famKey === "discount" ? "Продукт · консервативный" : famKey === "protection" ? "Продукт · сбалансированный" : famKey === "booster" ? "Структурная облигация · агрессивный" : "Варрант · активный";
     var left = usecaseHTML(d) +
       '<div class="kv"><div class="k">Как работает</div><div class="v">' + d.how + '</div></div>' +
       metricsHTML(d) +
@@ -604,6 +604,6 @@
 </script>
 <script src="chat.js?v=10"></script>
 <script src="nav-about.js?v=3"></script>
-<script src="qualgate.js?v=1"></script>
+<script src="qualgate.js?v=2"></script>
 </body>
 </html>

@@ -205,7 +205,7 @@
   const today = new Date();
   const dateS = ("0" + today.getDate()).slice(-2) + "." + ("0" + (today.getMonth() + 1)).slice(-2) + "." + today.getFullYear();
   const starSvg = (s, f) => '<svg width="' + s + '" height="' + s + '" viewBox="0 0 26 26" fill="none"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="' + f + '"/></svg>';
-  const QUAL = "Только для квалифицированных инвесторов<br>Не является инвестиционной рекомендацией";
+  const QUAL = "Только для квалифицированных инвесторов<br>Не является индивидуальной инвестиционной рекомендацией";
 
   function underDesc() {
     return S.underlyingLong(inst.underlying) || (U && U.desc) ||

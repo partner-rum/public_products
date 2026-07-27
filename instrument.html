@@ -115,6 +115,7 @@
   .calc-o .v { font-family: var(--f-mono); font-size: 19px; font-weight: 600; letter-spacing: -0.01em; }
   .calc-o .k { font-size: 11px; color: var(--faint); margin-top: 3px; }
   .calc-note { margin-top: 11px; font-size: 11.5px; line-height: 1.45; color: var(--faint); }
+  .disclaimer { margin-top: 20px; font-size: 12px; line-height: 1.5; color: var(--faint); }
 
   /* Экран «продукта нет»: снят с витрины, битая или устаревшая ссылка */
   .gone { max-width: 560px; margin: 72px auto 0; text-align: center; }
@@ -230,6 +231,8 @@
     <div class="explainer" id="explainer"></div>
     <div class="facts" id="facts"></div>
   </div>
+
+  <div class="disclaimer" id="disclaimer"></div>
 
 </div>
 
@@ -592,6 +595,11 @@
   document.getElementById("facts").innerHTML = content.facts.map(f =>
     '<div class="fact"><div class="k">' + f[0] + '</div><div class="v">' + f[1] + '</div></div>').join("");
 
+  // Дисклеймер: на эту страницу ведут ВСЕ шаринг-ссылки (p/<id> → instrument.html),
+  // а юридической оговорки тут не было — она приходила только из подвала чат-виджета.
+  document.getElementById("disclaimer").textContent =
+    S.LEGAL.iir + " Котировки индикативны. Пример расчёта иллюстративный, без учёта комиссий и налогов. Продукт доступен только квалифицированным инвесторам.";
+
   // --- Калькулятор выплаты (математика — в data/lib.js S.calc, общая с доской) ---
   function calcInner(inst) {
     const nom0 = inst.minNom || 1000000;
@@ -656,6 +664,6 @@
 </script>
 <script src="chat.js?v=10"></script>
 <script src="nav-about.js?v=3"></script>
-<script src="qualgate.js?v=1"></script>
+<script src="qualgate.js?v=2"></script>
 </body>
 </html>

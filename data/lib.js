@@ -56,6 +56,9 @@ window.SITE = (function () {
 
   // Юридические тексты (one-pager, футеры). Реквизиты заполняет компания — правится в одном месте.
   const LEGAL = {
+    // Единая формулировка ИИР — строгий термин «индивидуальной» (не путать с более
+    // слабым «инвестиционной рекомендацией»). Используется в подвалах витрины.
+    iir: "Не является индивидуальной инвестиционной рекомендацией.",
     qual: "Материал предназначен исключительно для квалифицированных инвесторов.",
     fx: "Базовый актив номинирован в иностранной валюте — выплата и пример расчёта приведены без учёта изменения валютного курса.",
     onepager: [
@@ -148,21 +151,6 @@ window.SITE = (function () {
     return UNDERLYINGS[name] || null;
   }
 
-  // Годовая доходность дисконтной облигации к погашению (простая).
-  function yieldAnnual(r) {
-    const d = daysTo(r.expiry);
-    if (!d) return 0;
-    return (100 / r.quote - 1) * (365 / d) * 100;
-  }
-
-  // Значение ключевого параметра для колонки доски.
-  function paramValue(r) {
-    if (r.type === "warrant") return fmtSmart(r.strike) + (r.strike2 ? "–" + fmtSmart(r.strike2) : "");
-    if (r.type === "discount") return fmt1(yieldAnnual(r)) + "% год.";
-    if (r.type === "protection") return Math.round(r.participation * 100) + "% роста";
-    return "";
-  }
-
   // Детерминированная история котировки (демо).
   function history(id, quote) {
     let seed = 0;
@@ -213,6 +201,6 @@ window.SITE = (function () {
     return /S&P|NASDAQ|NVDA|NVIDIA|NBIS|Nebius|BTC|IBIT|GLD|SPY|COPX|CSI|URA|Uranium|Bitcoin|Gold|USD|\$/i.test(n);
   }
 
-  return { TYPES, INSTRUMENTS, PAYOFF, LEGAL, calc, displayName, findInstrument, instrumentsOfType, underlyingInfo, underlyingLong, isFxSensitive, yieldAnnual, paramValue, history, fmtInt, fmt2, fmt1, fmtSmart, quoteBig, daysTo };
+  return { TYPES, INSTRUMENTS, PAYOFF, LEGAL, calc, displayName, findInstrument, instrumentsOfType, underlyingInfo, underlyingLong, isFxSensitive, history, fmtInt, fmt2, fmt1, fmtSmart, quoteBig, daysTo };
 
 })();

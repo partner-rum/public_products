@@ -34,6 +34,10 @@
     ".qg-no{background:none;color:rgba(242,243,247,.85);font-weight:500;border:1px solid rgba(255,255,255,.18);}" +
     ".qg-no:hover{border-color:rgba(255,255,255,.36);color:#F2F3F7;}" +
     ".qg-note{margin:18px 0 0;font-size:11.5px;line-height:1.5;color:rgba(242,243,247,.55);text-align:center;}" +
+    ".qg-links{margin:18px 0 0;font-size:12.5px;line-height:1.6;color:rgba(242,243,247,.68);text-align:center;}" +
+    ".qg-links a{color:#F58E33;text-decoration:none;}" +
+    ".qg-links a:hover{text-decoration:underline;}" +
+    ".qg-links .sep{opacity:.5;margin:0 6px;}" +
     ".qg-lock,.qg-lock body{overflow:hidden!important;}" +
     "@media(max-width:480px){.qg-card{padding:26px 20px 20px;}.qg-h{font-size:18px;}}";
 
@@ -92,14 +96,20 @@
       focusFirst();
     }
     function renderBlocked() {
+      // Раньше единственной кнопкой была «Я квалифицированный инвестор» — тупик,
+      // где честно ответивший «Нет» мог только вернуться и передумать. Добавляем
+      // объяснение статуса и реальные выходы (сайт компании, контакт). Саму логику
+      // гейта и текст вопроса не меняем.
       veil.innerHTML =
         '<div class="qg-card">' +
           '<div class="qg-eyebrow"><span class="qg-dot" style="background:#E0705A"></span>Доступ ограничен</div>' +
           '<h2 class="qg-h" id="qg-h">Материалы доступны только квалифицированным инвесторам</h2>' +
-          '<p class="qg-sub">К сожалению, мы не можем открыть содержимое сайта. Если вы квалифицированный инвестор — вернитесь к подтверждению статуса.</p>' +
+          '<p class="qg-sub">Статус квалифицированного инвестора присваивает брокер или управляющая компания — при соответствии критериям Банка России (по размеру активов, опыту сделок, образованию или квалификации). Если вы уже получили статус — вернитесь к подтверждению.</p>' +
           '<div class="qg-btns">' +
             '<button class="qg-yes qg-back" type="button">Я квалифицированный инвестор</button>' +
           '</div>' +
+          '<p class="qg-links"><a href="https://rumbergcapital.com" target="_blank" rel="noopener">О компании Rumberg</a>' +
+            '<span class="sep">·</span><a href="https://t.me/Rumberb_Sales_Team_bot" target="_blank" rel="noopener">Задать вопрос</a></p>' +
         '</div>';
       veil.querySelector(".qg-back").addEventListener("click", renderAsk);
       focusFirst();

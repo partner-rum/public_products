@@ -52,12 +52,12 @@ window.DF = (function () {
     if (idea.audience) return idea.audience;
     const a = (idea.p && idea.p.asset) || idea.underlying;
     const prot = idea.p && /100/.test(idea.p.protection || "");
-    if (idea.family === "warrant") return "Клиентам, кто верит в рост «" + a + "» и хочет усиленную экспозицию при ограниченном риске: оплачивается только премия, без маржин-коллов.";
+    if (idea.family === "warrant") return "Подходит, если вы ждёте рост «" + a + "» и хотите усиленную экспозицию при ограниченном риске: оплачивается только премия, без маржин-коллов.";
     if (idea.family === "coupon") return prot
-      ? "Клиентам, кто хочет заранее известный купон по «" + a + "» с полной защитой капитала."
-      : "Клиентам, кто хочет заранее известный купон по «" + a + "» и мирится со снижением номинала, если актив упадёт.";
+      ? "Подходит, если вы хотите заранее известный купон по «" + a + "» с полной защитой капитала."
+      : "Подходит, если вы хотите заранее известный купон по «" + a + "» и готовы к снижению номинала, если актив упадёт.";
     if (idea.family === "protection") return "Осторожным клиентам: полная защита капитала плюс участие в росте «" + a + "».";
-    return "Клиентам, кто хочет диверсифицированную облигационную стратегию с прогнозируемым горизонтом.";
+    return "Подходит, если вы хотите диверсифицированную облигационную стратегию с прогнозируемым горизонтом.";
   }
   // Риск — авто-шаблон по типу продукта (переопределяется полем idea.risk).
   function riskOf(idea) {
@@ -91,7 +91,7 @@ window.DF = (function () {
       '<div class="df-hypo"><span class="k">Гипотеза</span>' + idea.hypothesis + '</div>' +
       '<div class="df-grid"><div class="df-main">' +
         '<div class="df-sell"><div class="k">Кому подходит</div><p>' + audienceOf(idea) + '</p></div>' +
-        '<div class="df-block"><div class="k">Почему сработает</div>' +
+        '<div class="df-block"><div class="k">Логика идеи</div>' +
           (idea.situation ? '<p>' + idea.situation + '</p>' : "") +
           '<ul>' + idea.factors.map(f => '<li>' + f + '</li>').join("") + '</ul>' +
           (idea.conclusion ? '<p class="concl">' + idea.conclusion + '</p>' : "") +
