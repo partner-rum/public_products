@@ -1,0 +1,72 @@
+name: Дайджест → печатный PDF
+
+# Каждое изменение data/digest.js (сейлз завёл идею → Руслан одобрил → Worker закоммитил)
+# запускает пересборку печатной вёрстки и рендер PDF headless-хромом, затем коммит результата.
+# Коммит делается токеном Actions — он НЕ триггерит воркфлоу повторно, петли нет.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "data/digest.js"
+      - "make_digest.py"
+      - "media/logo-rumberg-white.png"
+      - ".github/workflows/digest-pdf.yml"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: digest-pdf
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Зависимости
+        run: pip install --quiet segno
+
+      - name: Сборка печатной вёрстки из data/digest.js
+        id: build
+        run: |
+          PDF=$(python make_digest.py | sed -n 's/^PDF_OUT=//p')
+          echo "pdf=$PDF" >> "$GITHUB_OUTPUT"
+          mkdir -p "$(dirname "$PDF")"
+
+      - name: Установка Chrome
+        id: chrome
+        uses: browser-actions/setup-chrome@v1
+
+      - name: Рендер PDF
+        run: |
+          python -m http.server 8000 --directory . >/dev/null 2>&1 &
+          for i in $(seq 1 20); do curl -sf http://localhost:8000/digest-print.html >/dev/null && break; sleep 0.5; done
+          "${{ steps.chrome.outputs.chrome-path }}" \
+            --headless=new --no-sandbox --disable-gpu \
+            --virtual-time-budget=20000 --run-all-compositor-stages-before-draw \
+            --no-pdf-header-footer \
+            --print-to-pdf="${{ steps.build.outputs.pdf }}" \
+            "http://localhost:8000/digest-print.html"
+          ls -la "${{ steps.build.outputs.pdf }}"
+
+      - name: Коммит результата
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add digest-print.html "${{ steps.build.outputs.pdf }}"
+          if git diff --cached --quiet; then
+            echo "Изменений нет — коммит не нужен."
+          else
+            git commit -m "Авто: пересборка печатного дайджеста и PDF"
+            git push
+          fi
