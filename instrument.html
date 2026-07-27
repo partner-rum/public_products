@@ -28,7 +28,7 @@
     --border: rgba(255,255,255,0.11); --border-soft: rgba(255,255,255,0.07);
     --solar: #EE7D1B; --solar-l: #F58E33;
     --spruce: #5E9B82; --steel: #4F86E6; --amber: #E0A24A;
-    --up: #55C08A; --down: #EE7D1B;
+    --up: #55C08A; --down: #E0705A; --loss: #E0705A;
     --f-body: 'Onest', system-ui, sans-serif;
     --f-mono: 'JetBrains Mono', Consolas, monospace;
     --display: 'Rubik', 'Onest', system-ui, sans-serif;
@@ -234,7 +234,7 @@
 </div>
 
 <script src="data/instruments.js?v=fx7"></script>
-<script src="data/lib.js?v=fx8"></script>
+<script src="data/lib.js?v=fx9"></script>
 <script src="contact.js?v=8"></script>
 <script src="intro.js?v=3"></script>
 <script>
@@ -426,13 +426,13 @@
     if (inst.uRef) wMetrics.push([inst.underlying + " сегодня", inst.uRef]);
     wMetrics.push(["Мин. номинал", S.fmtInt(nom) + " ₽"]);
     const wScen = [
-      [inst.underlying + " вырос на " + upPct + "%", "Выплата " + S.fmtInt(payout1) + " ₽", (net1 >= 0 ? "+" : "−") + S.fmtInt(Math.abs(net1)) + " ₽", net1 >= 0 ? "#55C08A" : "#EE7D1B"]
+      [inst.underlying + " вырос на " + upPct + "%", "Выплата " + S.fmtInt(payout1) + " ₽", (net1 >= 0 ? "+" : "−") + S.fmtInt(Math.abs(net1)) + " ₽", net1 >= 0 ? "var(--up)" : "var(--loss)"]
     ];
     if (isCS) {
       const capNet = capRub - premiumRub;
-      wScen.push([inst.underlying + " вырос на 70% — выше потолка", "Выплата " + S.fmtInt(capRub) + " ₽ — максимум", (capNet >= 0 ? "+" : "−") + S.fmtInt(Math.abs(capNet)) + " ₽", capNet >= 0 ? "#55C08A" : "#EE7D1B"]);
+      wScen.push([inst.underlying + " вырос на 70% — выше потолка", "Выплата " + S.fmtInt(capRub) + " ₽ — максимум", (capNet >= 0 ? "+" : "−") + S.fmtInt(Math.abs(capNet)) + " ₽", capNet >= 0 ? "var(--up)" : "var(--loss)"]);
     }
-    wScen.push([inst.underlying + " не вырос", "Выплаты нет", "−" + S.fmtInt(premiumRub) + " ₽", "#EE7D1B"]);
+    wScen.push([inst.underlying + " не вырос", "Выплаты нет", "−" + S.fmtInt(premiumRub) + " ₽", "var(--loss)"]);
     const wFacts = [
       ["Страйк", strikeTxt]
     ];
@@ -476,7 +476,7 @@
       ],
       exampleIntro: "Номинал " + S.fmtInt(nom) + " ₽ · покупка по " + S.fmt2(inst.quote) + "% = " + S.fmtInt(buyRub) + " ₽",
       scenarios: [
-        ["Дождались погашения " + inst.expiry, "Выплата " + S.fmtInt(nom) + " ₽ — 100% номинала", "+" + S.fmtInt(nom - buyRub) + " ₽", "#55C08A"],
+        ["Дождались погашения " + inst.expiry, "Выплата " + S.fmtInt(nom) + " ₽ — 100% номинала", "+" + S.fmtInt(nom - buyRub) + " ₽", "var(--up)"],
         ["Продали раньше срока", "По текущей рыночной цене", "по рынку", "rgba(255,255,255,0.60)"]
       ],
       facts: [
@@ -508,9 +508,9 @@
       ],
       exampleIntro: "Вход по номиналу " + S.fmtInt(nom) + " ₽ (100%) · базовый актив " + inst.underlying,
       scenarios: [
-        [inst.underlying + " вырос на " + bandUp + "% и выше", "Выплата " + S.fmtInt(upFull) + " ₽ — потолок", "+" + S.fmtInt(upFull - nom) + " ₽", "#55C08A"],
-        [inst.underlying + " вырос на 5%", "Выплата " + S.fmtInt(up5) + " ₽ (рост ×" + kuS + ")", "+" + S.fmtInt(up5 - nom) + " ₽", "#55C08A"],
-        [inst.underlying + " упал на 20%", "Выплата " + S.fmtInt(downRub) + " ₽ — падение 1:1", "−" + S.fmtInt(nom - downRub) + " ₽", "#EE7D1B"]
+        [inst.underlying + " вырос на " + bandUp + "% и выше", "Выплата " + S.fmtInt(upFull) + " ₽ — потолок", "+" + S.fmtInt(upFull - nom) + " ₽", "var(--up)"],
+        [inst.underlying + " вырос на 5%", "Выплата " + S.fmtInt(up5) + " ₽ (рост ×" + kuS + ")", "+" + S.fmtInt(up5 - nom) + " ₽", "var(--up)"],
+        [inst.underlying + " упал на 20%", "Выплата " + S.fmtInt(downRub) + " ₽ — падение 1:1", "−" + S.fmtInt(nom - downRub) + " ₽", "var(--loss)"]
       ],
       facts: [
         ["Рост", "×" + kuS + " внутри диапазона до потолка +" + S.fmt1(maxUp) + "%"],
@@ -542,8 +542,8 @@
       ],
       exampleIntro: "Номинал " + S.fmtInt(nom) + " ₽ · вход по " + S.fmt2(inst.quote) + "% = " + S.fmtInt(entryRub) + " ₽",
       scenarios: [
-        [inst.underlying + " вырос на " + upPct + "%", "Выплата " + S.fmtInt(payoutUp) + " ₽ — 100% + участие", "+" + S.fmtInt(payoutUp - entryRub) + " ₽", "#55C08A"],
-        [inst.underlying + " упал на 15%", "Сработала защита: выплата " + S.fmtInt(nom) + " ₽", "−" + S.fmtInt(entryRub - nom) + " ₽", "#EE7D1B"]
+        [inst.underlying + " вырос на " + upPct + "%", "Выплата " + S.fmtInt(payoutUp) + " ₽ — 100% + участие", "+" + S.fmtInt(payoutUp - entryRub) + " ₽", "var(--up)"],
+        [inst.underlying + " упал на 15%", "Сработала защита: выплата " + S.fmtInt(nom) + " ₽", "−" + S.fmtInt(entryRub - nom) + " ₽", "var(--loss)"]
       ],
       facts: [
         ["Защита", "100% номинала при любом сценарии"],
@@ -567,9 +567,18 @@
   document.getElementById("subtitle").textContent = content.subtitle;
   document.getElementById("quote").innerHTML = S.quoteBig(inst.quote);
   document.getElementById("quote-sub").textContent = inst.type === "booster" ? "коэффициент участия · индикативно" : "котировка · индикативно · % от номинала · " + (inst.currency || "RUB");
+  // «Изменение за день» дублируется в шапке (quote-chg) и в метриках. У всех
+  // инструментов chg===0 (рынок в котировках не отражаем), а на дисконтных 2-я
+  // ветка знака печатала «−0,0 п.п.» — минус на нуле. Пока данных о дневном
+  // движении нет, дневную дельту не показываем вовсе — честнее пустого поля.
   const chgEl = document.getElementById("quote-chg");
-  chgEl.textContent = (inst.chg > 0 ? "+" : inst.chg < 0 ? "−" : "") + S.fmt1(Math.abs(inst.chg)) + " п.п. сегодня";
-  chgEl.style.color = inst.chg > 0 ? "#55C08A" : inst.chg < 0 ? "#EE7D1B" : "rgba(242,243,247,0.56)";
+  if (inst.chg) {
+    chgEl.textContent = (inst.chg > 0 ? "+" : "−") + S.fmt1(Math.abs(inst.chg)) + " п.п. сегодня";
+    chgEl.style.color = inst.chg > 0 ? "var(--up)" : "var(--loss)";
+  } else {
+    chgEl.style.display = "none";
+  }
+  content.metrics = content.metrics.filter(m => !(m[0] === "Изм. за день" && !inst.chg));
 
   document.getElementById("metrics").innerHTML = content.metrics.map(m =>
     '<div class="metric"><span class="k">' + m[0] + '</span><span class="v">' + m[1] + '</span></div>').join("");
@@ -583,26 +592,14 @@
   document.getElementById("facts").innerHTML = content.facts.map(f =>
     '<div class="fact"><div class="k">' + f[0] + '</div><div class="v">' + f[1] + '</div></div>').join("");
 
-  // --- Калькулятор выплаты (перенос с доски: клиент сам двигает ползунок) ---
-  function calcMove(inst) {
-    if (inst.type === "warrant") { const cs = inst.structure === "cs"; const cap = cs ? Math.round((inst.strike2 - inst.strike) / inst.strike * 100) : 0; return { min: -30, max: cs ? cap + 15 : 60, val: cs ? cap : 30 }; }
-    if (inst.type === "protection") return { min: -30, max: 50, val: 20 };
-    if (inst.type === "booster") return { min: -30, max: 25, val: (inst.strike2 || 110) - 100 };
-    return null;
-  }
-  function calcPct(inst, move) {
-    if (inst.type === "warrant") { const lvl = (inst.spot || 100) * (1 + move / 100); return S.PAYOFF.pct(lvl, inst.strike, inst.strike2); }
-    if (inst.type === "protection") { const p = inst.participation, floor = inst.protectionPct || 100; let v = 100 + p * move; if (v < floor) v = floor; if (inst.cap != null) v = Math.min(v, 100 + p * inst.cap); return v; }
-    if (inst.type === "booster") return S.PAYOFF.booster(100 + move, inst.strike || 100, inst.strike2 || 110, (inst.ku || 175) / 100);
-    return 100;
-  }
+  // --- Калькулятор выплаты (математика — в data/lib.js S.calc, общая с доской) ---
   function calcInner(inst) {
     const nom0 = inst.minNom || 1000000;
-    const price0 = inst.type === "booster" ? nom0 : Math.round(nom0 * inst.quote / 100), cfg = calcMove(inst);
+    const price0 = inst.type === "booster" ? nom0 : Math.round(nom0 * inst.quote / 100), cfg = S.calc.move(inst);
     const slider = cfg ? '<div class="calc-row"><label class="calc-l">' + inst.underlying + ': <b id="calc-mv"></b></label>' +
       '<input class="calc-range" id="calc-move" type="range" min="' + cfg.min + '" max="' + cfg.max + '" value="' + cfg.val + '" step="1" aria-label="Сценарий по базовому активу"></div>' : '';
     return '<div class="calc-row"><label class="calc-l" for="calc-amt">Сумма вложения, ₽</label>' +
-        '<input class="calc-input" id="calc-amt" type="number" inputmode="numeric" min="0" step="1000" value="' + price0 + '"></div>' +
+        '<input class="calc-input" id="calc-amt" type="number" inputmode="numeric" min="0" max="1000000000" step="1000" value="' + price0 + '"></div>' +
       slider +
       '<div class="calc-out"><div class="calc-o"><div class="v" id="calc-payout"></div><div class="k">выплата при погашении</div></div>' +
         '<div class="calc-o"><div class="v" id="calc-net"></div><div class="k">результат</div></div></div>' +
@@ -613,19 +610,25 @@
     const move = document.getElementById("calc-move"), mvOut = document.getElementById("calc-mv");
     const payoutEl = document.getElementById("calc-payout"), netEl = document.getElementById("calc-net"), noteEl = document.getElementById("calc-note");
     const prot = inst.protectionPct || 100;
+    const MAX_AMT = 1e9;
     function run() {
-      const amount = Math.max(0, +amt.value || 0);
+      // Клемп суммы: отрицательное → 0, свыше 1 млрд → 1 млрд, мусор/экспонента → 0.
+      const raw = parseFloat(amt.value);
+      let amount = raw, clampNote = "";
+      if (!isFinite(amount) || amount < 0) { amount = 0; if (raw < 0) clampNote = "Сумма не может быть отрицательной. "; }
+      else if (amount > MAX_AMT) { amount = MAX_AMT; clampNote = "Максимум для расчёта — 1 млрд ₽. "; }
       const nominal = inst.type === "booster" ? amount : (inst.quote ? amount * 100 / inst.quote : 0);
       const m = move ? +move.value : 0;
       if (mvOut) mvOut.textContent = (m >= 0 ? "+" : "") + m + "%";
-      const payout = nominal * calcPct(inst, m) / 100, net = payout - amount;
+      const payout = nominal * S.calc.pct(inst, m) / 100, net = payout - amount;
       payoutEl.textContent = S.fmtInt(Math.round(payout)) + " ₽";
       netEl.textContent = (net >= 0 ? "+" : "−") + S.fmtInt(Math.round(Math.abs(net))) + " ₽";
-      netEl.style.color = net >= 0 ? "#55C08A" : "#E0705A";
-      if (inst.type === "warrant") noteEl.textContent = "Экспозиция на номинал " + S.fmtInt(Math.round(nominal)) + " ₽ за премию = сумму вложения. Если " + inst.underlying + " не вырос — выплаты нет, премия теряется.";
-      else if (inst.type === "protection") noteEl.textContent = "Номинал " + S.fmtInt(Math.round(nominal)) + " ₽. Защита " + prot + "%: при падении возвращается " + prot + "% номинала.";
-      else if (inst.type === "booster") noteEl.textContent = "Вложение = номинал " + S.fmtInt(Math.round(nominal)) + " ₽. Рост ×КУ внутри диапазона до потолка; при падении — участие 1:1, как в самом активе.";
-      else noteEl.textContent = "Номинал " + S.fmtInt(Math.round(nominal)) + " ₽. При погашении — 100% номинала (если нет кредитного события). Доход зафиксирован дисконтом.";
+      netEl.style.color = net >= 0 ? "var(--up)" : "var(--loss)";
+      const be = S.calc.breakeven(inst);
+      if (inst.type === "warrant") noteEl.textContent = clampNote + "Экспозиция на номинал " + S.fmtInt(Math.round(nominal)) + " ₽ за премию = сумму вложения. Безубыток — при росте " + inst.underlying + " примерно на +" + S.fmtSmart(be) + "%; ниже — выплата не покрывает премию.";
+      else if (inst.type === "protection") noteEl.textContent = clampNote + "Номинал " + S.fmtInt(Math.round(nominal)) + " ₽. Защита " + prot + "%: при падении возвращается " + prot + "% номинала.";
+      else if (inst.type === "booster") noteEl.textContent = clampNote + "Вложение = номинал " + S.fmtInt(Math.round(nominal)) + " ₽. Рост ×КУ внутри диапазона до потолка; при падении — участие 1:1, как в самом активе.";
+      else noteEl.textContent = clampNote + "Номинал " + S.fmtInt(Math.round(nominal)) + " ₽. При погашении — 100% номинала (если нет кредитного события). Доход зафиксирован дисконтом.";
     }
     amt.addEventListener("input", run);
     if (move) move.addEventListener("input", run);

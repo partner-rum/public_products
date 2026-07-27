@@ -90,6 +90,45 @@ window.SITE = (function () {
     }
   };
 
+  // --- Калькулятор выплаты (единый источник для доски и карточки) ----------
+  // Раньше calcMove/calcPct дублировались в board.html и instrument.html: из-за
+  // этого границы ползунка и статический «Пример расчёта» разъезжались по знаку,
+  // а на NBIS с премией 70–86% прибыль была недостижима (потолок ползунка +60%
+  // был НИЖЕ безубытка). Теперь границы привязаны к математике продукта.
+  const calc = {
+    // Ход базового актива (в %) в точке безубытка. Для CALL/колл-спреда выплата
+    // pct(move) = max((100+move) − K; 0); безубыток там, где pct == премия (quote),
+    // то есть move = K + quote − 100. Для остальных типов не считаем.
+    breakeven(r) {
+      if (r.type === "warrant") return (r.strike || 100) + (r.quote || 0) - 100;
+      return null;
+    },
+    // Границы ползунка {min,max,val}. val (дефолт) — ближайшая круглая точка
+    // СТРОГО выше безубытка (результат неотрицателен уже на старте); потолок —
+    // заведомо выше безубытка, поэтому прибыль достижима у любого продукта.
+    move(r) {
+      if (r.type === "warrant") {
+        const cs = r.structure === "cs";
+        const be = calc.breakeven(r);
+        const val = Math.floor(be / 5) * 5 + 5;                 // круглая точка > безубытка
+        const capMove = cs ? (r.strike2 || 150) - 100 : 0;      // ход, где выплата упёрлась в потолок
+        const max = cs ? Math.ceil(capMove / 5) * 5 + 15        // показать плато потолка
+                       : val + 40;                              // запас на рост прибыли
+        return { min: -30, max: Math.max(max, val + 20), val };
+      }
+      if (r.type === "protection") return { min: -30, max: 50, val: 20 };
+      if (r.type === "booster") return { min: -30, max: 25, val: (r.strike2 || 110) - 100 };
+      return null;
+    },
+    // Выплата в % от номинала при заданном ходе БА (move, %).
+    pct(r, move) {
+      if (r.type === "warrant") { const lvl = (r.spot || 100) * (1 + move / 100); return PAYOFF.pct(lvl, r.strike, r.strike2); }
+      if (r.type === "protection") { const p = r.participation, floor = r.protectionPct || 100; let v = 100 + p * move; if (v < floor) v = floor; if (r.cap != null) v = Math.min(v, 100 + p * r.cap); return v; }
+      if (r.type === "booster") return PAYOFF.booster(100 + move, r.strike || 100, r.strike2 || 110, (r.ku || 175) / 100);
+      return 100;
+    }
+  };
+
   function displayName(r) { return r.name; }
 
   // Возвращает null, если продукта с таким id нет (снят с витрины, битая ссылка,
@@ -174,6 +213,6 @@ window.SITE = (function () {
     return /S&P|NASDAQ|NVDA|NVIDIA|NBIS|Nebius|BTC|IBIT|GLD|SPY|COPX|CSI|URA|Uranium|Bitcoin|Gold|USD|\$/i.test(n);
   }
 
-  return { TYPES, INSTRUMENTS, PAYOFF, LEGAL, displayName, findInstrument, instrumentsOfType, underlyingInfo, underlyingLong, isFxSensitive, yieldAnnual, paramValue, history, fmtInt, fmt2, fmt1, fmtSmart, quoteBig, daysTo };
+  return { TYPES, INSTRUMENTS, PAYOFF, LEGAL, calc, displayName, findInstrument, instrumentsOfType, underlyingInfo, underlyingLong, isFxSensitive, yieldAnnual, paramValue, history, fmtInt, fmt2, fmt1, fmtSmart, quoteBig, daysTo };
 
 })();

@@ -27,7 +27,7 @@
     --ink: #F2F3F7; --hushed: rgba(242,243,247,0.64); --faint: rgba(242,243,247,0.56);
     --border: rgba(255,255,255,0.11); --border-soft: rgba(255,255,255,0.07);
     --solar: #EE7D1B; --solar-l: #F58E33;
-    --up: #55C08A; --down: #EE7D1B;
+    --up: #55C08A; --down: #E0705A; --loss: #E0705A;
     --f-body: 'Onest', system-ui, sans-serif;
     --f-mono: 'JetBrains Mono', Consolas, monospace;
     --display: 'Rubik', 'Onest', system-ui, sans-serif;
@@ -194,7 +194,7 @@
   </div>
 </div>
 
-<script src="data/lib.js?v=fx8"></script>
+<script src="data/lib.js?v=fx9"></script>
 <script src="data/placements.js"></script>
 <script src="data/placement_docs.js"></script>
 <script>
@@ -208,7 +208,7 @@
   const fmtD = s => s ? s.split("-").reverse().join(".") : "—";
   const fmtN = v => v == null ? "—" : String(v).replace(".", ",").replace("-", "−");
   const fmtPerf = v => v == null ? null : (v > 0 ? "+" : "") + fmtN(v) + "%";
-  const perfColor = v => v > 0 ? "#55C08A" : (v < 0 ? "#EE7D1B" : "rgba(242,243,247,0.64)");
+  const perfColor = v => v > 0 ? "var(--up)" : (v < 0 ? "var(--loss)" : "rgba(242,243,247,0.64)");
 
   const issues = D.issues.map(i => ({ ...i, matured: i.maturity && i.maturity < TODAY }));
   let kind = "all", showMatured = false, q = "", selected = null;
