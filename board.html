@@ -76,13 +76,17 @@
   .kf.active { background: rgba(238,125,27,0.16); border-color: var(--solar); color: var(--ink); font-weight: 600; }
   .kf .n { font-family: var(--f-mono); font-size: 10.5px; opacity: 0.75; margin-left: 4px; }
 
+  .list-top { display: flex; justify-content: flex-end; margin: -2px 0 8px; }
+  .ta { border: none; background: transparent; padding: 2px 2px; font-family: var(--f-body); font-size: 12.5px; font-weight: 500; color: var(--hushed); cursor: pointer; }
+  .ta:hover { color: var(--ink); }
+
   .list { background: var(--card); border: 1px solid var(--border-soft); border-radius: 12px; overflow-y: auto; flex: 1; min-height: 0; }
   .group-h { display: flex; align-items: center; gap: 9px; width: 100%; border: none; border-top: 1px solid var(--border-soft); background: var(--panel-2); cursor: pointer; font-family: var(--f-body); color: var(--ink); padding: 11px 14px; text-align: left; position: sticky; top: 0; z-index: 2; }
   .group-h:first-child { border-top: none; }
   .group-h .chev { transition: transform .2s var(--ease); color: var(--hushed); font-size: 11px; }
   .group-h.open .chev { transform: rotate(90deg); }
   .group-h .name { font-size: 13.5px; font-weight: 600; }
-  .group-h .gc { margin-left: auto; font-family: var(--f-mono); font-size: 11px; color: var(--hushed); }
+  .group-h .gc { margin-left: auto; font-family: var(--f-mono); font-size: 11px; color: var(--hushed); white-space: nowrap; }
   .group-items { display: none; }
   .group-items.open { display: block; }
   .item { display: block; width: 100%; text-align: left; border: none; border-top: 1px solid rgba(255,255,255,0.07); border-left: 3px solid transparent; background: transparent; cursor: pointer; font-family: var(--f-body); color: var(--ink); padding: 10px 14px 10px 12px; }
@@ -159,7 +163,7 @@
     .wrap { padding: 0 16px 32px; }
     .layout { grid-template-columns: 1fr; }
     .aside { position: static; max-height: none; }
-    .list { max-height: 60dvh; }
+    .list { max-height: none; }
     .panel-wrap { display: none; position: fixed; inset: 0; z-index: 40; background: var(--canvas); padding: 14px; overflow: auto; }
     .panel-wrap.open { display: block; }
     .panel { max-height: none; }
@@ -211,12 +215,13 @@
         <input class="search" id="search" type="search" placeholder="Поиск: название, тикер, актив…" aria-label="Поиск по инструментам">
         <div class="chips" id="kinds"></div>
       </div>
+      <div class="list-top"><button class="ta" id="toggle-all" type="button"></button></div>
       <div class="list" id="list"></div>
     </aside>
 
     <div class="panel-wrap" id="panel-wrap">
       <button class="panel-close" id="panel-close">← К списку</button>
-      <div class="panel" id="panel"><div class="placeholder">Выберите инструмент в списке слева</div></div>
+      <div class="panel" id="panel"><div class="placeholder">Выберите инструмент из списка</div></div>
       <div class="disclaimer">Не является индивидуальной инвестиционной рекомендацией. Котировки индикативны. Пример расчёта иллюстративный, без учёта комиссий и налогов.</div>
     </div>
   </div>
@@ -231,7 +236,9 @@
   const TYPE_LABEL = { discount: "Дисконтные облигации", protection: "Защита капитала", warrant: "Варранты", booster: "Бустеры" };
 
   let type = "all", q = "", selected = null, mode = "payoff";
-  const openGroups = new Set();
+  // Храним СВЁРНУТЫЕ группы: по умолчанию раскрыты все. Раньше здесь был набор
+  // раскрытых — доска открывалась с нулём видимых инструментов из 38.
+  const closedGroups = new Set();
 
   // ?type= из старых ссылок предвыбирает семейство
   const qsType = new URLSearchParams(location.search).get("type");
@@ -646,6 +653,18 @@
     '</button>';
   }
 
+  // Свёрнутая группа тоже должна нести цифру: «4 · 15,00–86,50%»
+  function groupRange(items) {
+    const vals = items.map(r => r.quote).filter(v => typeof v === "number");
+    if (!vals.length) return "";
+    const lo = Math.min(...vals), hi = Math.max(...vals);
+    // У бустеров quote — коэффициент участия, а не цена: подписываем как в строке списка
+    if (items.every(r => r.type === "booster")) {
+      return "КУ " + (lo === hi ? Math.round(lo) + "%" : Math.round(lo) + "–" + Math.round(hi) + "%");
+    }
+    return lo === hi ? S.fmt2(lo) + "%" : S.fmt2(lo) + "–" + S.fmt2(hi) + "%";
+  }
+
   function render() {
     const list = filtered();
     document.getElementById("count").textContent = "инструментов: " + list.length;
@@ -659,23 +678,36 @@
     const searching = q.trim().length > 0;
 
     document.getElementById("list").innerHTML = sorted.length ? sorted.map(([name, items], gi) => {
-      const open = searching || openGroups.has(name);
+      const open = searching || !closedGroups.has(name);
+      const meta = items.length + (open ? "" : " · " + groupRange(items));
       return '<button class="group-h' + (open ? " open" : "") + '" data-g="' + name.replace(/"/g, "&quot;") + '" aria-expanded="' + open + '">' +
-          '<span class="chev">▶</span><span class="name">' + name + '</span><span class="gc">' + items.length + '</span></button>' +
+          '<span class="chev">▶</span><span class="name">' + name + '</span><span class="gc">' + meta + '</span></button>' +
         '<div class="group-items' + (open ? " open" : "") + '">' + items.map(itemHTML).join("") + '</div>';
     }).join("") : '<div class="empty-list">Ничего не найдено — измените фильтр или запрос.</div>';
 
     document.querySelectorAll(".group-h").forEach(el => el.addEventListener("click", () => {
       const g = el.getAttribute("data-g");
-      if (openGroups.has(g)) openGroups.delete(g); else openGroups.add(g);
+      if (closedGroups.has(g)) closedGroups.delete(g); else closedGroups.add(g);
       render();
     }));
+
+    // «Развернуть всё / Свернуть всё» — при поиске группы раскрыты принудительно
+    const names = sorted.map(g => g[0]);
+    const anyClosed = names.some(n => closedGroups.has(n));
+    const ta = document.getElementById("toggle-all");
+    ta.hidden = searching || sorted.length < 2;
+    ta.textContent = anyClosed ? "Развернуть всё" : "Свернуть всё";
+    ta.onclick = () => {
+      if (anyClosed) names.forEach(n => closedGroups.delete(n));
+      else names.forEach(n => closedGroups.add(n));
+      render();
+    };
     document.querySelectorAll(".item").forEach(el =>
       el.addEventListener("click", () => select(el.getAttribute("data-id"), true)));
 
     if (selected && !list.some(r => r.id === selected)) {
       selected = null;
-      document.getElementById("panel").innerHTML = '<div class="placeholder">Выберите инструмент в списке слева</div>';
+      document.getElementById("panel").innerHTML = '<div class="placeholder">Выберите инструмент из списка</div>';
     }
   }
 
@@ -698,7 +730,7 @@
   const hash = decodeURIComponent(location.hash.slice(1));
   if (hash) {
     const r = S.INSTRUMENTS.find(x => x.id === hash);
-    if (r) { selected = hash; openGroups.add(r.underlying); if (type !== "all" && r.type !== type) type = "all"; }
+    if (r) { selected = hash; closedGroups.delete(r.underlying); if (type !== "all" && r.type !== type) type = "all"; }
   }
   render();
   if (selected) select(selected, false);

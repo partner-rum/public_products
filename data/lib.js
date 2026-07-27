@@ -92,8 +92,12 @@ window.SITE = (function () {
 
   function displayName(r) { return r.name; }
 
+  // Возвращает null, если продукта с таким id нет (снят с витрины, битая ссылка,
+  // пустой ?id). Подставлять вместо него первый инструмент каталога НЕЛЬЗЯ:
+  // клиент видел бы чужой продукт с настоящей котировкой, считая, что смотрит
+  // присланный сейлзом. Вызывающие обязаны обработать null.
   function findInstrument(id) {
-    return INSTRUMENTS.find(r => r.id === id) || INSTRUMENTS[0];
+    return INSTRUMENTS.find(r => r.id === id) || null;
   }
 
   function instrumentsOfType(type) {

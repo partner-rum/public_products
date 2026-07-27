@@ -116,8 +116,17 @@
   .calc-o .k { font-size: 10px; color: var(--faint); margin-top: 3px; }
   .calc-note { margin-top: 11px; font-size: 11.5px; line-height: 1.45; color: var(--faint); }
 
+  /* Экран «продукта нет»: снят с витрины, битая или устаревшая ссылка */
+  .gone { max-width: 560px; margin: 72px auto 0; text-align: center; }
+  .gone-k { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--solar); }
+  .gone h1 { margin: 14px 0 0; }
+  .gone p { margin: 14px 0 0; font-size: 14.5px; line-height: 1.65; color: var(--hushed); text-wrap: pretty; }
+  .gone-act { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 26px; }
+  .gone-act a { padding: 10px 17px; font-size: 13.5px; font-weight: 500; }
+
   @media (max-width: 900px) {
     .wrap { padding: 0 20px 48px; }
+    .gone { margin-top: 44px; }
     .nav-in { height: auto; flex-wrap: wrap; padding: 12px 20px; row-gap: 10px; }
     .topnav { margin-left: 0; width: 100%; gap: 16px; font-size: 13.5px; }
     .grid { grid-template-columns: 1fr; }
@@ -195,8 +204,8 @@
       <div class="chart-head">
         <div class="chart-title" id="chart-title"></div>
         <div class="tabs">
-          <button class="tab active" id="tab-payoff" onclick="setMode('payoff')">Выплата</button>
-          <button class="tab" id="tab-under" onclick="setMode('under')">Базовый актив</button>
+          <button class="tab active" id="tab-payoff" type="button">Выплата</button>
+          <button class="tab" id="tab-under" type="button">Базовый актив</button>
         </div>
       </div>
       <div id="chart"></div>
@@ -231,6 +240,24 @@
 <script>
   const S = window.SITE;
   const inst = S.findInstrument(new URLSearchParams(location.search).get("id"));
+
+  // Продукта с таким id в каталоге нет — показываем честный экран и НЕ рендерим
+  // карточку. Раньше findInstrument молча возвращал первый инструмент каталога:
+  // клиент по устаревшей ссылке видел чужой продукт с настоящей котировкой.
+  if (!inst) {
+    document.title = "Продукт снят с витрины — Rumberg";
+    document.querySelector(".wrap").innerHTML =
+      '<div class="gone">' +
+        '<div class="gone-k">ссылка устарела</div>' +
+        '<h1>Продукт снят с витрины</h1>' +
+        '<p>Этого продукта больше нет в каталоге: условия могли измениться, а выпуск — уже разместиться. ' +
+        'Актуальные инструменты с котировками собраны на доске. Если нужен именно этот — напишите, подберём аналог.</p>' +
+        '<div class="gone-act">' +
+          '<a class="btn-solar" href="board.html">Открыть доску</a>' +
+          '<a class="btn-solar btn-secondary" href="https://t.me/Rumberb_Sales_Team_bot" target="_blank" rel="noopener">Написать в Telegram</a>' +
+        '</div>' +
+      '</div>';
+  } else {
   const t = S.TYPES[inst.type];
   const U = S.underlyingInfo(inst.underlying);
   let mode = "payoff";
@@ -617,8 +644,12 @@
       : U.desc + " Динамика за 12 месяцев; данные — демо.";
     document.getElementById("chart").innerHTML = m === "payoff" ? content.payoff() : chartUnderlying();
   }
+  // Вкладки графика: слушатели, а не inline onclick — setMode живёт внутри блока
+  document.getElementById("tab-payoff").addEventListener("click", () => setMode("payoff"));
+  document.getElementById("tab-under").addEventListener("click", () => setMode("under"));
   if (!U) document.querySelector(".tabs").style.display = "none";
   setMode("payoff");
+  }
 </script>
 <script src="chat.js?v=9"></script>
 <script src="nav-about.js?v=3"></script>
