@@ -23,7 +23,7 @@
 <style>
   :root {
     --canvas: #0B0C10; --card: #14161C; --panel-2: #191B22; --tile: rgba(255,255,255,0.045); --black: #1A1919;
-    --ink: #F2F3F7; --hushed: rgba(242,243,247,0.64); --faint: rgba(242,243,247,0.42);
+    --ink: #F2F3F7; --hushed: rgba(242,243,247,0.64); --faint: rgba(242,243,247,0.56);
     --border: rgba(255,255,255,0.11); --border-soft: rgba(255,255,255,0.07);
     --solar: #EE7D1B; --solar-l: #F58E33;
     --spruce: #5E9B82; --steel: #4F86E6; --amber: #E0A24A;
@@ -47,7 +47,7 @@
   .btn-solar:hover { background: var(--solar-l); }
 
   .crumbs { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--hushed); padding: 24px 0 18px; }
-  .crumbs .sep { color: rgba(242,243,247,0.42); } .crumbs .here { color: var(--ink); font-weight: 500; }
+  .crumbs .sep { color: var(--faint); } .crumbs .here { color: var(--ink); font-weight: 500; }
   .head { margin-bottom: 8px; }
   .head-row { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
   h1 { margin: 0; font-family:var(--display); font-size: 32px; font-weight: 400; letter-spacing: -0.02em; }
@@ -72,7 +72,7 @@
   .item .pr { font-family: var(--f-mono); font-size: 13px; color: var(--fc); white-space: nowrap; }
   .item .r2 { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-top: 5px; }
   .item .sub { font-size: 12px; color: var(--hushed); }
-  .item .st { font-family: var(--f-mono); font-size: 10.5px; color: var(--faint); white-space: nowrap; display: inline-flex; align-items: center; gap: 5px; }
+  .item .st { font-family: var(--f-mono); font-size: 11px; color: var(--faint); white-space: nowrap; display: inline-flex; align-items: center; gap: 5px; }
   .item .st .dot { width: 7px; height: 7px; border-radius: 50%; }
   .item .st.live .dot { background: var(--spruce); } .item .st.up .dot { background: var(--amber); }
 
@@ -100,11 +100,11 @@
   .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 22px; }
   .tile { background: var(--tile); border-radius: 10px; padding: 11px 14px; }
   .tile .v { font-family: var(--f-mono); font-size: 15px; font-weight: 500; color: var(--ink); } .tile .v.hi { color: var(--fc); }
-  .tile .k { font-size: 10.5px; color: var(--hushed); margin-top: 3px; }
+  .tile .k { font-size: 11px; color: var(--hushed); margin-top: 3px; }
 
   .o-grid { display: grid; grid-template-columns: 1.25fr 1fr; gap: 28px; align-items: start; }
   .blk { margin-bottom: 18px; } .blk:last-child { margin-bottom: 0; }
-  .blk .k { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: 0.11em; text-transform: uppercase; color: var(--hushed); margin-bottom: 8px; }
+  .blk .k { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.11em; text-transform: uppercase; color: var(--hushed); margin-bottom: 8px; }
   .o-grid h3.k { margin: 0 0 8px; font-weight: 500; } /* секции — семантические заголовки без UA-отступов */
   .blk p { margin: 0; font-size: 14.5px; line-height: 1.62; color: var(--hushed); text-wrap: pretty; }
   .plaque { padding: 12px 14px; border: 1px solid rgba(238,125,27,0.28); background: rgba(238,125,27,0.12); border-radius: 8px; font-size: 13px; line-height: 1.5; color: #E7B98D; }
@@ -128,13 +128,13 @@
   .bk-sec { font-size: 11px; color: var(--hushed); background: var(--tile); border-radius: 5px; padding: 2px 8px; white-space: nowrap; }
   .bk-a { color: var(--ink); border-bottom: 1px dotted rgba(255,255,255,0.28); transition: color .15s, border-color .15s; }
   .bk-a:hover { color: var(--steel); border-bottom-color: var(--steel); }
-  .bk-ext { font-size: 10px; color: var(--faint); margin-left: 3px; }
+  .bk-ext { font-size: 11px; color: var(--faint); margin-left: 3px; }
   .bk-a:hover .bk-ext { color: var(--steel); }
   /* Пример расчёта при погашении */
   .ex { background: var(--tile); border-radius: 10px; padding: 4px 14px; }
   .ex-tbl { width: 100%; border-collapse: collapse; }
   .ex-tbl th, .ex-tbl td { padding: 8px 0; border-top: 1px solid var(--border-soft); text-align: right; vertical-align: baseline; }
-  .ex-tbl thead th { border-top: none; font-size: 10px; font-weight: 500; color: var(--hushed); text-transform: uppercase; letter-spacing: 0.05em; }
+  .ex-tbl thead th { border-top: none; font-size: 11px; font-weight: 500; color: var(--hushed); text-transform: uppercase; letter-spacing: 0.05em; }
   .ex-tbl th[scope="col"]:first-child, .ex-tbl th[scope="row"] { text-align: left; }
   .ex-l { font-family: var(--f-mono); font-size: 13px; font-weight: 400; color: var(--hushed); }
   .ex-v { font-family: var(--f-mono); font-size: 13.5px; font-weight: 500; }
@@ -150,7 +150,7 @@
   .o-partner { color: var(--steel); font-weight: 500; white-space: nowrap; }
   .o-partner:hover { text-decoration: underline; }
   .docs { margin-top: 16px; }
-  .docs .k { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: 0.11em; text-transform: uppercase; color: var(--hushed); margin-bottom: 9px; }
+  .docs .k { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.11em; text-transform: uppercase; color: var(--hushed); margin-bottom: 9px; }
   .doc { display: flex; align-items: center; gap: 12px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 11px 13px; margin-bottom: 8px; transition: border-color .18s, box-shadow .18s, transform .18s; }
   .doc:hover { border-color: rgba(255,255,255,0.22); box-shadow: 0 6px 16px rgba(0,0,0,0.4); transform: translateY(-1px); }
   .doc .ic { flex: none; width: 34px; height: 34px; border-radius: 8px; background: var(--tile); display: grid; place-items: center; }
@@ -233,8 +233,8 @@
 </footer>
 
 <script src="data/offerings.js?v=srv16"></script>
-<script src="share.js?v=5"></script>
-<script src="contact.js?v=7"></script>
+<script src="share.js?v=6"></script>
+<script src="contact.js?v=8"></script>
 <script>
 (function () {
   "use strict";
@@ -435,7 +435,7 @@
   if (startId) select(startId, true);  // true — открыть паспорт-оверлей на мобиле
 })();
 </script>
-<script src="chat.js?v=9"></script>
+<script src="chat.js?v=10"></script>
 <script src="nav-about.js?v=3"></script>
 <script src="qualgate.js?v=1"></script>
 </body>

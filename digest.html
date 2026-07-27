@@ -24,7 +24,7 @@
   :root {
     --canvas: #0B0C10; --card: #14161C; --panel-2: #191B22; --tile: rgba(255,255,255,0.045);
     --black: #1A1919;
-    --ink: #F2F3F7; --hushed: rgba(242,243,247,0.64); --faint: rgba(242,243,247,0.42);
+    --ink: #F2F3F7; --hushed: rgba(242,243,247,0.64); --faint: rgba(242,243,247,0.56);
     --border: rgba(255,255,255,0.11); --border-soft: rgba(255,255,255,0.07);
     --solar: #EE7D1B; --solar-l: #F58E33; --up: #55C08A; --down: #EE7D1B;
     --f-body: 'Onest', system-ui, sans-serif; --f-mono: 'JetBrains Mono', Consolas, monospace; --display: 'Rubik', 'Onest', system-ui, sans-serif;
@@ -60,12 +60,12 @@
   .btn-dl:hover { background: var(--solar-l); }
   .btn-dl[hidden] { display: none; }
   .pick-btn:hover { border-color: rgba(255,255,255,0.22); }
-  .pick-btn .lbl { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--faint); }
+  .pick-btn .lbl { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--faint); }
   .pick-btn .cv { color: var(--hushed); transition: transform .25s var(--ease); }
   .pick.open .cv { transform: rotate(180deg); }
   .pick-menu { position: absolute; top: calc(100% + 6px); left: 0; z-index: 40; min-width: 320px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 18px 44px rgba(0,0,0,0.5); padding: 6px; display: none; }
   .pick.open .pick-menu { display: block; }
-  .pick-mh { font-family: var(--f-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); padding: 8px 12px 6px; }
+  .pick-mh { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); padding: 8px 12px 6px; }
   .pick-i { display: block; width: 100%; text-align: left; background: none; border: none; border-radius: 8px; padding: 10px 12px; cursor: pointer; font-family: var(--f-body); color: var(--ink); }
   .pick-i:hover { background: rgba(255,255,255,0.05); }
   .pick-i.active { background: rgba(255,255,255,0.09); }
@@ -99,7 +99,7 @@
   .nextprev { display: flex; justify-content: space-between; gap: 14px; margin-top: 30px; border-top: 1px solid var(--border); padding-top: 18px; }
   .np { background: none; border: none; cursor: pointer; font-family: var(--f-body); color: var(--hushed); text-align: left; padding: 6px 0; max-width: 46%; }
   .np:hover { color: var(--ink); } .np.r { text-align: right; }
-  .np .l { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); }
+  .np .l { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); }
   .np .n { font-size: 14.5px; margin-top: 3px; }
   .np[disabled] { visibility: hidden; }
 
@@ -176,7 +176,7 @@
 <script src="data/lib.js?v=fx8"></script>
 <script src="data/digest.js?v=srv2"></script>
 <script src="data/digest-lib.js?v=2"></script>
-<script src="share.js?v=5"></script>
+<script src="share.js?v=6"></script>
 <script>
   const A = window.DIGEST_ARCHIVE;
   if (new URLSearchParams(location.search).get("view") === "client") document.body.classList.add("client");
@@ -268,7 +268,7 @@
   const startIssue = A.issues.find(x => x.id === parts[0]) ? parts[0] : A.issues[0].id;
   selectIssue(startIssue, parts[1] || null);
 </script>
-<script src="chat.js?v=9"></script>
+<script src="chat.js?v=10"></script>
 <script src="nav-about.js?v=3"></script>
 <script src="qualgate.js?v=1"></script>
 </body>

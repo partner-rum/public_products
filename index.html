@@ -27,7 +27,7 @@
   /* Вариант C «Тёмный терминал»: космос Revolut — тьма, свечение Rumberg (синий+оранжевый), живой тикер */
   :root {
     --bg:#0B0C10; --panel:rgba(255,255,255,0.04); --line:rgba(255,255,255,0.09);
-    --tx:#F2F3F7; --mut:#A0A5B8; --dim:#666C82;
+    --tx:#F2F3F7; --mut:#A0A5B8; --dim:#888C9C;
     --solar:#EE7D1B; --solar-l:#F58E33; --blue:#4F86E6; --or:#EE7D1B; --up:#55C08A;
     --f:'Onest',system-ui,sans-serif; --m:'JetBrains Mono',Consolas,monospace; --display:'Rubik','Onest',system-ui,sans-serif;
     --ease:cubic-bezier(0.16,1,0.3,1);
@@ -62,7 +62,7 @@
   .wrap { position:relative; z-index:1; max-width:1140px; margin:0 auto; padding:0 44px; }
 
   .hero { padding:66px 0 40px; }
-  .kicker { font-family:var(--m); font-size:10.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--dim); margin-bottom:20px; }
+  .kicker { font-family:var(--m); font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--dim); margin-bottom:20px; }
   h1 { margin:0; font-family:var(--display); font-size:clamp(36px,5vw,60px); font-weight:600; line-height:1.06; letter-spacing:-0.02em; max-width:860px; }
   h1 .lm { color:var(--solar); }
   .sub { margin:20px 0 0; font-size:16px; line-height:1.55; color:var(--mut); max-width:540px; }
@@ -92,7 +92,7 @@
   .srow .no { font-family:var(--m); font-size:11px; color:var(--dim); }
   .srow .st { font-family:var(--display); font-size:clamp(21px,2.4vw,29px); font-weight:600; letter-spacing:-0.015em; transition:color .25s; }
   .srow .sd { display:block; margin-top:5px; font-size:12.5px; font-weight:400; line-height:1.45; color:var(--dim); max-width:520px; }
-  .srow .sm { font-family:var(--m); font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--dim); white-space:nowrap; text-align:right; transition:color .25s; }
+  .srow .sm { font-family:var(--m); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--dim); white-space:nowrap; text-align:right; transition:color .25s; }
   .srow .go svg path { stroke:var(--dim); transition:stroke .25s; }
   .srow .go svg { transition:transform .3s var(--ease); }
   .srow:hover { background:var(--panel); }
@@ -448,7 +448,7 @@
     requestAnimationFrame(frame);
   })();
 </script>
-<script src="chat.js?v=9"></script>
+<script src="chat.js?v=10"></script>
 <script src="nav-about.js?v=3"></script>
 <script src="qualgate.js?v=1"></script>
 </body>

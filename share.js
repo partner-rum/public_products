@@ -26,7 +26,7 @@ window.Share = (function () {
     '.sh-mi:hover{background:rgba(255,255,255,0.06)}' +
     '.sh-mi .ic{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;flex:none;background:rgba(255,255,255,0.06)}' +
     '.sh-mi .ic.tg{background:rgba(79,134,230,0.18)}.sh-mi .ic.wa{background:rgba(85,192,138,0.16)}.sh-mi .ic.pdf{background:rgba(238,125,27,0.16)}' +
-    '.sh-mi small{display:block;color:rgba(242,243,247,0.42);font-size:11px;margin-top:1px}' +
+    '.sh-mi small{display:block;color:rgba(242,243,247,0.56);font-size:11px;margin-top:1px}' +
     '.sh-sep{height:1px;background:rgba(255,255,255,0.07);margin:5px 8px}' +
     '.sh-toast{position:absolute;right:0;top:calc(100% + 8px);z-index:61;white-space:nowrap;display:inline-flex;align-items:center;gap:8px;font-size:12.5px;color:#55C08A;background:rgba(85,192,138,0.14);border:1px solid rgba(85,192,138,0.35);border-radius:8px;padding:7px 12px;opacity:0;transform:translateY(-4px);pointer-events:none;transition:opacity .2s,transform .2s}' +
     '.sh-toast.on{opacity:1;transform:none}' +
