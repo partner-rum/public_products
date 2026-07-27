@@ -76,6 +76,7 @@
   .kf.active { background: rgba(238,125,27,0.16); border-color: var(--solar); color: var(--ink); font-weight: 600; }
   .kf .n { font-family: var(--f-mono); font-size: 11px; opacity: 0.75; margin-left: 4px; }
 
+  .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
   .list-top { display: flex; justify-content: flex-end; margin: -2px 0 8px; }
   .ta { border: none; background: transparent; padding: 2px 2px; font-family: var(--f-body); font-size: 12.5px; font-weight: 500; color: var(--hushed); cursor: pointer; }
   .ta:hover { color: var(--ink); }
@@ -206,8 +207,9 @@
 <div class="wrap">
   <div class="head">
     <h1>Текущие продукты</h1>
-    <span class="count" id="count"></span>
+    <span class="count" id="count" role="status" aria-live="polite"></span>
   </div>
+  <span class="sr-only" id="sr-live" aria-live="polite"></span>
 
   <div class="layout">
     <aside class="aside">
@@ -597,6 +599,8 @@
     selected = id;
     const inst = S.INSTRUMENTS.find(r => r.id === id);
     if (!inst) return;
+    const srl = document.getElementById("sr-live");
+    if (srl) srl.textContent = "Выбран инструмент: " + S.displayName(inst);
     document.getElementById("panel").innerHTML = passportHTML(inst);
     const c = buildContent(inst), U = S.underlyingInfo(inst.underlying);
     const shHost = document.getElementById("sh-host");
@@ -782,7 +786,7 @@
     (function fr() { phase -= 0.018; draw(); requestAnimationFrame(fr); })();
   })();
 </script>
-<script src="chat.js?v=10"></script>
+<script src="chat.js?v=11"></script>
 <script src="nav-about.js?v=3"></script>
 <script src="qualgate.js?v=2"></script>
 </body>

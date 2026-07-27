@@ -282,7 +282,7 @@
         '<div><div class="ca-ttl-row"><span class="ca-ttl">AI-ассистент</span><span class="ca-chip">beta</span></div>' +
         '<div class="ca-sub">Rumberg · структурные продукты</div></div>' +
         '<button class="ca-x" aria-label="Закрыть">&times;</button></div>' +
-      '<div class="ca-log"></div>' +
+      '<div class="ca-log" role="log" aria-live="polite" aria-label="Диалог с ассистентом"></div>' +
       '<div class="ca-foot">' +
         '<button class="ca-discuss" type="button">' + ICON_CHAT + 'Обсудить с Румбергом</button>' +
         '<div class="ca-row">' +

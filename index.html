@@ -285,13 +285,21 @@
     var len = path.getTotalLength();
     path.style.strokeDasharray = len; path.style.strokeDashoffset = len;
 
-    var finished = false;
+    var finished = false, bail = null;
     function finish() {
       if (finished) return; finished = true;
+      clearTimeout(bail);
+      document.removeEventListener("visibilitychange", onVis);
       ov.classList.add(reduced ? "fadeout" : "lift");
       setTimeout(function () { ov.remove(); document.body.classList.remove("intro-lock"); }, reduced ? 500 : 900);
       document.removeEventListener("keydown", onKey);
     }
+    // В фоновой вкладке requestAnimationFrame замораживается — без этого ролик
+    // не доходил до finish(), оверлей (z-index 9999) и intro-lock висли вечно,
+    // а гейт всплывал поверх замёрзшего кадра. setTimeout тикает и в фоне, поэтому
+    // это надёжный фолбэк; уход со вкладки просто завершает ролик. finish()
+    // идемпотентен — в норме анимация закрывает интро на ~3.4с, до фолбэка.
+    function onVis() { if (document.hidden) finish(); }
     function onKey(e) { if (e.key === "Escape" || e.key === " " || e.key === "Enter") finish(); }
     ov.addEventListener("click", finish);
     document.addEventListener("keydown", onKey);
@@ -326,6 +334,8 @@
       requestAnimationFrame(frame);
     }
     requestAnimationFrame(frame);
+    bail = setTimeout(finish, 4500);                 // фолбэк на случай замороженного rAF в фоне
+    document.addEventListener("visibilitychange", onVis);
   })();
 
   try {
@@ -448,7 +458,7 @@
     requestAnimationFrame(frame);
   })();
 </script>
-<script src="chat.js?v=10"></script>
+<script src="chat.js?v=11"></script>
 <script src="nav-about.js?v=3"></script>
 <script src="qualgate.js?v=2"></script>
 </body>
