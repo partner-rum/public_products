@@ -255,8 +255,8 @@ window.DIGEST_ARCHIVE = {
      }
     }
    ],
-   "pdf": "docs/digest/rumberg-digest-2026-07-22.pdf",
-   "pdfName": "Румберг Дайджест 22.07.pdf"
+   "pdf": "docs/digest/rumberg-digest-2026-07-27.pdf",
+   "pdfName": "Румберг Дайджест 27.07.pdf"
   },
   {
    "id": "2026-06-29",

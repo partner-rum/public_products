@@ -31,3 +31,6 @@ floaters_dashboard.png
 
 # artefacts of the impeccable design skill (local only)
 .impeccable/
+
+# Макеты печатного дайджеста — черновики, наружу не публикуем
+_digest/
