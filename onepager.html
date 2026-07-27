@@ -24,8 +24,8 @@
   :root {
     --ivory: #F4F2F0; --card: #FFFFFF;
     --nav: #1B2153; --nav2: #283067; --nav-deep: #0D1026;
-    --or: #EE7D1B; --or-soft: #FBEAD6;
-    --ink: #20233F; --hushed: #5A6180; --faint: #8B90A8;
+    --or: #EE7D1B; --or-text: #B15300; --or-soft: #FBEAD6;
+    --ink: #20233F; --hushed: #5A6180; --faint: #666B87;
     --border: #DCDEEC; --line: #EAEBF4;
     --up: #1E7C4F; --down: #C0561A;
     --f: 'Onest', system-ui, sans-serif;
@@ -49,7 +49,7 @@
 
   .brand { display: flex; align-items: center; gap: 9px; font-size: 13px; font-weight: 600; }
   .qual { font-family: var(--m); font-size: 9px; line-height: 1.55; letter-spacing: 0.02em; text-align: right; }
-  .lbl { font-family: var(--m); font-size: 9px; letter-spacing: 0.13em; text-transform: uppercase; color: var(--or); margin-bottom: 6px; }
+  .lbl { font-family: var(--m); font-size: 9.5px; letter-spacing: 0.13em; text-transform: uppercase; color: var(--or-text); margin-bottom: 6px; }
 
   /* ── Слайд 1 — титул (C: navy + оранжевые блоки) ── */
   .t-slide { padding: 34px 52px; justify-content: space-between; background: var(--nav); color: #F3F4FB; }
@@ -91,7 +91,7 @@
   .params.c4 { grid-template-columns: repeat(4, 1fr); }
   .param { background: var(--card); border: 1px solid var(--border); border-radius: 7px; padding: 7px 11px; }
   .param .v { font-family: var(--m); font-size: 14px; font-weight: 500; color: var(--ink); }
-  .param .v.or { color: var(--or); }
+  .param .v.or { color: var(--or-text); }
   .param .k { font-size: 9px; color: var(--faint); margin-top: 2px; }
 
   .chart-box { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 9px 13px 7px; }
@@ -109,7 +109,7 @@
   .scard .sr { font-family: var(--m); font-size: 11.5px; font-weight: 600; white-space: nowrap; }
   .fx-inline { margin-top: 8px; padding: 7px 11px; border-left: 3px solid var(--or); background: var(--or-soft); border-radius: 0 6px 6px 0; font-size: 9.5px; line-height: 1.4; font-weight: 500; color: #7A4A12; }
 
-  .c-foot { padding: 12px 52px 16px; font-size: 8.6px; line-height: 1.5; color: var(--faint); }
+  .c-foot { padding: 12px 52px 16px; font-size: 9.5px; line-height: 1.5; color: var(--faint); }
 
   /* ── Слайд 3 — дисклеймер (navy) ── */
   .d-slide { padding: 34px 52px; background: var(--nav); color: #E7E9F4; }
@@ -121,7 +121,7 @@
 
   /* Экран «продукта нет»: снят с витрины, битая или устаревшая ссылка */
   .gone-slide { align-items: center; justify-content: center; text-align: center; padding: 0 96px; }
-  .gone-slide .g-k { font-family: var(--m); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--or); }
+  .gone-slide .g-k { font-family: var(--m); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--or-text); }
   .gone-slide h1 { margin: 14px 0 0; font-family: var(--display); font-size: 34px; font-weight: 600; letter-spacing: -0.02em; color: var(--ink); }
   .gone-slide p { margin: 16px 0 0; font-size: 14px; line-height: 1.6; color: var(--hushed); }
   .gone-slide .g-act { margin-top: 26px; display: flex; gap: 12px; justify-content: center; }
