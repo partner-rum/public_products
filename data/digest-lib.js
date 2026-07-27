@@ -33,10 +33,30 @@ window.DF = (function () {
         '<path d="M' + PAD + ' ' + base + ' L' + bx + ' ' + base + ' L' + bx + ' ' + up + ' L' + (W - PAD) + ' ' + up + '" fill="none" stroke="' + color + '" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>' +
         '<rect x="' + (bx - 3.5) + '" y="' + (up - 3.5) + '" width="7" height="7" transform="rotate(45 ' + bx + ' ' + up + ')" fill="' + color + '"/>' +
         '<text x="' + (W - PAD) + '" y="' + (up - 8) + '" text-anchor="end" fill="rgba(255,255,255,0.60)" font-size="10.5" ' + MONO + '>' + (p.barrierPct ? "барьер +" + p.barrierPct + "% → " : "") + "купон " + p.couponPct + '%</text>';
+    } else if (p.type === "booster") {
+      // Бустер: вниз — один к одному, вверх — усиленное участие внутри диапазона до потолка.
+      const zero = y(0.58), cap = y(0.16), x0 = x(0.42), xc = x(0.7);
+      el = '<line x1="' + PAD + '" y1="' + zero + '" x2="' + (W - PAD) + '" y2="' + zero + '" stroke="rgba(255,255,255,0.17)" stroke-width="1" stroke-dasharray="2 4"/>' +
+        '<text x="' + PAD + '" y="' + (zero + 14) + '" fill="rgba(255,255,255,0.46)" font-size="10.5" ' + MONO + '>номинал 100%</text>' +
+        '<path d="M' + PAD + ' ' + y(0.95) + ' L' + x0 + ' ' + zero + ' L' + xc + ' ' + cap + ' L' + (W - PAD) + ' ' + cap + '" fill="none" stroke="' + color + '" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>' +
+        '<rect x="' + (xc - 3.5) + '" y="' + (cap - 3.5) + '" width="7" height="7" transform="rotate(45 ' + xc + ' ' + cap + ')" fill="' + color + '"/>' +
+        '<text x="' + (W - PAD) + '" y="' + (cap - 8) + '" text-anchor="end" fill="rgba(255,255,255,0.60)" font-size="10.5" ' + MONO + '>макс. +' + p.capPct + '%</text>' +
+        (p.kuPct ? '<text x="' + x(0.55) + '" y="' + y(0.44) + '" fill="rgba(255,255,255,0.60)" font-size="10.5" ' + MONO + '>×' + p.kuPct + '%</text>' : "") +
+        '<text x="' + PAD + '" y="' + (y(0.95) + 13) + '" fill="rgba(255,255,255,0.46)" font-size="10.5" ' + MONO + '>падение 1:1</text>';
+    } else if (p.type === "fixed") {
+      // Дисконтная облигация: результат известен в день сделки — вход ниже номинала, погашение по 100%.
+      const inY = y(0.72), outY = y(0.2), mid = x(0.52);
+      el = '<line x1="' + PAD + '" y1="' + inY + '" x2="' + (W - PAD) + '" y2="' + inY + '" stroke="rgba(255,255,255,0.17)" stroke-width="1" stroke-dasharray="2 4"/>' +
+        '<text x="' + PAD + '" y="' + (inY + 14) + '" fill="rgba(255,255,255,0.46)" font-size="10.5" ' + MONO + '>вход ' + p.entryPct + '%</text>' +
+        '<line x1="' + PAD + '" y1="' + outY + '" x2="' + (W - PAD) + '" y2="' + outY + '" stroke="' + color + '" stroke-width="2.5" stroke-linecap="round"/>' +
+        '<text x="' + (W - PAD) + '" y="' + (outY - 8) + '" text-anchor="end" fill="rgba(255,255,255,0.60)" font-size="10.5" ' + MONO + '>погашение 100%</text>' +
+        '<line x1="' + mid + '" y1="' + (inY - 4) + '" x2="' + mid + '" y2="' + (outY + 6) + '" stroke="' + color + '" stroke-width="1.6" stroke-dasharray="3 3"/>' +
+        '<path d="M' + (mid - 4.5) + ' ' + (outY + 11) + ' L' + mid + ' ' + (outY + 4) + ' L' + (mid + 4.5) + ' ' + (outY + 11) + '" fill="none" stroke="' + color + '" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>' +
+        '<text x="' + (mid + 10) + '" y="' + ((inY + outY) / 2 + 4) + '" fill="' + color + '" font-size="11.5" ' + MONO + '>+' + p.gainPct + '%</text>';
     } else if (p.type === "protected") {
       const floor = y(0.6), up = y(0.18), bx = x(0.5);
       el = '<line x1="' + PAD + '" y1="' + floor + '" x2="' + (W - PAD) + '" y2="' + floor + '" stroke="rgba(255,255,255,0.17)" stroke-width="1" stroke-dasharray="2 4"/>' +
-        '<text x="' + PAD + '" y="' + (floor + 14) + '" fill="rgba(255,255,255,0.46)" font-size="10.5" ' + MONO + '>защита 100%</text>' +
+        '<text x="' + PAD + '" y="' + (floor + 14) + '" fill="rgba(255,255,255,0.46)" font-size="10.5" ' + MONO + '>защита ' + (p.floorPct || 100) + '%</text>' +
         '<path d="M' + PAD + ' ' + floor + ' L' + bx + ' ' + floor + ' L' + x(0.86) + ' ' + up + ' L' + (W - PAD) + ' ' + up + '" fill="none" stroke="' + color + '" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>' +
         (p.capPct ? '<text x="' + (W - PAD) + '" y="' + (up - 8) + '" text-anchor="end" fill="rgba(255,255,255,0.60)" font-size="10.5" ' + MONO + '>участие до ' + p.capPct + '%</text>' : "");
     } else {
