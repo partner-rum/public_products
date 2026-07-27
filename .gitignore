@@ -28,3 +28,6 @@ _demo/
 Floater_tool.py
 floaters_dashboard.png
 *.xlsx
+
+# artefacts of the impeccable design skill (local only)
+.impeccable/

@@ -59,6 +59,7 @@ window.Contact = (function () {
     opts = opts || {};
     var title = opts.title || document.title;
     var url = opts.url || location.href;
+    var label = opts.label || "Обсудить продукт";
     var startPayload = String(opts.id || "").replace(/[^A-Za-z0-9_-]/g, "").slice(0, 64);
     var msg = "Здравствуйте! Интересует продукт: " + title + ".\n" + url + "\nРасскажите, пожалуйста, подробнее об условиях и как оформить.";
     var m = encodeURIComponent(msg);
@@ -74,8 +75,8 @@ window.Contact = (function () {
     var wrap = document.createElement("div");
     wrap.className = "ct";
     wrap.innerHTML =
-      '<button class="ct-btn" type="button" aria-haspopup="dialog">' + IC.chat + 'Обсудить продукт</button>' +
-      '<div class="ct-menu" role="dialog" aria-label="Обсудить продукт">' +
+      '<button class="ct-btn" type="button" aria-haspopup="dialog">' + IC.chat + label + '</button>' +
+      '<div class="ct-menu" role="dialog" aria-label="' + label + '">' +
         '<div class="ct-lead">Задайте вопрос менеджеру или оставьте заявку — свяжемся в течение рабочего дня.</div>' +
         tgRow + waRow +
         '<div class="ct-sep"><span>' + sepText + '</span></div>' +

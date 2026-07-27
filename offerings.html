@@ -82,6 +82,10 @@
   .o-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; flex-wrap: wrap; }
   .o-top-right { display: flex; flex-direction: column; align-items: flex-end; gap: 12px; margin-left: auto; }
   .o-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+  /* CTA-попап (contact.js) в правом кластере действий открываем влево — внутрь карточки */
+  .o-actions .ct-menu { left: auto; right: 0; }
+  /* главный CTA — тач-таргет ≥44px */
+  .o-actions .ct-btn { min-height: 44px; }
   .o-doc-btn { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font-size: 13px; color: var(--ink); background: transparent; transition: border-color .2s, background .2s; }
   .o-doc-btn:hover { border-color: rgba(255,255,255,0.28); background: rgba(255,255,255,0.05); }
   .o-doc-btn svg { display: block; flex: none; }
@@ -224,6 +228,7 @@
 
 <script src="data/offerings.js?v=srv15"></script>
 <script src="share.js?v=5"></script>
+<script src="contact.js?v=7"></script>
 <script>
 (function () {
   "use strict";
@@ -370,7 +375,7 @@
     return '<div class="o-kind">' + o.kind + '</div>' +
       '<div class="o-top"><div><h2 class="o-name">' + o.name + '</h2>' +
         '<div class="o-ref">' + refLine + '</div>' + issuerLine + partnerLine + '</div>' +
-        '<div class="o-top-right">' + badge + '<div class="o-actions">' + topDocBtns + '<span id="o-sh-host"></span></div></div></div>' +
+        '<div class="o-top-right">' + badge + '<div class="o-actions"><span id="o-ct-host"></span>' + topDocBtns + '<span id="o-sh-host"></span></div></div></div>' +
       '<div class="o-teaser">' + o.teaser + '</div>' +
       '<div class="tiles">' + tiles + '</div>' +
       '<div class="o-grid"><div>' +
@@ -402,6 +407,11 @@
       // короткая ссылка на p/<id> — шелл с персональным og-превью (название выпуска
       // в мессенджере), мгновенный редирект на offerings#<id>. Сообщение — только название.
       Share.attach(shHost, { url: location.origin + "/p/" + encodeURIComponent(o.id), title: o.name, name: o.name });
+    }
+    var ctHost = document.getElementById("o-ct-host");
+    if (ctHost && window.Contact) {
+      // Главный CTA — «поднять руку»: попап с Telegram и формой-заявкой → Worker /lead
+      Contact.attach(ctHost, { title: o.name, url: location.origin + "/offerings#" + o.id, id: o.id, label: "Обсудить выпуск" });
     }
     document.querySelectorAll(".item").forEach(el => el.classList.toggle("active", el.getAttribute("data-id") === id));
     history.replaceState(null, "", "#" + id);
