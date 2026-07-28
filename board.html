@@ -162,13 +162,19 @@
   .calc-note { margin-top: 11px; font-size: 11.5px; line-height: 1.45; color: var(--faint); }
 
   @media (max-width: 900px) {
-    .wrap { padding: 0 16px 32px; }
+    /* нижний воздух, чтобы последние строки списка прокручивались выше AI-орба (56px @ bottom:20) */
+    .wrap { padding: 0 16px 96px; }
+    /* пока открыт полноэкранный паспорт — орб (z-300) прячем, иначе он поверх CTA */
+    body:has(.panel-wrap.open) .ca-btn, body:has(.panel-wrap.open) .ca-panel { display: none; }
     .layout { grid-template-columns: 1fr; }
     .aside { position: static; max-height: none; }
     .list { max-height: none; }
-    .panel-wrap { display: none; position: fixed; inset: 0; z-index: 40; background: var(--canvas); padding: 14px; overflow: auto; }
+    .panel-wrap { display: none; position: fixed; inset: 0; z-index: 40; background: var(--canvas); padding: 14px; overflow-y: auto; overflow-x: hidden; }
     .panel-wrap.open { display: block; }
-    .panel { max-height: none; }
+    /* .panel не должен быть своим скролл-контекстом (overflow-y:auto → overflow-x:auto
+       давал паразитный горизонтальный скролл от закрытых absolute-попапов на 320px).
+       На мобиле вертикально скроллит .panel-wrap. */
+    .panel { max-height: none; overflow: visible; }
     .panel-close { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 12px; border: 1px solid var(--border); background: var(--card); border-radius: 6px; padding: 8px 14px; font-family: var(--f-body); font-size: 13.5px; cursor: pointer; }
     .metrics { grid-template-columns: repeat(2, 1fr); }
     .scenario { grid-template-columns: 1fr; gap: 3px; }
