@@ -407,7 +407,9 @@
     }
   }
   render();
-  if (selected) select(selected);
+  // Deep-link по #isin — на мобиле раскрываем полноэкранный паспорт (fromUser=true),
+  // иначе вместо конкретного выпуска показывается весь список.
+  if (selected) select(selected, !!hash);
 </script>
 <script src="chat.js?v=11"></script>
 <script src="nav-about.js?v=4"></script>

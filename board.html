@@ -744,7 +744,9 @@
     if (r) { selected = hash; closedGroups.delete(r.underlying); if (type !== "all" && r.type !== type) type = "all"; }
   }
   render();
-  if (selected) select(selected, false);
+  // Deep-link по #id — явное намерение открыть инструмент: на мобиле раскрываем
+  // полноэкранный паспорт (fromUser=true), иначе видна вся доска вместо продукта.
+  if (selected) select(selected, !!hash);
 
   // ── Полоса под шапкой: синусоида-фон + лента мотивирующих фраз (декор) ──
   (function ribbon() {
