@@ -11,11 +11,15 @@
 
   function seen() {
     if (demo) return false;
-    try { return sessionStorage.getItem(KEY) === "1"; } catch (e) { return false; }
+    try { if (sessionStorage.getItem(KEY) === "1") return true; } catch (e) {}
+    // Фолбэк для приватного Safari, где sessionStorage кидает: сессионная cookie
+    // (иначе гейт спрашивал бы на каждом переходе между страницами).
+    return document.cookie.indexOf(KEY + "=1") !== -1;
   }
   function mark() {
     if (demo) return;
     try { sessionStorage.setItem(KEY, "1"); } catch (e) {}
+    try { document.cookie = KEY + "=1;path=/;max-age=43200;samesite=lax"; } catch (e) {}
   }
 
   var css = "" +
@@ -66,15 +70,26 @@
     }
     function onKey(e) {
       if (e.key !== "Tab") return;              // Escape намеренно не закрывает — обязательный гейт
-      var fs = veil.querySelectorAll("button");
+      var fs = veil.querySelectorAll("button, a[href]");   // на блок-экране есть ссылки — их тоже держим в трапе
       if (!fs.length) return;
       var first = fs[0], last = fs[fs.length - 1];
       if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
       else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
     }
+    // Остальная страница на время гейта — inert: убирает 81 фокусируемый элемент из
+    // Tab-порядка и из кликов (раньше Tab/клик уводили фокус за вуаль на BODY).
+    var inerted = [];
+    function setBgInert(on) {
+      [].slice.call(document.body.children).forEach(function (el) {
+        if (el === veil) return;
+        if (on) { if (!el.hasAttribute("inert")) { el.setAttribute("inert", ""); inerted.push(el); } }
+      });
+      if (!on) { inerted.forEach(function (el) { el.removeAttribute("inert"); }); inerted = []; }
+    }
     function pass() {
       mark();
       document.removeEventListener("keydown", onKey, true);
+      setBgInert(false);
       root.classList.remove("qg-lock");
       veil.classList.remove("on");
       setTimeout(function () { if (veil.parentNode) veil.remove(); }, 320);
@@ -115,7 +130,11 @@
       focusFirst();
     }
 
+    // Клик по подложке (не по карточке) не должен уводить фокус на BODY.
+    veil.addEventListener("mousedown", function (e) { if (e.target === veil) e.preventDefault(); });
+
     document.body.appendChild(veil);         // сперва в DOM — иначе focus() не сработает
+    setBgInert(true);                        // фон недоступен, пока висит гейт
     renderAsk();
     document.addEventListener("keydown", onKey, true);
     requestAnimationFrame(function () { veil.classList.add("on"); });

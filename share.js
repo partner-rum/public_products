@@ -77,12 +77,14 @@ window.Share = (function () {
     var wrap = document.createElement("div");
     wrap.className = "sh";
     wrap.innerHTML =
-      '<button class="sh-btn" type="button" aria-haspopup="true" aria-label="Поделиться">' + IC.share + 'Поделиться</button>' +
-      '<div class="sh-menu" role="menu">' +
-        '<button class="sh-mi" type="button" data-copy role="menuitem"><span class="ic">' + IC.link + '</span><span>Скопировать ссылку<small>страница продукта</small></span></button>' +
-        '<a class="sh-mi" role="menuitem" target="_blank" rel="noopener" href="https://t.me/share/url?url=' + u + '&text=' + t + '"><span class="ic tg">' + IC.tg + '</span><span>Отправить в Telegram</span></a>' +
-        '<a class="sh-mi" role="menuitem" target="_blank" rel="noopener" href="https://wa.me/?text=' + t + '%20' + u + '"><span class="ic wa">' + IC.wa + '</span><span>Отправить в WhatsApp</span></a>' +
-        (pdf ? '<div class="sh-sep"></div><a class="sh-mi" role="menuitem" target="_blank" rel="noopener" href="' + pdf + '"><span class="ic pdf">' + IC.pdf + '</span><span>One-pager (PDF)</span></a>' : "") +
+      // role="menu"/"menuitem" убраны: ARIA-меню требует навигации стрелками, которой нет.
+      // Это просто список ссылок/кнопок — Tab обходит их нативно. aria-expanded отражает попап.
+      '<button class="sh-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Поделиться">' + IC.share + 'Поделиться</button>' +
+      '<div class="sh-menu">' +
+        '<button class="sh-mi" type="button" data-copy><span class="ic">' + IC.link + '</span><span>Скопировать ссылку<small>страница продукта</small></span></button>' +
+        '<a class="sh-mi" target="_blank" rel="noopener" href="https://t.me/share/url?url=' + u + '&text=' + t + '"><span class="ic tg">' + IC.tg + '</span><span>Отправить в Telegram</span></a>' +
+        '<a class="sh-mi" target="_blank" rel="noopener" href="https://wa.me/?text=' + t + '%20' + u + '"><span class="ic wa">' + IC.wa + '</span><span>Отправить в WhatsApp</span></a>' +
+        (pdf ? '<div class="sh-sep"></div><a class="sh-mi" target="_blank" rel="noopener" href="' + pdf + '"><span class="ic pdf">' + IC.pdf + '</span><span>One-pager (PDF)</span></a>' : "") +
       '</div>' +
       '<div class="sh-toast">' + IC.check + 'Ссылка скопирована</div>';
     host.innerHTML = "";
@@ -97,9 +99,10 @@ window.Share = (function () {
         wrap.classList.toggle("align-left", r.left < window.innerWidth / 2);
       }
       wrap.classList.toggle("open");
+      btn.setAttribute("aria-expanded", wrap.classList.contains("open"));
     });
-    document.addEventListener("click", function (e) { if (!wrap.contains(e.target)) wrap.classList.remove("open"); });
-    document.addEventListener("keydown", function (e) { if (e.key === "Escape") wrap.classList.remove("open"); });
+    document.addEventListener("click", function (e) { if (!wrap.contains(e.target)) { wrap.classList.remove("open"); btn.setAttribute("aria-expanded", "false"); } });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape") { wrap.classList.remove("open"); btn.setAttribute("aria-expanded", "false"); } });
     wrap.querySelector("[data-copy]").addEventListener("click", function () {
       var done = function () { wrap.classList.remove("open"); toast.classList.add("on"); setTimeout(function () { toast.classList.remove("on"); }, 2200); };
       if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(done, done);

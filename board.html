@@ -238,8 +238,8 @@
 
 <script src="data/instruments.js?v=fx7"></script>
 <script src="data/lib.js?v=fx9"></script>
-<script src="share.js?v=6"></script>
-<script src="contact.js?v=8"></script>
+<script src="share.js?v=7"></script>
+<script src="contact.js?v=9"></script>
 <script>
   const S = window.SITE;
   const TYPE_LABEL = { discount: "Дисконтные облигации", protection: "Защита капитала", warrant: "Варранты", booster: "Бустеры" };
@@ -577,7 +577,7 @@
       '</div></div>' +
       '<div class="chart-box">' +
         '<div class="chart-head"><span class="chart-title" id="chart-title"></span>' +
-        (U ? '<div class="tabs"><button class="tab" id="tab-payoff">Выплата</button><button class="tab" id="tab-under">Базовый актив</button></div>' : '') +
+        (U ? '<div class="tabs" role="tablist" aria-label="Вид графика"><button class="tab" id="tab-payoff" role="tab" type="button">Выплата</button><button class="tab" id="tab-under" role="tab" type="button">Базовый актив</button></div>' : '') +
         '</div><div id="chart"></div><div class="chart-caption" id="chart-caption"></div>' +
       '</div>' +
       '<div class="metrics">' + c.metrics.map(m => '<div class="metric"><div class="v">' + m[0] + '</div><div class="k">' + m[1] + '</div></div>').join("") + '</div>' +
@@ -595,11 +595,16 @@
   function setMode(m, inst, c, U) {
     mode = m;
     const tp = document.getElementById("tab-payoff"), tu = document.getElementById("tab-under");
-    if (tp) { tp.className = "tab" + (m === "payoff" ? " active" : ""); }
-    if (tu) { tu.className = "tab" + (m === "under" ? " active" : ""); }
+    if (tp) { tp.className = "tab" + (m === "payoff" ? " active" : ""); tp.setAttribute("aria-selected", m === "payoff"); }
+    if (tu) { tu.className = "tab" + (m === "under" ? " active" : ""); tu.setAttribute("aria-selected", m === "under"); }
     document.getElementById("chart-title").textContent = m === "payoff" ? "Диаграмма выплат" : "Базовый актив — " + inst.underlying;
-    document.getElementById("chart-caption").textContent = m === "payoff" ? c.payoffCaption : (U.desc + " Динамика за 12 месяцев; данные — демо.");
-    document.getElementById("chart").innerHTML = m === "payoff" ? c.payoff() : chartUnderlying(inst, U);
+    const cap = m === "payoff" ? c.payoffCaption : (U.desc + " Динамика за 12 месяцев; данные — демо.");
+    document.getElementById("chart-caption").textContent = cap;
+    // SVG-график без текстовой альтернативы (WCAG 1.1.1) → контейнер role=img + подпись из caption
+    const chartEl = document.getElementById("chart");
+    chartEl.innerHTML = m === "payoff" ? c.payoff() : chartUnderlying(inst, U);
+    chartEl.setAttribute("role", "img");
+    chartEl.setAttribute("aria-label", (m === "payoff" ? "Диаграмма выплат. " : "График базового актива. ") + cap);
   }
 
   function select(id, fromUser) {
@@ -721,11 +726,11 @@
   const counts = { all: S.INSTRUMENTS.length };
   S.INSTRUMENTS.forEach(r => counts[r.type] = (counts[r.type] || 0) + 1);
   document.getElementById("kinds").innerHTML = ["all", "warrant", "discount", "booster", "protection"].map(t =>
-    '<button class="kf' + (t === type ? " active" : "") + '" data-k="' + t + '">' +
+    '<button class="kf' + (t === type ? " active" : "") + '" data-k="' + t + '" aria-pressed="' + (t === type) + '">' +
     (t === "all" ? "Все" : TYPE_LABEL[t]) + '<span class="n">' + (counts[t] || 0) + '</span></button>').join("");
   document.querySelectorAll(".kf").forEach(b => b.addEventListener("click", () => {
     type = b.getAttribute("data-k");
-    document.querySelectorAll(".kf").forEach(x => x.classList.toggle("active", x === b));
+    document.querySelectorAll(".kf").forEach(x => { const on = x === b; x.classList.toggle("active", on); x.setAttribute("aria-pressed", on); });
     render();
   }));
   document.getElementById("search").addEventListener("input", e => { q = e.target.value; render(); });
@@ -794,7 +799,7 @@
   })();
 </script>
 <script src="chat.js?v=11"></script>
-<script src="nav-about.js?v=3"></script>
-<script src="qualgate.js?v=2"></script>
+<script src="nav-about.js?v=4"></script>
+<script src="qualgate.js?v=3"></script>
 </body>
 </html>

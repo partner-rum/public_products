@@ -206,9 +206,9 @@
     <div class="panel">
       <div class="chart-head">
         <div class="chart-title" id="chart-title"></div>
-        <div class="tabs">
-          <button class="tab active" id="tab-payoff" type="button">Выплата</button>
-          <button class="tab" id="tab-under" type="button">Базовый актив</button>
+        <div class="tabs" role="tablist" aria-label="Вид графика">
+          <button class="tab active" id="tab-payoff" type="button" role="tab" aria-selected="true">Выплата</button>
+          <button class="tab" id="tab-under" type="button" role="tab" aria-selected="false">Базовый актив</button>
         </div>
       </div>
       <div id="chart"></div>
@@ -240,8 +240,8 @@
 
 <script src="data/instruments.js?v=fx7"></script>
 <script src="data/lib.js?v=fx9"></script>
-<script src="contact.js?v=8"></script>
-<script src="share.js?v=6"></script>
+<script src="contact.js?v=9"></script>
+<script src="share.js?v=7"></script>
 <script src="intro.js?v=3"></script>
 <script>
   const S = window.SITE;
@@ -656,13 +656,17 @@
 
   function setMode(m) {
     mode = m;
-    document.getElementById("tab-payoff").className = "tab" + (m === "payoff" ? " active" : "");
-    document.getElementById("tab-under").className = "tab" + (m === "under" ? " active" : "");
+    const tp = document.getElementById("tab-payoff"), tu = document.getElementById("tab-under");
+    tp.className = "tab" + (m === "payoff" ? " active" : ""); tp.setAttribute("aria-selected", m === "payoff");
+    tu.className = "tab" + (m === "under" ? " active" : ""); tu.setAttribute("aria-selected", m === "under");
     document.getElementById("chart-title").textContent = m === "payoff" ? "Диаграмма выплат" : "Базовый актив — " + inst.underlying;
-    document.getElementById("chart-caption").textContent = m === "payoff"
-      ? content.payoffCaption
-      : U.desc + " Динамика за 12 месяцев; данные — демо.";
-    document.getElementById("chart").innerHTML = m === "payoff" ? content.payoff() : chartUnderlying();
+    const cap = m === "payoff" ? content.payoffCaption : U.desc + " Динамика за 12 месяцев; данные — демо.";
+    document.getElementById("chart-caption").textContent = cap;
+    // SVG без текстовой альтернативы (WCAG 1.1.1) → контейнер role=img + подпись
+    const chartEl = document.getElementById("chart");
+    chartEl.innerHTML = m === "payoff" ? content.payoff() : chartUnderlying();
+    chartEl.setAttribute("role", "img");
+    chartEl.setAttribute("aria-label", (m === "payoff" ? "Диаграмма выплат. " : "График базового актива. ") + cap);
   }
   // Вкладки графика: слушатели, а не inline onclick — setMode живёт внутри блока
   document.getElementById("tab-payoff").addEventListener("click", () => setMode("payoff"));
@@ -672,7 +676,7 @@
   }
 </script>
 <script src="chat.js?v=11"></script>
-<script src="nav-about.js?v=3"></script>
-<script src="qualgate.js?v=2"></script>
+<script src="nav-about.js?v=4"></script>
+<script src="qualgate.js?v=3"></script>
 </body>
 </html>

@@ -86,7 +86,7 @@ window.Contact = (function () {
     var wrap = document.createElement("div");
     wrap.className = "ct";
     wrap.innerHTML =
-      '<button class="ct-btn" type="button" aria-haspopup="dialog">' + IC.chat + label + '</button>' +
+      '<button class="ct-btn" type="button" aria-haspopup="dialog" aria-expanded="false">' + IC.chat + label + '</button>' +
       '<div class="ct-menu" role="dialog" aria-label="' + label + '">' +
         '<div class="ct-lead">Задайте вопрос менеджеру или оставьте заявку — свяжемся в течение рабочего дня.</div>' +
         tgRow + waRow +
@@ -158,9 +158,9 @@ window.Contact = (function () {
         '</div>';
     }
 
-    btn.addEventListener("click", function (e) { e.stopPropagation(); wrap.classList.toggle("open"); });
-    document.addEventListener("click", function (e) { if (!wrap.contains(e.target)) wrap.classList.remove("open"); });
-    document.addEventListener("keydown", function (e) { if (e.key === "Escape") wrap.classList.remove("open"); });
+    btn.addEventListener("click", function (e) { e.stopPropagation(); wrap.classList.toggle("open"); btn.setAttribute("aria-expanded", wrap.classList.contains("open")); });
+    document.addEventListener("click", function (e) { if (!wrap.contains(e.target)) { wrap.classList.remove("open"); btn.setAttribute("aria-expanded", "false"); } });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape") { wrap.classList.remove("open"); btn.setAttribute("aria-expanded", "false"); } });
 
     form.addEventListener("submit", function (e) {
       e.preventDefault();
@@ -176,7 +176,11 @@ window.Contact = (function () {
       // Демо-режим (бот ещё не подключён): показываем успех локально.
       if (!CFG.endpoint) { showDone(); return; }
 
+      // Метка сейлза: обычно из localStorage (её кладёт metrika.js по ?ref=). В приватном
+      // Safari localStorage кидает — тогда падаем на ?ref= прямо из URL, чтобы «Сейлз: …»
+      // не терялся в заявке.
       var ref = ""; try { ref = localStorage.getItem("so_ref") || ""; } catch (e) {}
+      if (!ref) { try { ref = new URLSearchParams(location.search).get("ref") || ""; } catch (e) {} }
       var payload = { segment: segEl.value, name: nameEl.value.trim(), contact: contact, product: title, url: url, ref: ref };
       sendBtn.disabled = true;
       var oldLabel = sendBtn.textContent;

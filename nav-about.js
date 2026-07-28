@@ -113,7 +113,14 @@
       "@media(max-width:640px){.nav-in .brand-name,.nav-in .name{display:none;}" +
       ".nav-in .topnav a:not(.btn-solar){display:none;}.nav-about{display:none;}" +
       ".nav-burger{display:inline-flex;}}" +
-      "@media(min-width:641px){.nav-menu,.nav-backdrop{display:none !important;}}";
+      "@media(min-width:641px){.nav-menu,.nav-backdrop{display:none !important;}}" +
+      // Тач-таргет логотипа ≥24px (WCAG 2.5.8); на мобиле, где подпись скрыта, лого
+      // остаётся один — добавляем небольшой паддинг, чтобы область нажатия не была 22px.
+      ".nav-in .brand{min-height:24px;}" +
+      "@media(max-width:640px){.nav-in .brand{padding:3px;margin-left:-3px;}}" +
+      // Универсальный respect prefers-reduced-motion (модуль подключён на всех витринных
+      // страницах, правило документ-глобальное — гасит и анимации попапов/гейта/лент).
+      "@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important;scroll-behavior:auto !important;}}";
     document.head.appendChild(s);
   }
 
