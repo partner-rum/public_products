@@ -181,7 +181,7 @@
 </div>
 
 <script src="data/lib.js?v=fx9"></script>
-<script src="data/digest.js?v=srv5"></script>
+<script src="data/digest.js?v=srv6"></script>
 <script src="data/digest-lib.js?v=4"></script>
 <script src="share.js?v=6"></script>
 <script src="contact.js?v=8"></script>
@@ -281,10 +281,29 @@
   document.getElementById("prev").addEventListener("click", e => { show(e.currentTarget.dataset.id); window.scrollTo({ top: 0, behavior: "smooth" }); });
   document.getElementById("next").addEventListener("click", e => { show(e.currentTarget.dataset.id); window.scrollTo({ top: 0, behavior: "smooth" }); });
 
-  // Deep-link: #issueId  или  #issueId/ideaId
-  const parts = decodeURIComponent(location.hash.slice(1)).split("/");
-  const startIssue = A.issues.find(x => x.id === parts[0]) ? parts[0] : A.issues[0].id;
-  selectIssue(startIssue, parts[1] || null);
+  // Режим превью черновика (для админки): ?draft=1 — рендерим A.draft, а не опубликованный выпуск.
+  // Обычных посетителей не касается: без параметра всё как раньше.
+  if (new URLSearchParams(location.search).get("draft") === "1") {
+    const draftIdeas = (A.draft && A.draft.ideas) || [];
+    const banner = document.createElement("div");
+    banner.textContent = "ЧЕРНОВИК ВЫПУСКА · не опубликовано — так дайджест будет выглядеть на сайте после публикации";
+    banner.style.cssText = "position:sticky;top:0;z-index:50;background:#EE7D1B;color:#0C0A08;font-weight:600;text-align:center;padding:9px 16px;font-size:13px;line-height:1.4;font-family:var(--f-body)";
+    document.body.insertBefore(banner, document.body.firstChild);
+    if (!draftIdeas.length) {
+      document.getElementById("article").innerHTML = '<div style="padding:48px 0;color:var(--hushed);font-size:15px">Черновик пуст — добавьте идеи в админке на вкладке «Идея в дайджест».</div>';
+      document.getElementById("pick-date").textContent = "Черновик";
+    } else {
+      A.issues.unshift({ id: "__draft__", label: "Черновик выпуска", summary: "предпросмотр",
+        intro: "Предпросмотр черновика: идеи, которые уйдут в выпуск после публикации.",
+        qualNote: (A.issues[0] && A.issues[0].qualNote) || "", ideas: draftIdeas, pdf: null });
+      selectIssue("__draft__", null);
+    }
+  } else {
+    // Deep-link: #issueId  или  #issueId/ideaId
+    const parts = decodeURIComponent(location.hash.slice(1)).split("/");
+    const startIssue = A.issues.find(x => x.id === parts[0]) ? parts[0] : A.issues[0].id;
+    selectIssue(startIssue, parts[1] || null);
+  }
 </script>
 <script src="chat.js?v=11"></script>
 <script src="nav-about.js?v=3"></script>

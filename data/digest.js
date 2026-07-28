@@ -40,6 +40,9 @@ window.DIGEST_ARCHIVE = {
    "color": "#8A93A6"
   }
  ],
+ "draft": {
+  "ideas": []
+ },
  "issues": [
   {
    "id": "2026-07-27",

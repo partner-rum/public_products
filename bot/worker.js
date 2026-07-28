@@ -420,9 +420,9 @@ function sanitizeItem(section, raw) {
       if (!src || typeof src !== "object") continue;
       if (k === "payoff") {
         const t = cleanStr(src.type, 20);
-        if (["call", "callcap", "digital", "protected"].includes(t)) {
+        if (["call", "callcap", "digital", "protected", "booster", "fixed", "portfolio"].includes(t)) {
           const p = { type: t };
-          for (const nk of ["capPct", "premiumPct", "couponPct", "barrierPct"]) {
+          for (const nk of ["capPct", "premiumPct", "couponPct", "barrierPct", "kuPct", "entryPct", "gainPct", "floorPct"]) {
             const v = cleanNum(src[nk]); if (v != null) p[nk] = v;
           }
           out.payoff = p;
@@ -464,6 +464,83 @@ async function handleSubmit(request, env, cors) {
     });
     if (!rr.ok) return json({ ok: false, error: "telegram_failed" }, 502, cors);
     return json({ ok: true }, 200, cors);
+  }
+
+  // ── Дайджест-самообслуживание (без модерации): идея → черновик, публикация — сейлзом ──
+  // Ключ уже проверен выше (author). Правки коммитятся прямо в data/digest.js, Руслану уходит
+  // уведомление без кнопок. Board/offerings/remove остаются на аппруве — их не трогаем.
+  if (data.action === "digest_add") {
+    const raw = data.item || {};
+    if (!raw.id && raw.name) raw.id = slugId(raw.name);   // id генерим сами из названия
+    const { item, missing } = sanitizeItem("digest", raw);
+    if (missing.length) return json({ ok: false, error: "missing: " + missing.join(", ") }, 422, cors);
+    let result;
+    try {
+      result = await commitDigestFile(env, (obj) => {
+        const taken = new Set(obj.draft.ideas.map((i) => i.id));
+        item.id = uniqueId(item.id, taken);
+        obj.draft.ideas.push(item);
+        return { msg: "Черновик дайджеста: +идея " + (item.name || item.id) + " (от " + author + ")",
+                 out: { id: item.id, count: obj.draft.ideas.length } };
+      });
+    } catch (e) { return json({ ok: false, error: String(e && e.message || e) }, 502, cors); }
+    await tg(env, "sendMessage", { chat_id: env.ADMIN_CHAT_ID, parse_mode: "HTML",
+      text: "🟠 <b>Черновик дайджеста</b>\n<b>" + esc(author) + "</b> добавил идею «" + esc(item.name || item.id) +
+            "». В черновике: " + result.count + "." });
+    return json({ ok: true, id: result.id, count: result.count }, 200, cors);
+  }
+
+  if (data.action === "digest_remove") {
+    const rid = cleanStr(data.id, 60);
+    if (!rid) return json({ ok: false, error: "no_id" }, 422, cors);
+    let result;
+    try {
+      result = await commitDigestFile(env, (obj) => {
+        const before = obj.draft.ideas.length;
+        obj.draft.ideas = obj.draft.ideas.filter((i) => i.id !== rid);
+        if (obj.draft.ideas.length === before) throw new Error("not_found");
+        return { msg: "Черновик дайджеста: −идея " + rid + " (от " + author + ")",
+                 out: { count: obj.draft.ideas.length } };
+      });
+    } catch (e) { return json({ ok: false, error: String(e && e.message || e) }, 502, cors); }
+    return json({ ok: true, count: result.count }, 200, cors);
+  }
+
+  if (data.action === "digest_publish") {
+    let result;
+    try {
+      result = await commitDigestFile(env, (obj) => {
+        if (!obj.draft.ideas.length) throw new Error("empty_draft");
+        const now = new Date(Date.now() + 3 * 3600 * 1000);   // МСК = UTC+3
+        const dd = String(now.getUTCDate()).padStart(2, "0");
+        const mm = String(now.getUTCMonth() + 1).padStart(2, "0");
+        const yy = now.getUTCFullYear();
+        const id = yy + "-" + mm + "-" + dd;
+        const MON = ["января", "февраля", "марта", "апреля", "мая", "июня",
+                     "июля", "августа", "сентября", "октября", "ноября", "декабря"];
+        obj.issues = obj.issues.filter((x) => x.id !== id);   // не плодим дубль за один день
+        obj.issues.unshift({
+          id, date: dd + "." + mm + "." + yy,
+          label: now.getUTCDate() + " " + MON[now.getUTCMonth()] + " " + yy,
+          summary: obj.draft.ideas.map((i) => i.underlying || i.name).slice(0, 7).join(", "),
+          intro: "Идеи недели: по каждой — гипотеза, рыночная ситуация, факторы и параметры выпуска.",
+          qualNote: "Продукты доступны только квалифицированным инвесторам. Не является индивидуальной инвестиционной рекомендацией.",
+          ideas: obj.draft.ideas,
+          pdf: "docs/digest/rumberg-digest-" + id + ".pdf",
+          pdfName: "Румберг Дайджест " + dd + "." + mm + ".pdf",
+        });
+        obj.draft = { ideas: [] };
+        return { msg: "Дайджест: опубликован выпуск " + id + " (" + obj.issues[0].ideas.length + " идей, от " + author + ")",
+                 out: { id, count: obj.issues[0].ideas.length } };
+      });
+    } catch (e) {
+      const m = String(e && e.message || e);
+      return json({ ok: false, error: m === "empty_draft" ? "empty_draft" : m }, m === "empty_draft" ? 422 : 502, cors);
+    }
+    await tg(env, "sendMessage", { chat_id: env.ADMIN_CHAT_ID, parse_mode: "HTML",
+      text: "📢 <b>Опубликован дайджест</b>\n<b>" + esc(author) + "</b> выпустил дайджест от " + esc(result.id) +
+            " (" + result.count + " идей). PDF соберётся сам, сайт обновится за 1–3 минуты." });
+    return json({ ok: true, id: result.id, count: result.count }, 200, cors);
   }
 
   const section = cleanStr(data.section, 20);
@@ -539,6 +616,41 @@ function uniqueId(id, taken) {
   let out = id, n = 2;
   while (taken.has(out)) { out = id + "-" + n; n++; }
   return out;
+}
+
+// Транслит-слаг из названия — чтобы сейлз не вводил id руками (id генерится сам).
+const TRANSLIT = { а:"a",б:"b",в:"v",г:"g",д:"d",е:"e",ё:"e",ж:"zh",з:"z",и:"i",й:"y",к:"k",л:"l",м:"m",
+  н:"n",о:"o",п:"p",р:"r",с:"s",т:"t",у:"u",ф:"f",х:"h",ц:"c",ч:"ch",ш:"sh",щ:"sch",ъ:"",ы:"y",ь:"",э:"e",ю:"yu",я:"ya" };
+function slugId(s) {
+  const out = String(s || "").toLowerCase().split("").map((ch) => (TRANSLIT[ch] != null ? TRANSLIT[ch] : ch)).join("")
+    .replace(/[^\w.-]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "").slice(0, 50);
+  return out || "idea";
+}
+
+// Прямая правка data/digest.js в GitHub (для самообслуживания дайджеста, без модерации).
+// mutate(obj) меняет объект на месте и возвращает { msg, out }; повтор при устаревшем sha.
+async function commitDigestFile(env, mutate) {
+  if (!env.GITHUB_TOKEN || !env.GITHUB_REPO) throw new Error("github_not_configured");
+  const branch = env.GITHUB_BRANCH || "main";
+  const api = "https://api.github.com/repos/" + env.GITHUB_REPO + "/contents/data/digest.js";
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const g = await fetch(api + "?ref=" + branch, { headers: ghHeaders(env) });
+    if (!g.ok) throw new Error("github_get_" + g.status);
+    const meta = await g.json();
+    const text = b64decodeUtf8(meta.content);
+    const obj = JSON.parse(text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1));
+    if (!obj.draft || !Array.isArray(obj.draft.ideas)) obj.draft = { ideas: [] };
+    const { msg, out } = mutate(obj);                    // бросит — прокинется наверх
+    const put = await fetch(api, {
+      method: "PUT", headers: ghHeaders(env),
+      body: JSON.stringify({ message: msg, content: b64encodeUtf8(renderDataFile("data/digest.js", obj)),
+                             sha: meta.sha, branch }),
+    });
+    if (put.ok) return out;
+    if (put.status !== 409) throw new Error("github_put_" + put.status);
+    // 409 — параллельная правка, sha устарел: перечитываем и повторяем
+  }
+  throw new Error("github_conflict");
 }
 
 // --- Персональные превью продуктов: p/<id>.html с og-тегами + редирект на карточку ---
