@@ -516,7 +516,7 @@ HTML = T("""<!DOCTYPE html>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;600;700&family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>$css</style>
-<script src="metrika.js?v=2"></script>
+<script src="metrika.js?v=2" defer></script>
 </head>
 <body>$bar$pages</body>
 </html>
