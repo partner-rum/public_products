@@ -496,6 +496,7 @@ HTML = T("""<!DOCTYPE html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, follow">
 <title>Дайджест $date — печатный выпуск</title>
 <meta name="description" content="Печатный выпуск дайджеста: идеи недели с гипотезой, механикой выплаты и параметрами. Сохранение в PDF, A4.">
 <meta property="og:type" content="website">
@@ -504,6 +505,7 @@ HTML = T("""<!DOCTYPE html>
 <meta property="og:title" content="Дайджест $date — печатный выпуск">
 <meta property="og:description" content="Идеи недели: гипотеза, механика выплаты и параметры каждого выпуска. A4, готово к печати и сохранению в PDF.">
 <meta property="og:url" content="https://invest.rumberg.ru/digest-print.html">
+<link rel="canonical" href="https://invest.rumberg.ru/digest-print.html">
 <meta property="og:image" content="https://invest.rumberg.ru/og-cover.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
