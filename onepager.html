@@ -47,6 +47,23 @@
   .btn-print:hover { background: #F58E33; }
 
   .slide { position: relative; width: 960px; height: 540px; margin: 18px auto; background: var(--ivory); overflow: hidden; box-shadow: 0 12px 36px rgba(13,16,38,0.5); display: flex; flex-direction: column; }
+  /* На экране слайд фикс. 960px не влезает в телефон (2,5× шире) → масштабируем по
+     ширине через zoom (двигает и layout-box, без горизонтального скролла). Множитель
+     считает JS в --fit. Только @media screen — печать (screen/print взаимоисключающи)
+     печатает натуральные 960×540 под @page. */
+  @media screen { .slide { zoom: var(--fit, 1); } }
+  /* Тулбар прижат вправо: всплывашки Contact открываем влево (right:0), иначе их
+     absolute-коробка (даже закрытая) торчит за правый край и даёт горизонтальный
+     скролл на телефоне. Share (.sh-menu) уже right:0. */
+  .toolbar .ct-menu, .toolbar .ct-toast { left: auto; right: 0; }
+  /* На узком экране тулбар переносится, распорка и совет про печать убираются,
+     чтобы ряд кнопок не разъезжался за правый край. */
+  @media screen and (max-width: 680px) {
+    .toolbar { flex-wrap: wrap; gap: 8px 10px; }
+    .toolbar .sp { display: none; }
+    .toolbar .tb-hint { display: none; }
+    body { overflow-x: hidden; }
+  }
 
   .brand { display: flex; align-items: center; gap: 9px; font-size: 13px; font-weight: 600; }
   .qual { font-family: var(--m); font-size: 9px; line-height: 1.55; letter-spacing: 0.02em; text-align: right; }
@@ -144,7 +161,7 @@
 <div class="toolbar">
   <a id="back-link" href="board.html">← К инструменту</a>
   <span class="sp"></span>
-  <span style="font-size:12px;color:#8B90A8">Если PDF без цвета — включите «Фоновая графика» в диалоге печати</span>
+  <span class="tb-hint" style="font-size:12px;color:#8B90A8">Если PDF без цвета — включите «Фоновая графика» в диалоге печати</span>
   <span class="ct-host" id="ct-host" style="margin-right:8px"></span>
   <span class="sh-host" id="sh-host" style="margin-right:4px"></span>
   <button class="btn-print" onclick="window.print()">Сохранить как PDF</button>
@@ -530,6 +547,17 @@
       .then(() => setTimeout(() => window.print(), 400));
   }
   }
+
+  // Fit-to-width на экране: множитель zoom для слайдов (см. CSS @media screen).
+  // 12px — боковой воздух; на десктопе (≥972px) множитель = 1, слайд в натуре.
+  (function fitDeck() {
+    function fit() {
+      var sc = Math.min(1, (document.documentElement.clientWidth - 12) / 960);
+      document.documentElement.style.setProperty("--fit", sc);
+    }
+    fit();
+    window.addEventListener("resize", fit);
+  })();
 </script>
 </body>
 </html>

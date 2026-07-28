@@ -127,13 +127,18 @@
   .disclaimer { margin-top: 20px; font-size: 12px; line-height: 1.5; color: var(--faint); }
 
   @media (max-width: 900px) {
-    .wrap { padding: 0 16px 32px; }
+    /* нижний воздух, чтобы последние строки списка прокручивались выше AI-орба */
+    .wrap { padding: 0 16px 96px; }
+    /* пока открыт полноэкранный паспорт — орб (z-300) прячем, иначе он поверх CTA */
+    body:has(.panel-wrap.open) .ca-btn, body:has(.panel-wrap.open) .ca-panel { display: none; }
     .layout { grid-template-columns: 1fr; }
     .aside { position: static; max-height: none; }
     .list { max-height: 60dvh; }
-    .panel-wrap { display: none; position: fixed; inset: 0; z-index: 40; background: var(--canvas); padding: 14px; overflow: auto; }
+    .panel-wrap { display: none; position: fixed; inset: 0; z-index: 40; background: var(--canvas); padding: 14px; overflow-y: auto; overflow-x: hidden; }
     .panel-wrap.open { display: block; }
-    .panel { max-height: none; }
+    /* .panel не свой скролл-контекст: overflow-y:auto давал overflow-x:auto и
+       паразитный горизонтальный скролл от закрытых absolute-попапов. */
+    .panel { max-height: none; overflow: visible; }
     .panel-close { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 12px; border: 1px solid var(--border); background: var(--card); border-radius: 6px; padding: 8px 14px; font-family: var(--f-body); font-size: 13.5px; cursor: pointer; }
   }
   @media (max-width: 860px) {
