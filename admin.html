@@ -74,6 +74,17 @@
   .msg { display:none; margin:14px 0 0; padding:13px 16px; border-radius:12px; font-size:13.5px; line-height:1.5; }
   .msg.ok { display:block; background:rgba(85,192,138,.1); border:1px solid rgba(85,192,138,.4); }
   .msg.err { display:block; background:rgba(224,112,90,.1); border:1px solid rgba(224,112,90,.45); }
+
+  /* авто-превью выведенных из продукта параметров */
+  .derived { margin-top:12px; padding:14px 16px; background:rgba(238,125,27,.07); border:1px solid rgba(238,125,27,.28); border-radius:12px; }
+  .derived .dh { font-family:var(--m); font-size:10.5px; letter-spacing:.11em; text-transform:uppercase; color:var(--solar); margin-bottom:9px; }
+  .derived .drow { display:flex; justify-content:space-between; gap:12px; padding:5px 0; border-bottom:1px solid var(--border-soft); font-size:13px; }
+  .derived .drow:last-child { border-bottom:0; }
+  .derived .drow .dk { color:var(--faint); } .derived .drow .dv { font-family:var(--m); text-align:right; }
+  .derived .dwarn { margin-top:8px; font-size:12.5px; color:var(--down); line-height:1.45; }
+  .preview-link { display:inline-block; margin-top:14px; font-size:13.5px; color:var(--solar-l); }
+  .preview-link:hover { text-decoration:underline; }
+  .dg-count { font-family:var(--m); font-size:11px; color:var(--faint); text-transform:uppercase; letter-spacing:.1em; margin:0 0 10px; }
 </style>
 </head>
 <body>
@@ -96,7 +107,7 @@
     <button class="tab on" data-f="f-board" type="button">Текущий продукт</button>
     <button class="tab" data-f="f-offering" type="button">На размещении</button>
     <button class="tab" data-f="f-digest" type="button">Идея в дайджест</button>
-    <button class="tab" data-f="f-dpdf" type="button">Дайджест (PDF)</button>
+    <button class="tab" data-f="f-dpdf" type="button">Выпуск недели</button>
     <button class="tab" data-f="f-remove" type="button">Снять с сайта</button>
   </div>
 
@@ -203,75 +214,36 @@
   </form>
 
   <!-- ══════════ ИДЕЯ В ДАЙДЖЕСТ ══════════ -->
-  <form id="f-digest">
-    <div class="grp"><div class="gt">Идея</div>
-      <label><span class="k">Название <b>*</b></span><input name="name" placeholder="Варрант на производителей меди" maxlength="80"></label>
-      <div class="row">
-        <label><span class="k">Секция <b>*</b></span>
-          <select name="family"><option value="warrant">Варранты</option><option value="coupon">Купоны</option><option value="protection">Защита капитала</option><option value="portfolio">Портфель</option></select>
-        </label>
-        <label><span class="k">Тип (подпись) <b>*</b></span><input name="kind" placeholder="Варрант" maxlength="40"></label>
-      </div>
-      <label><span class="k">Базовый актив <b>*</b></span><input name="underlying" placeholder="COPX · ETF на добытчиков меди" maxlength="80"></label>
-      <div class="row">
-        <label><span class="k">Ключевая цифра (для карточки)</span><input name="metric_v" placeholder="+30%" maxlength="12"></label>
-        <label><span class="k">Подпись цифры</span><input name="metric_k" placeholder="потолок роста" maxlength="30"></label>
-      </div>
-      <div class="row">
-        <label><span class="k">Срок (подпись)</span><input name="tenor" placeholder="0,5 года" maxlength="20"></label>
-        <label style="display:flex;align-items:center;gap:8px;margin-top:20px"><input type="checkbox" name="fx" style="width:16px;height:16px"> <span style="font-size:13px;color:var(--hushed)">валютный БА (FX-дисклеймер)</span></label>
-      </div>
-      <label><span class="k">Тизер <b>*</b></span><textarea name="teaser" maxlength="220" placeholder="Рычаг на рост меди: электрификация, дефицит предложения…"></textarea></label>
-    </div>
-
-    <div class="grp"><div class="gt">Аргументация</div>
-      <label><span class="k">Гипотеза <b>*</b></span><textarea name="hypothesis" maxlength="250" placeholder="Медь — ключевой металл электрификации мировой экономики."></textarea></label>
-      <label><span class="k">Рыночная ситуация</span><textarea name="situation" maxlength="400"></textarea></label>
-      <label><span class="k">Факторы — по одному на строку</span><textarea name="factors" maxlength="900" placeholder="Рост инвестиций в энергосети&#10;Ограниченное предложение&#10;Спрос со стороны ИИ"></textarea></label>
-      <label><span class="k">Вывод (необязательно)</span><textarea name="conclusion" maxlength="250"></textarea></label>
-    </div>
-
-    <div class="grp"><div class="gt">Механика и выплата</div>
-      <label><span class="k">Как работает <b>*</b></span><textarea name="how" maxlength="500"></textarea></label>
-      <label><span class="k">Выплата (описание) <b>*</b></span><textarea name="payout" maxlength="350" placeholder="Выплата роста базового актива (максимум 30%)…"></textarea></label>
-      <div class="row">
-        <label><span class="k">Актив (подпись)</span><input name="p_asset" placeholder="COPX (ETF)" maxlength="50"></label>
-        <label><span class="k">Цена (подпись)</span><input name="p_price" placeholder="150 ₽ · 15% ном." maxlength="50"></label>
-      </div>
-      <div class="row">
-        <label><span class="k">Апсайд (подпись)</span><input name="p_upside" placeholder="рост актива, потолок +30%" maxlength="60"></label>
-        <label><span class="k">Защита (подпись)</span><input name="p_protection" placeholder="нет / 100% номинала" maxlength="40"></label>
-      </div>
-      <label><span class="k">График выплаты</span>
-        <select name="payoff_type">
-          <option value="">без графика</option>
-          <option value="callcap">Рост с потолком (callcap)</option>
-          <option value="call">Рост без потолка (call)</option>
-          <option value="digital">Купон при условии (digital)</option>
-          <option value="protected">Защита + участие (protected)</option>
-        </select>
+  <form id="f-digest" onsubmit="return false">
+    <div class="grp"><div class="gt">1. Выбери продукт</div>
+      <div class="hint" style="margin:0 0 12px">Цифры, график выплаты и параметры подставятся из продукта сами — вводить руками ничего не нужно. Ты только опишешь идею словами.</div>
+      <label><span class="k">Продукт <b>*</b></span>
+        <select id="dg-product"><option value="">— загрузка списка… —</option></select>
       </label>
-      <div class="row3" id="d-payoff" style="display:none">
-        <label data-p="capPct"><span class="k">Потолок/участие, %</span><input name="payoff_capPct" type="number" placeholder="30"></label>
-        <label data-p="premiumPct"><span class="k">Премия, % ном.</span><input name="payoff_premiumPct" type="number" step="0.1" placeholder="15"></label>
-        <label data-p="couponPct"><span class="k">Купон, %</span><input name="payoff_couponPct" type="number" step="0.1"></label>
-        <label data-p="barrierPct"><span class="k">Барьер, +%</span><input name="payoff_barrierPct" type="number" step="0.1"></label>
-      </div>
-      <div class="hint">Идея добавится в конец текущего выпуска дайджеста (после одобрения).</div>
+      <div id="dg-derived" class="derived" style="display:none"></div>
     </div>
-    <button class="send" type="submit">Отправить на одобрение</button>
+
+    <div class="grp"><div class="gt">2. Опиши идею</div>
+      <label><span class="k">Название на карточке</span><input name="name" maxlength="80" placeholder="подставится из продукта — можно поправить"></label>
+      <label><span class="k">Тизер <b>*</b></span><textarea name="teaser" maxlength="220" placeholder="Одна фраза-крючок: почему это интересно сейчас."></textarea></label>
+      <label><span class="k">Гипотеза <b>*</b></span><textarea name="hypothesis" maxlength="250" placeholder="Во что мы верим: напр. «Цена ОФЗ 26238 вблизи исторического минимума»."></textarea></label>
+      <label><span class="k">Рыночная ситуация</span><textarea name="situation" maxlength="400" placeholder="Пара предложений контекста (необязательно)."></textarea></label>
+      <label><span class="k">Факторы — по одному на строку</span><textarea name="factors" maxlength="900" placeholder="Снижение ключевой ставки&#10;Приток капитала&#10;Устойчивый рост экономики"></textarea></label>
+      <label><span class="k">Вывод (необязательно)</span><textarea name="conclusion" maxlength="250"></textarea></label>
+      <div class="hint">Механика («как заработать», «структура выплаты») подставится из типа продукта автоматически.</div>
+    </div>
+    <button class="send" type="button" id="dg-add">Добавить в черновик выпуска</button>
     <div class="msg" id="m-digest"></div>
   </form>
 
-  <!-- ══════════ ДАЙДЖЕСТ (PDF) ══════════ -->
+  <!-- ══════════ ВЫПУСК НЕДЕЛИ (черновик + публикация) ══════════ -->
   <form id="f-dpdf" onsubmit="return false">
-    <div class="grp"><div class="gt">Новый PDF-выпуск дайджеста</div>
-      <div class="hint" style="margin:0 0 12px">Отправь <b>сам PDF-файл Руслану в Telegram</b>, а здесь нажми «Уведомить» — ему придёт отбивка, что готовится новый выпуск. Он обновит дайджест на сайте.</div>
-      <div class="row">
-        <label><span class="k">Дата выпуска <b>*</b></span><input id="dpdf-date" type="text" placeholder="22.07.2026" maxlength="20"></label>
-      </div>
+    <div class="grp"><div class="gt">Черновик выпуска недели</div>
+      <div class="hint" style="margin:0 0 12px">Идеи, которые уже в черновике. Посмотри превью — это точь-в-точь то, что увидят на сайте. Когда готово, жми «Опубликовать»: сайт и PDF соберутся сами за 1–3 минуты.</div>
+      <div id="dg-draft"><div class="rm-empty">Загрузка…</div></div>
+      <a class="preview-link" id="dg-preview" href="digest.html?draft=1" target="_blank" rel="noopener" style="display:none">↗ Открыть превью выпуска в новой вкладке</a>
     </div>
-    <button class="send" type="button" id="dpdf-send">Уведомить Руслана</button>
+    <button class="send" type="button" id="dg-publish" disabled>Опубликовать выпуск</button>
     <div class="msg" id="m-dpdf"></div>
   </form>
 
@@ -285,6 +257,7 @@
   </form>
 </div>
 
+<script src="admin-digest-derive.js?v=1"></script>
 <script>
 (function () {
   "use strict";
@@ -304,6 +277,7 @@
       var target = t.getAttribute("data-f");
       document.getElementById(target).classList.add("on");
       if (target === "f-remove") loadRemovable();
+      if (target === "f-dpdf") loadDraft();
     });
   });
 
@@ -369,14 +343,6 @@
     document.getElementById("b-warrant").style.display = fBoard.type.value === "warrant" ? "" : "none";
   });
   var fDigest = document.getElementById("f-digest");
-  var PAYOFF_FIELDS = { callcap: ["capPct", "premiumPct"], call: ["premiumPct"], digital: ["couponPct", "barrierPct"], protected: ["capPct"] };
-  fDigest.payoff_type.addEventListener("change", function () {
-    var t = fDigest.payoff_type.value, box = document.getElementById("d-payoff");
-    box.style.display = t ? "" : "none";
-    box.querySelectorAll("label").forEach(function (l) {
-      l.style.display = t && PAYOFF_FIELDS[t].indexOf(l.getAttribute("data-p")) >= 0 ? "" : "none";
-    });
-  });
 
   // ── утилиты ──
   var TR = { а:"a",б:"b",в:"v",г:"g",д:"d",е:"e",ё:"e",ж:"zh",з:"z",и:"i",й:"y",к:"k",л:"l",м:"m",н:"n",о:"o",п:"p",р:"r",с:"s",т:"t",у:"u",ф:"f",х:"h",ц:"c",ч:"ch",ш:"sh",щ:"sch",ъ:"",ы:"y",ь:"",э:"e",ю:"yu",я:"ya" };
@@ -400,7 +366,7 @@
       body: JSON.stringify({ key: key, section: section, item: item }) })
       .then(function (r) { return r.json().then(function (d) { return { s: r.status, d: d }; }); })
       .then(function (x) {
-        if (x.d && x.d.ok) { msgEl.className = "msg ok"; msgEl.textContent = "Отправлено на одобрение ✅ После ✅ Руслана продукт появится на сайте через пару минут."; form.reset(); fBoard.type.dispatchEvent(new Event("change")); fDigest.payoff_type.dispatchEvent(new Event("change")); }
+        if (x.d && x.d.ok) { msgEl.className = "msg ok"; msgEl.textContent = "Отправлено на одобрение ✅ После ✅ Руслана продукт появится на сайте через пару минут."; form.reset(); fBoard.type.dispatchEvent(new Event("change")); }
         else if (x.d && x.d.error === "bad_key") { msgEl.className = "msg err"; msgEl.textContent = "Ключ не подошёл — проверьте или спросите у Руслана."; }
         else { msgEl.className = "msg err"; msgEl.textContent = "Ошибка: " + ((x.d && x.d.error) || x.s) + ". Проверьте обязательные поля."; }
       })
@@ -471,59 +437,160 @@
     });
   });
 
-  // ── ИДЕЯ В ДАЙДЖЕСТ ──
-  fDigest.addEventListener("submit", function (e) {
-    e.preventDefault();
-    submit("digest", fDigest, document.getElementById("m-digest"), function () {
-      req(fDigest, ["name", "kind", "underlying", "teaser", "hypothesis", "how", "payout"]);
-      var item = { family: val(fDigest, "family"), kind: val(fDigest, "kind"), name: val(fDigest, "name"),
-                   underlying: val(fDigest, "underlying"), teaser: val(fDigest, "teaser"),
-                   hypothesis: val(fDigest, "hypothesis"), how: val(fDigest, "how"), payout: val(fDigest, "payout") };
-      if (fDigest.fx.checked) item.fx = true;
-      put(item, "tenor", val(fDigest, "tenor"));
-      put(item, "situation", val(fDigest, "situation"));
-      put(item, "conclusion", val(fDigest, "conclusion"));
-      var factors = val(fDigest, "factors").split("\n").map(function (s) { return s.trim(); }).filter(Boolean);
-      if (factors.length) item.factors = factors;
-      var metric = {}; put(metric, "v", val(fDigest, "metric_v")); put(metric, "k", val(fDigest, "metric_k"));
-      if (metric.v) item.metric = metric;
-      var p = {}; put(p, "asset", val(fDigest, "p_asset")); put(p, "price", val(fDigest, "p_price"));
-      put(p, "upside", val(fDigest, "p_upside")); put(p, "protection", val(fDigest, "p_protection"));
-      if (Object.keys(p).length) item.p = p;
-      var pt = val(fDigest, "payoff_type");
-      if (pt) {
-        var payoff = { type: pt };
-        ["capPct", "premiumPct", "couponPct", "barrierPct"].forEach(function (k) {
-          var v = num(fDigest, "payoff_" + k); if (v != null) payoff[k] = v;
+  // ── ИДЕЯ В ДАЙДЖЕСТ: выбор готового продукта → авто-подстановка → текст сейлза → черновик ──
+  var dgProducts = {};            // "source:id" -> { product, source }
+  var dgSel = document.getElementById("dg-product");
+  var dgDerived = document.getElementById("dg-derived");
+  var dgCurrent = null;           // выведенная идея по текущему выбору
+  var FAM_LABEL = { warrant: "Варранты", booster: "Бустеры", coupon: "Купоны",
+                    discount: "Дисконтные облигации", protection: "Защита капитала", portfolio: "Портфель" };
+
+  function loadProducts() {
+    var bust = "?cb=" + Date.now();
+    Promise.all([
+      fetch("data/instruments.js" + bust).then(function (r) { return r.text(); }),
+      fetch("data/offerings.js" + bust).then(function (r) { return r.text(); }),
+    ]).then(function (t) {
+      var opts = ['<option value="">— выбери продукт —</option>'];
+      [{ label: "Доска", items: (dataObj(t[0]) || {}).instruments || [], source: "board" },
+       { label: "На размещении", items: (dataObj(t[1]) || {}).items || [], source: "offering" }
+      ].forEach(function (g) {
+        var ok = g.items.filter(function (p) {
+          try { return window.deriveDigestIdea(p, g.source).supported; } catch (e) { return false; }
         });
-        item.payoff = payoff;
-      }
-      item.id = slug(item.name);
-      return item;
-    });
+        if (!ok.length) return;
+        opts.push('<optgroup label="' + esc(g.label) + '">');
+        ok.forEach(function (p) {
+          var key = g.source + ":" + p.id;
+          dgProducts[key] = { product: p, source: g.source };
+          opts.push('<option value="' + esc(key) + '">' + esc(p.name || p.id) + '</option>');
+        });
+        opts.push('</optgroup>');
+      });
+      dgSel.innerHTML = opts.join("");
+    }).catch(function () { dgSel.innerHTML = '<option value="">не удалось загрузить — обнови страницу</option>'; });
+  }
+
+  dgSel.addEventListener("change", function () {
+    var ref = dgProducts[dgSel.value]; dgCurrent = null;
+    if (!ref) { dgDerived.style.display = "none"; return; }
+    var r = window.deriveDigestIdea(ref.product, ref.source);
+    if (!r.supported) { dgDerived.style.display = ""; dgDerived.innerHTML = '<div class="dwarn">' + esc(r.reason) + '</div>'; return; }
+    dgCurrent = r;
+    if (fDigest.name && !fDigest.name.value.trim()) fDigest.name.value = r.name || "";
+    var rows = [
+      ["Секция", FAM_LABEL[r.family] || r.family],
+      ["Базовый актив", r.underlying],
+      ["Срок", r.tenor || "—"],
+      ["Ключевая цифра", (r.metric && r.metric.v) ? (r.metric.v + " · " + r.metric.k) : "—"],
+      ["Цена входа", (r.p && r.p.price) || "—"],
+      ["График выплаты", r.payoff ? r.payoff.type : "—"],
+    ];
+    if (r.fx) rows.push(["Валютный актив", "да — добавим FX-дисклеймер"]);
+    dgDerived.style.display = "";
+    dgDerived.innerHTML = '<div class="dh">Подставится автоматически</div>' + rows.map(function (x) {
+      return '<div class="drow"><span class="dk">' + esc(x[0]) + '</span><span class="dv">' + esc(x[1]) + '</span></div>';
+    }).join("");
   });
 
-  // ── Дайджест (PDF): просто отбивка Руслану в Telegram (файл он получает лично) ──
-  document.getElementById("dpdf-send").addEventListener("click", function () {
-    var msgEl = document.getElementById("m-dpdf");
-    var btn = this;
+  document.getElementById("dg-add").addEventListener("click", function () {
+    var msgEl = document.getElementById("m-digest"), btn = this;
     msgEl.className = "msg";
     var key = keyEl.value.trim();
     if (!key) { msgEl.className = "msg err"; msgEl.textContent = "Введите ваш ключ вверху страницы."; keyEl.focus(); return; }
-    var date = document.getElementById("dpdf-date").value.trim();
-    if (!date) { msgEl.className = "msg err"; msgEl.textContent = "Укажите дату выпуска (например, 22.07.2026)."; return; }
-    btn.disabled = true; btn.textContent = "Отправляю…";
-    var done = function (cls, text) { msgEl.className = cls; msgEl.textContent = text; btn.disabled = false; btn.textContent = "Уведомить Руслана"; };
+    if (!dgCurrent) { msgEl.className = "msg err"; msgEl.textContent = "Сначала выбери продукт из списка."; return; }
+    var teaser = val(fDigest, "teaser"), hypothesis = val(fDigest, "hypothesis");
+    if (!teaser || !hypothesis) { msgEl.className = "msg err"; msgEl.textContent = "Заполни тизер и гипотезу."; return; }
+    var item = {
+      family: dgCurrent.family, kind: dgCurrent.kind,
+      name: val(fDigest, "name") || dgCurrent.name, underlying: dgCurrent.underlying,
+      teaser: teaser, hypothesis: hypothesis, how: dgCurrent.how, payout: dgCurrent.payout,
+      metric: dgCurrent.metric, p: dgCurrent.p, payoff: dgCurrent.payoff,
+    };
+    if (dgCurrent.tenor) item.tenor = dgCurrent.tenor;
+    if (dgCurrent.fx) item.fx = true;
+    put(item, "situation", val(fDigest, "situation"));
+    put(item, "conclusion", val(fDigest, "conclusion"));
+    var factors = val(fDigest, "factors").split("\n").map(function (s) { return s.trim(); }).filter(Boolean);
+    if (factors.length) item.factors = factors;
+
+    btn.disabled = true; btn.textContent = "Добавляю…";
     fetch(ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ key: key, action: "digestnotify", date: date }) })
+      body: JSON.stringify({ key: key, action: "digest_add", item: item }) })
       .then(function (r) { return r.json().then(function (d) { return { s: r.status, d: d }; }); })
       .then(function (x) {
-        if (x.d && x.d.ok) done("msg ok", "Готово ✅ Руслану ушла отбивка. Не забудь прислать ему сам PDF в Telegram.");
-        else if (x.d && x.d.error === "bad_key") done("msg err", "Ключ не подошёл.");
-        else done("msg err", "Ошибка: " + ((x.d && x.d.error) || x.s));
+        if (x.d && x.d.ok) {
+          msgEl.className = "msg ok";
+          msgEl.textContent = "Добавлено в черновик ✅ В выпуске идей: " + x.d.count + ". Публикация — на вкладке «Выпуск недели».";
+          fDigest.reset(); dgDerived.style.display = "none"; dgCurrent = null;
+        } else if (x.d && x.d.error === "bad_key") { msgEl.className = "msg err"; msgEl.textContent = "Ключ не подошёл."; }
+        else { msgEl.className = "msg err"; msgEl.textContent = "Ошибка: " + ((x.d && x.d.error) || x.s); }
       })
-      .catch(function () { done("msg err", "Сеть недоступна — попробуйте ещё раз."); });
+      .catch(function () { msgEl.className = "msg err"; msgEl.textContent = "Сеть недоступна — попробуй ещё раз."; })
+      .finally(function () { btn.disabled = false; btn.textContent = "Добавить в черновик выпуска"; });
   });
+
+  // ── ВЫПУСК НЕДЕЛИ: черновик (список + удаление) и публикация одним нажатием ──
+  var dgPublishBtn = document.getElementById("dg-publish");
+
+  function loadDraft() {
+    var box = document.getElementById("dg-draft"), prev = document.getElementById("dg-preview");
+    box.innerHTML = '<div class="rm-empty">Загрузка…</div>';
+    fetch("data/digest.js?cb=" + Date.now()).then(function (r) { return r.text(); }).then(function (t) {
+      var dg = dataObj(t) || {}, ideas = (dg.draft && dg.draft.ideas) || [];
+      if (!ideas.length) {
+        box.innerHTML = '<div class="rm-empty">Черновик пуст. Добавь идеи на вкладке «Идея в дайджест».</div>';
+        prev.style.display = "none"; dgPublishBtn.disabled = true; return;
+      }
+      box.innerHTML = '<div class="dg-count">В черновике: ' + ideas.length + '</div>';
+      ideas.forEach(function (i) {
+        var el = document.createElement("div"); el.className = "rm-row";
+        el.innerHTML = '<div class="nm">' + esc(i.name || i.id) +
+          '<div class="sec">' + esc((i.kind || i.family || "") + (i.underlying ? " · " + i.underlying : "")) + '</div></div>';
+        var b = document.createElement("button"); b.type = "button"; b.textContent = "Убрать";
+        b.addEventListener("click", function () { removeDraft(i, b); });
+        el.appendChild(b); box.appendChild(el);
+      });
+      prev.style.display = ""; dgPublishBtn.disabled = false;
+    }).catch(function () { box.innerHTML = '<div class="rm-empty">Не удалось загрузить черновик — обнови страницу.</div>'; });
+  }
+
+  function removeDraft(idea, btn) {
+    var key = keyEl.value.trim(), msgEl = document.getElementById("m-dpdf");
+    msgEl.className = "msg";
+    if (!key) { msgEl.className = "msg err"; msgEl.textContent = "Введите ваш ключ вверху страницы."; return; }
+    if (!confirm("Убрать «" + (idea.name || idea.id) + "» из черновика?")) return;
+    btn.disabled = true; btn.textContent = "…";
+    fetch(ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key: key, action: "digest_remove", id: idea.id }) })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (d && d.ok) { setTimeout(loadDraft, 900); }
+        else { msgEl.className = "msg err"; msgEl.textContent = "Ошибка: " + ((d && d.error) || "?"); btn.disabled = false; btn.textContent = "Убрать"; }
+      })
+      .catch(function () { msgEl.className = "msg err"; msgEl.textContent = "Сеть недоступна."; btn.disabled = false; btn.textContent = "Убрать"; });
+  }
+
+  dgPublishBtn.addEventListener("click", function () {
+    var key = keyEl.value.trim(), msgEl = document.getElementById("m-dpdf"), btn = this;
+    msgEl.className = "msg";
+    if (!key) { msgEl.className = "msg err"; msgEl.textContent = "Введите ваш ключ вверху страницы."; return; }
+    if (!confirm("Опубликовать выпуск на сайт? Идеи из черновика станут публичным дайджестом, PDF соберётся сам.")) return;
+    btn.disabled = true; btn.textContent = "Публикую…";
+    fetch(ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key: key, action: "digest_publish" }) })
+      .then(function (r) { return r.json().then(function (d) { return { s: r.status, d: d }; }); })
+      .then(function (x) {
+        if (x.d && x.d.ok) { msgEl.className = "msg ok"; msgEl.textContent = "Опубликовано ✅ Выпуск от " + x.d.id + " (" + x.d.count + " идей). Сайт и PDF обновятся за 1–3 минуты."; setTimeout(loadDraft, 900); }
+        else if (x.d && x.d.error === "empty_draft") { msgEl.className = "msg err"; msgEl.textContent = "Черновик пуст — сначала добавь идеи."; }
+        else if (x.d && x.d.error === "bad_key") { msgEl.className = "msg err"; msgEl.textContent = "Ключ не подошёл."; }
+        else { msgEl.className = "msg err"; msgEl.textContent = "Ошибка: " + ((x.d && x.d.error) || x.s); }
+      })
+      .catch(function () { msgEl.className = "msg err"; msgEl.textContent = "Сеть недоступна — попробуй ещё раз."; })
+      .finally(function () { btn.disabled = false; btn.textContent = "Опубликовать выпуск"; });
+  });
+
+  loadProducts();
 })();
 </script>
 </body>
