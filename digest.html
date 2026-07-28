@@ -214,7 +214,25 @@
           '<span class="tx"><span class="nm">' + i.name + '</span><br><span class="mv">' + i.metric.v + ' · ' + i.metric.k + '</span></span>' +
         '</button>').join("");
     }).join("");
-    document.querySelectorAll(".toc-i").forEach(el => el.addEventListener("click", () => show(el.getAttribute("data-id"))));
+    document.querySelectorAll(".toc-i").forEach(el => el.addEventListener("click", () => { show(el.getAttribute("data-id")); afterSelectScroll(); }));
+  }
+
+  // На мобиле оглавление стоит НАД статьёй: после явного выбора идеи проматываем
+  // к статье (иначе тап или переход по ссылке визуально «ничего не делает» —
+  // остаёшься на оглавлении). На десктопе статья в правой колонке видна сверху.
+  function afterSelectScroll() {
+    function run() {
+      // Мобиль: оглавление над статьёй → проматываем к статье. Мгновенно (auto):
+      // плавный скролл на 1231px здесь ненадёжен и не нужен. Десктоп: статья в правой
+      // колонке видна сверху → просто к верху.
+      if (window.matchMedia("(max-width: 900px)").matches)
+        document.getElementById("article").scrollIntoView({ behavior: "auto", block: "start" });
+      else window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    // На deep-link скрипт отрабатывает ДО завершения раскладки — ранний scrollIntoView
+    // «теряется». Дублируем rAF + таймаутом: к 250 мс раскладка стоит, повтор безвреден.
+    requestAnimationFrame(run);
+    setTimeout(run, 250);
   }
 
   function show(id) {
@@ -254,7 +272,7 @@
     history.replaceState(null, "", "#" + issue.id + "/" + i.id);
   }
 
-  function selectIssue(issueId, ideaId) {
+  function selectIssue(issueId, ideaId, scrollArticle) {
     issue = A.issues.find(x => x.id === issueId) || A.issues[0];
     order = [];
     A.sections.forEach(s => issue.ideas.filter(i => i.family === s.key).forEach(i => order.push(i)));
@@ -268,7 +286,10 @@
     renderPicker();
     buildTOC();
     show(order.find(i => i.id === ideaId) ? ideaId : order[0].id);
-    window.scrollTo({ top: 0, behavior: "auto" });
+    // Deep-link с явной идеей → на мобиле показываем саму статью; иначе (открытие
+    // выпуска/страницы) — верх с оглавлением.
+    if (scrollArticle) afterSelectScroll();
+    else window.scrollTo({ top: 0, behavior: "auto" });
   }
 
   function setPickerOpen(open) {
@@ -278,8 +299,8 @@
   document.getElementById("pick-btn").addEventListener("click", e => { e.stopPropagation(); setPickerOpen(!document.getElementById("pick").classList.contains("open")); });
   document.addEventListener("click", () => setPickerOpen(false));
   document.addEventListener("keydown", e => { if (e.key === "Escape") setPickerOpen(false); });
-  document.getElementById("prev").addEventListener("click", e => { show(e.currentTarget.dataset.id); window.scrollTo({ top: 0, behavior: "smooth" }); });
-  document.getElementById("next").addEventListener("click", e => { show(e.currentTarget.dataset.id); window.scrollTo({ top: 0, behavior: "smooth" }); });
+  document.getElementById("prev").addEventListener("click", e => { show(e.currentTarget.dataset.id); afterSelectScroll(); });
+  document.getElementById("next").addEventListener("click", e => { show(e.currentTarget.dataset.id); afterSelectScroll(); });
 
   // Режим превью черновика (для админки): ?draft=1 — рендерим A.draft, а не опубликованный выпуск.
   // Обычных посетителей не касается: без параметра всё как раньше.
@@ -302,7 +323,7 @@
     // Deep-link: #issueId  или  #issueId/ideaId
     const parts = decodeURIComponent(location.hash.slice(1)).split("/");
     const startIssue = A.issues.find(x => x.id === parts[0]) ? parts[0] : A.issues[0].id;
-    selectIssue(startIssue, parts[1] || null);
+    selectIssue(startIssue, parts[1] || null, !!parts[1]);
   }
 </script>
 <script src="chat.js?v=11"></script>
