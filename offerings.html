@@ -431,7 +431,7 @@
     if (shHost && window.Share) {
       // короткая ссылка на p/<id> — шелл с персональным og-превью (название выпуска
       // в мессенджере), мгновенный редирект на offerings#<id>. Сообщение — только название.
-      Share.attach(shHost, { url: location.origin + "/p/" + encodeURIComponent(o.id), title: o.name, name: o.name });
+      Share.attach(shHost, { url: location.origin + "/p/" + encodeURIComponent(o.id) + ".html", title: o.name, name: o.name });
     }
     var ctHost = document.getElementById("o-ct-host");
     if (ctHost && window.Contact) {
