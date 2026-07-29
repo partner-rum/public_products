@@ -2,7 +2,20 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" id="vp" content="width=device-width, initial-scale=1">
+<script>
+  /* Слайды жёстко 960px. На узких экранах (телефон/планшет-портрет) CSS zoom в
+     in-app браузерах (Telegram/WKWebView) ненадёжен, поэтому задаём логическую
+     ширину viewport = 972px и даём браузеру самому вписать страницу по ширине
+     экрана (нативный fit — honorится везде). На десктопе (≥972) — как было. */
+  (function () {
+    var sw = (window.screen && screen.width) || Infinity;
+    var dev = Math.min(sw, window.innerWidth || Infinity);
+    if (dev && dev < 972) {
+      document.getElementById("vp").setAttribute("content", "width=972");
+    }
+  })();
+</script>
 <title>One-pager</title>
 <meta name="robots" content="noindex, follow">
 <meta property="og:type" content="website">
@@ -47,11 +60,9 @@
   .btn-print:hover { background: #F58E33; }
 
   .slide { position: relative; width: 960px; height: 540px; margin: 18px auto; background: var(--ivory); overflow: hidden; box-shadow: 0 12px 36px rgba(13,16,38,0.5); display: flex; flex-direction: column; }
-  /* На экране слайд фикс. 960px не влезает в телефон (2,5× шире) → масштабируем по
-     ширине через zoom (двигает и layout-box, без горизонтального скролла). Множитель
-     считает JS в --fit. Только @media screen — печать (screen/print взаимоисключающи)
-     печатает натуральные 960×540 под @page. */
-  @media screen { .slide { zoom: var(--fit, 1); } }
+  /* На экране слайд фикс. 960px. На телефоне вписываем по ширине через viewport
+     width=972 (см. inline-скрипт в <head>) — браузер сам масштабирует страницу.
+     Печать использует натуральные 960×540 под @page. */
   /* Тулбар прижат вправо: всплывашки Contact открываем влево (right:0), иначе их
      absolute-коробка (даже закрытая) торчит за правый край и даёт горизонтальный
      скролл на телефоне. Share (.sh-menu) уже right:0. */
@@ -560,29 +571,6 @@
   }
   }
 
-  // Fit-to-width на экране: множитель zoom для слайдов (см. CSS @media screen).
-  // 12px — боковой воздух; на десктопе (≥972px) множитель = 1, слайд в натуре.
-  (function fitDeck() {
-    function fit() {
-      // В in-app браузерах (Telegram/WKWebView) на первом кадре ширина ещё не
-      // устаканилась и одиночный расчёт давал --fit=1 → слайд 960px не масштабировался
-      // и обрезался. Берём наименьшую из доступных ширин и пересчитываем по многим триггерам.
-      var w = Math.min(
-        document.documentElement.clientWidth || 9999,
-        window.innerWidth || 9999,
-        (window.visualViewport && window.visualViewport.width) || 9999
-      );
-      if (!isFinite(w) || w <= 0) w = document.documentElement.clientWidth || 375;
-      document.documentElement.style.setProperty("--fit", Math.min(1, (w - 12) / 960));
-    }
-    fit();
-    window.addEventListener("resize", fit);
-    window.addEventListener("orientationchange", fit);
-    window.addEventListener("load", fit);
-    if (window.visualViewport) window.visualViewport.addEventListener("resize", fit);
-    // Подстраховка: пересчитываем, когда ширина устаканится после первого кадра.
-    setTimeout(fit, 100); setTimeout(fit, 400); setTimeout(fit, 1200);
-  })();
 </script>
 </body>
 </html>
