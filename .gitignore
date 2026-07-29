@@ -36,5 +36,5 @@ floaters_dashboard.png
 _digest/
 
 # Локальная автопереоценка котировок (Планировщик задач) — не публикуем
-auto_refresh_placements.ps1
+auto_refresh_placements.py
 _auto_refresh.log
