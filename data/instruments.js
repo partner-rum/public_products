@@ -635,6 +635,23 @@ window.SITE_DATA = {
       "chg": 0,
       "minNom": 1000000,
       "src": "sales"
+    },
+    {
+      "id": "w-cnyrub-10082027-s",
+      "type": "warrant",
+      "structure": "call",
+      "name": "Call 100 CNYRUB",
+      "underlying": "CNYRUB",
+      "cls": "Валюта",
+      "uRef": "11.74",
+      "tenor": "1 год",
+      "expiry": "10.08.2027",
+      "spot": 100,
+      "strike": 100,
+      "quote": 15.75,
+      "chg": 0,
+      "minNom": 1000000,
+      "src": "sales"
     }
   ],
   "underlyings": {}
