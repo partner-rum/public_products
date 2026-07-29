@@ -34,3 +34,7 @@ floaters_dashboard.png
 
 # Макеты печатного дайджеста — черновики, наружу не публикуем
 _digest/
+
+# Локальная автопереоценка котировок (Планировщик задач) — не публикуем
+auto_refresh_placements.ps1
+_auto_refresh.log
