@@ -44,6 +44,7 @@ export default {
     if (request.method === "OPTIONS") return new Response(null, { headers: cors });
 
     if (url.pathname === "/lead" && request.method === "POST") return handleLead(request, env, cors);
+    if (url.pathname === "/click" && request.method === "POST") return handleClick(request, env, cors);
     if (url.pathname === "/chat" && request.method === "POST") return handleChat(request, env, cors, ctx);
     if (url.pathname === "/submit" && request.method === "POST") return handleSubmit(request, env, cors);
     if (url.pathname === "/tg" && request.method === "POST") return handleTelegram(request, env);
@@ -94,6 +95,37 @@ async function handleLead(request, env, cors) {
     chat_id: env.CHAT_ID, text, parse_mode: "HTML", disable_web_page_preview: true,
   });
   if (!r.ok) return json({ ok: false, error: "telegram_failed" }, 502, cors);
+  return json({ ok: true }, 200, cors);
+}
+
+// --- Отбивка о клике по кнопке (напр. «Telegram-группа» в шапке) ---
+// Фронт шлёт navigator.sendBeacon; тело — text/plain JSON. Уведомление идёт
+// Руслану в личку (ADMIN_CHAT_ID), при отсутствии — в группу (CHAT_ID).
+async function handleClick(request, env, cors) {
+  // Только с нашего сайта (если ALLOW_ORIGIN задан) — защита от постороннего спама.
+  const origin = request.headers.get("Origin");
+  if (env.ALLOW_ORIGIN && env.ALLOW_ORIGIN !== "*" && origin && origin !== env.ALLOW_ORIGIN) {
+    return json({ ok: false, error: "forbidden_origin" }, 403, cors);
+  }
+  let data = {};
+  try { data = await request.json(); } catch {}
+  const label = String(data.label || "Telegram-группа").trim().slice(0, 80);
+  const ref = String(data.ref || "").trim().slice(0, 60);
+  const page = String(data.url || "").trim().slice(0, 300);
+  const ua = String(data.ua || "").trim().slice(0, 200);
+  const country = request.headers.get("cf-ipcountry") || "";
+
+  const text =
+    "🔵 <b>Клик по кнопке «" + esc(label) + "»</b>\n" +
+    (ref ? "Сейлз: " + esc(ref) + "\n" : "") +
+    (page ? "Страница: " + esc(page) + "\n" : "") +
+    (country ? "Страна: " + esc(country) + "\n" : "") +
+    (ua ? "Устройство: " + esc(ua) : "");
+
+  const chatId = env.ADMIN_CHAT_ID || env.CHAT_ID;
+  if (chatId) {
+    await tg(env, "sendMessage", { chat_id: chatId, text, parse_mode: "HTML", disable_web_page_preview: true });
+  }
   return json({ ok: true }, 200, cors);
 }
 

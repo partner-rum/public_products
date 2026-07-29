@@ -28,3 +28,37 @@ ym(110759242, "init", {
     if (ref) ym(110759242, "params", { ref: ref });
   } catch (e) {}
 })();
+
+// Отбивка в Telegram при клике по кнопке «Telegram-группа» в шапке (a.btn-tg).
+// sendBeacon переживает переход по ссылке; шлём максимум один раз за сессию, чтобы
+// повторные клики одного посетителя не спамили. Ошибки глушим — на навигацию не влияем.
+(function () {
+  var ENDPOINT = "https://so-leads.ruslan-sabirov.workers.dev/click";
+  function wire() {
+    var btn = document.querySelector("a.btn-tg");
+    if (!btn) return;
+    btn.addEventListener("click", function () {
+      try {
+        if (sessionStorage.getItem("tg_click_sent")) return;
+        sessionStorage.setItem("tg_click_sent", "1");
+      } catch (e) {}
+      try {
+        var ref = "";
+        try { ref = localStorage.getItem("so_ref") || ""; } catch (e) {}
+        var payload = JSON.stringify({
+          label: (btn.textContent || "Telegram-группа").trim().slice(0, 80),
+          ref: ref,
+          url: location.href.slice(0, 300),
+          ua: (navigator.userAgent || "").slice(0, 200)
+        });
+        if (navigator.sendBeacon) {
+          navigator.sendBeacon(ENDPOINT, payload);
+        } else {
+          fetch(ENDPOINT, { method: "POST", body: payload, keepalive: true, headers: { "Content-Type": "text/plain" } });
+        }
+      } catch (e) {}
+    });
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", wire);
+  else wire();
+})();
