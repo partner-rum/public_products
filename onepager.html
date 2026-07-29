@@ -565,9 +565,37 @@
       if (ctHost && window.Contact) Contact.attach(ctHost, { title: name, url: prodUrl, id: offering ? offering.id : inst.id });
     } }
 
-  if (qs.get("print") === "1") {
+  // Авто-печать — только на десктопе. На телефоне window.print() бесполезен
+  // и может оставлять страницу в print-раскладке (слайды 960px без масштаба).
+  var isNarrow = Math.min(
+    (window.screen && screen.width) || Infinity,
+    window.innerWidth || Infinity
+  ) < 972;
+  if (qs.get("print") === "1" && !isNarrow) {
     (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve())
       .then(() => setTimeout(() => window.print(), 400));
+  }
+
+  // ?debug=1 — диагностический оверлей (реальные метрики на самом устройстве).
+  // Если зелёной плашки НЕ видно — значит браузер отдал закешированный старый файл.
+  if (qs.get("debug") === "1") {
+    var dbg = document.createElement("div");
+    dbg.style.cssText = "position:fixed;left:6px;top:56px;z-index:99999;background:#000;color:#0f0;font:12px/1.45 monospace;padding:8px 10px;border-radius:6px;white-space:pre;box-shadow:0 2px 12px rgba(0,0,0,.6)";
+    var sd = document.querySelector(".slide");
+    dbg.textContent = [
+      "BUILD 630eaea+dbg",
+      "screen=" + screen.width + "x" + screen.height,
+      "inner=" + window.innerWidth + "x" + window.innerHeight,
+      "client=" + document.documentElement.clientWidth,
+      "dpr=" + window.devicePixelRatio,
+      "vp=" + document.getElementById("vp").getAttribute("content"),
+      "slideW=" + (sd ? Math.round(sd.getBoundingClientRect().width) : "-"),
+      "zoom=" + (sd ? getComputedStyle(sd).zoom : "-"),
+      "printMedia=" + (window.matchMedia && window.matchMedia("print").matches),
+      "scrollW=" + document.documentElement.scrollWidth,
+      "slides=" + document.querySelectorAll(".slide").length
+    ].join("\n");
+    document.body.appendChild(dbg);
   }
   }
 
