@@ -171,7 +171,7 @@
 
 <script src="data/instruments.js?v=fx8"></script>
 <script src="data/lib.js?v=fx9"></script>
-<script src="data/offerings.js?v=srv17"></script>
+<script src="data/offerings.js?v=srv18"></script>
 <script src="share.js?v=7"></script>
 <script src="contact.js?v=9"></script>
 <script>
@@ -205,7 +205,13 @@
   let inst, nom, q, name, backHref, backText, isForeign;
   if (offering) {
     q = offering.price; nom = 1000000; name = offering.name;
-    inst = { type: "offering", underlying: offering.reference, expiry: offering.maturity };
+    if (offering.opTemplate === "warrant") {
+      // Offering-варрант (напр. CALL ATM на CNY/RUB): синтезируем warrant-inst и
+      // рендерим стандартный one-pager варранта, а не CLN-ветку. Страйк ATM = 100%.
+      inst = { type: "warrant", structure: "call", underlying: offering.opUnderlying || offering.reference, strike: 100, strike2: null, spot: 100, tenor: offering.tenor };
+    } else {
+      inst = { type: "offering", underlying: offering.reference, expiry: offering.maturity };
+    }
     isForeign = false;
     backHref = "offerings.html"; backText = "← К размещению";
   } else {
@@ -342,7 +348,7 @@
 
   // ── Контент ──
   let c = {};
-  if (offering) {
+  if (offering && inst.type === "offering") {
     const buyRub = nom * q / 100;
     c = {
       badge: offering.kind,
@@ -482,6 +488,12 @@
       ],
       explainer: explainer
     };
+  }
+
+  // Для размещений добавляем в параметры one-pager серию и ISIN выпуска.
+  if (offering && c.params) {
+    if (offering.serial) c.params.push(["Серия", offering.serial, false]);
+    if (offering.isin) c.params.push(["ISIN", offering.isin, false]);
   }
 
   // ── Строительные блоки слайда 2 ──

@@ -237,7 +237,7 @@
   </div>
 </footer>
 
-<script src="data/offerings.js?v=srv17"></script>
+<script src="data/offerings.js?v=srv18"></script>
 <script src="share.js?v=7"></script>
 <script src="contact.js?v=9"></script>
 <script>
@@ -345,6 +345,10 @@
     var restDocs = (o.docs || []).filter(d => !d.top);
     var topDocBtns = topDocs.map(d => '<a class="o-doc-btn" href="' + d.file + '" target="_blank" rel="noopener" download>' +
       docIcon + '<span>' + (d.short || "Материалы") + '</span></a>').join("");
+    // Стандартный (генерируемый) one-pager — для размещений с opTemplate (напр. offering-варрант).
+    var opBtn = o.opTemplate
+      ? '<a class="o-doc-btn" href="onepager.html?offering=' + encodeURIComponent(o.id) + '&print=1" target="_blank" rel="noopener">' + docIcon + '<span>One-pager (PDF)</span></a>'
+      : "";
     var docsBlk = restDocs.length
       ? '<div class="docs"><h3 class="k">Материалы по выпуску</h3>' + restDocs.map(d => '<a class="doc" href="' + d.file + '" target="_blank" rel="noopener" download><span class="ic">' + docIcon + '</span>' +
         '<span><span class="nm">' + d.name + '</span><span class="mt">' + d.ext + ' · ' + d.size + '</span></span><span class="dl">' + dlIcon + '</span></a>').join("") + '</div>' : "";
@@ -395,7 +399,7 @@
     return '<div class="o-kind">' + o.kind + '</div>' +
       '<div class="o-top"><div><h2 class="o-name">' + o.name + '</h2>' +
         '<div class="o-ref">' + refLine + '</div>' + issuerLine + partnerLine + '</div>' +
-        '<div class="o-top-right">' + badge + '<div class="o-actions"><span id="o-ct-host"></span>' + topDocBtns + '<span id="o-sh-host"></span></div></div></div>' +
+        '<div class="o-top-right">' + badge + '<div class="o-actions"><span id="o-ct-host"></span>' + topDocBtns + opBtn + '<span id="o-sh-host"></span></div></div></div>' +
       '<div class="o-teaser">' + o.teaser + '</div>' +
       '<div class="tiles">' + tiles + '</div>' +
       '<div class="o-grid"><div>' +
