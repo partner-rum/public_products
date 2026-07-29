@@ -136,10 +136,10 @@
   .bk-ext { font-size: 11px; color: var(--faint); margin-left: 3px; }
   .bk-a:hover .bk-ext { color: var(--steel); }
   /* Пример расчёта при погашении */
-  .ex { background: var(--tile); border-radius: 10px; padding: 4px 14px; }
+  .ex { background: var(--tile); border-radius: 10px; overflow: hidden; }
   .ex-tbl { width: 100%; border-collapse: collapse; }
-  .ex-tbl th, .ex-tbl td { padding: 8px 0; border-top: 1px solid var(--border-soft); text-align: right; vertical-align: baseline; }
-  .ex-tbl thead th { border-top: none; font-size: 11px; font-weight: 500; color: var(--hushed); text-transform: uppercase; letter-spacing: 0.05em; }
+  .ex-tbl th, .ex-tbl td { padding: 8px 12px; border: 1px solid var(--border); text-align: right; vertical-align: baseline; }
+  .ex-tbl thead th { font-size: 11px; font-weight: 500; color: var(--hushed); text-transform: uppercase; letter-spacing: 0.05em; background: rgba(255,255,255,0.035); }
   .ex-tbl th[scope="col"]:first-child, .ex-tbl th[scope="row"] { text-align: left; }
   .ex-l { font-family: var(--f-mono); font-size: 13px; font-weight: 400; color: var(--hushed); }
   .ex-v { font-family: var(--f-mono); font-size: 13.5px; font-weight: 500; }
@@ -237,7 +237,7 @@
   </div>
 </footer>
 
-<script src="data/offerings.js?v=srv18"></script>
+<script src="data/offerings.js?v=srv19"></script>
 <script src="share.js?v=7"></script>
 <script src="contact.js?v=9"></script>
 <script>
@@ -383,9 +383,10 @@
       ? '<div class="blk"><h3 class="k">' + (o.example.title || "Пример расчёта при погашении") + '</h3><div class="ex"><table class="ex-tbl">' +
         (o.example.cols ? '<thead><tr>' + o.example.cols.map(c => '<th scope="col">' + c + '</th>').join("") + '</tr></thead>' : '') +
         '<tbody>' + o.example.rows.map(r => {
-          var cls = String(r[1]).indexOf("−") === 0 ? "dn" : "up";
+          // Цвет по знаку КАЖДОЙ ячейки: выплата 0% и результат −100% в одной строке
+          // должны краситься по-своему (иначе −100% ушёл бы в зелёный по знаку выплаты).
           return '<tr><th scope="row" class="ex-l">' + r[0] + '</th>' +
-            r.slice(1).map(v => '<td class="ex-v ' + cls + '">' + v + '</td>').join("") + '</tr>';
+            r.slice(1).map(v => '<td class="ex-v ' + (String(v).indexOf("−") === 0 ? "dn" : "up") + '">' + v + '</td>').join("") + '</tr>';
         }).join("") + '</tbody></table></div>' +
         (o.example.note ? '<div class="ex-note">' + o.example.note + '</div>' : '') + '</div>'
       : "";
