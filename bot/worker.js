@@ -51,6 +51,12 @@ export default {
 
     return new Response("OK", { status: 200, headers: cors });
   },
+
+  // Cron Triggers (расписание задаётся в Cloudflare → Workers → Triggers → Cron).
+  // Ежедневно генерим 3 короткие идеи постов для канала агентов и шлём Руслану в личку.
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(sendPostDraft(env).catch(() => {}));
+  },
 };
 
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -181,7 +187,7 @@ async function buildCatalog(env) {
   if (instr.length) {
     lines.push("ТЕКУЩИЕ ПРОДУКТЫ (доска, можно предложить сейчас):");
     for (const p of instr) {
-      lines.push("- " + [p.name, p.underlying && "базовый актив: " + p.underlying,
+      lines.push("- [" + p.id + "] " + [p.name, p.underlying && "базовый актив: " + p.underlying,
         p.quote != null && "цена " + p.quote + "%"].filter(Boolean).join(" · "));
     }
   }
@@ -189,7 +195,7 @@ async function buildCatalog(env) {
   if (offers.length) {
     lines.push("", "НА РАЗМЕЩЕНИИ СЕЙЧАС (первичный рынок):");
     for (const o of offers) {
-      lines.push("- " + [o.name, o.reference && "базовый актив: " + o.reference,
+      lines.push("- [" + o.id + "] " + [o.name, o.reference && "базовый актив: " + o.reference,
         o.price != null && "цена " + o.price + "% номинала", o.tenor && "срок " + o.tenor,
         o.isin && "ISIN " + o.isin, o.statusLabel].filter(Boolean).join(" · "));
     }
@@ -357,10 +363,10 @@ async function callYandex(system, messages, env) {
 }
 
 // DeepSeek (OpenAI-совместимый API) — провайдер /chat (CHAT_PROVIDER=deepseek)
-async function callDeepSeek(system, messages, env) {
+async function callDeepSeek(system, messages, env, opts = {}) {
   const key = (env.DEEPSEEK_API_KEY || "").trim();
   if (!key) throw new Error("not_configured");
-  const model = (env.DEEPSEEK_MODEL || "deepseek-chat").trim();
+  const model = (opts.model || env.DEEPSEEK_MODEL || "deepseek-chat").trim();
   const r = await fetch("https://api.deepseek.com/chat/completions", {
     method: "POST",
     headers: { "Authorization": "Bearer " + key, "Content-Type": "application/json" },
@@ -369,7 +375,8 @@ async function callDeepSeek(system, messages, env) {
       messages: [{ role: "system", content: system }].concat(
         messages.map((m) => ({ role: m.role, content: m.content }))
       ),
-      temperature: 0.3, max_tokens: 800, stream: false,
+      temperature: opts.temperature != null ? opts.temperature : 0.3,
+      max_tokens: opts.maxTokens != null ? opts.maxTokens : 800, stream: false,
     }),
   });
   if (!r.ok) throw new Error("upstream_" + r.status);
@@ -378,9 +385,15 @@ async function callDeepSeek(system, messages, env) {
   return ((c && c.message && c.message.content) || "").trim();
 }
 
-// Claude (Anthropic) — запасной провайдер (CHAT_PROVIDER=claude)
-async function callClaude(system, messages, env) {
+// Claude (Anthropic) — запасной провайдер (CHAT_PROVIDER=claude) и провайдер постов
+async function callClaude(system, messages, env, opts = {}) {
   if (!env.ANTHROPIC_API_KEY) throw new Error("not_configured");
+  const body = {
+    model: opts.model || env.CHAT_MODEL || "claude-haiku-4-5",
+    max_tokens: opts.maxTokens != null ? opts.maxTokens : 500,
+    system, messages,
+  };
+  if (opts.temperature != null) body.temperature = opts.temperature;
   const r = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -388,11 +401,120 @@ async function callClaude(system, messages, env) {
       "anthropic-version": "2023-06-01",
       "content-type": "application/json",
     },
-    body: JSON.stringify({ model: env.CHAT_MODEL || "claude-haiku-4-5", max_tokens: 500, system, messages }),
+    body: JSON.stringify(body),
   });
   if (!r.ok) throw new Error("upstream_" + r.status);
   const data = await r.json();
   return (data.content || []).filter((b) => b.type === "text").map((b) => b.text).join("\n").trim();
+}
+
+// ============================================================================
+// Авто-посты: 3 короткие идеи для канала агентов по живому каталогу → в личку
+// ============================================================================
+
+// Провайдер постов независим от чата: POST_PROVIDER (по умолчанию — как у чата).
+async function callLLM(provider, system, messages, env, opts) {
+  const p = (provider || "deepseek").toLowerCase();
+  if (p === "claude") return callClaude(system, messages, env, opts);
+  if (p === "yandex") return callYandex(system, messages, env);
+  return callDeepSeek(system, messages, env, opts);
+}
+
+const POST_SYSTEM = `Ты — контент-редактор Telegram-канала компании Rumberg для агентов по продажам (структурные продукты для квалифицированных инвесторов). Твоя задача — дать 3 КОРОТКИЕ идеи постов на день. Цель — подтолкнуть агента к сделке и переходу на сайт. Минимум информации, никакого перегруза.
+
+Формат ответа — РОВНО 3 идеи, каждая отдельным блоком строго в таком виде:
+[id продукта из каталога]
+<эмодзи> **Цепляющий заголовок**
+Одна короткая фраза сути (за что платит инвестор / чем ограничен риск).
+
+Между блоками — пустая строка. Больше НИЧЕГО не пиши: ни нумерации, ни вступления, ни ссылок (ссылки подставит система).
+
+Требования к идеям:
+- 3 РАЗНЫХ продукта из каталога (по возможности разные типы/активы).
+- Каждая идея ≤ ~200 знаков: заголовок + одна фраза. Коротко и энергично.
+- Название продукта — **жирным**.
+- Первая строка каждого блока — идентификатор продукта в квадратных скобках [id] из каталога (он в начале каждой строки продукта). Нужен, чтобы система подставила ссылку.
+
+ЖЁСТКИЕ ПРАВИЛА (нарушение недопустимо):
+- Продукты, цифры, ISIN, цены бери ТОЛЬКО из каталога ниже. Ничего не выдумывай.
+- НЕ обещай доходность и НЕ пиши «X% годовых». Цену/премию помечай словом «индикативно».
+- Ты НЕ знаешь актуальных новостей, курсов и решений ЦБ. НИКОГДА не утверждай конкретные свежие события («ЦБ сохранил/снизил ставку», «рынок вчера…», «ставки на паузе»). Зацепку давай ТОЛЬКО обобщённо и условно («когда ставки снижаются — цена облигаций растёт», «на развороте ставок», «в периоды просадки»), без привязки к факту, который не можешь проверить.
+- Слово «Нота»/«нота» запрещено. Пиши «варрант», «структурная облигация», «дисконтная облигация» или конкретный тип.
+- Без индивидуальных инвестрекомендаций. В тексте идей НЕ пиши внутренние id и конкретные даты (кроме тех, что уже есть в названии/статусе продукта).
+- Дисклеймер НЕ добавляй — его добавит система.`;
+
+const POST_DISCLAIMER = "Не является индивидуальной инвестиционной рекомендацией. Только для квалифицированных инвесторов.";
+
+// Markdown модели → Telegram HTML. Сначала экранируем весь текст (модель может вернуть
+// случайные < > &), затем разворачиваем **жирный** и [текст](https://url) в теги.
+function postToTgHtml(s) {
+  let out = esc(String(s || "").trim());
+  out = out.replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>");
+  out = out.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2">$1</a>');
+  return out;
+}
+
+async function generatePost(env, theme) {
+  let cat = { text: "", instr: [], offers: [] };
+  try { cat = await buildCatalog(env); } catch (e) { /* каталог необязателен, но лучше с ним */ }
+  const base = (env.SITE_BASE || "https://invest.rumberg.ru/").replace(/\/?$/, "/");
+  const group = env.TG_GROUP_URL || "https://t.me/+NHbVOoUI5IBkN2Uy";
+  const system = POST_SYSTEM +
+    (cat.text ? "\n\n=== АКТУАЛЬНЫЙ КАТАЛОГ (единственный источник продуктов, цифр и идентификаторов [id]) ===\n" + cat.text : "");
+  const user = "Дай 3 короткие идеи постов по правилам выше." +
+    (theme ? " По возможности вокруг темы: " + theme + "." :
+             " Сам выбери 3 разных продукта из каталога и уместные обобщённые зацепки.");
+  const provider = env.POST_PROVIDER || env.CHAT_PROVIDER || "deepseek";
+  const raw = await callLLM(provider, system, [{ role: "user", content: user }], env,
+    { temperature: 0.85, maxTokens: 700, model: env.POST_MODEL });
+
+  // Разбираем ответ на блоки «[id] + текст». Ссылку строим сами по id — не полагаемся
+  // на модель (она ссылки часто игнорирует/выдумывает).
+  const ideas = [];
+  const re = /\[([\w.\-]+)\]\s*([\s\S]*?)(?=\n\s*\[[\w.\-]+\]|$)/g;
+  let m;
+  while ((m = re.exec(raw || "")) !== null) {
+    const id = m[1];
+    const body = (m[2] || "").trim();
+    if (!body) continue;
+    let prodUrl = "", prodName = "";
+    const off = (cat.offers || []).find((o) => o.id === id);
+    const ins = (cat.instr || []).find((p) => p.id === id);
+    if (off) { prodUrl = base + "offerings.html#" + off.id; prodName = off.name; }
+    else if (ins) { prodUrl = base + "instrument.html?id=" + ins.id; prodName = ins.name; }
+    ideas.push({ body, prodUrl, prodName });
+  }
+  // Фолбэк: модель не разметила [id] — отдаём весь текст одной идеей без ссылки.
+  if (!ideas.length && raw && raw.trim()) ideas.push({ body: raw.trim(), prodUrl: "", prodName: "" });
+  return { ideas, group };
+}
+
+async function sendPostDraft(env, theme) {
+  if (!env.ADMIN_CHAT_ID) return;
+  let res;
+  try {
+    res = await generatePost(env, theme);
+  } catch (e) {
+    await tg(env, "sendMessage", { chat_id: env.ADMIN_CHAT_ID,
+      text: "⚠️ Не удалось сгенерировать идеи: " + String((e && e.message) || e).slice(0, 200) });
+    return;
+  }
+  if (!res || !res.ideas.length) {
+    await tg(env, "sendMessage", { chat_id: env.ADMIN_CHAT_ID, text: "⚠️ Пустой ответ модели, идеи не сформированы." });
+    return;
+  }
+  const provider = env.POST_PROVIDER || env.CHAT_PROVIDER || "deepseek";
+  const nums = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣"];
+  const blocks = res.ideas.map((it, i) => {
+    let b = (nums[i] || (i + 1) + ".") + " " + postToTgHtml(it.body);
+    if (it.prodUrl) b += '\n🔗 <a href="' + it.prodUrl + '">' + esc(it.prodName || "Смотреть на сайте") + "</a>";
+    return b;
+  });
+  const text = "📝 <b>Идеи для канала</b> (" + res.ideas.length + ") · " + esc(provider) + " · выбери и опубликуй\n\n" +
+    blocks.join("\n\n") +
+    '\n\n💬 <a href="' + res.group + '">Telegram-группа</a>' +
+    "\n\n<i>" + esc(POST_DISCLAIMER) + "</i>";
+  await tg(env, "sendMessage", { chat_id: env.ADMIN_CHAT_ID, text, parse_mode: "HTML", disable_web_page_preview: true });
 }
 
 // ============================================================================
@@ -903,6 +1025,16 @@ async function handleTelegram(request, env) {
   if (msg && msg.text) {
     const from = msg.from || {};
     const who = (from.username ? "@" + from.username : [from.first_name, from.last_name].filter(Boolean).join(" ")) || from.id;
+
+    // Команда админа: сгенерировать черновик поста по запросу. Формат: «/post [тема]».
+    // Только Руслан (ADMIN_CHAT_ID); чужие /post игнорируем и в группу НЕ пересылаем.
+    if (msg.text.startsWith("/post")) {
+      if (env.ADMIN_CHAT_ID && String(from.id) === String(env.ADMIN_CHAT_ID)) {
+        const theme = msg.text.replace(/^\/post(@\w+)?\s*/, "").trim().slice(0, 300);
+        await sendPostDraft(env, theme);
+      }
+      return new Response("ok");
+    }
 
     if (msg.text.startsWith("/start")) {
       const payload = msg.text.split(" ")[1] || "";
