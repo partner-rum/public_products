@@ -459,8 +459,35 @@ async function generatePost(env, theme) {
   try { cat = await buildCatalog(env); } catch (e) { /* каталог необязателен, но лучше с ним */ }
   const base = (env.SITE_BASE || "https://invest.rumberg.ru/").replace(/\/?$/, "/");
   const group = env.TG_GROUP_URL || "https://t.me/+NHbVOoUI5IBkN2Uy";
+
+  // Память последних идей (чтобы не повторяться). Хранится в KV-биндинге POST_KV;
+  // если биндинга нет — просто работаем без дедупликации.
+  let recent = [];
+  if (env.POST_KV) {
+    try { recent = (await env.POST_KV.get("history", "json")) || []; } catch (e) { recent = []; }
+  }
+  // Поддержка старого формата (строки) и нового (объекты {id,name,head}).
+  recent = recent.map((r) => (typeof r === "string" ? { id: "", name: r, head: "" } : r));
+  const recentIds = recent.map((r) => r.id).filter(Boolean);
+
+  // Детерминированная дедупликация: убираем недавние продукты ПРЯМО из каталога —
+  // тогда модель физически не сможет их выбрать (надёжнее, чем просить «не повторяй»).
+  let catText = cat.text;
+  if (recentIds.length && catText) {
+    const filtered = catText.split("\n").filter((line) => {
+      const mm = line.match(/^- \[([\w.\-]+)\]/);
+      return !(mm && recentIds.includes(mm[1]));
+    }).join("\n");
+    if (/^- \[/m.test(filtered)) catText = filtered; // не оставляем каталог пустым
+  }
+  const avoid = recent.length
+    ? "\n\n=== УЖЕ ПРЕДЛАГАЛИ НЕДАВНО (возьми ДРУГИЕ продукты и другие формулировки) ===\n" +
+      recent.map((r) => "- " + (r.name || "?") + (r.head ? " — " + r.head : "")).join("\n")
+    : "";
+
   const system = POST_SYSTEM +
-    (cat.text ? "\n\n=== АКТУАЛЬНЫЙ КАТАЛОГ (единственный источник продуктов, цифр и идентификаторов [id]) ===\n" + cat.text : "");
+    (catText ? "\n\n=== АКТУАЛЬНЫЙ КАТАЛОГ (единственный источник продуктов, цифр и идентификаторов [id]) ===\n" + catText : "") +
+    avoid;
   const user = "Дай 3 короткие идеи постов по правилам выше." +
     (theme ? " По возможности вокруг темы: " + theme + "." :
              " Сам выбери 3 разных продукта из каталога и уместные обобщённые зацепки.");
@@ -482,10 +509,22 @@ async function generatePost(env, theme) {
     const ins = (cat.instr || []).find((p) => p.id === id);
     if (off) { prodUrl = base + "offerings.html#" + off.id; prodName = off.name; }
     else if (ins) { prodUrl = base + "instrument.html?id=" + ins.id; prodName = ins.name; }
-    ideas.push({ body, prodUrl, prodName });
+    ideas.push({ id, body, prodUrl, prodName });
   }
   // Фолбэк: модель не разметила [id] — отдаём весь текст одной идеей без ссылки.
   if (!ideas.length && raw && raw.trim()) ideas.push({ body: raw.trim(), prodUrl: "", prodName: "" });
+
+  // Записываем свежие идеи в память (последние ~9 = ≈3 запуска), чтобы не повторяться.
+  if (env.POST_KV && ideas.length) {
+    try {
+      const fresh = ideas.map((it) => ({
+        id: it.id || "",
+        name: it.prodName || "?",
+        head: ((it.body.split("\n")[0] || "").replace(/\*\*/g, "").trim()).slice(0, 80),
+      }));
+      await env.POST_KV.put("history", JSON.stringify(fresh.concat(recent).slice(0, 9)));
+    } catch (e) { /* память необязательна */ }
+  }
   return { ideas, group };
 }
 
@@ -510,10 +549,11 @@ async function sendPostDraft(env, theme) {
     if (it.prodUrl) b += '\n🔗 <a href="' + it.prodUrl + '">' + esc(it.prodName || "Смотреть на сайте") + "</a>";
     return b;
   });
+  const memWarn = env.POST_KV ? "" : "\n\n⚠️ <i>Память не подключена (KV POST_KV) — идеи могут повторяться.</i>";
   const text = "📝 <b>Идеи для канала</b> (" + res.ideas.length + ") · " + esc(provider) + " · выбери и опубликуй\n\n" +
     blocks.join("\n\n") +
     '\n\n💬 <a href="' + res.group + '">Telegram-группа</a>' +
-    "\n\n<i>" + esc(POST_DISCLAIMER) + "</i>";
+    "\n\n<i>" + esc(POST_DISCLAIMER) + "</i>" + memWarn;
   await tg(env, "sendMessage", { chat_id: env.ADMIN_CHAT_ID, text, parse_mode: "HTML", disable_web_page_preview: true });
 }
 
