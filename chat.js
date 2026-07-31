@@ -249,21 +249,74 @@
     fetch(CFG.endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages: msgs.slice(-20), page: { title: document.title, url: location.href } })
+      // stream:true — просим печатать ответ по мере генерации. Старый (ещё не передеплоенный)
+      // воркер это поле игнорирует и отвечает JSON — ниже различаем по Content-Type.
+      body: JSON.stringify({ messages: msgs.slice(-20), stream: true, page: { title: document.title, url: location.href } })
     })
-      .then(function (r) { return r.ok ? r.json() : Promise.reject(r.status); })
-      .then(function (data) {
-        typing.remove();
-        var reply = (data && data.reply) ? data.reply : "";
-        if (reply) { msgs.push({ role: "assistant", content: reply }); saveChat(); addMsg("assistant", reply); }
-        else if (data && data.error === "region_unavailable") { addMsg("assistant", "").innerHTML = regionReply(); }
-        else { addMsg("assistant", "").innerHTML = fallbackReply(); }
+      .then(function (r) {
+        if (!r.ok) return Promise.reject(r.status);
+        var ct = r.headers.get("content-type") || "";
+        var canStream = r.body && typeof r.body.getReader === "function" && typeof window.TextDecoder === "function";
+        if (ct.indexOf("text/event-stream") >= 0 && canStream) return readStream(r, typing);
+        return r.json().then(function (data) { handleReply(data, typing); });
       })
       .catch(function () {
-        typing.remove();
+        if (typing.parentNode) typing.remove();
         var d = addMsg("assistant", ""); d.innerHTML = fallbackReply();
       })
       .finally(function () { busy = false; els.send.disabled = false; els.input.focus(); if (qCount >= CFG.msgLimit) lockChat(); });
+  }
+
+  /* Обычный (нестримовый) ответ — как было */
+  function handleReply(data, typing) {
+    if (typing.parentNode) typing.remove();
+    var reply = (data && data.reply) ? data.reply : "";
+    if (reply) { msgs.push({ role: "assistant", content: reply }); saveChat(); addMsg("assistant", reply); }
+    else if (data && data.error === "region_unavailable") { addMsg("assistant", "").innerHTML = regionReply(); }
+    else { addMsg("assistant", "").innerHTML = fallbackReply(); }
+  }
+
+  /* Стрим (SSE от воркера): data:{"t":"кусок"} … data:{"done":true}.
+     Текст дописываем в пузырь по мере поступления; **жирный** может прийти
+     разорванным по кускам, поэтому каждый раз перерисовываем весь накопленный текст. */
+  function readStream(r, typing) {
+    var reader = r.body.getReader(), dec = new TextDecoder();
+    var buf = "", acc = "", bubble = null, errCode = "";
+
+    function handleLine(raw) {
+      var line = raw.trim();
+      if (line.indexOf("data:") !== 0) return;
+      var payload = line.slice(5).trim();
+      if (!payload) return;
+      var j;
+      try { j = JSON.parse(payload); } catch (e) { return; }
+      if (j.error) { errCode = j.error; return; }
+      if (j.t) {
+        if (!bubble) { if (typing.parentNode) typing.remove(); bubble = addMsg("assistant", ""); }
+        acc += j.t;
+        bubble.innerHTML = fmt(acc);
+        els.log.scrollTop = els.log.scrollHeight;
+      }
+    }
+
+    function finish() {
+      if (typing.parentNode) typing.remove();
+      if (acc) { msgs.push({ role: "assistant", content: acc }); saveChat(); }
+      else if (errCode === "region_unavailable") { addMsg("assistant", "").innerHTML = regionReply(); }
+      else { addMsg("assistant", "").innerHTML = fallbackReply(); }
+    }
+
+    function pump() {
+      return reader.read().then(function (res) {
+        if (res.done) { if (buf) handleLine(buf); finish(); return; }
+        buf += dec.decode(res.value, { stream: true });
+        var lines = buf.split("\n");
+        buf = lines.pop();
+        lines.forEach(handleLine);
+        return pump();
+      });
+    }
+    return pump();
   }
 
   function build() {

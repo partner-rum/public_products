@@ -313,6 +313,15 @@ async function handleChat(request, env, cors, ctx) {
     (prodCtx ? "\n\n=== ПРОДУКТ, КОТОРЫЙ КЛИЕНТ СЕЙЧАС СМОТРИТ (отвечай в первую очередь про него) ===\n" + prodCtx : "");
 
   const provider = (env.CHAT_PROVIDER || "yandex").toLowerCase();
+
+  // Стриминг: фронт просит stream:true, провайдер умеет SSE (deepseek/claude).
+  // Ответ печатается по мере генерации — ощущение скорости. Ошибки отдаём обычным
+  // JSON: фронт различает по Content-Type и уходит в старую ветку.
+  if (data.stream === true && (provider === "deepseek" || provider === "claude")) {
+    const lastQ = messages[messages.length - 1].content.slice(0, 600);
+    return streamChat(provider, system, messages, env, cors, ctx, { pageTitle, question: lastQ });
+  }
+
   let reply;
   try {
     if (provider === "deepseek") reply = await callDeepSeek(system, messages, env);
@@ -336,6 +345,78 @@ async function handleChat(request, env, cors, ctx) {
   }
 
   return json({ ok: true, reply: reply || "Извините, не удалось сформировать ответ." }, 200, cors);
+}
+
+// --- Стриминг ответа ассистента (SSE) ---
+// Наружу отдаём свой простой протокол, чтобы фронт не зависел от формата провайдера:
+//   data: {"t":"кусок текста"}   … много раз
+//   data: {"done":true}          … в конце
+// Апстримы различаются: OpenAI-совместимый (deepseek) даёт choices[0].delta.content,
+// Anthropic — delta.text; разбираем оба.
+function sseDelta(j) {
+  if (j && j.delta && typeof j.delta.text === "string") return j.delta.text;      // anthropic
+  const c = j && j.choices && j.choices[0];                                       // openai-совместимый
+  if (c && c.delta && typeof c.delta.content === "string") return c.delta.content;
+  return "";
+}
+
+async function streamChat(provider, system, messages, env, cors, ctx, meta) {
+  let upstream;
+  try {
+    upstream = provider === "claude"
+      ? await callClaude(system, messages, env, { stream: true })
+      : await callDeepSeek(system, messages, env, { stream: true });
+  } catch (e) {
+    const m = String((e && e.message) || e);
+    return json({ ok: false, error: m }, m === "not_configured" ? 503 : 502, cors);
+  }
+  if (!upstream || !upstream.ok || !upstream.body) {
+    return json({ ok: false, error: "upstream_" + (upstream ? upstream.status : "no_body") }, 502, cors);
+  }
+
+  const enc = new TextEncoder(), dec = new TextDecoder();
+  let full = "", buf = "";
+  const ts = new TransformStream({
+    transform(chunk, controller) {
+      buf += dec.decode(chunk, { stream: true });
+      const lines = buf.split("\n");
+      buf = lines.pop();                       // последняя строка может быть неполной
+      for (const raw of lines) {
+        const line = raw.trim();
+        if (!line.startsWith("data:")) continue;   // пропускаем event:/комментарии/пустые
+        const payload = line.slice(5).trim();
+        if (!payload || payload === "[DONE]") continue;
+        let j;
+        try { j = JSON.parse(payload); } catch (e) { continue; }
+        const piece = sseDelta(j);
+        if (piece) {
+          full += piece;
+          controller.enqueue(enc.encode("data: " + JSON.stringify({ t: piece }) + "\n\n"));
+        }
+      }
+    },
+    flush(controller) {
+      controller.enqueue(enc.encode("data: " + JSON.stringify({ done: true }) + "\n\n"));
+      // Тихий лог диалога (как в нестримовой ветке) — не задерживаем поток
+      if (env.CHAT_LOG_CHAT_ID && full) {
+        const p = tg(env, "sendMessage", {
+          chat_id: env.CHAT_LOG_CHAT_ID, parse_mode: "HTML", disable_web_page_preview: true,
+          text: "💬 <b>AI-чат</b>" + (meta && meta.pageTitle ? " · " + esc(meta.pageTitle) : "") +
+            "\n<b>Q:</b> " + esc((meta && meta.question) || "") + "\n<b>A:</b> " + esc(full.slice(0, 500)),
+        }).catch(() => {});
+        if (ctx && ctx.waitUntil) ctx.waitUntil(p);
+      }
+    },
+  });
+
+  return new Response(upstream.body.pipeThrough(ts), {
+    headers: {
+      ...cors,
+      "Content-Type": "text/event-stream; charset=utf-8",
+      "Cache-Control": "no-cache, no-transform",
+      "X-Accel-Buffering": "no",
+    },
+  });
 }
 
 // YandexGPT (Yandex Cloud Foundation Models) — основной провайдер /chat
@@ -376,9 +457,10 @@ async function callDeepSeek(system, messages, env, opts = {}) {
         messages.map((m) => ({ role: m.role, content: m.content }))
       ),
       temperature: opts.temperature != null ? opts.temperature : 0.3,
-      max_tokens: opts.maxTokens != null ? opts.maxTokens : 800, stream: false,
+      max_tokens: opts.maxTokens != null ? opts.maxTokens : 800, stream: !!opts.stream,
     }),
   });
+  if (opts.stream) return r;   // сырой ответ — его SSE перекладывает streamChat()
   if (!r.ok) throw new Error("upstream_" + r.status);
   const data = await r.json();
   const c = data && data.choices && data.choices[0];
@@ -394,6 +476,7 @@ async function callClaude(system, messages, env, opts = {}) {
     system, messages,
   };
   if (opts.temperature != null) body.temperature = opts.temperature;
+  if (opts.stream) body.stream = true;
   const r = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -403,6 +486,7 @@ async function callClaude(system, messages, env, opts = {}) {
     },
     body: JSON.stringify(body),
   });
+  if (opts.stream) return r;   // сырой ответ — его SSE перекладывает streamChat()
   if (!r.ok) throw new Error("upstream_" + r.status);
   const data = await r.json();
   return (data.content || []).filter((b) => b.type === "text").map((b) => b.text).join("\n").trim();
