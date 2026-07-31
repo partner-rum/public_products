@@ -851,18 +851,54 @@ async function commitDigestFile(env, mutate) {
 // Скрапер превью (Telegram) не исполняет JS, поэтому нужна статичная страница на продукт.
 // Шаблон 1:1 с make_product_pages.py — чтобы массовая регенерация не давала лишних диффов.
 const SHELL_BASE = "https://invest.rumberg.ru";
-const SHELL_TYPE_LABEL = { discount: "Дисконтная облигация", protection: "Облигация с защитой капитала", warrant: "Варрант" };
+const SHELL_TYPE_LABEL = { discount: "Дисконтная облигация", protection: "Облигация с защитой капитала", warrant: "Варрант", booster: "Бустер" };
 function shellEsc(s) { return String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 function shellDesc(item) {
   const tl = SHELL_TYPE_LABEL[item.type] || "Структурный продукт";
   const ua = item.underlying || "";
   const parts = [tl + (ua ? " на " + ua : "")];
-  if (item.quote != null) parts.push("котировка " + String(item.quote).replace(".", ",") + "% от номинала");
+  if (item.quote != null) {
+    // у бустера quote = коэффициент участия, не цена (как в make_product_pages.py)
+    parts.push(item.type === "booster"
+      ? "коэффициент участия " + String(item.quote).replace(".", ",") + "%"
+      : "котировка " + String(item.quote).replace(".", ",") + "% от номинала");
+  }
   parts.push("Rumberg — структурные продукты для квалифицированных инвесторов");
   return parts.join(" · ");
 }
-function productShell(item) {
-  const id = item.id, title = shellEsc(item.name || id), desc = shellEsc(shellDesc(item)), B = SHELL_BASE;
+// Описание выпуска первички — 1:1 с describe_offering() в make_product_pages.py
+function shellDescOffering(o) {
+  const kind = o.kind || "Выпуск на размещении";
+  const parts = [kind];
+  if (o.protection && kind.indexOf(o.protection) < 0) parts.push("защита капитала " + o.protection);
+  if (o.participation) parts.push("участие в росте " + o.participation);
+  // цена входа — ключевая цифра в превью; на витрине всегда с пометкой «индикативно»
+  if (o.price != null) parts.push("цена " + String(o.price).replace(".", ",") + "% номинала · индикативно");
+  if (o.tenor) parts.push(o.tenor);
+  parts.push("Rumberg — структурные продукты для квалифицированных инвесторов");
+  return parts.join(" · ");
+}
+// Есть ли персональная og-картинка продукта в репо (её рендерит make_og_products.py локально).
+// Новый продукт из админки картинки ещё не имеет → отдаём общую обложку, чтобы превью
+// не оказалось битым; после локального прогона превью само станет персональным.
+async function ogImageFor(env, id, branch) {
+  const fallback = "og-cover.png";
+  if (!env.GITHUB_TOKEN || !env.GITHUB_REPO) return fallback;
+  try {
+    const r = await fetch("https://api.github.com/repos/" + env.GITHUB_REPO +
+      "/contents/og/" + encodeURIComponent(id) + ".png?ref=" + branch, { headers: ghHeaders(env) });
+    return r.ok ? "og/" + id + ".png" : fallback;
+  } catch (e) { return fallback; }
+}
+// section: "board" → редирект на карточку инструмента, "offering" → на выпуск первички
+// ogimg: путь картинки превью относительно корня сайта (см. ogImageFor / og_image в питоне)
+function productShell(item, section, ogimg) {
+  const id = item.id, B = SHELL_BASE;
+  const isOffering = section === "offering";
+  const target = isOffering ? "/offerings.html#" + id : "/instrument.html?id=" + id;
+  const title = shellEsc(item.name || id);
+  const desc = shellEsc(isOffering ? shellDescOffering(item) : shellDesc(item));
+  const img = ogimg || "og-cover.png";
   return [
     '<!DOCTYPE html>', '<html lang="ru">', '<head>', '<meta charset="utf-8">',
     '<meta name="viewport" content="width=device-width, initial-scale=1">',
@@ -873,16 +909,16 @@ function productShell(item) {
     '<meta property="og:title" content="' + title + '">',
     '<meta property="og:description" content="' + desc + '">',
     '<meta property="og:url" content="' + B + '/p/' + id + '.html">',
-    '<meta property="og:image" content="' + B + '/og-cover.png">',
+    '<meta property="og:image" content="' + B + '/' + img + '">',
     '<meta property="og:image:width" content="1200">', '<meta property="og:image:height" content="630">',
     '<meta property="og:image:alt" content="Rumberg — структурные продукты">',
     '<meta name="twitter:card" content="summary_large_image">',
     '<meta name="theme-color" content="#0B0C10">',
     '<link rel="canonical" href="' + B + '/p/' + id + '.html">',
-    '<script>location.replace("/instrument.html?id=' + id + '");</script>',
+    '<script>location.replace("' + target + '");</script>',
     "<style>html,body{margin:0;height:100%}body{background:#0B0C10;color:rgba(242,243,247,.6);font-family:'Onest',system-ui,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px}a{color:#EE7D1B}</style>",
     '</head>',
-    '<body>Открываем продукт… <a href="/instrument.html?id=' + id + '">перейти вручную</a></body>',
+    '<body>Открываем продукт… <a href="' + target + '">перейти вручную</a></body>',
     '</html>', '',
   ].join("\n");
 }
@@ -992,12 +1028,16 @@ async function publishItem(env, payload) {
       }),
     });
     if (put.ok) {
-      // Продукты доски: создаём/удаляем страницу превью p/<id>.html. Не критично для публикации —
-      // если сорвётся, продукт всё равно опубликован (превью подхватится при массовой регенерации).
-      if (section === "board") {
+      // Доска и первичка: создаём/удаляем страницу превью p/<id>.html (у первички редирект
+      // на offerings.html#<id>). Не критично для публикации — если сорвётся, продукт всё равно
+      // опубликован, а превью подхватится массовой регенерацией (make_product_pages.py).
+      if (section === "board" || section === "offering") {
         try {
           if (payload.rm) await deleteFile(env, "p/" + payload.rm + ".html", "Админка: убрана страница превью " + payload.rm, branch);
-          else await upsertFile(env, "p/" + item.id + ".html", productShell(item), "Админка: страница превью " + item.id, branch);
+          else {
+            const ogimg = await ogImageFor(env, item.id, branch);
+            await upsertFile(env, "p/" + item.id + ".html", productShell(item, section, ogimg), "Админка: страница превью " + item.id, branch);
+          }
         } catch (e) { /* превью — необязательное */ }
       }
       return result;

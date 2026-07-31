@@ -62,7 +62,7 @@ TEMPLATE = """<!DOCTYPE html>
 <meta property="og:title" content="{title}">
 <meta property="og:description" content="{desc}">
 <meta property="og:url" content="{base}/p/{id}.html">
-<meta property="og:image" content="{base}/og-cover.png">
+<meta property="og:image" content="{base}/{ogimg}">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Rumberg — структурные продукты">
@@ -99,28 +99,43 @@ def describe_offering(o):
         parts.append("защита капитала " + o["protection"])
     if o.get("participation"):
         parts.append("участие в росте " + o["participation"])
+    if o.get("price") is not None:
+        # цена входа — ключевая цифра в превью; на витрине всегда с пометкой «индикативно»
+        parts.append("цена " + num(o["price"]) + "% номинала · индикативно")
     if o.get("tenor"):
         parts.append(o["tenor"])
     parts.append("Rumberg — структурные продукты для квалифицированных инвесторов")
     return " · ".join(parts)
 
 
+def og_image(pid):
+    # персональная картинка превью, если её уже отрендерил make_og_products.py;
+    # иначе — общая обложка. ТО ЖЕ правило зашито в productShell() воркера.
+    rel = os.path.join("og", pid + ".png")
+    return "og/" + pid + ".png" if os.path.exists(os.path.join(ROOT, rel)) else "og-cover.png"
+
+
 def main():
     os.makedirs(OUTDIR, exist_ok=True)
     instruments = load_instruments()
     wanted = set()
+    personal = 0
     for inst in instruments:
         pid = inst["id"]
         wanted.add(pid)
+        img = og_image(pid)
+        personal += img != "og-cover.png"
         html = TEMPLATE.format(title=esc(inst.get("name", pid)), desc=esc(describe(inst)),
-                               base=BASE, id=pid)
+                               base=BASE, id=pid, ogimg=img)
         with open(os.path.join(OUTDIR, pid + ".html"), "w", encoding="utf-8", newline="\n") as f:
             f.write(html)
     for o in load_offerings():
         pid = o["id"]
         wanted.add(pid)
+        img = og_image(pid)
+        personal += img != "og-cover.png"
         html = TEMPLATE.format(title=esc(o.get("name", pid)), desc=esc(describe_offering(o)),
-                               base=BASE, id=pid)
+                               base=BASE, id=pid, ogimg=img)
         html = html.replace('/instrument.html?id=' + pid, '/offerings.html#' + pid)
         with open(os.path.join(OUTDIR, pid + ".html"), "w", encoding="utf-8", newline="\n") as f:
             f.write(html)
@@ -130,7 +145,10 @@ def main():
         pid = os.path.splitext(os.path.basename(path))[0]
         if pid not in wanted:
             os.remove(path); removed += 1
-    print("страниц продуктов:", len(wanted), "| удалено устаревших:", removed)
+    print("страниц продуктов:", len(wanted), "| с персональной og-картинкой:", personal,
+          "| удалено устаревших:", removed)
+    if personal < len(wanted):
+        print("у остальных — общая обложка; сделать персональные: python make_og_products.py")
 
 
 if __name__ == "__main__":
