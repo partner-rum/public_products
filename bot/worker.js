@@ -221,45 +221,86 @@ async function buildCatalog(env) {
         pay, i.bid != null && "Bid " + i.bid + "%"].filter(Boolean).join(" · "));
     }
   }
-  CATALOG = { text: lines.join("\n"), at: now, instr, offers };
+  CATALOG = { text: lines.join("\n"), at: now, instr, offers, ideas: (idea && idea.ideas) || [] };
   return CATALOG;
 }
 
-// Контекст продукта, который клиент открыл: по URL страницы находим инструмент доски
-// (instrument.html?id=X, p/X.html) или выпуск первички (offerings.html#id) и даём агенту
-// полные параметры — чтобы отвечал про конкретный продукт, а не каталог вообще.
+// Полные параметры инструмента доски — то, что видно в паспорте продукта на сайте.
+function describeInstr(p) {
+  const parts = ["Название: " + p.name, p.underlying && "Базовый актив: " + p.underlying];
+  if (p.type === "warrant") {
+    const cs = p.structure === "cs";
+    parts.push("Тип: " + (cs ? "колл-спред (CALL с потолком)" : "CALL-варрант"));
+    parts.push("Страйк K: " + p.strike + "% от начального уровня" + (p.strike2 ? ", потолок K₂: " + p.strike2 + "%" : ""));
+    if (p.quote != null) parts.push("Котировка (премия): " + p.quote + "% от номинала, индикативно");
+    parts.push("Выплата на экспирацию: max(S − K; 0) в % номинала" + (p.strike2 ? ", но не выше K₂ − K = " + (p.strike2 - p.strike) + "%" : "") +
+      "; безубыток — уровень актива " + (p.strike + (p.quote || 0)) + "%");
+  } else if (p.type === "discount") {
+    if (p.quote != null) parts.push("Цена входа: " + p.quote + "% номинала (индикативно), погашение 100% при отсутствии кредитного события");
+    if (p.about) parts.push("О компании: " + p.about);
+  }
+  if (p.tenor) parts.push("Срок: " + p.tenor + (p.expiry ? " (до " + p.expiry + ")" : ""));
+  if (p.minNom) parts.push("Мин. номинал: " + p.minNom + " ₽");
+  return parts.filter(Boolean).join("\n");
+}
+
+// Контекст того, что клиент открыл прямо сейчас: по URL страницы находим инструмент доски
+// (instrument.html?id=X, p/X.html, board.html#X — на доске паспорт пишется в hash), режим
+// сравнения (board.html?cmp=A,B), выпуск первички (offerings.html#id) или идею дайджеста
+// (digest.html#выпуск/идея). Агент отвечает про конкретный продукт, а не про каталог вообще.
 function productContext(cat, pageUrl) {
   if (!pageUrl) return "";
-  let m = pageUrl.match(/instrument\.html\?[^#]*\bid=([\w.-]+)/) || pageUrl.match(/\/p\/([\w.-]+)\.html/);
+  const findInstr = (id) => (cat.instr || []).find((x) => x.id === id);
+
+  let m = pageUrl.match(/instrument\.html\?[^#]*\bid=([\w.-]+)/) ||
+          pageUrl.match(/\/p\/([\w.-]+)\.html/) ||
+          pageUrl.match(/board\.html(?:\?[^#]*)?#([\w.-]+)/);
   if (m) {
-    const p = (cat.instr || []).find((x) => x.id === decodeURIComponent(m[1]));
-    if (!p) return "";
-    const parts = ["Название: " + p.name, p.underlying && "Базовый актив: " + p.underlying];
-    if (p.type === "warrant") {
-      const cs = p.structure === "cs";
-      parts.push("Тип: " + (cs ? "колл-спред (CALL с потолком)" : "CALL-варрант"));
-      parts.push("Страйк K: " + p.strike + "% от начального уровня" + (p.strike2 ? ", потолок K₂: " + p.strike2 + "%" : ""));
-      if (p.quote != null) parts.push("Котировка (премия): " + p.quote + "% от номинала, индикативно");
-      parts.push("Выплата на экспирацию: max(S − K; 0) в % номинала" + (p.strike2 ? ", но не выше K₂ − K = " + (p.strike2 - p.strike) + "%" : "") +
-        "; безубыток — уровень актива " + (p.strike + (p.quote || 0)) + "%");
-    } else if (p.type === "discount") {
-      if (p.quote != null) parts.push("Цена входа: " + p.quote + "% номинала (индикативно), погашение 100% при отсутствии кредитного события");
-      if (p.about) parts.push("О компании: " + p.about);
-    }
-    if (p.tenor) parts.push("Срок: " + p.tenor + (p.expiry ? " (до " + p.expiry + ")" : ""));
-    if (p.minNom) parts.push("Мин. номинал: " + p.minNom + " ₽");
-    return parts.filter(Boolean).join("\n");
+    const p = findInstr(decodeURIComponent(m[1]));
+    if (p) return describeInstr(p);
   }
-  m = pageUrl.match(/offerings\.html#([\w.-]+)/);
+
+  // Сравнение на доске: клиент выбирает между продуктами — даём оба (три) целиком,
+  // чтобы агент сравнивал по реальным параметрам, а не по названиям.
+  m = pageUrl.match(/board\.html\?[^#]*\bcmp=([^&#]+)/);
+  if (m) {
+    const list = decodeURIComponent(m[1]).split(",").map((s) => s.trim()).filter(Boolean)
+      .slice(0, 3).map(findInstr).filter(Boolean);
+    if (list.length) {
+      return "Клиент сравнивает эти продукты между собой:\n\n" +
+        list.map(describeInstr).join("\n— — —\n");
+    }
+  }
+
+  m = pageUrl.match(/offerings\.html(?:\?[^#]*)?#([\w.-]+)/);
   if (m) {
     const o = (cat.offers || []).find((x) => x.id === decodeURIComponent(m[1]));
-    if (!o) return "";
-    return [
-      "Название: " + o.name, o.kind && "Тип: " + o.kind, o.reference && "Базовый актив: " + o.reference,
-      o.price != null && "Цена размещения: " + o.price + "% номинала", o.tenor && "Срок: " + o.tenor,
-      o.isin && "ISIN: " + o.isin, o.venue && "Площадка: " + o.venue, o.statusLabel && "Статус: " + o.statusLabel,
-      o.teaser,
-    ].filter(Boolean).join("\n");
+    if (o) {
+      return [
+        "Название: " + o.name, o.kind && "Тип: " + o.kind, o.reference && "Базовый актив: " + o.reference,
+        o.price != null && "Цена размещения: " + o.price + "% номинала", o.tenor && "Срок: " + o.tenor,
+        o.isin && "ISIN: " + o.isin, o.venue && "Площадка: " + o.venue, o.statusLabel && "Статус: " + o.statusLabel,
+        o.teaser,
+      ].filter(Boolean).join("\n");
+    }
+  }
+
+  // Дайджест: hash вида #<id выпуска>/<id идеи>. Идея — это продукт плюс наша аргументация,
+  // её и отдаём: клиент спрашивает «почему вы так считаете» именно про этот текст.
+  m = pageUrl.match(/digest\.html(?:\?[^#]*)?#[\w.-]+\/([\w.-]+)/);
+  if (m) {
+    const i = (cat.ideas || []).find((x) => x.id === decodeURIComponent(m[1]));
+    if (i) {
+      return ["Идея недели из дайджеста Rumberg.", "Название: " + i.name,
+        i.underlying && "Базовый актив: " + i.underlying, i.teaser && "Тизер: " + i.teaser,
+        i.hypothesis && "Наша гипотеза: " + i.hypothesis,
+        i.situation && "Рыночная ситуация: " + i.situation,
+        i.factors && i.factors.length && "Факторы за идею: " + i.factors.join("; "),
+        i.conclusion && "Вывод: " + i.conclusion,
+        i.how && "Как заработать: " + i.how, i.payout && "Структура выплаты: " + i.payout,
+        i.tenor && "Срок: " + i.tenor,
+      ].filter(Boolean).join("\n");
+    }
   }
   return "";
 }
@@ -304,7 +345,7 @@ async function handleChat(request, env, cors, ctx) {
 
   const pageTitle = String((data.page && data.page.title) || "").slice(0, 200);
   const pageUrl = String((data.page && data.page.url) || "").slice(0, 300);
-  let cat = { text: "", instr: [], offers: [] };
+  let cat = { text: "", instr: [], offers: [], ideas: [] };
   try { cat = await buildCatalog(env); } catch (e) { /* каталог необязателен */ }
   const prodCtx = productContext(cat, pageUrl);
   const system = SYSTEM_PROMPT +
@@ -503,7 +544,7 @@ function postToTgHtml(s) {
 }
 
 async function generatePost(env, theme) {
-  let cat = { text: "", instr: [], offers: [] };
+  let cat = { text: "", instr: [], offers: [], ideas: [] };
   try { cat = await buildCatalog(env); } catch (e) { /* каталог необязателен, но лучше с ним */ }
   const base = (env.SITE_BASE || "https://invest.rumberg.ru/").replace(/\/?$/, "/");
   const group = env.TG_GROUP_URL || "https://t.me/+NHbVOoUI5IBkN2Uy";
