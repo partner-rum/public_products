@@ -374,42 +374,60 @@ async function streamChat(provider, system, messages, env, cors, ctx, meta) {
     return json({ ok: false, error: "upstream_" + (upstream ? upstream.status : "no_body") }, 502, cors);
   }
 
+  // ВАЖНО: качаем поток вручную и держим работу через ctx.waitUntil.
+  // Через upstream.body.pipeThrough(JS-трансформ) поток обрывался на середине ответа:
+  // обработчик уже вернул Response, runtime считал запрос завершённым и перестал
+  // выполнять наш JS, который перекладывает куски. waitUntil держит исполнение живым.
+  const { readable, writable } = new TransformStream();   // identity, без JS-логики внутри
   const enc = new TextEncoder(), dec = new TextDecoder();
-  let full = "", buf = "";
-  const ts = new TransformStream({
-    transform(chunk, controller) {
-      buf += dec.decode(chunk, { stream: true });
-      const lines = buf.split("\n");
-      buf = lines.pop();                       // последняя строка может быть неполной
-      for (const raw of lines) {
-        const line = raw.trim();
-        if (!line.startsWith("data:")) continue;   // пропускаем event:/комментарии/пустые
-        const payload = line.slice(5).trim();
-        if (!payload || payload === "[DONE]") continue;
-        let j;
-        try { j = JSON.parse(payload); } catch (e) { continue; }
-        const piece = sseDelta(j);
-        if (piece) {
-          full += piece;
-          controller.enqueue(enc.encode("data: " + JSON.stringify({ t: piece }) + "\n\n"));
+  const writer = writable.getWriter();
+  let full = "";
+
+  const pump = (async () => {
+    const reader = upstream.body.getReader();
+    let buf = "";
+    try {
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        const lines = buf.split("\n");
+        buf = lines.pop();                       // последняя строка может быть неполной
+        for (const raw of lines) {
+          const line = raw.trim();
+          if (!line.startsWith("data:")) continue;  // пропускаем event:/комментарии/пустые
+          const payload = line.slice(5).trim();
+          if (!payload || payload === "[DONE]") continue;
+          let j;
+          try { j = JSON.parse(payload); } catch (e) { continue; }
+          const piece = sseDelta(j);
+          if (piece) {
+            full += piece;
+            await writer.write(enc.encode("data: " + JSON.stringify({ t: piece }) + "\n\n"));
+          }
         }
       }
-    },
-    flush(controller) {
-      controller.enqueue(enc.encode("data: " + JSON.stringify({ done: true }) + "\n\n"));
-      // Тихий лог диалога (как в нестримовой ветке) — не задерживаем поток
+      await writer.write(enc.encode("data: " + JSON.stringify({ done: true }) + "\n\n"));
+    } catch (e) {
+      // Сорвалось на середине — сообщаем фронту, он покажет запасной текст
+      try { await writer.write(enc.encode("data: " + JSON.stringify({ error: "stream_failed" }) + "\n\n")); } catch (e2) {}
+    } finally {
+      try { await writer.close(); } catch (e3) {}
+      // Тихий лог диалога (как в нестримовой ветке)
       if (env.CHAT_LOG_CHAT_ID && full) {
-        const p = tg(env, "sendMessage", {
-          chat_id: env.CHAT_LOG_CHAT_ID, parse_mode: "HTML", disable_web_page_preview: true,
-          text: "💬 <b>AI-чат</b>" + (meta && meta.pageTitle ? " · " + esc(meta.pageTitle) : "") +
-            "\n<b>Q:</b> " + esc((meta && meta.question) || "") + "\n<b>A:</b> " + esc(full.slice(0, 500)),
-        }).catch(() => {});
-        if (ctx && ctx.waitUntil) ctx.waitUntil(p);
+        try {
+          await tg(env, "sendMessage", {
+            chat_id: env.CHAT_LOG_CHAT_ID, parse_mode: "HTML", disable_web_page_preview: true,
+            text: "💬 <b>AI-чат</b>" + (meta && meta.pageTitle ? " · " + esc(meta.pageTitle) : "") +
+              "\n<b>Q:</b> " + esc((meta && meta.question) || "") + "\n<b>A:</b> " + esc(full.slice(0, 500)),
+          });
+        } catch (e4) {}
       }
-    },
-  });
+    }
+  })();
+  if (ctx && ctx.waitUntil) ctx.waitUntil(pump);
 
-  return new Response(upstream.body.pipeThrough(ts), {
+  return new Response(readable, {
     headers: {
       ...cors,
       "Content-Type": "text/event-stream; charset=utf-8",
