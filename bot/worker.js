@@ -732,6 +732,56 @@ async function handleSubmit(request, env, cors) {
     return json({ ok: true, id: result.id, count: result.count }, 200, cors);
   }
 
+  // Правка текста уже заведённой идеи — в черновике (where:"draft") или в опубликованном
+  // выпуске (where:"issue"). Меняются ТОЛЬКО описательные поля: цифры, график и параметры
+  // выведены из продукта автоматически, и при исправлении опечатки трогать их нечего —
+  // так правка не может разойтись с витриной. Пустая строка в необязательном поле = убрать его.
+  if (data.action === "digest_edit") {
+    const eid = cleanStr(data.id, 60);
+    if (!eid) return json({ ok: false, error: "no_id" }, 422, cors);
+    const where = data.where === "issue" ? "issue" : "draft";
+    const src = data.item || {};
+    const patch = {};
+    for (const k of ["name", "teaser", "hypothesis", "situation", "conclusion"]) {
+      if (typeof src[k] === "string") patch[k] = cleanStr(src[k]);
+    }
+    if (Array.isArray(src.factors)) {
+      patch.factors = src.factors.map((x) => cleanStr(x, 200)).filter(Boolean).slice(0, 8);
+    }
+    if (!Object.keys(patch).length) return json({ ok: false, error: "nothing_to_edit" }, 422, cors);
+    // тизер и гипотеза обязательны — их нельзя опустошить правкой
+    for (const k of ["teaser", "hypothesis"]) {
+      if (patch[k] === "") return json({ ok: false, error: "empty: " + k }, 422, cors);
+    }
+    let result;
+    try {
+      result = await commitDigestFile(env, (obj) => {
+        const list = where === "issue"
+          ? ((obj.issues && obj.issues[0] && obj.issues[0].ideas) || null)
+          : obj.draft.ideas;
+        if (!list) throw new Error("no_issue");
+        const idea = list.find((i) => i.id === eid);
+        if (!idea) throw new Error("not_found");
+        for (const k of Object.keys(patch)) {
+          const v = patch[k];
+          if (v === "" || (Array.isArray(v) && !v.length)) delete idea[k];
+          else idea[k] = v;
+        }
+        return { msg: "Дайджест: правка идеи " + (idea.name || eid) +
+                      (where === "issue" ? " (в выпуске)" : " (в черновике)") + " (от " + author + ")",
+                 out: { id: eid, where } };
+      });
+    } catch (e) { return json({ ok: false, error: String(e && e.message || e) }, 502, cors); }
+    // Правка опубликованного выпуска меняет клиентский PDF и витрину — Руслану сообщаем всегда
+    if (env.ADMIN_CHAT_ID) {
+      await tg(env, "sendMessage", { chat_id: env.ADMIN_CHAT_ID, parse_mode: "HTML",
+        text: "✏️ <b>Правка дайджеста</b>\n<b>" + esc(author) + "</b> поправил текст идеи «" + esc(eid) + "» " +
+              (where === "issue" ? "в <b>опубликованном выпуске</b> — PDF пересоберётся автоматически."
+                                 : "в черновике.") });
+    }
+    return json({ ok: true, id: result.id, where: result.where }, 200, cors);
+  }
+
   if (data.action === "digest_remove") {
     const rid = cleanStr(data.id, 60);
     if (!rid) return json({ ok: false, error: "no_id" }, 422, cors);

@@ -248,7 +248,16 @@
         <div class="note">Сломать нельзя: на сайт ничего не попадёт, пока не нажмёшь «Опубликовать». Продукта нет в списке? Сначала заведи его на вкладке «Текущий продукт» или «На размещении».</div>
       </div>
     </details>
-    <div class="grp"><div class="gt">1. Выбери продукт</div>
+    <div class="grp" id="dg-edit-grp"><div class="gt">Поправить уже заведённую идею</div>
+      <div class="hint" style="margin:0 0 10px">Опечатка или обрезанный текст? Выбери идею — её описание загрузится в форму ниже.
+        Правятся только слова: цифры, график и параметры выпуска остаются как есть.</div>
+      <label><span class="k">Идея</span>
+        <select id="dg-edit-pick"><option value="">— не правлю, добавляю новую —</option></select>
+      </label>
+      <button class="send" type="button" id="dg-edit-cancel" style="display:none;background:transparent;border:1px solid var(--border);color:var(--ink)">Отменить правку</button>
+    </div>
+
+    <div class="grp" id="dg-product-grp"><div class="gt">1. Выбери продукт</div>
       <div class="hint" style="margin:0 0 12px">Цифры, график выплаты и параметры подставятся из продукта сами — вводить руками ничего не нужно. Ты только опишешь идею словами.</div>
       <label><span class="k">Продукт <b>*</b></span>
         <select id="dg-product"><option value="">— загрузка списка… —</option></select>
@@ -560,11 +569,114 @@
     }).join("");
   });
 
+  // ── Правка текста уже заведённой идеи ──────────────────────────────────────
+  // Черновик и опубликованный выпуск в одном списке. Правим ТОЛЬКО слова: цифры,
+  // график и параметры выведены из продукта, поэтому продукт в режиме правки не трогаем.
+  var dgEdit = null;                       // {id, where, name} — если правим
+  var dgPick = document.getElementById("dg-edit-pick");
+  var dgEditCancel = document.getElementById("dg-edit-cancel");
+  var dgProductGrp = document.getElementById("dg-product-grp");
+  var dgAddBtn = document.getElementById("dg-add");
+  var dgEditable = [];                     // загруженные идеи с текстами
+
+  function setField(name, v) {
+    var el = fDigest.querySelector('[name="' + name + '"]');
+    if (!el) return;
+    el.value = v == null ? "" : v;
+    el.dispatchEvent(new Event("input"));  // чтобы обновился счётчик символов
+  }
+
+  function loadEditable() {
+    fetch("data/digest.js?cb=" + Date.now()).then(function (r) { return r.text(); }).then(function (t) {
+      var dg = dataObj(t) || {};
+      dgEditable = [];
+      ((dg.draft && dg.draft.ideas) || []).forEach(function (i) {
+        dgEditable.push({ where: "draft", idea: i, label: "черновик" });
+      });
+      var iss = dg.issues && dg.issues[0];
+      (iss && iss.ideas || []).forEach(function (i) {
+        dgEditable.push({ where: "issue", idea: i, label: "выпуск " + (iss.date || iss.id || "") });
+      });
+      dgPick.innerHTML = '<option value="">— не правлю, добавляю новую —</option>' +
+        dgEditable.map(function (e, n) {
+          return '<option value="' + n + '">' + esc(e.idea.name || e.idea.id) + " · " + esc(e.label) + "</option>";
+        }).join("");
+    }).catch(function () { /* список правки необязателен */ });
+  }
+
+  function enterEdit(n) {
+    var e = dgEditable[n];
+    if (!e) return;
+    dgEdit = { id: e.idea.id, where: e.where, name: e.idea.name || e.idea.id };
+    setField("name", e.idea.name);
+    setField("teaser", e.idea.teaser);
+    setField("hypothesis", e.idea.hypothesis);
+    setField("situation", e.idea.situation);
+    setField("conclusion", e.idea.conclusion);
+    setField("factors", (e.idea.factors || []).join("\n"));
+    dgProductGrp.style.display = "none";        // цифры не правим — продукт не нужен
+    dgEditCancel.style.display = "";
+    dgAddBtn.textContent = "Сохранить правку";
+    var msgEl = document.getElementById("m-digest");
+    msgEl.className = "msg";
+    msgEl.textContent = "Правим «" + dgEdit.name + "» (" + e.label + "). Цифры и график не меняются.";
+  }
+
+  function exitEdit() {
+    dgEdit = null;
+    dgPick.value = "";
+    fDigest.reset();
+    ["name","teaser","hypothesis","situation","conclusion","factors"].forEach(function (f) { setField(f, ""); });
+    dgProductGrp.style.display = "";
+    dgEditCancel.style.display = "none";
+    dgAddBtn.textContent = "Добавить в черновик выпуска";
+    dgDerived.style.display = "none"; dgCurrent = null;
+    document.getElementById("m-digest").textContent = "";
+  }
+
+  dgPick.addEventListener("change", function () {
+    if (this.value === "") exitEdit(); else enterEdit(+this.value);
+  });
+  dgEditCancel.addEventListener("click", exitEdit);
+  loadEditable();
+
   document.getElementById("dg-add").addEventListener("click", function () {
     var msgEl = document.getElementById("m-digest"), btn = this;
     msgEl.className = "msg";
     var key = keyEl.value.trim();
     if (!key) { msgEl.className = "msg err"; msgEl.textContent = "Введите ваш ключ вверху страницы."; keyEl.focus(); return; }
+
+    // ── режим правки: отправляем только текстовые поля ──
+    if (dgEdit) {
+      var t2 = val(fDigest, "teaser"), h2 = val(fDigest, "hypothesis");
+      if (!t2 || !h2) { msgEl.className = "msg err"; msgEl.textContent = "Тизер и гипотеза не могут быть пустыми."; return; }
+      var patch = {
+        name: val(fDigest, "name"), teaser: t2, hypothesis: h2,
+        situation: val(fDigest, "situation"), conclusion: val(fDigest, "conclusion"),
+        factors: val(fDigest, "factors").split("\n").map(function (s) { return s.trim(); }).filter(Boolean)
+      };
+      btn.disabled = true; btn.textContent = "Сохраняю…";
+      fetch(ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: key, action: "digest_edit", id: dgEdit.id, where: dgEdit.where, item: patch }) })
+        .then(function (r) { return r.json().then(function (d) { return { s: r.status, d: d }; }); })
+        .then(function (x) {
+          if (x.d && x.d.ok) {
+            // exitEdit() чистит поле сообщения — поэтому сначала выходим из режима правки,
+            // а подтверждение пишем после, иначе сейлз не увидит, что правка сохранилась
+            var wasIssue = dgEdit.where === "issue";
+            exitEdit(); loadEditable();
+            msgEl.className = "msg ok";
+            msgEl.textContent = wasIssue
+              ? "Сохранено ✅ Выпуск обновится на сайте, PDF пересоберётся автоматически (1–3 минуты)."
+              : "Сохранено ✅ Правка в черновике.";
+          } else if (x.d && x.d.error === "bad_key") { msgEl.className = "msg err"; msgEl.textContent = "Ключ не подошёл."; }
+          else { msgEl.className = "msg err"; msgEl.textContent = "Ошибка: " + ((x.d && x.d.error) || x.s); }
+        })
+        .catch(function () { msgEl.className = "msg err"; msgEl.textContent = "Сеть недоступна — попробуй ещё раз."; })
+        .finally(function () { btn.disabled = false; btn.textContent = dgEdit ? "Сохранить правку" : "Добавить в черновик выпуска"; });
+      return;
+    }
+
     if (!dgCurrent) { msgEl.className = "msg err"; msgEl.textContent = "Сначала выбери продукт из списка."; return; }
     var teaser = val(fDigest, "teaser"), hypothesis = val(fDigest, "hypothesis");
     if (!teaser || !hypothesis) { msgEl.className = "msg err"; msgEl.textContent = "Заполни тизер и гипотезу."; return; }
@@ -590,6 +702,7 @@
           msgEl.className = "msg ok";
           msgEl.textContent = "Добавлено в черновик ✅ В выпуске идей: " + x.d.count + ". Публикация — на вкладке «Выпуск недели».";
           fDigest.reset(); dgDerived.style.display = "none"; dgCurrent = null;
+          loadEditable();                  // новая идея сразу доступна для правки
         } else if (x.d && x.d.error === "bad_key") { msgEl.className = "msg err"; msgEl.textContent = "Ключ не подошёл."; }
         else { msgEl.className = "msg err"; msgEl.textContent = "Ошибка: " + ((x.d && x.d.error) || x.s); }
       })
