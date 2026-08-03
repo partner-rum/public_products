@@ -99,6 +99,58 @@
   .item .q { font-family: var(--f-mono); font-size: 12px; white-space: nowrap; }
   .empty-list { padding: 22px 14px; font-size: 13px; color: var(--faint); }
 
+  /* ── Сравнение продуктов ────────────────────────────────────────────────
+     Режим: чипс «Сравнить» в фильтрах → в списке появляются галочки, клик по
+     пункту добавляет/убирает продукт (до 3), при 2+ панель показывает сравнение. */
+  .cmp-chip { border: 1px solid var(--border); background: var(--card); border-radius: 20px; padding: 6px 13px; font-family: var(--f-body); font-size: 12.5px; color: var(--hushed); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .cmp-chip:hover { color: var(--ink); }
+  .cmp-chip.on { background: rgba(238,125,27,0.16); color: var(--ink); border-color: var(--solar); }
+  /* галочка перед названием — только в режиме сравнения */
+  .list.cmp .item { padding-left: 12px; }
+  .item .ck { display: none; flex: none; width: 15px; height: 15px; margin-right: 9px; border: 1px solid var(--border); border-radius: 4px; position: relative; top: 2px; }
+  .list.cmp .item .ck { display: inline-block; }
+  .item.picked .ck { background: var(--solar); border-color: var(--solar); }
+  .item.picked .ck::after { content: "✓"; position: absolute; inset: 0; color: #0C0A08; font-size: 11px; font-weight: 700; line-height: 15px; text-align: center; }
+  .item.picked { background: rgba(238,125,27,0.10); }
+  .list.cmp .item .r1 { align-items: flex-start; }
+  /* полоска состояния под списком */
+  .cmp-bar { display: none; align-items: center; gap: 10px; margin-top: 8px; padding: 9px 12px; background: var(--card); border: 1px solid var(--solar); border-radius: 10px; font-size: 12.5px; color: var(--hushed); }
+  .cmp-bar.on { display: flex; }
+  .cmp-bar .cnt { font-family: var(--f-mono); color: var(--ink); }
+  .cmp-bar .rst { margin-left: auto; border: none; background: transparent; padding: 0; font-family: var(--f-body); font-size: 12.5px; color: var(--solar); cursor: pointer; }
+  .cmp-bar .rst:hover { color: var(--solar-l); }
+
+  /* таблица сравнения */
+  .cmp-head { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 4px; }
+  .cmp-h1 { font-family: var(--display); font-size: 21px; font-weight: 400; letter-spacing: -0.01em; }
+  .cmp-scroll { overflow-x: auto; margin: 14px -2px 0; }
+  .cmp-tbl { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 420px; }
+  .cmp-tbl th, .cmp-tbl td { padding: 9px 12px; border: 1px solid var(--border-soft); vertical-align: top; text-align: left; }
+  .cmp-tbl thead th { background: var(--panel-2); font-weight: 600; font-size: 13px; line-height: 1.3; }
+  .cmp-tbl thead th .tp { display: block; font-family: var(--f-mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); margin-top: 4px; font-weight: 400; }
+  .cmp-tbl tbody th { font-weight: 400; color: var(--hushed); background: var(--card); white-space: nowrap; }
+  /* первая колонка залипает — на телефоне видно, какой это параметр */
+  .cmp-tbl th:first-child, .cmp-tbl td:first-child { position: sticky; left: 0; z-index: 1; }
+  .cmp-tbl thead th:first-child { background: var(--panel-2); }
+  .cmp-tbl tr.diff td { background: rgba(238,125,27,0.06); }
+  .cmp-tbl td .mono { font-family: var(--f-mono); }
+  .cmp-legend { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 12px; font-size: 12px; color: var(--hushed); }
+  .cmp-legend .lg { display: inline-flex; align-items: center; gap: 6px; }
+  .cmp-legend .sw { width: 13px; height: 3px; border-radius: 2px; flex: none; }
+  .cmp-diffnote { margin-top: 10px; font-size: 11.5px; color: var(--faint); }
+  /* результаты общего калькулятора по продуктам */
+  .cmp-res { display: grid; gap: 10px; margin-top: 12px; }
+  .cmp-r { background: var(--card); border: 1px solid var(--border-soft); border-radius: 9px; padding: 11px 13px; display: flex; align-items: baseline; gap: 12px; }
+  .cmp-r .nm { font-size: 12.5px; font-weight: 600; display: flex; align-items: center; gap: 7px; min-width: 0; }
+  .cmp-r .nm .sw { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+  .cmp-r .vals { margin-left: auto; display: flex; align-items: baseline; gap: 14px; white-space: nowrap; }
+  .cmp-r .pay { font-family: var(--f-mono); font-size: 13px; color: var(--hushed); }
+  .cmp-r .net { font-family: var(--f-mono); font-size: 15px; font-weight: 600; }
+  @media (max-width: 560px) {
+    .cmp-r { flex-wrap: wrap; }
+    .cmp-r .vals { margin-left: 0; width: 100%; justify-content: space-between; }
+  }
+
   /* ── Паспорт справа ── */
   .panel-wrap { position: sticky; top: 78px; }
   .panel { background: var(--card); border: 1px solid var(--border-soft); border-radius: 12px; padding: 26px 28px; max-height: calc(100dvh - 100px); overflow-y: auto; }
@@ -226,6 +278,10 @@
       </div>
       <div class="list-top"><button class="ta" id="toggle-all" type="button"></button></div>
       <div class="list" id="list"></div>
+      <div class="cmp-bar" id="cmp-bar">
+        <span class="cnt" id="cmp-cnt"></span><span id="cmp-hint"></span>
+        <button class="rst" id="cmp-reset" type="button">Сбросить</button>
+      </div>
     </aside>
 
     <div class="panel-wrap" id="panel-wrap">
@@ -563,6 +619,271 @@
     run();
   }
 
+  // ─── Сравнение продуктов ──────────────────────────────────────────────────
+  // Математика — из той же S.calc, что и калькулятор карточки: сравнение не может
+  // разойтись с паспортом продукта. Ключевая нормировка: у продуктов разная цена
+  // входа (варрант 15%, бустер 100%, дисконт 68% номинала), поэтому «выплата в %
+  // номинала» несравнима. Приводим всё к РЕЗУЛЬТАТУ НА ВЛОЖЕННУЮ СУММУ.
+  const CMP_MAX = 3;
+  const CMP_COLORS = ["#EE7D1B", "#4F86E6", "#55C08A"];
+  let cmpMode = false, cmp = [];
+
+  // Цена входа в % номинала. Бустер покупается по номиналу (в quote у него КУ).
+  function cmpEntry(r) { return r.type === "booster" ? 100 : (r.quote || 0); }
+  // Результат на вложенную сумму (%) при ходе базового актива move (%).
+  function cmpResult(r, move) {
+    const e = cmpEntry(r);
+    if (!e) return 0;
+    return S.calc.pct(r, move) / e * 100 - 100;
+  }
+
+  function cmpTypeLabel(r) {
+    if (r.type === "warrant") return r.structure === "cs" ? "Варрант · колл-спред" : "Варрант · CALL";
+    if (r.type === "discount") return "Дисконтная облигация";
+    if (r.type === "booster") return "Бустер";
+    if (r.type === "protection") return "Облигация с защитой капитала";
+    return "Структурный продукт";
+  }
+  function cmpGrowth(r) {
+    if (r.type === "warrant") return r.structure === "cs"
+      ? "1:1 в диапазоне " + S.fmtSmart(r.strike) + "–" + S.fmtSmart(r.strike2) + "%"
+      : "1:1 выше " + S.fmtSmart(r.strike) + "%";
+    if (r.type === "booster") return "×" + Math.round(r.ku || r.quote) + "% в диапазоне " +
+      S.fmtSmart(r.strike || 100) + "–" + S.fmtSmart(r.strike2 || 110) + "%";
+    if (r.type === "protection") return "участие " + Math.round((r.participation || 1) * 100) + "%";
+    return "—";
+  }
+  function cmpCap(r) {
+    if (r.type === "warrant") return r.structure === "cs"
+      ? "+" + S.fmtSmart((r.strike2 || 150) - (r.strike || 100)) + "% ном." : "не ограничен";
+    if (r.type === "booster") {
+      const K = r.strike || 100, K2 = r.strike2 || 110, ku = (r.ku || r.quote || 100) / 100;
+      return "+" + S.fmtSmart((K2 - K) * ku) + "% ном.";
+    }
+    if (r.type === "discount") return "100% ном. — фиксировано";
+    if (r.type === "protection") return r.cap != null ? "участие до +" + S.fmtSmart(r.cap) + "% актива" : "не ограничен";
+    return "—";
+  }
+  function cmpDown(r) {
+    if (r.type === "warrant") return "только премия — " + S.fmt2(r.quote) + "% ном.";
+    if (r.type === "booster") return "1:1 вместе с активом";
+    if (r.type === "discount") return "не зависит от рынка · кредитный риск";
+    if (r.type === "protection") return "защита " + (r.protectionPct || 100) + "% ном.";
+    return "—";
+  }
+  function cmpBE(r) {
+    const be = S.calc.breakeven(r);
+    if (be != null) return "рост " + (be >= 0 ? "+" : "−") + S.fmtSmart(Math.abs(be)) + "%";
+    if (r.type === "booster") return "на месте — 0%";
+    if (r.type === "discount") return "известен в день сделки";
+    return "—";
+  }
+
+  const CMP_ROWS = [
+    ["Тип", cmpTypeLabel],
+    ["Базовый актив", r => r.underlying || "—"],
+    ["Класс актива", r => r.cls || "—"],
+    ["Срок", r => r.tenor || "—"],
+    ["Цена входа", r => '<span class="mono">' + S.fmt2(cmpEntry(r)) + "%</span> ном." +
+      (r.type === "booster" ? "" : " · индикативно")],
+    ["Участие в росте", cmpGrowth],
+    ["Потолок выплаты", cmpCap],
+    ["Риск снижения", cmpDown],
+    ["Безубыток", cmpBE],
+    ["Мин. номинал", r => '<span class="mono">' + S.fmtInt(r.minNom || 0) + "</span> ₽"]
+  ];
+
+  // Наложенные профили: X — ход базового актива, Y — результат на вложенную сумму.
+  function cmpChartSVG(items) {
+    const W = 560, H = 240, PADL = 46, PADR = 14, PADT = 14, PADB = 30;
+    const MOVE_MIN = -30, MOVE_MAX = 60, STEP = 2;
+    const series = items.map((r, i) => {
+      const pts = [];
+      for (let m = MOVE_MIN; m <= MOVE_MAX; m += STEP) pts.push([m, cmpResult(r, m)]);
+      return { r, color: CMP_COLORS[i % CMP_COLORS.length], pts };
+    });
+    let lo = 0, hi = 0;   // 0 всегда в диапазоне — это точка «вернул вложенное»
+    series.forEach(s => s.pts.forEach(p => { if (p[1] < lo) lo = p[1]; if (p[1] > hi) hi = p[1]; }));
+    // Округляем границы до «круглого» шага, иначе подписи оси выходят вида «+332%».
+    const rawStep = (hi - lo) / 4;
+    const pow = Math.pow(10, Math.floor(Math.log10(rawStep || 1)));
+    const n = (rawStep || 1) / pow;
+    const step = (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * pow;
+    lo = Math.floor(lo / step) * step;
+    hi = Math.ceil(hi / step) * step;
+    const x = m => PADL + (m - MOVE_MIN) / (MOVE_MAX - MOVE_MIN) * (W - PADL - PADR);
+    const y = v => H - PADB - (v - lo) / (hi - lo) * (H - PADT - PADB);
+    const MONO = 'font-family="JetBrains Mono, monospace"';
+    let grid = "";
+    for (let val = lo; val <= hi + step / 2; val += step) {
+      const gy = y(val);
+      grid += '<line x1="' + PADL + '" y1="' + gy.toFixed(1) + '" x2="' + (W - PADR) + '" y2="' + gy.toFixed(1) +
+        '" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>' +
+        '<text x="' + (PADL - 7) + '" y="' + (gy + 4).toFixed(1) + '" text-anchor="end" fill="rgba(242,243,247,0.45)" font-size="10" ' + MONO + '>' +
+        (val > 0 ? "+" : val < 0 ? "−" : "") + S.fmtSmart(Math.abs(val)) + '%</text>';
+    }
+    // нулевая линия результата и нулевой ход актива
+    const zeroY = y(0), zeroX = x(0);
+    const zeros = '<line x1="' + PADL + '" y1="' + zeroY.toFixed(1) + '" x2="' + (W - PADR) + '" y2="' + zeroY.toFixed(1) +
+        '" stroke="rgba(255,255,255,0.22)" stroke-width="1"/>' +
+      '<line x1="' + zeroX.toFixed(1) + '" y1="' + PADT + '" x2="' + zeroX.toFixed(1) + '" y2="' + (H - PADB) +
+        '" stroke="rgba(255,255,255,0.10)" stroke-width="1" stroke-dasharray="3 4"/>';
+    let xlab = "";
+    for (let m = MOVE_MIN; m <= MOVE_MAX; m += 15) {
+      xlab += '<text x="' + x(m).toFixed(1) + '" y="' + (H - PADB + 17) + '" text-anchor="middle" fill="rgba(242,243,247,0.45)" font-size="10" ' + MONO + '>' +
+        (m > 0 ? "+" : "") + m + '%</text>';
+    }
+    const lines = series.map(s =>
+      '<path d="' + s.pts.map((p, i) => (i ? "L" : "M") + x(p[0]).toFixed(1) + "," + y(p[1]).toFixed(1)).join(" ") +
+      '" fill="none" stroke="' + s.color + '" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>').join("");
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="display:block" role="img" ' +
+      'aria-label="Профили результата на вложенную сумму для выбранных продуктов">' +
+      grid + zeros + xlab + lines +
+      '<text x="' + (PADL - 7) + '" y="12" text-anchor="end" fill="rgba(242,243,247,0.45)" font-size="10" ' + MONO + '>%</text>' +
+      '</svg>';
+  }
+
+  function cmpHTML(items) {
+    const cols = items.map((r, i) => {
+      const sn = shortName(r);
+      // у дисконтных короткое имя уже содержит актив — подзаголовок был бы дублем
+      const sub = r.underlying && sn.indexOf(r.underlying) < 0 ? '<span class="tp">' + r.underlying + '</span>' : "";
+      return '<th scope="col"><span style="color:' + CMP_COLORS[i % CMP_COLORS.length] + '">' + sn + '</span>' + sub + '</th>';
+    }).join("");
+    const rows = CMP_ROWS.map(([label, fn]) => {
+      const vals = items.map(fn);
+      const diff = vals.some(v => v !== vals[0]);
+      return '<tr' + (diff ? ' class="diff"' : '') + '><th scope="row">' + label + '</th>' +
+        vals.map(v => '<td>' + v + '</td>').join("") + '</tr>';
+    }).join("");
+    // В легенде и калькуляторе — полные названия: короткие («CALL 100 · 2 года»)
+    // рассчитаны на список, где базовый актив вынесен в заголовок группы.
+    const legend = items.map((r, i) =>
+      '<span class="lg"><span class="sw" style="background:' + CMP_COLORS[i % CMP_COLORS.length] + '"></span>' +
+      S.displayName(r) + '</span>').join("");
+    return '<div class="cmp-head"><div class="cmp-h1">Сравнение · ' + items.length + ' продукта</div>' +
+        '<span class="sh-host" id="cmp-sh-host"></span></div>' +
+      '<div class="cmp-scroll"><table class="cmp-tbl"><thead><tr><th scope="col">Параметр</th>' + cols + '</tr></thead>' +
+        '<tbody>' + rows + '</tbody></table></div>' +
+      '<div class="cmp-diffnote">Подсвечены строки, где продукты различаются.</div>' +
+      '<div class="sec" style="margin-top:18px"><div class="h">Профиль результата</div>' +
+        '<div class="chart-box">' + cmpChartSVG(items) + '</div>' +
+        '<div class="cmp-legend">' + legend + '</div>' +
+        '<div class="calc-note">По вертикали — результат на вложенную сумму, по горизонтали — изменение базового актива продукта. ' +
+          'Приведено к вложенной сумме, потому что цена входа у продуктов разная.</div>' +
+      '</div>' +
+      '<div class="sec"><div class="h">Общий калькулятор</div><div class="calc">' +
+        '<div class="calc-row"><label class="calc-l" for="cmp-amt">Сумма вложения в каждый, ₽</label>' +
+          '<input class="calc-input" id="cmp-amt" type="number" inputmode="numeric" min="0" max="1000000000" step="1000" value="1000000"></div>' +
+        '<div class="calc-row"><label class="calc-l">Базовый актив каждого продукта: <b id="cmp-mv"></b></label>' +
+          '<input class="calc-range" id="cmp-move" type="range" min="-30" max="60" value="20" step="1" aria-label="Сценарий по базовому активу"></div>' +
+        '<div class="cmp-res" id="cmp-res"></div>' +
+        '<div class="calc-note">Сценарий применяется к базовому активу <b>каждого</b> продукта отдельно — это не единое движение рынка. ' +
+          'У дисконтных облигаций выплата от рынка не зависит.</div>' +
+      '</div></div>';
+  }
+
+  function wireCmpCalc(items) {
+    const amt = document.getElementById("cmp-amt"); if (!amt) return;
+    const move = document.getElementById("cmp-move"), mvOut = document.getElementById("cmp-mv"),
+          out = document.getElementById("cmp-res");
+    const MAX_AMT = 1e9;
+    function run() {
+      const raw = parseFloat(amt.value);
+      let amount = raw;
+      if (!isFinite(amount) || amount < 0) amount = 0;
+      else if (amount > MAX_AMT) amount = MAX_AMT;
+      const m = +move.value;
+      mvOut.textContent = (m >= 0 ? "+" : "") + m + "%";
+      out.innerHTML = items.map((r, i) => {
+        const e = cmpEntry(r);
+        const nominal = e ? amount * 100 / e : 0;
+        const payout = nominal * S.calc.pct(r, m) / 100, net = payout - amount;
+        return '<div class="cmp-r"><span class="nm"><span class="sw" style="background:' +
+            CMP_COLORS[i % CMP_COLORS.length] + '"></span>' + S.displayName(r) + '</span>' +
+          '<span class="vals"><span class="pay">выплата ' + S.fmtInt(Math.round(payout)) + ' ₽</span>' +
+          '<span class="net" style="color:' + (net >= 0 ? "var(--up)" : "var(--loss)") + '">' +
+            (net >= 0 ? "+" : "−") + S.fmtInt(Math.round(Math.abs(net))) + ' ₽</span></span></div>';
+      }).join("");
+    }
+    amt.addEventListener("input", run);
+    move.addEventListener("input", run);
+    run();
+  }
+
+  function cmpUrl() {
+    const u = new URL("board.html", location.href);
+    u.searchParams.set("cmp", cmp.join(","));
+    return u.href;
+  }
+
+  function renderCompare() {
+    const items = cmp.map(id => S.INSTRUMENTS.find(r => r.id === id)).filter(Boolean);
+    if (items.length < 2) return;
+    document.getElementById("panel").innerHTML = cmpHTML(items);
+    wireCmpCalc(items);
+    const host = document.getElementById("cmp-sh-host");
+    if (host && window.Share) {
+      Share.attach(host, {
+        url: cmpUrl(), title: "Сравнение продуктов Rumberg",
+        name: items.map(shortName).join(" vs "),
+        pitch: "Сравнение параметров и профиля результата",
+        params: items.map(r => [shortName(r), S.fmt2(cmpEntry(r)) + "% ном."])
+      });
+    }
+    const srl = document.getElementById("sr-live");
+    if (srl) srl.textContent = "Сравнение: " + items.map(shortName).join(", ");
+    if (window.matchMedia("(max-width: 900px)").matches) {
+      document.getElementById("panel-wrap").classList.add("open");
+    }
+  }
+
+  function cmpBarUpdate() {
+    const bar = document.getElementById("cmp-bar");
+    bar.classList.toggle("on", cmpMode);
+    document.getElementById("cmp-cnt").textContent = "выбрано " + cmp.length + " из " + CMP_MAX;
+    document.getElementById("cmp-hint").textContent =
+      cmp.length < 2 ? "· отметьте ещё продукт" : "· сравнение справа";
+  }
+
+  function cmpToggleItem(id) {
+    const i = cmp.indexOf(id);
+    if (i >= 0) cmp.splice(i, 1);
+    else {
+      if (cmp.length >= CMP_MAX) return false;   // лимит — молча игнорируем
+      cmp.push(id);
+    }
+    document.querySelectorAll(".item").forEach(el => {
+      const on = cmp.indexOf(el.getAttribute("data-id")) >= 0;
+      el.classList.toggle("picked", on);
+      el.setAttribute("aria-pressed", on);
+    });
+    cmpBarUpdate();
+    if (cmp.length >= 2) renderCompare();
+    else document.getElementById("panel").innerHTML =
+      '<div class="placeholder">Отметьте 2–3 продукта, чтобы сравнить их бок о бок</div>';
+    return true;
+  }
+
+  function setCmpMode(on) {
+    cmpMode = on;
+    const chip = document.getElementById("cmp-chip");
+    if (chip) { chip.classList.toggle("on", on); chip.setAttribute("aria-pressed", on); }
+    document.getElementById("list").classList.toggle("cmp", on);
+    if (!on) {
+      cmp = [];
+      document.querySelectorAll(".item").forEach(el => { el.classList.remove("picked"); el.removeAttribute("aria-pressed"); });
+      document.getElementById("panel").innerHTML = selected
+        ? '<div class="placeholder">Выберите инструмент из списка</div>'
+        : '<div class="placeholder">Выберите инструмент из списка</div>';
+      if (selected) select(selected);
+    } else {
+      document.getElementById("panel").innerHTML =
+        '<div class="placeholder">Отметьте 2–3 продукта, чтобы сравнить их бок о бок</div>';
+    }
+    cmpBarUpdate();
+  }
+
   function passportHTML(inst) {
     const c = buildContent(inst);
     const U = S.underlyingInfo(inst.underlying);
@@ -659,8 +980,10 @@
 
   function itemHTML(r) {
     var qv = r.type === "booster" ? "КУ " + Math.round(r.quote) + "%" : S.fmt2(r.quote) + "%";
-    return '<button class="item' + (r.id === selected ? " active" : "") + '" data-id="' + r.id + '">' +
-      '<div class="r1"><span class="nm">' + shortName(r) + '</span><span class="q">' + qv + '</span></div>' +
+    const picked = cmp.indexOf(r.id) >= 0;
+    return '<button class="item' + (r.id === selected && !cmpMode ? " active" : "") + (picked ? " picked" : "") +
+      '" data-id="' + r.id + '"' + (cmpMode ? ' aria-pressed="' + picked + '"' : "") + '>' +
+      '<div class="r1"><span class="nm"><span class="ck"></span>' + shortName(r) + '</span><span class="q">' + qv + '</span></div>' +
     '</button>';
   }
 
@@ -714,7 +1037,10 @@
       render();
     };
     document.querySelectorAll(".item").forEach(el =>
-      el.addEventListener("click", () => select(el.getAttribute("data-id"), true)));
+      el.addEventListener("click", () => {
+        const id = el.getAttribute("data-id");
+        if (cmpMode) cmpToggleItem(id); else select(id, true);
+      }));
 
     if (selected && !list.some(r => r.id === selected)) {
       selected = null;
@@ -733,6 +1059,12 @@
     document.querySelectorAll(".kf").forEach(x => { const on = x === b; x.classList.toggle("active", on); x.setAttribute("aria-pressed", on); });
     render();
   }));
+
+  // Чипс «Сравнить» — в том же ряду, что фильтры по типу
+  document.getElementById("kinds").insertAdjacentHTML("beforeend",
+    '<button class="cmp-chip" id="cmp-chip" type="button" aria-pressed="false" title="Сравнить 2–3 продукта">⇄ Сравнить</button>');
+  document.getElementById("cmp-chip").addEventListener("click", () => setCmpMode(!cmpMode));
+  document.getElementById("cmp-reset").addEventListener("click", () => setCmpMode(false));
   document.getElementById("search").addEventListener("input", e => { q = e.target.value; render(); });
   document.getElementById("panel-close").addEventListener("click", () =>
     document.getElementById("panel-wrap").classList.remove("open"));
@@ -743,10 +1075,36 @@
     const r = S.INSTRUMENTS.find(x => x.id === hash);
     if (r) { selected = hash; closedGroups.delete(r.underlying); if (type !== "all" && r.type !== type) type = "all"; }
   }
+  // Deep-link на сравнение: ?cmp=ID1,ID2[,ID3] — сейлз отправляет клиенту готовое
+  // сравнение одной ссылкой. Неизвестные id молча отбрасываем (продукт мог быть снят).
+  const cmpParam = new URLSearchParams(location.search).get("cmp");
+  if (cmpParam) {
+    const ids = cmpParam.split(",").map(s => s.trim())
+      .filter((id, i, a) => a.indexOf(id) === i)          // без дублей: ?cmp=A,A дал бы две одинаковые колонки
+      .filter(id => S.INSTRUMENTS.some(r => r.id === id)).slice(0, CMP_MAX);
+    if (ids.length >= 2) {
+      cmp = ids;
+      cmpMode = true;
+      type = "all";                                   // чтобы отмеченные продукты были видны в списке
+      ids.forEach(id => {
+        const r = S.INSTRUMENTS.find(x => x.id === id);
+        if (r) closedGroups.delete(r.underlying);
+      });
+      const chip = document.getElementById("cmp-chip");
+      if (chip) { chip.classList.add("on"); chip.setAttribute("aria-pressed", "true"); }
+      document.getElementById("list").classList.add("cmp");
+      document.querySelectorAll(".kf").forEach(x => {
+        const on = x.getAttribute("data-k") === "all";
+        x.classList.toggle("active", on); x.setAttribute("aria-pressed", on);
+      });
+    }
+  }
+
   render();
+  if (cmp.length >= 2) { cmpBarUpdate(); renderCompare(); }
   // Deep-link по #id — явное намерение открыть инструмент: на мобиле раскрываем
   // полноэкранный паспорт (fromUser=true), иначе видна вся доска вместо продукта.
-  if (selected) select(selected, !!hash);
+  else if (selected) select(selected, !!hash);
 
   // ── Полоса под шапкой: синусоида-фон + лента мотивирующих фраз (декор) ──
   (function ribbon() {
