@@ -11,6 +11,12 @@
     botUser: "Rumberb_Sales_Team_bot",
     metrikaId: 110759242,
     msgLimit: 10,   // максимум вопросов за сессию, дальше — кнопка «Написать в Telegram»
+    // Стриминг ответа ВЫКЛЮЧЕН: в бою поток DeepSeek через Cloudflare Workers обрывался
+    // на середине ответа (клиент видел обрезанный текст) — воспроизводилось и при
+    // трансформации потока в воркере, и при прямом пробросе, и в браузере, и вне него.
+    // Причина в связке провайдер↔Workers, не во фронте. Код чтения потока ниже рабочий
+    // и протестирован — когда причина будет устранена, достаточно вернуть true.
+    stream: false,
     greeting: "Здравствуйте! Я AI-ассистент Rumberg: объясню, как устроены структурные продукты, и подскажу, где что на сайте.",
     suggestions: [
       "Чем автоколл отличается от облигации с защитой капитала?",
@@ -249,9 +255,9 @@
     fetch(CFG.endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      // stream:true — просим печатать ответ по мере генерации. Старый (ещё не передеплоенный)
-      // воркер это поле игнорирует и отвечает JSON — ниже различаем по Content-Type.
-      body: JSON.stringify({ messages: msgs.slice(-20), stream: true, page: { title: document.title, url: location.href } })
+      // stream — печатать ответ по мере генерации (см. CFG.stream; сейчас выключено).
+      // Воркер при stream:false отвечает обычным JSON; различаем ниже по Content-Type.
+      body: JSON.stringify({ messages: msgs.slice(-20), stream: !!CFG.stream, page: { title: document.title, url: location.href } })
     })
       .then(function (r) {
         if (!r.ok) return Promise.reject(r.status);
