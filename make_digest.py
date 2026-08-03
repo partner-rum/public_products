@@ -159,6 +159,13 @@ p+p{margin-top:2.4mm}
       text-align:right;line-height:1.5}
 .foot .lnk .t b{display:block;color:var(--accent-ink);font-weight:500}
 
+/* Блоки страницы НЕ сжимаются: min-height + flex-shrink давали то, что при длинном
+   тексте колонка «Рыночная ситуация» ужималась до 62mm, а её содержимое вылезало
+   поверх «Профиля выплаты» (в выпуске 03.08.2026 — наложение до 39mm). Теперь блок
+   занимает натуральную высоту, а если страница всё равно не влезает — включается
+   автоподгонка .fit1/.fit2/.fit3 (см. ниже и скрипт в конце документа). */
+.hypo,.cols,.scen{flex:none}
+
 /* гипотеза */
 .hypo{border-left:2.2mm solid var(--accent);padding-left:6mm;margin-bottom:7mm;min-height:21.5mm}
 .hypo .lbl{color:var(--accent-ink);margin-bottom:2.2mm;display:block}
@@ -176,11 +183,16 @@ p+p{margin-top:2.4mm}
       border-radius:50%;background:var(--accent)}
 .spec{background:var(--tint);border-radius:2mm;padding:5mm;align-self:start}
 .spec .lbl{display:block;margin-bottom:3.4mm}
-.spec dl{display:grid;grid-template-columns:1fr auto;gap:0 3mm}
+/* Значение забирает остаток ширины и переносится: при 1fr auto длинные словесные
+   значения («Корзина из 8 акций энергетики для ИИ (в USD)») распирали колонку и
+   уезжали за край листа — в выпуске 03.08.2026 до 26mm за границу. */
+.spec dl{display:grid;grid-template-columns:minmax(0,auto) minmax(0,1fr);gap:0 3mm}
 .spec dt{font-size:8.4pt;color:var(--ink-3);padding:1.6mm 0;border-bottom:1px solid var(--hair)}
 .spec dd{font-family:var(--mono);font-size:8.4pt;font-weight:500;text-align:right;
       padding:1.6mm 0;border-bottom:1px solid var(--hair);white-space:nowrap}
-.spec dd.t{font-family:'Onest',sans-serif;font-size:8.8pt;font-weight:500}
+/* цифры оставляем в одну строку, словесные значения переносим */
+.spec dd.t{font-family:'Onest',sans-serif;font-size:8.8pt;font-weight:500;
+      white-space:normal;overflow-wrap:anywhere}
 .spec dl>:nth-last-child(1),.spec dl>:nth-last-child(2){border-bottom:0}
 .spec .hl{color:var(--accent-ink)}
 
@@ -201,6 +213,40 @@ p+p{margin-top:2.4mm}
 .card .lbl{display:block;margin-bottom:2.4mm;color:var(--accent-ink)}
 .card.risk .lbl{color:#B4402F}
 .card p{font-size:8.8pt;line-height:1.52;color:var(--ink-2)}
+
+/* Автоподгонка: если после запрета сжатия страница всё равно не влезает в A4,
+   скрипт в конце документа ставит листу .fit1/.fit2/.fit3 и мы соразмерно
+   уменьшаем ТОЛЬКО переменный текст (гипотеза, ситуация, факторы, вывод, карточки).
+   Каркас — шапка, параметры, график, подвал — не трогаем: страницы остаются
+   узнаваемо одинаковыми. Текст не обрезается ни на одном шаге. */
+.fit1 .hypo h2{font-size:16pt}
+.fit1 p{font-size:9pt}
+.fit1 .facts ul{font-size:8.6pt}
+.fit2 .hypo h2{font-size:14.5pt;line-height:1.22}
+.fit2 p{font-size:8.5pt;line-height:1.5}
+.fit2 .facts ul{font-size:8.2pt;line-height:1.45}
+.fit2 .facts li{margin-bottom:1.1mm}
+.fit2 .hypo{min-height:0;margin-bottom:5.5mm}
+.fit3 .hypo h2{font-size:13pt;line-height:1.2}
+.fit3 p{font-size:8pt;line-height:1.45}
+.fit3 .facts ul{font-size:7.8pt;line-height:1.4}
+.fit3 .facts li{margin-bottom:.9mm}
+.fit3 .hypo{min-height:0;margin-bottom:5mm}
+.fit3 .cols{min-height:0;margin-bottom:5mm}
+.fit3 .facts{margin-top:3mm}
+/* Крайний шаг — на случай, когда сейлз заполнил все поля под лимит (до ~1700 знаков).
+   Дополнительно поджимаем график: он сузился по ширине, значит стал ниже. */
+.fit4 .hypo h2{font-size:12pt;line-height:1.18}
+.fit4 p{font-size:7.5pt;line-height:1.4}
+.fit4 .facts ul{font-size:7.3pt;line-height:1.36}
+.fit4 .facts li{margin-bottom:.7mm}
+.fit4 .hypo{min-height:0;margin-bottom:4mm}
+.fit4 .cols{min-height:0;margin-bottom:4mm;gap:6mm}
+.fit4 .facts{margin-top:2.6mm}
+.fit4 .scen{margin-bottom:3.5mm}
+.fit4 .scen-grid{grid-template-columns:78mm 1fr;gap:6mm}
+.fit4 .cards{gap:5mm;padding-bottom:3.5mm}
+.fit4 .card{padding:3.8mm}
 
 /* правовая страница */
 .legal{padding:10mm 16mm 0;flex:1;display:flex;flex-direction:column}
@@ -364,7 +410,17 @@ def param_rows(idea):
         rows.append(("Цена входа", esc(p["price"]), 0))
     rows.append(("Номинал", esc(p.get("nominal", "1 000 ₽")), 0))
     rows.append(("Защита капитала", esc(p.get("protection", "нет")), 0))
-    return rows[:6]
+    # Без повторов: у идей с защитой капитала ключевая цифра называется так же
+    # («Защита капитала 80%»), и строка выводилась дважды — как в выпуске 03.08.2026.
+    # Первое вхождение выигрывает: это ключевая цифра, она подсвечена.
+    out, seen = [], set()
+    for k, v, hl in rows:
+        key = str(k).strip().lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append((k, v, hl))
+    return out[:6]
 
 def logic_block(idea):
     situation = idea.get("situation")
@@ -488,6 +544,31 @@ BAR = T("""
     формат A4, поля «нет», включите печать фона. Файл обновляется автоматически при изменении дайджеста.</span>
 </div></div>""", pdf=PDF, date=DATE, n=str(len(ORDERED) + 2))
 
+# Автоподгонка страниц. Работает и на экране, и при рендере PDF: headless-хром
+# исполняет скрипт до печати (в воркфлоу на это дан --virtual-time-budget).
+# Шрифты грузятся с сети, поэтому пересчитываем ещё и после document.fonts.ready —
+# до подгрузки Onest/Rubik высота текста другая, и подгонка была бы неверной.
+FIT_JS = """<script>
+(function () {
+  var STEPS = ["fit1", "fit2", "fit3", "fit4"];
+  function fit() {
+    document.querySelectorAll(".sheet").forEach(function (sh) {
+      var body = sh.querySelector(".body");
+      if (!body) return;
+      STEPS.forEach(function (c) { sh.classList.remove(c); });
+      for (var i = 0; i < STEPS.length; i++) {
+        if (body.scrollHeight - body.clientHeight <= 1) break;
+        if (i) sh.classList.remove(STEPS[i - 1]);
+        sh.classList.add(STEPS[i]);
+      }
+    });
+  }
+  fit();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+  window.addEventListener("load", fit);
+})();
+</script>"""
+
 PAGES = [cover()] + [page_idea(idea, idx + 2) for idx, idea in enumerate(ORDERED)]
 PAGES.append(page_legal(len(ORDERED) + 2))
 
@@ -518,9 +599,10 @@ HTML = T("""<!DOCTYPE html>
 <style>$css</style>
 <script src="metrika.js?v=2" defer></script>
 </head>
-<body>$bar$pages</body>
+<body>$bar$pages
+$fitjs</body>
 </html>
-""", date=DATE, css=CSS, bar=BAR, pages="".join(PAGES))
+""", date=DATE, css=CSS, bar=BAR, pages="".join(PAGES), fitjs=FIT_JS)
 
 open(OUT, "w", encoding="utf-8", newline="\n").write(HTML)
 print("готово: %s" % OUT)
@@ -529,3 +611,20 @@ print("PDF_OUT=%s" % PDF)   # стабильная строка для CI: workf
 for idx, idea in enumerate(ORDERED):
     print("   %02d  %-14s %-40s payoff=%s" % (idx + 2, idea.get("family"),
           idea.get("name", "")[:40], (idea.get("payoff") or {}).get("type")))
+
+# Предупреждение об обрезанных текстах: maxlength в админке рубит ввод молча, и в
+# выпуске 03.08.2026 «Вывод» уехал в PDF оборванным на полуслове («…относительно ш»).
+# Ловим это при сборке — в логе воркфлоу видно до того, как PDF попадёт клиенту.
+TRUNC = []
+for idea in ORDERED:
+    for field, label in (("hypothesis", "гипотеза"), ("situation", "рыночная ситуация"),
+                         ("conclusion", "вывод")):
+        v = (idea.get(field) or "").strip()
+        if v and v[-1].isalpha():          # проза оборвана без знака препинания
+            TRUNC.append((idea.get("name", ""), label, len(v), v[-46:]))
+if TRUNC:
+    print("")
+    print("!! ВНИМАНИЕ: текст обрывается без знака препинания — похоже, обрезан лимитом в админке.")
+    print("   Попроси автора дописать поле, иначе клиент увидит обрыв на полуслове:")
+    for name, label, n, tail in TRUNC:
+        print("   — %s · %s (%d симв): …%s" % (name[:34], label, n, tail))

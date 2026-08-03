@@ -57,6 +57,11 @@
   select { appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23888' fill='none' stroke-width='1.5'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; padding-right:34px; }
   option { background:#14161C; color:#F2F3F7; }   /* иначе в раскрытом списке белым по белому */
   .hint { font-size:11px; color:var(--faint); margin-top:4px; line-height:1.45; }
+  /* Счётчик символов у длинных полей: браузер по maxlength обрезает молча, и в выпуске
+     03.08.2026 «Вывод» уехал в PDF оборванным на полуслове. Теперь видно, что упёрлись. */
+  .cnt { display:block; font-family:var(--m); font-size:10px; color:var(--faint); margin-top:3px; text-align:right; }
+  .cnt.near { color:var(--solar-l); }
+  .cnt.full { color:#E0705A; }
   .rm-row { display:flex; align-items:center; gap:10px; padding:11px 0; border-bottom:1px solid var(--border-soft); }
   .rm-row:last-child { border-bottom:0; }
   .rm-row .nm { flex:1; font-size:13.5px; line-height:1.35; }
@@ -257,7 +262,7 @@
       <label><span class="k">Гипотеза <b>*</b></span><textarea name="hypothesis" maxlength="250" placeholder="Во что мы верим: напр. «Цена ОФЗ 26238 вблизи исторического минимума»."></textarea></label>
       <label><span class="k">Рыночная ситуация</span><textarea name="situation" maxlength="400" placeholder="Пара предложений контекста (необязательно)."></textarea></label>
       <label><span class="k">Факторы — по одному на строку</span><textarea name="factors" maxlength="900" placeholder="Снижение ключевой ставки&#10;Приток капитала&#10;Устойчивый рост экономики"></textarea></label>
-      <label><span class="k">Вывод (необязательно)</span><textarea name="conclusion" maxlength="250"></textarea></label>
+      <label><span class="k">Вывод (необязательно)</span><textarea name="conclusion" maxlength="400"></textarea></label>
       <div class="hint">Механика («как заработать», «структура выплаты») подставится из типа продукта автоматически.</div>
     </div>
     <button class="send" type="button" id="dg-add">Добавить в черновик выпуска</button>
@@ -304,6 +309,26 @@
 (function () {
   "use strict";
   var ENDPOINT = "https://so-leads.ruslan-sabirov.workers.dev/submit";
+
+  // ── счётчик символов у длинных полей ──
+  // maxlength обрезает ввод молча: вставленный текст длиннее лимита теряет хвост,
+  // и сейлз об этом не узнаёт (в выпуске 03.08.2026 «Вывод» так уехал в PDF
+  // оборванным на полуслове). Показываем остаток и предупреждаем на лимите.
+  document.querySelectorAll("textarea[maxlength], input[maxlength]").forEach(function (el) {
+    var max = parseInt(el.getAttribute("maxlength"), 10);
+    if (!max || max < 60) return;                       // короткие поля (ISIN, срок) не засоряем
+    var c = document.createElement("span");
+    c.className = "cnt";
+    el.insertAdjacentElement("afterend", c);
+    function upd() {
+      var n = el.value.length;
+      c.textContent = n + " / " + max + (n >= max ? " — лимит: дальше текст не влезет" : "");
+      c.classList.toggle("near", n >= max * 0.9 && n < max);
+      c.classList.toggle("full", n >= max);
+    }
+    el.addEventListener("input", upd);
+    upd();
+  });
 
   // ── ключ сейлза: запоминаем в браузере ──
   var keyEl = document.getElementById("key");

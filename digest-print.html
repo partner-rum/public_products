@@ -113,6 +113,13 @@ p+p{margin-top:2.4mm}
       text-align:right;line-height:1.5}
 .foot .lnk .t b{display:block;color:var(--accent-ink);font-weight:500}
 
+/* Блоки страницы НЕ сжимаются: min-height + flex-shrink давали то, что при длинном
+   тексте колонка «Рыночная ситуация» ужималась до 62mm, а её содержимое вылезало
+   поверх «Профиля выплаты» (в выпуске 03.08.2026 — наложение до 39mm). Теперь блок
+   занимает натуральную высоту, а если страница всё равно не влезает — включается
+   автоподгонка .fit1/.fit2/.fit3 (см. ниже и скрипт в конце документа). */
+.hypo,.cols,.scen{flex:none}
+
 /* гипотеза */
 .hypo{border-left:2.2mm solid var(--accent);padding-left:6mm;margin-bottom:7mm;min-height:21.5mm}
 .hypo .lbl{color:var(--accent-ink);margin-bottom:2.2mm;display:block}
@@ -130,11 +137,16 @@ p+p{margin-top:2.4mm}
       border-radius:50%;background:var(--accent)}
 .spec{background:var(--tint);border-radius:2mm;padding:5mm;align-self:start}
 .spec .lbl{display:block;margin-bottom:3.4mm}
-.spec dl{display:grid;grid-template-columns:1fr auto;gap:0 3mm}
+/* Значение забирает остаток ширины и переносится: при 1fr auto длинные словесные
+   значения («Корзина из 8 акций энергетики для ИИ (в USD)») распирали колонку и
+   уезжали за край листа — в выпуске 03.08.2026 до 26mm за границу. */
+.spec dl{display:grid;grid-template-columns:minmax(0,auto) minmax(0,1fr);gap:0 3mm}
 .spec dt{font-size:8.4pt;color:var(--ink-3);padding:1.6mm 0;border-bottom:1px solid var(--hair)}
 .spec dd{font-family:var(--mono);font-size:8.4pt;font-weight:500;text-align:right;
       padding:1.6mm 0;border-bottom:1px solid var(--hair);white-space:nowrap}
-.spec dd.t{font-family:'Onest',sans-serif;font-size:8.8pt;font-weight:500}
+/* цифры оставляем в одну строку, словесные значения переносим */
+.spec dd.t{font-family:'Onest',sans-serif;font-size:8.8pt;font-weight:500;
+      white-space:normal;overflow-wrap:anywhere}
 .spec dl>:nth-last-child(1),.spec dl>:nth-last-child(2){border-bottom:0}
 .spec .hl{color:var(--accent-ink)}
 
@@ -155,6 +167,40 @@ p+p{margin-top:2.4mm}
 .card .lbl{display:block;margin-bottom:2.4mm;color:var(--accent-ink)}
 .card.risk .lbl{color:#B4402F}
 .card p{font-size:8.8pt;line-height:1.52;color:var(--ink-2)}
+
+/* Автоподгонка: если после запрета сжатия страница всё равно не влезает в A4,
+   скрипт в конце документа ставит листу .fit1/.fit2/.fit3 и мы соразмерно
+   уменьшаем ТОЛЬКО переменный текст (гипотеза, ситуация, факторы, вывод, карточки).
+   Каркас — шапка, параметры, график, подвал — не трогаем: страницы остаются
+   узнаваемо одинаковыми. Текст не обрезается ни на одном шаге. */
+.fit1 .hypo h2{font-size:16pt}
+.fit1 p{font-size:9pt}
+.fit1 .facts ul{font-size:8.6pt}
+.fit2 .hypo h2{font-size:14.5pt;line-height:1.22}
+.fit2 p{font-size:8.5pt;line-height:1.5}
+.fit2 .facts ul{font-size:8.2pt;line-height:1.45}
+.fit2 .facts li{margin-bottom:1.1mm}
+.fit2 .hypo{min-height:0;margin-bottom:5.5mm}
+.fit3 .hypo h2{font-size:13pt;line-height:1.2}
+.fit3 p{font-size:8pt;line-height:1.45}
+.fit3 .facts ul{font-size:7.8pt;line-height:1.4}
+.fit3 .facts li{margin-bottom:.9mm}
+.fit3 .hypo{min-height:0;margin-bottom:5mm}
+.fit3 .cols{min-height:0;margin-bottom:5mm}
+.fit3 .facts{margin-top:3mm}
+/* Крайний шаг — на случай, когда сейлз заполнил все поля под лимит (до ~1700 знаков).
+   Дополнительно поджимаем график: он сузился по ширине, значит стал ниже. */
+.fit4 .hypo h2{font-size:12pt;line-height:1.18}
+.fit4 p{font-size:7.5pt;line-height:1.4}
+.fit4 .facts ul{font-size:7.3pt;line-height:1.36}
+.fit4 .facts li{margin-bottom:.7mm}
+.fit4 .hypo{min-height:0;margin-bottom:4mm}
+.fit4 .cols{min-height:0;margin-bottom:4mm;gap:6mm}
+.fit4 .facts{margin-top:2.6mm}
+.fit4 .scen{margin-bottom:3.5mm}
+.fit4 .scen-grid{grid-template-columns:78mm 1fr;gap:6mm}
+.fit4 .cards{gap:5mm;padding-bottom:3.5mm}
+.fit4 .card{padding:3.8mm}
 
 /* правовая страница */
 .legal{padding:10mm 16mm 0;flex:1;display:flex;flex-direction:column}
@@ -325,7 +371,7 @@ p+p{margin-top:2.4mm}
   <div class="head"><div><span class="fam">Защита капитала</span><h1>Энергетика будущего</h1></div><img src="media/logo-rumberg-white.png" alt="Rumberg"></div>
   <div class="body">
     <div class="hypo"><span class="lbl">Гипотеза</span><h2>Искусственный интеллект — это прежде всего спрос на электроэнергию: по прогнозам, к 2030 году потребление дата- центров вырастет в разы. Идея даёт экспозицию на компании, которые этот рост обеспечивают.</h2></div>
-    <div class="cols"><div><h3>Рыночная ситуация</h3><div class="facts"><span class="lbl">Факторы</span><ul><li>биржевой выпуск, ISIN RU000A10BZ10 — покупается у любого брокера в стакане;</li><li>приём заявок 12.08–31.08.2026;</li><li>комиссий за управление и за успех нет;</li><li>при погашении удерживаются транзакционные издержки 3% с ростовой части.</li></ul></div></div><div class="spec"><span class="lbl">Параметры выпуска</span><dl><dt>Защита капитала</dt><dd class="hl">80%</dd><dt>Срок</dt><dd class="t">3 года</dd><dt>Базовый актив</dt><dd class="t">Корзина из 8 акций энергетики для ИИ (в USD)</dd><dt>Цена входа</dt><dd class="t">100% номинала</dd><dt>Номинал</dt><dd>1 000 ₽</dd><dt>Защита капитала</dt><dd>80%</dd></dl></div></div>
+    <div class="cols"><div><h3>Рыночная ситуация</h3><div class="facts"><span class="lbl">Факторы</span><ul><li>биржевой выпуск, ISIN RU000A10BZ10 — покупается у любого брокера в стакане;</li><li>приём заявок 12.08–31.08.2026;</li><li>комиссий за управление и за успех нет;</li><li>при погашении удерживаются транзакционные издержки 3% с ростовой части.</li></ul></div></div><div class="spec"><span class="lbl">Параметры выпуска</span><dl><dt>Защита капитала</dt><dd class="hl">80%</dd><dt>Срок</dt><dd class="t">3 года</dd><dt>Базовый актив</dt><dd class="t">Корзина из 8 акций энергетики для ИИ (в USD)</dd><dt>Цена входа</dt><dd class="t">100% номинала</dd><dt>Номинал</dt><dd>1 000 ₽</dd></dl></div></div>
     <div class="scen">
       <div class="scen-top"><span class="lbl">Профиль выплаты</span><span class="be"><b>80%</b> · защита капитала</span></div>
       <div class="scen-grid">
@@ -375,5 +421,25 @@ p+p{margin-top:2.4mm}
     <div class="lnk"><div class="t">Цифровая версия<br>дайджеста<b>invest.rumberg.ru</b></div>
       <div class="qr"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 31 31" class="segno"><path class="qrline" stroke="#101231" d="M1 1.5h7m3 0h1m2 0h1m1 0h1m2 0h1m3 0h7m-29 1h1m5 0h1m4 0h2m1 0h1m1 0h2m1 0h2m1 0h1m5 0h1m-29 1h1m1 0h3m1 0h1m1 0h1m2 0h1m5 0h1m2 0h1m1 0h1m1 0h3m1 0h1m-29 1h1m1 0h3m1 0h1m3 0h1m1 0h1m5 0h1m1 0h1m1 0h1m1 0h3m1 0h1m-29 1h1m1 0h3m1 0h1m1 0h4m5 0h2m3 0h1m1 0h3m1 0h1m-29 1h1m5 0h1m1 0h1m2 0h4m3 0h3m1 0h1m5 0h1m-29 1h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7m-20 1h1m3 0h8m-20 1h1m2 0h1m1 0h1m1 0h1m1 0h1m2 0h3m1 0h1m2 0h2m1 0h2m1 0h1m-26 1h1m2 0h2m1 0h5m3 0h1m2 0h1m3 0h1m1 0h1m2 0h2m-29 1h8m1 0h1m2 0h1m2 0h1m1 0h2m1 0h2m2 0h2m2 0h1m-29 1h1m1 0h2m3 0h1m1 0h1m3 0h1m3 0h5m3 0h1m1 0h2m-28 1h1m1 0h1m2 0h2m2 0h2m1 0h1m1 0h3m2 0h1m2 0h1m1 0h1m2 0h1m-28 1h1m3 0h1m2 0h3m4 0h2m5 0h1m1 0h1m1 0h1m1 0h1m-29 1h1m1 0h1m2 0h7m2 0h2m2 0h1m1 0h1m3 0h1m3 0h1m-22 1h1m1 0h1m1 0h1m3 0h1m1 0h2m2 0h1m1 0h1m1 0h1m2 0h1m-29 1h5m1 0h2m2 0h2m1 0h3m1 0h1m2 0h2m5 0h1m-28 1h1m2 0h1m1 0h1m1 0h1m5 0h1m4 0h1m1 0h7m1 0h1m-27 1h1m1 0h1m1 0h1m2 0h1m1 0h2m1 0h3m3 0h1m2 0h2m1 0h1m1 0h1m-27 1h2m1 0h1m4 0h2m3 0h1m1 0h2m1 0h1m2 0h1m1 0h1m1 0h2m-29 1h2m2 0h1m1 0h2m4 0h1m3 0h2m1 0h7m-18 1h3m1 0h1m1 0h3m2 0h2m3 0h1m1 0h3m-29 1h7m2 0h1m3 0h8m1 0h1m1 0h1m3 0h1m-29 1h1m5 0h1m4 0h2m1 0h1m2 0h4m3 0h2m1 0h1m-28 1h1m1 0h3m1 0h1m1 0h6m1 0h3m1 0h6m-25 1h1m1 0h3m1 0h1m4 0h1m2 0h3m6 0h1m2 0h1m1 0h1m-29 1h1m1 0h3m1 0h1m4 0h5m1 0h5m3 0h1m1 0h2m-29 1h1m5 0h1m1 0h4m4 0h2m1 0h5m1 0h1m1 0h2m-29 1h7m2 0h5m3 0h2m1 0h1m1 0h1m1 0h1m2 0h1"/></svg></div></div>
   </div>
-</section></body>
+</section>
+<script>
+(function () {
+  var STEPS = ["fit1", "fit2", "fit3", "fit4"];
+  function fit() {
+    document.querySelectorAll(".sheet").forEach(function (sh) {
+      var body = sh.querySelector(".body");
+      if (!body) return;
+      STEPS.forEach(function (c) { sh.classList.remove(c); });
+      for (var i = 0; i < STEPS.length; i++) {
+        if (body.scrollHeight - body.clientHeight <= 1) break;
+        if (i) sh.classList.remove(STEPS[i - 1]);
+        sh.classList.add(STEPS[i]);
+      }
+    });
+  }
+  fit();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+  window.addEventListener("load", fit);
+})();
+</script></body>
 </html>
