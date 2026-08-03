@@ -716,20 +716,31 @@ async function handleSubmit(request, env, cors) {
     if (!raw.id && raw.name) raw.id = slugId(raw.name);   // id генерим сами из названия
     const { item, missing } = sanitizeItem("digest", raw);
     if (missing.length) return json({ ok: false, error: "missing: " + missing.join(", ") }, 422, cors);
+    // where:"issue" — доложить идею в УЖЕ опубликованный выпуск (issues[0]): выпуск разослан,
+    // а идея дозрела. Иначе (по умолчанию) — в черновик следующего выпуска.
+    const addTo = data.where === "issue" ? "issue" : "draft";
     let result;
     try {
       result = await commitDigestFile(env, (obj) => {
-        const taken = new Set(obj.draft.ideas.map((i) => i.id));
-        item.id = uniqueId(item.id, taken);
-        obj.draft.ideas.push(item);
-        return { msg: "Черновик дайджеста: +идея " + (item.name || item.id) + " (от " + author + ")",
-                 out: { id: item.id, count: obj.draft.ideas.length } };
+        const list = addTo === "issue"
+          ? ((obj.issues && obj.issues[0] && obj.issues[0].ideas) || null)
+          : obj.draft.ideas;
+        if (!list) throw new Error("no_issue");
+        item.id = uniqueId(item.id, new Set(list.map((i) => i.id)));
+        list.push(item);
+        return { msg: (addTo === "issue" ? "Дайджест: +идея " : "Черновик дайджеста: +идея ") +
+                      (item.name || item.id) + (addTo === "issue" ? " (в выпуске)" : "") + " (от " + author + ")",
+                 out: { id: item.id, count: list.length, where: addTo } };
       });
     } catch (e) { return json({ ok: false, error: String(e && e.message || e) }, 502, cors); }
     await tg(env, "sendMessage", { chat_id: env.ADMIN_CHAT_ID, parse_mode: "HTML",
-      text: "🟠 <b>Черновик дайджеста</b>\n<b>" + esc(author) + "</b> добавил идею «" + esc(item.name || item.id) +
-            "». В черновике: " + result.count + "." });
-    return json({ ok: true, id: result.id, count: result.count }, 200, cors);
+      text: addTo === "issue"
+        ? "🟢 <b>Дайджест: новая идея в выпуске</b>\n<b>" + esc(author) + "</b> добавил «" +
+          esc(item.name || item.id) + "» в <b>опубликованный выпуск</b> — PDF пересоберётся автоматически. Идей: " +
+          result.count + "."
+        : "🟠 <b>Черновик дайджеста</b>\n<b>" + esc(author) + "</b> добавил идею «" + esc(item.name || item.id) +
+          "». В черновике: " + result.count + "." });
+    return json({ ok: true, id: result.id, count: result.count, where: result.where }, 200, cors);
   }
 
   // Правка текста уже заведённой идеи — в черновике (where:"draft") или в опубликованном

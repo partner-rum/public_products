@@ -244,6 +244,7 @@
           <li><b>Опиши идею словами:</b> тизер (фраза-крючок), гипотеза (во что верим), факторы (по одному на строку).</li>
           <li>Нажми <b>«Добавить в черновик»</b>. Повтори для каждой идеи недели.</li>
           <li>Когда идеи собраны — вкладка <b>«Выпуск недели»</b> → проверь превью → «Опубликовать».</li>
+          <li>Выпуск уже вышел, а идея дозрела? В блоке <b>«Куда добавить»</b> выбери текущий выпуск — идея встанет в него, сайт и PDF обновятся сами.</li>
         </ol>
         <div class="note">Сломать нельзя: на сайт ничего не попадёт, пока не нажмёшь «Опубликовать». Продукта нет в списке? Сначала заведи его на вкладке «Текущий продукт» или «На размещении».</div>
       </div>
@@ -273,6 +274,16 @@
       <label><span class="k">Факторы — по одному на строку</span><textarea name="factors" maxlength="900" placeholder="Снижение ключевой ставки&#10;Приток капитала&#10;Устойчивый рост экономики"></textarea></label>
       <label><span class="k">Вывод (необязательно)</span><textarea name="conclusion" maxlength="400"></textarea></label>
       <div class="hint">Механика («как заработать», «структура выплаты») подставится из типа продукта автоматически.</div>
+    </div>
+
+    <div class="grp" id="dg-where-grp" style="display:none"><div class="gt">3. Куда добавить</div>
+      <label><span class="k">Выпуск</span>
+        <select id="dg-where">
+          <option value="draft">В черновик следующего выпуска</option>
+          <option value="issue">В текущий выпуск — сразу на сайт</option>
+        </select>
+      </label>
+      <div class="hint" id="dg-where-hint">Черновик никто не видит, пока не нажмёшь «Опубликовать» на вкладке «Выпуск недели».</div>
     </div>
     <button class="send" type="button" id="dg-add">Добавить в черновик выпуска</button>
     <div class="msg" id="m-digest"></div>
@@ -578,6 +589,20 @@
   var dgProductGrp = document.getElementById("dg-product-grp");
   var dgAddBtn = document.getElementById("dg-add");
   var dgEditable = [];                     // загруженные идеи с текстами
+  var dgWhereGrp = document.getElementById("dg-where-grp");
+  var dgWhereSel = document.getElementById("dg-where");
+  var dgIssueLabel = "";                   // дата опубликованного выпуска (если есть)
+
+  // Куда ляжет новая идея: черновик (по умолчанию) или уже опубликованный выпуск.
+  // Выбор появляется только когда на сайте есть выпуск, куда можно доложить.
+  function dgWhereSync() {
+    var toIssue = dgWhereSel.value === "issue";
+    dgAddBtn.textContent = toIssue ? "Добавить в выпуск " + dgIssueLabel : "Добавить в черновик выпуска";
+    document.getElementById("dg-where-hint").textContent = toIssue
+      ? "Идея попадёт в выпуск " + dgIssueLabel + " сразу — он уже на сайте. PDF пересоберётся автоматически (1–3 минуты)."
+      : "Черновик никто не видит, пока не нажмёшь «Опубликовать» на вкладке «Выпуск недели».";
+  }
+  dgWhereSel.addEventListener("change", dgWhereSync);
 
   function setField(name, v) {
     var el = fDigest.querySelector('[name="' + name + '"]');
@@ -597,6 +622,9 @@
       (iss && iss.ideas || []).forEach(function (i) {
         dgEditable.push({ where: "issue", idea: i, label: "выпуск " + (iss.date || iss.id || "") });
       });
+      dgIssueLabel = iss ? (iss.date || iss.id || "") : "";
+      dgWhereGrp.style.display = (iss && !dgEdit) ? "" : "none";
+      dgWhereSync();
       dgPick.innerHTML = '<option value="">— не правлю, добавляю новую —</option>' +
         dgEditable.map(function (e, n) {
           return '<option value="' + n + '">' + esc(e.idea.name || e.idea.id) + " · " + esc(e.label) + "</option>";
@@ -615,6 +643,7 @@
     setField("conclusion", e.idea.conclusion);
     setField("factors", (e.idea.factors || []).join("\n"));
     dgProductGrp.style.display = "none";        // цифры не правим — продукт не нужен
+    dgWhereGrp.style.display = "none";          // правим на месте — выбирать выпуск нечего
     dgEditCancel.style.display = "";
     dgAddBtn.textContent = "Сохранить правку";
     var msgEl = document.getElementById("m-digest");
@@ -628,8 +657,9 @@
     fDigest.reset();
     ["name","teaser","hypothesis","situation","conclusion","factors"].forEach(function (f) { setField(f, ""); });
     dgProductGrp.style.display = "";
+    dgWhereGrp.style.display = dgIssueLabel ? "" : "none";
+    dgWhereSel.value = "draft"; dgWhereSync();
     dgEditCancel.style.display = "none";
-    dgAddBtn.textContent = "Добавить в черновик выпуска";
     dgDerived.style.display = "none"; dgCurrent = null;
     document.getElementById("m-digest").textContent = "";
   }
@@ -673,7 +703,7 @@
           else { msgEl.className = "msg err"; msgEl.textContent = "Ошибка: " + ((x.d && x.d.error) || x.s); }
         })
         .catch(function () { msgEl.className = "msg err"; msgEl.textContent = "Сеть недоступна — попробуй ещё раз."; })
-        .finally(function () { btn.disabled = false; btn.textContent = dgEdit ? "Сохранить правку" : "Добавить в черновик выпуска"; });
+        .finally(function () { btn.disabled = false; if (dgEdit) btn.textContent = "Сохранить правку"; else dgWhereSync(); });
       return;
     }
 
@@ -693,21 +723,25 @@
     var factors = val(fDigest, "factors").split("\n").map(function (s) { return s.trim(); }).filter(Boolean);
     if (factors.length) item.factors = factors;
 
+    var toIssue = dgWhereGrp.style.display !== "none" && dgWhereSel.value === "issue";
     btn.disabled = true; btn.textContent = "Добавляю…";
     fetch(ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ key: key, action: "digest_add", item: item }) })
+      body: JSON.stringify({ key: key, action: "digest_add", where: toIssue ? "issue" : "draft", item: item }) })
       .then(function (r) { return r.json().then(function (d) { return { s: r.status, d: d }; }); })
       .then(function (x) {
         if (x.d && x.d.ok) {
           msgEl.className = "msg ok";
-          msgEl.textContent = "Добавлено в черновик ✅ В выпуске идей: " + x.d.count + ". Публикация — на вкладке «Выпуск недели».";
+          msgEl.textContent = x.d.where === "issue"
+            ? "Добавлено в выпуск " + dgIssueLabel + " ✅ Идей в выпуске: " + x.d.count +
+              ". Сайт и PDF обновятся автоматически (1–3 минуты)."
+            : "Добавлено в черновик ✅ В выпуске идей: " + x.d.count + ". Публикация — на вкладке «Выпуск недели».";
           fDigest.reset(); dgDerived.style.display = "none"; dgCurrent = null;
           loadEditable();                  // новая идея сразу доступна для правки
         } else if (x.d && x.d.error === "bad_key") { msgEl.className = "msg err"; msgEl.textContent = "Ключ не подошёл."; }
         else { msgEl.className = "msg err"; msgEl.textContent = "Ошибка: " + ((x.d && x.d.error) || x.s); }
       })
       .catch(function () { msgEl.className = "msg err"; msgEl.textContent = "Сеть недоступна — попробуй ещё раз."; })
-      .finally(function () { btn.disabled = false; btn.textContent = "Добавить в черновик выпуска"; });
+      .finally(function () { btn.disabled = false; dgWhereSync(); });
   });
 
   // ── ВЫПУСК НЕДЕЛИ: черновик (список + удаление) и публикация одним нажатием ──
