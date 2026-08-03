@@ -487,15 +487,13 @@ def logic_block(idea):
 # ══════════════════════════════════════════════════════════════════════════════
 def page_idea(idea, pg):
     fam = FAM_BADGE.get(idea.get("family"), esc(idea.get("kind", "")))
-    m = idea.get("metric") or {}
-    metric_line = ("<b>%s</b> · %s" % (esc(m.get("v", "")), esc(m.get("k", "")))) if m.get("v") else ""
     payout = esc(idea.get("payout", ""))
     if idea.get("fx"):
         payout += " Базовый актив в валюте — пример расчёта приведён без учёта изменения курса."
     body = T("""
     <div class="cols">$left$spec</div>
     <div class="scen">
-      <div class="scen-top"><span class="lbl">Профиль выплаты</span><span class="be">$metric</span></div>
+      <div class="scen-top"><span class="lbl">Профиль выплаты</span></div>
       <div class="scen-grid">
         <div class="chart">$svg</div>
         <p class="scen-note">$payout</p>
@@ -505,7 +503,7 @@ def page_idea(idea, pg):
       <div class="card"><span class="lbl">Как заработать</span><p>$how</p></div>
       <div class="card risk"><span class="lbl">Риск</span><p>$risk</p></div>
     </div>""", left=logic_block(idea), spec=spec_block("Параметры выпуска", param_rows(idea)),
-             metric=metric_line, svg=payoff_svg(idea.get("payoff")), payout=payout,
+             svg=payoff_svg(idea.get("payoff")), payout=payout,
              how=esc(idea.get("how", "")), risk=risk_of(idea))
     qr = qr_svg("%s/digest?view=client#%s/%s" % (SITE, ISSUE_ID, idea.get("id", "")))
     return T("""
