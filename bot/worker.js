@@ -318,8 +318,7 @@ async function handleChat(request, env, cors, ctx) {
   // Ответ печатается по мере генерации — ощущение скорости. Ошибки отдаём обычным
   // JSON: фронт различает по Content-Type и уходит в старую ветку.
   if (data.stream === true && (provider === "deepseek" || provider === "claude")) {
-    const lastQ = messages[messages.length - 1].content.slice(0, 600);
-    return streamChat(provider, system, messages, env, cors, ctx, { pageTitle, question: lastQ });
+    return streamChat(provider, system, messages, env, cors);
   }
 
   let reply;
@@ -348,19 +347,17 @@ async function handleChat(request, env, cors, ctx) {
 }
 
 // --- Стриминг ответа ассистента (SSE) ---
-// Наружу отдаём свой простой протокол, чтобы фронт не зависел от формата провайдера:
-//   data: {"t":"кусок текста"}   … много раз
-//   data: {"done":true}          … в конце
-// Апстримы различаются: OpenAI-совместимый (deepseek) даёт choices[0].delta.content,
-// Anthropic — delta.text; разбираем оба.
-function sseDelta(j) {
-  if (j && j.delta && typeof j.delta.text === "string") return j.delta.text;      // anthropic
-  const c = j && j.choices && j.choices[0];                                       // openai-совместимый
-  if (c && c.delta && typeof c.delta.content === "string") return c.delta.content;
-  return "";
-}
-
-async function streamChat(provider, system, messages, env, cors, ctx, meta) {
+// Отдаём SSE провайдера КАК ЕСТЬ, без нашего JS в петле стрима: тело апстрима
+// уходит клиенту напрямую, байты перекладывает сам runtime.
+// Почему так, а не «свой протокол»: попытки трансформировать поток в воркере
+// (и через body.pipeThrough(JS-трансформ), и через ручной насос с ctx.waitUntil)
+// в бою стабильно вставали после ~700–800 байт — соединение висело без ошибки и
+// без закрытия. Прямой проброс этот класс проблем убирает.
+// Разбор формата (OpenAI-совместимый choices[0].delta.content у deepseek либо
+// Anthropic delta.text) делает фронт — см. readStream() в chat.js.
+// Побочный эффект: тихий лог диалога (CHAT_LOG_CHAT_ID) для стримовых ответов не
+// пишется — воркер их текст не видит. Для нестримовой ветки лог сохранён.
+async function streamChat(provider, system, messages, env, cors) {
   let upstream;
   try {
     upstream = provider === "claude"
@@ -374,60 +371,9 @@ async function streamChat(provider, system, messages, env, cors, ctx, meta) {
     return json({ ok: false, error: "upstream_" + (upstream ? upstream.status : "no_body") }, 502, cors);
   }
 
-  // ВАЖНО: качаем поток вручную и держим работу через ctx.waitUntil.
-  // Через upstream.body.pipeThrough(JS-трансформ) поток обрывался на середине ответа:
-  // обработчик уже вернул Response, runtime считал запрос завершённым и перестал
-  // выполнять наш JS, который перекладывает куски. waitUntil держит исполнение живым.
-  const { readable, writable } = new TransformStream();   // identity, без JS-логики внутри
-  const enc = new TextEncoder(), dec = new TextDecoder();
-  const writer = writable.getWriter();
-  let full = "";
-
-  const pump = (async () => {
-    const reader = upstream.body.getReader();
-    let buf = "";
-    try {
-      for (;;) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buf += dec.decode(value, { stream: true });
-        const lines = buf.split("\n");
-        buf = lines.pop();                       // последняя строка может быть неполной
-        for (const raw of lines) {
-          const line = raw.trim();
-          if (!line.startsWith("data:")) continue;  // пропускаем event:/комментарии/пустые
-          const payload = line.slice(5).trim();
-          if (!payload || payload === "[DONE]") continue;
-          let j;
-          try { j = JSON.parse(payload); } catch (e) { continue; }
-          const piece = sseDelta(j);
-          if (piece) {
-            full += piece;
-            await writer.write(enc.encode("data: " + JSON.stringify({ t: piece }) + "\n\n"));
-          }
-        }
-      }
-      await writer.write(enc.encode("data: " + JSON.stringify({ done: true }) + "\n\n"));
-    } catch (e) {
-      // Сорвалось на середине — сообщаем фронту, он покажет запасной текст
-      try { await writer.write(enc.encode("data: " + JSON.stringify({ error: "stream_failed" }) + "\n\n")); } catch (e2) {}
-    } finally {
-      try { await writer.close(); } catch (e3) {}
-      // Тихий лог диалога (как в нестримовой ветке)
-      if (env.CHAT_LOG_CHAT_ID && full) {
-        try {
-          await tg(env, "sendMessage", {
-            chat_id: env.CHAT_LOG_CHAT_ID, parse_mode: "HTML", disable_web_page_preview: true,
-            text: "💬 <b>AI-чат</b>" + (meta && meta.pageTitle ? " · " + esc(meta.pageTitle) : "") +
-              "\n<b>Q:</b> " + esc((meta && meta.question) || "") + "\n<b>A:</b> " + esc(full.slice(0, 500)),
-          });
-        } catch (e4) {}
-      }
-    }
-  })();
-  if (ctx && ctx.waitUntil) ctx.waitUntil(pump);
-
-  return new Response(readable, {
+  // Тело апстрима уходит клиенту напрямую — байты перекладывает runtime, нашего JS
+  // в петле стрима нет. Формат SSE провайдера разбирает фронт (readStream в chat.js).
+  return new Response(upstream.body, {
     headers: {
       ...cors,
       "Content-Type": "text/event-stream; charset=utf-8",

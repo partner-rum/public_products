@@ -276,8 +276,19 @@
     else { addMsg("assistant", "").innerHTML = fallbackReply(); }
   }
 
-  /* Стрим (SSE от воркера): data:{"t":"кусок"} … data:{"done":true}.
-     Текст дописываем в пузырь по мере поступления; **жирный** может прийти
+  /* Достаём кусок текста из события SSE. Воркер пробрасывает поток провайдера как есть
+     (без своего JS в петле — так надёжнее), поэтому формат зависит от провайдера:
+     deepseek (OpenAI-совместимый) → choices[0].delta.content, Anthropic → delta.text.
+     Плюс поддерживаем прежний протокол воркера {"t":…} — на случай другой версии. */
+  function sseText(j) {
+    if (typeof j.t === "string") return j.t;                                  // прежний протокол
+    if (j.delta && typeof j.delta.text === "string") return j.delta.text;     // anthropic
+    var c = j.choices && j.choices[0];                                        // openai-совместимый
+    if (c && c.delta && typeof c.delta.content === "string") return c.delta.content;
+    return "";
+  }
+
+  /* Стрим: текст дописываем в пузырь по мере поступления. **жирный** может прийти
      разорванным по кускам, поэтому каждый раз перерисовываем весь накопленный текст. */
   function readStream(r, typing) {
     var reader = r.body.getReader(), dec = new TextDecoder();
@@ -287,13 +298,14 @@
       var line = raw.trim();
       if (line.indexOf("data:") !== 0) return;
       var payload = line.slice(5).trim();
-      if (!payload) return;
+      if (!payload || payload === "[DONE]") return;   // конец потока у OpenAI-совместимых
       var j;
       try { j = JSON.parse(payload); } catch (e) { return; }
-      if (j.error) { errCode = j.error; return; }
-      if (j.t) {
+      if (j.error) { errCode = typeof j.error === "string" ? j.error : "upstream"; return; }
+      var piece = sseText(j);
+      if (piece) {
         if (!bubble) { if (typing.parentNode) typing.remove(); bubble = addMsg("assistant", ""); }
-        acc += j.t;
+        acc += piece;
         bubble.innerHTML = fmt(acc);
         els.log.scrollTop = els.log.scrollHeight;
       }
