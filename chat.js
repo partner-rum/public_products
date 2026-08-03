@@ -57,11 +57,17 @@
     ".ca-sug button{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.03);color:rgba(242,243,247,.85);border-radius:12px;padding:8px 12px;font-family:inherit;font-size:12.5px;line-height:1.4;cursor:pointer;text-align:left;transition:border-color .15s,color .15s,background .15s;}" +
     ".ca-sug button:hover{border-color:rgba(238,125,27,.6);color:#fff;background:rgba(238,125,27,.06);}" +
     ".ca-sug button svg{flex:none;margin-right:8px;vertical-align:-1px;}" +
-    /* — «думает»: мигающий блок-курсор терминала вместо спаркла — */
-    ".ca-typing{align-self:flex-start;display:flex;align-items:center;gap:2px;padding:10px 14px;background:rgba(255,255,255,.05);border-radius:14px;border-bottom-left-radius:5px;font-size:12px;color:rgba(242,243,247,.55);font-family:'JetBrains Mono',monospace;}" +
+    /* — «думает»: мигающий блок-курсор терминала + бегущая полоса; фразы меняются
+         по мере ожидания (ответ провайдера может идти до ~15 c) — */
+    ".ca-typing{align-self:flex-start;display:flex;flex-direction:column;align-items:flex-start;gap:7px;min-width:168px;padding:10px 14px;background:rgba(255,255,255,.05);border-radius:14px;border-bottom-left-radius:5px;font-size:12px;color:rgba(242,243,247,.55);font-family:'JetBrains Mono',monospace;}" +
+    ".ca-typing .tl{display:flex;align-items:center;gap:2px;}" +
+    ".ca-typing .tx{transition:opacity .16s ease;}" +
     ".ca-typing .cur{color:#EE7D1B;animation:caCaret 1s steps(1) infinite;}" +
+    ".ca-typing .tb{position:relative;width:100%;height:2px;border-radius:2px;background:rgba(255,255,255,.08);overflow:hidden;}" +
+    ".ca-typing .tb::after{content:'';position:absolute;top:0;bottom:0;left:0;width:38%;border-radius:2px;background:linear-gradient(90deg,transparent,#EE7D1B,transparent);animation:caScan 1.5s ease-in-out infinite;}" +
     "@keyframes caCaret{50%{opacity:0;}}" +
-    "@media(prefers-reduced-motion:reduce){.ca-typing .cur{animation:none;}}" +
+    "@keyframes caScan{0%{transform:translateX(-100%);}100%{transform:translateX(265%);}}" +
+    "@media(prefers-reduced-motion:reduce){.ca-typing .cur,.ca-typing .tb::after{animation:none;}.ca-typing .tb::after{width:100%;opacity:.5;}}" +
     /* — низ — */
     ".ca-foot{flex:none;border-top:1px solid rgba(255,255,255,.09);padding:10px 12px;}" +
     ".ca-row{display:flex;gap:8px;align-items:flex-end;}" +
@@ -145,11 +151,39 @@
     els.log.scrollTop = els.log.scrollHeight;
   }
 
+  // Фразы ожидания: ответ провайдера идёт от ~2 до ~15 c, и статичное «думаю» на такой
+  // паузе читается как «зависло». Тексты честные — агент действительно получает каталог
+  // продуктов в промпте и отвечает по нему.
+  var TYPING_PHASES = [
+    { at: 0, text: "думаю" },
+    { at: 1800, text: "читаю каталог продуктов" },
+    { at: 4500, text: "сверяю параметры выпусков" },
+    { at: 8000, text: "формулирую ответ" },
+    { at: 12000, text: "почти готово" }
+  ];
+
   function showTyping() {
     var t = document.createElement("div");
     t.className = "ca-typing";
-    t.innerHTML = 'думаю<span class="cur">▍</span>';
+    t.innerHTML = '<span class="tl"><span class="tx">' + TYPING_PHASES[0].text +
+                  '</span><span class="cur">▍</span></span><span class="tb"></span>';
     els.log.appendChild(t); els.log.scrollTop = els.log.scrollHeight;
+
+    var tx = t.querySelector(".tx"), t0 = Date.now(), i = 0;
+    var timer = setInterval(function () {
+      // индикатор убрали (пришёл ответ/ошибка) — сами гасим таймер, без правок в вызовах
+      if (!t.parentNode) { clearInterval(timer); return; }
+      var next = i + 1;
+      if (next >= TYPING_PHASES.length) return;
+      if (Date.now() - t0 < TYPING_PHASES[next].at) return;
+      i = next;
+      tx.style.opacity = "0";
+      setTimeout(function () {
+        if (!t.parentNode) return;
+        tx.textContent = TYPING_PHASES[i].text;
+        tx.style.opacity = "1";
+      }, 160);
+    }, 400);
     return t;
   }
 
