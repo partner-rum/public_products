@@ -124,7 +124,7 @@ window.DIGEST_ARCHIVE = {
      "id": "call",
      "family": "warrant",
      "kind": "Варрант",
-     "name": "Call",
+     "name": "Call 100 CNYRUB",
      "underlying": "CNYRUB",
      "teaser": "Рубль теряет фундаментальные факторы поддержки",
      "tenor": "1 год",
