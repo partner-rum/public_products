@@ -300,6 +300,10 @@ _W, _H, _PAD = 300.0, 130.0, 16.0
 def _x(t): return _PAD + t * (_W - 2 * _PAD)
 def _y(t): return _PAD + t * (_H - 2 * _PAD)
 def _num(v): return str(v).replace(".", ",")
+def _gnum(v):
+    """Число без хвостового нуля: 100.0 -> «100», 86.5 -> «86,5» (иначе «K 100,0»)."""
+    try: return ("%g" % float(v)).replace(".", ",")
+    except (TypeError, ValueError): return _num(v)
 
 def _txt(x, y, s, anchor="start", fill=LAB, size="10.5"):
     return ('<text x="%.1f" y="%.1f" text-anchor="%s" fill="%s" font-size="%s" '
@@ -314,54 +318,98 @@ def _diamond(x, y):
     return ('<rect x="%.1f" y="%.1f" width="7" height="7" transform="rotate(45 %.1f %.1f)" '
             'fill="%s"/>' % (x - 3.5, y - 3.5, x, y, CURVE))
 
+# Варрант (CALL и колл-спред) — как на витрине (chartWarrant в board.html):
+# ось X — уровень базового актива в % от старта, ось Y — выплата в % номинала.
+# Премия рисуется ГОРИЗОНТАЛЬНЫМ уровнем: точка, где линия выплаты его пересекает,
+# и есть безубыток. Раньше премией была подписана плоская часть графика, где выплата
+# как раз НУЛЕВАЯ, — читалось так, будто там что-то платят, и безубыток был не виден
+# (у премии 86,5% он на уровне 186,5%, то есть актив должен почти удвоиться).
+def _warrant_svg(p, cap=None):
+    K = float(p.get("strikePct") or 100)
+    q = float(p.get("premiumPct") or 0)
+    K2 = (K + cap) if cap else None
+    sBe = K + q                                  # безубыток: выплата = премия
+    s0 = K * 0.8
+    s1 = (K2 * 1.18) if K2 else max(K * 1.32, sBe * 1.15)
+
+    def pay(s):
+        v = max(s - K, 0.0)
+        return min(v, cap) if cap else v
+
+    top = cap if cap else pay(s1)
+    ymax = max(top, q) * 1.14 + 4                # и премия, и потолок влезают с воздухом
+    PADL, PADR, PADT, PADB = 8.0, 8.0, 15.0, 24.0   # снизу — место под подпись страйка
+    def X(s): return PADL + (s - s0) / (s1 - s0) * (_W - PADL - PADR)
+    def Y(v): return _H - PADB - (v / ymax) * (_H - PADT - PADB)
+
+    d = "M%.1f %.1f L%.1f %.1f" % (X(s0), Y(0), X(K), Y(0))
+    if K2:
+        d += " L%.1f %.1f L%.1f %.1f" % (X(K2), Y(cap), X(s1), Y(cap))
+    else:
+        d += " L%.1f %.1f" % (X(s1), Y(pay(s1)))
+
+    out = ('<line x1="%.1f" y1="%.1f" x2="%.1f" y2="%.1f" stroke="%s" stroke-width="1"/>'
+           % (PADL, Y(0), _W - PADR, Y(0), AX))                              # нулевая выплата
+    if q:                                                                     # уровень премии
+        out += ('<line x1="%.1f" y1="%.1f" x2="%.1f" y2="%.1f" stroke="%s" stroke-width="1" '
+                'stroke-dasharray="3 3"/>' % (PADL, Y(q), _W - PADR, Y(q), CURVE))
+        out += _txt(PADL + 1, Y(q) - 5, "премия %s%%" % _gnum(q), "start", INK)
+    if K2:                                                                    # потолок колл-спреда
+        out += ('<line x1="%.1f" y1="%.1f" x2="%.1f" y2="%.1f" stroke="%s" stroke-width="1" '
+                'stroke-dasharray="2 4"/>' % (PADL, Y(cap), _W - PADR, Y(cap), AX))
+    out += _line(d)
+    out += _diamond(X(K), Y(0))
+    out += _txt(X(K), Y(0) + 15, "K %s" % _gnum(K), "middle")
+    if q and X(sBe) < _W - PADR - 6:                                          # точка безубытка
+        end = X(sBe) > _W * 0.7
+        out += '<circle cx="%.1f" cy="%.1f" r="3.2" fill="%s"/>' % (X(sBe), Y(q), CURVE)
+        out += _txt(X(sBe) + (-6 if end else 6), Y(q) + 14, "б/у %s" % _gnum(round(sBe, 2)),
+                    "end" if end else "start", INK)
+    out += _txt(_W - PADR, PADT - 4,
+                ("макс. +%s%% ном." % _gnum(cap)) if K2 else "рост без потолка", "end")
+    return out
+
+
 def payoff_svg(p):
     p = p or {}
     t = p.get("type", "")
     e = ""
     if t == "callcap":
-        e = (_base(_y(.15), "потолок") +
-             _line("M%.1f %.1f L%.1f %.1f L%.1f %.1f L%.1f %.1f" %
-                   (_x(0), _y(.85), _x(.38), _y(.85), _x(.74), _y(.15), _x(1), _y(.15))) +
-             _diamond(_x(.74), _y(.15)) +
-             _txt(_W - _PAD, _y(.15) - 8, "макс. +%s%%" % p.get("capPct", ""), "end") +
-             (_txt(_x(.19), _y(.85) + 14, "премия %s%%" % _num(p["premiumPct"]), "middle") if p.get("premiumPct") is not None else ""))
+        e = _warrant_svg(p, cap=float(p.get("capPct") or 0) or None)
     elif t == "call":
-        e = (_line("M%.1f %.1f L%.1f %.1f L%.1f %.1f" %
-                   (_x(0), _y(.85), _x(.38), _y(.85), _x(.97), _y(.14))) +
-             _txt(_W - _PAD, _y(.14) + 2, "рост без потолка", "end") +
-             (_txt(_x(.19), _y(.85) + 14, "премия %s%%" % _num(p["premiumPct"]), "middle") if p.get("premiumPct") is not None else ""))
+        e = _warrant_svg(p)
     elif t == "digital":
         base, up, bx = _y(.62), _y(.18), _x(.56)
         e = (_base(base, "номинал 100%") +
              _line("M%.1f %.1f L%.1f %.1f L%.1f %.1f L%.1f %.1f" % (_PAD, base, bx, base, bx, up, _W - _PAD, up)) +
              _diamond(bx, up) +
-             _txt(_W - _PAD, up - 8, ("барьер +%s%% → " % p["barrierPct"] if p.get("barrierPct") else "") +
-                  "купон %s%%" % p.get("couponPct", ""), "end"))
+             _txt(_W - _PAD, up - 8, ("барьер +%s%% → " % _gnum(p["barrierPct"]) if p.get("barrierPct") else "") +
+                  "купон %s%%" % _gnum(p.get("couponPct", "")), "end"))
     elif t == "protected":
         floor, up, bx = _y(.6), _y(.18), _x(.5)
-        e = (_base(floor, "защита %s%%" % p.get("floorPct", 100)) +
+        e = (_base(floor, "защита %s%%" % _gnum(p.get("floorPct", 100))) +
              _line("M%.1f %.1f L%.1f %.1f L%.1f %.1f L%.1f %.1f" % (_PAD, floor, bx, floor, _x(.86), up, _W - _PAD, up)) +
-             (_txt(_W - _PAD, up - 8, "участие до +%s%%" % p["capPct"], "end") if p.get("capPct") else
+             (_txt(_W - _PAD, up - 8, "участие до +%s%%" % _gnum(p["capPct"]), "end") if p.get("capPct") else
               _txt(_W - _PAD, up - 8, "участие в росте", "end")))
     elif t == "booster":
         zero, cap, x0, xc = _y(.58), _y(.16), _x(.42), _x(.7)
         e = (_base(zero, "номинал 100%") +
              _line("M%.1f %.1f L%.1f %.1f L%.1f %.1f L%.1f %.1f" % (_PAD, _y(.95), x0, zero, xc, cap, _W - _PAD, cap)) +
              _diamond(xc, cap) +
-             _txt(_W - _PAD, cap - 8, "макс. +%s%%" % p.get("capPct", ""), "end") +
-             (_txt(_x(.55), _y(.44), "×%s%%" % p["kuPct"], "start") if p.get("kuPct") else "") +
+             _txt(_W - _PAD, cap - 8, "макс. +%s%%" % _gnum(p.get("capPct", "")), "end") +
+             (_txt(_x(.55), _y(.44), "×%s%%" % _gnum(p["kuPct"]), "start") if p.get("kuPct") else "") +
              _txt(_PAD, _y(.95) + 13, "падение 1:1"))
     elif t == "fixed":
         inY, outY, mid = _y(.72), _y(.2), _x(.52)
         e = ('<line x1="%.1f" y1="%.1f" x2="%.1f" y2="%.1f" stroke="%s" stroke-width="1" stroke-dasharray="2 4"/>' %
-             (_PAD, inY, _W - _PAD, inY, AX) + _txt(_PAD, inY + 14, "вход %s%%" % p.get("entryPct", "")) +
+             (_PAD, inY, _W - _PAD, inY, AX) + _txt(_PAD, inY + 14, "вход %s%%" % _gnum(p.get("entryPct", ""))) +
              '<line x1="%.1f" y1="%.1f" x2="%.1f" y2="%.1f" stroke="%s" stroke-width="2.5" stroke-linecap="round"/>' %
              (_PAD, outY, _W - _PAD, outY, CURVE) + _txt(_W - _PAD, outY - 8, "погашение 100%", "end") +
              '<line x1="%.1f" y1="%.1f" x2="%.1f" y2="%.1f" stroke="%s" stroke-width="1.6" stroke-dasharray="3 3"/>' %
              (mid, inY - 4, mid, outY + 6, CURVE) +
              '<path d="M%.1f %.1f L%.1f %.1f L%.1f %.1f" fill="none" stroke="%s" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>' %
              (mid - 4.5, outY + 11, mid, outY + 4, mid + 4.5, outY + 11, CURVE) +
-             _txt(mid + 10, (inY + outY) / 2 + 4, "+%s%%" % p.get("gainPct", ""), "start", INK, "11.5"))
+             _txt(mid + 10, (inY + outY) / 2 + 4, "+%s%%" % _gnum(p.get("gainPct", "")), "start", INK, "11.5"))
     else:
         e = (_line("M%.1f %.1f C%.1f %.1f %.1f %.1f %.1f %.1f" %
                    (_PAD, _y(.8), _x(.35), _y(.72), _x(.6), _y(.42), _W - _PAD, _y(.2))) +
