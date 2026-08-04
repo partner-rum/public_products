@@ -358,8 +358,13 @@ async function handleChat(request, env, cors, ctx) {
   let cat = { text: "", instr: [], offers: [], ideas: [] };
   try { cat = await buildCatalog(env); } catch (e) { /* каталог необязателен */ }
   const prodCtx = productContext(cat, pageUrl);
+  let morn = null;
+  try { morn = await morningContext(env); } catch (e) { /* контекст необязателен */ }
   const system = SYSTEM_PROMPT +
     (cat.text ? "\n\n=== АКТУАЛЬНЫЙ КАТАЛОГ ===\n" + cat.text : "") +
+    (morn ? "\n\n=== РЫНОЧНЫЙ КОНТЕКСТ (" + morn.label + ", аналитика Rumberg) ===\n" + morn.news +
+            "\nИспользуй как фон при вопросах о рынке, ссылайся как на «наш утренний обзор». " +
+            "О событиях позже этой даты данных нет — так и говори. Прогнозов и обещаний доходности из него не выводи." : "") +
     (pageTitle ? `\n\nСейчас клиент на странице: «${pageTitle}»${pageUrl ? " (" + pageUrl + ")" : ""}.` : "") +
     (prodCtx ? "\n\n=== ПРОДУКТ, КОТОРЫЙ КЛИЕНТ СЕЙЧАС СМОТРИТ (отвечай в первую очередь про него) ===\n" + prodCtx : "");
 
@@ -654,10 +659,35 @@ async function generateMorning(env, article) {
       const fresh = ideas.map((it) => ({ id: it.id, name: it.prodName || "?",
         head: (it.body.split("\n")[0] || "").replace(/\*\*/g, "").trim().slice(0, 80) }));
       await env.POST_KV.put("history", JSON.stringify(fresh.concat(recent).slice(0, 15)));
-      await env.POST_KV.put("morning:" + mskDate().key, "1", { expirationTtl: 172800 });
+      const d = mskDate();
+      await env.POST_KV.put("morning:" + d.key, "1", { expirationTtl: 172800 });
+      // Сжатые новости — в память для AI-консьержа на сайте (см. morningContext):
+      // агент отвечает «что сегодня на рынке» по свежей аналитике, а не общими фразами.
+      await env.POST_KV.put("morning:latest", JSON.stringify({ d: d.key, h: d.human, news }),
+        { expirationTtl: 259200 });
     } catch (e) { /* память необязательна */ }
   }
   return { news, ideas, warn: numbersNotInSource(news, article) };
+}
+
+// Рыночный контекст для /chat: сжатый утренний обзор из KV, не старше 3 дней
+// (выходные переживает, залежалый не подсовываем). Кэш 5 минут в изоляте — как каталог.
+let MORNING_CTX = { at: 0, val: null };
+async function morningContext(env) {
+  const now = Date.now();
+  if (now - MORNING_CTX.at < 5 * 60 * 1000) return MORNING_CTX.val;
+  let val = null;
+  if (env.POST_KV) {
+    try {
+      const raw = await env.POST_KV.get("morning:latest", "json");
+      if (raw && raw.d && raw.news) {
+        const age = (Date.parse(mskDate().key) - Date.parse(raw.d)) / 86400000;
+        if (age >= 0 && age <= 3) val = { label: "утренний обзор от " + (raw.h || raw.d), news: raw.news };
+      }
+    } catch (e) { /* контекст необязателен */ }
+  }
+  MORNING_CTX = { at: now, val };
+  return val;
 }
 
 // Готовый пост возвращается ТОМУ, КТО ПРИСЛАЛ статью (chatId) — сейлз сам публикует
@@ -665,6 +695,10 @@ async function generateMorning(env, article) {
 async function sendMorningDraft(env, article, chatId) {
   const to = chatId || env.ADMIN_CHAT_ID;
   if (!to) return;
+  // Статью помним сутки: кнопка «🔁 Пересобрать» работает без повторной отправки текста
+  if (env.POST_KV) {
+    try { await env.POST_KV.put("morning:article:" + to, article, { expirationTtl: 86400 }); } catch (e) {}
+  }
   let res;
   try {
     res = await generateMorning(env, article);
@@ -683,7 +717,8 @@ async function sendMorningDraft(env, article, chatId) {
     "\n\n💡 <b>Что предложить клиенту сегодня:</b>\n\n" + lines.join("\n\n") +
     "\n\n<i>" + esc(POST_DISCLAIMER) + "</i>";
   await tg(env, "sendMessage", { chat_id: to, text, parse_mode: "HTML",
-    disable_web_page_preview: true });
+    disable_web_page_preview: true,
+    reply_markup: { inline_keyboard: [[{ text: "🔁 Пересобрать", callback_data: "morn" }]] } });
   if (res.warn.length) {
     await tg(env, "sendMessage", { chat_id: to, parse_mode: "HTML",
       text: "⚠️ <b>Проверьте цифры перед публикацией</b> — в статье аналитика не нашёл: " +
@@ -1383,6 +1418,28 @@ async function handleTelegram(request, env) {
   if (cb) {
     const answer = (textMsg, alert) => tg(env, "answerCallbackQuery",
       { callback_query_id: cb.id, text: textMsg || "", show_alert: !!alert });
+
+    // «🔁 Пересобрать» под утренним постом — доступно отправителям статьи (Руслан и
+    // сейлзы из ANALYST_CHAT_ID). Статья лежит в KV сутки; дедуп-память сама подставит
+    // другие продукты. Ветка ДО модераторской проверки: кнопку жмёт не только Руслан.
+    if (cb.data === "morn") {
+      const trusted = [env.ADMIN_CHAT_ID]
+        .concat(String(env.ANALYST_CHAT_ID || "").split(","))
+        .map((s) => String(s || "").trim()).filter(Boolean);
+      if (!trusted.includes(String(cb.from && cb.from.id))) {
+        await answer("Недостаточно прав"); return new Response("ok");
+      }
+      const chatId = cb.message && cb.message.chat && cb.message.chat.id;
+      let article = null;
+      if (env.POST_KV && chatId != null) {
+        try { article = await env.POST_KV.get("morning:article:" + chatId); } catch (e) {}
+      }
+      if (!article) { await answer("Статья уже устарела — пришлите её боту заново.", true); return new Response("ok"); }
+      await answer("Собираю заново…");
+      await sendMorningDraft(env, article, chatId);
+      return new Response("ok");
+    }
+
     // жмёт кнопки только модератор
     if (!env.ADMIN_CHAT_ID || String(cb.from && cb.from.id) !== String(env.ADMIN_CHAT_ID)) {
       await answer("Недостаточно прав"); return new Response("ok");
