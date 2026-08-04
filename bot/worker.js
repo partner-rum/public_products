@@ -33,6 +33,9 @@
 //                     считаются утренней статьёй; готовый пост возвращается ОТПРАВИТЕЛЮ,
 //                     он сам публикует его в канал (копипастой). Руслан (ADMIN_CHAT_ID)
 //                     может слать статью и сам. Свой chat_id каждый узнаёт командой /id.
+//   CHANNEL_ID      — (опц.) канал для кнопки «📢 В канал» у утреннего поста: "@имя_канала"
+//                     или -100…-id. Бот должен быть админом канала с правом публикации.
+//                     Не задан — кнопки нет, публикация копипастой как раньше.
 //
 // Маршруты:
 //   POST /lead   — форма-заявка с сайта  → сообщение в CHAT_ID
@@ -737,14 +740,20 @@ async function sendMorningDraft(env, article, chatId) {
   // внимание к первому (пробовали, откатили по решению Руслана 04.08.2026).
   const preview = { is_disabled: true };
 
-  // Сообщение = готовый пост: скопировал (формат сохраняется) — и в канал.
   const text = "☕️ <b>Утро на рынках</b> · " + esc(mskDate().human) + "\n\n" +
     newsHtml +
     "\n\n💡 <b>Что предложить клиенту сегодня</b>\n\n" + lines.join("\n\n") +
     "\n\n<i>" + esc(POST_DISCLAIMER) + "</i>";
+  // Готовый HTML поста — в KV: кнопка «📢 В канал» публикует его сервером с выключенным
+  // превью. Копипаста превью НЕ выключает (клиент строит его заново) — потому и кнопка.
+  if (env.POST_KV) {
+    try { await env.POST_KV.put("morning:post:" + to, text, { expirationTtl: 86400 }); } catch (e) {}
+  }
+  const buttons = [{ text: "🔁 Пересобрать", callback_data: "morn" }];
+  if (env.CHANNEL_ID) buttons.push({ text: "📢 В канал", callback_data: "mpub" });
   await tg(env, "sendMessage", { chat_id: to, text, parse_mode: "HTML",
     link_preview_options: preview,
-    reply_markup: { inline_keyboard: [[{ text: "🔁 Пересобрать", callback_data: "morn" }]] } });
+    reply_markup: { inline_keyboard: [buttons] } });
   if (res.warn.length) {
     await tg(env, "sendMessage", { chat_id: to, parse_mode: "HTML",
       text: "⚠️ <b>Проверьте цифры перед публикацией</b> — в статье аналитика не нашёл: " +
@@ -1465,6 +1474,36 @@ async function handleTelegram(request, env) {
       await sendMorningDraft(env, article, chatId);
       return new Response("ok");
     }
+
+    // «📢 В канал» — бот публикует утренний пост сам, с выключенным превью.
+    // Копипаста так не умеет: свойство «без превью» не переносится с текстом,
+    // клиент отправителя строит карточку заново. Доступ — тем же доверенным.
+    if (cb.data === "mpub") {
+      const trusted = [env.ADMIN_CHAT_ID]
+        .concat(String(env.ANALYST_CHAT_ID || "").split(","))
+        .map((s) => String(s || "").trim()).filter(Boolean);
+      if (!trusted.includes(String(cb.from && cb.from.id))) {
+        await answer("Недостаточно прав"); return new Response("ok");
+      }
+      if (!env.CHANNEL_ID) { await answer("Канал не настроен (CHANNEL_ID)", true); return new Response("ok"); }
+      const chatId = cb.message && cb.message.chat && cb.message.chat.id;
+      let post = null;
+      if (env.POST_KV && chatId != null) {
+        try { post = await env.POST_KV.get("morning:post:" + chatId); } catch (e) {}
+      }
+      if (!post) { await answer("Пост устарел — пересоберите и публикуйте заново.", true); return new Response("ok"); }
+      const r = await tg(env, "sendMessage", { chat_id: env.CHANNEL_ID, text: post, parse_mode: "HTML",
+        link_preview_options: { is_disabled: true } });
+      let sentOk = false;
+      try { sentOk = (await r.json()).ok === true; } catch (e) {}
+      if (!sentOk) { await answer("Не удалось опубликовать — бот админ канала?", true); return new Response("ok"); }
+      // Кнопку публикации убираем — защита от случайного двойного тапа
+      await tg(env, "editMessageReplyMarkup", { chat_id: chatId, message_id: cb.message.message_id,
+        reply_markup: { inline_keyboard: [[{ text: "✅ Опубликовано", callback_data: "noop" }]] } });
+      await answer("Опубликовано в канал ✅");
+      return new Response("ok");
+    }
+    if (cb.data === "noop") { await answer(""); return new Response("ok"); }
 
     // жмёт кнопки только модератор
     if (!env.ADMIN_CHAT_ID || String(cb.from && cb.from.id) !== String(env.ADMIN_CHAT_ID)) {
