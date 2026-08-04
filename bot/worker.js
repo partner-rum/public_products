@@ -28,9 +28,11 @@
 //   WEBHOOK_SECRET  — ОБЯЗАТЕЛЕН для кнопок ✅/❌: без него /tg не защищён от поддельных approve
 //
 //   --- утренний пост (статья аналитика → новости + продукты дня) ---
-//   ANALYST_CHAT_ID — (опц.) chat_id аналитика: его длинные сообщения (≥600 знаков) в личке бота
+//   ANALYST_CHAT_ID — (опц.) chat_id доверенных отправителей статьи, МОЖНО НЕСКОЛЬКО через
+//                     запятую ("123,456"). Их длинные сообщения (≥600 знаков) в личке бота
 //                     считаются утренней статьёй. Руслан (ADMIN_CHAT_ID) может слать статью сам.
-//                     Готовый пост приходит Руслану, публикация в канал — руками (копипастой).
+//                     Свой chat_id каждый узнаёт командой /id боту. Готовый пост приходит
+//                     Руслану, публикация в канал — руками (копипастой).
 //
 // Маршруты:
 //   POST /lead   — форма-заявка с сайта  → сообщение в CHAT_ID
@@ -1418,10 +1420,22 @@ async function handleTelegram(request, env) {
     const from = msg.from || {};
     const who = (from.username ? "@" + from.username : [from.first_name, from.last_name].filter(Boolean).join(" ")) || from.id;
 
+    // Свой chat_id — чтобы Руслан добавил человека в ANALYST_CHAT_ID без гаданий.
+    // Отвечаем только в личке: в группах команда создавала бы шум.
+    if (msg.text.startsWith("/id")) {
+      if (msg.chat && msg.chat.type === "private") {
+        await tg(env, "sendMessage", { chat_id: msg.chat.id,
+          text: "Ваш chat_id: " + msg.chat.id + "\nПередайте его Руслану — он включит вам доступ к утренним постам." });
+      }
+      return new Response("ok");
+    }
+
     // Утренняя статья аналитика: длинный текст в личке от доверенного отправителя
-    // (Руслан или аналитик из ANALYST_CHAT_ID) → сжимаем в пост и шлём Руслану.
+    // (Руслан или любой из списка ANALYST_CHAT_ID, через запятую) → пост Руслану.
     // Порог 600 знаков отделяет статью от обычных сообщений — их пересылаем как раньше.
-    const trusted = [env.ADMIN_CHAT_ID, env.ANALYST_CHAT_ID].filter(Boolean).map(String);
+    const trusted = [env.ADMIN_CHAT_ID]
+      .concat(String(env.ANALYST_CHAT_ID || "").split(","))
+      .map((s) => String(s || "").trim()).filter(Boolean);
     if (trusted.includes(String(from.id)) && msg.chat && msg.chat.type === "private" &&
         !msg.text.startsWith("/") && msg.text.length >= 600) {
       await tg(env, "sendMessage", { chat_id: msg.chat.id,
