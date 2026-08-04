@@ -9,7 +9,7 @@
 <meta property="og:site_name" content="Rumberg">
 <meta property="og:locale" content="ru_RU">
 <meta property="og:title" content="Как продавать с сайтом Rumberg — онлайн, 6 августа">
-<meta property="og:description" content="Живой разбор invest.rumberg.ru за 30 минут: доска прайсинга, карточка, one-pager, заявки и AI-ассистент. Для агентов и сейлзов.">
+<meta property="og:description" content="Живой разбор invest.rumberg.ru за 30 минут: доска прайсинга, карточка, one-pager, заявки и AI-ассистент. Для агентов и партнёров.">
 <meta property="og:url" content="https://invest.rumberg.ru/events.html">
 <link rel="canonical" href="https://invest.rumberg.ru/events.html">
 <meta property="og:image" content="https://invest.rumberg.ru/og-event-v2.png">
@@ -63,6 +63,11 @@
   .cl{font-family:var(--m);font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--mut2);margin-bottom:10px}
   .cv{font-family:var(--d);font-weight:800;font-size:24px;line-height:1.12}
   .cs{font-size:14.5px;color:var(--mut);margin-top:9px;line-height:1.5}
+  /* ссылка на подключение: показывается только когда в EVENT.joinUrl есть адрес,
+     иначе скрыта — чтобы после мероприятия не висела мёртвая ссылка */
+  .join{display:none;margin-top:14px;font-family:var(--f);font-weight:600;font-size:15px;
+    color:var(--or);text-decoration:none;border-bottom:1px solid rgba(238,125,27,.35);padding-bottom:2px}
+  .join:hover{color:var(--or2);border-bottom-color:var(--or2)}
   .cv b,.cs b{color:var(--or)}
 
   .hero-cell{grid-column:2/4;display:flex;flex-direction:column;justify-content:center}
@@ -157,7 +162,7 @@
 <section class="hero">
   <div class="glow"></div>
   <div class="wrap">
-    <div class="kick">Ближайшее мероприятие · для агентов и сейлзов</div>
+    <div class="kick">Ближайшее мероприятие · для агентов и партнёров</div>
     <div class="bento">
 
       <div class="cell ph-cell">
@@ -187,7 +192,8 @@
       <div class="cell when">
         <div class="cl">Когда</div>
         <div class="cv">Четверг, <b>6 августа</b> · 15:00 МСК</div>
-        <div class="cs">30 минут + ответы на вопросы. Ссылку на Контур.Толк пришлём в Telegram перед началом. Будет запись.</div>
+        <div class="cs">30 минут + ответы на вопросы. Будет запись.</div>
+        <a class="join" id="joinLink" href="#" target="_blank" rel="noopener">Подключиться в Контур.Толк →</a>
       </div>
 
       <div class="cell speaker">
@@ -218,7 +224,7 @@
     <button class="x" id="close" aria-label="Закрыть">✕</button>
     <div id="formStep">
       <h3 id="mTitle">Записаться на мероприятие</h3>
-      <div class="md">Четверг, 6 августа · 15:00 МСК. Ссылку на Контур.Толк пришлём в Telegram перед началом.</div>
+      <div class="md">Четверг, 6 августа · 15:00 МСК, Контур.Толк. Напомним в Telegram перед началом.</div>
       <form id="regForm">
         <div class="fld"><label for="nm">Как вас зовут</label><input id="nm" name="name" autocomplete="name" placeholder="Имя"></div>
         <div class="fld"><label for="ct">Telegram или телефон</label><input id="ct" name="contact" autocomplete="off" placeholder="@username или +7…" required></div>
@@ -229,7 +235,8 @@
     <div id="doneStep" class="done" style="display:none">
       <div class="ok">✓</div>
       <h3>Готово, вы записаны!</h3>
-      <p>Ссылку на Контур.Толк пришлём в Telegram перед началом. Добавьте мероприятие в календарь, чтобы не забыть.</p>
+      <p>Напомним в Telegram перед началом. Добавьте мероприятие в календарь — ссылка на подключение будет и в нём.</p>
+      <a class="join" id="joinLink2" href="#" target="_blank" rel="noopener" style="margin:0 0 14px">Подключиться в Контур.Толк →</a>
       <div class="row">
         <button class="btn" id="calBtn" type="button">В календарь</button>
         <a class="btn ghost" id="tgBtn" href="https://t.me/+NHbVOoUI5IBkN2Uy" target="_blank" rel="noopener">Наш Telegram</a>
@@ -251,6 +258,7 @@
     icsEnd:   "20260806T123000Z",              // +30 минут
     icsUid:   "rmbrg-event-20260806@invest.rumberg.ru",
     icsFile:  "rumberg-event-06-08.ics",
+    joinUrl:  "https://i1pujnc1.ktalk.ru/app/stream/auditoriums/0f533da2-21e4-4331-bfd7-31eb368befce",
     recordingUrl: ""                           // после мероприятия: ссылка на запись → страница
                                                // сама перейдёт в режим «Смотреть запись»
   };
@@ -258,6 +266,18 @@
   var ov = document.getElementById("ov");
   function openModal(){ ov.classList.add("on"); document.body.style.overflow="hidden"; setTimeout(function(){var n=document.getElementById("nm"); if(n) n.focus();},50); }
   function closeModal(){ ov.classList.remove("on"); document.body.style.overflow=""; }
+
+  // Ссылка на подключение проставляется из конфига в двух местах — карточка «Когда» и
+  // подтверждение после записи. Если joinUrl пуст (или уже есть запись — подключаться
+  // некуда), ссылки остаются скрытыми: висящий мёртвый адрес хуже его отсутствия.
+  var joinReady = !!EVENT.joinUrl && !EVENT.recordingUrl;
+  ["joinLink", "joinLink2"].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    // именно inline-block, а не "": пустая строка лишь снимает инлайн-стиль, а display:none
+    // задан в самом правиле .join и остался бы в силе
+    if (joinReady) { el.href = EVENT.joinUrl; el.style.display = "inline-block"; }
+  });
 
   // Режим «после мероприятия»: если в EVENT.recordingUrl вписана ссылка на запись,
   // обе кнопки «Записаться» превращаются в «Смотреть запись» (форма больше не нужна).
@@ -330,8 +350,11 @@
       "DTSTART:" + EVENT.icsStart,
       "DTEND:" + EVENT.icsEnd,
       "SUMMARY:" + EVENT.title + " (онлайн)",
-      "DESCRIPTION:Онлайн-разбор invest.rumberg.ru для агентов. Ссылку на Контур.Толк пришлём в Telegram перед началом.",
-      "URL:https://invest.rumberg.ru/events.html",
+      // LOCATION с адресом подключения — календари делают его кликабельным в напоминании
+      "LOCATION:" + (EVENT.joinUrl || "Онлайн"),
+      "DESCRIPTION:Онлайн-разбор invest.rumberg.ru для агентов и партнёров. Подключение: " +
+        (EVENT.joinUrl || "ссылку пришлём в Telegram перед началом"),
+      "URL:" + (EVENT.joinUrl || "https://invest.rumberg.ru/events.html"),
       "END:VEVENT","END:VCALENDAR"
     ].join("\r\n");
     var blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
