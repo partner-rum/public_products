@@ -708,16 +708,36 @@ async function sendMorningDraft(env, article, chatId) {
             "\nПришлите статью ещё раз — попробую заново." });
     return;
   }
+  // Новостные блоки — в <blockquote>: вертикальная полоса даёт визуальную структуру.
+  // Многострочный блок (модель перенесла мысль) приклеиваем к своему флагу-эмодзи.
+  const rawLines = postToTgHtml(res.news).split(/\n+/).filter(Boolean);
+  const blocks = [];
+  for (const l of rawLines) {
+    if (/^(🌍|🇺🇸|🇷🇺)/.test(l) || !blocks.length) blocks.push(l);
+    else blocks[blocks.length - 1] += "\n" + l;
+  }
+  const newsHtml = blocks.map((b) => "<blockquote>" + b + "</blockquote>").join("\n");
+
+  // Продукт: номер + название-ссылка жирным, зацепка под ним — без служебной строки «🔗».
   const nums = ["1️⃣", "2️⃣", "3️⃣"];
   const lines = res.ideas.slice(0, 3).map((it, i) =>
-    nums[i] + " " + postToTgHtml(it.body) + '\n🔗 <a href="' + it.prodUrl + '">' + esc(it.prodName) + "</a>");
+    nums[i] + ' <a href="' + it.prodUrl + '"><b>' + esc(it.prodName) + "</b></a>\n" + postToTgHtml(it.body));
+
+  // Превью поста — персональная og-карточка первого продукта доски (p/<id>.html,
+  // график выплаты 1200×630). Для первички p/-шелла может не быть — тогда без превью.
+  const base = (env.SITE_BASE || "https://invest.rumberg.ru/").replace(/\/?$/, "/");
+  const firstBoard = res.ideas.find((it) => it.prodUrl.includes("instrument.html"));
+  const preview = firstBoard
+    ? { url: base + "p/" + firstBoard.id + ".html", prefer_large_media: true }
+    : { is_disabled: true };
+
   // Сообщение = готовый пост: скопировал (формат сохраняется) — и в канал.
   const text = "☕️ <b>Утро на рынках</b> · " + esc(mskDate().human) + "\n\n" +
-    postToTgHtml(res.news) +
-    "\n\n💡 <b>Что предложить клиенту сегодня:</b>\n\n" + lines.join("\n\n") +
+    newsHtml +
+    "\n\n💡 <b>Что предложить клиенту сегодня</b>\n\n" + lines.join("\n\n") +
     "\n\n<i>" + esc(POST_DISCLAIMER) + "</i>";
   await tg(env, "sendMessage", { chat_id: to, text, parse_mode: "HTML",
-    disable_web_page_preview: true,
+    link_preview_options: preview,
     reply_markup: { inline_keyboard: [[{ text: "🔁 Пересобрать", callback_data: "morn" }]] } });
   if (res.warn.length) {
     await tg(env, "sendMessage", { chat_id: to, parse_mode: "HTML",
