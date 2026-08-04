@@ -58,7 +58,7 @@ export default {
     if (url.pathname === "/click" && request.method === "POST") return handleClick(request, env, cors);
     if (url.pathname === "/chat" && request.method === "POST") return handleChat(request, env, cors, ctx);
     if (url.pathname === "/submit" && request.method === "POST") return handleSubmit(request, env, cors);
-    if (url.pathname === "/tg" && request.method === "POST") return handleTelegram(request, env);
+    if (url.pathname === "/tg" && request.method === "POST") return handleTelegram(request, env, ctx);
 
     return new Response("OK", { status: 200, headers: cors });
   },
@@ -443,14 +443,17 @@ async function streamChat(provider, system, messages, env, cors) {
 }
 
 // YandexGPT (Yandex Cloud Foundation Models) — основной провайдер /chat
-async function callYandex(system, messages, env) {
+async function callYandex(system, messages, env, opts = {}) {
   const key = (env.YANDEX_API_KEY || "").trim();
   const folder = (env.YANDEX_FOLDER_ID || "").trim();
   if (!key || !folder) throw new Error("not_configured");
   const model = (env.YANDEX_MODEL || "yandexgpt/latest").trim();
   const body = {
     modelUri: "gpt://" + folder + "/" + model,
-    completionOptions: { stream: false, temperature: 0.3, maxTokens: "800" },
+    completionOptions: { stream: false,
+      temperature: opts.temperature != null ? opts.temperature : 0.3,
+      // бюджет обязан приходить снаружи: утренний JSON в 800 токенов не влезает
+      maxTokens: String(opts.maxTokens != null ? opts.maxTokens : 800) },
     messages: [{ role: "system", text: system }].concat(
       messages.map((m) => ({ role: m.role, text: m.content }))
     ),
@@ -481,12 +484,17 @@ async function callDeepSeek(system, messages, env, opts = {}) {
       ),
       temperature: opts.temperature != null ? opts.temperature : 0.3,
       max_tokens: opts.maxTokens != null ? opts.maxTokens : 800, stream: !!opts.stream,
+      // json-режим: модель обязана вернуть валидный JSON (нужен утреннему конвейеру)
+      ...(opts.json ? { response_format: { type: "json_object" } } : {}),
     }),
   });
   if (opts.stream) return r;   // сырой ответ — его SSE перекладывает streamChat()
   if (!r.ok) throw new Error("upstream_" + r.status);
   const data = await r.json();
   const c = data && data.choices && data.choices[0];
+  // json-режим: упор в max_tokens отдаёт недописанный JSON без внешних признаков —
+  // сигналим вызывающему, чтобы ретрай знал настоящую причину, а не гадал
+  if (opts.json && c && c.finish_reason === "length") throw new Error("upstream_length");
   return ((c && c.message && c.message.content) || "").trim();
 }
 
@@ -523,7 +531,7 @@ async function callClaude(system, messages, env, opts = {}) {
 async function callLLM(provider, system, messages, env, opts) {
   const p = (provider || "deepseek").toLowerCase();
   if (p === "claude") return callClaude(system, messages, env, opts);
-  if (p === "yandex") return callYandex(system, messages, env);
+  if (p === "yandex") return callYandex(system, messages, env, opts);
   return callDeepSeek(system, messages, env, opts);
 }
 
@@ -555,31 +563,29 @@ const POST_DISCLAIMER = "Не является индивидуальной ин
 // ============================================================================
 // Утренний пост: статья аналитика (личка бота) → сжатые новости + продукты дня
 // ============================================================================
-const MORNING_SYSTEM = `Ты — редактор утреннего поста Telegram-канала компании Rumberg для агентов по продажам (структурные продукты, только квалифицированные инвесторы). Тебе дают: утренний обзор аналитика и каталог продуктов. Собери материал СТРОГО в формате:
+const MORNING_SYSTEM = `Ты — редактор утреннего поста Telegram-канала компании Rumberg для агентов по продажам (структурные продукты, только квалифицированные инвесторы). Тебе дают утренний обзор аналитика и каталог продуктов.
 
-===НОВОСТИ===
-🌍 **<тезис 2–4 слова>** — 1–2 предложения по геополитике/сырью из статьи, в конце короткий вывод.
-🇺🇸 **<тезис>** — 1–2 предложения по рынку США из статьи.
-🇷🇺 **<тезис>** — 1–2 предложения по российскому рынку из статьи.
+Ответь ОДНИМ валидным JSON-объектом без какого-либо текста вокруг, строго по схеме:
+{"news":[
+  {"flag":"🌍","title":"<тезис 2–4 слова>","text":"<1–2 предложения по геополитике/сырью из статьи, в конце короткий вывод; до 300 знаков>"},
+  {"flag":"🇺🇸","title":"<тезис>","text":"<1–2 предложения по рынку США из статьи; до 300 знаков>"},
+  {"flag":"🇷🇺","title":"<тезис>","text":"<1–2 предложения по российскому рынку из статьи; до 300 знаков>"}
+],"products":[
+  {"id":"<id из каталога>","hook":"<зацепка до 140 знаков, связывает продукт с новостями дня>"},
+  {"id":"<id>","hook":"<...>"},
+  {"id":"<id>","hook":"<...>"}
+]}
 
-Заголовок-тезис — с характером, как газетный анонс, а НЕ сухая рубрика: «Мир хрупок» — хорошо,
-«Геополитика» — плохо; «Ставки не спешат вниз» — хорошо, «Рынок США» — плохо. Без кликбейта и
-паники, факт из статьи должен тезис подтверждать.
-===ПРОДУКТЫ===
-[id продукта из каталога]
-Одна фраза-зацепка (до 140 знаков), связывающая продукт с новостями дня.
+ЖЁСТКИЕ ПРАВИЛА (нарушение = брак):
+- title — газетный тезис с характером («Мир хрупок», «Ставки не спешат вниз»), НЕ сухая рубрика («Геополитика», «Рынок США» — брак). Без кликбейта: факт из статьи обязан тезис подтверждать. Без точки в конце.
+- text: факты и цифры ТОЛЬКО из статьи аналитика. Цифры переноси КАК В СТАТЬЕ — не округляй и не «освежай» из своих знаний. Чего в статье нет — того не пишешь.
+- Если статья тему блока НЕ покрывает — НЕ сочиняй: поставь title "Без обновлений" и text "Эту тему сегодняшний обзор не затрагивает." Такой блок в пост не попадёт.
+- Флаги строго в порядке схемы: news[1] всегда 🌍, news[2] всегда 🇺🇸, news[3] всегда 🇷🇺.
+- products: ровно 3 РАЗНЫХ продукта, id бери ТОЛЬКО из [скобок] в начале строк каталога. Подбирай под темы статьи: разворот/снижение ставок → облигации и варранты на ОФЗ; слабый рубль → валютные активы (CNY, USD); сырьё/акции → соответствующие базовые активы. Темы не совпали — просто 3 разных типа.
+- hook: обобщённая зацепка («когда ставки снижаются…»), НЕ утверждай событий, которых нет в статье. Цену из каталога помечай словом «индикативно». НЕ обещай доходность, НЕ пиши «X% годовых», слова «нота» и «гарантированный» запрещены. Внутренние id в hook не пиши.
 
-РОВНО 3 продукта, между блоками — пустая строка. Больше НИЧЕГО: ни вступления, ни ссылок, ни дисклеймера.
-
-ЖЁСТКИЕ ПРАВИЛА (нарушение недопустимо):
-- Факты и цифры в НОВОСТЯХ — ТОЛЬКО из статьи аналитика. Цифры переноси КАК В СТАТЬЕ, не округляй и не «освежай» из своих знаний. Чего в статье нет — того не пишешь.
-- Каждый новостной блок ≤ 320 знаков. Пиши плотно, без воды.
-- Продукты, цены, ISIN — ТОЛЬКО из каталога. [id] бери из начала строки каталога.
-- Продукты подбирай под темы статьи: разворот/снижение ставок → облигации и варранты на ОФЗ, слабый рубль → валютные активы (CNY, USD), сырьё → соответствующие акции. Темы не совпали — просто возьми 3 разных типа.
-- Зацепка продукта — обобщённая («когда ставки снижаются…»), НЕ утверждай событий, которых нет в статье.
-- НЕ обещай доходность, НЕ пиши «X% годовых». Цену/премию помечай словом «индикативно».
-- Слово «Нота»/«нота» запрещено: пиши «варрант», «дисконтная облигация», «структурная облигация».
-- Без индивидуальных инвестрекомендаций и внутренних id в тексте фраз.`;
+Пример ФОРМЫ ответа (содержание всегда бери из статьи и каталога, а не отсюда):
+{"news":[{"flag":"🌍","title":"Нефть не верит миру","text":"Переговоры буксуют, поставки под риском — премия за геополитику остаётся в цене."},{"flag":"🇺🇸","title":"Ставки давят","text":"Доходности длинных бумаг у максимумов, рынок ждёт сигнала ФРС."},{"flag":"🇷🇺","title":"Рынок без покупателя","text":"Объёмы торгов низкие, индекс у сопротивления — импульса нет."}],"products":[{"id":"AAA-1","hook":"Когда ставки разворачиваются, длинные облигации растут первыми — вход долей номинала, индикативно."},{"id":"BBB-2","hook":"Слабый рубль — участие в росте юаня без плеча."},{"id":"CCC-3","hook":"Просадка в сырье — ускоренное участие в восстановлении."}]}`;
 
 // Дата по МСК: ключ для KV («2026-08-04») и человеческая подпись («4 августа»)
 function mskDate() {
@@ -596,18 +602,97 @@ function mskDate() {
 // LLM любит «освежать» котировки из своих знаний — это единственный способ поймать.
 function numbersNotInSource(newsText, article) {
   const norm = (s) => String(s).replace(/\./g, ",");
+  // разряды «2 262,75» схлопываем на ОБЕИХ сторонах — иначе дословно перенесённое
+  // из статьи число объявлялось выдуманным (пробел или NBSP между цифрами)
+  const collapse = (s) => s.replace(/(\d)[  ]+(?=\d)/g, "$1");
   const src = norm(article);
+  const srcC = collapse(src);
+  // третий вариант источника: срезаны разрядные запятые («5.000»→norm→«5,000»→«5000»)
+  const srcT = srcC.replace(/(\d),(?=\d{3}(?:\D|$))/g, "$1");
   const out = [];
-  for (const m of norm(newsText).matchAll(/\d[\d\s]*(?:,\d+)?/g)) {
-    const n = m[0].replace(/\s+/g, "");
+  // внутри числа допускаем только пробел/NBSP, не \n — перенос строки склеивал
+  // числа соседних блоков в один несуществующий кандидат
+  for (const m of norm(newsText).matchAll(/\d[\d  ]*(?:,\d+)?/g)) {
+    const n = m[0].replace(/[  ]+/g, "");
     if (n.replace(/\D/g, "").length < 3) continue;       // короткие (годы жизни, «30 минут») не проверяем
-    if (src.includes(n)) continue;
-    // допускаем округление хвоста: «4,684» в статье ↔ «4,68» в посте
-    const re = new RegExp(n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\d");
-    if (re.test(src)) continue;
-    out.push(m[0].trim());
+    let found = false;
+    for (const c of [n, n.replace(/,/g, "")]) {          // «5,000» ↔ «5000»
+      if (src.includes(c) || srcC.includes(c) || srcT.includes(c)) { found = true; break; }
+      // допускаем округление хвоста: «4,684» в статье ↔ «4,68» в посте
+      const re = new RegExp(c.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\d");
+      if (re.test(src) || re.test(srcC) || re.test(srcT)) { found = true; break; }
+    }
+    if (!found) out.push(m[0].trim());
   }
   return [...new Set(out)];
+}
+
+// Достаём JSON из ответа модели: терпим ```json-заборы и болтовню вокруг объекта.
+function parseMorningJson(raw) {
+  let s = String(raw || "").trim();
+  const fence = s.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (fence) s = fence[1].trim();
+  const a = s.indexOf("{"), b = s.lastIndexOf("}");
+  if (a < 0 || b <= a) return null;
+  try { return JSON.parse(s.slice(a, b + 1)); } catch (e) { return null; }
+}
+
+// Проверка ответа кодом, а не надеждой: каждая проблема — строка-инструкция, которую
+// можно вернуть модели на доработку. ids — множество допустимых id (из ОТФИЛЬТРОВАННОГО
+// каталога: так дедуп недавних продуктов превращается из просьбы в требование).
+const MORNING_FLAGS = ["🌍", "🇺🇸", "🇷🇺"];
+// Блок-заглушка «тема не покрыта статьёй» — честный выход вместо сочинительства.
+// В пост и в morning:latest такие блоки не попадают.
+const isMorningStub = (b) => !!(b && typeof b.text === "string" && /не затрагивает/i.test(b.text));
+function morningLint(p, ids, article) {
+  if (!p || typeof p !== "object") return ["ответ не является JSON-объектом — верни один объект по схеме"];
+  const probs = [];
+  const news = Array.isArray(p.news) ? p.news : [];
+  if (news.length !== 3) probs.push("в news должно быть ровно 3 блока (сейчас " + news.length + ")");
+  // сухая рубрика вместо тезиса — главный источник «скучных» заголовков
+  const RUBRIC = /^(геополитика|сша|рынок сша|россия|российский рынок|рынок рф|рынок|новости|макро|трежерис|treasur\w*|сырьё|нефть)\.?$/i;
+  news.forEach((b, i) => {
+    const n = "news[" + (i + 1) + "]";
+    if (!b || typeof b.title !== "string" || !b.title.trim() || typeof b.text !== "string" || !b.text.trim()) {
+      probs.push(n + ": нужны непустые title и text"); return;
+    }
+    // флаг закреплён за слотом схемы — проверки «из множества» мало: три 🌍 подряд проходили
+    if (i < 3 && b.flag !== MORNING_FLAGS[i]) probs.push(n + ": flag должен быть " + MORNING_FLAGS[i] + " (порядок: мир, США, РФ)");
+    if (isMorningStub(b)) return;               // заглушке стиль и цифры не проверяем
+    if (b.title.trim().split(/\s+/).length > 5) probs.push(n + ": title длиннее 4–5 слов — сократи до тезиса");
+    if (RUBRIC.test(b.title.trim())) probs.push(n + ": title «" + b.title.trim() + "» — сухая рубрика, нужен тезис с характером");
+    if (b.text.length > 340) probs.push(n + ": text длиннее 320 знаков (" + b.text.length + ") — сожми");
+  });
+  const prods = Array.isArray(p.products) ? p.products : [];
+  if (prods.length < 3) probs.push("в products должно быть 3 позиции (сейчас " + prods.length + ")");
+  const seen = new Set();
+  // ровно 3 — как в рендере: брак 4-го, который никогда не публикуется, сжигал бы ретрай
+  prods.slice(0, 3).forEach((pr, i) => {
+    const n = "products[" + (i + 1) + "]";
+    if (!pr || typeof pr.id !== "string" || typeof pr.hook !== "string" || !pr.hook.trim()) {
+      probs.push(n + ": нужны id и hook"); return;
+    }
+    if (!ids.has(pr.id)) probs.push(n + ": id «" + pr.id + "» нет в каталоге — возьми id из [скобок] строки каталога");
+    if (seen.has(pr.id)) probs.push(n + ": продукт повторяется — нужны 3 разных");
+    seen.add(pr.id);
+    if (pr.hook.length > 160) probs.push(n + ": hook длиннее 140 знаков — сократи");
+  });
+  // запрещённые слова (\b не работает с кириллицей — границы через lookaround);
+  // {0,3} покрывает падежи «нотой/нотами/нотах», но не пускает «нотацию»
+  const all = news.map((b) => ((b && b.title) || "") + " " + ((b && b.text) || ""))
+    .concat(prods.map((pr) => (pr && pr.hook) || "")).join("\n");
+  if (/(?<![а-яё])нот[а-яё]{0,3}(?![а-яё])/i.test(all)) probs.push("слово «нота» запрещено — назови тип инструмента (варрант, дисконтная облигация)");
+  if (/%\s*годовых/i.test(all)) probs.push("«% годовых» запрещено — убери обещание доходности");
+  if (/гарантир/i.test(all)) probs.push("«гарантированный» запрещено");
+  // цифры в новостях (и заголовках) обязаны быть из статьи; проверяем поблочно, чтобы
+  // числа соседних блоков не склеивались; hooks не проверяем — там цены из каталога
+  const fake = new Set();
+  for (const b of news) {
+    if (!b || isMorningStub(b)) continue;
+    for (const t of numbersNotInSource(((b.title || "") + " " + (b.text || "")), article)) fake.add(t);
+  }
+  if (fake.size) probs.push("цифры не из статьи: " + [...fake].join(", ") + " — возьми точные значения из статьи или убери их");
+  return probs;
 }
 
 async function generateMorning(env, article) {
@@ -633,48 +718,88 @@ async function generateMorning(env, article) {
 
   const system = MORNING_SYSTEM +
     (catText ? "\n\n=== АКТУАЛЬНЫЙ КАТАЛОГ (единственный источник продуктов и [id]) ===\n" + catText : "");
-  const user = "СТАТЬЯ АНАЛИТИКА:\n\n" + article.slice(0, 12000);
   const provider = env.POST_PROVIDER || env.CHAT_PROVIDER || "deepseek";
-  const raw = await callLLM(provider, system, [{ role: "user", content: user }], env,
-    { temperature: 0.4, maxTokens: 1400, model: env.POST_MODEL });
 
-  // Режем на секции. Модель иногда теряет маркеры — тогда честно падаем в ошибку,
-  // Руслан перегенерирует повторной отправкой статьи.
-  const mNews = /===НОВОСТИ===\s*([\s\S]*?)===ПРОДУКТЫ===/.exec(raw || "");
-  const mProd = /===ПРОДУКТЫ===\s*([\s\S]*)$/.exec(raw || "");
-  if (!mNews || !mProd) throw new Error("модель вернула ответ без секций НОВОСТИ/ПРОДУКТЫ");
-  const news = mNews[1].trim();
+  // Допустимые id — из отфильтрованного каталога: недавние продукты для модели не существуют.
+  const idSet = new Set();
+  for (const mm of catText.matchAll(/^- \[([\w.\-]+)\]/gm)) idSet.add(mm[1]);
+
+  // До двух попыток: браку возвращаем конкретный список проблем — модель чинит сама.
+  // Это надёжнее «жёстких правил» в промпте: правила она читает, а брак — исправляет.
+  let messages = [{ role: "user", content: "СТАТЬЯ АНАЛИТИКА:\n\n" + article.slice(0, 12000) }];
+  let parsed = null, problems = [], best = null;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    let raw = "";
+    try {
+      raw = await callLLM(provider, system, messages, env,
+        { temperature: 0.4, maxTokens: attempt ? 2600 : 1400, model: env.POST_MODEL, json: true });
+    } catch (e) {
+      // обрезка по max_tokens — единственная ошибка, которую лечит ретрай: даём больший
+      // бюджет и просим короче (без этого фидбек «верни JSON» бил мимо настоящей причины)
+      if (attempt === 0 && /upstream_length/.test(String((e && e.message) || e))) {
+        messages = messages.concat([{ role: "user",
+          content: "Твой прошлый ответ обрезался лимитом. Сократи text каждого блока до 250 знаков, hook — до 120, и верни JSON целиком." }]);
+        continue;
+      }
+      if (best) break;                          // первая попытка была пригодной — берём её
+      throw e;
+    }
+    parsed = parseMorningJson(raw);
+    problems = morningLint(parsed, idSet, article);
+    // помним лучшую попытку: вторая может выйти ХУЖЕ первой или вовсе не распарситься
+    if (parsed && (!best || problems.length < best.problems.length)) best = { parsed, problems };
+    if (!problems.length) break;
+    if (attempt === 0) {
+      messages = messages.concat([
+        { role: "assistant", content: raw || "{}" },   // пустой content ломал бы ретрай-диалог
+        { role: "user", content: "Брак. Исправь и верни JSON ЦЕЛИКОМ по той же схеме:\n- " + problems.join("\n- ") },
+      ]);
+    }
+  }
+  if (best) { parsed = best.parsed; problems = best.problems; }
+  if (!parsed || !Array.isArray(parsed.news) || !Array.isArray(parsed.products)) {
+    throw new Error("модель не вернула валидный JSON после двух попыток");
+  }
+
+  // Флаг ставим ПО СЛОТУ схемы (мир/США/РФ) — перепутанные флаги рендер чинит сам;
+  // блоки-заглушки «тема не покрыта» отфильтровываем: их в посте быть не должно.
+  const blocks = parsed.news.slice(0, 3)
+    .map((b, i) => (b && typeof b.title === "string" && b.title.trim() && typeof b.text === "string" && b.text.trim())
+      ? { flag: MORNING_FLAGS[i], title: b.title.trim().replace(/\.$/, ""), text: b.text.trim(), stub: isMorningStub(b) }
+      : null)
+    .filter((b) => b && !b.stub);
+  if (!blocks.length) throw new Error("статья не покрывает ни одной из тем поста");
 
   const ideas = [];
-  const re = /\[([\w.\-]+)\]\s*([\s\S]*?)(?=\n\s*\[[\w.\-]+\]|$)/g;
-  let m;
-  while ((m = re.exec(mProd[1])) !== null) {
-    const id = m[1], body = (m[2] || "").trim();
-    if (!body) continue;
-    let prodUrl = "", prodName = "";
-    const off = (cat.offers || []).find((o) => o.id === id);
-    const ins = (cat.instr || []).find((p) => p.id === id);
-    if (off) { prodUrl = base + "offerings.html#" + off.id; prodName = off.name; }
-    else if (ins) { prodUrl = base + "instrument.html?id=" + ins.id; prodName = ins.name; }
-    if (prodUrl) ideas.push({ id, body, prodUrl, prodName });   // без ссылки продукт не берём
+  for (const pr of parsed.products.slice(0, 3)) {
+    if (!pr || typeof pr.id !== "string" || typeof pr.hook !== "string" || !pr.hook.trim()) continue;
+    // жёстко: только id из отфильтрованного каталога (запрет недавних) и без дублей
+    if (!idSet.has(pr.id) || ideas.some((x) => x.id === pr.id)) continue;
+    const off = (cat.offers || []).find((o) => o.id === pr.id);
+    const ins = (cat.instr || []).find((p) => p.id === pr.id);
+    if (off) ideas.push({ id: pr.id, body: pr.hook.trim(), prodUrl: base + "offerings.html#" + off.id, prodName: off.name });
+    else if (ins) ideas.push({ id: pr.id, body: pr.hook.trim(), prodUrl: base + "instrument.html?id=" + ins.id, prodName: ins.name });
   }
-  if (!ideas.length) throw new Error("модель не подобрала продукты из каталога");
+  if (ideas.length < 2) throw new Error("модель не подобрала продукты из каталога");
 
   // Дедуп-память и отметка «сегодня пост собран» (для напоминалки в cron)
   if (env.POST_KV) {
     try {
       const fresh = ideas.map((it) => ({ id: it.id, name: it.prodName || "?",
-        head: (it.body.split("\n")[0] || "").replace(/\*\*/g, "").trim().slice(0, 80) }));
+        head: it.body.replace(/\*\*/g, "").slice(0, 80) }));
       await env.POST_KV.put("history", JSON.stringify(fresh.concat(recent).slice(0, 15)));
       const d = mskDate();
       await env.POST_KV.put("morning:" + d.key, "1", { expirationTtl: 172800 });
       // Сжатые новости — в память для AI-консьержа на сайте (см. morningContext):
       // агент отвечает «что сегодня на рынке» по свежей аналитике, а не общими фразами.
-      await env.POST_KV.put("morning:latest", JSON.stringify({ d: d.key, h: d.human, news }),
+      const newsText = blocks.map((b) => b.flag + " " + b.title + " — " + b.text).join("\n");
+      await env.POST_KV.put("morning:latest", JSON.stringify({ d: d.key, h: d.human, news: newsText }),
         { expirationTtl: 259200 });
     } catch (e) { /* память необязательна */ }
   }
-  return { news, ideas, warn: numbersNotInSource(news, article) };
+  // problems после ретрая — мягкие остатки: пост отправляем, сейлзу — предупреждение.
+  // Flag-огрехи рендер уже починил по слоту — из предупреждения их убираем.
+  return { blocks, ideas, warn: problems.filter((s) => !/flag должен быть/.test(s)) };
 }
 
 // Рыночный контекст для /chat: сжатый утренний обзор из KV, не старше 3 дней
@@ -716,20 +841,10 @@ async function sendMorningDraft(env, article, chatId) {
     return;
   }
   // Новостной блок: тезис-заголовок ВНЕ цитаты («🌍 Мир хрупок»), текст — в <blockquote>
-  // под ним. Многострочный блок (модель перенесла мысль) приклеиваем к своему флагу-эмодзи.
-  const rawLines = postToTgHtml(res.news).split(/\n+/).filter(Boolean);
-  const blocks = [];
-  for (const l of rawLines) {
-    if (/^(🌍|🇺🇸|🇷🇺)/.test(l) || !blocks.length) blocks.push(l);
-    else blocks[blocks.length - 1] += "\n" + l;
-  }
-  const newsHtml = blocks.map((b) => {
-    const m = /^((?:🌍|🇺🇸|🇷🇺)\s*)<b>([^<]+)<\/b>\s*[—–-]*\s*([\s\S]*)$/.exec(b);
-    if (m && m[3].trim()) {
-      return m[1] + "<b>" + m[2].trim() + "</b>\n<blockquote>" + m[3].trim() + "</blockquote>";
-    }
-    return "<blockquote>" + b + "</blockquote>";   // блок без жирного тезиса — целиком в цитату
-  }).join("\n\n");
+  // под ним. Модель отдаёт СТРУКТУРУ (JSON), вся вёрстка — здесь, кодом.
+  const newsHtml = res.blocks.map((b) =>
+    b.flag + " <b>" + esc(b.title) + "</b>\n<blockquote>" + postToTgHtml(b.text) + "</blockquote>"
+  ).join("\n\n");
 
   // Продукт: номер + название-ссылка жирным, зацепка под ним — без служебной строки «🔗».
   const nums = ["1️⃣", "2️⃣", "3️⃣"];
@@ -751,13 +866,22 @@ async function sendMorningDraft(env, article, chatId) {
   }
   const buttons = [{ text: "🔁 Пересобрать", callback_data: "morn" }];
   if (env.CHANNEL_ID) buttons.push({ text: "📢 В канал", callback_data: "mpub" });
-  await tg(env, "sendMessage", { chat_id: to, text, parse_mode: "HTML",
+  const resp = await tg(env, "sendMessage", { chat_id: to, text, parse_mode: "HTML",
     link_preview_options: preview,
     reply_markup: { inline_keyboard: [buttons] } });
+  // Пост привязываем к КОНКРЕТНОМУ сообщению: иначе после «Пересобрать» кнопка «В канал»
+  // на старом пузыре публиковала бы новейшую версию из общего ключа
+  if (env.POST_KV) {
+    try {
+      const rj = await resp.json();
+      const mid = rj && rj.ok && rj.result && rj.result.message_id;
+      if (mid != null) await env.POST_KV.put("morning:post:" + to + ":" + mid, text, { expirationTtl: 86400 });
+    } catch (e) { /* привязка — best effort, общий ключ уже записан */ }
+  }
   if (res.warn.length) {
     await tg(env, "sendMessage", { chat_id: to, parse_mode: "HTML",
-      text: "⚠️ <b>Проверьте цифры перед публикацией</b> — в статье аналитика не нашёл: " +
-            esc(res.warn.join(", ")) + ". Возможно, модель их выдумала." });
+      text: "⚠️ <b>Проверьте перед публикацией</b> — модель не всё исправила даже со второй попытки:\n• " +
+            res.warn.map(esc).join("\n• ") });
   }
 }
 
@@ -1441,7 +1565,7 @@ async function publishItem(env, payload) {
 }
 
 // --- (опц.) Вебхук бота: клиент нажал «Написать в Telegram» ---
-async function handleTelegram(request, env) {
+async function handleTelegram(request, env, ctx) {
   if (env.WEBHOOK_SECRET && request.headers.get("X-Telegram-Bot-Api-Secret-Token") !== env.WEBHOOK_SECRET) {
     return new Response("forbidden", { status: 403 });
   }
@@ -1471,7 +1595,10 @@ async function handleTelegram(request, env) {
       }
       if (!article) { await answer("Статья уже устарела — пришлите её боту заново.", true); return new Response("ok"); }
       await answer("Собираю заново…");
-      await sendMorningDraft(env, article, chatId);
+      // Два LLM-вызова держали бы вебхук открытым до минуты — Telegram счёл бы это
+      // таймаутом и прислал update повторно (дубль). Отвечаем сразу, работаем после.
+      const rejob = sendMorningDraft(env, article, chatId);
+      if (ctx) ctx.waitUntil(rejob); else await rejob;
       return new Response("ok");
     }
 
@@ -1489,7 +1616,11 @@ async function handleTelegram(request, env) {
       const chatId = cb.message && cb.message.chat && cb.message.chat.id;
       let post = null;
       if (env.POST_KV && chatId != null) {
-        try { post = await env.POST_KV.get("morning:post:" + chatId); } catch (e) {}
+        try {
+          // сперва версия, привязанная к этому сообщению; общий ключ — для старых постов
+          post = await env.POST_KV.get("morning:post:" + chatId + ":" + cb.message.message_id);
+          if (!post) post = await env.POST_KV.get("morning:post:" + chatId);
+        } catch (e) {}
       }
       if (!post) { await answer("Пост устарел — пересоберите и публикуйте заново.", true); return new Response("ok"); }
       const r = await tg(env, "sendMessage", { chat_id: env.CHANNEL_ID, text: post, parse_mode: "HTML",
@@ -1570,7 +1701,9 @@ async function handleTelegram(request, env) {
         !msg.text.startsWith("/") && msg.text.length >= 600) {
       await tg(env, "sendMessage", { chat_id: msg.chat.id,
         text: "⏳ Понял, это утренний обзор. Собираю пост…" });
-      await sendMorningDraft(env, msg.text, msg.chat.id);
+      // См. комментарий у «Пересобрать»: вебхук отвечает сразу, генерация — после ответа
+      const job = sendMorningDraft(env, msg.text, msg.chat.id);
+      if (ctx) ctx.waitUntil(job); else await job;
       return new Response("ok");
     }
 
