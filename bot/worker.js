@@ -30,9 +30,9 @@
 //   --- утренний пост (статья аналитика → новости + продукты дня) ---
 //   ANALYST_CHAT_ID — (опц.) chat_id доверенных отправителей статьи, МОЖНО НЕСКОЛЬКО через
 //                     запятую ("123,456"). Их длинные сообщения (≥600 знаков) в личке бота
-//                     считаются утренней статьёй. Руслан (ADMIN_CHAT_ID) может слать статью сам.
-//                     Свой chat_id каждый узнаёт командой /id боту. Готовый пост приходит
-//                     Руслану, публикация в канал — руками (копипастой).
+//                     считаются утренней статьёй; готовый пост возвращается ОТПРАВИТЕЛЮ,
+//                     он сам публикует его в канал (копипастой). Руслан (ADMIN_CHAT_ID)
+//                     может слать статью и сам. Свой chat_id каждый узнаёт командой /id.
 //
 // Маршруты:
 //   POST /lead   — форма-заявка с сайта  → сообщение в CHAT_ID
@@ -660,15 +660,18 @@ async function generateMorning(env, article) {
   return { news, ideas, warn: numbersNotInSource(news, article) };
 }
 
-async function sendMorningDraft(env, article) {
-  if (!env.ADMIN_CHAT_ID) return;
+// Готовый пост возвращается ТОМУ, КТО ПРИСЛАЛ статью (chatId) — сейлз сам публикует
+// в канал, Руслан в цепочке не участвует. Без chatId (прямой вызов) — Руслану.
+async function sendMorningDraft(env, article, chatId) {
+  const to = chatId || env.ADMIN_CHAT_ID;
+  if (!to) return;
   let res;
   try {
     res = await generateMorning(env, article);
   } catch (e) {
-    await tg(env, "sendMessage", { chat_id: env.ADMIN_CHAT_ID,
+    await tg(env, "sendMessage", { chat_id: to,
       text: "⚠️ Утренний пост не собрался: " + String((e && e.message) || e).slice(0, 200) +
-            "\nПришли статью ещё раз — попробую заново." });
+            "\nПришлите статью ещё раз — попробую заново." });
     return;
   }
   const nums = ["1️⃣", "2️⃣", "3️⃣"];
@@ -679,23 +682,28 @@ async function sendMorningDraft(env, article) {
     postToTgHtml(res.news) +
     "\n\n💡 <b>Что предложить клиенту сегодня:</b>\n\n" + lines.join("\n\n") +
     "\n\n<i>" + esc(POST_DISCLAIMER) + "</i>";
-  await tg(env, "sendMessage", { chat_id: env.ADMIN_CHAT_ID, text, parse_mode: "HTML",
+  await tg(env, "sendMessage", { chat_id: to, text, parse_mode: "HTML",
     disable_web_page_preview: true });
   if (res.warn.length) {
-    await tg(env, "sendMessage", { chat_id: env.ADMIN_CHAT_ID, parse_mode: "HTML",
-      text: "⚠️ <b>Проверь цифры перед публикацией</b> — в статье аналитика не нашёл: " +
+    await tg(env, "sendMessage", { chat_id: to, parse_mode: "HTML",
+      text: "⚠️ <b>Проверьте цифры перед публикацией</b> — в статье аналитика не нашёл: " +
             esc(res.warn.join(", ")) + ". Возможно, модель их выдумала." });
   }
 }
 
-// Cron (будни 10:00 МСК): статья уже пришла → молчим; нет → напоминаем.
+// Cron (будни 10:00 МСК): статья уже пришла → молчим; нет → напоминаем сейлзам
+// из ANALYST_CHAT_ID (они шлют статью); если список пуст — Руслану.
 async function morningCron(env) {
-  if (!env.ADMIN_CHAT_ID) return;
+  const targets = String(env.ANALYST_CHAT_ID || "").split(",").map((s) => s.trim()).filter(Boolean);
+  if (!targets.length && env.ADMIN_CHAT_ID) targets.push(String(env.ADMIN_CHAT_ID));
+  if (!targets.length) return;
   let done = null;
   if (env.POST_KV) { try { done = await env.POST_KV.get("morning:" + mskDate().key); } catch (e) {} }
   if (done) return;
-  await tg(env, "sendMessage", { chat_id: env.ADMIN_CHAT_ID,
-    text: "☕️ Утренней статьи сегодня ещё не было. Пришли текст обзора боту — соберу пост с продуктами. Запасной вариант: /post — 5 идей без новостей." });
+  for (const id of targets) {
+    await tg(env, "sendMessage", { chat_id: id,
+      text: "☕️ Утренней статьи сегодня ещё не было. Пришлите текст обзора боту — соберу пост с продуктами." });
+  }
 }
 
 // Markdown модели → Telegram HTML. Сначала экранируем весь текст (модель может вернуть
@@ -1430,9 +1438,9 @@ async function handleTelegram(request, env) {
       return new Response("ok");
     }
 
-    // Утренняя статья аналитика: длинный текст в личке от доверенного отправителя
-    // (Руслан или любой из списка ANALYST_CHAT_ID, через запятую) → пост Руслану.
-    // Порог 600 знаков отделяет статью от обычных сообщений — их пересылаем как раньше.
+    // Утренняя статья: длинный текст в личке от доверенного отправителя (Руслан или
+    // любой из списка ANALYST_CHAT_ID, через запятую) → готовый пост ОБРАТНО отправителю,
+    // он сам публикует в канал. Порог 600 знаков отделяет статью от обычных сообщений.
     const trusted = [env.ADMIN_CHAT_ID]
       .concat(String(env.ANALYST_CHAT_ID || "").split(","))
       .map((s) => String(s || "").trim()).filter(Boolean);
@@ -1440,10 +1448,7 @@ async function handleTelegram(request, env) {
         !msg.text.startsWith("/") && msg.text.length >= 600) {
       await tg(env, "sendMessage", { chat_id: msg.chat.id,
         text: "⏳ Понял, это утренний обзор. Собираю пост…" });
-      await sendMorningDraft(env, msg.text);
-      if (String(from.id) !== String(env.ADMIN_CHAT_ID)) {
-        await tg(env, "sendMessage", { chat_id: msg.chat.id, text: "Готово — черновик ушёл на модерацию." });
-      }
+      await sendMorningDraft(env, msg.text, msg.chat.id);
       return new Response("ok");
     }
 
