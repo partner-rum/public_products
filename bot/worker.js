@@ -733,13 +733,9 @@ async function sendMorningDraft(env, article, chatId) {
   const lines = res.ideas.slice(0, 3).map((it, i) =>
     nums[i] + ' <a href="' + it.prodUrl + '"><b>' + esc(it.prodName) + "</b></a>\n" + postToTgHtml(it.body));
 
-  // Превью поста — персональная og-карточка первого продукта доски (p/<id>.html,
-  // график выплаты 1200×630). Для первички p/-шелла может не быть — тогда без превью.
-  const base = (env.SITE_BASE || "https://invest.rumberg.ru/").replace(/\/?$/, "/");
-  const firstBoard = res.ideas.find((it) => it.prodUrl.includes("instrument.html"));
-  const preview = firstBoard
-    ? { url: base + "p/" + firstBoard.id + ".html", prefer_large_media: true }
-    : { is_disabled: true };
+  // Превью выключено: в подборке 3 продукта, а карточка была бы одна — перекашивает
+  // внимание к первому (пробовали, откатили по решению Руслана 04.08.2026).
+  const preview = { is_disabled: true };
 
   // Сообщение = готовый пост: скопировал (формат сохраняется) — и в канал.
   const text = "☕️ <b>Утро на рынках</b> · " + esc(mskDate().human) + "\n\n" +
