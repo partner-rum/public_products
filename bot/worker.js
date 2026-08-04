@@ -27,12 +27,18 @@
 //   GITHUB_REPO     — напр. "partner-rum/public_products"; GITHUB_BRANCH — по умолчанию "main"
 //   WEBHOOK_SECRET  — ОБЯЗАТЕЛЕН для кнопок ✅/❌: без него /tg не защищён от поддельных approve
 //
+//   --- утренний пост (статья аналитика → новости + продукты дня) ---
+//   ANALYST_CHAT_ID — (опц.) chat_id аналитика: его длинные сообщения (≥600 знаков) в личке бота
+//                     считаются утренней статьёй. Руслан (ADMIN_CHAT_ID) может слать статью сам.
+//                     Готовый пост приходит Руслану, публикация в канал — руками (копипастой).
+//
 // Маршруты:
 //   POST /lead   — форма-заявка с сайта  → сообщение в CHAT_ID
 //   POST /chat   — сообщение чат-ассистента → Claude API → ответ обратно на сайт
 //   POST /submit — админка сейлзов: продукт → карточка с кнопками ✅/❌ в ADMIN_CHAT_ID
 //   POST /tg     — вебхук Telegram: callback-кнопки модерации (✅ публикует коммитом в GitHub),
-//                  /start <id> приветствует клиента и шлёт лид в CHAT_ID, прочее пересылает в CHAT_ID
+//                  /start <id> приветствует клиента и шлёт лид в CHAT_ID, прочее пересылает в CHAT_ID;
+//                  длинный текст от ADMIN/ANALYST — утренняя статья → сжатый пост Руслану
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -55,7 +61,9 @@ export default {
   // Cron Triggers (расписание задаётся в Cloudflare → Workers → Triggers → Cron).
   // Ежедневно генерим 3 короткие идеи постов для канала агентов и шлём Руслану в личку.
   async scheduled(event, env, ctx) {
-    ctx.waitUntil(sendPostDraft(env).catch(() => {}));
+    // Будни 10:00 МСК: если утренняя статья ещё не приходила — напоминание Руслану.
+    // Сам пост собирается не по крону, а в момент, когда статья прилетает боту.
+    ctx.waitUntil(morningCron(env).catch(() => {}));
   },
 };
 
@@ -533,6 +541,160 @@ const POST_SYSTEM = `Ты — контент-редактор Telegram-кана�
 - Дисклеймер НЕ добавляй — его добавит система.`;
 
 const POST_DISCLAIMER = "Не является индивидуальной инвестиционной рекомендацией. Только для квалифицированных инвесторов.";
+
+// ============================================================================
+// Утренний пост: статья аналитика (личка бота) → сжатые новости + продукты дня
+// ============================================================================
+const MORNING_SYSTEM = `Ты — редактор утреннего поста Telegram-канала компании Rumberg для агентов по продажам (структурные продукты, только квалифицированные инвесторы). Тебе дают: утренний обзор аналитика и каталог продуктов. Собери материал СТРОГО в формате:
+
+===НОВОСТИ===
+🌍 **<заголовок 2–4 слова>** — 1–2 предложения по геополитике/сырью из статьи, в конце короткий вывод.
+🇺🇸 **<заголовок>** — 1–2 предложения по рынку США из статьи.
+🇷🇺 **<заголовок>** — 1–2 предложения по российскому рынку из статьи.
+===ПРОДУКТЫ===
+[id продукта из каталога]
+Одна фраза-зацепка (до 140 знаков), связывающая продукт с новостями дня.
+
+РОВНО 3 продукта, между блоками — пустая строка. Больше НИЧЕГО: ни вступления, ни ссылок, ни дисклеймера.
+
+ЖЁСТКИЕ ПРАВИЛА (нарушение недопустимо):
+- Факты и цифры в НОВОСТЯХ — ТОЛЬКО из статьи аналитика. Цифры переноси КАК В СТАТЬЕ, не округляй и не «освежай» из своих знаний. Чего в статье нет — того не пишешь.
+- Каждый новостной блок ≤ 320 знаков. Пиши плотно, без воды.
+- Продукты, цены, ISIN — ТОЛЬКО из каталога. [id] бери из начала строки каталога.
+- Продукты подбирай под темы статьи: разворот/снижение ставок → облигации и варранты на ОФЗ, слабый рубль → валютные активы (CNY, USD), сырьё → соответствующие акции. Темы не совпали — просто возьми 3 разных типа.
+- Зацепка продукта — обобщённая («когда ставки снижаются…»), НЕ утверждай событий, которых нет в статье.
+- НЕ обещай доходность, НЕ пиши «X% годовых». Цену/премию помечай словом «индикативно».
+- Слово «Нота»/«нота» запрещено: пиши «варрант», «дисконтная облигация», «структурная облигация».
+- Без индивидуальных инвестрекомендаций и внутренних id в тексте фраз.`;
+
+// Дата по МСК: ключ для KV («2026-08-04») и человеческая подпись («4 августа»)
+function mskDate() {
+  const d = new Date(Date.now() + 3 * 3600 * 1000);
+  const MON = ["января", "февраля", "марта", "апреля", "мая", "июня",
+               "июля", "августа", "сентября", "октября", "ноября", "декабря"];
+  return {
+    key: d.getUTCFullYear() + "-" + String(d.getUTCMonth() + 1).padStart(2, "0") + "-" + String(d.getUTCDate()).padStart(2, "0"),
+    human: d.getUTCDate() + " " + MON[d.getUTCMonth()],
+  };
+}
+
+// Контроль цифр: числа из сжатых новостей должны встречаться в статье аналитика.
+// LLM любит «освежать» котировки из своих знаний — это единственный способ поймать.
+function numbersNotInSource(newsText, article) {
+  const norm = (s) => String(s).replace(/\./g, ",");
+  const src = norm(article);
+  const out = [];
+  for (const m of norm(newsText).matchAll(/\d[\d\s]*(?:,\d+)?/g)) {
+    const n = m[0].replace(/\s+/g, "");
+    if (n.replace(/\D/g, "").length < 3) continue;       // короткие (годы жизни, «30 минут») не проверяем
+    if (src.includes(n)) continue;
+    // допускаем округление хвоста: «4,684» в статье ↔ «4,68» в посте
+    const re = new RegExp(n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\d");
+    if (re.test(src)) continue;
+    out.push(m[0].trim());
+  }
+  return [...new Set(out)];
+}
+
+async function generateMorning(env, article) {
+  let cat = { text: "", instr: [], offers: [], ideas: [] };
+  try { cat = await buildCatalog(env); } catch (e) { /* без каталога продукты не подобрать */ }
+  const base = (env.SITE_BASE || "https://invest.rumberg.ru/").replace(/\/?$/, "/");
+
+  // Память продуктов общая с «5 идеями» — утренние подборки тоже не должны повторяться.
+  let recent = [];
+  if (env.POST_KV) {
+    try { recent = (await env.POST_KV.get("history", "json")) || []; } catch (e) { recent = []; }
+  }
+  recent = recent.map((r) => (typeof r === "string" ? { id: "", name: r, head: "" } : r));
+  const recentIds = recent.map((r) => r.id).filter(Boolean);
+  let catText = cat.text;
+  if (recentIds.length && catText) {
+    const filtered = catText.split("\n").filter((line) => {
+      const mm = line.match(/^- \[([\w.\-]+)\]/);
+      return !(mm && recentIds.includes(mm[1]));
+    }).join("\n");
+    if (/^- \[/m.test(filtered)) catText = filtered;
+  }
+
+  const system = MORNING_SYSTEM +
+    (catText ? "\n\n=== АКТУАЛЬНЫЙ КАТАЛОГ (единственный источник продуктов и [id]) ===\n" + catText : "");
+  const user = "СТАТЬЯ АНАЛИТИКА:\n\n" + article.slice(0, 12000);
+  const provider = env.POST_PROVIDER || env.CHAT_PROVIDER || "deepseek";
+  const raw = await callLLM(provider, system, [{ role: "user", content: user }], env,
+    { temperature: 0.4, maxTokens: 1400, model: env.POST_MODEL });
+
+  // Режем на секции. Модель иногда теряет маркеры — тогда честно падаем в ошибку,
+  // Руслан перегенерирует повторной отправкой статьи.
+  const mNews = /===НОВОСТИ===\s*([\s\S]*?)===ПРОДУКТЫ===/.exec(raw || "");
+  const mProd = /===ПРОДУКТЫ===\s*([\s\S]*)$/.exec(raw || "");
+  if (!mNews || !mProd) throw new Error("модель вернула ответ без секций НОВОСТИ/ПРОДУКТЫ");
+  const news = mNews[1].trim();
+
+  const ideas = [];
+  const re = /\[([\w.\-]+)\]\s*([\s\S]*?)(?=\n\s*\[[\w.\-]+\]|$)/g;
+  let m;
+  while ((m = re.exec(mProd[1])) !== null) {
+    const id = m[1], body = (m[2] || "").trim();
+    if (!body) continue;
+    let prodUrl = "", prodName = "";
+    const off = (cat.offers || []).find((o) => o.id === id);
+    const ins = (cat.instr || []).find((p) => p.id === id);
+    if (off) { prodUrl = base + "offerings.html#" + off.id; prodName = off.name; }
+    else if (ins) { prodUrl = base + "instrument.html?id=" + ins.id; prodName = ins.name; }
+    if (prodUrl) ideas.push({ id, body, prodUrl, prodName });   // без ссылки продукт не берём
+  }
+  if (!ideas.length) throw new Error("модель не подобрала продукты из каталога");
+
+  // Дедуп-память и отметка «сегодня пост собран» (для напоминалки в cron)
+  if (env.POST_KV) {
+    try {
+      const fresh = ideas.map((it) => ({ id: it.id, name: it.prodName || "?",
+        head: (it.body.split("\n")[0] || "").replace(/\*\*/g, "").trim().slice(0, 80) }));
+      await env.POST_KV.put("history", JSON.stringify(fresh.concat(recent).slice(0, 15)));
+      await env.POST_KV.put("morning:" + mskDate().key, "1", { expirationTtl: 172800 });
+    } catch (e) { /* память необязательна */ }
+  }
+  return { news, ideas, warn: numbersNotInSource(news, article) };
+}
+
+async function sendMorningDraft(env, article) {
+  if (!env.ADMIN_CHAT_ID) return;
+  let res;
+  try {
+    res = await generateMorning(env, article);
+  } catch (e) {
+    await tg(env, "sendMessage", { chat_id: env.ADMIN_CHAT_ID,
+      text: "⚠️ Утренний пост не собрался: " + String((e && e.message) || e).slice(0, 200) +
+            "\nПришли статью ещё раз — попробую заново." });
+    return;
+  }
+  const nums = ["1️⃣", "2️⃣", "3️⃣"];
+  const lines = res.ideas.slice(0, 3).map((it, i) =>
+    nums[i] + " " + postToTgHtml(it.body) + '\n🔗 <a href="' + it.prodUrl + '">' + esc(it.prodName) + "</a>");
+  // Сообщение = готовый пост: скопировал (формат сохраняется) — и в канал.
+  const text = "☕️ <b>Утро на рынках</b> · " + esc(mskDate().human) + "\n\n" +
+    postToTgHtml(res.news) +
+    "\n\n💡 <b>Что предложить клиенту сегодня:</b>\n\n" + lines.join("\n\n") +
+    "\n\n<i>" + esc(POST_DISCLAIMER) + "</i>";
+  await tg(env, "sendMessage", { chat_id: env.ADMIN_CHAT_ID, text, parse_mode: "HTML",
+    disable_web_page_preview: true });
+  if (res.warn.length) {
+    await tg(env, "sendMessage", { chat_id: env.ADMIN_CHAT_ID, parse_mode: "HTML",
+      text: "⚠️ <b>Проверь цифры перед публикацией</b> — в статье аналитика не нашёл: " +
+            esc(res.warn.join(", ")) + ". Возможно, модель их выдумала." });
+  }
+}
+
+// Cron (будни 10:00 МСК): статья уже пришла → молчим; нет → напоминаем.
+async function morningCron(env) {
+  if (!env.ADMIN_CHAT_ID) return;
+  let done = null;
+  if (env.POST_KV) { try { done = await env.POST_KV.get("morning:" + mskDate().key); } catch (e) {} }
+  if (done) return;
+  await tg(env, "sendMessage", { chat_id: env.ADMIN_CHAT_ID,
+    text: "☕️ Утренней статьи сегодня ещё не было. Пришли текст обзора боту — соберу пост с продуктами. Запасной вариант: /post — 5 идей без новостей." });
+}
 
 // Markdown модели → Telegram HTML. Сначала экранируем весь текст (модель может вернуть
 // случайные < > &), затем разворачиваем **жирный** и [текст](https://url) в теги.
@@ -1255,6 +1417,21 @@ async function handleTelegram(request, env) {
   if (msg && msg.text) {
     const from = msg.from || {};
     const who = (from.username ? "@" + from.username : [from.first_name, from.last_name].filter(Boolean).join(" ")) || from.id;
+
+    // Утренняя статья аналитика: длинный текст в личке от доверенного отправителя
+    // (Руслан или аналитик из ANALYST_CHAT_ID) → сжимаем в пост и шлём Руслану.
+    // Порог 600 знаков отделяет статью от обычных сообщений — их пересылаем как раньше.
+    const trusted = [env.ADMIN_CHAT_ID, env.ANALYST_CHAT_ID].filter(Boolean).map(String);
+    if (trusted.includes(String(from.id)) && msg.chat && msg.chat.type === "private" &&
+        !msg.text.startsWith("/") && msg.text.length >= 600) {
+      await tg(env, "sendMessage", { chat_id: msg.chat.id,
+        text: "⏳ Понял, это утренний обзор. Собираю пост…" });
+      await sendMorningDraft(env, msg.text);
+      if (String(from.id) !== String(env.ADMIN_CHAT_ID)) {
+        await tg(env, "sendMessage", { chat_id: msg.chat.id, text: "Готово — черновик ушёл на модерацию." });
+      }
+      return new Response("ok");
+    }
 
     // Команда админа: сгенерировать черновик поста по запросу. Формат: «/post [тема]».
     // Только Руслан (ADMIN_CHAT_ID); чужие /post игнорируем и в группу НЕ пересылаем.
