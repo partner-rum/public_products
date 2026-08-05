@@ -76,11 +76,61 @@
 
   .note { margin: 26px 0 0; font-size: 11.5px; line-height: 1.55; color: var(--faint); }
 
+  /* ─── «О нас в цифрах»: живые счётчики + конструктор структур + орбиты активов ─── */
+  .ci-lead { margin: 30px 0 0; font-size: 16px; line-height: 1.6; color: var(--hushed); max-width: 620px; text-wrap: pretty; }
+  .ci-lead b { color: var(--ink); font-weight: 600; }
+  .ci-sub { margin: -2px 0 12px; font-size: 13.5px; line-height: 1.55; color: var(--hushed); max-width: 560px; }
+
+  .ci-cap { margin: 32px 0 12px; font-family: var(--f-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); display: flex; align-items: center; gap: 8px; }
+  .ci-cap::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--solar); }
+  .chips { display: flex; flex-wrap: wrap; gap: 7px; }
+  .chip { display: inline-flex; align-items: center; border: 1px solid var(--border); border-radius: 999px; padding: 5px 11px; font-size: 12.5px; color: var(--hushed); animation: chipIn .4s var(--ease) backwards; }
+  .chip.hot { border-color: rgba(238,125,27,0.45); color: #F0AE72; }
+  @keyframes chipIn { from { opacity: 0; transform: translateY(7px); } }
+
+  /* Плавное появление секций при скролле */
+  .rv { opacity: 0; transform: translateY(16px); transition: opacity .7s var(--ease), transform .7s var(--ease); }
+  .rv.vis { opacity: 1; transform: none; }
+
+  /* Живые цифры */
+  .ci-nums { display: flex; gap: 36px; flex-wrap: wrap; margin-top: 30px; padding: 22px 0; border-top: 1px solid var(--border-soft); border-bottom: 1px solid var(--border-soft); }
+  .ci-num .v { font-family: var(--display); font-size: 34px; font-weight: 600; letter-spacing: -0.02em; color: var(--solar); line-height: 1.05; font-variant-numeric: tabular-nums; }
+  .ci-num .k { margin-top: 6px; font-size: 12.5px; line-height: 1.45; color: var(--hushed); max-width: 175px; }
+  .ci-num .d { margin-top: 5px; font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .03em; color: var(--faint); }
+
+  /* Конструктор структур: чипсы + морфящаяся диаграмма */
+  .px { border: 1px solid var(--border-soft); border-radius: 12px; background: var(--card); padding: 15px 16px 12px; }
+  .px-tabs { display: flex; flex-wrap: wrap; gap: 7px; }
+  .px-tab { border: 1px solid var(--border); background: transparent; color: var(--hushed); border-radius: 999px; padding: 6px 13px; font-family: var(--f-body); font-size: 12.5px; cursor: pointer; transition: color .2s, border-color .2s, background .2s; }
+  .px-tab:hover { color: var(--ink); border-color: rgba(255,255,255,0.3); }
+  .px-tab.on { background: var(--solar); border-color: var(--solar); color: #0C0A08; font-weight: 600; }
+  .px svg { display: block; width: 100%; height: auto; margin-top: 4px; }
+  .px-axis { display: flex; justify-content: space-between; padding: 0 6px; font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
+  .px-note { margin-top: 10px; font-size: 12.5px; line-height: 1.55; color: var(--hushed); min-height: 40px; transition: opacity .25s; }
+
+  /* Орбиты активов вокруг звезды */
+  .ob-wrap { display: grid; grid-template-columns: 1fr 230px; gap: 20px; margin-top: 28px; border: 1px solid var(--border-soft); border-radius: 14px; background: var(--card); padding: 18px; }
+  .ob { position: relative; height: 344px; }
+  .orb { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); border: 1px dashed rgba(255,255,255,0.09); border-radius: 50%; }
+  .ob-star { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); }
+  .ob-star svg { display: block; filter: drop-shadow(0 0 12px rgba(238,125,27,0.45)); }
+  .orb-lab { position: absolute; transform: translate(-50%,-50%); z-index: 2; font-family: var(--f-mono); font-size: 10px; letter-spacing: .09em; text-transform: uppercase; background: var(--card); border: 1px solid var(--border-soft); border-radius: 999px; padding: 2px 8px; white-space: nowrap; }
+  .od { position: absolute; width: 10px; height: 10px; margin: -5px; border-radius: 50%; cursor: pointer; }
+  .od::after { content: ""; position: absolute; inset: -6px; border-radius: 50%; }
+  .ob-tip { position: absolute; z-index: 3; background: #191C23; border: 1px solid var(--border); border-radius: 7px; padding: 4px 9px; font-family: var(--f-mono); font-size: 11px; color: var(--ink); pointer-events: none; opacity: 0; transition: opacity .15s; white-space: nowrap; transform: translate(-50%, -135%); }
+  .ob-leg .st { margin-bottom: 15px; }
+  .ob-leg .st .v { font-family: var(--display); font-size: 24px; font-weight: 600; letter-spacing: -0.02em; color: var(--solar); }
+  .ob-leg .st .k { margin-top: 2px; font-size: 11.5px; line-height: 1.4; color: var(--hushed); }
+  .ob-leg .lg { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--hushed); margin-top: 9px; }
+  .ob-leg .lg i { flex: none; width: 9px; height: 9px; border-radius: 50%; }
+
   @media (max-width: 640px) {
     .nav-in { padding: 0 20px; }
     .topnav { gap: 14px; font-size: 13px; }
     .topnav a:not(.btn-solar) { display: none; }
     .kv { flex-direction: column; gap: 2px; } .kv .k { width: auto; }
+    .ci-nums { gap: 20px; } .ci-num .v { font-size: 28px; } .ci-num .k { max-width: 140px; }
+    .ob-wrap { grid-template-columns: 1fr; } .ob { height: 300px; }
   }
 </style>
 </head>
@@ -110,6 +160,231 @@
   <h1>О компании</h1>
   <p class="lead">Готовые инвестиционные решения и альтернативные инвестиции для <b>квалифицированных инвесторов и финансовых институтов</b>. Этот сайт — витрина продуктов; полная информация о группе — на официальном сайте.</p>
 
+  <!-- ─── О нас в цифрах: счётчики + конструктор структур + орбиты активов ─── -->
+  <p class="ci-lead rv">Собираем структурные продукты как конструктор: <b>идея → базовый актив → структура выплаты → выпуск с ISIN</b>.</p>
+
+  <div class="ci-nums rv" id="ci-nums">
+    <div class="ci-num"><div class="v"><span data-cnt="2" data-suf=" года">2 года</span></div><div class="k">выпускаем структурные продукты</div><div class="d">первый выпуск — апрель 2024</div></div>
+    <div class="ci-num"><div class="v"><span data-cnt="20" data-pre="≈" data-suf=" млрд ₽">≈20 млрд ₽</span></div><div class="k">объём выпущенных продуктов</div><div class="d">структурные облигации и варранты</div></div>
+  </div>
+
+  <div class="rv">
+    <div class="ci-cap">Структуры выплат — собираем любую</div>
+    <div class="ci-sub">Пять базовых механик и любая их комбинация под задачу. Кликните по типу — диаграмма перестроится.</div>
+    <div class="px" id="px">
+      <div class="px-tabs" role="tablist" aria-label="Тип структуры" id="px-tabs"></div>
+      <svg viewBox="0 0 560 226" aria-hidden="true">
+        <defs><linearGradient id="pxg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#EE7D1B" stop-opacity="0.20"/><stop offset="1" stop-color="#EE7D1B" stop-opacity="0"/></linearGradient></defs>
+        <line x1="40" y1="196" x2="540" y2="196" stroke="rgba(255,255,255,0.13)" stroke-width="1"/>
+        <path id="px-area" fill="url(#pxg)" stroke="none"/>
+        <line id="px-dash" x1="40" x2="540" stroke="rgba(255,255,255,0.22)" stroke-width="1" stroke-dasharray="4 5" opacity="0" style="transition: opacity .3s"/>
+        <text id="px-dash-t" x="536" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="10" fill="rgba(242,243,247,0.5)" opacity="0" style="transition: opacity .3s"></text>
+        <path id="px-line" fill="none" stroke="#EE7D1B" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+        <circle id="px-dot" r="4.5" fill="#55C08A" opacity="0" style="transition: opacity .3s"/>
+        <text id="px-dot-t" font-family="JetBrains Mono, monospace" font-size="10" fill="#55C08A" text-anchor="end" opacity="0" style="transition: opacity .3s"></text>
+      </svg>
+      <div class="px-axis"><span>выплата ↑</span><span id="px-ax"></span></div>
+      <div class="px-note" id="px-note"></div>
+    </div>
+  </div>
+
+  <div class="rv">
+    <div class="ci-cap">Универсум базовых активов</div>
+    <div class="ci-sub">В выпусках и на витрине — от ОФЗ и российских акций до биткоин-ETF, урана и NVIDIA. Наведите на точку — орбиты остановятся.</div>
+    <div class="ob-wrap">
+      <div class="ob" id="ob">
+        <div class="ob-star"><svg width="30" height="30" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg></div>
+        <div class="ob-tip" id="ob-tip"></div>
+      </div>
+      <div class="ob-leg">
+        <div class="st"><div class="v"><span data-cnt="25" data-suf="+">25+</span></div><div class="k">базовых активов в выпусках и на витрине</div></div>
+        <div class="st"><div class="v"><span data-cnt="54">54</span></div><div class="k">выпуска за два года</div></div>
+        <div class="st"><div class="v"><span data-cnt="9">9</span></div><div class="k">собственных индексов Румберг</div></div>
+        <div class="lg"><i style="background:#EE7D1B"></i>иностранные · 8</div>
+        <div class="lg"><i style="background:rgba(242,243,247,0.85)"></i>локальные · 9</div>
+        <div class="lg"><i style="background:#4F86E6"></i>индексы Румберг · 9</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var RM = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+      var ease = function (t) { return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; };
+
+      // ── появление секций + счётчики при входе в кадр
+      function countUp(sp) {
+        var n = +sp.getAttribute("data-cnt"), pre = sp.getAttribute("data-pre") || "", suf = sp.getAttribute("data-suf") || "";
+        if (RM) return;
+        var t0 = performance.now(), dur = 1300;
+        (function tick(t) {
+          var p = Math.min(1, (t - t0) / dur);
+          sp.textContent = pre + Math.round(n * ease(p)) + suf;
+          if (p < 1) requestAnimationFrame(tick);
+        })(t0);
+      }
+      var io = new IntersectionObserver(function (es) {
+        es.forEach(function (e) {
+          if (!e.isIntersecting) return;
+          e.target.classList.add("vis");
+          e.target.querySelectorAll("[data-cnt]").forEach(countUp);
+          io.unobserve(e.target);
+        });
+      }, { threshold: 0.35 });
+      document.querySelectorAll(".rv").forEach(function (el) { io.observe(el); });
+
+      // ── конструктор структур: полилиния морфится между выплатами
+      var X0 = 40, X1 = 540, Y0 = 196, Y1 = 34, N = 72;
+      var ST = [
+        { t: "Участие в росте", ax: "актив на экспирацию →",
+          note: "Классический варрант: выплата растёт вместе с активом, риск ограничен уплаченной премией.",
+          pts: [[0, .06], [.42, .06], [1, .88]] },
+        { t: "Защита капитала", ax: "актив на экспирацию →",
+          note: "Ниже старта — возврат 100% номинала при любом сценарии; выше — участие в росте.",
+          pts: [[0, .42], [.5, .42], [1, .82]], dash: { y: .42, t: "номинал 100%" } },
+        { t: "Автоколл с памятью", ax: "время →",
+          note: "Купоны копятся от наблюдения к наблюдению; при выполнении условия выпуск гасится досрочно.",
+          pts: [[0, .42], [.24, .42], [.25, .55], [.49, .55], [.5, .68], [.74, .68], [.75, .81], [1, .81]],
+          dash: { y: .42, t: "номинал 100%" }, dot: { x: .75, y: .81, t: "досрочное погашение" } },
+        { t: "Барьерный купон", ax: "актив на экспирацию →",
+          note: "Условие выполнено — фиксированная повышенная выплата; нет — возврат номинала.",
+          pts: [[0, .42], [.54, .42], [.55, .7], [1, .7]], dash: { y: .42, t: "номинал 100%" } },
+        { t: "Бустер", ax: "актив на экспирацию →",
+          note: "Рост актива умножается на коэффициент участия до потолка; ниже старта — один к одному.",
+          pts: [[0, .06], [.34, .34], [.62, .86], [1, .86]] }
+      ];
+      var px = function (x) { return X0 + x * (X1 - X0); }, py = function (y) { return Y0 - y * (Y0 - Y1); };
+      function sample(bp) {
+        var ys = [];
+        for (var i = 0; i <= N; i++) {
+          var x = i / N, j = 1;
+          while (j < bp.length && bp[j][0] < x) j++;
+          if (j === bp.length) { ys.push(bp[bp.length - 1][1]); continue; }
+          var a = bp[j - 1], b = bp[j];
+          ys.push(b[0] === a[0] ? b[1] : a[1] + (b[1] - a[1]) * (x - a[0]) / (b[0] - a[0]));
+        }
+        return ys;
+      }
+      var line = document.getElementById("px-line"), dash = document.getElementById("px-dash"),
+          dashT = document.getElementById("px-dash-t"), dot = document.getElementById("px-dot"),
+          dotT = document.getElementById("px-dot-t"), ax = document.getElementById("px-ax"),
+          note = document.getElementById("px-note"), tabsEl = document.getElementById("px-tabs"),
+          area = document.getElementById("px-area");
+      var cur = sample(ST[0].pts), anim = null;
+      function draw(ys) {
+        var d = "";
+        for (var i = 0; i <= N; i++) d += (i ? " L" : "M") + px(i / N).toFixed(1) + " " + py(ys[i]).toFixed(1);
+        line.setAttribute("d", d);
+        area.setAttribute("d", d + " L" + X1 + " " + Y0 + " L" + X0 + " " + Y0 + " Z");
+      }
+      function show(k, instant) {
+        var s = ST[k];
+        tabsEl.querySelectorAll(".px-tab").forEach(function (b, i) {
+          b.classList.toggle("on", i === k); b.setAttribute("aria-selected", i === k);
+        });
+        ax.textContent = s.ax;
+        note.style.opacity = 0;
+        setTimeout(function () { note.textContent = s.note; note.style.opacity = 1; }, instant ? 0 : 180);
+        if (s.dash) {
+          dash.setAttribute("y1", py(s.dash.y)); dash.setAttribute("y2", py(s.dash.y));
+          dashT.setAttribute("y", py(s.dash.y) - 5); dashT.textContent = s.dash.t;
+          dash.style.opacity = 1; dashT.style.opacity = 1;
+        } else { dash.style.opacity = 0; dashT.style.opacity = 0; }
+        if (s.dot) {
+          dot.setAttribute("cx", px(s.dot.x)); dot.setAttribute("cy", py(s.dot.y));
+          dotT.setAttribute("x", px(s.dot.x) - 9); dotT.setAttribute("y", py(s.dot.y) - 9); dotT.textContent = s.dot.t;
+          dot.style.opacity = 1; dotT.style.opacity = 1;
+        } else { dot.style.opacity = 0; dotT.style.opacity = 0; }
+        var target = sample(s.pts);
+        if (instant || RM) { cur = target; draw(cur); return; }
+        var from = cur.slice(), t0 = performance.now(), dur = 480;
+        if (anim) cancelAnimationFrame(anim);
+        (function tick(t) {
+          var p = ease(Math.min(1, (t - t0) / dur));
+          cur = from.map(function (v, i) { return v + (target[i] - v) * p; });
+          draw(cur);
+          if (p < 1) anim = requestAnimationFrame(tick);
+        })(t0);
+      }
+      ST.forEach(function (s, i) {
+        var b = document.createElement("button");
+        b.type = "button"; b.className = "px-tab"; b.setAttribute("role", "tab");
+        b.textContent = s.t;
+        b.addEventListener("click", function () { stopCycle(); show(i); });
+        tabsEl.appendChild(b);
+      });
+      show(0, true);
+      // авто-перелистывание, пока пользователь не вмешался
+      var cyc = null, ci = 0;
+      function stopCycle() { if (cyc) { clearInterval(cyc); cyc = null; } }
+      if (!RM) {
+        var pio = new IntersectionObserver(function (es) {
+          es.forEach(function (e) {
+            if (e.isIntersecting && !cyc) cyc = setInterval(function () { ci = (ci + 1) % ST.length; show(ci); }, 4200);
+            if (!e.isIntersecting) stopCycle();
+          });
+        }, { threshold: 0.4 });
+        pio.observe(document.getElementById("px"));
+      }
+
+      // ── орбиты активов: позиции считает rAF (подписи всегда горизонтальны),
+      // наведение на точку показывает название и останавливает вращение
+      var ob = document.getElementById("ob"), tip = document.getElementById("ob-tip");
+      var G = [
+        { r: 1.0, sp: 0.05, col: "#EE7D1B", lab: "иностранные", items: ["S&P 500 ETF", "Биткоин-ETF", "Золото (GLD)", "CSI 300", "Уран (Global X)", "NVIDIA", "Hang Seng", "Nebius"] },
+        { r: 0.68, sp: -0.038, col: "rgba(242,243,247,0.85)", lab: "локальные", items: ["ОФЗ 26238", "Сбербанк", "Лукойл", "Яндекс", "Хэдхантер", "МосБиржа", "Татнефть", "ИКС 5", "USD/RUB"] },
+        { r: 0.38, sp: 0.028, col: "#4F86E6", lab: "индексы Rumberg", items: ["Широкий рынок", "Технологии", "Pre-IPO 1", "AI RSP 30", "Nat. Gas", "Нефтегаз", "Банки", "Сталь", "Лантаниум"] }
+      ];
+      var odots = [], rings = [], paused = false, W, H, R;
+      G.forEach(function (g, gi) {
+        var ring = document.createElement("div");
+        ring.className = "orb";
+        ob.appendChild(ring);
+        var lab = document.createElement("div");
+        lab.className = "orb-lab";
+        lab.textContent = g.lab;
+        lab.style.color = g.col;
+        ob.appendChild(lab);
+        rings.push({ el: ring, lab: lab, g: g });
+        g.items.forEach(function (nm, i) {
+          var d = document.createElement("div");
+          d.className = "od";
+          d.style.background = g.col;
+          d.addEventListener("mouseenter", function () {
+            tip.textContent = nm; tip.dataset.n = nm;
+            tip.style.opacity = 1; paused = true;
+          });
+          d.addEventListener("mouseleave", function () { tip.style.opacity = 0; paused = false; });
+          ob.appendChild(d);
+          odots.push({ el: d, g: g, nm: nm, a: (2 * Math.PI * i) / g.items.length + gi * 0.9 });
+        });
+      });
+      function obSize() {
+        W = ob.clientWidth; H = ob.clientHeight;
+        R = Math.min(W, H) / 2 - 16;
+        rings.forEach(function (r) {
+          var d = 2 * R * r.g.r;
+          r.el.style.width = d + "px"; r.el.style.height = d + "px";
+          r.lab.style.left = W / 2 + "px";
+          r.lab.style.top = (H / 2 - R * r.g.r) + "px";
+        });
+      }
+      obSize();
+      addEventListener("resize", obSize);
+      var ot0 = performance.now();
+      (function oframe(t) {
+        var odt = Math.min(0.05, (t - ot0) / 1000); ot0 = t;
+        odots.forEach(function (o) {
+          if (!paused && !RM) o.a += o.g.sp * odt * 6.28;
+          var x = W / 2 + Math.cos(o.a) * R * o.g.r, y = H / 2 + Math.sin(o.a) * R * o.g.r;
+          o.el.style.left = x + "px"; o.el.style.top = y + "px";
+          if (tip.dataset.n === o.nm) { tip.style.left = x + "px"; tip.style.top = y + "px"; }
+        });
+        requestAnimationFrame(oframe);
+      })(ot0);
+    })();
+  </script>
+
   <div class="cap">Юридические лица</div>
   <div class="entity">
     <div class="n">ООО «Румберг Капитал»</div>
@@ -117,7 +392,7 @@
     <div class="ogrn">ОГРН 1227700346610</div>
   </div>
   <div class="entity">
-    <div class="n">АО «Румберг Технологиз»</div>
+    <div class="n">АО «Румберг Технолоджис»</div>
     <div class="d">Участник Московского инновационного кластера.</div>
     <div class="ogrn">ОГРН 1237700069420</div>
   </div>
