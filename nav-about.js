@@ -94,8 +94,9 @@
     var s = document.createElement("style");
     s.id = "nav-about-css";
     s.textContent =
-      ".nav-about{font-size:13px;font-weight:500;color:rgba(242,243,247,0.6);white-space:nowrap;transition:color .2s;}" +
-      ".nav-about:hover{color:#F2F3F7;}" +
+      // Пилюля с оранжевым контуром: заметнее серых пунктов, но тише сплошной «Доски»
+      ".nav-about{display:inline-flex;align-items:center;font-size:13px;font-weight:500;color:#F0AE72;white-space:nowrap;border:1px solid rgba(238,125,27,0.45);border-radius:999px;padding:5px 12px;transition:color .2s,border-color .2s,background .2s;}" +
+      ".nav-about:hover{color:#0C0A08;background:#EE7D1B;border-color:#EE7D1B;}" +
       ".nav-burger{display:none;align-items:center;justify-content:center;width:38px;height:38px;border:1px solid rgba(255,255,255,0.14);border-radius:6px;background:transparent;cursor:pointer;padding:0;}" +
       ".nav-burger:hover{border-color:rgba(255,255,255,0.30);}" +
       ".nav-backdrop{position:fixed;inset:0;z-index:39;background:rgba(0,0,0,0.45);opacity:0;pointer-events:none;transition:opacity .18s;}" +
