@@ -181,7 +181,7 @@
 <div id="deck"></div>
 
 <script src="data/instruments.js?v=fx8"></script>
-<script src="data/lib.js?v=ac1"></script>
+<script src="data/lib.js?v=ac2"></script>
 <script src="data/offerings.js?v=srv19"></script>
 <script src="share.js?v=7"></script>
 <script src="contact.js?v=9"></script>
@@ -462,17 +462,17 @@
     const obsTxt = per === 4 ? "ежеквартально" : per + " раза в год";
     c = {
       badge: "Автоколл · структурная облигация",
-      subtitle: "Условный купон " + S.fmt2(cpnPa) + "% годовых на корзину " + inst.underlying + " по принципу worst-of.",
+      subtitle: "Условный купон " + S.fmt2(cpnPa) + "% годовых на корзину " + inst.underlying + " по принципу worst-of · срок " + inst.tenor + " · " + S.ccyLabel(inst) + ".",
       quoteK: "купон · % годовых · индикативно",
       chart: chAutocall,
       chartCap: "Возврат номинала на погашении в % от него; по горизонтали — уровень худшей бумаги корзины. Купоны на графике не показаны.",
-      params: [["Купон", S.fmt2(cpnPa) + "% годовых", true], ["Купонный барьер", S.fmtSmart(cpnB) + "%", false], ["Барьер автоотзыва", S.fmtSmart(call) + "%", false], ["Защита", S.fmtSmart(prot) + "%", false], ["Срок", inst.tenor, false]],
+      params: [["Купон", S.fmt2(cpnPa) + "% годовых", true], ["Купонный барьер", S.fmtSmart(cpnB) + "%", false], ["Барьер автоотзыва", S.fmtSmart(call) + "%", false], ["Защита на погашении", S.fmtSmart(prot) + "%", false]],
       exIntro: "Вход по номиналу " + S.fmtInt(nom) + " ₽ (100%) · купон " + S.fmt2(cpnPer) + "% за период = " + S.fmtInt(cpnRub) + " ₽",
       scen: [
         ["Корзина выше " + S.fmtSmart(cpnB) + "% весь срок", "купоны за " + inst.tenor + " и номинал", "+" + S.fmtInt(holdRub - nom) + " ₽", "var(--up)"],
         ["На погашении худшая бумага на " + downLvl + "%", "выплата по перформансу " + S.fmtInt(downRub) + " ₽", "−" + S.fmtInt(nom - downRub) + " ₽", "var(--down)"]
       ],
-      explainer: "Автоколл — облигация с условным купоном на корзину акций по принципу worst-of: условия считаются по худшей бумаге. На каждую дату наблюдения (" + obsTxt + ") при worst-of не ниже " + S.fmtSmart(cpnB) + "% начисляется купон " + S.fmt2(cpnPer) + "% номинала за период. При worst-of не ниже " + S.fmtSmart(call) + "% выпуск гасится досрочно с выплатой номинала и купона." + (nonCall ? " Первые " + nonCall + " " + (nonCall === 1 ? "период" : "периода") + " отзыв невозможен." : "") + " На погашении номинал возвращается полностью, пока worst-of не ниже " + S.fmtSmart(prot) + "%.",
+      explainer: "Условия считаются по <b>худшей бумаге</b> корзины (worst-of), наблюдения — " + obsTxt + ". Выше " + S.fmtSmart(cpnB) + "% начисляется купон " + S.fmt2(cpnPer) + "% номинала за период; выше " + S.fmtSmart(call) + "% выпуск гасится досрочно." + (nonCall ? " " + S.nonCallText(nonCall) + " отзыв невозможен." : "") + " На погашении номинал возвращается целиком, пока worst-of не ниже " + S.fmtSmart(prot) + "%.",
       underLabel: "Главный риск · падение корзины",
       underDesc: "Если на дату погашения худшая бумага корзины опустится ниже " + S.fmtSmart(prot) + "% начального уровня, выплата считается по её перформансу — возможна потеря части или всей суммы вложения. Отдельно действует кредитный риск эмитента облигации."
     };

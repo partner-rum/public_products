@@ -214,6 +214,27 @@ window.SITE = (function () {
 
   function underlyingLong(name) { return UNDERLYING_LONG[name] || null; }
 
+  // Валюта инструмента для витрины. Если экономика считается в одной валюте, а
+  // денежные расчёты идут в другой (поле settle) — показываем обе:
+  // «USD · расчёты в ₽». Иначе — просто код валюты.
+  // Период non-call словами: 1 → «Первый период», 3 → «Первые 3 периода».
+  // Раньше склеивалось «Первые 1 период» — грамматика ломалась на единице.
+  function nonCallText(n) {
+    n = Number(n) || 0;
+    if (n <= 0) return "";
+    if (n === 1) return "Первый период";
+    const t = n % 10, h = n % 100;
+    const w = (t >= 2 && t <= 4 && (h < 10 || h >= 20)) ? "периода" : "периодов";
+    return "Первые " + n + " " + w;
+  }
+
+  const CCY_SIGN = { RUB: "₽", USD: "$", EUR: "€", CNY: "¥" };
+  function ccyLabel(r) {
+    const c = (r && r.currency) || "RUB", s = r && r.settle;
+    if (!s || s === c) return c;
+    return c + " · расчёты в " + (CCY_SIGN[s] || s);
+  }
+
   // Чувствителен ли инструмент к валютному курсу: базовый актив в иностранной валюте.
   // Валютные пары (USD/RUB, CNY/RUB) исключаем — там курс и есть базовый актив.
   function isFxSensitive(name) {
@@ -222,6 +243,6 @@ window.SITE = (function () {
     return /S&P|NASDAQ|NVDA|NVIDIA|NBIS|Nebius|BTC|IBIT|GLD|SPY|COPX|CSI|URA|Uranium|Bitcoin|Gold|USD|\$/i.test(n);
   }
 
-  return { TYPES, INSTRUMENTS, PAYOFF, LEGAL, calc, displayName, findInstrument, instrumentsOfType, underlyingInfo, underlyingLong, isFxSensitive, history, fmtInt, fmt2, fmt1, fmtSmart, quoteBig, daysTo };
+  return { TYPES, INSTRUMENTS, PAYOFF, LEGAL, calc, displayName, findInstrument, instrumentsOfType, underlyingInfo, underlyingLong, isFxSensitive, ccyLabel, nonCallText, history, fmtInt, fmt2, fmt1, fmtSmart, quoteBig, daysTo };
 
 })();

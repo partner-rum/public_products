@@ -239,7 +239,7 @@
 </div>
 
 <script src="data/instruments.js?v=fx8"></script>
-<script src="data/lib.js?v=ac1"></script>
+<script src="data/lib.js?v=ac2"></script>
 <script src="contact.js?v=9"></script>
 <script src="share.js?v=7"></script>
 <script src="intro.js?v=3"></script>
@@ -535,8 +535,9 @@
       explainer: "Автоколл — облигация с условным купоном на корзину из " + (inst.basket ? inst.basket.length : 3) + " акций по принципу worst-of: все условия считаются по худшей бумаге корзины. " +
         "На каждую дату наблюдения (" + obsTxt + ") проверяются два уровня. Если худшая бумага не ниже " + S.fmtSmart(cpnB) + "% начального уровня — начисляется купон " + S.fmt2(cpnPer) + "% номинала за период. " +
         "Если все бумаги не ниже " + S.fmtSmart(call) + "% — выпуск гасится досрочно: инвестор получает номинал и купон." +
-        (nonCall ? " Первые " + nonCall + " " + (nonCall === 1 ? "период" : "периода") + " досрочный отзыв невозможен." : "") +
-        " На погашении номинал возвращается полностью, пока худшая бумага не ниже " + S.fmtSmart(prot) + "%; ниже этого уровня выплата считается по её перформансу — возможна потеря части или всей суммы.",
+        (nonCall ? " " + S.nonCallText(nonCall) + " досрочный отзыв невозможен." : "") +
+        " На погашении номинал возвращается полностью, пока худшая бумага не ниже " + S.fmtSmart(prot) + "%; ниже этого уровня выплата считается по её перформансу — возможна потеря части или всей суммы." +
+        (inst.settle && inst.settle !== inst.currency ? " Экономика продукта считается в " + inst.currency + ", денежные расчёты идут в рублях." : ""),
       payoff: chartAutocall,
       payoffCaption: "Возврат номинала на погашении в % от него; по горизонтали — уровень худшей бумаги корзины в % от начального. Купоны здесь не показаны: они начисляются отдельно на датах наблюдения.",
       metrics: [
@@ -546,6 +547,7 @@
         ["Защита на погашении", S.fmtSmart(prot) + "%"],
         ["Наблюдения", obsTxt.charAt(0).toUpperCase() + obsTxt.slice(1)],
         ["Срок", inst.tenor],
+        ["Валюта", S.ccyLabel(inst)],
         ["Мин. номинал", S.fmtInt(nom) + " ₽"]
       ],
       exampleIntro: "Вход по номиналу " + S.fmtInt(nom) + " ₽ (100%) · купон " + S.fmt2(cpnPer) + "% за период = " + S.fmtInt(cpnRub) + " ₽",
@@ -650,7 +652,7 @@
   document.getElementById("subtitle").textContent = content.subtitle;
   document.getElementById("quote").innerHTML = S.quoteBig(inst.quote);
   document.getElementById("quote-sub").textContent = inst.type === "booster" ? "коэффициент участия · индикативно"
-    : inst.type === "autocall" ? "купон · % годовых · индикативно · " + (inst.currency || "RUB")
+    : inst.type === "autocall" ? "купон · % годовых · индикативно"
     : "котировка · индикативно · % от номинала · " + (inst.currency || "RUB");
   // «Изменение за день» дублируется в шапке (quote-chg) и в метриках. У всех
   // инструментов chg===0 (рынок в котировках не отражаем), а на дисконтных 2-я

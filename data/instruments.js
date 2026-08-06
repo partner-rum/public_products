@@ -7,7 +7,7 @@ window.SITE_DATA = {
       "name": "Автоколл · Полупроводники США · 3 года",
       "underlying": "NVDA / AMD / INTC",
       "cls": "Акции США",
-      "currency": "RUB",
+      "currency": "USD",
       "basket": [
         "NVDA",
         "AMD",
@@ -23,7 +23,8 @@ window.SITE_DATA = {
       "quote": 20,
       "chg": 0,
       "minNom": 1000000,
-      "src": "sales"
+      "src": "sales",
+      "settle": "RUB"
     },
     {
       "id": "AC-BIGTECH-US-3Y",
@@ -31,7 +32,7 @@ window.SITE_DATA = {
       "name": "Автоколл · Big Tech США · 3 года",
       "underlying": "NVDA / TSLA / AMZN / GOOGL",
       "cls": "Акции США",
-      "currency": "RUB",
+      "currency": "USD",
       "basket": [
         "NVDA",
         "TSLA",
@@ -48,7 +49,8 @@ window.SITE_DATA = {
       "quote": 16,
       "chg": 0,
       "minNom": 1000000,
-      "src": "sales"
+      "src": "sales",
+      "settle": "RUB"
     },
     {
       "id": "W-OFZ238-C100-0728",
