@@ -384,7 +384,8 @@
       var parts = String(r.name).split(" · ");
       var head = parts.shift();
       var rest = parts.length ? '<span class="nm"> · ' + parts.join(" · ") + '</span>' : '';
-      var qt = r.quote != null ? '<span class="qt">' + fmtQ(r.quote) + '%</span>' : '';
+      // У автоколла quote — купон годовых, не премия: подпись «% г.», как на доске
+      var qt = r.quote != null ? '<span class="qt">' + fmtQ(r.quote) + (r.type === "autocall" ? "% г." : "%") + '</span>' : '';
       return '<span class="it"><span class="sym">' + head + '</span>' + rest + qt + '</span>';
     }).join("");
     document.getElementById("tape").innerHTML = items + items;
