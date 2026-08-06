@@ -200,8 +200,15 @@ async function buildCatalog(env) {
   if (instr.length) {
     lines.push("ТЕКУЩИЕ ПРОДУКТЫ (доска, можно предложить сейчас):");
     for (const p of instr) {
+      // У автоколла quote — это КУПОН годовых, а не цена входа (вход по номиналу).
+      // Без этой ветки агент отвечал «цена 20%» и вводил клиента в заблуждение.
+      const price = p.type === "autocall"
+        ? "купон " + (p.couponPa != null ? p.couponPa : p.quote) + "% годовых · вход по номиналу · купонный барьер " +
+          (p.couponBarrier || p.protectionPct || 65) + "% · автоотзыв " + (p.callBarrier || 120) +
+          "% · защита " + (p.protectionPct || 65) + "% · worst-of"
+        : p.quote != null && "цена " + p.quote + "%";
       lines.push("- [" + p.id + "] " + [p.name, p.underlying && "базовый актив: " + p.underlying,
-        p.quote != null && "цена " + p.quote + "%"].filter(Boolean).join(" · "));
+        price].filter(Boolean).join(" · "));
     }
   }
   const offers = (off && off.items) || [];

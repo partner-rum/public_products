@@ -299,12 +299,12 @@
 </div>
 
 <script src="data/instruments.js?v=fx8"></script>
-<script src="data/lib.js?v=fx9"></script>
+<script src="data/lib.js?v=ac1"></script>
 <script src="share.js?v=7"></script>
 <script src="contact.js?v=9"></script>
 <script>
   const S = window.SITE;
-  const TYPE_LABEL = { discount: "Дисконтные облигации", protection: "Защита капитала", warrant: "Варранты", booster: "Бустеры" };
+  const TYPE_LABEL = { discount: "Дисконтные облигации", protection: "Защита капитала", warrant: "Варранты", booster: "Бустеры", autocall: "Автоколлы" };
 
   let type = "all", q = "", selected = null, mode = "payoff";
   // Храним СВЁРНУТЫЕ группы: по умолчанию раскрыты все. Раньше здесь был набор
@@ -449,6 +449,34 @@
       '</svg>';
   }
 
+  // Автоколл: выплата ТЕЛА на погашении по worst-of (европейский барьер).
+  // Вертикальные пунктиры — купонный барьер и барьер автоотзыва.
+  function chartAutocall(inst) {
+    const prot = inst.protectionPct || 65, cpn = inst.couponBarrier || prot, call = inst.callBarrier || 120;
+    const rLo = Math.min(prot - 25, 35), rHi = Math.max(call + 12, 132);
+    const yMin = Math.max(0, rLo - 8), yMax = 118;
+    const x = v => PAD + ((v - rLo) / (rHi - rLo)) * (W - PAD * 2);
+    const y = v => H - PAD - ((v - yMin) / (yMax - yMin)) * (H - PAD * 2);
+    // ниже барьера — выплата по перформансу; на барьере — скачок к 100%
+    const d = "M" + x(rLo).toFixed(1) + " " + y(rLo).toFixed(1) +
+      " L" + x(prot).toFixed(1) + " " + y(prot).toFixed(1) +
+      " L" + x(prot).toFixed(1) + " " + y(100).toFixed(1) +
+      " L" + x(rHi).toFixed(1) + " " + y(100).toFixed(1);
+    const vline = (v, col, label, anchor) =>
+      '<line x1="' + x(v) + '" y1="' + (PAD - 4) + '" x2="' + x(v) + '" y2="' + y(yMin) + '" stroke="' + col + '" stroke-width="1" stroke-dasharray="3 4"/>' +
+      '<text x="' + (x(v) + (anchor === "end" ? -5 : 5)) + '" y="' + (PAD + 6) + '" text-anchor="' + (anchor || "start") + '" fill="' + col + '" font-size="10" ' + MONO + '>' + label + '</text>';
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="display:block">' +
+      '<line x1="' + PAD + '" y1="' + y(100) + '" x2="' + (W - PAD) + '" y2="' + y(100) + '" stroke="' + C.axis + '" stroke-width="1" stroke-dasharray="4 4"/>' +
+      '<text x="' + (W - PAD) + '" y="' + (y(100) - 7) + '" text-anchor="end" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>номинал 100%</text>' +
+      vline(call, C.gold, "автоотзыв " + S.fmtSmart(call) + "%", "end") +
+      (cpn !== prot ? vline(cpn, C.lab, "купон " + S.fmtSmart(cpn) + "%") : "") +
+      '<path d="' + d + '" fill="none" stroke="' + C.line + '" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>' +
+      '<circle cx="' + x(prot) + '" cy="' + y(100) + '" r="3.4" fill="' + C.line + '"/>' +
+      '<text x="' + (x(prot) + 7) + '" y="' + (y(100) + 15) + '" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>защита ' + S.fmtSmart(prot) + '%</text>' +
+      '<text x="' + x((rLo + prot) / 2) + '" y="' + (y((rLo + prot) / 2) - 10) + '" text-anchor="middle" fill="' + C.lab + '" font-size="10" ' + MONO + '>по перформансу</text>' +
+      '</svg>';
+  }
+
   // --- Контент паспорта (без дублей: котировка и изменение — только в шапке) ---
   function buildContent(inst) {
     const nom = inst.minNom;
@@ -518,6 +546,50 @@
         ]
       };
     }
+    if (inst.type === "autocall") {
+      const cpnPa = inst.couponPa != null ? inst.couponPa : inst.quote;
+      const prot = inst.protectionPct || 65, cpnB = inst.couponBarrier || prot, call = inst.callBarrier || 120;
+      const per = inst.obsPerYear || 4, nonCall = inst.nonCall || 0;
+      const cpnPer = cpnPa / per;                        // купон за период, % номинала
+      const cpnRub = nom * cpnPer / 100;
+      const firstCall = nonCall + 1;                     // номер первого наблюдения с возможностью отзыва
+      const yrs = parseFloat(String(inst.tenor).replace(",", ".")) || 3;
+      const holdRub = nom * (1 + cpnPa / 100 * yrs);     // номинал + купоны за весь срок
+      const downLvl = Math.max(10, prot - 20);           // сценарий «ниже барьера»
+      const downRub = nom * downLvl / 100;
+      return {
+        badge: "АВТОКОЛЛ · WORST-OF",
+        subtitle: "Условный купон на корзину " + inst.underlying + " — купон идёт, пока худшая бумага выше " + S.fmtSmart(cpnB) + "%",
+        payoff: () => chartAutocall(inst),
+        payoffCaption: "Возврат номинала на погашении в % от него; по горизонтали — уровень худшей бумаги корзины в % от начального. Купоны на графике не показаны — они начисляются отдельно на датах наблюдения.",
+        metrics: [
+          [S.fmt2(cpnPa) + "% г.", "купон · индикативно"],
+          [S.fmtSmart(cpnB) + "%", "купонный барьер"],
+          [S.fmtSmart(call) + "%", "барьер автоотзыва"],
+          [S.fmtSmart(prot) + "%", "защита на погашении"],
+          [inst.tenor, "срок"],
+          [inst.currency || "RUB", "валюта"]
+        ],
+        exampleIntro: "Номинал " + S.fmtInt(nom) + " ₽ · купон " + S.fmt2(cpnPa) + "% годовых = " + S.fmtInt(cpnRub) + " ₽ за период (" + (per === 4 ? "квартал" : "период") + ")",
+        scenarios: [
+          ["Автоотзыв: все бумаги выше " + S.fmtSmart(call) + "%", "Досрочное погашение — номинал и купон", "+" + S.fmtInt(cpnRub) + " ₽ за период", "var(--up)"],
+          ["Корзина держится выше " + S.fmtSmart(cpnB) + "% весь срок", "Купоны за " + inst.tenor + " и номинал: " + S.fmtInt(holdRub) + " ₽", "+" + S.fmtInt(holdRub - nom) + " ₽", "var(--up)"],
+          ["Худшая бумага ниже " + S.fmtSmart(cpnB) + "% на дату наблюдения", "Купон за этот период не выплачивается", "0 ₽", "rgba(255,255,255,0.60)"],
+          ["На погашении худшая бумага на " + downLvl + "%", "Выплата по перформансу: " + S.fmtInt(downRub) + " ₽", "−" + S.fmtInt(nom - downRub) + " ₽", "var(--loss)"]
+        ],
+        explainer: "Автоколл — облигация с условным купоном на корзину из " + (inst.basket ? inst.basket.length : 3) + " акций по принципу worst-of: все условия считаются по худшей бумаге корзины. " +
+          "На каждую дату наблюдения (" + (per === 4 ? "ежеквартально" : per + " раза в год") + ") проверяются два уровня. Если худшая бумага не ниже " + S.fmtSmart(cpnB) + "% начального уровня — начисляется купон " + S.fmt2(cpnPer) + "% номинала за период (" + S.fmt2(cpnPa) + "% годовых). " +
+          "Если все бумаги не ниже " + S.fmtSmart(call) + "% — выпуск гасится досрочно: инвестор получает номинал и купон, сделка закрывается." +
+          (nonCall ? " Первые " + nonCall + " " + (nonCall === 1 ? "период" : "периода") + " досрочный отзыв невозможен — купоны идут минимум до " + firstCall + "-й даты наблюдения." : "") +
+          " На погашении номинал возвращается полностью, пока худшая бумага не ниже " + S.fmtSmart(prot) + "%; ниже этого уровня выплата считается по её перформансу.",
+        facts: [
+          ["Принцип", "Worst-of — по худшей бумаге корзины"],
+          ["Наблюдения", per === 4 ? "Ежеквартально" : per + " раза в год"],
+          ["Non-call", nonCall ? nonCall + " " + (nonCall === 1 ? "период" : "периода") + " без досрочного отзыва" : "Отзыв возможен с первой даты"],
+          ["Максимальный убыток", "До полной суммы вложения при падении корзины"]
+        ]
+      };
+    }
     if (inst.type === "booster") {
       const K = inst.strike || 100, K2 = inst.strike2 || 110, ku = (inst.ku || 175) / 100;
       const capPay = K + ku * (K2 - K), maxUp = capPay - 100, kuS = Math.round(ku * 100) + "%";
@@ -581,7 +653,8 @@
   // Математика калькулятора — в data/lib.js (S.calc), общая с карточкой инструмента.
   function calcHTML(inst) {
     // Бустер покупается по номиналу (100%), а не по quote (там хранится КУ) — вход = minNom.
-    const price0 = inst.type === "booster" ? inst.minNom : Math.round(inst.minNom * inst.quote / 100), cfg = S.calc.move(inst);
+    const atPar = inst.type === "booster" || inst.type === "autocall";   // покупка по номиналу, не по премии
+    const price0 = atPar ? inst.minNom : Math.round(inst.minNom * inst.quote / 100), cfg = S.calc.move(inst);
     const slider = cfg ? '<div class="calc-row"><label class="calc-l">' + inst.underlying + ': <b id="calc-mv"></b></label>' +
       '<input class="calc-range" id="calc-move" type="range" min="' + cfg.min + '" max="' + cfg.max + '" value="' + cfg.val + '" step="1" aria-label="Сценарий по базовому активу"></div>' : '';
     return '<div class="sec"><div class="h">Калькулятор выплаты</div>' +
@@ -607,7 +680,7 @@
       if (!isFinite(amount) || amount < 0) { amount = 0; if (raw < 0) clampNote = "Сумма не может быть отрицательной. "; }
       else if (amount > MAX_AMT) { amount = MAX_AMT; clampNote = "Максимум для расчёта — 1 млрд ₽. "; }
       // Бустер: вход по номиналу → номинал = сумме вложения. Иначе номинал = сумма / цена входа.
-      const nominal = inst.type === "booster" ? amount : (inst.quote ? amount * 100 / inst.quote : 0);
+      const nominal = (inst.type === "booster" || inst.type === "autocall") ? amount : (inst.quote ? amount * 100 / inst.quote : 0);
       const m = move ? +move.value : 0;
       if (mvOut) mvOut.textContent = (m >= 0 ? "+" : "") + m + "%";
       const payout = nominal * S.calc.pct(inst, m) / 100, net = payout - amount;
@@ -618,6 +691,7 @@
       if (inst.type === "warrant") noteEl.textContent = clampNote + "Экспозиция на номинал " + S.fmtInt(Math.round(nominal)) + " ₽ за премию = сумму вложения. Безубыток — при росте " + inst.underlying + " примерно на +" + S.fmtSmart(be) + "%; ниже — выплата не покрывает премию.";
       else if (inst.type === "protection") noteEl.textContent = clampNote + "Номинал " + S.fmtInt(Math.round(nominal)) + " ₽. Защита " + prot + "%: при падении возвращается " + prot + "% номинала.";
       else if (inst.type === "booster") noteEl.textContent = clampNote + "Вложение = номинал " + S.fmtInt(Math.round(nominal)) + " ₽. Рост ×КУ внутри диапазона до потолка; при падении — участие 1:1, как в самом активе.";
+      else if (inst.type === "autocall") noteEl.textContent = clampNote + "Вложение = номинал " + S.fmtInt(Math.round(nominal)) + " ₽. Показан возврат ТЕЛА на погашении по худшей бумаге корзины — БЕЗ купонов: они начисляются отдельно на датах наблюдения. Выше " + S.fmtSmart(inst.protectionPct || 65) + "% возвращается весь номинал.";
       else noteEl.textContent = clampNote + "Номинал " + S.fmtInt(Math.round(nominal)) + " ₽. При погашении — 100% номинала (если нет кредитного события). Доход зафиксирован дисконтом.";
     }
     amt.addEventListener("input", run);
@@ -635,7 +709,7 @@
   let cmpMode = false, cmp = [];
 
   // Цена входа в % номинала. Бустер покупается по номиналу (в quote у него КУ).
-  function cmpEntry(r) { return r.type === "booster" ? 100 : (r.quote || 0); }
+  function cmpEntry(r) { return (r.type === "booster" || r.type === "autocall") ? 100 : (r.quote || 0); }
   // Результат на вложенную сумму (%) при ходе базового актива move (%).
   function cmpResult(r, move) {
     const e = cmpEntry(r);
@@ -648,6 +722,7 @@
     if (r.type === "discount") return "Дисконтная облигация";
     if (r.type === "booster") return "Бустер";
     if (r.type === "protection") return "Облигация с защитой капитала";
+    if (r.type === "autocall") return "Автоколл · worst-of";
     return "Структурный продукт";
   }
   function cmpGrowth(r) {
@@ -657,6 +732,7 @@
     if (r.type === "booster") return "×" + Math.round(r.ku || r.quote) + "% в диапазоне " +
       S.fmtSmart(r.strike || 100) + "–" + S.fmtSmart(r.strike2 || 110) + "%";
     if (r.type === "protection") return "участие " + Math.round((r.participation || 1) * 100) + "%";
+    if (r.type === "autocall") return "купон " + S.fmt2(r.couponPa != null ? r.couponPa : r.quote) + "% г. вместо роста";
     return "—";
   }
   function cmpCap(r) {
@@ -668,6 +744,7 @@
     }
     if (r.type === "discount") return "100% ном. — фиксировано";
     if (r.type === "protection") return r.cap != null ? "участие до +" + S.fmtSmart(r.cap) + "% актива" : "не ограничен";
+    if (r.type === "autocall") return "номинал + накопленные купоны";
     return "—";
   }
   function cmpDown(r) {
@@ -675,6 +752,7 @@
     if (r.type === "booster") return "1:1 вместе с активом";
     if (r.type === "discount") return "не зависит от рынка · кредитный риск";
     if (r.type === "protection") return "защита " + (r.protectionPct || 100) + "% ном.";
+    if (r.type === "autocall") return "защита " + S.fmtSmart(r.protectionPct || 65) + "% ном., ниже — по перформансу";
     return "—";
   }
   function cmpBE(r) {
@@ -682,6 +760,7 @@
     if (be != null) return "рост " + (be >= 0 ? "+" : "−") + S.fmtSmart(Math.abs(be)) + "%";
     if (r.type === "booster") return "на месте — 0%";
     if (r.type === "discount") return "известен в день сделки";
+    if (r.type === "autocall") return "worst-of выше " + S.fmtSmart(r.protectionPct || 65) + "%";
     return "—";
   }
 
@@ -906,7 +985,9 @@
       '</div>' +
       '<div class="quote-block">' +
         '<div class="quote-big">' + S.quoteBig(inst.quote) + '</div>' +
-        '<div class="quote-sub">' + (inst.type === "booster" ? "коэффициент участия · индикативно" : "котировка · индикативно · % от номинала · " + (inst.currency || "RUB")) + '</div>' +
+        '<div class="quote-sub">' + (inst.type === "booster" ? "коэффициент участия · индикативно"
+          : inst.type === "autocall" ? "купон · % годовых · индикативно · " + (inst.currency || "RUB")
+          : "котировка · индикативно · % от номинала · " + (inst.currency || "RUB")) + '</div>' +
       '</div></div>' +
       '<div class="pp-actions">' + actionsHTML(inst) + '</div>' +
       '<div class="chart-box">' +
@@ -978,6 +1059,7 @@
     if (r.type === "warrant") return (r.structure === "cs" ? "CS 100–150" : "CALL " + S.fmtSmart(r.strike)) + " · " + r.tenor;
     if (r.type === "discount") return (r.underlying || "Дисконтная облигация") + " · " + r.tenor;
     if (r.type === "booster") return "Бустер · " + r.tenor;
+    if (r.type === "autocall") return "Автоколл · " + r.tenor;
     return "Защита капитала · участие " + Math.round(r.participation * 100) + "%";
   }
 
@@ -989,7 +1071,9 @@
   }
 
   function itemHTML(r) {
-    var qv = r.type === "booster" ? "КУ " + Math.round(r.quote) + "%" : S.fmt2(r.quote) + "%";
+    var qv = r.type === "booster" ? "КУ " + Math.round(r.quote) + "%"
+      : r.type === "autocall" ? S.fmt2(r.couponPa != null ? r.couponPa : r.quote) + "% г."
+      : S.fmt2(r.quote) + "%";
     const picked = cmp.indexOf(r.id) >= 0;
     return '<button class="item' + (r.id === selected && !cmpMode ? " active" : "") + (picked ? " picked" : "") +
       '" data-id="' + r.id + '"' + (cmpMode ? ' aria-pressed="' + picked + '"' : "") + '>' +
@@ -1061,7 +1145,7 @@
   // Фильтр по семейству
   const counts = { all: S.INSTRUMENTS.length };
   S.INSTRUMENTS.forEach(r => counts[r.type] = (counts[r.type] || 0) + 1);
-  document.getElementById("kinds").innerHTML = ["all", "warrant", "discount", "booster", "protection"].map(t =>
+  document.getElementById("kinds").innerHTML = ["all", "warrant", "discount", "autocall", "booster", "protection"].map(t =>
     '<button class="kf' + (t === type ? " active" : "") + '" data-k="' + t + '" aria-pressed="' + (t === type) + '">' +
     (t === "all" ? "Все" : TYPE_LABEL[t]) + '<span class="n">' + (counts[t] || 0) + '</span></button>').join("");
   document.querySelectorAll(".kf").forEach(b => b.addEventListener("click", () => {

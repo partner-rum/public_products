@@ -239,7 +239,7 @@
 </div>
 
 <script src="data/instruments.js?v=fx8"></script>
-<script src="data/lib.js?v=fx9"></script>
+<script src="data/lib.js?v=ac1"></script>
 <script src="contact.js?v=9"></script>
 <script src="share.js?v=7"></script>
 <script src="intro.js?v=3"></script>
@@ -406,6 +406,33 @@
       '</svg>';
   }
 
+  // Автоколл: возврат тела на погашении по worst-of (европейский барьер);
+  // вертикальные пунктиры — купонный барьер и барьер автоотзыва.
+  function chartAutocall() {
+    const prot = inst.protectionPct || 65, cpn = inst.couponBarrier || prot, call = inst.callBarrier || 120;
+    const rLo = Math.min(prot - 25, 35), rHi = Math.max(call + 12, 132);
+    const yMin = Math.max(0, rLo - 8), yMax = 118;
+    const x = v => PAD + ((v - rLo) / (rHi - rLo)) * (W - PAD * 2);
+    const y = v => H - PAD - ((v - yMin) / (yMax - yMin)) * (H - PAD * 2);
+    const d = "M" + x(rLo).toFixed(1) + " " + y(rLo).toFixed(1) +
+      " L" + x(prot).toFixed(1) + " " + y(prot).toFixed(1) +
+      " L" + x(prot).toFixed(1) + " " + y(100).toFixed(1) +
+      " L" + x(rHi).toFixed(1) + " " + y(100).toFixed(1);
+    const vline = (v, col, label, anchor) =>
+      '<line x1="' + x(v) + '" y1="' + (PAD - 4) + '" x2="' + x(v) + '" y2="' + y(yMin) + '" stroke="' + col + '" stroke-width="1" stroke-dasharray="3 4"/>' +
+      '<text x="' + (x(v) + (anchor === "end" ? -6 : 6)) + '" y="' + (PAD + 7) + '" text-anchor="' + (anchor || "start") + '" fill="' + col + '" font-size="11" ' + MONO + '>' + label + '</text>';
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="display:block">' +
+      '<line x1="' + PAD + '" y1="' + y(100) + '" x2="' + (W - PAD) + '" y2="' + y(100) + '" stroke="' + C.axis + '" stroke-width="1" stroke-dasharray="4 4"/>' +
+      '<text x="' + (W - PAD) + '" y="' + (y(100) - 8) + '" text-anchor="end" fill="' + C.lab2 + '" font-size="11" ' + MONO + '>номинал 100%</text>' +
+      vline(call, C.gold, "автоотзыв " + S.fmtSmart(call) + "%", "end") +
+      (cpn !== prot ? vline(cpn, C.lab, "купон " + S.fmtSmart(cpn) + "%") : "") +
+      '<path d="' + d + '" fill="none" stroke="' + C.line + '" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>' +
+      '<circle cx="' + x(prot) + '" cy="' + y(100) + '" r="3.8" fill="' + C.line + '"/>' +
+      '<text x="' + (x(prot) + 8) + '" y="' + (y(100) + 17) + '" fill="' + C.lab2 + '" font-size="11" ' + MONO + '>защита ' + S.fmtSmart(prot) + '%</text>' +
+      '<text x="' + x((rLo + prot) / 2) + '" y="' + (y((rLo + prot) / 2) - 11) + '" text-anchor="middle" fill="' + C.lab + '" font-size="11" ' + MONO + '>по перформансу</text>' +
+      '</svg>';
+  }
+
   // --- Контент по типу продукта ---
   const nom = inst.minNom;
   let content = {};
@@ -490,6 +517,50 @@
         ["Доход", "Дисконт: номинал минус цена покупки"],
         ["Купоны", "Нет — весь доход в дисконте"],
         ["Риск", "Кредитное качество эмитента"],
+        ["Мин. номинал", S.fmtInt(nom) + " ₽"]
+      ]
+    };
+  } else if (inst.type === "autocall") {
+    const cpnPa = inst.couponPa != null ? inst.couponPa : inst.quote;
+    const prot = inst.protectionPct || 65, cpnB = inst.couponBarrier || prot, call = inst.callBarrier || 120;
+    const per = inst.obsPerYear || 4, nonCall = inst.nonCall || 0;
+    const cpnPer = cpnPa / per, cpnRub = nom * cpnPer / 100;
+    const yrs = parseFloat(String(inst.tenor).replace(",", ".")) || 3;
+    const holdRub = nom * (1 + cpnPa / 100 * yrs);
+    const downLvl = Math.max(10, prot - 20), downRub = nom * downLvl / 100;
+    const obsTxt = per === 4 ? "ежеквартально" : per + " раза в год";
+    content = {
+      badge: "автоколл · worst-of",
+      subtitle: "Автоколл · корзина " + inst.underlying + " · условный купон " + S.fmt2(cpnPa) + "% годовых",
+      explainer: "Автоколл — облигация с условным купоном на корзину из " + (inst.basket ? inst.basket.length : 3) + " акций по принципу worst-of: все условия считаются по худшей бумаге корзины. " +
+        "На каждую дату наблюдения (" + obsTxt + ") проверяются два уровня. Если худшая бумага не ниже " + S.fmtSmart(cpnB) + "% начального уровня — начисляется купон " + S.fmt2(cpnPer) + "% номинала за период. " +
+        "Если все бумаги не ниже " + S.fmtSmart(call) + "% — выпуск гасится досрочно: инвестор получает номинал и купон." +
+        (nonCall ? " Первые " + nonCall + " " + (nonCall === 1 ? "период" : "периода") + " досрочный отзыв невозможен." : "") +
+        " На погашении номинал возвращается полностью, пока худшая бумага не ниже " + S.fmtSmart(prot) + "%; ниже этого уровня выплата считается по её перформансу — возможна потеря части или всей суммы.",
+      payoff: chartAutocall,
+      payoffCaption: "Возврат номинала на погашении в % от него; по горизонтали — уровень худшей бумаги корзины в % от начального. Купоны здесь не показаны: они начисляются отдельно на датах наблюдения.",
+      metrics: [
+        ["Купон", S.fmt2(cpnPa) + "% годовых · индикативно"],
+        ["Купонный барьер", S.fmtSmart(cpnB) + "%"],
+        ["Барьер автоотзыва", S.fmtSmart(call) + "%"],
+        ["Защита на погашении", S.fmtSmart(prot) + "%"],
+        ["Наблюдения", obsTxt.charAt(0).toUpperCase() + obsTxt.slice(1)],
+        ["Срок", inst.tenor],
+        ["Мин. номинал", S.fmtInt(nom) + " ₽"]
+      ],
+      exampleIntro: "Вход по номиналу " + S.fmtInt(nom) + " ₽ (100%) · купон " + S.fmt2(cpnPer) + "% за период = " + S.fmtInt(cpnRub) + " ₽",
+      scenarios: [
+        ["Автоотзыв: все бумаги выше " + S.fmtSmart(call) + "%", "Досрочное погашение — номинал и купон", "+" + S.fmtInt(cpnRub) + " ₽ за период", "var(--up)"],
+        ["Корзина выше " + S.fmtSmart(cpnB) + "% весь срок", "Купоны за " + inst.tenor + " и номинал: " + S.fmtInt(holdRub) + " ₽", "+" + S.fmtInt(holdRub - nom) + " ₽", "var(--up)"],
+        ["Худшая бумага ниже " + S.fmtSmart(cpnB) + "% на дату наблюдения", "Купон за этот период не начисляется", "0 ₽", "rgba(242,243,247,0.60)"],
+        ["На погашении худшая бумага на " + downLvl + "%", "Выплата по перформансу: " + S.fmtInt(downRub) + " ₽", "−" + S.fmtInt(nom - downRub) + " ₽", "var(--loss)"]
+      ],
+      facts: [
+        ["Принцип", "Worst-of — все условия по худшей бумаге корзины"],
+        ["Купон", "Условный: " + S.fmt2(cpnPa) + "% годовых при worst-of ≥ " + S.fmtSmart(cpnB) + "%"],
+        ["Автоотзыв", "При worst-of ≥ " + S.fmtSmart(call) + "% на дату наблюдения" + (nonCall ? ", начиная с " + (nonCall + 1) + "-й" : "")],
+        ["Защита", S.fmtSmart(prot) + "% номинала на погашении (европейский барьер)"],
+        ["Риск", "Ниже барьера — выплата по перформансу худшей бумаги"],
         ["Мин. номинал", S.fmtInt(nom) + " ₽"]
       ]
     };
@@ -578,7 +649,9 @@
   document.getElementById("badge").textContent = content.badge;
   document.getElementById("subtitle").textContent = content.subtitle;
   document.getElementById("quote").innerHTML = S.quoteBig(inst.quote);
-  document.getElementById("quote-sub").textContent = inst.type === "booster" ? "коэффициент участия · индикативно" : "котировка · индикативно · % от номинала · " + (inst.currency || "RUB");
+  document.getElementById("quote-sub").textContent = inst.type === "booster" ? "коэффициент участия · индикативно"
+    : inst.type === "autocall" ? "купон · % годовых · индикативно · " + (inst.currency || "RUB")
+    : "котировка · индикативно · % от номинала · " + (inst.currency || "RUB");
   // «Изменение за день» дублируется в шапке (quote-chg) и в метриках. У всех
   // инструментов chg===0 (рынок в котировках не отражаем), а на дисконтных 2-я
   // ветка знака печатала «−0,0 п.п.» — минус на нуле. Пока данных о дневном
@@ -612,7 +685,8 @@
   // --- Калькулятор выплаты (математика — в data/lib.js S.calc, общая с доской) ---
   function calcInner(inst) {
     const nom0 = inst.minNom || 1000000;
-    const price0 = inst.type === "booster" ? nom0 : Math.round(nom0 * inst.quote / 100), cfg = S.calc.move(inst);
+    const atPar = inst.type === "booster" || inst.type === "autocall";   // вход по номиналу, не по премии
+    const price0 = atPar ? nom0 : Math.round(nom0 * inst.quote / 100), cfg = S.calc.move(inst);
     const slider = cfg ? '<div class="calc-row"><label class="calc-l">' + inst.underlying + ': <b id="calc-mv"></b></label>' +
       '<input class="calc-range" id="calc-move" type="range" min="' + cfg.min + '" max="' + cfg.max + '" value="' + cfg.val + '" step="1" aria-label="Сценарий по базовому активу"></div>' : '';
     return '<div class="calc-row"><label class="calc-l" for="calc-amt">Сумма вложения, ₽</label>' +
@@ -634,7 +708,7 @@
       let amount = raw, clampNote = "";
       if (!isFinite(amount) || amount < 0) { amount = 0; if (raw < 0) clampNote = "Сумма не может быть отрицательной. "; }
       else if (amount > MAX_AMT) { amount = MAX_AMT; clampNote = "Максимум для расчёта — 1 млрд ₽. "; }
-      const nominal = inst.type === "booster" ? amount : (inst.quote ? amount * 100 / inst.quote : 0);
+      const nominal = (inst.type === "booster" || inst.type === "autocall") ? amount : (inst.quote ? amount * 100 / inst.quote : 0);
       const m = move ? +move.value : 0;
       if (mvOut) mvOut.textContent = (m >= 0 ? "+" : "") + m + "%";
       const payout = nominal * S.calc.pct(inst, m) / 100, net = payout - amount;
@@ -645,6 +719,7 @@
       if (inst.type === "warrant") noteEl.textContent = clampNote + "Экспозиция на номинал " + S.fmtInt(Math.round(nominal)) + " ₽ за премию = сумму вложения. Безубыток — при росте " + inst.underlying + " примерно на +" + S.fmtSmart(be) + "%; ниже — выплата не покрывает премию.";
       else if (inst.type === "protection") noteEl.textContent = clampNote + "Номинал " + S.fmtInt(Math.round(nominal)) + " ₽. Защита " + prot + "%: при падении возвращается " + prot + "% номинала.";
       else if (inst.type === "booster") noteEl.textContent = clampNote + "Вложение = номинал " + S.fmtInt(Math.round(nominal)) + " ₽. Рост ×КУ внутри диапазона до потолка; при падении — участие 1:1, как в самом активе.";
+      else if (inst.type === "autocall") noteEl.textContent = clampNote + "Вложение = номинал " + S.fmtInt(Math.round(nominal)) + " ₽. Показан возврат ТЕЛА на погашении по худшей бумаге корзины — БЕЗ купонов: они начисляются отдельно на датах наблюдения. Выше " + S.fmtSmart(inst.protectionPct || 65) + "% возвращается весь номинал.";
       else noteEl.textContent = clampNote + "Номинал " + S.fmtInt(Math.round(nominal)) + " ₽. При погашении — 100% номинала (если нет кредитного события). Доход зафиксирован дисконтом.";
     }
     amt.addEventListener("input", run);

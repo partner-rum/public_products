@@ -181,7 +181,7 @@
 <div id="deck"></div>
 
 <script src="data/instruments.js?v=fx8"></script>
-<script src="data/lib.js?v=fx9"></script>
+<script src="data/lib.js?v=ac1"></script>
 <script src="data/offerings.js?v=srv19"></script>
 <script src="share.js?v=7"></script>
 <script src="contact.js?v=9"></script>
@@ -357,6 +357,32 @@
     return svg + '</svg>';
   }
 
+  // Автоколл: возврат тела на погашении по worst-of (европейский барьер).
+  function chAutocall() {
+    const prot = inst.protectionPct || 65, cpn = inst.couponBarrier || prot, call = inst.callBarrier || 120;
+    const lo = Math.min(prot - 25, 35), hi = Math.max(call + 12, 132);
+    const yMin = Math.max(0, lo - 8), yMax = 118;
+    const x = v => PAD + ((v - lo) / (hi - lo)) * (CW - PAD * 2);
+    const y = v => CH - PAD - ((v - yMin) / (yMax - yMin)) * (CH - PAD * 2);
+    const line = "M" + x(lo).toFixed(1) + " " + y(lo).toFixed(1) +
+      " L" + x(prot).toFixed(1) + " " + y(prot).toFixed(1) +
+      " L" + x(prot).toFixed(1) + " " + y(100).toFixed(1) +
+      " L" + x(hi).toFixed(1) + " " + y(100).toFixed(1);
+    const vline = (v, col, label, anchor) =>
+      '<line x1="' + x(v) + '" y1="' + (PAD - 3) + '" x2="' + x(v) + '" y2="' + y(yMin) + '" stroke="' + col + '" stroke-width="1" stroke-dasharray="3 4"/>' +
+      '<text x="' + (x(v) + (anchor === "end" ? -5 : 5)) + '" y="' + (PAD + 5) + '" text-anchor="' + (anchor || "start") + '" fill="' + col + '" font-size="10" ' + MONO + '>' + label + '</text>';
+    return '<svg viewBox="0 0 ' + CW + ' ' + CH + '" width="100%" style="display:block">' +
+      '<line x1="' + PAD + '" y1="' + y(100) + '" x2="' + (CW - PAD) + '" y2="' + y(100) + '" stroke="' + C.axis + '" stroke-width="1" stroke-dasharray="4 4"/>' +
+      '<text x="' + (CW - PAD) + '" y="' + (y(100) - 6) + '" text-anchor="end" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>номинал 100%</text>' +
+      vline(call, C.or, "автоотзыв " + S.fmtSmart(call) + "%", "end") +
+      (cpn !== prot ? vline(cpn, C.lab, "купон " + S.fmtSmart(cpn) + "%") : "") +
+      '<path d="' + line + '" fill="none" stroke="' + C.line + '" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>' +
+      '<circle cx="' + x(prot) + '" cy="' + y(100) + '" r="3.2" fill="' + C.line + '"/>' +
+      '<text x="' + (x(prot) + 6) + '" y="' + (y(100) + 14) + '" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>защита ' + S.fmtSmart(prot) + '%</text>' +
+      '<text x="' + x((lo + prot) / 2) + '" y="' + (y((lo + prot) / 2) - 9) + '" text-anchor="middle" fill="' + C.lab + '" font-size="10" ' + MONO + '>по перформансу</text>' +
+      '</svg>';
+  }
+
   // ── Контент ──
   let c = {};
   if (offering && inst.type === "offering") {
@@ -424,6 +450,31 @@
         ["Продали раньше срока", "по текущей рыночной цене", "по рынку", "var(--nav)"]
       ],
       explainer: "Облигация покупается дешевле номинала — по " + S.fmt2(q) + "% от него. На дату погашения выплачивается полный номинал, 100%. Весь доход — дисконт: разница между ценой покупки и номиналом, известная в день сделки. Купонов нет; основной риск — кредитное качество эмитента."
+    };
+  } else if (inst.type === "autocall") {
+    const cpnPa = inst.couponPa != null ? inst.couponPa : q;
+    const prot = inst.protectionPct || 65, cpnB = inst.couponBarrier || prot, call = inst.callBarrier || 120;
+    const per = inst.obsPerYear || 4, nonCall = inst.nonCall || 0;
+    const cpnPer = cpnPa / per, cpnRub = nom * cpnPer / 100;
+    const yrs = parseFloat(String(inst.tenor).replace(",", ".")) || 3;
+    const holdRub = nom * (1 + cpnPa / 100 * yrs);
+    const downLvl = Math.max(10, prot - 20), downRub = nom * downLvl / 100;
+    const obsTxt = per === 4 ? "ежеквартально" : per + " раза в год";
+    c = {
+      badge: "Автоколл · структурная облигация",
+      subtitle: "Условный купон " + S.fmt2(cpnPa) + "% годовых на корзину " + inst.underlying + " по принципу worst-of.",
+      quoteK: "купон · % годовых · индикативно",
+      chart: chAutocall,
+      chartCap: "Возврат номинала на погашении в % от него; по горизонтали — уровень худшей бумаги корзины. Купоны на графике не показаны.",
+      params: [["Купон", S.fmt2(cpnPa) + "% годовых", true], ["Купонный барьер", S.fmtSmart(cpnB) + "%", false], ["Барьер автоотзыва", S.fmtSmart(call) + "%", false], ["Защита", S.fmtSmart(prot) + "%", false], ["Срок", inst.tenor, false]],
+      exIntro: "Вход по номиналу " + S.fmtInt(nom) + " ₽ (100%) · купон " + S.fmt2(cpnPer) + "% за период = " + S.fmtInt(cpnRub) + " ₽",
+      scen: [
+        ["Корзина выше " + S.fmtSmart(cpnB) + "% весь срок", "купоны за " + inst.tenor + " и номинал", "+" + S.fmtInt(holdRub - nom) + " ₽", "var(--up)"],
+        ["На погашении худшая бумага на " + downLvl + "%", "выплата по перформансу " + S.fmtInt(downRub) + " ₽", "−" + S.fmtInt(nom - downRub) + " ₽", "var(--down)"]
+      ],
+      explainer: "Автоколл — облигация с условным купоном на корзину акций по принципу worst-of: условия считаются по худшей бумаге. На каждую дату наблюдения (" + obsTxt + ") при worst-of не ниже " + S.fmtSmart(cpnB) + "% начисляется купон " + S.fmt2(cpnPer) + "% номинала за период. При worst-of не ниже " + S.fmtSmart(call) + "% выпуск гасится досрочно с выплатой номинала и купона." + (nonCall ? " Первые " + nonCall + " " + (nonCall === 1 ? "период" : "периода") + " отзыв невозможен." : "") + " На погашении номинал возвращается полностью, пока worst-of не ниже " + S.fmtSmart(prot) + "%.",
+      underLabel: "Главный риск · падение корзины",
+      underDesc: "Если на дату погашения худшая бумага корзины опустится ниже " + S.fmtSmart(prot) + "% начального уровня, выплата считается по её перформансу — возможна потеря части или всей суммы вложения. Отдельно действует кредитный риск эмитента облигации."
     };
   } else if (inst.type === "booster") {
     const K = inst.strike || 100, K2 = inst.strike2 || 110, ku = (inst.ku || 175) / 100;

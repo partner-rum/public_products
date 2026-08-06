@@ -2,6 +2,57 @@ window.SITE_DATA = {
   "updated": "2026-08-06",
   "instruments": [
     {
+      "id": "AC-SEMI-US-3Y",
+      "type": "autocall",
+      "name": "Автоколл · Полупроводники США · 3 года",
+      "underlying": "NVDA / AMD / INTC",
+      "cls": "Акции США",
+      "currency": "RUB",
+      "basket": [
+        "NVDA",
+        "AMD",
+        "INTC"
+      ],
+      "couponPa": 20,
+      "couponBarrier": 65,
+      "callBarrier": 120,
+      "protectionPct": 65,
+      "nonCall": 3,
+      "obsPerYear": 4,
+      "tenor": "3 года",
+      "expiry": "06.08.2029",
+      "quote": 20,
+      "chg": 0,
+      "minNom": 1000000,
+      "src": "sales"
+    },
+    {
+      "id": "AC-BIGTECH-US-3Y",
+      "type": "autocall",
+      "name": "Автоколл · Big Tech США · 3 года",
+      "underlying": "NVDA / TSLA / AMZN / GOOGL",
+      "cls": "Акции США",
+      "currency": "RUB",
+      "basket": [
+        "NVDA",
+        "TSLA",
+        "AMZN",
+        "GOOGL"
+      ],
+      "couponPa": 16,
+      "couponBarrier": 80,
+      "callBarrier": 120,
+      "protectionPct": 65,
+      "nonCall": 1,
+      "obsPerYear": 4,
+      "tenor": "3 года",
+      "expiry": "06.08.2029",
+      "quote": 16,
+      "chg": 0,
+      "minNom": 1000000,
+      "src": "sales"
+    },
+    {
       "id": "W-OFZ238-C100-0728",
       "type": "warrant",
       "structure": "call",

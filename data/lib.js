@@ -38,6 +38,14 @@ window.SITE = (function () {
       chipFg: "#A6402E", chipBg: "#F6DAD2",
       desc: "Усиленное участие в росте базового актива (КУ 150–200%) внутри диапазона до потолка — ценой полного участия в падении один к одному. На акции РФ, срок до года.",
       paramLabel: "КУ, %"
+    },
+    autocall: {
+      slug: "autocall",
+      title: "Автоколлы",
+      chip: "Купонный",
+      chipFg: "#6B4E9E", chipBg: "#E4DDF2",
+      desc: "Облигация с условным купоном на корзину акций по принципу worst-of: купон начисляется, пока худшая бумага корзины держится выше купонного барьера. Если на дату наблюдения все бумаги выше барьера автоотзыва — выпуск гасится досрочно с выплатой номинала и купона. На погашении номинал возвращается полностью, пока worst-of выше барьера защиты.",
+      paramLabel: "Купон, % г."
     }
   };
 
@@ -90,6 +98,12 @@ window.SITE = (function () {
     booster(S, K, K2, ku) {
       if (S < K) return S;
       return K + ku * (Math.min(S, K2) - K);
+    },
+    // Автоколл, возврат ТЕЛА на погашении (без купонов): европейский барьер.
+    // worst-of ≥ barrier → 100% номинала; ниже — выплата по перформансу худшей бумаги.
+    // S и barrier — в % от начального уровня worst-of.
+    autocall(S, barrier) {
+      return S >= barrier ? 100 : S;
     }
   };
 
@@ -121,6 +135,12 @@ window.SITE = (function () {
       }
       if (r.type === "protection") return { min: -30, max: 50, val: 20 };
       if (r.type === "booster") return { min: -30, max: 25, val: (r.strike2 || 110) - 100 };
+      // Автоколл: интересна зона вокруг барьера защиты — ползунок уводим глубоко вниз,
+      // вверх достаточно барьера автоотзыва (выше выплата тела уже не меняется).
+      if (r.type === "autocall") {
+        const prot = r.protectionPct || 65;
+        return { min: Math.min(-60, prot - 100 - 15), max: Math.max(30, (r.callBarrier || 120) - 100 + 5), val: 10 };
+      }
       return null;
     },
     // Выплата в % от номинала при заданном ходе БА (move, %).
@@ -128,6 +148,7 @@ window.SITE = (function () {
       if (r.type === "warrant") { const lvl = (r.spot || 100) * (1 + move / 100); return PAYOFF.pct(lvl, r.strike, r.strike2); }
       if (r.type === "protection") { const p = r.participation, floor = r.protectionPct || 100; let v = 100 + p * move; if (v < floor) v = floor; if (r.cap != null) v = Math.min(v, 100 + p * r.cap); return v; }
       if (r.type === "booster") return PAYOFF.booster(100 + move, r.strike || 100, r.strike2 || 110, (r.ku || 175) / 100);
+      if (r.type === "autocall") return PAYOFF.autocall(100 + move, r.protectionPct || 65);
       return 100;
     }
   };

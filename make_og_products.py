@@ -131,7 +131,7 @@ TEMPLATE = r"""<!DOCTYPE html>
 </div>
 <script>
 var TYPE_KICK = { discount:"Дисконтная облигация", protection:"Облигация с защитой капитала",
-                  warrant:"Варрант", booster:"Бустер" };
+                  warrant:"Варрант", booster:"Бустер", autocall:"Автоколл" };
 var qs = new URLSearchParams(location.search);
 var id = qs.get("id") || "";
 var instr = ((window.SITE_DATA||{}).instruments)||[];
@@ -156,6 +156,12 @@ function curve(it, isOffer){
     var floor = parseFloat(String(it.protection||"80").replace("%","")) || 80;
     return { pts:[[70,floor],[100,floor],[160,floor+60]], marks:[["защита "+floor+"%",70,floor],["рост",160,floor+60]],
              cap:false, xlab:"уровень базового актива", ylab:"% номинала" };
+  }
+  if (fam === "autocall"){
+    var prot = it.protectionPct || 65, call = it.callBarrier || 120;
+    return { pts:[[prot-25,prot-25],[prot,prot],[prot,100],[call+12,100]],
+             marks:[["защита "+num(prot)+"%",prot,100],["номинал 100%",call+12,100]],
+             cap:true, xlab:"худшая бумага корзины", ylab:"возврат тела, % ном." };
   }
   if (fam === "booster"){
     var ku = it.ku || q || 100, top = ((K2||110) - K) * ku / 100;
@@ -238,6 +244,7 @@ function chip(cap, val, sub){
   var chips = [];
   var q = item.quote != null ? item.quote : item.price;
   if (fam === "booster") chips.push(chip("участие", num(item.ku||q)+"%", ""));
+  else if (fam === "autocall") chips.push(chip("купон", num(item.couponPa != null ? item.couponPa : q)+"%", "годовых · индикативно"));
   else if (fam === "discount") chips.push(chip("цена входа", num(q)+"%", "ном. · индикативно"));
   else if (q != null) chips.push(chip(isOffer?"цена":"котировка", num(q)+"%", "ном. · индикативно"));
   if (item.tenor) chips.push(chip("срок", item.tenor, ""));
