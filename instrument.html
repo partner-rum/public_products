@@ -70,7 +70,10 @@
   .btn-secondary { background: transparent !important; color: var(--ink) !important; border: 1px solid var(--border); font-weight: 500; }
   .btn-secondary:hover { background: rgba(255,255,255,0.06) !important; }
   .btn-secondary svg path { stroke: var(--ink) !important; }
-  .quote-block { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+  /* Содержимое блока котировки выравниваем по ЛЕВОМУ краю: при переносе шапки
+     (узкий экран) блок падает под подзаголовок, и flex-end оставлял число
+     висеть посередине строки вместо левого края страницы. */
+  .quote-block { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
   .quote-big { font-family: var(--f-mono); font-size: 36px; font-weight: 500; letter-spacing: -0.02em; }
   .quote-big .q-dec { font-size: 0.6em; }
   .quote-sub { font-size: 12.5px; color: var(--faint); }

@@ -160,7 +160,12 @@
   .pp-title { font-family: var(--display); font-size: 23px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.15; }
   .badge { display: inline-block; margin-top: 7px; font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink); background: rgba(255,255,255,0.08); border-radius: 6px; padding: 3px 8px; }
   .pp-sub { margin-top: 8px; font-size: 13px; color: var(--hushed); max-width: 480px; }
-  .quote-block { text-align: right; }
+  /* Котировка в паспорте — ВСЕГДА на своей строке и по левому краю, в одну линию
+     с бейджем, подзаголовком и кнопками. Раньше блок переносился «как получится»
+     (зависело от длины названия): у длинных имён он падал вниз и с text-align:right
+     выглядел висящим по центру, у коротких — оставался справа. flex-basis:100%
+     убирает эту зависимость: перенос гарантирован для всех продуктов. */
+  .quote-block { flex: 0 0 100%; text-align: left; margin-top: 2px; }
   .quote-big { font-family: var(--f-mono); font-size: 30px; font-weight: 500; letter-spacing: -0.02em; }
   .quote-big .q-dec { font-size: 0.6em; }
   .quote-sub { font-size: 11.5px; color: var(--faint); margin-top: 2px; }
