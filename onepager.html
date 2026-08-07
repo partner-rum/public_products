@@ -113,7 +113,10 @@
   .callout .expl { color: #D2D6EC; }
   .callout .expl b { color: #fff; font-weight: 600; }
   .under { margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.16); }
-  .under .expl { color: #E4E7F4; }
+  /* Описание базового актива берётся из справочника и бывает длинным (например,
+     ОФЗ 26238) — на слайде фикс. высоты 540px оно распирало колонку, и плитки
+     параметров наезжали на дисклеймер. Ограничиваем по строкам. */
+  .under .expl { color: #E4E7F4; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 5; overflow: hidden; }
 
   .params { display: grid; gap: 8px; }
   .params.c2 { grid-template-columns: 1fr 1fr; }
@@ -181,7 +184,7 @@
 <div id="deck"></div>
 
 <script src="data/instruments.js?v=fx8"></script>
-<script src="data/lib.js?v=ac2"></script>
+<script src="data/lib.js?v=ac3"></script>
 <script src="data/offerings.js?v=srv19"></script>
 <script src="share.js?v=7"></script>
 <script src="contact.js?v=9"></script>
@@ -530,19 +533,23 @@
 
     explainer = "Облигация возвращает " + (floor >= 100 ? "100% номинала при любом сценарии" : "не менее " + S.fmtSmart(floor) + "% номинала (риск ограничен " + S.fmtSmart(100 - floor) + "%)") +
       ". Если " + inst.underlying + " вырос" + (protOff > 0 ? " выше страйка " + S.fmtSmart(protK) + "% начального уровня" : "") + " — " + (partPct === 100 ? "засчитывается весь его рост" : "сверху выплачивается " + partPct + "% этого роста") +
-      (cap != null ? ", но не выше потолка " + capPay + "% номинала" : ", без ограничения сверху") + ". Основной риск — кредитный риск эмитента облигации.";
+      (cap != null ? ", но не выше потолка " + capPay + "% номинала" : ", без ограничения сверху") + ". Риск — кредитное качество эмитента.";
 
     c = {
       badge: "Облигация · защита капитала",
       subtitle: subtitle,
       chart: () => chProtection({ part: part, floor: floor, cap: cap, strike: protK }),
       chartCap: chartCap,
+      // Ровно 4 плитки: сетка в две колонки, третий ряд не влезает в слайд 960×540
+      // и наезжает на дисклеймер. Четвёртая плитка — по ситуации: у продукта со
+      // страйком выше S₀ это ключевой параметр, иначе показываем потолок.
       params: [
         ["Защита капитала", S.fmtSmart(floor) + "%", false],
         ["Участие в росте", partPct + "%", true],
-        ["Потолок", cap != null ? "+" + S.fmtSmart(cap) + "%" : "нет", false],
-        ["Страйк опциона", S.fmtSmart(protK) + "%", false],
-        ["Срок", inst.tenor, false]
+        ["Срок", inst.tenor, false],
+        protK > 100
+          ? ["Страйк опциона", S.fmtSmart(protK) + "%", false]
+          : ["Потолок", cap != null ? "+" + S.fmtSmart(cap) + "%" : "нет", false]
       ],
       exIntro: "Номинал " + S.fmtInt(nom) + " ₽ · вход по " + S.fmt2(q) + "% = " + S.fmtInt(entryRub) + " ₽",
       scen: [
