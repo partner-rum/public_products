@@ -21,6 +21,7 @@ TYPE_LABEL = {
     "protection": "Облигация с защитой капитала",
     "warrant": "Варрант",
     "booster": "Бустер",
+    "autocall": "Автоколл",
 }
 
 
@@ -39,8 +40,18 @@ def describe(inst):
     ua = inst.get("underlying", "")
     q = inst.get("quote")
     parts = [tl + (" на " + ua if ua else "")]
-    if q is not None:
-        if inst.get("type") == "booster":
+    t = inst.get("type")
+    if t == "autocall":
+        # у автоколла quote = КУПОН годовых, не цена входа (вход по номиналу)
+        cpn = inst.get("couponPa", q)
+        if cpn is not None:
+            parts.append("купон " + num(cpn) + "% годовых")
+    elif t == "protection":
+        # вход по номиналу; для превью полезнее участие, чем «котировка 100%»
+        pt = inst.get("participation")
+        parts.append("вход по номиналу" + (" · участие " + num(round(pt * 100)) + "%" if pt else ""))
+    elif q is not None:
+        if t == "booster":
             # у бустера quote = коэффициент участия, не цена
             parts.append("коэффициент участия " + num(q) + "%")
         else:

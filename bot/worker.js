@@ -1423,17 +1423,26 @@ async function commitDigestFile(env, mutate) {
 // Скрапер превью (Telegram) не исполняет JS, поэтому нужна статичная страница на продукт.
 // Шаблон 1:1 с make_product_pages.py — чтобы массовая регенерация не давала лишних диффов.
 const SHELL_BASE = "https://invest.rumberg.ru";
-const SHELL_TYPE_LABEL = { discount: "Дисконтная облигация", protection: "Облигация с защитой капитала", warrant: "Варрант", booster: "Бустер" };
+const SHELL_TYPE_LABEL = { discount: "Дисконтная облигация", protection: "Облигация с защитой капитала", warrant: "Варрант", booster: "Бустер", autocall: "Автоколл" };
 function shellEsc(s) { return String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 function shellDesc(item) {
   const tl = SHELL_TYPE_LABEL[item.type] || "Структурный продукт";
   const ua = item.underlying || "";
   const parts = [tl + (ua ? " на " + ua : "")];
-  if (item.quote != null) {
+  const shellNum = (v) => String(v).replace(".", ",");
+  if (item.type === "autocall") {
+    // у автоколла quote = КУПОН годовых, не цена входа (вход по номиналу)
+    const cpn = item.couponPa != null ? item.couponPa : item.quote;
+    if (cpn != null) parts.push("купон " + shellNum(cpn) + "% годовых");
+  } else if (item.type === "protection") {
+    // вход по номиналу; для превью полезнее участие, чем «котировка 100%»
+    parts.push("вход по номиналу" + (item.participation
+      ? " · участие " + shellNum(Math.round(item.participation * 100)) + "%" : ""));
+  } else if (item.quote != null) {
     // у бустера quote = коэффициент участия, не цена (как в make_product_pages.py)
     parts.push(item.type === "booster"
-      ? "коэффициент участия " + String(item.quote).replace(".", ",") + "%"
-      : "котировка " + String(item.quote).replace(".", ",") + "% от номинала");
+      ? "коэффициент участия " + shellNum(item.quote) + "%"
+      : "котировка " + shellNum(item.quote) + "% от номинала");
   }
   parts.push("Rumberg — структурные продукты для квалифицированных инвесторов");
   return parts.join(" · ");
