@@ -370,18 +370,27 @@
   }
 
   function chartProtection() {
-    const part = inst.participation, yMin = 88, yMax = 130;
-    const x = rel => PAD + ((rel - 0.7) / (1.4 - 0.7)) * (W - PAD * 2);
+    // Полка на уровне защиты, перелом на страйке опциона, дальше — участие.
+    // Масштаб по Y динамический: при участии 150–250% фиксированный потолок 130% обрезал линию.
+    const part = inst.participation, K = inst.strike || 100;
+    const floor = inst.protectionPct != null ? inst.protectionPct : 100;
+    const rLo = 70, rHi = Math.max(140, K + 40);
+    const pay = s => { const v = 100 + part * Math.max(s - K, 0); return v < floor ? floor : v; };
+    const endVal = pay(rHi);
+    const yMin = Math.min(floor, 100) - 8, yMax = endVal + (endVal - yMin) * 0.12;
+    const x = s => PAD + ((s - rLo) / (rHi - rLo)) * (W - PAD * 2);
     const y = v => H - PAD - ((v - yMin) / (yMax - yMin)) * (H - PAD * 2);
-    const endVal = 100 + part * 40;
-    const line = "M" + x(0.7).toFixed(1) + " " + y(100).toFixed(1) + " L" + x(1.0).toFixed(1) + " " + y(100).toFixed(1) + " L" + x(1.4).toFixed(1) + " " + y(endVal).toFixed(1);
+    const line = "M" + x(rLo).toFixed(1) + " " + y(pay(rLo)).toFixed(1) +
+      " L" + x(K).toFixed(1) + " " + y(pay(K)).toFixed(1) +
+      " L" + x(rHi).toFixed(1) + " " + y(endVal).toFixed(1);
+    const midS = (K + rHi) / 2;
     return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="display:block">' +
-      '<line x1="' + PAD + '" y1="' + y(100) + '" x2="' + (W - PAD) + '" y2="' + y(100) + '" stroke="' + C.axis + '" stroke-width="1" stroke-dasharray="4 4"/>' +
-      '<text x="' + (PAD + 2) + '" y="' + (y(100) + 16) + '" fill="' + C.lab2 + '" font-size="11" ' + MONO + '>защита 100%</text>' +
+      '<line x1="' + PAD + '" y1="' + y(floor) + '" x2="' + (W - PAD) + '" y2="' + y(floor) + '" stroke="' + C.axis + '" stroke-width="1" stroke-dasharray="4 4"/>' +
+      '<text x="' + (PAD + 2) + '" y="' + (y(floor) + 16) + '" fill="' + C.lab2 + '" font-size="11" ' + MONO + '>защита ' + S.fmtSmart(floor) + '%</text>' +
       '<path d="' + line + '" fill="none" stroke="' + C.line + '" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>' +
-      '<rect x="' + (x(1.0) - 4) + '" y="' + (y(100) - 4) + '" width="8" height="8" transform="rotate(45 ' + x(1.0) + ' ' + y(100) + ')" fill="' + C.line + '"/>' +
-      '<text x="' + x(1.0) + '" y="' + (y(100) + 18) + '" text-anchor="middle" fill="' + C.lab2 + '" font-size="11" ' + MONO + '>S₀</text>' +
-      '<text x="' + x(1.24) + '" y="' + (y(100 + part * 24) - 12) + '" fill="' + C.line + '" font-size="11" ' + MONO + '>участие ' + Math.round(part * 100) + '%</text>' +
+      '<rect x="' + (x(K) - 4) + '" y="' + (y(pay(K)) - 4) + '" width="8" height="8" transform="rotate(45 ' + x(K) + ' ' + y(pay(K)) + ')" fill="' + C.line + '"/>' +
+      '<text x="' + x(K) + '" y="' + (y(pay(K)) + 17) + '" text-anchor="middle" fill="' + C.lab2 + '" font-size="11" ' + MONO + '>' + (K === 100 ? "S\u2080" : "K " + S.fmtSmart(K)) + '</text>' +
+      '<text x="' + x(midS) + '" y="' + (y(pay(midS)) - 11) + '" text-anchor="middle" fill="' + C.line + '" font-size="11" ' + MONO + '>участие ' + Math.round(part * 100) + '%</text>' +
       '</svg>';
   }
 
@@ -604,33 +613,42 @@
     };
   } else {
     const entryRub = nom * inst.quote / 100;
-    const upPct = 20;
-    const payoutUp = nom * (1 + inst.participation * upPct / 100);
+    const protK = inst.strike || 100;                       // страйк опциона, % от начального уровня
+    const protOff = protK - 100;
+    const upPct = protOff + 20;
+    const payoutUp = nom * S.calc.pct(inst, upPct) / 100;   // calc.pct учитывает страйк
     const partS = Math.round(inst.participation * 100) + "%";
     content = {
       badge: "облигация · защита капитала",
-      subtitle: "Облигация с защитой капитала · " + inst.underlying + " · Экспирация " + inst.expiry,
-      explainer: "Облигация возвращает 100% номинала при любом сценарии. Если базовый актив на дату экспирации выше начального уровня S₀, дополнительно выплачивается " + partS + " его роста. Если актив упал — вы получаете номинал целиком.",
+      subtitle: "Облигация с защитой капитала · " + inst.underlying + " · срок " + inst.tenor +
+        (protOff > 0 ? " · участие с роста +" + S.fmtSmart(protOff) + "%" : ""),
+      explainer: "Облигация возвращает 100% номинала при любом сценарии — рыночного убытка нет. " +
+        (protOff > 0
+          ? "Сверху выплачивается " + partS + " роста базового актива, который он покажет ВЫШЕ страйка " + S.fmtSmart(protK) + "% начального уровня: первые " + S.fmtSmart(protOff) + "% роста в выплату не идут."
+          : "Если базовый актив на дату погашения выше начального уровня S₀, дополнительно выплачивается " + partS + " его роста.") +
+        " Если актив упал — вы получаете номинал целиком. Купонов нет; результат определяется на дату погашения.",
       payoff: chartProtection,
-      payoffCaption: "Выплата на экспирацию в % от номинала: не ниже 100% при любом сценарии, выше S₀ — участие в росте.",
+      payoffCaption: "Выплата на погашение в % от номинала: не ниже 100% при любом сценарии, выше " +
+        (protOff > 0 ? "страйка " + S.fmtSmart(protK) + "%" : "S₀") + " — участие в росте.",
       metrics: [
-        ["Котировка", S.fmt2(inst.quote) + "%"],
-        ["Изм. за день", (inst.chg > 0 ? "+" : "−") + S.fmt1(Math.abs(inst.chg)) + " п.п."],
-        ["Защита капитала", "100%"],
+        ["Цена входа", S.fmt2(inst.quote) + "% ном."],
+        ["Защита капитала", S.fmtSmart(inst.protectionPct != null ? inst.protectionPct : 100) + "%"],
         ["Участие в росте", partS],
-        ["Нач. уровень (S₀)", S.fmtSmart(inst.strike)],
-        ["Экспирация", inst.expiry],
+        ["Страйк опциона", S.fmtSmart(protK) + "%"],
+        ["Срок", inst.tenor],
+        ["Валюта", S.ccyLabel(inst)],
         ["Мин. номинал", S.fmtInt(nom) + " ₽"]
       ],
       exampleIntro: "Номинал " + S.fmtInt(nom) + " ₽ · вход по " + S.fmt2(inst.quote) + "% = " + S.fmtInt(entryRub) + " ₽",
       scenarios: [
-        [inst.underlying + " вырос на " + upPct + "%", "Выплата " + S.fmtInt(payoutUp) + " ₽ — 100% + участие", "+" + S.fmtInt(payoutUp - entryRub) + " ₽", "var(--up)"],
-        [inst.underlying + " упал на 15%", "Сработала защита: выплата " + S.fmtInt(nom) + " ₽", "−" + S.fmtInt(entryRub - nom) + " ₽", "var(--loss)"]
+        [inst.underlying + " вырос на " + S.fmtSmart(upPct) + "%", "Выплата " + S.fmtInt(payoutUp) + " ₽ — 100% + участие", "+" + S.fmtInt(payoutUp - entryRub) + " ₽", "var(--up)"],
+        [inst.underlying + " упал на 15%", "Сработала защита: выплата " + S.fmtInt(nom) + " ₽", "0 ₽", "rgba(242,243,247,0.60)"]
       ],
       facts: [
         ["Защита", "100% номинала при любом сценарии"],
-        ["Котировка", "В процентах от номинала"],
-        ["Стиль", "Европейский — выплата на дату экспирации"],
+        ["Участие", partS + " роста" + (protOff > 0 ? " выше страйка " + S.fmtSmart(protK) + "%" : " базового актива") + ", без потолка"],
+        ["Купоны", "Нет — результат на дату погашения"],
+        ["Стиль", "Европейский — выплата на дату погашения"],
         ["Риск", "Кредитный риск эмитента облигации"],
         ["Мин. номинал", S.fmtInt(nom) + " ₽"]
       ]

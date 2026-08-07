@@ -153,8 +153,22 @@ function curve(it, isOffer){
              cap:false, xlab:"срок до погашения", ylab:"% номинала", time:true };
   }
   if (fam === "protection"){
-    var floor = parseFloat(String(it.protection||"80").replace("%","")) || 80;
-    return { pts:[[70,floor],[100,floor],[160,floor+60]], marks:[["защита "+floor+"%",70,floor],["рост",160,floor+60]],
+    /* Уровень защиты берём из protectionPct (так он лежит в данных доски); строка
+       it.protection — формат первички. Раньше оба игнорировались и рисовалось 80%. */
+    var floor = it.protectionPct != null ? it.protectionPct
+              : (parseFloat(String(it.protection||"100").replace("%","")) || 100);
+    var Kp = it.strike || 100;
+    /* participation: у доски — число-доля (1.9), у первички — строка "100%".
+       Строку без парсинга умножали как число -> NaN, и линия исчезала. */
+    var pRaw = it.participation;
+    var part = typeof pRaw === "number" ? pRaw
+             : (parseFloat(String(pRaw || "").replace("%", "")) / 100 || 1);
+    var top = Math.max(floor + 4, 100 + part * (160 - Kp));
+    var midK = (Kp + 160) / 2;
+    var mk = [["защита "+num(floor)+"%",70,floor],
+              ["участие "+Math.round(part*100)+"%",midK,100+part*(midK-Kp)]];
+    if (Kp > 100) mk.push(["K "+num(Kp),Kp,floor]);
+    return { pts:[[70,floor],[Kp,floor],[160,top]], marks:mk,
              cap:false, xlab:"уровень базового актива", ylab:"% номинала" };
   }
   if (fam === "autocall"){

@@ -206,6 +206,10 @@ async function buildCatalog(env) {
         ? "купон " + (p.couponPa != null ? p.couponPa : p.quote) + "% годовых · вход по номиналу · купонный барьер " +
           (p.couponBarrier || p.protectionPct || 65) + "% · автоотзыв " + (p.callBarrier || 120) +
           "% · защита " + (p.protectionPct || 65) + "% · worst-of"
+        : p.type === "protection"
+        ? "вход по номиналу · защита " + (p.protectionPct != null ? p.protectionPct : 100) +
+          "% · участие в росте " + Math.round((p.participation || 1) * 100) + "%" +
+          (p.strike > 100 ? " выше страйка " + p.strike + "%" : "")
         : p.quote != null && "цена " + p.quote + "%";
       lines.push("- [" + p.id + "] " + [p.name, p.underlying && "базовый актив: " + p.underlying,
         price].filter(Boolean).join(" · "));

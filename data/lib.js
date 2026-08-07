@@ -133,7 +133,7 @@ window.SITE = (function () {
                        : val + 40;                              // запас на рост прибыли
         return { min: -30, max: Math.max(max, val + 20), val };
       }
-      if (r.type === "protection") return { min: -30, max: 50, val: 20 };
+      if (r.type === "protection") { const off = (r.strike || 100) - 100; return { min: -30, max: Math.max(50, off + 40), val: Math.max(20, off + 15) }; }
       if (r.type === "booster") return { min: -30, max: 25, val: (r.strike2 || 110) - 100 };
       // Автоколл: интересна зона вокруг барьера защиты — ползунок уводим глубоко вниз,
       // вверх достаточно барьера автоотзыва (выше выплата тела уже не меняется).
@@ -146,7 +146,16 @@ window.SITE = (function () {
     // Выплата в % от номинала при заданном ходе БА (move, %).
     pct(r, move) {
       if (r.type === "warrant") { const lvl = (r.spot || 100) * (1 + move / 100); return PAYOFF.pct(lvl, r.strike, r.strike2); }
-      if (r.type === "protection") { const p = r.participation, floor = r.protectionPct || 100; let v = 100 + p * move; if (v < floor) v = floor; if (r.cap != null) v = Math.min(v, 100 + p * r.cap); return v; }
+      // Защита капитала: участие начисляется на рост ВЫШЕ страйка опциона (strike, % от
+      // начального уровня; 100 = ATM). Раньше страйк игнорировался, и продукт на CALL 105
+      // показывал участие уже с нулевого движения.
+      if (r.type === "protection") {
+        const p = r.participation, floor = r.protectionPct != null ? r.protectionPct : 100, K = r.strike || 100;
+        let v = 100 + p * Math.max(100 + move - K, 0);
+        if (v < floor) v = floor;
+        if (r.cap != null) v = Math.min(v, 100 + p * Math.max(100 + r.cap - K, 0));
+        return v;
+      }
       if (r.type === "booster") return PAYOFF.booster(100 + move, r.strike || 100, r.strike2 || 110, (r.ku || 175) / 100);
       if (r.type === "autocall") return PAYOFF.autocall(100 + move, r.protectionPct || 65);
       return 100;

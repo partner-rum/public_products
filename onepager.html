@@ -301,9 +301,9 @@
       '</svg>';
   }
   function chProtection(cfg) {
-    const part = cfg.part, floor = cfg.floor, cap = cfg.cap;   // part 0..1; floor %; cap = макс. рост БА, % (или null)
-    const capPay = cap != null ? 100 + part * cap : null;
-    const pay = up => { let v = 100 + part * up; if (v < floor) v = floor; if (capPay != null && v > capPay) v = capPay; return v; };
+    const part = cfg.part, floor = cfg.floor, cap = cfg.cap, K = cfg.strike || 100;   // part 0..1; floor %; cap = макс. рост БА, %; K — страйк опциона (% от начального уровня)
+    const capPay = cap != null ? 100 + part * Math.max(100 + cap - K, 0) : null;
+    const pay = up => { let v = 100 + part * Math.max(100 + up - K, 0); if (v < floor) v = floor; if (capPay != null && v > capPay) v = capPay; return v; };
     const upMin = -30, upMax = 40;
     const x = up => PAD + ((up - upMin) / (upMax - upMin)) * (CW - PAD * 2);
     const yLo = Math.min(floor, 100), yHi = Math.max(pay(upMax), 100), span = Math.max(yHi - yLo, 1);
@@ -507,11 +507,13 @@
     const oCap = numq("cap"); if (oCap != null) cap = oCap > 0 ? oCap : null;
 
     const clamp = (v, lo, hi) => { v = Math.max(v, lo); if (hi != null) v = Math.min(v, hi); return v; };
-    const capPay = cap != null ? Math.round(100 + part * cap) : null;
+    const protK = inst.strike || 100;                       // страйк опциона, % от начального уровня
+    const protOff = protK - 100;
+    const capPay = cap != null ? Math.round(100 + part * Math.max(100 + cap - protK, 0)) : null;
     const partPct = Math.round(part * 100);
     const entryRub = nom * q / 100;
-    const upPct = 20, downPct = 20;
-    const payUpPct = clamp(100 + part * upPct, floor, capPay);
+    const upPct = protOff + 20, downPct = 20;
+    const payUpPct = clamp(100 + part * Math.max(100 + upPct - protK, 0), floor, capPay);
     const payUpRub = nom * payUpPct / 100, netUp = payUpRub - entryRub;
     const payDownPct = clamp(100 - part * downPct, floor, capPay);
     const downRub = nom * payDownPct / 100;
@@ -524,22 +526,23 @@
 
     chartCap = "Выплата в % от номинала. " +
       (floor >= 100 ? "Ниже S₀ — не меньше 100%." : "Гарантированный минимум — " + S.fmtSmart(floor) + "% (макс. убыток " + S.fmtSmart(100 - floor) + "%).") +
-      " Выше S₀ — " + partPct + "% роста" + (cap != null ? " до потолка " + capPay + "%." : ", без потолка.");
+      " Выше " + (protOff > 0 ? "страйка " + S.fmtSmart(protK) + "%" : "S₀") + " — " + partPct + "% роста" + (cap != null ? " до потолка " + capPay + "%." : ", без потолка.");
 
     explainer = "Облигация возвращает " + (floor >= 100 ? "100% номинала при любом сценарии" : "не менее " + S.fmtSmart(floor) + "% номинала (риск ограничен " + S.fmtSmart(100 - floor) + "%)") +
-      ". Если " + inst.underlying + " вырос — " + (partPct === 100 ? "засчитывается весь его рост" : "сверху выплачивается " + partPct + "% его роста") +
+      ". Если " + inst.underlying + " вырос" + (protOff > 0 ? " выше страйка " + S.fmtSmart(protK) + "% начального уровня" : "") + " — " + (partPct === 100 ? "засчитывается весь его рост" : "сверху выплачивается " + partPct + "% этого роста") +
       (cap != null ? ", но не выше потолка " + capPay + "% номинала" : ", без ограничения сверху") + ". Основной риск — кредитный риск эмитента облигации.";
 
     c = {
       badge: "Облигация · защита капитала",
       subtitle: subtitle,
-      chart: () => chProtection({ part: part, floor: floor, cap: cap }),
+      chart: () => chProtection({ part: part, floor: floor, cap: cap, strike: protK }),
       chartCap: chartCap,
       params: [
         ["Защита капитала", S.fmtSmart(floor) + "%", false],
         ["Участие в росте", partPct + "%", true],
         ["Потолок", cap != null ? "+" + S.fmtSmart(cap) + "%" : "нет", false],
-        ["Срок · погашение", inst.expiry, false]
+        ["Страйк опциона", S.fmtSmart(protK) + "%", false],
+        ["Срок", inst.tenor, false]
       ],
       exIntro: "Номинал " + S.fmtInt(nom) + " ₽ · вход по " + S.fmt2(q) + "% = " + S.fmtInt(entryRub) + " ₽",
       scen: [
