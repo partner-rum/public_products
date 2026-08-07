@@ -160,6 +160,22 @@ window.OFFERINGS = {
      "size": "1,7 МБ",
      "top": true,
      "short": "Презентация"
+    },
+    {
+     "name": "Ключевой информационный документ (КИД) · СП-1-42",
+     "file": "docs/kid-RU000A10BZ10.pdf",
+     "ext": "PDF",
+     "size": "487 КБ",
+     "top": true,
+     "short": "КИД"
+    },
+    {
+     "name": "Ключевые условия выпуска (КУВ) · СП-1-42",
+     "file": "docs/kuv-RU000A10BZ10.pdf",
+     "ext": "PDF",
+     "size": "532 КБ",
+     "top": true,
+     "short": "КУВ"
     }
    ]
   },
