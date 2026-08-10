@@ -158,6 +158,12 @@
 
   .pp-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; flex-wrap: wrap; }
   .pp-title { font-family: var(--display); font-size: 23px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.15; }
+  /* Все действия — в строке с названием, как на размещённых выпусках: вниз за ними
+     не идут. Кегль «Обсудить» мельче базового — рядом с 23-м заголовком
+     полноразмерная кнопка спорит с ним за внимание. */
+  .pp-title-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .pp-title-row .pp-actions { margin-top: 0; }
+  .pp-title-row .ct-btn { padding: 8px 14px; font-size: 13px; }
   .badge { display: inline-block; margin-top: 7px; font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink); background: rgba(255,255,255,0.08); border-radius: 6px; padding: 3px 8px; }
   .pp-sub { margin-top: 8px; font-size: 13px; color: var(--hushed); max-width: 480px; }
   /* Котировка в паспорте — ВСЕГДА на своей строке и по левому краю, в одну линию
@@ -887,7 +893,8 @@
     const c = buildContent(inst);
     const U = S.underlyingInfo(inst.underlying);
     return '<div class="pp-top"><div>' +
-        '<div class="pp-title">' + S.displayName(inst) + '</div>' +
+        '<div class="pp-title-row"><div class="pp-title">' + S.displayName(inst) + '</div>' +
+          '<div class="pp-actions">' + actionsHTML(inst) + '</div></div>' +
         '<span class="badge">' + c.badge + '</span>' +
         '<div class="pp-sub">' + c.subtitle + '</div>' +
       '</div>' +
@@ -897,7 +904,6 @@
           : inst.type === "autocall" ? "купон · % годовых · индикативно"
           : "котировка · индикативно · % от номинала · " + (inst.currency || "RUB")) + '</div>' +
       '</div></div>' +
-      '<div class="pp-actions">' + actionsHTML(inst) + '</div>' +
       '<div class="chart-box">' +
         '<div class="chart-head"><span class="chart-title" id="chart-title"></span>' +
         (U ? '<div class="tabs" role="tablist" aria-label="Вид графика"><button class="tab" id="tab-payoff" role="tab" type="button">Выплата</button><button class="tab" id="tab-under" role="tab" type="button">Базовый актив</button></div>' : '') +
