@@ -39,7 +39,10 @@ jobs:
       - name: Сборка печатной вёрстки из data/digest.js
         id: build
         run: |
-          PDF=$(python make_digest.py | sed -n 's/^PDF_OUT=//p')
+          # --all: текущий выпуск -> digest-print.html (его же рендерим в PDF),
+          # архивные -> digest-print-<дата>.html. Из архива «Печатная версия»
+          # должна открывать выбранный выпуск, а не сегодняшний (правка 10.08.2026).
+          PDF=$(python make_digest.py --all | sed -n 's/^PDF_OUT=//p')
           echo "pdf=$PDF" >> "$GITHUB_OUTPUT"
           mkdir -p "$(dirname "$PDF")"
 
@@ -63,7 +66,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add digest-print.html "${{ steps.build.outputs.pdf }}"
+          git add digest-print.html digest-print-*.html "${{ steps.build.outputs.pdf }}"
           if git diff --cached --quiet; then
             echo "Изменений нет — коммит не нужен."
           else

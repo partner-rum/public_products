@@ -21,7 +21,6 @@ except ImportError:
     sys.exit("Нужен модуль segno для генерации QR: pip install segno")
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
-OUT  = os.path.join(ROOT, "digest-print.html")
 SITE = "https://invest.rumberg.ru"
 
 # ── данные: единственный источник — data/digest.js ───────────────────────────
@@ -30,8 +29,19 @@ def load(fn, glob):
     return json.loads(re.search(r"window\.%s\s*=\s*(\{.*\})\s*;" % glob, t, re.S).group(1))
 
 ARCHIVE = load("digest.js", "DIGEST_ARCHIVE")
-ISSUE   = ARCHIVE["issues"][0]
+ISSUES  = ARCHIVE["issues"]
+# Страница собирается для КОНКРЕТНОГО выпуска: `--issue=2026-08-03`. Без аргумента —
+# текущий, в digest-print.html (старые ссылки и og:url не ломаются). Архивным выпускам
+# нужна своя страница: до 10.08.2026 «Печатная версия» из архива открывала сегодняшний
+# дайджест — сейлз выбирал старый выпуск и видел не его.
+WANT = next((a.split("=", 1)[1] for a in sys.argv[1:] if a.startswith("--issue=")), None)
+ISSUE = next((i for i in ISSUES if i["id"] == WANT), None) if WANT else ISSUES[0]
+if ISSUE is None:
+    sys.exit("нет выпуска «%s» в data/digest.js" % WANT)
+IS_CURRENT = ISSUE is ISSUES[0]
 ISSUE_ID = ISSUE["id"]
+PAGE = "digest-print.html" if IS_CURRENT else "digest-print-%s.html" % ISSUE_ID
+OUT  = os.path.join(ROOT, PAGE)
 SECTIONS = ARCHIVE["sections"]
 
 # идеи в порядке секций — так же, как раскладывает сайт
@@ -50,6 +60,10 @@ def human_date(dmy):
     except (ValueError, KeyError): return dmy
 DATE = human_date(ISSUE.get("date", ""))
 PDF  = "docs/digest/rumberg-digest-%s.pdf" % ISSUE_ID   # куда ведёт кнопка «Скачать PDF»
+# У текущего выпуска PDF рендерится ПОСЛЕ этой страницы (workflow), поэтому его
+# отсутствие на диске — норма. У архивного файл либо есть, либо не появится уже
+# никогда (выпуск 2026-06-29 старше пайплайна) — тогда кнопку не показываем.
+HAS_PDF = IS_CURRENT or os.path.exists(os.path.join(ROOT, PDF))
 
 FAM_BADGE = {"warrant": "Варрант", "booster": "Бустер", "coupon": "Купон",
              "discount": "Дисконт", "protection": "Защита капитала", "portfolio": "Портфель"}
@@ -575,11 +589,7 @@ BAR = T("""
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M12 7H2M6 3 2 7l4 4"
       stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
     К дайджесту</a>
-  <a class="act" href="$pdf" download>
-    <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M7 1v8M7 9 4 6M7 9l3-3"
-      stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 12h10"
-      stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round"/></svg>
-    Скачать PDF</a>
+  $dlbtn
   <button class="act ghost" type="button" onclick="window.print()">
     <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M4 5V1.5h6V5M4 10H2.5V5h9v5H10"
       stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 8h6v4.5H4z"
@@ -588,7 +598,12 @@ BAR = T("""
   <span class="ttl">Печатный выпуск · $date · $n стр.</span>
   <span class="hint">Кнопка «Печать» сохраняет свежую версию в PDF: выберите «Сохранить как PDF»,
     формат A4, поля «нет», включите печать фона. Файл обновляется автоматически при изменении дайджеста.</span>
-</div></div>""", pdf=PDF, date=DATE, n=str(len(ORDERED) + 2))
+</div></div>""", dlbtn=(T("""<a class="act" href="$pdf" download>
+    <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M7 1v8M7 9 4 6M7 9l3-3"
+      stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 12h10"
+      stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round"/></svg>
+    Скачать PDF</a>""", pdf=PDF) if HAS_PDF else ""),
+   date=DATE, n=str(len(ORDERED) + 2))
 
 # Автоподгонка страниц. Работает и на экране, и при рендере PDF: headless-хром
 # исполняет скрипт до печати (в воркфлоу на это дан --virtual-time-budget).
@@ -631,8 +646,8 @@ HTML = T("""<!DOCTYPE html>
 <meta property="og:locale" content="ru_RU">
 <meta property="og:title" content="Дайджест $date — печатный выпуск">
 <meta property="og:description" content="Идеи недели: гипотеза, механика выплаты и параметры каждого выпуска. A4, готово к печати и сохранению в PDF.">
-<meta property="og:url" content="https://invest.rumberg.ru/digest-print.html">
-<link rel="canonical" href="https://invest.rumberg.ru/digest-print.html">
+<meta property="og:url" content="https://invest.rumberg.ru/$page">
+<link rel="canonical" href="https://invest.rumberg.ru/$page">
 <meta property="og:image" content="https://invest.rumberg.ru/og-cover.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -648,7 +663,7 @@ HTML = T("""<!DOCTYPE html>
 <body>$bar$pages
 $fitjs</body>
 </html>
-""", date=DATE, css=CSS, bar=BAR, pages="".join(PAGES), fitjs=FIT_JS)
+""", date=DATE, css=CSS, bar=BAR, pages="".join(PAGES), fitjs=FIT_JS, page=PAGE)
 
 open(OUT, "w", encoding="utf-8", newline="\n").write(HTML)
 print("готово: %s" % OUT)
@@ -674,3 +689,13 @@ if TRUNC:
     print("   Попроси автора дописать поле, иначе клиент увидит обрыв на полуслове:")
     for name, label, n, tail in TRUNC:
         print("   — %s · %s (%d симв): …%s" % (name[:34], label, n, tail))
+
+# `--all`: собрать ещё и страницы архивных выпусков. Скрипт устроен как «одна
+# страница за запуск» (данные выпуска — модульные глобали), поэтому архивные
+# гоняем отдельными процессами — это надёжнее, чем цикл в shell внутри workflow.
+if "--all" in sys.argv:
+    import subprocess
+    for it in ISSUES[1:]:
+        subprocess.check_call([sys.executable, os.path.abspath(__file__), "--issue=" + it["id"]],
+                              stdout=subprocess.DEVNULL)
+        print("архив: digest-print-%s.html" % it["id"])

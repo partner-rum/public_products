@@ -162,7 +162,7 @@
         <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M7 1 V9 M7 9 L4 6 M7 9 L10 6" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 12 H12" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round"/></svg>
         Скачать дайджест (PDF)
       </a>
-      <a class="btn-print" href="digest-print.html">
+      <a class="btn-print" id="digest-print" href="digest-print.html">
         <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M4 5 V1.5 H10 V5 M4 10 H2.5 V5 H11.5 V10 H10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 8 H10 V12.5 H4 Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
         Печатная версия
       </a>
@@ -283,6 +283,11 @@
     const dl = document.getElementById("digest-pdf");
     if (issue.pdf) { dl.href = issue.pdf; dl.setAttribute("download", issue.pdfName || "Румберг Дайджест.pdf"); dl.hidden = false; }
     else dl.hidden = true;
+    // «Печатная версия» тоже следует за выбранным выпуском: у текущего страница
+    // digest-print.html, у архивных — своя (digest-print-<дата>.html). Раньше
+    // ссылка была статичной, и из архива открывался сегодняшний дайджест.
+    const pr = document.getElementById("digest-print");
+    if (pr) pr.href = issue.id === A.issues[0].id ? "digest-print.html" : "digest-print-" + issue.id + ".html";
     document.getElementById("intro").textContent = issue.intro;
     document.getElementById("qual").textContent = issue.qualNote;
     renderPicker();
