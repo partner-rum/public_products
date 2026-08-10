@@ -58,7 +58,11 @@ window.DF = (function () {
       el = '<line x1="' + PAD + '" y1="' + floor + '" x2="' + (W - PAD) + '" y2="' + floor + '" stroke="rgba(255,255,255,0.17)" stroke-width="1" stroke-dasharray="2 4"/>' +
         '<text x="' + PAD + '" y="' + (floor + 14) + '" fill="rgba(255,255,255,0.46)" font-size="10.5" ' + MONO + '>защита ' + (p.floorPct || 100) + '%</text>' +
         '<path d="M' + PAD + ' ' + floor + ' L' + bx + ' ' + floor + ' L' + x(0.86) + ' ' + up + ' L' + (W - PAD) + ' ' + up + '" fill="none" stroke="' + color + '" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>' +
-        (p.capPct ? '<text x="' + (W - PAD) + '" y="' + (up - 8) + '" text-anchor="end" fill="rgba(255,255,255,0.60)" font-size="10.5" ' + MONO + '>участие до ' + p.capPct + '%</text>' : "");
+        // participation без потолка — «участие 120%»; с потолком остаётся «до N%»
+        (p.partPct || p.capPct
+          ? '<text x="' + (W - PAD) + '" y="' + (up - 8) + '" text-anchor="end" fill="rgba(255,255,255,0.60)" font-size="10.5" ' + MONO + '>' +
+            (p.partPct ? "участие " + p.partPct + "%" : "участие до " + p.capPct + "%") + '</text>'
+          : "");
     } else {
       const line = "M" + x(0) + " " + y(0.8) + " C" + x(0.35) + " " + y(0.72) + " " + x(0.6) + " " + y(0.42) + " " + x(1) + " " + y(0.2);
       el = '<path d="' + line + '" fill="none" stroke="' + color + '" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>' +
@@ -66,6 +70,16 @@ window.DF = (function () {
     }
     return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="display:block">' + el + '</svg>';
   }
+
+  // Уровень защиты числом: в payoff он лежит как есть, в параметрах — строкой («80%»).
+  // Нужен, чтобы тексты «кому» и «риск» не утверждали 100%, когда защита частичная.
+  function floorOf(idea) {
+    const pf = idea.payoff || {};
+    if (typeof pf.floorPct === "number") return pf.floorPct;
+    const m = String((idea.p && idea.p.protection) || "").match(/\d+([.,]\d+)?/);
+    return m ? Number(m[0].replace(",", ".")) : null;
+  }
+  const numTxt = (n) => String(Math.round(n * 100) / 100).replace(".", ",");
 
   // Кому продавать — авто-шаблон по типу продукта (переопределяется полем idea.audience).
   function audienceOf(idea) {
@@ -76,7 +90,12 @@ window.DF = (function () {
     if (idea.family === "coupon") return prot
       ? "Подходит, если вы хотите заранее известный купон по «" + a + "» с полной защитой капитала."
       : "Подходит, если вы хотите заранее известный купон по «" + a + "» и готовы к снижению номинала, если актив упадёт.";
-    if (idea.family === "protection") return "Осторожным клиентам: полная защита капитала плюс участие в росте «" + a + "».";
+    if (idea.family === "protection") {
+      const f = floorOf(idea);
+      return f != null && f < 100
+        ? "Осторожным клиентам: возврат не менее " + numTxt(f) + "% номинала плюс участие в росте «" + a + "»."
+        : "Осторожным клиентам: полная защита капитала плюс участие в росте «" + a + "».";
+    }
     return "Подходит, если вы хотите диверсифицированную облигационную стратегию с прогнозируемым горизонтом.";
   }
   // Риск — авто-шаблон по типу продукта (переопределяется полем idea.risk).
@@ -87,7 +106,13 @@ window.DF = (function () {
     if (idea.family === "coupon") return prot
       ? "Капитал защищён на 100% — при любом сценарии возвращается номинал. Основной риск — кредитное качество эмитента облигации."
       : "Если базовый актив снизится, выплата номинала уменьшается пропорционально падению. Дополнительно — кредитный риск эмитента облигации.";
-    if (idea.family === "protection") return "Защита капитала 100%: при падении возвращается номинал. Основной риск — кредитное качество эмитента облигации.";
+    if (idea.family === "protection") {
+      const f = floorOf(idea);
+      return f != null && f < 100
+        ? "Защита капитала " + numTxt(f) + "%: максимальный убыток — " + numTxt(100 - f) +
+          "% от вложенной суммы, он реализуется, если базовый актив не вырастет. Дополнительно — кредитный риск эмитента облигации."
+        : "Защита капитала 100%: при падении возвращается номинал. Основной риск — кредитное качество эмитента облигации.";
+    }
     return "Стоимость портфеля колеблется вместе с рынком облигаций — итоговый доход не гарантирован.";
   }
   // Единый набор параметров: сейлзы заполняют одинаковые поля через idea.p.

@@ -60,6 +60,21 @@
       return base;
     }
 
+    if (t === "protection") {
+      var floor = num(p.protectionPct); if (floor == null) floor = 100;
+      var part = num(p.participation); if (part == null) part = 1;
+      // participation в instruments.js — доля (1.2), на витрине показывается процентами
+      var partPct = Math.round(part * 100);
+      var K = strike != null ? strike : 100;
+      base.family = "protection"; base.kind = "Структурная облигация · защита капитала";
+      base.metric = { v: floor + "%", k: "защита капитала" };
+      base.p.price = "100% номинала";
+      base.p.upside = partPct + "% роста базового актива" + (K > 100 ? " выше +" + comma(K - 100) + "%" : "");
+      base.p.protection = floor + "%";
+      base.payoff = { type: "protected", floorPct: floor, partPct: partPct, strikePct: K };
+      return base;
+    }
+
     return { supported: false, reason: "Тип продукта «" + t + "» не поддержан в дайджесте." };
   }
 
@@ -69,6 +84,10 @@
       return { supported: false, reason: "В дайджест из «Размещений» пока поддержаны только продукты с защитой капитала (family=protection)." };
     }
     var floor = num(String(o.protection || "").replace("%", ""));
+    // participation в offerings.js — строка («100%»), в отличие от доли на доске
+    var partPct = num(String(o.participation == null ? "" : o.participation).replace("%", ""));
+    var pf = { type: "protected", floorPct: floor != null ? floor : 100 };
+    if (partPct != null) pf.partPct = partPct;
     return {
       family: "protection", kind: o.kind || "Структурная облигация · защита капитала",
       underlying: o.reference || o.name, name: o.name, tenor: o.tenor || "",
@@ -77,7 +96,7 @@
       p: { asset: o.reference || o.name, price: "100% номинала",
            upside: (o.participation || "100%") + " роста базового актива",
            protection: o.protection || (floor != null ? floor + "%" : "есть") },
-      payoff: { type: "protected", floorPct: floor != null ? floor : 100 },
+      payoff: pf,
     };
   }
 
@@ -97,8 +116,15 @@
       r.how = "Дисконтная облигация: покупка ниже номинала (" + entry + "%), погашение по 100%. Доход +" + gain + "% зафиксирован в день сделки и не требует роста рынка.";
       r.payout = "В дату погашения выплачивается 100% номинала. Промежуточных купонов нет.";
     } else if (r.family === "protection") {
-      r.how = "Защита капитала " + floor + "%: при погашении возвращается не менее " + floor + "% номинала плюс участие в росте базового актива.";
-      r.payout = "Выплата = " + floor + "% + участие в росте базового актива. Если актив не вырос — возврат " + floor + "% номинала.";
+      // участие и страйк знаем не всегда (у первички в данных может не быть) — текст
+      // подстраиваем, а не подставляем «100%» по умолчанию: это была бы выдуманная цифра
+      var part = pf.partPct, K = pf.strikePct;
+      var above = K != null && K > 100 ? " выше +" + comma(K - 100) + "%" : "";
+      var grow = (part != null ? part + "% роста базового актива" : "участие в росте базового актива") + above;
+      r.how = "Защита капитала " + floor + "%: при погашении возвращается не менее " + floor +
+              "% номинала плюс " + grow + ".";
+      r.payout = "Выплата = " + floor + "% номинала плюс " + grow +
+                 ". Если актив не вырос — возврат " + floor + "% номинала.";
     } else {
       r.how = "Диверсифицированная облигационная стратегия."; r.payout = "Выплата равна стоимости портфеля на дату погашения.";
     }

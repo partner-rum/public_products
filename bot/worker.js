@@ -1486,7 +1486,9 @@ function sanitizeItem(section, raw) {
         const t = cleanStr(src.type, 20);
         if (["call", "callcap", "digital", "protected", "booster", "fixed", "portfolio"].includes(t)) {
           const p = { type: t };
-          for (const nk of ["capPct", "premiumPct", "couponPct", "barrierPct", "kuPct", "entryPct", "gainPct", "floorPct"]) {
+          // partPct/strikePct — защита капитала с доски: участие в росте и страйк опциона
+          for (const nk of ["capPct", "premiumPct", "couponPct", "barrierPct", "kuPct",
+                            "entryPct", "gainPct", "floorPct", "partPct", "strikePct"]) {
             const v = cleanNum(src[nk]); if (v != null) p[nk] = v;
           }
           out.payoff = p;
