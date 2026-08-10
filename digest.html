@@ -97,6 +97,8 @@
   .art-kind { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); margin-left: 10px; }
   .art-title { margin: 12px 0 6px; font-family: var(--display); font-size: 40px; font-weight: 400; letter-spacing: -0.025em; line-height: 1.08; max-width: 640px; }
   .art-un { font-size: 15px; color: var(--hushed); margin-bottom: 8px; }
+  /* «Обсудить идею» — сразу под заголовком: идею рассылают клиентам, до низа не долистывают */
+  .art-cta { margin-top: 14px; }
   .art-bar { width: 60px; height: 4px; background: var(--fc); margin: 16px 0 24px; }
 
   .nextprev { display: flex; justify-content: space-between; gap: 14px; margin-top: 30px; border-top: 1px solid var(--border); padding-top: 18px; }
@@ -180,7 +182,7 @@
   </div>
 </div>
 
-<script src="data/lib.js?v=ac3"></script>
+<script src="data/lib.js?v=ax1"></script>
 <script src="data/digest.js?v=srv6"></script>
 <script src="data/digest-lib.js?v=5"></script>
 <script src="share.js?v=7"></script>
@@ -244,8 +246,8 @@
       '<div class="art-head"><div class="art-meta"><span class="art-num">' + num(i.id) + '</span><span class="art-kind">' + i.kind + '</span></div><span class="art-tools" id="art-tools"></span></div>' +
       '<h2 class="art-title">' + i.name + '</h2>' +
       '<div class="art-un">' + i.underlying + '</div>' +
-      '<div class="art-bar"></div>' + DF.detailBody(i) +
-      '<div class="art-cta" style="margin-top:24px"><span class="ct-host" id="art-ct"></span></div>';
+      '<div class="art-cta"><span class="ct-host" id="art-ct"></span></div>' +
+      '<div class="art-bar"></div>' + DF.detailBody(i);
     const shHost = document.getElementById("art-tools");
     if (shHost && window.Share) {
       // Короткая ссылка без .html (GitHub Pages отдаёт digest.html и по /digest). Сообщение —

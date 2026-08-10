@@ -304,7 +304,7 @@
 </div>
 
 <script src="data/instruments.js?v=fx8"></script>
-<script src="data/lib.js?v=ac3"></script>
+<script src="data/lib.js?v=ax1"></script>
 <script src="share.js?v=7"></script>
 <script src="contact.js?v=9"></script>
 <script>
@@ -364,132 +364,15 @@
       '</svg>';
   }
 
-  function chartWarrant(inst) {
-    const K = inst.strike, K2 = inst.strike2, q = inst.quote;
-    const cap = K2 ? (K2 - K) : 0;
-    const sBe = K + q;
-    const s0 = K * 0.8;
-    const s1 = K2 ? K2 * 1.18 : Math.max(K * 1.32, sBe * 1.15);
-    const yMax = K2 ? cap + 10 : Math.max(34, S.PAYOFF.pct(s1, K) + 6);
-    const x = s => PAD + ((s - s0) / (s1 - s0)) * (W - PAD * 2);
-    const y = v => H - PAD - (v / yMax) * (H - PAD * 2);
-    let line = "M" + x(s0).toFixed(1) + " " + y(0).toFixed(1) + " L" + x(K).toFixed(1) + " " + y(0).toFixed(1);
-    if (K2) line += " L" + x(K2).toFixed(1) + " " + y(cap).toFixed(1) + " L" + x(s1).toFixed(1) + " " + y(cap).toFixed(1);
-    else line += " L" + x(s1).toFixed(1) + " " + y(S.PAYOFF.pct(s1, K)).toFixed(1);
-    let capMark = "";
-    if (K2) {
-      capMark = '<line x1="' + PAD + '" y1="' + y(cap) + '" x2="' + (W - PAD) + '" y2="' + y(cap) + '" stroke="' + C.grid + '" stroke-width="1" stroke-dasharray="2 4"/>' +
-        '<rect x="' + (x(K2) - 4) + '" y="' + (y(cap) - 4) + '" width="8" height="8" transform="rotate(45 ' + x(K2) + ' ' + y(cap) + ')" fill="' + C.line + '"/>' +
-        '<text x="' + x(K2) + '" y="' + (y(cap) - 9) + '" text-anchor="middle" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>K₂ ' + S.fmtSmart(K2) + ' · макс. ' + S.fmtSmart(cap) + '%</text>';
-    }
-    const beEnd = x(sBe) > W * 0.72;
-    return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="display:block">' +
-      '<line x1="' + PAD + '" y1="' + y(0) + '" x2="' + (W - PAD) + '" y2="' + y(0) + '" stroke="' + C.grid + '" stroke-width="1"/>' +
-      '<line x1="' + PAD + '" y1="' + y(q) + '" x2="' + (W - PAD) + '" y2="' + y(q) + '" stroke="' + C.gold + '" stroke-width="1" stroke-dasharray="4 4"/>' +
-      '<text x="' + (PAD + 2) + '" y="' + (y(q) - 6) + '" fill="' + C.gold + '" font-size="10" ' + MONO + '>премия ' + S.fmt1(q) + '%</text>' +
-      capMark +
-      '<path d="' + line + '" fill="none" stroke="' + C.line + '" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>' +
-      '<rect x="' + (x(K) - 4) + '" y="' + (y(0) - 4) + '" width="8" height="8" transform="rotate(45 ' + x(K) + ' ' + y(0) + ')" fill="' + C.line + '"/>' +
-      '<text x="' + x(K) + '" y="' + (y(0) + 16) + '" text-anchor="middle" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>K ' + S.fmtSmart(K) + '</text>' +
-      '<circle cx="' + x(sBe) + '" cy="' + y(q) + '" r="4" fill="' + C.gold + '"/>' +
-      '<text x="' + (x(sBe) + (beEnd ? -7 : 7)) + '" y="' + (y(q) + 15) + '"' + (beEnd ? ' text-anchor="end"' : '') + ' fill="' + C.gold + '" font-size="10" ' + MONO + '>б/у ' + S.fmtSmart(sBe) + '</text>' +
-      '</svg>';
-  }
-
-  function chartDiscount(inst) {
-    const q = inst.quote;
-    const base = H - 46, pxPer = (H - 96) / 110, barW = 100;
-    const x1 = W * 0.31 - barW / 2, x2 = W * 0.69 - barW / 2;
-    const h1 = q * pxPer, h2 = 100 * pxPer;
-    return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="display:block">' +
-      '<line x1="' + PAD + '" y1="' + base + '" x2="' + (W - PAD) + '" y2="' + base + '" stroke="' + C.axis + '" stroke-width="1"/>' +
-      '<line x1="' + (x1 + barW / 2) + '" y1="' + (base - h1) + '" x2="' + (x2 + barW) + '" y2="' + (base - h1) + '" stroke="' + C.gold + '" stroke-width="1" stroke-dasharray="4 4"/>' +
-      '<rect x="' + x1 + '" y="' + (base - h1) + '" width="' + barW + '" height="' + h1 + '" rx="7" fill="rgba(255,255,255,0.22)"/>' +
-      '<rect x="' + x2 + '" y="' + (base - h2) + '" width="' + barW + '" height="' + h2 + '" rx="7" fill="' + C.line + '"/>' +
-      '<text x="' + (x1 + barW / 2) + '" y="' + (base - h1 - 9) + '" text-anchor="middle" fill="' + C.lab2 + '" font-size="12" ' + MONO + '>' + S.fmt2(q) + '%</text>' +
-      '<text x="' + (x2 + barW / 2) + '" y="' + (base - h2 - 9) + '" text-anchor="middle" fill="' + C.line + '" font-size="12" ' + MONO + '>100%</text>' +
-      '<text x="' + ((x1 + barW + x2) / 2) + '" y="' + (base - h1 - 8) + '" text-anchor="middle" fill="' + C.gold + '" font-size="10" ' + MONO + '>доход +' + S.fmt2(100 - q) + ' п.п.</text>' +
-      '<text x="' + (x1 + barW / 2) + '" y="' + (base + 17) + '" text-anchor="middle" fill="' + C.lab2 + '" font-size="11">Покупка сегодня</text>' +
-      '<text x="' + (x2 + barW / 2) + '" y="' + (base + 17) + '" text-anchor="middle" fill="' + C.lab2 + '" font-size="11">Погашение ' + inst.expiry + '</text>' +
-      '</svg>';
-  }
-
-  function chartProtection(inst) {
-    // Полка на уровне защиты, перелом на страйке опциона, дальше — участие.
-    // Масштаб по Y динамический: при участии 150–250% фиксированный потолок 130% обрезал линию.
-    const part = inst.participation, K = inst.strike || 100;
-    const floor = inst.protectionPct != null ? inst.protectionPct : 100;
-    const rLo = 70, rHi = Math.max(140, K + 40);
-    const pay = s => { const v = 100 + part * Math.max(s - K, 0); return v < floor ? floor : v; };
-    const endVal = pay(rHi);
-    const yMin = Math.min(floor, 100) - 8, yMax = endVal + (endVal - yMin) * 0.12;
-    const x = s => PAD + ((s - rLo) / (rHi - rLo)) * (W - PAD * 2);
-    const y = v => H - PAD - ((v - yMin) / (yMax - yMin)) * (H - PAD * 2);
-    const line = "M" + x(rLo).toFixed(1) + " " + y(pay(rLo)).toFixed(1) +
-      " L" + x(K).toFixed(1) + " " + y(pay(K)).toFixed(1) +
-      " L" + x(rHi).toFixed(1) + " " + y(endVal).toFixed(1);
-    const midS = (K + rHi) / 2;
-    return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="display:block">' +
-      '<line x1="' + PAD + '" y1="' + y(floor) + '" x2="' + (W - PAD) + '" y2="' + y(floor) + '" stroke="' + C.axis + '" stroke-width="1" stroke-dasharray="4 4"/>' +
-      '<text x="' + (PAD + 2) + '" y="' + (y(floor) + 15) + '" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>защита ' + S.fmtSmart(floor) + '%</text>' +
-      '<path d="' + line + '" fill="none" stroke="' + C.line + '" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>' +
-      '<rect x="' + (x(K) - 4) + '" y="' + (y(pay(K)) - 4) + '" width="8" height="8" transform="rotate(45 ' + x(K) + ' ' + y(pay(K)) + ')" fill="' + C.line + '"/>' +
-      '<text x="' + x(K) + '" y="' + (y(pay(K)) + 16) + '" text-anchor="middle" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>' + (K === 100 ? "S\u2080" : "K " + S.fmtSmart(K)) + '</text>' +
-      '<text x="' + x(midS) + '" y="' + (y(pay(midS)) - 10) + '" text-anchor="middle" fill="' + C.line + '" font-size="10" ' + MONO + '>участие ' + Math.round(part * 100) + '%</text>' +
-      '</svg>';
-  }
-
-  function chartBooster(inst) {
-    const K = inst.strike || 100, K2 = inst.strike2 || 110, ku = (inst.ku || 175) / 100;
-    const capPay = K + ku * (K2 - K), maxUp = capPay - 100;
-    const rK = K / 100, rK2 = K2 / 100, rLo = 0.72, rHi = 1.22;
-    const yMin = 68, yMax = capPay + 6;
-    const x = rel => PAD + ((rel - rLo) / (rHi - rLo)) * (W - PAD * 2);
-    const y = v => H - PAD - ((v - yMin) / (yMax - yMin)) * (H - PAD * 2);
-    const d = "M" + x(rLo).toFixed(1) + " " + y(rLo * 100).toFixed(1) +
-      " L" + x(rK).toFixed(1) + " " + y(K).toFixed(1) +
-      " L" + x(rK2).toFixed(1) + " " + y(capPay).toFixed(1) +
-      " L" + x(rHi).toFixed(1) + " " + y(capPay).toFixed(1);
-    return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="display:block">' +
-      '<line x1="' + PAD + '" y1="' + y(100) + '" x2="' + (W - PAD) + '" y2="' + y(100) + '" stroke="' + C.axis + '" stroke-width="1" stroke-dasharray="4 4"/>' +
-      '<text x="' + (W - PAD) + '" y="' + (y(100) + 15) + '" text-anchor="end" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>номинал 100%</text>' +
-      '<line x1="' + PAD + '" y1="' + y(capPay) + '" x2="' + (W - PAD) + '" y2="' + y(capPay) + '" stroke="' + C.grid + '" stroke-width="1" stroke-dasharray="2 4"/>' +
-      '<text x="' + (W - PAD) + '" y="' + (y(capPay) - 7) + '" text-anchor="end" fill="' + C.gold + '" font-size="10" ' + MONO + '>потолок +' + S.fmt1(maxUp) + '%</text>' +
-      '<path d="' + d + '" fill="none" stroke="' + C.line + '" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>' +
-      '<rect x="' + (x(rK) - 4) + '" y="' + (y(K) - 4) + '" width="8" height="8" transform="rotate(45 ' + x(rK) + ' ' + y(K) + ')" fill="' + C.line + '"/>' +
-      '<text x="' + x(rK) + '" y="' + (y(K) + 16) + '" text-anchor="middle" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>S₀</text>' +
-      '<text x="' + x(0.84) + '" y="' + (y(84) - 8) + '" text-anchor="middle" fill="' + C.lab + '" font-size="10" ' + MONO + '>падение 1:1</text>' +
-      '<text x="' + x(rK2 + 0.03) + '" y="' + (y(capPay) + 17) + '" fill="' + C.gold + '" font-size="10" ' + MONO + '>рост ×' + Math.round(ku * 100) + '%</text>' +
-      '</svg>';
-  }
-
-  // Автоколл: выплата ТЕЛА на погашении по worst-of (европейский барьер).
-  // Вертикальные пунктиры — купонный барьер и барьер автоотзыва.
-  function chartAutocall(inst) {
-    const prot = inst.protectionPct || 65, cpn = inst.couponBarrier || prot, call = inst.callBarrier || 120;
-    const rLo = Math.min(prot - 25, 35), rHi = Math.max(call + 12, 132);
-    const yMin = Math.max(0, rLo - 8), yMax = 118;
-    const x = v => PAD + ((v - rLo) / (rHi - rLo)) * (W - PAD * 2);
-    const y = v => H - PAD - ((v - yMin) / (yMax - yMin)) * (H - PAD * 2);
-    // ниже барьера — выплата по перформансу; на барьере — скачок к 100%
-    const d = "M" + x(rLo).toFixed(1) + " " + y(rLo).toFixed(1) +
-      " L" + x(prot).toFixed(1) + " " + y(prot).toFixed(1) +
-      " L" + x(prot).toFixed(1) + " " + y(100).toFixed(1) +
-      " L" + x(rHi).toFixed(1) + " " + y(100).toFixed(1);
-    const vline = (v, col, label, anchor) =>
-      '<line x1="' + x(v) + '" y1="' + (PAD - 4) + '" x2="' + x(v) + '" y2="' + y(yMin) + '" stroke="' + col + '" stroke-width="1" stroke-dasharray="3 4"/>' +
-      '<text x="' + (x(v) + (anchor === "end" ? -5 : 5)) + '" y="' + (PAD + 6) + '" text-anchor="' + (anchor || "start") + '" fill="' + col + '" font-size="10" ' + MONO + '>' + label + '</text>';
-    return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="display:block">' +
-      '<line x1="' + PAD + '" y1="' + y(100) + '" x2="' + (W - PAD) + '" y2="' + y(100) + '" stroke="' + C.axis + '" stroke-width="1" stroke-dasharray="4 4"/>' +
-      '<text x="' + (W - PAD) + '" y="' + (y(100) - 7) + '" text-anchor="end" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>номинал 100%</text>' +
-      vline(call, C.gold, "автоотзыв " + S.fmtSmart(call) + "%", "end") +
-      (cpn !== prot ? vline(cpn, C.lab, "купон " + S.fmtSmart(cpn) + "%", "end") : "") +
-      '<path d="' + d + '" fill="none" stroke="' + C.line + '" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>' +
-      '<circle cx="' + x(prot) + '" cy="' + y(100) + '" r="3.4" fill="' + C.line + '"/>' +
-      '<text x="' + (x(prot) - 7) + '" y="' + (y(100) + 15) + '" text-anchor="end" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>защита ' + S.fmtSmart(prot) + '%</text>' +
-      '<text x="' + x((rLo + prot) / 2) + '" y="' + (y((rLo + prot) / 2) - 10) + '" text-anchor="middle" fill="' + C.lab + '" font-size="10" ' + MONO + '>по перформансу</text>' +
-      '</svg>';
-  }
+  // Графики выплат — общие с доской, живут в data/lib.js. Пока копия была
+  // на каждой странице, оси у типов продуктов назывались по-своему и нуля
+  // на них не было видно (правка по фидбеку 10.08.2026).
+  // На узком экране viewBox уже, поэтому кегль подписей задаём крупнее: иначе
+  // 11px внутри 620-й системы координат сжимаются до нечитаемых ~5px.
+  const chOpt = () => (window.innerWidth < 620
+    ? { W: 380, H: 280, colors: C, padL: 50, padR: 14, padT: 18, padB: 46, font: 13, xCount: 3, yCount: 3 }
+    : { W: W, H: H, colors: C, padL: 56, padR: 26, padT: 20, padB: 48 });
+  const chartPayoff = (r) => (r.type === "discount" ? S.discountChart(r, chOpt()) : S.payoffChart(r, chOpt()));
 
   // --- Контент паспорта (без дублей: котировка и изменение — только в шапке) ---
   function buildContent(inst) {
@@ -519,7 +402,7 @@
       return {
         badge: isCS ? "КОЛЛ-СПРЕД · ВАРРАНТ" : "CALL · ВАРРАНТ",
         subtitle: (isCS ? "Колл-спред на рост " : "Варрант на рост ") + inst.underlying + " — риск ограничен уплаченной премией",
-        payoff: () => chartWarrant(inst),
+        payoff: () => chartPayoff(inst),
         payoffCaption: isCS
           ? "Выплата на экспирацию в % от номинала; уровень БА — в % от начального. Выше K₂ выплата не растёт. Пунктир — премия; б/у — безубыточность."
           : "Выплата на экспирацию в % от номинала; уровень БА — в % от начального. Пунктир — премия; б/у — безубыточность.",
@@ -540,7 +423,7 @@
       return {
         badge: "ДИСКОНТНАЯ ОБЛИГАЦИЯ",
         subtitle: "Покупка дешевле номинала, погашение по 100% — доход зафиксирован в день сделки",
-        payoff: () => chartDiscount(inst),
+        payoff: () => chartPayoff(inst),
         payoffCaption: "Покупка дешевле номинала, погашение по 100%. Доход — разница, зафиксированная в момент покупки.",
         metrics: [
           [inst.tenor || "—", "срок"],
@@ -574,7 +457,7 @@
       return {
         badge: "АВТОКОЛЛ · WORST-OF",
         subtitle: "Условный купон на корзину " + inst.underlying + " — купон идёт, пока худшая бумага выше " + S.fmtSmart(cpnB) + "%",
-        payoff: () => chartAutocall(inst),
+        payoff: () => chartPayoff(inst),
         payoffCaption: "Возврат номинала на погашении в % от него; по горизонтали — уровень худшей бумаги корзины в % от начального. Купоны на графике не показаны — они начисляются отдельно на датах наблюдения.",
         metrics: [
           [S.fmt2(cpnPa) + "% г.", "купон · индикативно"],
@@ -615,7 +498,7 @@
       return {
         badge: "БУСТЕР · УСИЛЕННЫЙ РОСТ",
         subtitle: "Рост " + inst.underlying + " ×" + kuS + " до потолка · участие в падении 1:1",
-        payoff: () => chartBooster(inst),
+        payoff: () => chartPayoff(inst),
         payoffCaption: "Слева от старта — падение 1:1; справа — рост ×" + kuS + " внутри диапазона " + S.fmtSmart(K) + "–" + S.fmtSmart(K2) + "% до потолка +" + S.fmt1(maxUp) + "%.",
         metrics: [
           [kuS, "коэффициент участия"],
@@ -646,7 +529,7 @@
       badge: "ОБЛИГАЦИЯ · ЗАЩИТА КАПИТАЛА",
       subtitle: "Облигация с защитой капитала: " + inst.underlying + " · 100% номинала при любом сценарии" +
         (protOff > 0 ? " · участие с роста +" + S.fmtSmart(protOff) + "%" : ""),
-      payoff: () => chartProtection(inst),
+      payoff: () => chartPayoff(inst),
       payoffCaption: "Выплата на экспирацию в % от номинала: не ниже 100% при любом сценарии, выше " +
         (protOff > 0 ? "страйка " + S.fmtSmart(protK) + "%" : "S₀") + " — участие в росте.",
       metrics: [

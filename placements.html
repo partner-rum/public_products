@@ -110,6 +110,8 @@
   .pp-bid .val { font-family: var(--f-mono); font-size: 19px; font-weight: 600; color: var(--up); line-height: 1; }
   .pp-bid .u { font-size: 11px; color: rgba(85,192,138,0.9); }
   .tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 20px 0 4px; }
+  /* «Обсудить выпуск» — сразу под ключевыми цифрами: до конца паспорта не долистывают */
+  .pp-cta { margin: 16px 0 2px; }
   .tile { min-width: 0; }
   .tile { background: var(--tile); border-radius: 8px; padding: 12px 14px; }
   .tile .v { font-family: var(--f-mono); font-size: 16px; font-weight: 500; }
@@ -202,7 +204,7 @@
   </div>
 </div>
 
-<script src="data/lib.js?v=ac3"></script>
+<script src="data/lib.js?v=ax1"></script>
 <script src="data/placements.js?v=1"></script>
 <script src="data/placement_docs.js?v=1"></script>
 <script src="contact.js?v=9"></script>
@@ -276,6 +278,7 @@
         '<div class="tile"><div class="v" style="color:' + (i.perfPct != null ? perfColor(i.perfPct) : "var(--faint)") + '">' + (fmtPerf(i.perfPct) || "—") + '</div><div class="k">динамика БА</div></div>' +
         '<div class="tile"><div class="v">' + fmtD(i.maturity) + '</div><div class="k">погашение</div></div>' +
       '</div>' +
+      '<div class="pp-cta"><span class="ct-host" id="ct-host"></span></div>' +
       '<div class="sec"><div class="h">Базовый актив</div>' + assets + '</div>' +
       '<div class="sec"><div class="h">Параметры выплаты</div>' + kv(pay) +
         (i.fx ? '<div style="margin-top:12px;padding:9px 13px;border-left:3px solid #EE7D1B;background:rgba(238,125,27,0.12);border-radius:0 7px 7px 0;font-size:12.5px;line-height:1.5;color:#E7B98D">' + S.LEGAL.fx + '</div>' : '') + '</div>' +
@@ -290,8 +293,7 @@
         ["Номинал", i.notional ? Math.round(i.notional) + " " + (i.currency || "") : "—", true],
         ["Рег. номер", i.regNumber || "—", true],
         ["ISIN", i.isin, true]
-      ]) + '</div>' + docsHTML +
-      '<div class="pp-cta"><span class="ct-host" id="ct-host"></span></div>';
+      ]) + '</div>' + docsHTML;
   }
 
   function filtered() {

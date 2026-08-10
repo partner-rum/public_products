@@ -162,6 +162,179 @@ window.SITE = (function () {
     }
   };
 
+  // --- Рамка графика выплаты: оси с делениями и подписями ---------------------
+  // Одна на все поверхности (доска, карточка, one-pager) и на все типы продуктов.
+  // До 10.08.2026 каждый график рисовал «оси» сам: подписью служил то страйк, то
+  // барьер, то S₀ — горизонтальная ось называлась у каждого продукта по-своему,
+  // а нуля на ней не было видно вовсе. Теперь семантика единая: X — уровень
+  // базового актива в % от старта, Y — выплата в % номинала.
+  const AXIS_X = "Уровень базового актива, % от старта";
+  const AXIS_Y = "Выплата, % номинала";
+
+  // Круглые деления: шаг из ряда 1/2/2.5/5/10 × 10^k, чтобы подписи читались.
+  function niceTicks(min, max, target) {
+    const span = max - min;
+    if (!(span > 0)) return [min];
+    const raw = span / Math.max(1, target || 5);
+    const mag = Math.pow(10, Math.floor(Math.log(raw) / Math.LN10));
+    const n = raw / mag;
+    const step = (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * mag;
+    const out = [];
+    for (let v = Math.ceil(min / step) * step; v <= max + step * 1e-6; v += step) {
+      out.push(Math.round(v * 1e6) / 1e6);
+    }
+    return out;
+  }
+
+  // Возвращает масштабы x()/y() и разметку осей; сам график рисует вызывающий.
+  function chartFrame(o) {
+    const W = o.W, H = o.H;
+    const L = o.padL != null ? o.padL : 58, R = o.padR != null ? o.padR : 26;
+    const T = o.padT != null ? o.padT : 20, B = o.padB != null ? o.padB : 48;
+    const c = o.colors || {};
+    const grid = c.grid || "rgba(255,255,255,0.09)";
+    const axis = c.axis || "rgba(255,255,255,0.17)";
+    const lab = c.lab || "rgba(255,255,255,0.46)";
+    const MONO = 'font-family="JetBrains Mono, monospace"';
+    const x = (v) => L + ((v - o.xMin) / (o.xMax - o.xMin)) * (W - L - R);
+    const y = (v) => H - B - ((v - o.yMin) / (o.yMax - o.yMin)) * (H - T - B);
+    const fs = o.font || 11;                     // на узком экране viewBox уже — кегль крупнее
+    const fx = o.xFmt || fmtSmart, fy = o.yFmt || fmtSmart;
+    const xt = o.xTicks || niceTicks(o.xMin, o.xMax, o.xCount || 5);
+    const yt = o.yTicks || niceTicks(o.yMin, o.yMax, o.yCount || 4);
+    let s = "";
+    for (const v of yt) {
+      const gy = y(v);
+      if (gy < T - 1 || gy > H - B + 1) continue;
+      s += '<line x1="' + L + '" y1="' + gy.toFixed(1) + '" x2="' + (W - R) + '" y2="' + gy.toFixed(1) +
+        '" stroke="' + grid + '" stroke-width="1"/>' +
+        '<text x="' + (L - 9) + '" y="' + (gy + 4).toFixed(1) + '" text-anchor="end" fill="' + lab +
+        '" font-size="' + fs + '" ' + MONO + '>' + fy(v) + '</text>';
+    }
+    for (const v of xt) {
+      const gx = x(v);
+      if (gx < L - 1 || gx > W - R + 1) continue;
+      s += '<line x1="' + gx.toFixed(1) + '" y1="' + (H - B) + '" x2="' + gx.toFixed(1) + '" y2="' + (H - B + 5) +
+        '" stroke="' + axis + '" stroke-width="1"/>' +
+        '<text x="' + gx.toFixed(1) + '" y="' + (H - B + fs + 8) + '" text-anchor="middle" fill="' + lab +
+        '" font-size="' + fs + '" ' + MONO + '>' + fx(v) + '</text>';
+    }
+    s += '<line x1="' + L + '" y1="' + T + '" x2="' + L + '" y2="' + (H - B) + '" stroke="' + axis + '" stroke-width="1"/>' +
+      '<line x1="' + L + '" y1="' + (H - B) + '" x2="' + (W - R) + '" y2="' + (H - B) + '" stroke="' + axis + '" stroke-width="1"/>' +
+      '<text x="' + ((L + W - R) / 2) + '" y="' + (H - 9) + '" text-anchor="middle" fill="' + lab + '" font-size="' + fs + '">' +
+      (o.xLabel != null ? o.xLabel : AXIS_X) + '</text>' +
+      '<text transform="translate(' + (fs + 1) + ' ' + ((T + H - B) / 2) + ') rotate(-90)" text-anchor="middle" fill="' + lab +
+      '" font-size="' + fs + '">' + (o.yLabel != null ? o.yLabel : AXIS_Y) + '</text>';
+    return { x, y, svg: s, L, R, T, B };
+  }
+
+  // График выплаты — ОДИН на доску и карточку продукта. Кривая строится из
+  // calc.pct, то есть из той же функции, что считает калькулятор: разойтись они
+  // не могут. Шкала Y — по данным продукта (вариант А, выбран 10.08.2026):
+  // перелом виден крупно, а ноль/номинал помечены пунктиром и подписью деления.
+  function payoffChart(r, o) {
+    const W = o.W, H = o.H, C = o.colors;
+    const MONO = 'font-family="JetBrains Mono, monospace"';
+    const fs = o.font || 11;
+    const rg = calc.move(r) || { min: -30, max: 30 };
+    const mLo = rg.min, mHi = rg.max;
+    const base = r.type === "warrant" ? 0 : 100;      // «ноль» выплаты для этого типа
+    const pts = [];
+    for (let i = 0; i <= 240; i++) {
+      const m = mLo + (mHi - mLo) * i / 240;
+      pts.push([100 + m, calc.pct(r, m)]);
+    }
+    const vals = pts.map((p) => p[1]);
+    const lo = Math.min.apply(null, vals), hi = Math.max.apply(null, vals);
+    const pad = Math.max(6, (hi - lo) * 0.14);
+    const yMin = Math.max(0, Math.min(lo, base) - pad);
+    const yMax = hi + pad * (o.headroom || 1.6);       // запас сверху под подписи меток
+    const f = chartFrame({ W: W, H: H, xMin: 100 + mLo, xMax: 100 + mHi, yMin: yMin, yMax: yMax,
+      colors: C, padL: o.padL, padR: o.padR, padT: o.padT, padB: o.padB,
+      font: o.font, xCount: o.xCount, yCount: o.yCount });
+    const x = f.x, y = f.y, R = W - f.R;
+    const txt = (tx, ty, fill, anchor, s, size) => '<text x="' + tx.toFixed(1) + '" y="' + ty.toFixed(1) +
+      '"' + (anchor ? ' text-anchor="' + anchor + '"' : "") + ' fill="' + fill + '" font-size="' + (size || fs) +
+      '" ' + MONO + '>' + s + '</text>';
+    const hline = (v, col, dash) => '<line x1="' + f.L + '" y1="' + y(v).toFixed(1) + '" x2="' + R +
+      '" y2="' + y(v).toFixed(1) + '" stroke="' + col + '" stroke-width="1" stroke-dasharray="' + (dash || "4 4") + '"/>';
+    const vline = (v, col) => '<line x1="' + x(v).toFixed(1) + '" y1="' + f.T + '" x2="' + x(v).toFixed(1) +
+      '" y2="' + (H - f.B) + '" stroke="' + col + '" stroke-width="1" stroke-dasharray="3 4"/>';
+    const diamond = (cx, cy, col) => '<rect x="' + (cx - 4).toFixed(1) + '" y="' + (cy - 4).toFixed(1) +
+      '" width="8" height="8" transform="rotate(45 ' + cx.toFixed(1) + " " + cy.toFixed(1) + ')" fill="' + col + '"/>';
+
+    // Базовая линия выплаты: 0 у варранта, номинал 100% у бумаг с возвратом тела
+    let s = hline(base, C.axis) + txt(R, y(base) - 7, C.lab, "end", base ? "номинал 100%" : "выплата 0");
+    const K = r.strike || 100;
+
+    if (r.type === "warrant") {
+      const q = r.quote || 0, be = K + q, cap = r.strike2 ? r.strike2 - K : 0;
+      s += hline(q, C.gold) + txt(f.L + 3, y(q) - 7, C.gold, null, "премия " + fmt1(q) + "%");
+      if (r.strike2) {
+        s += hline(cap, C.grid, "2 4") +
+          diamond(x(r.strike2), y(cap), C.line) +
+          txt(x(r.strike2), y(cap) - 10, C.lab2, "middle", "K₂ " + fmtSmart(r.strike2) + " · макс. " + fmtSmart(cap) + "%");
+      }
+      // Страйк подписываем НАД осью и левее ромба: у варранта нулевая выплата лежит
+      // ровно на нижней оси, и подпись под ромбом налезала на деление шкалы.
+      // Слева от страйка выплата плоская — место свободно.
+      s += diamond(x(K), y(0), C.line) + txt(x(K) - 8, y(0) - 9, C.lab2, "end", "K " + fmtSmart(K));
+      if (be >= 100 + mLo && be <= 100 + mHi) {
+        const end = x(be) > W * 0.75;
+        s += '<circle cx="' + x(be).toFixed(1) + '" cy="' + y(q).toFixed(1) + '" r="4.5" fill="' + C.gold + '"/>' +
+          txt(x(be) + (end ? -8 : 8), y(q) + 16, C.gold, end ? "end" : null, "б/у " + fmtSmart(be));
+      }
+    } else if (r.type === "protection") {
+      const floor = r.protectionPct != null ? r.protectionPct : 100, part = r.participation || 1;
+      if (floor !== 100) s += hline(floor, C.axis) + txt(f.L + 3, y(floor) + 15, C.lab2, null, "защита " + fmtSmart(floor) + "%");
+      s += diamond(x(K), y(calc.pct(r, K - 100)), C.line) +
+        txt(x(K), y(calc.pct(r, K - 100)) + 18, C.lab2, "middle", K === 100 ? "S₀" : "K " + fmtSmart(K));
+      const mid = (K + 100 + mHi) / 2;
+      s += txt(x(mid), y(calc.pct(r, mid - 100)) - 11, C.line, "middle", "участие " + Math.round(part * 100) + "%");
+    } else if (r.type === "booster") {
+      const K2 = r.strike2 || 110, ku = (r.ku || 175) / 100, capPay = K + ku * (K2 - K);
+      s += hline(capPay, C.grid, "2 4") + txt(R, y(capPay) - 8, C.gold, "end", "потолок +" + fmt1(capPay - 100) + "%") +
+        diamond(x(K), y(K), C.line) + txt(x(K), y(K) + 18, C.lab2, "middle", "S₀") +
+        txt(x(100 + mLo + (K - 100 - mLo) * 0.45), y(calc.pct(r, mLo + (K - 100 - mLo) * 0.45)) - 10, C.lab, "middle", "падение 1:1") +
+        txt(x(K2) + 6, y(capPay) + 17, C.gold, null, "рост ×" + Math.round(ku * 100) + "%");
+    } else if (r.type === "autocall") {
+      const prot = r.protectionPct || 65, cpn = r.couponBarrier || prot, call = r.callBarrier || 120;
+      const vmark = (v, col, label, anchor) => vline(v, col) +
+        txt(x(v) + (anchor === "end" ? -6 : 6), f.T + 11, col, anchor, label);
+      s += vmark(call, C.gold, "автоотзыв " + fmtSmart(call) + "%", "end");
+      if (cpn !== prot) s += vmark(cpn, C.lab, "купон " + fmtSmart(cpn) + "%", "end");
+      s += '<circle cx="' + x(prot).toFixed(1) + '" cy="' + y(100).toFixed(1) + '" r="3.8" fill="' + C.line + '"/>' +
+        txt(x(prot) - 8, y(100) + 17, C.lab2, "end", "защита " + fmtSmart(prot) + "%") +
+        txt(x((100 + mLo + prot) / 2), y((100 + mLo + prot) / 2) - 11, C.lab, "middle", "по перформансу");
+    }
+    const d = pts.map((p, i) => (i ? "L" : "M") + x(p[0]).toFixed(1) + " " + y(p[1]).toFixed(1)).join(" ");
+    s += '<path d="' + d + '" fill="none" stroke="' + C.line + '" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>';
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="display:block">' + f.svg + s + '</svg>';
+  }
+
+  // Дисконтная облигация — единственная, у которой по горизонтали не уровень БА,
+  // а срок: выплата от рынка не зависит, бумага просто дорастает до номинала.
+  function discountChart(r, o) {
+    const W = o.W, H = o.H, C = o.colors;
+    const MONO = 'font-family="JetBrains Mono, monospace"';
+    const q = r.quote;
+    const f = chartFrame({ W: W, H: H, xMin: 0, xMax: 100, yMin: Math.max(0, q - 12), yMax: 108,
+      colors: C, padL: o.padL, padR: o.padR, padT: o.padT, padB: o.padB,
+      font: o.font, yCount: o.yCount, xLabel: "Срок жизни выпуска", xTicks: [0, 100], xFmt: (v) => (v ? "погашение" : "покупка") });
+    const R = W - f.R;
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="display:block">' + f.svg +
+      '<line x1="' + f.L + '" y1="' + f.y(100).toFixed(1) + '" x2="' + R + '" y2="' + f.y(100).toFixed(1) +
+      '" stroke="' + C.axis + '" stroke-width="1" stroke-dasharray="4 4"/>' +
+      '<text x="' + R + '" y="' + (f.y(100) - 7).toFixed(1) + '" text-anchor="end" fill="' + C.lab +
+      '" font-size="11" ' + MONO + '>номинал 100%</text>' +
+      '<path d="M' + f.x(0).toFixed(1) + " " + f.y(q).toFixed(1) + " L" + f.x(100).toFixed(1) + " " + f.y(100).toFixed(1) +
+      '" fill="none" stroke="' + C.line + '" stroke-width="2.5" stroke-linecap="round"/>' +
+      '<circle cx="' + f.x(0).toFixed(1) + '" cy="' + f.y(q).toFixed(1) + '" r="4.5" fill="' + C.gold + '"/>' +
+      '<text x="' + (f.x(0) + 9).toFixed(1) + '" y="' + (f.y(q) + 4).toFixed(1) + '" fill="' + C.gold +
+      '" font-size="11" ' + MONO + '>вход ' + fmt2(q) + '% · доход +' + fmt2(100 - q) + ' п.п.</text>' +
+      '</svg>';
+  }
+
   function displayName(r) { return r.name; }
 
   // Возвращает null, если продукта с таким id нет (снят с витрины, битая ссылка,
@@ -252,6 +425,6 @@ window.SITE = (function () {
     return /S&P|NASDAQ|NVDA|NVIDIA|NBIS|Nebius|BTC|IBIT|GLD|SPY|COPX|CSI|URA|Uranium|Bitcoin|Gold|USD|\$/i.test(n);
   }
 
-  return { TYPES, INSTRUMENTS, PAYOFF, LEGAL, calc, displayName, findInstrument, instrumentsOfType, underlyingInfo, underlyingLong, isFxSensitive, ccyLabel, nonCallText, history, fmtInt, fmt2, fmt1, fmtSmart, quoteBig, daysTo };
+  return { TYPES, INSTRUMENTS, PAYOFF, LEGAL, calc, displayName, findInstrument, instrumentsOfType, underlyingInfo, underlyingLong, isFxSensitive, ccyLabel, nonCallText, history, fmtInt, fmt2, fmt1, fmtSmart, quoteBig, daysTo, chartFrame, niceTicks, payoffChart, discountChart, AXIS_X, AXIS_Y };
 
 })();
