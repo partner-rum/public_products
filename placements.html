@@ -110,8 +110,10 @@
   .pp-bid .val { font-family: var(--f-mono); font-size: 19px; font-weight: 600; color: var(--up); line-height: 1; }
   .pp-bid .u { font-size: 11px; color: rgba(85,192,138,0.9); }
   .tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 20px 0 4px; }
-  /* «Обсудить выпуск» — сразу под ключевыми цифрами: до конца паспорта не долистывают */
-  .pp-cta { margin: 16px 0 2px; }
+  /* «Обсудить выпуск» — в одну строку с серией: до конца паспорта не долистывают.
+     Кнопка чуть мельче базовой (14px/11-18) — рядом с 24-м заголовком иначе спорит с ним. */
+  .pp-title-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .pp-title-row .ct-btn { padding: 8px 14px; font-size: 13px; }
   .tile { min-width: 0; }
   .tile { background: var(--tile); border-radius: 8px; padding: 12px 14px; }
   .tile .v { font-family: var(--f-mono); font-size: 16px; font-weight: 500; }
@@ -268,7 +270,8 @@
       : '';
 
     return '<div class="pp-top"><div>' +
-        '<div class="pp-title">' + i.serial + '</div>' +
+        '<div class="pp-title-row"><div class="pp-title">' + i.serial + '</div>' +
+          '<span class="ct-host" id="ct-host"></span></div>' +
         '<div class="pp-sub"><span>' + i.isin + '</span><span class="status ' + (i.matured ? "matured" : "live") + '">' + (i.matured ? "погашен" : "в обращении") + '</span></div>' +
         (!i.matured && i.bid != null ? '<div class="pp-bid"><span class="lbl">Bid</span><span class="val">' + fmtN(i.bid) + '%</span><span class="u">индикативно · от номинала</span></div>' : '') +
       '</div>' +
@@ -278,7 +281,6 @@
         '<div class="tile"><div class="v" style="color:' + (i.perfPct != null ? perfColor(i.perfPct) : "var(--faint)") + '">' + (fmtPerf(i.perfPct) || "—") + '</div><div class="k">динамика БА</div></div>' +
         '<div class="tile"><div class="v">' + fmtD(i.maturity) + '</div><div class="k">погашение</div></div>' +
       '</div>' +
-      '<div class="pp-cta"><span class="ct-host" id="ct-host"></span></div>' +
       '<div class="sec"><div class="h">Базовый актив</div>' + assets + '</div>' +
       '<div class="sec"><div class="h">Параметры выплаты</div>' + kv(pay) +
         (i.fx ? '<div style="margin-top:12px;padding:9px 13px;border-left:3px solid #EE7D1B;background:rgba(238,125,27,0.12);border-radius:0 7px 7px 0;font-size:12.5px;line-height:1.5;color:#E7B98D">' + S.LEGAL.fx + '</div>' : '') + '</div>' +
