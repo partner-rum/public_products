@@ -169,7 +169,7 @@
 <section class="hero">
   <div class="glow"></div>
   <div class="wrap">
-    <div class="kick">Ближайшее мероприятие · для агентов и партнёров</div>
+    <div class="kick" id="heroKick">Ближайшее мероприятие · для агентов и партнёров</div>
     <div class="bento">
 
       <div class="cell ph-cell">
@@ -269,8 +269,12 @@
     icsUid:   "rmbrg-event-20260806@invest.rumberg.ru",
     icsFile:  "rumberg-event-06-08.ics",
     joinUrl:  "https://i1pujnc1.ktalk.ru/app/stream/auditoriums/0f533da2-21e4-4331-bfd7-31eb368befce",
-    recordingUrl: ""                           // после мероприятия: ссылка на запись → страница
-                                               // сама перейдёт в режим «Смотреть запись»
+    recordingUrl: "",                          // появится ссылка → кнопка станет «Смотреть запись»
+
+    // Мероприятие ПРОШЛО. Данные не удаляем — это история встреч: сюда можно
+    // вернуться, когда появится запись, и отсюда же берутся параметры следующей
+    // встречи. Чтобы анонсировать новую: поменять title/дату/joinUrl и снять флаг.
+    past: true
   };
   var ENDPOINT = "https://so-leads.ruslan-sabirov.workers.dev/lead";
   var ov = document.getElementById("ov");
@@ -280,7 +284,7 @@
   // Ссылка на подключение проставляется из конфига в двух местах — карточка «Когда» и
   // подтверждение после записи. Если joinUrl пуст (или уже есть запись — подключаться
   // некуда), ссылки остаются скрытыми: висящий мёртвый адрес хуже его отсутствия.
-  var joinReady = !!EVENT.joinUrl && !EVENT.recordingUrl;
+  var joinReady = !!EVENT.joinUrl && !EVENT.recordingUrl && !EVENT.past;
   ["joinLink", "joinLink2"].forEach(function (id) {
     var el = document.getElementById(id);
     if (!el) return;
@@ -295,6 +299,9 @@
   //   нет ни того, ни другого → «Записаться» через форму (так было до открытой ссылки;
   //                             остаётся рабочим для следующего мероприятия)
   function goal(name) { try { ym(110759242, "reachGoal", name); } catch (e) {} }
+
+  var heroKick = document.getElementById("heroKick");
+  if (heroKick && EVENT.past) heroKick.textContent = "Прошедшее мероприятие · для агентов и партнёров";
 
   var mainCta = document.getElementById("mainCta");
   var ctaT = mainCta.querySelector(".t"), ctaB = mainCta.querySelector(".btn");
@@ -322,6 +329,15 @@
 
   if (EVENT.recordingUrl) {
     asLink(EVENT.recordingUrl, "Мероприятие прошло — доступна запись", "▶ Смотреть запись", "event_recording");
+    remind.style.display = "none";
+  } else if (EVENT.past) {
+    // Прошло, записи ещё нет: ничего не обещаем кнопкой, которая никуда не ведёт
+    mainCta.removeAttribute("href"); mainCta.removeAttribute("target");
+    mainCta.style.cursor = "default"; mainCta.style.opacity = ".72";
+    ctaT.textContent = "Мероприятие прошло " + EVENT.dateHuman;
+    ctaB.textContent = "Запись готовится";
+    phoneCta.textContent = "Запись готовится";
+    phoneCta.disabled = true; phoneCta.style.opacity = ".72"; phoneCta.style.cursor = "default";
     remind.style.display = "none";
   } else if (EVENT.joinUrl) {
     asLink(EVENT.joinUrl, "Подключение открыто — вход свободный", "Подключиться", "event_join");
