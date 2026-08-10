@@ -1069,6 +1069,365 @@ async function sendPostDraft(env, theme) {
 }
 
 // ============================================================================
+// Пост для финансовых институтов (/fi): 5 непересекающихся продуктов
+// ============================================================================
+// Чем отличается от «5 идей» и утреннего поста: аудитория — банки, брокеры, УК,
+// НПФ. Им не нужны эмодзи-заголовки и продающие зацепки, нужен паспорт: тип
+// структуры, актив, вход, барьеры, срок. Поэтому ВСЕ цифры печатает код из
+// объекта продукта (fiSpec), а модель делает ровно две вещи: выбирает пятёрку и
+// пишет одну фразу «какой риск берётся». Выдумать параметр она физически не
+// может — fiLint сверяет каждое число в её фразе с параметрами этого продукта.
+
+const FI_TYPE_LABEL = {
+  warrant: "варрант", discount: "дисконтная облигация", protection: "защита капитала",
+  autocall: "автоколл", booster: "бустер", primary: "биржевой выпуск",
+};
+
+// «12.5» → «12,5»: в посте по-русски, и заодно срезает хвосты float-арифметики
+const fiNum = (n) => String(Math.round(Number(n) * 100) / 100).replace(".", ",");
+const fiMoney = (n) => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+const fiMinNomText = (n) => (n % 1000000 === 0 ? fiNum(n / 1000000) + " млн ₽" : fiMoney(n) + " ₽");
+const fiHas = (name, part) => String(name || "").toLowerCase().includes(String(part || "").toLowerCase());
+// «·» — разделитель параметров в строке, поэтому внутри самого параметра его быть не
+// должно: «Биржа · стакан» из данных иначе читается как два отдельных параметра.
+const fiFlat = (s) => String(s == null ? "" : s).replace(/\s*·\s*/g, ", ").trim();
+
+// Параметры продукта доски — то же, что в паспорте на сайте, но одной строкой.
+// Состав подобран под ФИ: не «за что платит инвестор», а чем ограничен риск.
+function fiSpec(p) {
+  const s = [], K = p.strike, K2 = p.strike2;
+  if (p.type === "warrant") {
+    s.push(p.structure === "cs" ? "колл-спред" : "CALL-варрант");
+    if (p.quote != null) s.push("премия " + fiNum(p.quote) + "% номинала");
+    if (K != null) s.push("страйк " + fiNum(K) + "%" + (K2 ? ", потолок " + fiNum(K2) + "%" : ""));
+    if (K != null && K2) s.push("выплата не выше " + fiNum(K2 - K) + "% номинала");
+    if (K != null && p.quote != null) s.push("безубыток " + fiNum(K + p.quote) + "%");
+  } else if (p.type === "discount") {
+    if (p.quote != null) s.push("вход " + fiNum(p.quote) + "% номинала");
+    s.push("погашение 100%", "без купонов");
+  } else if (p.type === "protection") {
+    s.push("вход 100% номинала");
+    s.push("защита " + fiNum(p.protectionPct != null ? p.protectionPct : 100) + "%");
+    s.push("участие " + fiNum(Math.round((p.participation || 1) * 100)) + "%" +
+      (K > 100 ? " выше " + fiNum(K) + "%" : ""));
+  } else if (p.type === "autocall") {
+    s.push("вход 100% номинала");
+    if (p.couponPa != null) s.push("купон " + fiNum(p.couponPa) + "% годовых");
+    if (p.couponBarrier != null) s.push("барьер купона " + fiNum(p.couponBarrier) + "%");
+    if (p.callBarrier != null) s.push("автоотзыв " + fiNum(p.callBarrier) + "%");
+    if (p.protectionPct != null) s.push("защита " + fiNum(p.protectionPct) + "%");
+    if (Array.isArray(p.basket) && p.basket.length) s.push("worst-of " + p.basket.length);
+  } else if (p.type === "booster") {
+    s.push("вход 100% номинала");
+    if (p.ku != null && K != null && K2 != null) {
+      s.push("коэффициент " + fiNum(p.ku) + "% в диапазоне " + fiNum(K) + "–" + fiNum(K2) + "%");
+      s.push("максимум " + fiNum(K + (p.ku / 100) * (K2 - K)) + "% номинала");
+    }
+    if (K != null) s.push("ниже " + fiNum(K) + "% — как базовый актив");
+  }
+  return s;
+}
+
+// Первичка/биржевые выпуски: цену входа НЕ додумываем — у торгующегося выпуска она
+// рыночная, а у размещаемого её в данных может не быть. Берём только то, что есть.
+function fiSpecOffer(o) {
+  const s = [];
+  if (o.kind) s.push(fiFlat(o.kind));
+  if (o.price != null) s.push("цена " + fiNum(o.price) + "% номинала");
+  if (o.participation && !/участ/i.test(String(o.kind || ""))) s.push("участие " + fiFlat(o.participation));
+  if (o.nominal != null) s.push("номинал " + fiMoney(o.nominal) + " ₽");
+  if (o.isin) s.push("ISIN " + o.isin);
+  if (o.venue) s.push(fiFlat(o.venue));
+  if (o.statusLabel) s.push(fiFlat(o.statusLabel));
+  return s;
+}
+
+// Каталог доски + первичка в едином виде: три оси непересечения (тип, класс актива,
+// базовый актив), готовая строка параметров и ссылка. Одни и те же записи уходят
+// и в промпт, и в рендер — значит, модель видит ровно те цифры, что будут в посте.
+function fiPool(cat, base) {
+  const out = [];
+  const add = (r) => {
+    const bits = [];
+    // Актив пишем, только если названия недостаточно. Сравниваем без тикера в скобках:
+    // «Защита капитала · S&P 500» и «S&P 500 (SPY)» — это одно и то же, повтор лишний.
+    const bare = String(r.under || "").replace(/\s*\([^)]*\)\s*$/, "").trim();
+    if (r.under && !fiHas(r.name, bare)) bits.push(fiFlat(r.under));
+    bits.push.apply(bits, r.spec);
+    if (r.tenor && !fiHas(r.name, r.tenor)) bits.push("срок " + r.tenor);
+    if (r.ccy) bits.push(fiFlat(r.ccy));
+    r.specText = bits.filter(Boolean).join(" · ");
+    if (r.specText) out.push(r);
+  };
+  for (const p of cat.instr || []) {
+    if (!p || !p.id) continue;
+    // расчёты в рублях при валютном номинале — для ФИ это первый вопрос
+    const ccy = p.settle && p.settle !== p.currency
+      ? p.currency + ", расчёты в " + (p.settle === "RUB" ? "₽" : p.settle)
+      : (p.currency && p.currency !== "RUB" ? p.currency : "");
+    add({
+      id: p.id, name: p.name || p.id, type: p.type || "warrant",
+      typeLabel: FI_TYPE_LABEL[p.type] || "структурный продукт",
+      cls: p.cls || "Прочее", under: p.underlying || "", tenor: p.tenor || "",
+      ccy, minNom: p.minNom || null, spec: fiSpec(p),
+      url: base + "instrument.html?id=" + p.id,
+    });
+  }
+  for (const o of cat.offers || []) {
+    if (!o || !o.id) continue;
+    // Биржевые выпуски — свой класс: бумага в стакане не конкурирует с внебиржевой
+    // структурой на тот же актив, но и дублировать её в подборке незачем.
+    add({
+      id: o.id, name: o.name || o.id, type: "primary", typeLabel: "биржевой выпуск",
+      cls: "Биржевые выпуски", under: o.reference || "", tenor: o.tenor || "",
+      ccy: o.fx || "", minNom: null, spec: fiSpecOffer(o),
+      url: base + "offerings.html#" + o.id,
+    });
+  }
+  return out;
+}
+
+const fiKey = (r) => String(r.under || r.name).toLowerCase();
+
+// Существует ли вообще пятёрка без пересечений по типу/классу/активу — и какая.
+// Перебор с возвратом: пул ~50 позиций, глубина 5, отсечка по трём осям — мгновенно.
+// Нужен дважды: проверить, что каталог после дедупа ещё собирается, и как запасной
+// вариант, если модель дважды промахнулась мимо правил (пост уйдёт в любом случае).
+function fiPick(list) {
+  const res = [], used = { type: new Set(), cls: new Set(), under: new Set() };
+  const go = (from) => {
+    if (res.length === 5) return true;
+    for (let j = from; j < list.length; j++) {
+      const r = list[j];
+      if (used.type.has(r.type) || used.cls.has(r.cls) || used.under.has(fiKey(r))) continue;
+      used.type.add(r.type); used.cls.add(r.cls); used.under.add(fiKey(r)); res.push(r);
+      if (go(j + 1)) return true;
+      res.pop(); used.type.delete(r.type); used.cls.delete(r.cls); used.under.delete(fiKey(r));
+    }
+    return false;
+  };
+  return go(0) ? res.slice() : null;
+}
+
+// Числа во фразе модели, которых нет в параметрах продукта. В отличие от утреннего
+// поста проверяем ЛЮБЫЕ числа, а не только трёхзначные: перепутать 68% и 80% в цене
+// входа опаснее всего, а оба коротких.
+function fiAlienNumbers(text, src) {
+  const norm = (s) => String(s).replace(/\./g, ",").replace(/(\d)[  ]+(?=\d)/g, "$1");
+  const s = norm(src), out = [];
+  for (const m of norm(text).matchAll(/\d+(?:,\d+)?/g)) if (!s.includes(m[0])) out.push(m[0]);
+  return [...new Set(out)];
+}
+
+const FI_SYSTEM = `Ты — аналитик компании Rumberg. Готовишь короткую подборку структурных продуктов для ФИНАНСОВЫХ ИНСТИТУТОВ: банки, брокеры, управляющие компании, НПФ. Читатель — профессионал. Ему нужны структура и параметры, а не продающие лозунги.
+
+Ответь ОДНИМ валидным JSON-объектом без текста вокруг, строго по схеме:
+{"products":[
+  {"id":"<id из каталога>","why":"<одна фраза до 110 знаков: какой риск берёт на себя инвестор и под какую задачу бумага>"},
+  ... ровно 5 объектов
+]}
+
+ЖЁСТКИЕ ПРАВИЛА (нарушение = брак):
+- Ровно 5 продуктов, и они НЕ ПЕРЕСЕКАЮТСЯ между собой: у всех пяти РАЗНЫЙ тип, РАЗНЫЙ класс актива и РАЗНЫЙ базовый актив. Два варранта, две бумаги на ОФЗ или два продукта на акции США в одной подборке — брак. Тип и класс указаны в начале каждой строки каталога.
+- id бери ТОЛЬКО из [квадратных скобок] в каталоге.
+- why — одна фраза без воды и без эпитетов («уникальный», «интересный», «отличный»). По сути: какой риск берётся и для какой задачи бумага годится. Без эмодзи, без восклицаний, без обращения к читателю.
+- Параметры, цены, барьеры и сроки в why НЕ пиши: их печатает система отдельной строкой над твоей фразой. Если число всё же называешь — оно обязано быть в строке каталога ИМЕННО этого продукта.
+- Ты НЕ знаешь свежих новостей, курсов и решений ЦБ. Не ссылайся на события и не описывай состояние рынка.
+- Запрещено: обещания доходности, формулировки «X% годовых» как доходности, слова «нота», «гарантированный», «надёжный», индивидуальные инвестрекомендации, внутренние id и календарные даты.
+- Дисклеймер не добавляй — его добавит система.
+
+Пример ФОРМЫ и ТОНА (содержание всегда из каталога):
+{"products":[{"id":"AAA-1","why":"Кредитный риск госкорпорации без процентного риска купона — для портфеля под фиксированный горизонт."},{"id":"BBB-2","why":"Ограниченный премией риск на длинную дюрацию: убыток известен заранее, рост не ограничен."}]}`;
+
+function fiLint(p, byId) {
+  if (!p || typeof p !== "object") return ["ответ не является JSON-объектом — верни один объект по схеме"];
+  const probs = [];
+  const arr = Array.isArray(p.products) ? p.products : [];
+  if (arr.length !== 5) probs.push("в products должно быть ровно 5 позиций (сейчас " + arr.length + ")");
+  const seenId = new Set(), byType = new Map(), byCls = new Map(), byUnder = new Map();
+  arr.slice(0, 5).forEach((it, i) => {
+    const n = "products[" + (i + 1) + "]";
+    if (!it || typeof it.id !== "string" || typeof it.why !== "string" || !it.why.trim()) {
+      probs.push(n + ": нужны id и why"); return;
+    }
+    const r = byId.get(it.id);
+    if (!r) { probs.push(n + ": id «" + it.id + "» нет в каталоге — возьми id из [скобок]"); return; }
+    if (seenId.has(it.id)) probs.push(n + ": продукт повторяется — нужны 5 разных");
+    seenId.add(it.id);
+    // три оси непересечения: сообщаем, ЧЕМ именно занято — модель чинит адресно
+    if (byType.has(r.type)) probs.push(n + ": тип «" + r.typeLabel + "» уже занят продуктом «" + byType.get(r.type) + "» — возьми продукт другого типа");
+    else byType.set(r.type, r.name);
+    if (byCls.has(r.cls)) probs.push(n + ": класс актива «" + r.cls + "» уже занят продуктом «" + byCls.get(r.cls) + "» — возьми другой класс");
+    else byCls.set(r.cls, r.name);
+    if (byUnder.has(fiKey(r))) probs.push(n + ": базовый актив «" + (r.under || r.name) + "» уже занят продуктом «" + byUnder.get(fiKey(r)) + "» — возьми другой актив");
+    else byUnder.set(fiKey(r), r.name);
+
+    const why = it.why.trim();
+    if (why.length > 130) probs.push(n + ": why длиннее 110 знаков (" + why.length + ") — сожми до одной фразы");
+    // Границу слова у «нота» ставим кириллическими lookaround-ами: \b считает буквой
+    // только латиницу, поэтому /нота\b/ по русскому тексту НЕ срабатывает.
+    const bad = why.match(/(?<![а-яё])нот[ауыеой]?(?![а-яё])|гарантирован|надёжн|надежн|% годовых|доходность/i);
+    if (bad) probs.push(n + ": формулировка «" + bad[0] + "» в why запрещена — перепиши фразу без неё");
+    if (/\p{Extended_Pictographic}|!/u.test(why)) probs.push(n + ": в why эмодзи или восклицательный знак — тон должен быть деловым");
+    const alien = fiAlienNumbers(why, r.name + " · " + r.specText);
+    if (alien.length) probs.push(n + ": чисел " + alien.join(", ") + " нет в параметрах этого продукта — убери их из why, цифры печатает система");
+  });
+  return probs;
+}
+
+async function generateFi(env, theme) {
+  const cat = await buildCatalog(env);
+  const base = (env.SITE_BASE || "https://invest.rumberg.ru/").replace(/\/?$/, "/");
+  const pool = fiPool(cat, base);
+  if (!fiPick(pool)) throw new Error("в каталоге не набирается 5 непересекающихся продуктов");
+
+  // Память своя (fi:history), не общая с каналом агентов: аудитории разные, один и тот
+  // же продукт может уйти и туда, и туда. Дедуп нужен только между подборками для ФИ.
+  let recent = [];
+  if (env.POST_KV) { try { recent = (await env.POST_KV.get("fi:history", "json")) || []; } catch (e) { recent = []; } }
+  const recentIds = recent.map((r) => r && r.id).filter(Boolean);
+  // Недавние вычёркиваем ЖЁСТКО — но только пока остаток каталога ещё собирается
+  // в пятёрку по всем трём осям, иначе подборка не соберётся вовсе.
+  let avail = pool.filter((r) => !recentIds.includes(r.id));
+  if (!fiPick(avail)) avail = pool;
+
+  const byId = new Map(avail.map((r) => [r.id, r]));
+  const catText = avail.map((r) => "- [" + r.id + "] тип: " + r.typeLabel + " · класс: " + r.cls +
+    " · " + r.name + " · " + r.specText).join("\n");
+  const system = FI_SYSTEM + "\n\n=== КАТАЛОГ (единственный источник продуктов, цифр и [id]) ===\n" + catText;
+  const user = "Собери подборку из 5 непересекающихся продуктов по правилам выше." +
+    (theme ? " По возможности вокруг темы: " + theme + "." : "");
+  const provider = env.POST_PROVIDER || env.CHAT_PROVIDER || "deepseek";
+
+  // Две попытки: браку возвращаем список проблем — модель чинит адресно. Как в
+  // утреннем конвейере, помним лучшую попытку: вторая бывает хуже первой.
+  let messages = [{ role: "user", content: user }];
+  let parsed = null, problems = [], best = null;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    let raw = "";
+    try {
+      raw = await callLLM(provider, system, messages, env,
+        { temperature: 0.5, maxTokens: attempt ? 1600 : 900, model: env.POST_MODEL, json: true });
+    } catch (e) {
+      if (attempt === 0 && /upstream_length/.test(String((e && e.message) || e))) {
+        messages = messages.concat([{ role: "user",
+          content: "Твой прошлый ответ обрезался лимитом. Сократи why до 90 знаков и верни JSON целиком." }]);
+        continue;
+      }
+      if (best) break;
+      throw e;
+    }
+    parsed = parseMorningJson(raw);
+    problems = fiLint(parsed, byId);
+    if (parsed && (!best || problems.length < best.problems.length)) best = { parsed, problems };
+    if (!problems.length) break;
+    if (attempt === 0) {
+      messages = messages.concat([
+        { role: "assistant", content: raw || "{}" },
+        { role: "user", content: "Брак. Исправь и верни JSON ЦЕЛИКОМ по той же схеме:\n- " + problems.join("\n- ") },
+      ]);
+    }
+  }
+  if (best) { parsed = best.parsed; problems = best.problems; }
+
+  // Собираем пятёрку, отбрасывая позиции, которые нарушают непересечение: лучше
+  // взять недостающие кодом, чем выпустить подборку с двумя варрантами на ОФЗ.
+  const items = [], used = { type: new Set(), cls: new Set(), under: new Set() };
+  for (const pr of (parsed && Array.isArray(parsed.products) ? parsed.products : [])) {
+    if (items.length === 5) break;
+    if (!pr || typeof pr.id !== "string") continue;
+    const r = byId.get(pr.id);
+    if (!r || used.type.has(r.type) || used.cls.has(r.cls) || used.under.has(fiKey(r))) continue;
+    const why = typeof pr.why === "string" ? pr.why.trim() : "";
+    // фразу с выдуманным числом не чиним — выкидываем текст, параметры скажут сами
+    const clean = why && !fiAlienNumbers(why, r.name + " · " + r.specText).length ? why : "";
+    used.type.add(r.type); used.cls.add(r.cls); used.under.add(fiKey(r));
+    items.push({ ...r, why: clean });
+  }
+  // Добор кодом: продукты в подборке важнее комментария к ним.
+  if (items.length < 5) {
+    const rest = avail.filter((r) => !used.type.has(r.type) && !used.cls.has(r.cls) && !used.under.has(fiKey(r)));
+    for (const r of fiPick(rest) || rest) {
+      if (items.length === 5) break;
+      if (used.type.has(r.type) || used.cls.has(r.cls) || used.under.has(fiKey(r))) continue;
+      used.type.add(r.type); used.cls.add(r.cls); used.under.add(fiKey(r));
+      items.push({ ...r, why: "" });
+    }
+  }
+  if (items.length < 5) throw new Error("не удалось собрать 5 непересекающихся продуктов");
+
+  if (env.POST_KV) {
+    try {
+      const fresh = items.map((r) => ({ id: r.id, name: r.name }));
+      await env.POST_KV.put("fi:history", JSON.stringify(fresh.concat(recent).slice(0, 10)));
+    } catch (e) { /* память необязательна */ }
+  }
+  return { items, warn: problems };
+}
+
+// Готовая подборка уходит ТОМУ, КТО ВЫЗВАЛ /fi — он сам решает, кому её отправить.
+async function sendFiDraft(env, theme, chatId) {
+  const to = chatId || env.ADMIN_CHAT_ID;
+  if (!to) return;
+  // Тему помним сутки: кнопка «🔁 Пересобрать» работает без повторного ввода команды
+  if (env.POST_KV) {
+    try { await env.POST_KV.put("fi:theme:" + to, String(theme || ""), { expirationTtl: 86400 }); } catch (e) {}
+  }
+  let res;
+  try {
+    res = await generateFi(env, theme);
+  } catch (e) {
+    await tg(env, "sendMessage", { chat_id: to,
+      text: "⚠️ Подборка для ФИ не собралась: " + String((e && e.message) || e).slice(0, 200) });
+    return;
+  }
+  // Вёрстка — кодом: название-ссылка жирным, под ним строка параметров, под ней
+  // фраза модели. Никаких эмодзи-заголовков: аудитория читает параметры, не лозунги.
+  const nums = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣"];
+  const blocks = res.items.map((r, i) =>
+    nums[i] + ' <b><a href="' + r.url + '">' + esc(r.name) + "</a></b>\n" + esc(r.specText) +
+    (r.why ? "\n" + postToTgHtml(r.why) : ""));
+
+  // Минимальный номинал у внебиржевых структур один — выносим в подвал, чтобы не
+  // повторять пять раз. У биржевого выпуска его нет (номинал бумаги напечатан в его
+  // же строке), поэтому в смешанной подборке оговариваем, к чему относится цифра.
+  // Разошёлся хотя бы у одного — не пишем вовсе, чтобы не соврать.
+  const noms = res.items.map((r) => r.minNom).filter((n) => n != null);
+  const nomLine = noms.length && noms.every((n) => n === noms[0])
+    ? (noms.length === res.items.length ? "Мин. номинал " : "Мин. номинал внебиржевых структур — ") +
+      fiMinNomText(noms[0]) + ". " : "";
+
+  const text = "🏛 <b>Структурные продукты Rumberg</b>\nПодборка для финансовых институтов · " +
+    esc(mskDate().human) + "\n\n" + blocks.join("\n\n") +
+    "\n\n" + esc(nomLine) + "Котировки индикативны, параметры уточняются на дату сделки." +
+    "\n<i>" + esc(POST_DISCLAIMER) + "</i>";
+
+  if (env.POST_KV) {
+    try { await env.POST_KV.put("fi:post:" + to, text, { expirationTtl: 86400 }); } catch (e) {}
+  }
+  const buttons = [{ text: "🔁 Пересобрать", callback_data: "fi" }];
+  // Отдельный канал, НЕ CHANNEL_ID: там сидят агенты, у подборки для ФИ другая аудитория
+  if (env.FI_CHANNEL_ID) buttons.push({ text: "📢 В канал ФИ", callback_data: "fipub" });
+  const resp = await tg(env, "sendMessage", { chat_id: to, text, parse_mode: "HTML",
+    link_preview_options: { is_disabled: true },
+    reply_markup: { inline_keyboard: [buttons] } });
+  // Привязка к конкретному сообщению: после «Пересобрать» кнопка на старом пузыре
+  // иначе опубликовала бы новейшую версию из общего ключа (та же грабля, что в утреннем)
+  if (env.POST_KV) {
+    try {
+      const rj = await resp.json();
+      const mid = rj && rj.ok && rj.result && rj.result.message_id;
+      if (mid != null) await env.POST_KV.put("fi:post:" + to + ":" + mid, text, { expirationTtl: 86400 });
+    } catch (e) { /* привязка — best effort */ }
+  }
+  if (res.warn.length) {
+    await tg(env, "sendMessage", { chat_id: to, parse_mode: "HTML",
+      text: "⚠️ <b>Проверьте перед отправкой</b> — модель не всё исправила даже со второй попытки:\n• " +
+            res.warn.map(esc).join("\n• ") });
+  }
+}
+
+// ============================================================================
 // Админка сейлзов: /submit → карточка модератору → ✅ коммит в GitHub
 // ============================================================================
 
@@ -1630,6 +1989,13 @@ async function publishItem(env, payload) {
 }
 
 // --- (опц.) Вебхук бота: клиент нажал «Написать в Telegram» ---
+// Кому бот доверяет генерацию постов: Руслан плюс сейлзы из ANALYST_CHAT_ID
+// (список через запятую). Свой chat_id человек узнаёт командой /id.
+function trustedIds(env) {
+  return [env.ADMIN_CHAT_ID].concat(String(env.ANALYST_CHAT_ID || "").split(","))
+    .map((s) => String(s || "").trim()).filter(Boolean);
+}
+
 async function handleTelegram(request, env, ctx) {
   if (env.WEBHOOK_SECRET && request.headers.get("X-Telegram-Bot-Api-Secret-Token") !== env.WEBHOOK_SECRET) {
     return new Response("forbidden", { status: 403 });
@@ -1647,10 +2013,7 @@ async function handleTelegram(request, env, ctx) {
     // сейлзы из ANALYST_CHAT_ID). Статья лежит в KV сутки; дедуп-память сама подставит
     // другие продукты. Ветка ДО модераторской проверки: кнопку жмёт не только Руслан.
     if (cb.data === "morn") {
-      const trusted = [env.ADMIN_CHAT_ID]
-        .concat(String(env.ANALYST_CHAT_ID || "").split(","))
-        .map((s) => String(s || "").trim()).filter(Boolean);
-      if (!trusted.includes(String(cb.from && cb.from.id))) {
+      if (!trustedIds(env).includes(String(cb.from && cb.from.id))) {
         await answer("Недостаточно прав"); return new Response("ok");
       }
       const chatId = cb.message && cb.message.chat && cb.message.chat.id;
@@ -1671,10 +2034,7 @@ async function handleTelegram(request, env, ctx) {
     // Копипаста так не умеет: свойство «без превью» не переносится с текстом,
     // клиент отправителя строит карточку заново. Доступ — тем же доверенным.
     if (cb.data === "mpub") {
-      const trusted = [env.ADMIN_CHAT_ID]
-        .concat(String(env.ANALYST_CHAT_ID || "").split(","))
-        .map((s) => String(s || "").trim()).filter(Boolean);
-      if (!trusted.includes(String(cb.from && cb.from.id))) {
+      if (!trustedIds(env).includes(String(cb.from && cb.from.id))) {
         await answer("Недостаточно прав"); return new Response("ok");
       }
       if (!env.CHANNEL_ID) { await answer("Канал не настроен (CHANNEL_ID)", true); return new Response("ok"); }
@@ -1697,6 +2057,51 @@ async function handleTelegram(request, env, ctx) {
       await tg(env, "editMessageReplyMarkup", { chat_id: chatId, message_id: cb.message.message_id,
         reply_markup: { inline_keyboard: [[{ text: "✅ Опубликовано", callback_data: "noop" }]] } });
       await answer("Опубликовано в канал ✅");
+      return new Response("ok");
+    }
+    // «🔁 Пересобрать» под подборкой для ФИ: тема лежит в KV сутки, дедуп (fi:history)
+    // сам подставит другие продукты. Права те же, что у утреннего поста.
+    if (cb.data === "fi") {
+      if (!trustedIds(env).includes(String(cb.from && cb.from.id))) {
+        await answer("Недостаточно прав"); return new Response("ok");
+      }
+      const chatId = cb.message && cb.message.chat && cb.message.chat.id;
+      let theme = "";
+      if (env.POST_KV && chatId != null) {
+        try { theme = (await env.POST_KV.get("fi:theme:" + chatId)) || ""; } catch (e) {}
+      }
+      await answer("Собираю заново…");
+      // Вебхук отвечаем сразу: два вызова LLM держали бы его до минуты и Telegram
+      // прислал бы update повторно (см. ту же развязку у «morn»).
+      const rejob = sendFiDraft(env, theme, chatId);
+      if (ctx) ctx.waitUntil(rejob); else await rejob;
+      return new Response("ok");
+    }
+
+    // «📢 В канал ФИ» — публикует бот, с выключенным превью. Канал отдельный
+    // (FI_CHANNEL_ID): в канале агентов эта подборка не к месту.
+    if (cb.data === "fipub") {
+      if (!trustedIds(env).includes(String(cb.from && cb.from.id))) {
+        await answer("Недостаточно прав"); return new Response("ok");
+      }
+      if (!env.FI_CHANNEL_ID) { await answer("Канал ФИ не настроен (FI_CHANNEL_ID)", true); return new Response("ok"); }
+      const chatId = cb.message && cb.message.chat && cb.message.chat.id;
+      let post = null;
+      if (env.POST_KV && chatId != null) {
+        try {
+          post = await env.POST_KV.get("fi:post:" + chatId + ":" + cb.message.message_id);
+          if (!post) post = await env.POST_KV.get("fi:post:" + chatId);
+        } catch (e) {}
+      }
+      if (!post) { await answer("Подборка устарела — пересоберите и публикуйте заново.", true); return new Response("ok"); }
+      const r = await tg(env, "sendMessage", { chat_id: env.FI_CHANNEL_ID, text: post, parse_mode: "HTML",
+        link_preview_options: { is_disabled: true } });
+      let sentOk = false;
+      try { sentOk = (await r.json()).ok === true; } catch (e) {}
+      if (!sentOk) { await answer("Не удалось опубликовать — бот админ канала?", true); return new Response("ok"); }
+      await tg(env, "editMessageReplyMarkup", { chat_id: chatId, message_id: cb.message.message_id,
+        reply_markup: { inline_keyboard: [[{ text: "✅ Опубликовано", callback_data: "noop" }]] } });
+      await answer("Опубликовано в канал ФИ ✅");
       return new Response("ok");
     }
     if (cb.data === "noop") { await answer(""); return new Response("ok"); }
@@ -1759,9 +2164,7 @@ async function handleTelegram(request, env, ctx) {
     // Утренняя статья: длинный текст в личке от доверенного отправителя (Руслан или
     // любой из списка ANALYST_CHAT_ID, через запятую) → готовый пост ОБРАТНО отправителю,
     // он сам публикует в канал. Порог 600 знаков отделяет статью от обычных сообщений.
-    const trusted = [env.ADMIN_CHAT_ID]
-      .concat(String(env.ANALYST_CHAT_ID || "").split(","))
-      .map((s) => String(s || "").trim()).filter(Boolean);
+    const trusted = trustedIds(env);
     if (trusted.includes(String(from.id)) && msg.chat && msg.chat.type === "private" &&
         !msg.text.startsWith("/") && msg.text.length >= 600) {
       await tg(env, "sendMessage", { chat_id: msg.chat.id,
@@ -1778,6 +2181,18 @@ async function handleTelegram(request, env, ctx) {
       if (env.ADMIN_CHAT_ID && String(from.id) === String(env.ADMIN_CHAT_ID)) {
         const theme = msg.text.replace(/^\/post(@\w+)?\s*/, "").trim().slice(0, 300);
         await sendPostDraft(env, theme);
+      }
+      return new Response("ok");
+    }
+
+    // «/fi [тема]» — подборка 5 непересекающихся продуктов для финансовых институтов.
+    // Доступна доверенным, ответ уходит вызвавшему в личку: он сам решает, кому слать.
+    if (/^\/fi(?:@\w+)?(?:\s|$)/.test(msg.text)) {
+      if (trusted.includes(String(from.id)) && msg.chat && msg.chat.type === "private") {
+        const theme = msg.text.replace(/^\/fi(@\w+)?\s*/, "").trim().slice(0, 300);
+        await tg(env, "sendMessage", { chat_id: msg.chat.id, text: "⏳ Собираю подборку для ФИ…" });
+        const job = sendFiDraft(env, theme, msg.chat.id);
+        if (ctx) ctx.waitUntil(job); else await job;
       }
       return new Response("ok");
     }
