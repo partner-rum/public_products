@@ -149,11 +149,15 @@ window.SITE = (function () {
       // Защита капитала: участие начисляется на рост ВЫШЕ страйка опциона (strike, % от
       // начального уровня; 100 = ATM). Раньше страйк игнорировался, и продукт на CALL 105
       // показывал участие уже с нулевого движения.
+      // База выплаты — УРОВЕНЬ ЗАЩИТЫ, а не номинал: при защите 80% и отсутствии роста
+      // возвращается 80% («Энергетика будущего»: выплата = 80% + 100% × рост корзины).
+      // Раньше базой было 100, и защита ниже 100% не работала вовсе: график рисовал
+      // полку на 80%, а расчёт платил 100% при любом падении. У всех продуктов доски
+      // защита 100%, поэтому их цифры не меняются (floor = 100 → прежняя формула).
       if (r.type === "protection") {
         const p = r.participation, floor = r.protectionPct != null ? r.protectionPct : 100, K = r.strike || 100;
-        let v = 100 + p * Math.max(100 + move - K, 0);
-        if (v < floor) v = floor;
-        if (r.cap != null) v = Math.min(v, 100 + p * Math.max(100 + r.cap - K, 0));
+        let v = floor + p * Math.max(100 + move - K, 0);
+        if (r.cap != null) v = Math.min(v, floor + p * Math.max(100 + r.cap - K, 0));
         return v;
       }
       if (r.type === "booster") return PAYOFF.booster(100 + move, r.strike || 100, r.strike2 || 110, (r.ku || 175) / 100);

@@ -1445,7 +1445,8 @@ const SUBMIT_SECTIONS = {
   board: {
     label: "Текущие продукты (доска)",
     file: "data/instruments.js",
-    str: ["id", "type", "structure", "name", "underlying", "cls", "uRef", "tenor", "expiry"],
+    // currency: без неё всё, что заводит сейлз, молча становилось рублёвым
+    str: ["id", "type", "structure", "name", "underlying", "cls", "uRef", "tenor", "expiry", "currency"],
     num: ["spot", "strike", "strike2", "participation", "protectionPct", "cap", "quote", "chg", "minNom"],
     required: ["id", "type", "name", "underlying", "cls", "expiry", "quote"],
   },

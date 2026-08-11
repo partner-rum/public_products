@@ -41,6 +41,8 @@
 
   .grp { margin:0 0 16px; padding:16px; background:var(--card); border:1px solid var(--border-soft); border-radius:14px; }
   .grp .gt { font-family:var(--m); font-size:10.5px; letter-spacing:.13em; text-transform:uppercase; color:var(--faint); margin:0 0 12px; }
+  .hint-box { margin:0 0 12px; padding:9px 13px; border-left:3px solid var(--solar); background:rgba(238,125,27,.1);
+              border-radius:0 7px 7px 0; font-size:12.5px; line-height:1.5; color:#E7B98D; }
   .row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   .row3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
   @media (max-width:560px){ .row,.row3 { grid-template-columns:1fr; } }
@@ -152,17 +154,25 @@
     <div class="grp"><div class="gt">Условия</div>
       <div class="row3">
         <label><span class="k">Экспирация <b>*</b></span><input name="expiry" placeholder="18.12.2027" maxlength="10"></label>
-        <label><span class="k">Котировка, % ном. <b>*</b></span><input name="quote" type="number" step="0.01" placeholder="96.80"></label>
+        <label id="l-quote"><span class="k">Котировка, % ном. <b>*</b></span><input name="quote" type="number" step="0.01" placeholder="96.80"></label>
         <label><span class="k">Мин. номинал, ₽</span><input name="minNom" type="number" value="1000000"></label>
       </div>
+      <div class="row">
+        <label><span class="k">Срок (подпись) <b>*</b></span><input name="tenor" placeholder="3 года" maxlength="20"></label>
+        <label><span class="k">Валюта</span>
+          <select name="currency"><option value="RUB">RUB — рубли</option><option value="USD">USD — доллары</option><option value="CNY">CNY — юани</option></select>
+        </label>
+      </div>
       <div id="b-protection" style="display:none">
+        <div class="hint-box">Вход по номиналу (100%) — котировку вводить не нужно. Все уровни задаются
+          в % ОТ СТАРТА базового актива, а не в его пунктах.</div>
         <div class="row">
-          <label><span class="k">Нач. уровень БА (S0) <b>*</b></span><input name="strike" type="number" step="0.01" placeholder="3285"></label>
-          <label><span class="k">Участие в росте, 0–1 <b>*</b></span><input name="participation" type="number" step="0.05" placeholder="0.6"></label>
+          <label><span class="k">Участие начинается с роста, %</span><input name="startFrom" type="number" step="0.5" value="0" placeholder="0"></label>
+          <label><span class="k">Участие в росте, % <b>*</b></span><input name="participation" type="number" step="5" placeholder="120"></label>
         </div>
         <div class="row">
           <label><span class="k">Защита номинала, %</span><input name="protectionPct" type="number" value="100"></label>
-          <label><span class="k">Потолок роста, % (пусто = нет)</span><input name="cap" type="number" placeholder=""></label>
+          <label><span class="k">Потолок роста БА, % (пусто = без потолка)</span><input name="cap" type="number" placeholder=""></label>
         </div>
       </div>
       <div id="b-warrant" style="display:none">
@@ -172,7 +182,6 @@
           </label>
           <label><span class="k">Текущий уровень БА (текстом)</span><input name="uRef" placeholder="$54,80 или 6 320 пт" maxlength="30"></label>
         </div>
-        <label><span class="k">Срок (подпись)</span><input name="tenor" placeholder="1 год" maxlength="20"></label>
       </div>
     </div>
     <button class="send" type="submit">Отправить на одобрение</button>
@@ -426,8 +435,11 @@
   // ── условные поля ──
   var fBoard = document.getElementById("f-board");
   fBoard.type.addEventListener("change", function () {
-    document.getElementById("b-protection").style.display = fBoard.type.value === "protection" ? "" : "none";
+    var isProt = fBoard.type.value === "protection";
+    document.getElementById("b-protection").style.display = isProt ? "" : "none";
     document.getElementById("b-warrant").style.display = fBoard.type.value === "warrant" ? "" : "none";
+    // Вход по номиналу зашит: показывать сейлзу поле котировки — приглашать к ошибке
+    document.getElementById("l-quote").style.display = isProt ? "none" : "";
   });
   var fDigest = document.getElementById("f-digest");
 
@@ -470,18 +482,23 @@
   fBoard.addEventListener("submit", function (e) {
     e.preventDefault();
     submit("board", fBoard, document.getElementById("m-board"), function () {
-      req(fBoard, ["name", "underlying", "expiry", "quote"]);
       var type = val(fBoard, "type");
+      // У защиты капитала вход всегда по номиналу — поле котировки скрыто и не требуется
+      req(fBoard, ["name", "underlying", "expiry", "tenor"].concat(type === "protection" ? [] : ["quote"]));
       var item = { type: type, name: val(fBoard, "name"), underlying: val(fBoard, "underlying"),
-                   cls: val(fBoard, "cls"), expiry: val(fBoard, "expiry") };
-      put(item, "quote", num(fBoard, "quote"));
+                   cls: val(fBoard, "cls"), expiry: val(fBoard, "expiry"), tenor: val(fBoard, "tenor") };
+      put(item, "currency", val(fBoard, "currency") || "RUB");
+      put(item, "quote", type === "protection" ? 100 : num(fBoard, "quote"));
       item.chg = 0;
       put(item, "minNom", num(fBoard, "minNom") || 1000000);
       if (type === "protection") {
-        req(fBoard, ["strike", "participation"]);
-        put(item, "spot", num(fBoard, "strike"));
-        put(item, "strike", num(fBoard, "strike"));
-        put(item, "participation", num(fBoard, "participation"));
+        req(fBoard, ["participation"]);
+        // Витрина считает выплату в % ОТ СТАРТА: 100 = номинал, страйк 105 = участие с +5%.
+        // Раньше форма просила уровень индекса в пунктах и клала его в strike — участие
+        // не включалось ни при каком росте (продукт молча платил номинал). Исправлено 11.08.2026.
+        item.spot = 100;
+        item.strike = 100 + (num(fBoard, "startFrom") || 0);
+        put(item, "participation", num(fBoard, "participation") / 100);   // 120% -> 1.2
         put(item, "protectionPct", num(fBoard, "protectionPct") || 100);
         put(item, "cap", num(fBoard, "cap"));
       }
@@ -490,7 +507,6 @@
         put(item, "uRef", val(fBoard, "uRef"));
         item.spot = 100; item.strike = 100;
         if (item.structure === "cs") item.strike2 = 150;
-        put(item, "tenor", val(fBoard, "tenor"));
       }
       var pfx = type === "discount" ? "d" : type === "protection" ? "p" : "w";
       item.id = pfx + "-" + slug(item.underlying) + "-" + slug(item.expiry).replace(/\./g, "") + "-s";
