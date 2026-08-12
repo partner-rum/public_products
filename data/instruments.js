@@ -1,5 +1,5 @@
 window.SITE_DATA = {
-  "updated": "2026-08-08",
+  "updated": "2026-08-11",
   "instruments": [
     {
       "id": "P-OFZ238-K100-2Y",
