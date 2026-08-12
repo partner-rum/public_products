@@ -3,238 +3,214 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Мероприятие · Как продавать с сайтом Rumberg</title>
-<meta name="robots" content="noindex, follow">
+<title>События — встречи для агентов и партнёров</title>
+<meta name="description" content="Онлайн-встречи Rumberg для агентов и партнёров: разборы продуктов, механика структур и работа с витриной. Расписание и записи прошедших встреч.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Rumberg">
 <meta property="og:locale" content="ru_RU">
-<meta property="og:title" content="Как продавать с сайтом Rumberg — онлайн, 6 августа">
-<meta property="og:description" content="Живой разбор invest.rumberg.ru за 30 минут: доска прайсинга, карточка, one-pager, заявки и AI-ассистент. Для агентов и партнёров.">
+<meta property="og:title" content="События Rumberg — встречи для агентов и партнёров">
+<meta property="og:description" content="Онлайн-разборы продуктов и работы с витриной: 30 минут, вход свободный, с записью. Расписание встреч и архив.">
 <meta property="og:url" content="https://invest.rumberg.ru/events.html">
 <link rel="canonical" href="https://invest.rumberg.ru/events.html">
-<meta property="og:image" content="https://invest.rumberg.ru/og-event-v2.png">
+<meta property="og:image" content="https://invest.rumberg.ru/og-cover.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="Мероприятие Rumberg — как продавать с сайтом">
+<meta property="og:image:alt" content="Rumberg — структурные продукты">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#0B0C10">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Rubik:wght@600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Rubik:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="metrika.js?v=2" defer></script>
 <style>
-  :root{
-    --bg:#0B0C10; --card:#14161C; --card2:#191C24; --ink:#F2F3F7; --mut:rgba(242,243,247,.64);
-    --mut2:rgba(242,243,247,.42); --bd:rgba(255,255,255,.11); --bd2:rgba(255,255,255,.16);
-    --or:#EE7D1B; --or2:#F58E33; --bl:#4F86E6; --gr:#55C08A;
-    --f:'Onest',system-ui,sans-serif; --m:'JetBrains Mono',monospace; --d:'Rubik',sans-serif;
+  :root {
+    --canvas: #0B0C10; --card: #14161C; --panel-2: #191B22; --tile: rgba(255,255,255,0.045);
+    --ink: #F2F3F7; --hushed: rgba(242,243,247,0.64); --faint: rgba(242,243,247,0.44);
+    --border: rgba(255,255,255,0.11); --border-soft: rgba(255,255,255,0.07);
+    --solar: #EE7D1B; --solar-l: #F58E33; --up: #55C08A;
+    --f-body: 'Onest', system-ui, sans-serif; --f-mono: 'JetBrains Mono', Consolas, monospace;
+    --display: 'Rubik', 'Onest', system-ui, sans-serif;
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
   }
-  *{box-sizing:border-box;margin:0;padding:0}
-  html{scroll-behavior:smooth}
-  body{background:var(--bg);color:var(--ink);font-family:var(--f);-webkit-font-smoothing:antialiased;line-height:1.5;overflow-x:hidden}
-  a{color:inherit;text-decoration:none}
-  .wrap{max-width:1200px;margin:0 auto;padding:0 24px}
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--canvas); color: var(--ink); font-family: var(--f-body); -webkit-font-smoothing: antialiased; }
+  a { text-decoration: none; color: inherit; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 4px; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 44px 56px; }
 
-  /* nav */
-  header{position:sticky;top:0;z-index:20;background:rgba(11,12,16,.82);backdrop-filter:blur(10px);border-bottom:1px solid var(--bd)}
-  .nav{display:flex;align-items:center;justify-content:space-between;height:64px}
-  .wm{display:inline-flex;align-items:center;gap:9px;font-family:var(--d);font-weight:700;font-size:18px}
-  .dot{width:9px;height:9px;border-radius:50%;background:var(--or);box-shadow:0 0 14px var(--or)}
-  .nav a.site{font-family:var(--m);font-size:13px;color:var(--mut);letter-spacing:.02em}
-  .nav a.site:hover{color:var(--ink)}
+  .nav { position: sticky; top: 0; z-index: 30; background: rgba(11,12,16,0.82); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); }
+  .nav-in { max-width: 1180px; margin: 0 auto; padding: 0 44px; height: 62px; display: flex; align-items: center; gap: 12px; }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand-name { font-size: 14.5px; font-weight: 600; }
+  .topnav { margin-left: auto; display: flex; align-items: center; gap: 22px; font-size: 14px; font-weight: 500; }
+  .topnav a { color: var(--hushed); transition: color .2s; }
+  .topnav a:hover { color: var(--ink); }
+  .topnav a[aria-current="page"] { color: var(--ink); font-weight: 600; }
+  .btn-solar { background: var(--solar); color: #0C0A08 !important; border-radius: 6px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 7px; transition: background .3s; }
+  .btn-solar:hover { background: var(--solar-l); }
 
-  /* buttons */
-  .btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;background:var(--or);color:#0C0A08;font-family:var(--f);font-weight:700;font-size:16px;border:none;border-radius:12px;padding:15px 28px;cursor:pointer;transition:background .15s}
-  .btn:hover{background:var(--or2)}
-  .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--bd2)}
-  .btn.ghost:hover{background:rgba(255,255,255,.05)}
-  .btn.dark{background:#0C0A08;color:var(--ink)}
-  .btn.dark:hover{background:#1F1914}
+  .crumbs { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--hushed); padding: 24px 0 22px; }
+  .crumbs .sep { color: var(--faint); }
+  .crumbs .here { color: var(--ink); font-weight: 500; }
+  .head-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+  h1 { margin: 0; font-family: var(--display); font-size: 34px; font-weight: 400; letter-spacing: -0.02em; }
+  .lede { margin-top: 10px; font-size: 15px; line-height: 1.6; color: var(--hushed); max-width: 660px; }
+  .count { font-family: var(--f-mono); font-size: 12px; color: var(--faint); }
 
-  .kick{font-family:var(--m);font-size:12.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--or)}
+  .chip { display: inline-flex; align-items: center; gap: 6px; font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .1em;
+          text-transform: uppercase; border-radius: 999px; padding: 4px 10px; white-space: nowrap; }
+  .chip.live { color: var(--solar); background: rgba(238,125,27,.14); border: 1px solid rgba(238,125,27,.4); }
+  .chip.onair { color: #0C0A08; background: var(--solar); border: 1px solid var(--solar); font-weight: 600; }
+  .chip.onair i { width: 6px; height: 6px; border-radius: 50%; background: #0C0A08; animation: evPulse 1.2s infinite; }
+  .chip.past { color: var(--faint); background: rgba(255,255,255,.05); border: 1px solid var(--border-soft); }
+  .chip.rec { color: var(--up); background: rgba(85,192,138,.12); border: 1px solid rgba(85,192,138,.38); }
+  @keyframes evPulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
 
-  /* hero */
-  .hero{padding:56px 0 40px;position:relative;overflow:hidden}
-  .glow{position:absolute;top:-140px;right:-120px;width:560px;height:560px;border-radius:50%;
-    background:radial-gradient(circle,rgba(238,125,27,.16),transparent 62%);pointer-events:none;z-index:0}
-  .hero .wrap{position:relative;z-index:1}
-  .bento{display:grid;grid-template-columns:340px 1fr 1fr;grid-auto-rows:min-content;gap:16px;margin-top:26px}
-  .cell{background:var(--card);border:1px solid var(--bd);border-radius:18px;padding:26px}
-  .cl{font-family:var(--m);font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--mut2);margin-bottom:10px}
-  .cv{font-family:var(--d);font-weight:800;font-size:24px;line-height:1.12}
-  .cs{font-size:14.5px;color:var(--mut);margin-top:9px;line-height:1.5}
-  /* ссылка на подключение: показывается только когда в EVENT.joinUrl есть адрес,
-     иначе скрыта — чтобы после мероприятия не висела мёртвая ссылка */
-  .join{display:none;margin-top:14px;font-family:var(--f);font-weight:600;font-size:15px;
-    color:var(--or);text-decoration:none;border-bottom:1px solid rgba(238,125,27,.35);padding-bottom:2px}
-  .join:hover{color:var(--or2);border-bottom-color:var(--or2)}
-  .cv b,.cs b{color:var(--or)}
+  .btn { display: inline-flex; align-items: center; gap: 8px; background: var(--solar); color: #0C0A08; border: none; border-radius: 8px;
+         padding: 11px 18px; font-family: var(--f-body); font-size: 14px; font-weight: 600; cursor: pointer; transition: background .2s; }
+  .btn:hover { background: var(--solar-l); }
+  .btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--border); font-weight: 500; }
+  .btn.ghost:hover { border-color: rgba(255,255,255,.34); background: rgba(255,255,255,.05); }
 
-  .hero-cell{grid-column:2/4;display:flex;flex-direction:column;justify-content:center}
-  .hero-cell h1{font-family:var(--d);font-weight:800;font-size:46px;line-height:1.04;letter-spacing:-.02em;margin:14px 0 14px}
-  .hero-cell h1 b{color:var(--or)}
-  .hero-cell .sub{font-size:17.5px;color:var(--mut);max-width:620px}
-  .cta-cell{grid-column:2/4;display:flex;align-items:center;justify-content:space-between;gap:20px;
-    background:linear-gradient(92deg,#E9720F,#C85E08);border:none;padding:22px 30px;cursor:pointer;transition:filter .15s}
-  .cta-cell:hover{filter:brightness(1.08)}
-  .cta-cell .t{font-family:var(--d);font-weight:800;font-size:21px;color:#1A0F03;line-height:1.2}
-  /* тихая вторая опция: вход свободный, поэтому запись нужна только чтобы получить
-     напоминание — она не должна конкурировать с главной кнопкой */
-  .remind{grid-column:2/4;background:none;border:none;padding:2px 0;cursor:pointer;text-align:center;
-    font-family:var(--f);font-size:14.5px;color:var(--mut);text-decoration:underline;
-    text-decoration-color:rgba(242,243,247,.28);text-underline-offset:3px}
-  .remind:hover{color:var(--ink);text-decoration-color:var(--mut)}
+  /* ── Плакат ближайшей встречи ── */
+  .poster { position: relative; overflow: hidden; background: var(--card); border: 1px solid var(--border); border-radius: 18px;
+            padding: 34px 36px; margin-top: 26px; display: grid; grid-template-columns: minmax(0,1.32fr) minmax(268px,.88fr); gap: 34px; }
+  .poster::after { content: ""; position: absolute; right: -170px; top: -130px; width: 470px; height: 470px; border-radius: 50%;
+                   background: radial-gradient(circle, rgba(238,125,27,.16), transparent 62%); pointer-events: none; }
+  .p-l { position: relative; z-index: 1; min-width: 0; }
+  .p-title { font-family: var(--display); font-size: 37px; font-weight: 600; letter-spacing: -.025em; line-height: 1.1; margin: 14px 0 0; }
+  .p-sub { margin-top: 14px; font-size: 14.5px; line-height: 1.62; color: var(--hushed); max-width: 530px; }
+  .p-meta { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; margin-top: 22px; max-width: 530px; }
+  .mcard { background: var(--tile); border: 1px solid var(--border-soft); border-radius: 11px; padding: 12px 15px; }
+  .mcard .k { font-family: var(--f-mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); }
+  .mcard .v { font-size: 14.5px; font-weight: 600; margin-top: 5px; line-height: 1.25; }
+  .p-act { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 24px; }
+  .p-where { font-size: 12.5px; color: var(--faint); }
+  .p-r { position: relative; z-index: 1; background: var(--panel-2); border: 1px solid var(--border-soft); border-radius: 14px;
+         padding: 20px 22px; align-self: start; }
+  .p-r h3 { margin: 0 0 12px; font-family: var(--display); font-size: 14px; font-weight: 600; }
+  .ag { list-style: none; margin: 0; padding: 0; counter-reset: a; }
+  .ag li { counter-increment: a; position: relative; padding: 9px 0 9px 30px; font-size: 13.5px; line-height: 1.45;
+           color: var(--hushed); border-top: 1px solid var(--border-soft); }
+  .ag li:first-child { border-top: none; }
+  .ag li::before { content: counter(a); position: absolute; left: 0; top: 9px; font-family: var(--f-mono); font-size: 11px; color: var(--solar); }
+  .spk { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border-soft); }
+  .spk .k { font-family: var(--f-mono); font-size: 10px; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); }
+  .spk .n { font-size: 14px; font-weight: 600; margin-top: 5px; }
+  .spk .d { font-size: 12.5px; color: var(--faint); margin-top: 2px; line-height: 1.4; }
 
-  /* phone */
-  .ph-cell{grid-row:1/4;display:flex;align-items:center;justify-content:center;
-    background:radial-gradient(120% 100% at 50% 0%,rgba(238,125,27,.13),var(--card) 62%);overflow:hidden;padding:20px}
-  .phone{position:relative;width:280px;height:576px;background:#0E1015;border:1.5px solid rgba(255,255,255,.16);border-radius:42px;padding:11px;box-shadow:0 30px 70px rgba(0,0,0,.55)}
-  .phone .island{position:absolute;top:21px;left:50%;transform:translateX(-50%);width:86px;height:23px;background:#000;border-radius:13px;z-index:3}
-  .phone .scr{width:100%;height:100%;background:linear-gradient(170deg,#12141B,#0B0C10 70%);border-radius:32px;overflow:hidden;display:flex;flex-direction:column}
-  .p-nav{display:flex;align-items:center;justify-content:space-between;padding:50px 18px 11px;border-bottom:1px solid var(--bd)}
-  .p-nav .wm{font-size:13px}.p-nav .wm .dot{width:6px;height:6px}
-  .p-live{font-family:var(--m);font-size:8.5px;color:var(--gr);letter-spacing:.08em}
-  .p-body{flex:1;padding:16px 18px;display:flex;flex-direction:column;gap:12px}
-  .p-kick{font-family:var(--m);font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--or)}
-  .p-title{font-family:var(--d);font-weight:800;font-size:22px;line-height:1.1}
-  .p-list{list-style:none;display:flex;flex-direction:column;gap:11px;margin-top:2px}
-  .p-list li{position:relative;padding-left:19px;font-size:12.5px;line-height:1.38;color:var(--mut)}
-  .p-list li::before{content:"";position:absolute;left:0;top:5px;width:7px;height:7px;border-radius:2px;background:var(--or)}
-  .p-list li b{color:var(--ink);font-weight:600}
-  .p-cta{margin-top:auto;background:var(--or);color:#0C0A08;border:none;border-radius:11px;padding:12px;text-align:center;font-family:var(--f);font-weight:700;font-size:13.5px;cursor:pointer;transition:background .15s}
-  .p-cta:hover{background:var(--or2)}
+  /* ── Расписание ── */
+  .sec-h { display: flex; align-items: baseline; gap: 14px; margin: 44px 0 14px; }
+  .sec-h h2 { margin: 0; font-family: var(--display); font-size: 19px; font-weight: 500; }
+  .sec-h .n { font-family: var(--f-mono); font-size: 12px; color: var(--faint); }
+  .tbl { border: 1px solid var(--border-soft); border-radius: 12px; overflow: hidden; }
+  .th, .tr { display: grid; grid-template-columns: 96px minmax(0,1fr) 128px 168px; gap: 16px; }
+  .th { padding: 11px 20px; background: var(--panel-2); border-bottom: 1px solid var(--border-soft); font-family: var(--f-mono);
+        font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); }
+  .tr { align-items: center; padding: 15px 20px; border-bottom: 1px solid var(--border-soft); background: var(--card); transition: background .18s; }
+  .tr:last-child { border-bottom: none; }
+  .tr:hover { background: var(--panel-2); }
+  .tr .dt { font-family: var(--f-mono); font-size: 13.5px; }
+  .tr .dt .yr { display: block; font-size: 11px; color: var(--faint); margin-top: 2px; }
+  .tr .tt { font-size: 15px; font-weight: 500; line-height: 1.35; }
+  .tr .ts { font-size: 12.5px; color: var(--faint); margin-top: 4px;
+            display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; overflow: hidden; }
+  .tr .mut { font-size: 13px; color: var(--faint); line-height: 1.45; }
+  .tr .ac { display: flex; justify-content: flex-end; }
+  .lnk { font-size: 13.5px; color: var(--solar); cursor: pointer; background: none; border: none; font-family: var(--f-body); padding: 6px 0; }
+  .lnk:hover { color: var(--solar-l); text-decoration: underline; }
+  .empty { margin-top: 26px; background: var(--card); border: 1px solid var(--border-soft); border-radius: 14px;
+           padding: 26px; font-size: 14px; color: var(--hushed); line-height: 1.6; }
 
-  /* footer */
-  footer{border-top:1px solid var(--bd);margin-top:20px;padding:26px 0 40px}
-  .foot{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
-  .foot .q{font-family:var(--m);font-size:11px;color:var(--mut2);letter-spacing:.02em;line-height:1.6}
+  footer { border-top: 1px solid var(--border); margin-top: 8px; }
+  .foot { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; padding: 20px 44px; max-width: 1180px; margin: 0 auto;
+          font-size: 12px; color: var(--faint); }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--solar); box-shadow: 0 0 12px var(--solar); }
 
-  /* modal */
-  .ov{position:fixed;inset:0;z-index:100;background:rgba(6,7,10,.72);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:20px}
-  .ov.on{display:flex}
-  .modal{width:100%;max-width:440px;background:var(--card2);border:1px solid var(--bd2);border-radius:20px;padding:30px;position:relative}
-  .modal .x{position:absolute;top:16px;right:16px;width:34px;height:34px;border-radius:9px;border:1px solid var(--bd);background:transparent;color:var(--mut);font-size:18px;cursor:pointer;line-height:1}
-  .modal .x:hover{color:var(--ink);background:rgba(255,255,255,.05)}
-  .modal h3{font-family:var(--d);font-weight:700;font-size:23px;margin-bottom:6px}
-  .modal .md{font-size:14.5px;color:var(--mut);margin-bottom:20px}
-  .fld{margin-bottom:14px}
-  .fld label{display:block;font-family:var(--m);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut2);margin-bottom:7px}
+  /* ── Модалка «Напомнить» (перенесена со старой страницы мероприятия) ── */
+  .ov { position: fixed; inset: 0; z-index: 100; background: rgba(6,7,10,.72); backdrop-filter: blur(4px); display: none;
+        align-items: center; justify-content: center; padding: 20px; }
+  .ov.on { display: flex; }
+  .modal { width: 100%; max-width: 440px; background: var(--panel-2); border: 1px solid var(--border); border-radius: 20px; padding: 30px; position: relative; }
+  .modal .x { position: absolute; top: 16px; right: 16px; width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--border);
+              background: transparent; color: var(--hushed); font-size: 18px; cursor: pointer; line-height: 1; }
+  .modal .x:hover { color: var(--ink); background: rgba(255,255,255,.05); }
+  .modal h3 { font-family: var(--display); font-weight: 600; font-size: 22px; margin: 0 0 6px; }
+  .modal .md { font-size: 14.5px; color: var(--hushed); margin-bottom: 20px; line-height: 1.5; }
+  .fld { margin-bottom: 14px; }
+  .fld label { display: block; font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); margin-bottom: 7px; }
   /* 16px обязательно: меньший размер заставляет iOS Safari зумить страницу при фокусе */
-  .fld input{width:100%;background:var(--bg);border:1px solid var(--bd2);border-radius:11px;padding:13px 15px;color:var(--ink);font-family:var(--f);font-size:16px}
-  .fld input:focus{outline:none;border-color:var(--or)}
-  .modal .btn{width:100%;margin-top:6px}
-  .err{color:#E0705A;font-size:13px;margin-top:10px;display:none}
-  .done{text-align:center;padding:8px 0}
-  .done .ok{width:56px;height:56px;border-radius:50%;background:rgba(85,192,138,.14);color:var(--gr);display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 16px}
-  .done h3{margin-bottom:8px}
-  .done p{font-size:14.5px;color:var(--mut);margin-bottom:20px;line-height:1.5}
-  .done .row{display:flex;gap:10px}
-  .done .row .btn{margin-top:0;flex:1;font-size:14.5px;padding:13px 14px}
+  .fld input { width: 100%; background: var(--canvas); border: 1px solid var(--border); border-radius: 11px; padding: 13px 15px;
+               color: var(--ink); font-family: var(--f-body); font-size: 16px; }
+  .fld input:focus { outline: none; border-color: var(--solar); }
+  .modal .btn { width: 100%; margin-top: 6px; justify-content: center; }
+  .err { color: #E0705A; font-size: 13px; margin-top: 10px; display: none; }
+  .done { text-align: center; padding: 8px 0; display: none; }
+  .done .ok { width: 56px; height: 56px; border-radius: 50%; background: rgba(85,192,138,.14); color: var(--up); display: flex;
+              align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 16px; }
+  .done h3 { margin-bottom: 8px; }
+  .done p { font-size: 14.5px; color: var(--hushed); margin: 0 0 20px; line-height: 1.5; }
+  .done .row { display: flex; gap: 10px; }
+  .done .row .btn { margin-top: 0; flex: 1; font-size: 14px; padding: 12px 14px; }
+  .join2 { display: none; margin: 0 0 14px; font-weight: 600; font-size: 15px; color: var(--solar);
+           border-bottom: 1px solid rgba(238,125,27,.35); padding-bottom: 2px; }
+  .join2:hover { color: var(--solar-l); }
 
-  @media (max-width:900px){
-    .bento{grid-template-columns:1fr 1fr}
-    .ph-cell{grid-row:auto;grid-column:1/3;order:2}
-    .hero-cell{grid-column:1/3;order:1}
-    .when{order:3}.speaker{order:4}
-    .cta-cell{grid-column:1/3;order:5}
-    .remind{grid-column:1/3;order:6}
-    .phone{width:270px}
+  @media (max-width: 960px) { .poster { grid-template-columns: 1fr; padding: 26px 22px; } .p-title { font-size: 29px; } }
+  @media (max-width: 820px) { .wrap, .nav-in, .foot { padding-left: 18px; padding-right: 18px; } h1 { font-size: 27px; } }
+  @media (max-width: 640px) {
+    .p-meta { grid-template-columns: 1fr 1fr; }
+    .th { display: none; }
+    .tr { grid-template-columns: 1fr; gap: 9px; padding: 16px 18px; }
+    .tr .ac { justify-content: flex-start; }
+    .modal { padding: 24px; }
   }
-  @media (max-width:560px){
-    .wrap{padding:0 16px}
-    .hero{padding:36px 0 28px}
-    .bento{grid-template-columns:1fr;gap:12px}
-    .cell{padding:20px;border-radius:16px}
-    .hero-cell,.cta-cell,.ph-cell,.remind{grid-column:auto}
-    .hero-cell h1{font-size:34px}
-    .hero-cell .sub{font-size:16px}
-    .cta-cell{flex-direction:column;align-items:stretch;text-align:center;padding:22px}
-    .cta-cell .t{font-size:19px}
-    .cta-cell .btn{width:100%}
-    .hero-cell{order:1}.ph-cell{order:2}.when{order:3}.speaker{order:4}.cta-cell{order:5}.remind{order:6}
-    .foot{flex-direction:column;align-items:flex-start;gap:10px}
-    .modal{padding:24px}
-  }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 </style>
 </head>
 <body>
 
-<header>
-  <div class="wrap nav">
-    <a class="wm" href="index.html"><span class="dot"></span>Rumberg · События</a>
-    <a class="site" href="index.html">invest.rumberg.ru →</a>
-  </div>
-</header>
+<div class="nav"><div class="nav-in">
+  <a class="brand" href="index.html" aria-label="На главную">
+    <svg width="18" height="18" viewBox="0 0 34 34" aria-hidden="true"><path d="M17 0 L21 13 L34 17 L21 21 L17 34 L13 21 L0 17 L13 13 Z" fill="#EE7D1B"/></svg>
+    <span class="brand-name">Структурные продукты</span>
+  </a>
+  <nav class="topnav">
+    <a href="digest.html">Дайджест</a>
+    <a href="offerings.html">Размещения</a>
+    <a href="placements.html">Выпуски</a>
+    <a href="events.html" aria-current="page">События</a>
+    <a href="about.html">Библиотека</a>
+    <a class="btn-solar" href="board.html">Доска
+      <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+  </nav>
+</div></div>
 
-<section class="hero">
-  <div class="glow"></div>
-  <div class="wrap">
-    <div class="kick" id="heroKick">Ближайшее мероприятие · для агентов и партнёров</div>
-    <div class="bento">
-
-      <div class="cell ph-cell">
-        <div class="phone"><div class="island"></div><div class="scr">
-          <div class="p-nav"><span class="wm"><span class="dot"></span>Rumberg</span><span class="p-live">● LIVE · ОНЛАЙН</span></div>
-          <div class="p-body">
-            <div class="p-kick">Программа · 30 минут онлайн</div>
-            <div class="p-title">5 инструментов продаж</div>
-            <ul class="p-list">
-              <li><b>Доска прайсинга</b> — продукт под клиента</li>
-              <li><b>Карточка и калькулятор</b> выплат</li>
-              <li><b>One-pager</b> и персональные ссылки</li>
-              <li><b>«На размещении»</b> и дайджест идей</li>
-              <li><b>AI-ассистент</b> и заявки с сайта</li>
-            </ul>
-            <button class="p-cta" id="reg2" type="button">Записаться</button>
-          </div>
-        </div></div>
-      </div>
-
-      <div class="cell hero-cell">
-        <div class="kick">Онлайн · Контур.Толк · вход свободный</div>
-        <h1>Как продавать <b>с сайтом Rumberg</b></h1>
-        <div class="sub">Живой разбор invest.rumberg.ru за 30 минут: доска прайсинга, карточка, one-pager, персональные ссылки, заявки и AI-ассистент — от первого касания до сделки.</div>
-      </div>
-
-      <div class="cell when">
-        <div class="cl">Когда</div>
-        <div class="cv">Четверг, <b>6 августа</b> · 15:00 МСК</div>
-        <div class="cs">30 минут + ответы на вопросы. Будет запись.</div>
-        <a class="join" id="joinLink" href="#" target="_blank" rel="noopener">Подключиться в Контур.Толк →</a>
-      </div>
-
-      <div class="cell speaker">
-        <div class="cl">Спикер</div>
-        <div class="cv">Руслан Сабиров</div>
-        <div class="cs">Rumberg — автор витрины структурных продуктов.</div>
-      </div>
-
-      <!-- Главное действие. Ссылка, а не кнопка: работает средний клик и «открыть в новой
-           вкладке». Текст и адрес проставляет скрипт — см. три режима в конфиге ниже. -->
-      <a class="cell cta-cell" id="mainCta" href="#" target="_blank" rel="noopener">
-        <span class="t">Подключение открыто — вход свободный</span>
-        <span class="btn dark">Подключиться</span>
-      </a>
-      <button class="remind" id="reg1" type="button">Напомнить в Telegram перед началом</button>
-
+<div class="wrap">
+  <div class="crumbs"><a href="index.html">Главная</a><span class="sep">/</span><span class="here">События</span></div>
+  <div class="head-row">
+    <div>
+      <h1>События</h1>
+      <div class="lede">Онлайн-встречи для агентов и партнёров: разборы продуктов, механика структур и работа с витриной. Тридцать минут, без регистрации, с записью.</div>
     </div>
+    <span class="count">встреч: <span id="cnt">—</span></span>
   </div>
-</section>
+  <div id="app"></div>
+</div>
 
-<footer>
-  <div class="wrap foot">
-    <span class="wm"><span class="dot"></span>Rumberg</span>
-    <span class="q">invest.rumberg.ru · Только для квалифицированных инвесторов · не является индивидуальной инвестиционной рекомендацией</span>
-  </div>
-</footer>
+<footer><div class="foot">
+  <span style="display:inline-flex;align-items:center;gap:9px;font-weight:600;color:var(--ink)"><span class="dot"></span>Rumberg</span>
+  <span>invest.rumberg.ru · Только для квалифицированных инвесторов · не является индивидуальной инвестиционной рекомендацией</span>
+</div></footer>
 
-<!-- модалка записи -->
+<!-- модалка «Напомнить в Telegram» -->
 <div class="ov" id="ov">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle">
     <button class="x" id="close" aria-label="Закрыть">✕</button>
     <div id="formStep">
-      <h3 id="mTitle">Напомнить о мероприятии</h3>
-      <div class="md">Четверг, 6 августа · 15:00 МСК, Контур.Толк. Вход свободный — регистрация не нужна, напомним перед началом.</div>
+      <h3 id="mTitle">Напомнить о встрече</h3>
+      <div class="md" id="mDesc"></div>
       <form id="regForm">
         <div class="fld"><label for="nm">Как вас зовут</label><input id="nm" name="name" autocomplete="name" placeholder="Имя"></div>
         <div class="fld"><label for="ct">Telegram или телефон</label><input id="ct" name="contact" autocomplete="off" placeholder="@username или +7…" required></div>
@@ -242,117 +218,134 @@
         <div class="err" id="err">Не удалось отправить. Попробуйте ещё раз или напишите нам <a href="https://t.me/+NHbVOoUI5IBkN2Uy" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">в Telegram</a>.</div>
       </form>
     </div>
-    <div id="doneStep" class="done" style="display:none">
+    <div id="doneStep" class="done">
       <div class="ok">✓</div>
       <h3>Готово, напомним!</h3>
-      <p>Напомним в Telegram перед началом. Добавьте мероприятие в календарь — ссылка на подключение будет и в нём.</p>
-      <a class="join" id="joinLink2" href="#" target="_blank" rel="noopener" style="margin:0 0 14px">Подключиться в Контур.Толк →</a>
+      <p>Напомним в Telegram перед началом. Добавьте встречу в календарь — ссылка на подключение будет и в нём.</p>
+      <a class="join2" id="joinLink2" href="#" target="_blank" rel="noopener">Подключиться в Контур.Толк →</a>
       <div class="row">
-        <button class="btn" id="calBtn" type="button">В календарь</button>
-        <a class="btn ghost" id="tgBtn" href="https://t.me/+NHbVOoUI5IBkN2Uy" target="_blank" rel="noopener">Наш Telegram</a>
+        <button class="btn" id="calBtn2" type="button">В календарь</button>
+        <a class="btn ghost" href="https://t.me/+NHbVOoUI5IBkN2Uy" target="_blank" rel="noopener">Наш Telegram</a>
       </div>
-      <a class="btn ghost" id="shareBtn" style="margin-top:10px;width:100%"
-         href="https://t.me/share/url?url=https%3A%2F%2Finvest.rumberg.ru%2Fevents.html&text=%D0%9E%D0%BD%D0%BB%D0%B0%D0%B9%D0%BD-%D1%80%D0%B0%D0%B7%D0%B1%D0%BE%D1%80%20%C2%AB%D0%9A%D0%B0%D0%BA%20%D0%BF%D1%80%D0%BE%D0%B4%D0%B0%D0%B2%D0%B0%D1%82%D1%8C%20%D1%81%20%D1%81%D0%B0%D0%B9%D1%82%D0%BE%D0%BC%20Rumberg%C2%BB%20%E2%80%94%206%20%D0%B0%D0%B2%D0%B3%D1%83%D1%81%D1%82%D0%B0%2C%2015%3A00%20%D0%9C%D0%A1%D0%9A"
-         target="_blank" rel="noopener">↗ Переслать коллеге</a>
+      <a class="btn ghost" id="shareBtn" style="margin-top:10px;width:100%;justify-content:center" href="#" target="_blank" rel="noopener">↗ Переслать коллеге</a>
     </div>
   </div>
 </div>
 
+<script src="data/events.js?v=1"></script>
 <script>
-  // ===== Конфиг мероприятия — при переносе даты правится ТОЛЬКО этот блок =====
-  // (плюс тексты в HTML: карточка «Когда», модалка — ищи по слову «августа»).
-  var EVENT = {
-    title: "Как продавать с сайтом Rumberg",
-    dateHuman: "6 августа",                    // для текста заявки
-    icsStart: "20260806T120000Z",              // 15:00 МСК = 12:00 UTC
-    icsEnd:   "20260806T123000Z",              // +30 минут
-    icsUid:   "rmbrg-event-20260806@invest.rumberg.ru",
-    icsFile:  "rumberg-event-06-08.ics",
-    joinUrl:  "https://i1pujnc1.ktalk.ru/app/stream/auditoriums/0f533da2-21e4-4331-bfd7-31eb368befce",
-    recordingUrl: "",                          // появится ссылка → кнопка станет «Смотреть запись»
-
-    // Мероприятие ПРОШЛО. Данные не удаляем — это история встреч: сюда можно
-    // вернуться, когда появится запись, и отсюда же берутся параметры следующей
-    // встречи. Чтобы анонсировать новую: поменять title/дату/joinUrl и снять флаг.
-    past: true
-  };
+(function () {
+  "use strict";
   var ENDPOINT = "https://so-leads.ruslan-sabirov.workers.dev/lead";
-  var ov = document.getElementById("ov");
-  function openModal(){ ov.classList.add("on"); document.body.style.overflow="hidden"; setTimeout(function(){var n=document.getElementById("nm"); if(n) n.focus();},50); }
-  function closeModal(){ ov.classList.remove("on"); document.body.style.overflow=""; }
-
-  // Ссылка на подключение проставляется из конфига в двух местах — карточка «Когда» и
-  // подтверждение после записи. Если joinUrl пуст (или уже есть запись — подключаться
-  // некуда), ссылки остаются скрытыми: висящий мёртвый адрес хуже его отсутствия.
-  var joinReady = !!EVENT.joinUrl && !EVENT.recordingUrl && !EVENT.past;
-  ["joinLink", "joinLink2"].forEach(function (id) {
-    var el = document.getElementById(id);
-    if (!el) return;
-    // именно inline-block, а не "": пустая строка лишь снимает инлайн-стиль, а display:none
-    // задан в самом правиле .join и остался бы в силе
-    if (joinReady) { el.href = EVENT.joinUrl; el.style.display = "inline-block"; }
-  });
-
-  // Главная кнопка живёт в трёх режимах, режим задаётся только конфигом:
-  //   есть recordingUrl → «Смотреть запись» (мероприятие прошло)
-  //   есть joinUrl      → «Подключиться» (вход свободный, регистрация не нужна)
-  //   нет ни того, ни другого → «Записаться» через форму (так было до открытой ссылки;
-  //                             остаётся рабочим для следующего мероприятия)
+  var MON = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"];
+  var WD = ["Воскресенье", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"];
   function goal(name) { try { ym(110759242, "reachGoal", name); } catch (e) {} }
+  function esc(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
 
-  var heroKick = document.getElementById("heroKick");
-  if (heroKick && EVENT.past) heroKick.textContent = "Прошедшее мероприятие · для агентов и партнёров";
+  // ?now=2026-08-20T15:05 — проверка состояний (идёт/прошла) без ожидания даты
+  var NOW = (function () {
+    var m = location.search.match(/[?&]now=([\d:T-]+)/);
+    if (m) { var d = new Date(m[1] + "+03:00"); if (!isNaN(d)) return d.getTime(); }
+    return Date.now();
+  })();
 
-  var mainCta = document.getElementById("mainCta");
-  var ctaT = mainCta.querySelector(".t"), ctaB = mainCta.querySelector(".btn");
-  var remind = document.getElementById("reg1"), phoneCta = document.getElementById("reg2");
-
-  function asLink(url, cellText, btnText, goalName) {
-    ctaT.textContent = cellText; ctaB.textContent = btnText;
-    mainCta.href = url;
-    phoneCta.textContent = btnText;
-    phoneCta.addEventListener("click", function () {
-      goal(goalName); window.open(url, "_blank", "noopener");
-    });
-    mainCta.addEventListener("click", function () { goal(goalName); });
-  }
-  function asForm() {
-    // ссылки ещё нет — возвращаем прежнее поведение с формой
-    mainCta.removeAttribute("target"); mainCta.removeAttribute("href");
-    mainCta.style.cursor = "pointer";
-    ctaT.textContent = "Место в один клик — вход свободный"; ctaB.textContent = "Записаться";
-    mainCta.addEventListener("click", function (e) { e.preventDefault(); openModal(); });
-    phoneCta.textContent = "Записаться";
-    phoneCta.addEventListener("click", openModal);
-    remind.style.display = "none";      // отдельная кнопка напоминания не нужна: форма и есть запись
+  // Встреча из данных → вычисленные поля. Время в данных московское (UTC+3).
+  function enrich(e) {
+    var dp = e.date.split("-").map(Number), tp = e.timeMsk.split(":").map(Number);
+    var start = Date.UTC(dp[0], dp[1] - 1, dp[2], tp[0] - 3, tp[1]);
+    var end = start + (e.durationMin || 30) * 60000;
+    var d = new Date(start + 3 * 3600 * 1000);   // календарные части — по МСК
+    return {
+      src: e, start: start, end: end,
+      dateShort: String(d.getUTCDate()).padStart(2, "0") + "." + String(d.getUTCMonth() + 1).padStart(2, "0"),
+      dateHuman: d.getUTCDate() + " " + MON[d.getUTCMonth()],
+      year: d.getUTCFullYear(),
+      weekday: WD[d.getUTCDay()],
+      // идёт: от начала до конца + 15 минут на «ответы на вопросы»
+      state: NOW < start ? "upcoming" : (NOW < end + 15 * 60000 ? "live" : "past")
+    };
   }
 
-  if (EVENT.recordingUrl) {
-    asLink(EVENT.recordingUrl, "Мероприятие прошло — доступна запись", "▶ Смотреть запись", "event_recording");
-    remind.style.display = "none";
-  } else if (EVENT.past) {
-    // Прошло, записи ещё нет: ничего не обещаем кнопкой, которая никуда не ведёт
-    mainCta.removeAttribute("href"); mainCta.removeAttribute("target");
-    mainCta.style.cursor = "default"; mainCta.style.opacity = ".72";
-    ctaT.textContent = "Мероприятие прошло " + EVENT.dateHuman;
-    ctaB.textContent = "Запись готовится";
-    phoneCta.textContent = "Запись готовится";
-    phoneCta.disabled = true; phoneCta.style.opacity = ".72"; phoneCta.style.cursor = "default";
-    remind.style.display = "none";
-  } else if (EVENT.joinUrl) {
-    asLink(EVENT.joinUrl, "Подключение открыто — вход свободный", "Подключиться", "event_join");
-    remind.addEventListener("click", openModal);
-  } else {
-    asForm();
+  var ALL = (window.EVENTS && EVENTS.items || []).map(enrich).sort(function (a, b) { return b.start - a.start; });
+  var upcoming = ALL.filter(function (e) { return e.state !== "past"; }).sort(function (a, b) { return a.start - b.start; });
+  var nearest = upcoming[0] || null;
+  var rest = ALL.filter(function (e) { return e !== nearest; });
+
+  var ARROW = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+  function posterHTML(e) {
+    var s = e.src, live = e.state === "live";
+    var actions = live && s.joinUrl
+      ? '<a class="btn" id="joinBtn" href="' + esc(s.joinUrl) + '" target="_blank" rel="noopener">Подключиться ' + ARROW + '</a>' +
+        '<button class="btn ghost" id="calBtn" type="button">В календарь</button>'
+      : '<button class="btn" id="remindBtn" type="button">Напомнить в Telegram</button>' +
+        '<button class="btn ghost" id="calBtn" type="button">В календарь</button>';
+    return '<section class="poster">' +
+      '<div class="p-l">' +
+        (live ? '<span class="chip onair"><i></i>Идёт сейчас</span>'
+              : '<span class="chip live">Ближайшая · ' + e.dateShort + '</span>') +
+        '<h2 class="p-title">' + esc(s.title) + '</h2>' +
+        '<div class="p-sub">' + esc(s.sub) + '</div>' +
+        '<div class="p-meta">' +
+          '<div class="mcard"><div class="k">Когда</div><div class="v">' + e.weekday + ', ' + e.dateHuman + '</div></div>' +
+          '<div class="mcard"><div class="k">Время</div><div class="v">' + esc(s.timeMsk) + ' МСК</div></div>' +
+          '<div class="mcard"><div class="k">Формат</div><div class="v">' + (s.durationMin || 30) + ' минут онлайн</div></div>' +
+        '</div>' +
+        '<div class="p-act">' + actions + '<span class="p-where">' + esc(s.place || "") + '</span></div>' +
+      '</div>' +
+      '<div class="p-r"><h3>Программа</h3><ul class="ag">' +
+        (s.agenda || []).map(function (a) { return '<li>' + esc(a) + '</li>'; }).join("") + '</ul>' +
+        '<div class="spk"><div class="k">Спикер</div><div class="n">' + esc(s.speaker || "") + '</div>' +
+        '<div class="d">' + esc(s.speakerNote || "") + '</div></div></div>' +
+    '</section>';
   }
+
+  function rowHTML(e) {
+    var s = e.src, act;
+    if (e.state === "live" && s.joinUrl) act = '<a class="btn" style="padding:8px 14px;font-size:13px" href="' + esc(s.joinUrl) + '" target="_blank" rel="noopener">Подключиться</a>';
+    else if (e.state !== "past") act = '<span class="chip live">Скоро</span>';
+    else if (s.recordingUrl) act = '<a class="lnk" href="' + esc(s.recordingUrl) + '" target="_blank" rel="noopener" data-goal="event_recording">Смотреть запись →</a>';
+    else act = '<span class="chip past">Запись готовится</span>';
+    return '<div class="tr" id="' + esc(s.id) + '">' +
+      '<div class="dt">' + e.dateShort + '<span class="yr">' + e.year + '</span></div>' +
+      '<div><div class="tt">' + esc(s.title) + '</div><div class="ts">' + esc(s.sub) + '</div></div>' +
+      '<div class="mut">' + (s.durationMin || 30) + ' минут<br>' + esc(s.timeMsk) + ' МСК</div>' +
+      '<div class="ac">' + act + '</div></div>';
+  }
+
+  var h = "";
+  if (nearest) h += posterHTML(nearest);
+  else h += '<div class="empty">Следующая встреча пока не назначена — анонс появится здесь и на главной. Записи прошедших встреч — в списке ниже.</div>';
+  if (rest.length) {
+    h += '<div class="sec-h"><h2>Все встречи</h2><span class="n">' + rest.length + '</span></div>' +
+      '<div class="tbl"><div class="th"><span>Дата</span><span>Тема</span><span>Формат</span><span></span></div>' +
+      rest.map(rowHTML).join("") + '</div>';
+  }
+  document.getElementById("app").innerHTML = h;
+  document.getElementById("cnt").textContent = ALL.length;
+
+  // ── Модалка напоминания (логика перенесена со старой страницы мероприятия) ──
+  var ov = document.getElementById("ov");
+  function openModal() {
+    if (!nearest) return;
+    document.getElementById("mDesc").textContent = nearest.weekday + ", " + nearest.dateHuman + " · " +
+      nearest.src.timeMsk + " МСК, Контур.Толк. Вход свободный — регистрация не нужна, напомним перед началом.";
+    ov.classList.add("on"); document.body.style.overflow = "hidden";
+    setTimeout(function () { var n = document.getElementById("nm"); if (n) n.focus(); }, 50);
+  }
+  function closeModal() { ov.classList.remove("on"); document.body.style.overflow = ""; }
+  var remindBtn = document.getElementById("remindBtn");
+  if (remindBtn) remindBtn.addEventListener("click", openModal);
+  var joinBtn = document.getElementById("joinBtn");
+  if (joinBtn) joinBtn.addEventListener("click", function () { goal("event_join"); });
   document.getElementById("close").addEventListener("click", closeModal);
-  ov.addEventListener("click", function(e){ if(e.target===ov) closeModal(); });
-  document.addEventListener("keydown", function(e){
+  ov.addEventListener("click", function (e) { if (e.target === ov) closeModal(); });
+  document.addEventListener("keydown", function (e) {
     if (e.key === "Escape") { closeModal(); return; }
     // Запираем Tab внутри открытой модалки (иначе фокус уходит на страницу под ней)
     if (e.key === "Tab" && ov.classList.contains("on")) {
-      var f = ov.querySelectorAll('button, a[href], input');
-      var vis = [].filter.call(f, function(el){ return el.offsetParent !== null; });
+      var f = ov.querySelectorAll("button, a[href], input");
+      var vis = [].filter.call(f, function (el) { return el.offsetParent !== null; });
       if (!vis.length) return;
       var first = vis[0], last = vis[vis.length - 1];
       if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
@@ -360,8 +353,9 @@
     }
   });
 
-  document.getElementById("regForm").addEventListener("submit", function(e){
+  document.getElementById("regForm").addEventListener("submit", function (e) {
     e.preventDefault();
+    if (!nearest) return;
     var name = document.getElementById("nm").value.trim();
     var contact = document.getElementById("ct").value.trim();
     var err = document.getElementById("err");
@@ -369,52 +363,75 @@
     err.style.display = "none";
     if (!contact) { document.getElementById("ct").focus(); return; }
     btn.disabled = true; btn.textContent = "Отправляем…";
-    var ref = ""; try { ref = localStorage.getItem("so_ref") || ""; } catch(e2){}
+    var ref = ""; try { ref = localStorage.getItem("so_ref") || ""; } catch (e2) {}
     fetch(ENDPOINT, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: name,
         contact: contact,
-        product: "📅 Регистрация на мероприятие · " + EVENT.dateHuman + " · " + EVENT.title,
+        product: "📅 Регистрация на мероприятие · " + nearest.dateHuman + " · " + nearest.src.title,
         segment: "Мероприятие",
         url: location.href,
         ref: ref
       })
-    }).then(function(r){ return r.json().catch(function(){ return { ok: r.ok }; }); })
-      .then(function(res){
+    }).then(function (r) { return r.json().catch(function () { return { ok: r.ok }; }); })
+      .then(function (res) {
         if (res && res.ok) {
           document.getElementById("formStep").style.display = "none";
           document.getElementById("doneStep").style.display = "block";
-          try { ym(110759242, "reachGoal", "event_signup"); ym(110759242, "reachGoal", "lead_submit"); } catch (e3) {}
+          var j2 = document.getElementById("joinLink2");
+          if (nearest.src.joinUrl) { j2.href = nearest.src.joinUrl; j2.style.display = "inline-block"; }
+          var share = document.getElementById("shareBtn");
+          share.href = "https://t.me/share/url?url=" + encodeURIComponent("https://invest.rumberg.ru/events.html") +
+            "&text=" + encodeURIComponent("Онлайн-встреча Rumberg «" + nearest.src.title + "» — " +
+              nearest.dateHuman + ", " + nearest.src.timeMsk + " МСК");
+          goal("event_signup"); goal("lead_submit");
         } else { throw new Error("fail"); }
       })
-      .catch(function(){ err.style.display = "block"; btn.disabled = false; btn.textContent = "Записаться"; });
+      .catch(function () { err.style.display = "block"; btn.disabled = false; btn.textContent = "Напомнить в Telegram"; });
   });
 
-  document.getElementById("calBtn").addEventListener("click", function(){
+  // ── «В календарь»: .ics собирается из данных встречи ──
+  function icsStamp(ms) {
+    var d = new Date(ms);
+    return d.getUTCFullYear() + String(d.getUTCMonth() + 1).padStart(2, "0") + String(d.getUTCDate()).padStart(2, "0") +
+      "T" + String(d.getUTCHours()).padStart(2, "0") + String(d.getUTCMinutes()).padStart(2, "0") + "00Z";
+  }
+  function downloadIcs() {
+    if (!nearest) return;
+    var s = nearest.src;
     var ics = [
-      "BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Rumberg//Event//RU","CALSCALE:GREGORIAN",
+      "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Rumberg//Events//RU", "CALSCALE:GREGORIAN",
       "BEGIN:VEVENT",
-      "UID:" + EVENT.icsUid,
-      "DTSTAMP:20260731T090000Z",
-      "DTSTART:" + EVENT.icsStart,
-      "DTEND:" + EVENT.icsEnd,
-      "SUMMARY:" + EVENT.title + " (онлайн)",
+      "UID:rmbrg-event-" + s.id + "@invest.rumberg.ru",
+      "DTSTAMP:" + icsStamp(NOW),
+      "DTSTART:" + icsStamp(nearest.start),
+      "DTEND:" + icsStamp(nearest.end),
+      "SUMMARY:" + s.title + " (онлайн)",
       // LOCATION с адресом подключения — календари делают его кликабельным в напоминании
-      "LOCATION:" + (EVENT.joinUrl || "Онлайн"),
-      "DESCRIPTION:Онлайн-разбор invest.rumberg.ru для агентов и партнёров. Подключение: " +
-        (EVENT.joinUrl || "ссылку пришлём в Telegram перед началом"),
-      "URL:" + (EVENT.joinUrl || "https://invest.rumberg.ru/events.html"),
-      "END:VEVENT","END:VCALENDAR"
+      "LOCATION:" + (s.joinUrl || "Онлайн"),
+      "DESCRIPTION:Онлайн-встреча Rumberg для агентов и партнёров. Подключение: " +
+        (s.joinUrl || "ссылку пришлём в Telegram перед началом"),
+      "URL:" + (s.joinUrl || "https://invest.rumberg.ru/events.html"),
+      "END:VEVENT", "END:VCALENDAR"
     ].join("\r\n");
     var blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
     var a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = EVENT.icsFile;
+    a.download = "rumberg-event-" + nearest.dateShort.replace(".", "-") + ".ics";
     document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 5000);
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 5000);
+  }
+  var calBtn = document.getElementById("calBtn");
+  if (calBtn) calBtn.addEventListener("click", downloadIcs);
+  document.getElementById("calBtn2").addEventListener("click", downloadIcs);
+
+  [].forEach.call(document.querySelectorAll("[data-goal]"), function (el) {
+    el.addEventListener("click", function () { goal(el.getAttribute("data-goal")); });
   });
+})();
 </script>
+<script src="nav-about.js?v=5" defer></script>
 </body>
 </html>

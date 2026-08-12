@@ -175,6 +175,61 @@
   .intro .fin .bar { width: 64px; height: 4px; background: #4F86E6; transform: scaleX(0); transform-origin: left; transition: transform .5s var(--ease) .22s; }
   .intro.brandon .bar { transform: scaleX(1); }
   body.intro-lock { overflow: hidden; }
+
+  /* ══ События (данные: data/events.js; рендер — скрипт в конце страницы) ══ */
+  @keyframes evPulse { 0%,100% { opacity:1; } 50% { opacity:.3; } }
+  .ev-live { display:inline-flex; align-items:center; gap:7px; color:var(--solar); }
+  .ev-live i { width:6px; height:6px; border-radius:50%; background:currentColor; box-shadow:0 0 8px currentColor; animation:evPulse 1.6s infinite; }
+
+  /* Дорожка дней до ближайшей встречи — под героем, над лентой продуктов */
+  .evx { display:block; margin:26px 0 0; color:var(--ink); position:relative; z-index:1; text-decoration:none; }
+  .evt4 { padding:4px 2px 6px; }
+  .evt4 .head { display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; }
+  .evt4 .k { font-family:var(--m); font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:rgba(242,243,247,.45); }
+  .evt4 .t { font-size:15px; font-weight:600; }
+  .evt4 .go { margin-left:auto; display:inline-flex; align-items:center; gap:8px; color:var(--solar); font-weight:600; font-size:13.5px; }
+  .evt4:hover .go { color:var(--solar-l); }
+  .evt4 .line { position:relative; height:46px; margin-top:14px; }
+  .evt4 .rail { position:absolute; left:0; right:10px; top:12px; height:2px; background:rgba(255,255,255,.1); }
+  .evt4 .spark { position:absolute; top:8.5px; left:0; width:9px; height:9px; border-radius:50%; background:var(--solar); box-shadow:0 0 12px var(--solar); animation:evRun 6s 1s infinite ease-in-out; }
+  @keyframes evRun { 0% { left:0; opacity:0; } 8% { opacity:1; } 82% { left:calc(100% - 19px); opacity:1; } 96%,100% { left:calc(100% - 19px); opacity:0; } }
+  .evt4 .tick { position:absolute; top:8px; width:1px; height:10px; background:rgba(255,255,255,.22); }
+  .evt4 .tick .tl { position:absolute; top:14px; left:50%; transform:translateX(-50%); font-family:var(--m); font-size:10px; color:rgba(242,243,247,.4); white-space:nowrap; }
+  .evt4 .tick.first, .evt4 .tick.last { background:transparent; }
+  .evt4 .tick.first::before { content:""; position:absolute; left:-4px; top:1px; width:8px; height:8px; border-radius:50%; background:rgba(242,243,247,.5); }
+  .evt4 .tick.last::before { content:""; position:absolute; left:-6px; top:0; width:10px; height:10px; background:var(--solar); transform:rotate(45deg); box-shadow:0 0 12px rgba(238,125,27,.6); }
+  .evt4 .tick.first .tl, .evt4 .tick.last .tl { color:rgba(242,243,247,.72); }
+  .evt4 .tick.last .tl { color:var(--solar); }
+  @media (max-width:640px) { .evt4 .tick:not(.first):not(.last) .tl { display:none; } .evt4 .go { margin-left:0; } }
+
+  /* Телефон «Rumberg События» справа от заголовка героя: заставка раздела + пуши.
+     Конкретику встречи несёт дорожка — телефон её не дублирует. */
+  .hero { position:relative; }
+  .hev { position:absolute; right:0; top:2px; width:222px; z-index:2; text-decoration:none; color:var(--ink); }
+  @media (max-width:1099px) { .hev { display:none; } }
+  .hev .tilt { display:block; transform:rotate(3.5deg); transition:transform .3s ease; }
+  .hev:hover .tilt { transform:rotate(1.2deg) translateY(-3px); }
+  .hev .shell { display:block; border:1px solid rgba(255,255,255,.16); border-radius:30px; background:#0E0F14; box-shadow:0 24px 60px rgba(0,0,0,.55), 0 0 0 6px rgba(255,255,255,.03); padding:9px; }
+  .hev .island { display:block; width:58px; height:14px; border-radius:8px; background:#000; margin:2px auto 7px; }
+  .hev .scr { display:block; position:relative; overflow:hidden; border-radius:21px; background:linear-gradient(170deg,#15171E,#0C0D12); border:1px solid rgba(255,255,255,.07); padding:12px 13px; }
+  .hev .ntf { display:flex; align-items:flex-start; gap:8px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); border-radius:11px; padding:7px 10px; opacity:0; transform:translateY(-42px); animation:hevNtf .55s forwards var(--ease); }
+  .hev .ntf + .ntf { margin-top:7px; }
+  .hev .ntf.n1 { animation-delay:.8s; }
+  .hev .ntf.n2 { animation-delay:1.5s; }
+  @keyframes hevNtf { to { opacity:1; transform:none; } }
+  .hev .ntf i { width:7px; height:7px; border-radius:50%; background:var(--solar); box-shadow:0 0 9px var(--solar); flex:none; margin-top:3px; animation:evPulse 1.6s infinite; }
+  .hev .ntf .nb { min-width:0; }
+  .hev .ntf .nt { display:block; font-size:10px; font-weight:600; line-height:1.3; }
+  .hev .ntf .nd { display:block; font-family:var(--m); font-size:8.5px; color:rgba(242,243,247,.45); margin-top:2px; }
+  .hev .ntf .nw { margin-left:auto; flex:none; font-family:var(--m); font-size:8.5px; color:rgba(242,243,247,.4); }
+  .hev .star { display:block; margin:14px auto 0; filter:drop-shadow(0 0 14px rgba(238,125,27,.55)); }
+  .hev .wm2 { display:block; text-align:center; font-family:var(--m); font-size:8.5px; letter-spacing:.34em; text-indent:.34em; text-transform:uppercase; color:rgba(242,243,247,.5); margin-top:10px; }
+  .hev .big { display:block; text-align:center; font-family:var(--display); font-weight:700; font-size:23px; letter-spacing:-.02em; margin-top:2px; }
+  .hev .feat { display:block; text-align:center; font-family:var(--m); font-size:9px; color:rgba(242,243,247,.45); margin-top:7px; line-height:1.6; white-space:nowrap; }
+  .hev .pbtn { display:block; margin-top:12px; background:var(--solar); color:#0C0A08; border-radius:9px; text-align:center; font-weight:600; font-size:12.5px; padding:9px; transition:background .2s; }
+  .hev:hover .pbtn { background:var(--solar-l); }
+  @media (prefers-reduced-motion:reduce) { .evx *, .hev * { animation:none !important; transition:none !important; } .hev .ntf { opacity:1; transform:none; } }
+
 </style>
 <script src="metrika.js?v=2" defer></script>
 </head>
@@ -201,11 +256,13 @@
     <div class="kicker rise">Структурные облигации · для квалифицированных инвесторов</div>
     <h1 class="rise" style="animation-delay:.07s"><span class="lm">Уверенность</span><br>в каждой сделке.</h1>
     <p class="sub rise" style="animation-delay:.14s">От ОФЗ до биткоина: продукты под разный аппетит к риску, с прозрачной формулой выплаты и расчётом на вашу сумму.</p>
+    <div id="hevslot"></div>
   </section>
 
-  <!-- Здесь жил анонс мероприятия 06.08 (снят 08.08, встреча прошла). Разметку и стили
-       .evt оставили: для следующей встречи достаточно вернуть блок из git-истории
-       (коммит e2ec0a4 и раньше) и поправить дату, заголовок и подпись кнопки. -->
+  <!-- Дорожка дней до ближайшей встречи: рисуется скриптом событий из data/events.js,
+       когда есть анонс. Встреча прошла — блок исчезает сам, руками снимать не нужно. -->
+  <div id="evslot"></div>
+
 
   <a class="launch rise" style="animation-delay:.18s" href="board.html" aria-label="Открыть текущие продукты">
     <div class="tape-cap"><span class="tdot"></span>Можем запустить сейчас<span class="tsub">· текущие продукты под клиента · котировки индикативны</span><span class="launch-go">Смотреть<svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
@@ -241,6 +298,12 @@
       <span class="no">05</span>
       <span><span class="st">Библиотека</span><span class="sd">Как работает каждый тип продукта — с описанием, сценариями и графиками выплат.</span></span>
       <span class="sm">как это работает</span>
+      <span class="go"><svg width="16" height="16" viewBox="0 0 14 14" fill="none"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#666C82" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    </a>
+    <a class="srow rise" style="animation-delay:.46s" href="events.html">
+      <span class="no">06</span>
+      <span><span class="st">События</span><span class="sd">Онлайн-встречи для агентов и партнёров: разборы продуктов и работа с витриной. С записями прошедших.</span></span>
+      <span class="sm" id="ev-sm">встречи и записи</span>
       <span class="go"><svg width="16" height="16" viewBox="0 0 14 14" fill="none"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#666C82" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
     </a>
   </nav>
@@ -485,6 +548,82 @@
     requestAnimationFrame(frame);
   })();
 </script>
+
+<script src="data/events.js?v=1"></script>
+<script>
+  // ── События на главной: телефон в герое, дорожка до встречи, строка 06 ──
+  // Всё считается от data/events.js: прошла дата — дорожка и пуш исчезают сами.
+  (function () {
+    var MON = ["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"];
+    var items = (window.EVENTS && EVENTS.items) || [];
+    var now = Date.now();
+    function startOf(e) {
+      var d = e.date.split("-").map(Number), t = e.timeMsk.split(":").map(Number);
+      return Date.UTC(d[0], d[1] - 1, d[2], t[0] - 3, t[1]);
+    }
+    var upcoming = items.filter(function (e) { return startOf(e) + (e.durationMin || 30) * 60000 > now; })
+      .sort(function (a, b) { return startOf(a) - startOf(b); })[0] || null;
+    var past = items.filter(function (e) { return startOf(e) + (e.durationMin || 30) * 60000 <= now; })
+      .sort(function (a, b) { return startOf(b) - startOf(a); })[0] || null;
+
+    // МСК-полночь дня: дорожка меряется днями, не часами
+    function mskDay(ms) { return Math.floor((ms + 3 * 3600 * 1000) / 86400000); }
+    function fmtShort(ms) {
+      var d = new Date(ms + 3 * 3600 * 1000);
+      return String(d.getUTCDate()).padStart(2, "0") + "." + String(d.getUTCMonth() + 1).padStart(2, "0");
+    }
+    function declDays(n) { var m10 = n % 10, m100 = n % 100;
+      if (m10 === 1 && m100 !== 11) return n + " день";
+      if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return n + " дня";
+      return n + " дней"; }
+
+    // Дорожка дней — только пока встреча впереди
+    var slot = document.getElementById("evslot");
+    if (slot && upcoming) {
+      var st = startOf(upcoming), days = mskDay(st) - mskDay(now);
+      var ticks = "", n = Math.max(days, 1);
+      // больше 10 дней — все подписи не влезают: рисуем деления без дат, кроме краёв
+      for (var i = 0; i <= n; i++) {
+        var cls = i === 0 ? " first" : (i === n ? " last" : "");
+        var lbl = i === 0 ? "сегодня" : (i === n ? fmtShort(st) : (n <= 10 ? fmtShort(now + i * 86400000) : ""));
+        ticks += '<span class="tick' + cls + '" style="left:' + (i / n * 100) + '%">' +
+          (lbl ? '<span class="tl">' + lbl + "</span>" : "") + "</span>";
+      }
+      var head = days > 0 ? "До встречи " + declDays(days) : "Встреча сегодня · " + upcoming.timeMsk + " МСК";
+      slot.innerHTML = '<a class="evx evt4 rise" style="animation-delay:.16s" href="events.html">' +
+        '<div class="head"><span class="k">' + head + '</span>' +
+        '<span class="t">' + upcoming.title + '</span>' +
+        '<span class="go">Записаться <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>' +
+        '<div class="line"><span class="rail"></span><span class="spark"></span>' + ticks + '</div></a>';
+    }
+
+    // Телефон-заставка: пуши подстраиваются под данные, конкретику не дублируют
+    var hev = document.getElementById("hevslot");
+    if (hev) {
+      var n1 = upcoming ? '<span class="ntf n1"><i></i><span class="nb"><span class="nt">Анонсирована новая встреча</span>' +
+        '<span class="nd">регистрация уже открыта</span></span><span class="nw">сейчас</span></span>' : "";
+      var n2 = past ? (past.recordingUrl
+        ? '<span class="ntf n2"><i></i><span class="nb"><span class="nt">Запись встречи доступна</span><span class="nd">смотреть в разделе</span></span><span class="nw">·</span></span>'
+        : '<span class="ntf n2"><i></i><span class="nb"><span class="nt">Запись прошлой встречи</span><span class="nd">скоро появится в разделе</span></span><span class="nw">·</span></span>') : "";
+      hev.innerHTML = '<a class="hev rise" style="animation-delay:.2s" href="events.html" aria-label="События Rumberg">' +
+        '<span class="tilt"><span class="shell"><span class="island"></span><span class="scr">' + n1 + n2 +
+        '<svg class="star" width="27" height="27" viewBox="0 0 34 34" aria-hidden="true"><path d="M17 0 L21 13 L34 17 L21 21 L17 34 L13 21 L0 17 L13 13 Z" fill="#EE7D1B"/></svg>' +
+        '<span class="wm2">Rumberg</span><span class="big">События</span>' +
+        '<span class="feat">эфиры · записи · напоминания</span>' +
+        '<span class="pbtn">Открыть раздел</span>' +
+        '</span></span></span></a>';
+    }
+
+    // Строка 06: пока есть анонс — живая метка с датой
+    var sm = document.getElementById("ev-sm");
+    if (sm && upcoming) {
+      var d = new Date(startOf(upcoming) + 3 * 3600 * 1000);
+      sm.innerHTML = '<span class="ev-live"><i></i>' + d.getUTCDate() + " " +
+        MON[d.getUTCMonth()].slice(0, 3) + " · регистрация</span>";
+    }
+  })();
+</script>
+
 <script src="chat.js?v=14"></script>
 <script src="nav-about.js?v=5"></script>
 <script src="qualgate.js?v=3"></script>
