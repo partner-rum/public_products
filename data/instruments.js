@@ -64,7 +64,7 @@ window.SITE_DATA = {
       "spot": 100,
       "tenor": "2 года",
       "expiry": "13.08.2028",
-      "quote": 25.62,
+      "quote": 25.75,
       "chg": 0,
       "minNom": 1000000,
       "src": "sales"
@@ -81,7 +81,7 @@ window.SITE_DATA = {
       "spot": 100,
       "tenor": "2 года",
       "expiry": "13.08.2028",
-      "quote": 27.31,
+      "quote": 27.5,
       "chg": 0,
       "minNom": 1000000,
       "src": "sales"
@@ -98,7 +98,7 @@ window.SITE_DATA = {
       "spot": 100,
       "tenor": "2 года",
       "expiry": "13.08.2028",
-      "quote": 42.38,
+      "quote": 42.5,
       "chg": 0,
       "minNom": 1000000,
       "src": "sales"
