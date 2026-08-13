@@ -2,7 +2,7 @@
 // ГЕНЕРИРУЕТСЯ fetch_rates.py — руками не править, изменения затрутся.
 // Источники: ЦБ (ключевая ставка, RUONIA), MOEX ISS (RUSFAR, БПИФы, ОФЗ).
 window.RATES = {
-  "updated": "2026-08-13 10:06",
+  "updated": "2026-08-13 10:23",
   "cbr": {
     "key": {
       "rate": 14.0,
@@ -55,13 +55,13 @@ window.RATES = {
     {
       "id": "SBMM",
       "name": "Первая Сберегательный",
-      "price": 19.1505,
+      "price": 19.157,
       "rate": 14.19
     },
     {
       "id": "BCSD",
       "name": "БКС Денежный рынок",
-      "price": 14.192,
+      "price": 14.198,
       "rate": 14.15
     },
     {
@@ -85,7 +85,7 @@ window.RATES = {
     {
       "id": "TMON",
       "name": "Т-Капитал Денежный рынок",
-      "price": 162.4,
+      "price": 162.47,
       "rate": 13.58
     }
   ],
@@ -95,35 +95,35 @@ window.RATES = {
       "name": "ОФЗ 26219",
       "maturity": "2026-09-16",
       "years": 0.09,
-      "rate": 14.58
+      "rate": 13.11
     },
     {
       "id": "SU26226RMFS9",
       "name": "ОФЗ 26226",
       "maturity": "2026-10-07",
       "years": 0.15,
-      "rate": 13.81
+      "rate": 12.9
     },
     {
       "id": "SU26207RMFS9",
       "name": "ОФЗ 26207",
       "maturity": "2027-02-03",
       "years": 0.48,
-      "rate": 13.26
+      "rate": 12.54
     },
     {
       "id": "SU26232RMFS7",
       "name": "ОФЗ 26232",
       "maturity": "2027-10-06",
       "years": 1.15,
-      "rate": 13.33
+      "rate": 13.05
     },
     {
       "id": "SU26212RMFS9",
       "name": "ОФЗ 26212",
       "maturity": "2028-01-19",
-      "years": 1.43,
-      "rate": 13.97
+      "years": 1.44,
+      "rate": 13.81
     }
   ]
 };
