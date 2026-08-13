@@ -244,40 +244,40 @@
   </a>
 
   <nav aria-label="Разделы">
-    <a class="srow rise" style="animation-delay:.26s" href="digest.html">
+    <a class="srow rise" style="animation-delay:.26s" href="screener.html">
       <span class="no">01</span>
+      <span><span class="st">Лучшие ставки</span><span class="sd">Куда положить деньги на срок до года: вклады, накопительные счета, фонды денежного рынка, короткие ОФЗ.</span></span>
+      <span class="sm" id="scr-sm">денежный рынок</span>
+      <span class="go"><svg width="16" height="16" viewBox="0 0 14 14" fill="none"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#666C82" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    </a>
+    <a class="srow rise" style="animation-delay:.3s" href="digest.html">
+      <span class="no">02</span>
       <span><span class="st">Дайджест</span><span class="sd">Инвестиционные идеи недели: гипотеза, рыночная ситуация, факторы и параметры выпуска.</span></span>
       <span class="sm" id="m1">идеи недели</span>
       <span class="go"><svg width="16" height="16" viewBox="0 0 14 14" fill="none"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#666C82" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
     </a>
-    <a class="srow rise" style="animation-delay:.3s" href="offerings.html">
-      <span class="no">02</span>
+    <a class="srow rise" style="animation-delay:.34s" href="offerings.html">
+      <span class="no">03</span>
       <span><span class="st">На размещении</span><span class="sd">Выпуски, которые размещаем сейчас или готовим: параметры и материалы по выпуску.</span></span>
       <span class="sm">первичный рынок</span>
       <span class="go"><svg width="16" height="16" viewBox="0 0 14 14" fill="none"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#666C82" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
     </a>
-    <a class="srow rise" style="animation-delay:.34s" href="board.html?type=warrant">
-      <span class="no">03</span>
+    <a class="srow rise" style="animation-delay:.38s" href="board.html?type=warrant">
+      <span class="no">04</span>
       <span><span class="st">Текущие продукты</span><span class="sd">Доска инструментов: варранты, дисконтные и защитные облигации — котировки в процентах от номинала.</span></span>
       <span class="sm" id="m2">котировки</span>
       <span class="go"><svg width="16" height="16" viewBox="0 0 14 14" fill="none"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#666C82" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
     </a>
-    <a class="srow rise" style="animation-delay:.38s" href="placements.html">
-      <span class="no">04</span>
+    <a class="srow rise" style="animation-delay:.42s" href="placements.html">
+      <span class="no">05</span>
       <span><span class="st">Размещённые выпуски</span><span class="sd">Выпуски на рынке: базовые активы, параметры выплат, начальные фиксинги и текущая динамика.</span></span>
       <span class="sm" id="m3">выпуски</span>
       <span class="go"><svg width="16" height="16" viewBox="0 0 14 14" fill="none"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#666C82" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
     </a>
-    <a class="srow rise" style="animation-delay:.42s" href="about.html">
-      <span class="no">05</span>
+    <a class="srow rise" style="animation-delay:.46s" href="about.html">
+      <span class="no">06</span>
       <span><span class="st">Библиотека</span><span class="sd">Как работает каждый тип продукта — с описанием, сценариями и графиками выплат.</span></span>
       <span class="sm">как это работает</span>
-      <span class="go"><svg width="16" height="16" viewBox="0 0 14 14" fill="none"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#666C82" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-    </a>
-    <a class="srow rise" style="animation-delay:.46s" href="screener.html">
-      <span class="no">06</span>
-      <span><span class="st">Лучшие ставки</span><span class="sd">Куда положить деньги на срок до года: вклады, накопительные счета, фонды денежного рынка, короткие ОФЗ.</span></span>
-      <span class="sm" id="scr-sm">денежный рынок</span>
       <span class="go"><svg width="16" height="16" viewBox="0 0 14 14" fill="none"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#666C82" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
     </a>
   </nav>
@@ -404,7 +404,9 @@
   try {
     var S = window.SITE;
     document.getElementById("m1").textContent = "идеи от " + window.DIGEST.date;
-    document.getElementById("m2").textContent = window.SITE_DATA.instruments.length + " инструментов";
+    var ni = window.SITE_DATA.instruments.length, n10 = ni % 10, n100 = ni % 100;
+    document.getElementById("m2").textContent = ni + " инструмент" +
+      ((n10 === 1 && n100 !== 11) ? "" : (n10 >= 2 && n10 <= 4 && (n100 < 12 || n100 > 14)) ? "а" : "ов");
     document.getElementById("m3").textContent = window.PLACEMENTS_DATA.issues.length + " выпуска";
     document.getElementById("m4").textContent = "данные: " + window.SITE_DATA.updated.split("-").reverse().join(".");
 
