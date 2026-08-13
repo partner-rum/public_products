@@ -384,6 +384,19 @@
   // --- Контент паспорта (без дублей: котировка и изменение — только в шапке) ---
   function buildContent(inst) {
     const nom = inst.minNom;
+
+    // Worst-of: продукт на корзину — весь расчёт по ХУДШЕЙ бумаге. Формулировки те же,
+    // что у автоколлов, чтобы на витрине не появилось второго имени одного принципа.
+    const isWO = Array.isArray(inst.basket) && inst.basket.length > 1;
+    const uGrew = isWO ? "Худшая бумага корзины выросла" : inst.underlying + " вырос";
+    const uFell = isWO ? "Худшая бумага корзины упала" : inst.underlying + " упал";
+    const uNo = isWO ? "Худшая бумага корзины не выросла" : inst.underlying + " не вырос";
+    const uNom = isWO ? "худшая бумага корзины" : "базовый актив";
+  const uGen = isWO ? "худшей бумаги корзины" : "базового актива";
+    const uAxis = isWO ? "уровень ХУДШЕЙ бумаги корзины" : "уровень БА";
+    const woBadge = isWO ? " · WORST-OF" : "";
+    const woFact = ["Принцип", "Worst-of — выплата считается по ХУДШЕЙ бумаге корзины (" + inst.underlying + "), а не по средней"];
+    const woMetric = isWO ? [inst.basket.length + " бумаги · worst-of", "корзина"] : [inst.underlying, "базовый актив"];
     if (inst.type === "warrant") {
       const isCS = inst.structure === "cs";
       const K = inst.strike, K2 = inst.strike2;
@@ -397,32 +410,34 @@
       const capRub = nom * capPct / 100;
       const metrics = isCS
         ? [[S.fmtSmart(K) + "%", "страйк (K)"], [S.fmtSmart(K2) + "%", "потолок (K₂)"], [inst.tenor, "срок"], [S.fmt2(inst.quote) + "% ном.", "цена входа"], [inst.currency || "RUB", "валюта"]]
-        : [[S.fmtSmart(K) + "%", "страйк (K)"], [inst.tenor, "срок"], [S.fmt2(inst.quote) + "% ном.", "цена входа"], [inst.currency || "RUB", "валюта"], [inst.underlying, "базовый актив"]];
+        : [[S.fmtSmart(K) + "%", "страйк (K)"], [inst.tenor, "срок"], [S.fmt2(inst.quote) + "% ном.", "цена входа"], [inst.currency || "RUB", "валюта"], woMetric];
       const scen = [
-        [inst.underlying + " вырос на " + upPct + "%", "Выплата " + S.fmtInt(payout1) + " ₽", (net1 >= 0 ? "+" : "−") + S.fmtInt(Math.abs(net1)) + " ₽", net1 >= 0 ? "var(--up)" : "var(--loss)"]
+        [uGrew + " на " + upPct + "%", "Выплата " + S.fmtInt(payout1) + " ₽", (net1 >= 0 ? "+" : "−") + S.fmtInt(Math.abs(net1)) + " ₽", net1 >= 0 ? "var(--up)" : "var(--loss)"]
       ];
       if (isCS) {
         const capNet = capRub - premiumRub;
-        scen.push([inst.underlying + " вырос на 70% — выше потолка", "Выплата " + S.fmtInt(capRub) + " ₽ — максимум", (capNet >= 0 ? "+" : "−") + S.fmtInt(Math.abs(capNet)) + " ₽", capNet >= 0 ? "var(--up)" : "var(--loss)"]);
+        scen.push([uGrew + " на 70% — выше потолка", "Выплата " + S.fmtInt(capRub) + " ₽ — максимум", (capNet >= 0 ? "+" : "−") + S.fmtInt(Math.abs(capNet)) + " ₽", capNet >= 0 ? "var(--up)" : "var(--loss)"]);
       }
-      scen.push([inst.underlying + " не вырос", "Выплаты нет", "−" + S.fmtInt(premiumRub) + " ₽", "var(--loss)"]);
+      scen.push([uNo, "Выплаты нет", "−" + S.fmtInt(premiumRub) + " ₽", "var(--loss)"]);
       return {
-        badge: isCS ? "КОЛЛ-СПРЕД · ВАРРАНТ" : "CALL · ВАРРАНТ",
-        subtitle: (isCS ? "Колл-спред на рост " : "Варрант на рост ") + inst.underlying + " — риск ограничен уплаченной премией",
+        badge: (isCS ? "КОЛЛ-СПРЕД · ВАРРАНТ" : "CALL · ВАРРАНТ") + woBadge,
+        subtitle: (isCS ? "Колл-спред на рост " : "Варрант на рост ") +
+          (isWO ? "корзины " + inst.underlying + " — выплата по ХУДШЕЙ бумаге, риск ограничен премией"
+                : inst.underlying + " — риск ограничен уплаченной премией"),
         payoff: () => chartPayoff(inst),
         payoffCaption: isCS
-          ? "Выплата на экспирацию в % от номинала; уровень БА — в % от начального. Выше K₂ выплата не растёт. Пунктир — премия; б/у — безубыточность."
-          : "Выплата на экспирацию в % от номинала; уровень БА — в % от начального. Пунктир — премия; б/у — безубыточность.",
+          ? "Выплата на экспирацию в % от номинала; " + uAxis + " — в % от начального. Выше K₂ выплата не растёт. Пунктир — премия; б/у — безубыточность."
+          : "Выплата на экспирацию в % от номинала; " + uAxis + " — в % от начального. Пунктир — премия; б/у — безубыточность.",
         metrics,
         exampleIntro: "Номинал " + S.fmtInt(nom) + " ₽ · премия " + S.fmt2(inst.quote) + "% = " + S.fmtInt(premiumRub) + " ₽",
         scenarios: scen,
         explainer: isCS
           ? "Колл-спред — CALL с потолком выплаты. Страйк K фиксируется по уровню базового актива в день покупки (100%), рост засчитывается до K₂ = " + S.fmtSmart(K2) + "%: максимальная выплата — " + S.fmtSmart(capPct) + "% номинала. За счёт ограничения премия ниже, чем у обычного CALL. Если актив не вырос — выплаты нет, потеря ограничена премией."
           : "CALL-варрант — право на выплату при росте базового актива выше страйка. " + strikeTxt + " Если на экспирацию актив выше страйка, выплата растёт вместе с ним. Если нет — выплаты нет, потеря ограничена премией.",
-        facts: [
+        facts: (isWO ? [woFact] : []).concat([
           ["Стиль", "Европейский — выплата на дату экспирации"],
           ["Максимальный убыток", "Уплаченная премия"]
-        ]
+        ])
       };
     }
     if (inst.type === "discount") {
@@ -533,11 +548,13 @@
     const payoutUp = nom * S.calc.pct(inst, upPct) / 100;   // через calc.pct — он учитывает страйк
     const partS = Math.round(inst.participation * 100) + "%";
     return {
-      badge: "ОБЛИГАЦИЯ · ЗАЩИТА КАПИТАЛА",
-      subtitle: "Облигация с защитой капитала: " + inst.underlying + " · 100% номинала при любом сценарии" +
+      badge: "ОБЛИГАЦИЯ · ЗАЩИТА КАПИТАЛА" + woBadge,
+      subtitle: "Облигация с защитой капитала: " + (isWO ? "корзина " : "") + inst.underlying +
+        " · 100% номинала при любом сценарии" + (isWO ? " · участие по ХУДШЕЙ бумаге" : "") +
         (protOff > 0 ? " · участие с роста +" + S.fmtSmart(protOff) + "%" : ""),
       payoff: () => chartPayoff(inst),
-      payoffCaption: "Выплата на экспирацию в % от номинала: не ниже 100% при любом сценарии, выше " +
+      payoffCaption: "Выплата на экспирацию в % от номинала" + (isWO ? " (по худшей бумаге корзины)" : "") +
+        ": не ниже 100% при любом сценарии, выше " +
         (protOff > 0 ? "страйка " + S.fmtSmart(protK) + "%" : "S₀") + " — участие в росте.",
       metrics: [
         [S.fmtSmart(inst.protectionPct != null ? inst.protectionPct : 100) + "%", "защита капитала"],
@@ -545,22 +562,22 @@
         [S.fmtSmart(protK) + "%", "страйк опциона"],
         [inst.tenor, "срок"],
         [S.ccyLabel(inst), "валюта"],
-        [inst.underlying, "базовый актив"]
+        woMetric
       ],
       exampleIntro: "Номинал " + S.fmtInt(nom) + " ₽ · вход по " + S.fmt2(inst.quote) + "% = " + S.fmtInt(entryRub) + " ₽",
       scenarios: [
-        [inst.underlying + " вырос на " + S.fmtSmart(upPct) + "%", "Выплата " + S.fmtInt(payoutUp) + " ₽ — 100% + участие", "+" + S.fmtInt(payoutUp - entryRub) + " ₽", "var(--up)"],
-        [inst.underlying + " упал на 15%", "Сработала защита: выплата " + S.fmtInt(nom) + " ₽", "0 ₽", "rgba(255,255,255,0.60)"]
+        [uGrew + " на " + S.fmtSmart(upPct) + "%", "Выплата " + S.fmtInt(payoutUp) + " ₽ — 100% + участие", "+" + S.fmtInt(payoutUp - entryRub) + " ₽", "var(--up)"],
+        [uFell + " на 15%", "Сработала защита: выплата " + S.fmtInt(nom) + " ₽", "0 ₽", "rgba(255,255,255,0.60)"]
       ],
       explainer: "Облигация возвращает 100% номинала при любом сценарии — рыночного убытка нет. " +
         (protOff > 0
-          ? "Сверху выплачивается " + partS + " роста базового актива, который он покажет ВЫШЕ страйка " + S.fmtSmart(protK) + "% начального уровня: первые " + S.fmtSmart(protOff) + "% роста в выплату не идут."
-          : "Если базовый актив на дату погашения выше начального уровня S₀, дополнительно выплачивается " + partS + " его роста.") +
-        " Если актив упал — вы получаете номинал целиком. Купонов нет; результат определяется на дату погашения.",
-      facts: [
+          ? "Сверху выплачивается " + partS + " роста " + uGen + ", который он покажет ВЫШЕ страйка " + S.fmtSmart(protK) + "% начального уровня: первые " + S.fmtSmart(protOff) + "% роста в выплату не идут."
+          : "Если " + uNom + " на дату погашения выше начального уровня S₀, дополнительно выплачивается " + partS + " роста " + uGen + ".") +
+        " Если " + (isWO ? "худшая бумага корзины упала" : "актив упал") + " — вы получаете номинал целиком. Купонов нет; результат определяется на дату погашения.",
+      facts: (isWO ? [woFact] : []).concat([
         ["Стиль", "Европейский — выплата на дату экспирации"],
         ["Риск", "Кредитный риск эмитента облигации"]
-      ]
+      ])
     };
   }
 
@@ -633,10 +650,11 @@
   }
 
   function cmpTypeLabel(r) {
-    if (r.type === "warrant") return r.structure === "cs" ? "Варрант · колл-спред" : "Варрант · CALL";
+    const wo = Array.isArray(r.basket) && r.basket.length > 1 ? " · worst-of" : "";
+    if (r.type === "warrant") return (r.structure === "cs" ? "Варрант · колл-спред" : "Варрант · CALL") + wo;
     if (r.type === "discount") return "Дисконтная облигация";
     if (r.type === "booster") return "Бустер";
-    if (r.type === "protection") return "Облигация с защитой капитала";
+    if (r.type === "protection") return "Облигация с защитой капитала" + wo;
     if (r.type === "autocall") return "Автоколл · worst-of";
     return "Структурный продукт";
   }
@@ -646,7 +664,8 @@
       : "1:1 выше " + S.fmtSmart(r.strike) + "%";
     if (r.type === "booster") return "×" + Math.round(r.ku || r.quote) + "% в диапазоне " +
       S.fmtSmart(r.strike || 100) + "–" + S.fmtSmart(r.strike2 || 110) + "%";
-    if (r.type === "protection") return "участие " + Math.round((r.participation || 1) * 100) + "%";
+    if (r.type === "protection") return "участие " + Math.round((r.participation || 1) * 100) + "%" +
+      (Array.isArray(r.basket) && r.basket.length > 1 ? " по худшей бумаге" : "");
     if (r.type === "autocall") return "купон " + S.fmt2(r.couponPa != null ? r.couponPa : r.quote) + "% г. вместо роста";
     return "—";
   }
@@ -971,11 +990,15 @@
 
   // Короткое имя в списке — без повторения базового актива (он в заголовке группы)
   function shortName(r) {
-    if (r.type === "warrant") return (r.structure === "cs" ? "CS 100–150" : "CALL " + S.fmtSmart(r.strike)) + " · " + r.tenor;
+    // Корзина worst-of: в строке списка нужна пометка. У автоколлов её роль играл
+    // заголовок группы с тремя тикерами, но WO-колл стоит рядом с сингл-коллами на те
+    // же бумаги и вдвое дешевле — без пометки дешёвая строка читается как выгодная.
+    const wo = Array.isArray(r.basket) && r.basket.length > 1 ? " · худшая" : "";
+    if (r.type === "warrant") return (r.structure === "cs" ? "CS 100–150" : "CALL " + S.fmtSmart(r.strike)) + wo + " · " + r.tenor;
     if (r.type === "discount") return (r.underlying || "Дисконтная облигация") + " · " + r.tenor;
     if (r.type === "booster") return "Бустер · " + r.tenor;
     if (r.type === "autocall") return "Автоколл · " + r.tenor;
-    return "Участие " + Math.round(r.participation * 100) + "%" + (r.strike > 100 ? " · от +" + S.fmtSmart(r.strike - 100) + "%" : "") + " · " + r.tenor;
+    return "Участие " + Math.round(r.participation * 100) + "%" + wo + (r.strike > 100 ? " · от +" + S.fmtSmart(r.strike - 100) + "%" : "") + " · " + r.tenor;
   }
 
   function filtered() {

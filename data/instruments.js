@@ -2,6 +2,94 @@ window.SITE_DATA = {
   "updated": "2026-08-13",
   "instruments": [
     {
+      "id": "W-WO3-C100-0827",
+      "type": "warrant",
+      "structure": "call",
+      "name": "CALL 100 · худшая из корзины · 1 год",
+      "underlying": "Полюс / Сбербанк / Лукойл",
+      "basket": [
+        "PLZL",
+        "SBER",
+        "LKOH"
+      ],
+      "cls": "Акции РФ",
+      "currency": "RUB",
+      "strike": 100,
+      "spot": 100,
+      "tenor": "1 год",
+      "expiry": "13.08.2027",
+      "quote": 10.75,
+      "chg": 0,
+      "minNom": 1000000,
+      "src": "sales"
+    },
+    {
+      "id": "W-WO3-C100-0828",
+      "type": "warrant",
+      "structure": "call",
+      "name": "CALL 100 · худшая из корзины · 2 года",
+      "underlying": "Полюс / Сбербанк / Лукойл",
+      "basket": [
+        "PLZL",
+        "SBER",
+        "LKOH"
+      ],
+      "cls": "Акции РФ",
+      "currency": "RUB",
+      "strike": 100,
+      "spot": 100,
+      "tenor": "2 года",
+      "expiry": "13.08.2028",
+      "quote": 13.75,
+      "chg": 0,
+      "minNom": 1000000,
+      "src": "sales"
+    },
+    {
+      "id": "P-WO3-1Y",
+      "type": "protection",
+      "name": "Защита капитала · худшая из корзины · 1 год",
+      "underlying": "Полюс / Сбербанк / Лукойл",
+      "basket": [
+        "PLZL",
+        "SBER",
+        "LKOH"
+      ],
+      "cls": "Акции РФ",
+      "currency": "RUB",
+      "strike": 100,
+      "spot": 100,
+      "participation": 1.2,
+      "protectionPct": 100,
+      "tenor": "1 год",
+      "quote": 100,
+      "chg": 0,
+      "minNom": 1000000,
+      "src": "sales"
+    },
+    {
+      "id": "P-WO3-2Y",
+      "type": "protection",
+      "name": "Защита капитала · худшая из корзины · 2 года",
+      "underlying": "Полюс / Сбербанк / Лукойл",
+      "basket": [
+        "PLZL",
+        "SBER",
+        "LKOH"
+      ],
+      "cls": "Акции РФ",
+      "currency": "RUB",
+      "strike": 100,
+      "spot": 100,
+      "participation": 1.5,
+      "protectionPct": 100,
+      "tenor": "2 года",
+      "quote": 100,
+      "chg": 0,
+      "minNom": 1000000,
+      "src": "sales"
+    },
+    {
       "id": "W-SBER-C100-0827",
       "type": "warrant",
       "structure": "call",

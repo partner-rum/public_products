@@ -97,6 +97,24 @@
   .c-title { font-family: var(--display); font-size: 23px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.12; color: var(--ink); }
   .c-badge { display: inline-block; margin-top: 8px; font-family: var(--m); font-size: 9.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--nav); background: #E4E6F2; border-radius: 5px; padding: 3px 9px; }
   .c-sub { margin-top: 9px; font-size: 11.5px; line-height: 1.45; color: var(--hushed); max-width: 440px; }
+
+  /* Корзина worst-of: на что клиент берёт риск — видно до чтения текста.
+     Тикеры крупно (опознаются быстрее названий), названия — подписью под ними. */
+  .basket { margin-top: 11px; display: flex; align-items: center; gap: 9px; }
+  .bk-lbl { flex: none; font-family: var(--m); font-size: 8.5px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--or-text); background: var(--or-soft); border-radius: 4px; padding: 5px 7px; line-height: 1.15; max-width: 92px; }
+  .bk-row { display: flex; gap: 6px; }
+  .bk-chip { display: flex; flex-direction: column; align-items: center; background: var(--card);
+    border: 1px solid var(--or); border-radius: 7px; padding: 4px 10px 5px; }
+  .bk-chip b { font-family: var(--display); font-size: 17px; font-weight: 700; line-height: 1.05;
+    letter-spacing: -0.01em; color: var(--nav); }
+  .bk-chip i { font-style: normal; font-size: 8px; color: var(--faint); margin-top: 1px; white-space: nowrap; }
+  /* Титульный слайд тёмный — плашка и чипы инвертируются */
+  .t-slide .basket { margin-top: 20px; }
+  .t-slide .bk-lbl { color: #FFD9B0; background: rgba(238,125,27,0.18); }
+  .t-slide .bk-chip { background: rgba(255,255,255,0.07); border-color: rgba(238,125,27,0.55); }
+  .t-slide .bk-chip b { color: #FFFFFF; font-size: 21px; }
+  .t-slide .bk-chip i { color: rgba(243,244,251,0.62); font-size: 8.5px; }
   .c-quote { text-align: right; flex: none; }
   .c-quote .v { font-family: var(--m); font-size: 26px; font-weight: 600; letter-spacing: -0.02em; color: var(--nav); }
   .c-quote .v .q-dec { font-size: 0.62em; }
@@ -235,6 +253,25 @@
     backHref = "board.html#" + encodeURIComponent(inst.id); backText = "← К инструменту";
   }
   const U = S.underlyingInfo(inst.underlying);
+
+  // Worst-of: продукт на корзину. Шаблон one-pager остаётся стандартным — просто
+  // вместо одного актива подставляется ХУДШАЯ бумага корзины, а сам перечень бумаг
+  // уходит в блок «О корзине». Формулировки слово в слово как на доске и в карточке.
+  const isWO = Array.isArray(inst.basket) && inst.basket.length > 1;
+  const uName = isWO ? "худшей бумаги корзины" : inst.underlying;
+  const uGrew = isWO ? "Худшая бумага корзины выросла" : inst.underlying + " вырос";
+  const uFell = isWO ? "Худшая бумага корзины упала" : inst.underlying + " упал";
+  const uNo = isWO ? "Худшая бумага корзины не выросла" : inst.underlying + " не вырос";
+  const uGrewLow = isWO ? "худшая бумага корзины выросла" : inst.underlying + " вырос";
+  const uGenAsset = isWO ? "худшей бумаги корзины" : "базового актива";
+  const uAxis = isWO ? "уровень худшей бумаги" : "уровень БА";
+  const uPoss = isWO ? "её" : "его";
+  const woLabel = isWO ? "О корзине · " + inst.underlying : null;
+  const woDesc = isWO
+    ? "Корзина из " + inst.basket.length + " бумаг: " + inst.underlying +
+      ". Все условия считаются по ХУДШЕЙ из них: результат определяет самая слабая бумага корзины, а не средняя по ней. " +
+      "Именно за этот риск цена входа ниже, чем у продукта на одну бумагу."
+    : null;
   const fxShort = "Расчёт в валюте базового актива — изменение курса рубля к ней не учтено.";
 
   document.title = "One-pager — " + name;
@@ -429,19 +466,20 @@
     params.push(["Срок", inst.tenor, false], ["Экспозиция", "100% номинала", false]);
     c = {
       badge: isCS ? "Колл-спред · структурная облигация" : "CALL · структурная облигация",
-      subtitle: "Заработать на росте " + inst.underlying + " с полной экспозицией на номинал и риском, ограниченным премией.",
+      subtitle: "Заработать на росте " + uName + " с полной экспозицией на номинал и риском, ограниченным премией.",
+      underLabel: woLabel, underDesc: woDesc,
       chart: chWarrant, params,
       chartCap: isCS
-        ? "Выплата в % от номинала; уровень БА — в % от начального. Выше K₂ не растёт (макс. " + S.fmtSmart(capPct) + "%). Пунктир — премия; б/у — безубыток."
-        : "Выплата в % от номинала; уровень БА — в % от начального. Рост выплаты не ограничен потолком. Пунктир — премия; б/у — безубыток.",
+        ? "Выплата в % от номинала; " + uAxis + " — в % от начального. Выше K₂ не растёт (макс. " + S.fmtSmart(capPct) + "%). Пунктир — премия; б/у — безубыток."
+        : "Выплата в % от номинала; " + uAxis + " — в % от начального. Рост выплаты не ограничен потолком. Пунктир — премия; б/у — безубыток.",
       exIntro: "Номинал " + S.fmtInt(nom) + " ₽ · премия " + S.fmt2(q) + "% = " + S.fmtInt(premiumRub) + " ₽",
       scen: [
-        [inst.underlying + " вырос на " + upPct + "%", "выплата " + S.fmtInt(payout1) + " ₽", (net1 >= 0 ? "+" : "−") + S.fmtInt(Math.abs(net1)) + " ₽", net1 >= 0 ? "var(--up)" : "var(--down)"],
-        [inst.underlying + " не вырос", "выплаты нет — максимум убытка", "−" + S.fmtInt(premiumRub) + " ₽", "var(--down)"]
+        [uGrew + " на " + upPct + "%", "выплата " + S.fmtInt(payout1) + " ₽", (net1 >= 0 ? "+" : "−") + S.fmtInt(Math.abs(net1)) + " ₽", net1 >= 0 ? "var(--up)" : "var(--down)"],
+        [uNo, "выплаты нет — максимум убытка", "−" + S.fmtInt(premiumRub) + " ₽", "var(--down)"]
       ],
       explainer: isCS
-        ? "Колл-спред — CALL с потолком выплаты. Страйк фиксируется по уровню актива в день покупки, рост засчитывается до K₂. Инвестор платит только премию (" + S.fmt2(q) + "% номинала) и получает экспозицию на весь номинал. Если актив не вырос — теряется только премия."
-        : "CALL-варрант — право на выплату, равную росту базового актива сверх страйка. Инвестор платит только премию (" + S.fmt2(q) + "% номинала) и получает экспозицию на весь номинал без маржин-коллов. Если актив не вырос — теряется только премия."
+        ? "Колл-спред — CALL с потолком выплаты. Страйк фиксируется по уровню актива в день покупки, рост засчитывается до K₂. Инвестор платит только премию (" + S.fmt2(q) + "% номинала) и получает экспозицию на весь номинал. Если " + (isWO ? "худшая бумага корзины не выросла" : "актив не вырос") + " — теряется только премия."
+        : "CALL-варрант — право на выплату, равную росту " + uGenAsset + " сверх страйка. Инвестор платит только премию (" + S.fmt2(q) + "% номинала) и получает экспозицию на весь номинал без маржин-коллов. Если " + (isWO ? "худшая бумага корзины не выросла" : "актив не вырос") + " — теряется только премия."
     };
   } else if (inst.type === "discount") {
     const buyRub = nom * q / 100;
@@ -528,22 +566,23 @@
     const downRub = nom * payDownPct / 100;
 
     let subtitle, chartCap, explainer;
-    if (floor >= 100 && cap == null) subtitle = "Возврат 100% номинала при любом падении и участие в росте " + inst.underlying + " без потолка.";
-    else if (floor >= 100) subtitle = "Полная защита номинала и участие в росте " + inst.underlying + " — с потолком выплаты " + capPay + "%.";
-    else if (cap == null) subtitle = "Гарантированный минимум " + S.fmtSmart(floor) + "% номинала и участие в росте " + inst.underlying + " без потолка.";
-    else subtitle = "Гарантированный минимум " + S.fmtSmart(floor) + "% номинала и участие в росте " + inst.underlying + " с потолком " + capPay + "%.";
+    if (floor >= 100 && cap == null) subtitle = "Возврат 100% номинала при любом падении и участие в росте " + uName + " без потолка.";
+    else if (floor >= 100) subtitle = "Полная защита номинала и участие в росте " + uName + " — с потолком выплаты " + capPay + "%.";
+    else if (cap == null) subtitle = "Гарантированный минимум " + S.fmtSmart(floor) + "% номинала и участие в росте " + uName + " без потолка.";
+    else subtitle = "Гарантированный минимум " + S.fmtSmart(floor) + "% номинала и участие в росте " + uName + " с потолком " + capPay + "%.";
 
     chartCap = "Выплата в % от номинала. " +
       (floor >= 100 ? "Ниже S₀ — не меньше 100%." : "Гарантированный минимум — " + S.fmtSmart(floor) + "% (макс. убыток " + S.fmtSmart(100 - floor) + "%).") +
       " Выше " + (protOff > 0 ? "страйка " + S.fmtSmart(protK) + "%" : "S₀") + " — " + partPct + "% роста" + (cap != null ? " до потолка " + capPay + "%." : ", без потолка.");
 
     explainer = "Облигация возвращает " + (floor >= 100 ? "100% номинала при любом сценарии" : "не менее " + S.fmtSmart(floor) + "% номинала (риск ограничен " + S.fmtSmart(100 - floor) + "%)") +
-      ". Если " + inst.underlying + " вырос" + (protOff > 0 ? " выше страйка " + S.fmtSmart(protK) + "% начального уровня" : "") + " — " + (partPct === 100 ? "засчитывается весь его рост" : "сверху выплачивается " + partPct + "% этого роста") +
+      ". Если " + uGrewLow + (protOff > 0 ? " выше страйка " + S.fmtSmart(protK) + "% начального уровня" : "") + " — " + (partPct === 100 ? "засчитывается весь " + uPoss + " рост" : "сверху выплачивается " + partPct + "% этого роста") +
       (cap != null ? ", но не выше потолка " + capPay + "% номинала" : ", без ограничения сверху") + ". Риск — кредитное качество эмитента.";
 
     c = {
       badge: "Облигация · защита капитала",
       subtitle: subtitle,
+      underLabel: woLabel, underDesc: woDesc,
       chart: () => chProtection({ part: part, floor: floor, cap: cap, strike: protK }),
       chartCap: chartCap,
       // Ровно 4 плитки: сетка в две колонки, третий ряд не влезает в слайд 960×540
@@ -559,10 +598,10 @@
       ],
       exIntro: "Номинал " + S.fmtInt(nom) + " ₽ · вход по " + S.fmt2(q) + "% = " + S.fmtInt(entryRub) + " ₽",
       scen: [
-        [inst.underlying + " вырос на " + upPct + "%", "выплата " + S.fmtSmart(payUpPct) + "% номинала", (netUp >= 0 ? "+" : "−") + S.fmtInt(Math.abs(netUp)) + " ₽", netUp >= 0 ? "var(--up)" : "var(--down)"],
+        [uGrew + " на " + upPct + "%", "выплата " + S.fmtSmart(payUpPct) + "% номинала", (netUp >= 0 ? "+" : "−") + S.fmtInt(Math.abs(netUp)) + " ₽", netUp >= 0 ? "var(--up)" : "var(--down)"],
         floor >= 100
-          ? [inst.underlying + " упал", "защита — 100% номинала", S.fmtInt(downRub) + " ₽", "var(--nav)"]
-          : [inst.underlying + " упал на " + downPct + "%", "минимум — " + S.fmtSmart(floor) + "% номинала", S.fmtInt(downRub) + " ₽", "var(--down)"]
+          ? [uFell, "защита — 100% номинала", S.fmtInt(downRub) + " ₽", "var(--nav)"]
+          : [uFell + " на " + downPct + "%", "минимум — " + S.fmtSmart(floor) + "% номинала", S.fmtInt(downRub) + " ₽", "var(--down)"]
       ],
       explainer: explainer
     };
@@ -575,9 +614,19 @@
   }
 
   // ── Строительные блоки слайда 2 ──
+
+  // Блок корзины: тикеры из basket, названия — из underlying (порядок совпадает).
+  // Если списки разошлись по длине, показываем только тикеры — врать подписями нельзя.
+  const bkNames = String(inst.underlying || "").split("/").map(x => x.trim()).filter(Boolean);
+  const bkNamed = isWO && bkNames.length === inst.basket.length;
+  const basketHTML = !isWO ? "" :
+    '<div class="basket"><div class="bk-lbl">Риск по худшей бумаге</div><div class="bk-row">' +
+    inst.basket.map(function (tk, i) {
+      return '<span class="bk-chip"><b>' + tk + '</b>' + (bkNamed ? '<i>' + bkNames[i] + '</i>' : '') + '</span>';
+    }).join("") + '</div></div>';
   const howHTML =
     '<div class="callout"><div class="lbl">Как устроен продукт</div><div class="expl">' + c.explainer + '</div>' +
-      '<div class="under"><div class="lbl">' + (c.underLabel || ('О базовом активе · ' + inst.underlying)) + '</div>' +
+      '<div class="under"><div class="lbl">' + (c.underLabel || ((isWO ? 'О корзине · ' : 'О базовом активе · ') + inst.underlying)) + '</div>' +
         '<div class="expl">' + (c.underDesc || underDesc()) + '</div></div></div>';
   const chartHTML = '<div class="chart-box"><div class="ct">Диаграмма выплат</div>' + c.chart() + '<div class="chart-cap">' + c.chartCap + '</div></div>';
   const paramsHTML = cols => '<div class="params c' + cols + '">' + c.params.map(p =>
@@ -599,14 +648,14 @@
   html += '<section class="slide t-slide">' +
     '<div class="t-blocks"><i style="top:150px;right:0;width:56px;height:104px"></i><i style="top:264px;right:0;width:28px;height:28px;opacity:.5"></i></div>' +
     '<div class="t-top"><div class="brand">' + starSvg(20, "#EE7D1B") + ' Структурные продукты</div><div class="qual">' + QUAL + '</div></div>' +
-    '<div><div class="t-badge">' + c.badge + '</div><div class="t-title">' + name + '</div><div class="t-bar"></div></div>' +
+    '<div><div class="t-badge">' + c.badge + '</div><div class="t-title">' + name + '</div><div class="t-bar"></div>' + basketHTML + '</div>' +
     '<div class="t-meta">' + dateS + '</div>' +
     '</section>';
 
   // Слайд 2 — описание
   html += '<section class="slide">' +
     '<div class="c-head"><div><div class="c-title">' + name + '</div><span class="c-badge">' + c.badge + '</span>' +
-      '<div class="c-sub">' + c.subtitle + '</div></div>' +
+      '<div class="c-sub">' + c.subtitle + '</div>' + basketHTML + '</div>' +
       '<div class="c-quote"><div class="v">' + S.quoteBig(q) + '</div><div class="k">' + (c.quoteK || "котировка · индикативно · % от номинала") + '</div></div></div>' +
     '<div class="c-body">' + bodyHTML + '</div>' +
     '<div class="c-foot">Пример иллюстративный, без учёта комиссий и налогов.</div>' +

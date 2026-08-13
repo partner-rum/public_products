@@ -334,6 +334,18 @@
   const nom = inst.minNom;
   let content = {};
 
+  // Worst-of: продукт на корзину — весь расчёт по ХУДШЕЙ бумаге. Формулировки те же,
+  // что у автоколлов и на доске: одно имя одного принципа на всей витрине.
+  const isWO = Array.isArray(inst.basket) && inst.basket.length > 1;
+  const uGrew = isWO ? "Худшая бумага корзины выросла" : inst.underlying + " вырос";
+  const uFell = isWO ? "Худшая бумага корзины упала" : inst.underlying + " упал";
+  const uNo = isWO ? "Худшая бумага корзины не выросла" : inst.underlying + " не вырос";
+  const uNom = isWO ? "худшая бумага корзины" : "базовый актив";
+  const uGen = isWO ? "худшей бумаги корзины" : "базового актива";
+  const uAxis = isWO ? "уровень ХУДШЕЙ бумаги корзины" : "уровень БА";
+  const woBadge = isWO ? " · worst-of" : "";
+  const woFact = ["Принцип", "Worst-of — выплата считается по ХУДШЕЙ бумаге корзины (" + inst.underlying + "), а не по средней"];
+
   if (inst.type === "warrant") {
     const isCS = inst.structure === "cs";
     const K = inst.strike, K2 = inst.strike2;
@@ -353,19 +365,18 @@
     ];
     if (isCS) wMetrics.push(["Потолок (K₂)", S.fmtSmart(K2) + "% · выплата ≤ " + S.fmtSmart(capPct) + "%"]);
     wMetrics.push(["Срок", inst.tenor], ["Экспирация", inst.expiry], ["Валюта", inst.currency || "RUB"]);
+    if (isWO) wMetrics.push(["Корзина", inst.underlying + " · выплата по худшей"]);
     if (inst.uRef) wMetrics.push([inst.underlying + " сегодня", inst.uRef]);
     wMetrics.push(["Мин. номинал", S.fmtInt(nom) + " ₽"]);
     const wScen = [
-      [inst.underlying + " вырос на " + upPct + "%", "Выплата " + S.fmtInt(payout1) + " ₽", (net1 >= 0 ? "+" : "−") + S.fmtInt(Math.abs(net1)) + " ₽", net1 >= 0 ? "var(--up)" : "var(--loss)"]
+      [uGrew + " на " + upPct + "%", "Выплата " + S.fmtInt(payout1) + " ₽", (net1 >= 0 ? "+" : "−") + S.fmtInt(Math.abs(net1)) + " ₽", net1 >= 0 ? "var(--up)" : "var(--loss)"]
     ];
     if (isCS) {
       const capNet = capRub - premiumRub;
-      wScen.push([inst.underlying + " вырос на 70% — выше потолка", "Выплата " + S.fmtInt(capRub) + " ₽ — максимум", (capNet >= 0 ? "+" : "−") + S.fmtInt(Math.abs(capNet)) + " ₽", capNet >= 0 ? "var(--up)" : "var(--loss)"]);
+      wScen.push([uGrew + " на 70% — выше потолка", "Выплата " + S.fmtInt(capRub) + " ₽ — максимум", (capNet >= 0 ? "+" : "−") + S.fmtInt(Math.abs(capNet)) + " ₽", capNet >= 0 ? "var(--up)" : "var(--loss)"]);
     }
-    wScen.push([inst.underlying + " не вырос", "Выплаты нет", "−" + S.fmtInt(premiumRub) + " ₽", "var(--loss)"]);
-    const wFacts = [
-      ["Страйк", strikeTxt]
-    ];
+    wScen.push([uNo, "Выплаты нет", "−" + S.fmtInt(premiumRub) + " ₽", "var(--loss)"]);
+    const wFacts = isWO ? [woFact, ["Страйк", strikeTxt]] : [["Страйк", strikeTxt]];
     if (isCS) wFacts.push(["Потолок", "K₂ = " + S.fmtSmart(K2) + "%: выплата не выше " + S.fmtSmart(capPct) + "% номинала"]);
     wFacts.push(
       ["Котировка", "В процентах от номинала"],
@@ -374,15 +385,16 @@
       ["Мин. номинал", S.fmtInt(nom) + " ₽"]
     );
     content = {
-      badge: isCS ? "КОЛЛ-СПРЕД · варрант" : "CALL · варрант",
-      subtitle: (isCS ? "Колл-спред на рост: " : "Варрант на рост: ") + inst.underlying + " · Срок " + inst.tenor,
+      badge: (isCS ? "КОЛЛ-СПРЕД · варрант" : "CALL · варрант") + woBadge,
+      subtitle: (isCS ? "Колл-спред на рост: " : "Варрант на рост: ") + (isWO ? "корзина " : "") + inst.underlying +
+        (isWO ? " — по худшей бумаге" : "") + " · Срок " + inst.tenor,
       explainer: isCS
         ? "Колл-спред — CALL с потолком выплаты. Страйк K фиксируется по уровню базового актива в день покупки (100%), рост засчитывается до K₂ = " + S.fmtSmart(K2) + "%: максимальная выплата — " + S.fmtSmart(capPct) + "% номинала. За счёт этого ограничения премия ниже, чем у обычного CALL. Если актив не вырос — выплаты нет, потеря ограничена премией."
         : "CALL-варрант — право на выплату при росте базового актива выше страйка. Страйк: " + strikeTxt + ". Если на экспирацию актив выше страйка, выплата растёт вместе с ним. Если роста до страйка нет — выплаты нет, потеря ограничена премией.",
       payoff: chartPayoff,
       payoffCaption: isCS
-        ? "Выплата на экспирацию в % от номинала; уровень БА — в % от начального. Выше K₂ выплата не растёт: максимум " + S.fmtSmart(capPct) + "%. Пунктир — премия; б/у — безубыточность."
-        : "Выплата на экспирацию в % от номинала; уровень БА — в % от начального. Пунктир — уплаченная премия; б/у — точка безубыточности.",
+        ? "Выплата на экспирацию в % от номинала; " + uAxis + " — в % от начального. Выше K₂ выплата не растёт: максимум " + S.fmtSmart(capPct) + "%. Пунктир — премия; б/у — безубыточность."
+        : "Выплата на экспирацию в % от номинала; " + uAxis + " — в % от начального. Пунктир — уплаченная премия; б/у — точка безубыточности.",
       metrics: wMetrics,
       exampleIntro: "Номинал " + S.fmtInt(nom) + " ₽ · премия " + S.fmt2(inst.quote) + "% = " + S.fmtInt(premiumRub) + " ₽",
       scenarios: wScen,
@@ -504,16 +516,18 @@
     const payoutUp = nom * S.calc.pct(inst, upPct) / 100;   // calc.pct учитывает страйк
     const partS = Math.round(inst.participation * 100) + "%";
     content = {
-      badge: "облигация · защита капитала",
-      subtitle: "Облигация с защитой капитала · " + inst.underlying + " · срок " + inst.tenor +
+      badge: "облигация · защита капитала" + woBadge,
+      subtitle: "Облигация с защитой капитала · " + (isWO ? "корзина " : "") + inst.underlying +
+        (isWO ? " — участие по худшей бумаге" : "") + " · срок " + inst.tenor +
         (protOff > 0 ? " · участие с роста +" + S.fmtSmart(protOff) + "%" : ""),
       explainer: "Облигация возвращает 100% номинала при любом сценарии — рыночного убытка нет. " +
         (protOff > 0
-          ? "Сверху выплачивается " + partS + " роста базового актива, который он покажет ВЫШЕ страйка " + S.fmtSmart(protK) + "% начального уровня: первые " + S.fmtSmart(protOff) + "% роста в выплату не идут."
-          : "Если базовый актив на дату погашения выше начального уровня S₀, дополнительно выплачивается " + partS + " его роста.") +
-        " Если актив упал — вы получаете номинал целиком. Купонов нет; результат определяется на дату погашения.",
+          ? "Сверху выплачивается " + partS + " роста " + uGen + ", который он покажет ВЫШЕ страйка " + S.fmtSmart(protK) + "% начального уровня: первые " + S.fmtSmart(protOff) + "% роста в выплату не идут."
+          : "Если " + uNom + " на дату погашения выше начального уровня S₀, дополнительно выплачивается " + partS + " роста " + uGen + ".") +
+        " Если " + (isWO ? "худшая бумага корзины упала" : "актив упал") + " — вы получаете номинал целиком. Купонов нет; результат определяется на дату погашения.",
       payoff: chartPayoff,
-      payoffCaption: "Выплата на погашение в % от номинала: не ниже 100% при любом сценарии, выше " +
+      payoffCaption: "Выплата на погашение в % от номинала" + (isWO ? " (по худшей бумаге корзины)" : "") +
+        ": не ниже 100% при любом сценарии, выше " +
         (protOff > 0 ? "страйка " + S.fmtSmart(protK) + "%" : "S₀") + " — участие в росте.",
       metrics: [
         ["Цена входа", S.fmt2(inst.quote) + "% ном."],
@@ -526,17 +540,17 @@
       ],
       exampleIntro: "Номинал " + S.fmtInt(nom) + " ₽ · вход по " + S.fmt2(inst.quote) + "% = " + S.fmtInt(entryRub) + " ₽",
       scenarios: [
-        [inst.underlying + " вырос на " + S.fmtSmart(upPct) + "%", "Выплата " + S.fmtInt(payoutUp) + " ₽ — 100% + участие", "+" + S.fmtInt(payoutUp - entryRub) + " ₽", "var(--up)"],
-        [inst.underlying + " упал на 15%", "Сработала защита: выплата " + S.fmtInt(nom) + " ₽", "0 ₽", "rgba(242,243,247,0.60)"]
+        [uGrew + " на " + S.fmtSmart(upPct) + "%", "Выплата " + S.fmtInt(payoutUp) + " ₽ — 100% + участие", "+" + S.fmtInt(payoutUp - entryRub) + " ₽", "var(--up)"],
+        [uFell + " на 15%", "Сработала защита: выплата " + S.fmtInt(nom) + " ₽", "0 ₽", "rgba(242,243,247,0.60)"]
       ],
-      facts: [
+      facts: (isWO ? [woFact] : []).concat([
         ["Защита", "100% номинала при любом сценарии"],
         ["Участие", partS + " роста" + (protOff > 0 ? " выше страйка " + S.fmtSmart(protK) + "%" : " базового актива") + ", без потолка"],
         ["Купоны", "Нет — результат на дату погашения"],
         ["Стиль", "Европейский — выплата на дату погашения"],
         ["Риск", "Кредитный риск эмитента облигации"],
         ["Мин. номинал", S.fmtInt(nom) + " ₽"]
-      ]
+      ])
     };
   }
 
