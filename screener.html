@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Куда положить свободные деньги — скринер ставок</title>
-<meta name="description" content="Скринер размещения ликвидности: ставки денежного рынка RUSFAR, фонды денежного рынка, короткие ОФЗ и ориентиры ЦБ — в одной таблице, на срок от одного дня.">
+<meta name="description" content="Скринер размещения ликвидности: вклады, накопительные счета, фонды денежного рынка и короткие ОФЗ по срокам — от одного дня до трёх лет. Обновляется дважды в день.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Rumberg">
 <meta property="og:locale" content="ru_RU">
 <meta property="og:title" content="Куда положить свободные деньги — скринер ставок">
-<meta property="og:description" content="Денежный рынок, фонды ликвидности и короткие ОФЗ в одной таблице. Обновляется дважды в день по данным ЦБ и Московской биржи.">
+<meta property="og:description" content="Вклады, накопительные счета, фонды денежного рынка и короткие ОФЗ по срокам размещения. Данные ЦБ, Московской биржи и Финуслуг.">
 <meta property="og:url" content="https://invest.rumberg.ru/screener.html">
 <link rel="canonical" href="https://invest.rumberg.ru/screener.html">
 <meta property="og:image" content="https://invest.rumberg.ru/og-cover.png">
@@ -57,40 +57,38 @@
   .lede { margin-top: 10px; font-size: 15px; line-height: 1.6; color: var(--hushed); max-width: 680px; }
   .upd { font-family: var(--f-mono); font-size: 12px; color: var(--faint); white-space: nowrap; }
 
-  /* Ориентиры ЦБ — три плитки над таблицей */
+  /* Ориентиры ЦБ и биржи */
   .marks { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; margin-top: 24px; }
   .mark { background: var(--card); border: 1px solid var(--border-soft); border-radius: 12px; padding: 15px 18px; }
   .mark .k { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); }
   .mark .v { font-family: var(--f-mono); font-size: 26px; font-weight: 600; margin-top: 6px; letter-spacing: -.02em; }
   .mark .d { font-size: 12px; color: var(--faint); margin-top: 3px; }
 
-  /* Фильтры */
-  .filters { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 28px 0 14px; }
-  .kf { border: 1px solid var(--border); background: var(--card); border-radius: 7px; padding: 7px 13px; font-size: 13px; font-weight: 500; color: var(--hushed); cursor: pointer; font-family: var(--f-body); transition: color .2s, border-color .2s; }
-  .kf:hover { color: var(--ink); }
-  .kf.active { background: rgba(238,125,27,0.16); border-color: var(--solar); color: var(--ink); font-weight: 600; }
-  .kf .n { font-family: var(--f-mono); font-size: 11px; opacity: .75; margin-left: 5px; }
-  .sortnote { margin-left: auto; font-family: var(--f-mono); font-size: 11px; color: var(--faint); }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; margin: 28px 0 14px; font-size: 12.5px; color: var(--hushed); }
+  .legend i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; }
+  .lg-dep i { background: var(--solar); }
+  .lg-fund i { background: var(--up); }
+  .lg-ofz i { background: #F2F3F7; }
 
-  /* Таблица */
-  .tbl { border: 1px solid var(--border-soft); border-radius: 12px; overflow: hidden; }
-  .th, .tr { display: grid; grid-template-columns: minmax(0,1fr) 150px 120px 118px; gap: 16px; align-items: center; }
-  .th { padding: 11px 20px; background: var(--panel-2); border-bottom: 1px solid var(--border-soft); font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); }
-  .th .r, .tr .r { text-align: right; }
-  .tr { padding: 14px 20px; border-bottom: 1px solid var(--border-soft); background: var(--card); transition: background .18s; }
-  .tr:last-child { border-bottom: none; }
-  .tr:hover { background: var(--panel-2); }
-  .tr .nm { font-size: 15px; font-weight: 500; line-height: 1.3; }
-  .tr .sub { font-size: 12.5px; color: var(--faint); margin-top: 3px; }
-  .tr .rate { font-family: var(--f-mono); font-size: 18px; font-weight: 600; }
-  .tr .rate.top { color: var(--up); }
-  .tr .term { font-family: var(--f-mono); font-size: 13px; color: var(--hushed); }
-  .kind { display: inline-flex; font-family: var(--f-mono); font-size: 10px; letter-spacing: .1em; text-transform: uppercase; border-radius: 999px; padding: 3px 9px; white-space: nowrap; }
-  .kind.mm { color: var(--blue); background: rgba(79,134,230,.13); border: 1px solid rgba(79,134,230,.36); }
-  .kind.fund { color: var(--up); background: rgba(85,192,138,.12); border: 1px solid rgba(85,192,138,.34); }
-  .kind.ofz { color: var(--solar); background: rgba(238,125,27,.13); border: 1px solid rgba(238,125,27,.36); }
+  /* Лестница сроков */
+  .ladder { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 12px; align-items: start; }
+  .lcol .lh { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .13em; text-transform: uppercase; color: var(--faint); padding: 0 2px 10px; }
+  .lcard { display: block; background: var(--card); border: 1px solid var(--border-soft); border-radius: 12px; padding: 13px 15px; margin-bottom: 9px; transition: border-color .2s, transform .2s var(--ease); }
+  a.lcard:hover { border-color: var(--border); transform: translateY(-1px); }
+  .lcard.best { border-color: rgba(238,125,27,.5); background: linear-gradient(180deg, rgba(238,125,27,.07), transparent 60%), var(--card); }
+  .lcard .r { font-family: var(--f-mono); font-size: 21px; font-weight: 600; letter-spacing: -.02em; }
+  .lcard.best .r { color: var(--solar); }
+  .lcard .n { font-size: 13px; font-weight: 500; margin-top: 5px; line-height: 1.35; }
+  .lcard .s { font-size: 11.5px; color: var(--faint); margin-top: 3px; line-height: 1.4; }
+  .lcard .tag { display: inline-block; font-family: var(--f-mono); font-size: 9px; letter-spacing: .1em; text-transform: uppercase; border-radius: 5px; padding: 2px 6px; margin-top: 7px; }
+  .t-dep { color: var(--solar); background: rgba(238,125,27,.13); }
+  .t-sav { color: #E7B98D; background: rgba(238,125,27,.08); }
+  .t-fund { color: var(--up); background: rgba(85,192,138,.12); }
+  .t-ofz { color: var(--ink); background: rgba(255,255,255,.08); }
+  .flag { color: var(--solar); font-family: var(--f-mono); font-size: 11px; }
+  .flag.fl { color: var(--blue); }
 
-  .note { margin-top: 18px; font-size: 12.5px; line-height: 1.6; color: var(--faint); max-width: 780px; }
+  .note { margin-top: 20px; font-size: 12.5px; line-height: 1.6; color: var(--faint); max-width: 800px; }
   .note b { color: var(--hushed); font-weight: 500; }
   .cta { margin-top: 26px; background: var(--card); border: 1px solid var(--border); border-left: 3px solid var(--solar); border-radius: 12px; padding: 20px 24px; display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
   .cta .tx { min-width: 260px; flex: 1; }
@@ -103,17 +101,10 @@
   .foot { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; padding: 20px 44px; max-width: 1180px; margin: 0 auto; font-size: 12px; color: var(--faint); }
   .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--solar); box-shadow: 0 0 12px var(--solar); }
 
+  @media (max-width: 1080px) { .ladder { grid-template-columns: repeat(3, minmax(0,1fr)); } }
   @media (max-width: 900px) { .marks { grid-template-columns: 1fr; } }
-  @media (max-width: 820px) { .wrap, .nav-in, .foot { padding-left: 18px; padding-right: 18px; } h1 { font-size: 27px; } }
-  @media (max-width: 700px) {
-    .th { display: none; }
-    /* Таблица в карточки: ставка уходит вправо от названия, срок и тип — строкой ниже */
-    .tr { grid-template-columns: minmax(0,1fr) auto; gap: 6px 12px; padding: 15px 18px; }
-    .tr .r { text-align: left; }
-    .tr .rate { font-size: 20px; text-align: right; }
-    .tr .term, .tr .kindcell { grid-column: 1 / -1; }
-    .tr .term { font-size: 12px; }
-  }
+  @media (max-width: 820px) { .wrap, .nav-in, .foot { padding-left: 18px; padding-right: 18px; } h1 { font-size: 27px; } .ladder { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+  @media (max-width: 560px) { .ladder { grid-template-columns: 1fr; } }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 </style>
 </head>
@@ -142,15 +133,19 @@
   <div class="head-row">
     <div>
       <h1>Куда положить свободные деньги</h1>
-      <div class="lede">Ставки денежного рынка, фонды ликвидности и короткие ОФЗ в одной таблице — от одного дня до полутора лет. Всё в простых процентах годовых, поэтому строки сравнимы между собой. Данные ЦБ и Московской биржи, обновляются дважды в день.</div>
+      <div class="lede">Вклады, накопительные счета, фонды денежного рынка и короткие ОФЗ — по срокам размещения, от одного дня до трёх лет. Все ставки простые, в процентах годовых. Обновляется дважды в день.</div>
     </div>
     <span class="upd" id="upd">—</span>
   </div>
 
   <div class="marks" id="marks"></div>
-
-  <div class="filters" id="filters"></div>
-  <div class="tbl" id="tbl"></div>
+  <div class="legend">
+    <span class="lg-dep"><i></i>Вклады и счета — Финуслуги</span>
+    <span class="lg-fund"><i></i>Фонды денежного рынка</span>
+    <span class="lg-ofz"><i></i>Короткие ОФЗ</span>
+    <span style="color:var(--faint)">★ — промо с условиями банка</span>
+  </div>
+  <div class="ladder" id="ladder"></div>
   <div class="note" id="note"></div>
 
   <div class="cta">
@@ -169,99 +164,85 @@
   <span>invest.rumberg.ru · Не является индивидуальной инвестиционной рекомендацией · ставки не гарантированы и меняются</span>
 </div></footer>
 
-<script src="data/rates.js?v=1"></script>
+<script src="data/rates.js?v=2"></script>
 <script>
 (function () {
   "use strict";
   var R = window.RATES || {};
-  var esc = function (s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); };
-  var fmt = function (n) { return (Math.round(n * 100) / 100).toFixed(2).replace(".", ","); };
-  var MON = ["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"];
-  // Год показываем, только если он не текущий: «19 января» у бумаги с погашением
-  // в 2028-м читалось как ближайший январь.
-  function human(iso, withYear) {
-    if (!iso) return "";
-    var p = String(iso).slice(0, 10).split("-");
-    if (p.length !== 3) return iso;
-    var s = Number(p[2]) + " " + MON[Number(p[1]) - 1];
-    if (withYear && Number(p[0]) !== new Date().getFullYear()) s += " " + p[0];
-    return s;
-  }
-
+  var esc = function (s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); };
+  var fmt = function (n) { return (Math.round(n * 100) / 100).toFixed(2).replace(/\.?0+$/, "").replace(".", ","); };
+  var money = function (n) { return n >= 1000000 ? (n / 1000000 + " млн ₽") : (String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " ₽"); };
   document.getElementById("upd").textContent = R.updated ? "обновлено " + R.updated : "";
 
-  // ── Ориентиры ЦБ ──
+  // ── Ориентиры сверху ──
   var marks = [];
-  if (R.cbr && R.cbr.key) marks.push(["Ключевая ставка", fmt(R.cbr.key.rate) + "%", "ЦБ РФ, с " + human(R.cbr.key.date)]);
-  if (R.cbr && R.cbr.ruonia) marks.push(["RUONIA", fmt(R.cbr.ruonia.rate) + "%", "межбанк овернайт, " + human(R.cbr.ruonia.date)]);
+  if (R.cbr && R.cbr.key) marks.push(["Ключевая ставка", fmt(R.cbr.key.rate) + "%", "ЦБ РФ"]);
+  if (R.cbr && R.cbr.ruonia) marks.push(["RUONIA", fmt(R.cbr.ruonia.rate) + "%", "межбанк овернайт"]);
   var on = (R.rusfar || []).filter(function (x) { return x.days === 1; })[0];
   if (on) marks.push(["RUSFAR овернайт", fmt(on.rate) + "%", "обеспеченные деньги, МосБиржа"]);
   document.getElementById("marks").innerHTML = marks.map(function (m) {
     return '<div class="mark"><div class="k">' + esc(m[0]) + '</div><div class="v">' + esc(m[1]) + '</div><div class="d">' + esc(m[2]) + '</div></div>';
   }).join("");
 
-  // ── Единый список инструментов ──
+  // ── Единый пул инструментов ──
+  // Ссылки: вклады и счета → продукт на Финуслугах (там же открывается),
+  // фонды и ОФЗ → карточка бумаги на МосБирже. RUSFAR — бенчмарк, в лестнице его нет.
   var rows = [];
-  (R.rusfar || []).forEach(function (x) {
-    rows.push({ kind: "mm", kindLabel: "Денежный рынок", name: "RUSFAR · " + x.term,
-      sub: "ставка обеспеченных денег на МосБирже", rate: x.rate, days: x.days, term: x.term });
+  (R.deposits || []).forEach(function (d) {
+    rows.push({ kind: d.kind === "saving" ? "sav" : "dep", name: d.bank, sub: d.name,
+      rate: d.rate, days: d.termMonths > 0 ? Math.round(d.termMonths * 30.44) : 1,
+      termLabel: d.termMonths > 0 ? d.termMonths + " мес" : "гибкий срок",
+      min: d.minAmount, promo: d.promo, floating: d.floating, url: d.url });
   });
-  (R.funds || []).forEach(function (x) {
-    rows.push({ kind: "fund", kindLabel: "Фонд", name: x.name,
-      sub: "БПИФ " + x.id + " · продать можно в любой день", rate: x.rate, days: 1, term: "любой срок" });
+  (R.funds || []).forEach(function (f) {
+    rows.push({ kind: "fund", name: f.name, sub: "БПИФ " + f.id + " · продать можно в любой день",
+      rate: f.rate, days: 1, termLabel: "любой день",
+      url: "https://www.moex.com/ru/issue.aspx?code=" + f.id });
   });
-  (R.ofz || []).forEach(function (x) {
-    var d = Math.round(x.years * 365);
-    rows.push({ kind: "ofz", kindLabel: "ОФЗ", name: x.name,
-      sub: "погашение " + human(x.maturity, true) + " · доходность к погашению", rate: x.rate, days: d,
-      term: x.years < 1 ? (Math.round(x.years * 12) + " мес.") : (fmt(x.years).replace(",00", "") + " года") });
+  (R.ofz || []).forEach(function (o) {
+    rows.push({ kind: "ofz", name: o.name, sub: "доходность к погашению",
+      rate: o.rate, days: Math.round(o.years * 365),
+      termLabel: o.years < 1 ? Math.round(o.years * 12) + " мес" : fmt(o.years) + " г.",
+      url: "https://www.moex.com/ru/issue.aspx?code=" + o.id });
   });
 
-  var FILTERS = [
-    { id: "all", label: "Все" },
-    { id: "mm", label: "Денежный рынок" },
-    { id: "fund", label: "Фонды" },
-    { id: "ofz", label: "Короткие ОФЗ" }
+  // ── Лестница: колонка = «деньги свободны на такой срок» ──
+  var buckets = [
+    { label: "Снять в любой день", test: function (p) { return p.days <= 1; } },
+    { label: "До 3 месяцев", test: function (p) { return p.days > 1 && p.days <= 95; } },
+    { label: "3–6 месяцев", test: function (p) { return p.days > 95 && p.days <= 185; } },
+    { label: "6–18 месяцев", test: function (p) { return p.days > 185 && p.days <= 550; } },
+    { label: "Больше полутора лет", test: function (p) { return p.days > 550; } }
   ];
-  var cur = "all";
-
-  function render() {
-    var list = rows.filter(function (r) { return cur === "all" || r.kind === cur; })
-                   .sort(function (a, b) { return b.rate - a.rate; });
-    var best = list.length ? list[0].rate : null;
-    document.getElementById("filters").innerHTML = FILTERS.map(function (f) {
-      var n = f.id === "all" ? rows.length : rows.filter(function (r) { return r.kind === f.id; }).length;
-      return '<button class="kf' + (cur === f.id ? " active" : "") + '" type="button" data-f="' + f.id + '">' +
-        esc(f.label) + '<span class="n">' + n + '</span></button>';
-    }).join("") + '<span class="sortnote">по убыванию ставки</span>';
-
-    document.getElementById("tbl").innerHTML =
-      '<div class="th"><span>Инструмент</span><span>Тип</span><span>Срок</span><span class="r">% годовых</span></div>' +
-      list.map(function (r) {
-        return '<div class="tr">' +
-          '<div><div class="nm">' + esc(r.name) + '</div><div class="sub">' + esc(r.sub) + '</div></div>' +
-          '<div class="kindcell"><span class="kind ' + r.kind + '">' + esc(r.kindLabel) + '</span></div>' +
-          '<div class="term">' + esc(r.term) + '</div>' +
-          '<div class="r"><span class="rate' + (r.rate === best ? " top" : "") + '">' + fmt(r.rate) + '%</span></div>' +
-        '</div>';
-      }).join("");
-
-    [].forEach.call(document.querySelectorAll(".kf"), function (b) {
-      b.addEventListener("click", function () { cur = b.getAttribute("data-f"); render(); });
+  var TAG = { dep: ["t-dep", "Вклад"], sav: ["t-sav", "Накоп. счёт"], fund: ["t-fund", "Фонд"], ofz: ["t-ofz", "ОФЗ"] };
+  document.getElementById("ladder").innerHTML = buckets.map(function (b) {
+    var list = rows.filter(b.test).sort(function (x, y) { return y.rate - x.rate; });
+    var h = '<div class="lcol"><div class="lh">' + b.label + '</div>';
+    list.slice(0, 4).forEach(function (p, i) {
+      var t = TAG[p.kind];
+      var inner = '<div class="r">' + fmt(p.rate) + '%' +
+        (p.promo ? ' <span class="flag">★ промо</span>' : '') +
+        (p.floating ? ' <span class="flag fl">плав.</span>' : '') + '</div>' +
+        '<div class="n">' + esc(p.name) + '</div>' +
+        '<div class="s">' + esc(p.sub || "") + (p.min ? " · от " + money(p.min) : "") + '</div>' +
+        '<span class="tag ' + t[0] + '">' + t[1] + " · " + esc(p.termLabel) + '</span>';
+      h += p.url
+        ? '<a class="lcard' + (i === 0 ? " best" : "") + '" href="' + esc(p.url) + '" target="_blank" rel="noopener">' + inner + '</a>'
+        : '<div class="lcard' + (i === 0 ? " best" : "") + '">' + inner + '</div>';
     });
-  }
-  render();
+    return h + '</div>';
+  }).join("");
 
   document.getElementById("note").innerHTML =
-    "<b>Все ставки — простые, в процентах годовых.</b> Это привычный счёт: «положил рубль на год — получил столько сверху», " +
-    "без предположений о том, что доход будет вложен заново. Поэтому колонку можно сравнивать сверху вниз напрямую. " +
+    "<b>Как читать.</b> Колонка — ответ на вопрос «деньги свободны на такой срок — куда?». Лучшее предложение в колонке подсвечено. " +
+    "Все ставки простые, в процентах годовых: «положил рубль на год — получил столько сверху», без реинвестирования, поэтому карточки сравнимы между собой. " +
     "<br><br>" +
-    "<b>Что есть что.</b> RUSFAR — ставка, под которую банки занимают друг у друга под залог ценных бумаг; ориентир, сколько стоят деньги на срок. " +
-    "У фондов денежного рынка ставка посчитана по приросту пая за последние 30 дней в пересчёте на год: это факт прошлого, а не обещание на будущее. " +
-    "У ОФЗ — доходность при удержании бумаги до погашения, посчитанная от цены с накопленным купоном; берём только выпуски с фиксированным купоном, " +
-    "потому что у флоатеров будущие выплаты ещё не объявлены. " +
+    "★ Промо-ставки действуют при условиях банка (новые деньги, подписка, ограниченный срок) — читайте условия по ссылке. " +
+    "«Плав.» — ставка привязана к ключевой и меняется вместе с ней. " +
+    "У фондов доходность посчитана по приросту пая за последние 30 дней в пересчёте на год: это факт прошлого, а не обещание. " +
+    "У ОФЗ — доходность при удержании до погашения, от цены с накопленным купоном; комиссии брокера и налоги не учтены. " +
     "<br><br>" +
-    "Комиссии брокера, депозитария и налог не учтены — они уменьшат результат. Ставки по вкладам конкретных банков сюда не входят.";
+    "Вклады и накопительные счета — витрина Финуслуг (проект Московской биржи), открываются по ссылке там же. Фонды и ОФЗ покупаются у любого брокера.";
 })();
 </script>
 <script src="nav-about.js?v=6" defer></script>
