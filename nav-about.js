@@ -1,6 +1,6 @@
 /* Шапка: ссылка «О компании» рядом с логотипом (десктоп) + бургер-меню на мобильном.
    На десктопе — как раньше: звезда + «О компании» + пункты меню + «Доска».
-   На мобильном (≤640px) длинные пункты прячутся, вместо них — кнопка ☰, по тапу
+   На узком экране (≤900px) длинные пункты прячутся, вместо них — кнопка ☰, по тапу
    выпадает панель со всеми разделами (Дайджест / Размещения / Выпуски / Библиотека /
    О компании / Доска). Бургер появляется только там, где есть .topnav (внутренние страницы).
    Подключение: <script src="nav-about.js?v=3"></script> перед </body>. Без зависимостей. */
@@ -83,7 +83,7 @@
     backdrop.addEventListener("click", close);
     menu.addEventListener("click", function (e) { if (e.target.closest("a")) close(); });
     document.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
-    window.addEventListener("resize", function () { if (window.innerWidth > 640) close(); });
+    window.addEventListener("resize", function () { if (window.innerWidth > 900) close(); });
   }
 
   var ICON_MENU = '<svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#F2F3F7" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M2 5h14M2 9h14M2 13h14"/></svg>';
@@ -111,14 +111,16 @@
       '.nav-menu a[aria-current="page"] svg path{stroke:#EE7D1B;}' +
       ".nav-menu a.item-cta{color:#EE7D1B;font-weight:600;}" +
       ".nav-menu a.item-cta svg path{stroke:#EE7D1B;}" +
-      "@media(max-width:640px){.nav-in .brand-name,.nav-in .name{display:none;}" +
+      // Порог 900, а не 640: с шестым пунктом («Ставки») ряд перестал влезать уже
+      // на 760–900px и давал горизонтальный скролл. Ширина ряда ~890px.
+      "@media(max-width:900px){.nav-in .brand-name,.nav-in .name{display:none;}" +
       ".nav-in .topnav a:not(.btn-solar){display:none;}.nav-about{display:none;}" +
       ".nav-burger{display:inline-flex;}}" +
-      "@media(min-width:641px){.nav-menu,.nav-backdrop{display:none !important;}}" +
+      "@media(min-width:901px){.nav-menu,.nav-backdrop{display:none !important;}}" +
       // Тач-таргет логотипа ≥24px (WCAG 2.5.8); на мобиле, где подпись скрыта, лого
       // остаётся один — добавляем небольшой паддинг, чтобы область нажатия не была 22px.
       ".nav-in .brand{min-height:24px;}" +
-      "@media(max-width:640px){.nav-in .brand{padding:3px;margin-left:-3px;}}" +
+      "@media(max-width:900px){.nav-in .brand{padding:3px;margin-left:-3px;}}" +
       // Универсальный respect prefers-reduced-motion (модуль подключён на всех витринных
       // страницах, правило документ-глобальное — гасит и анимации попапов/гейта/лент).
       "@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important;scroll-behavior:auto !important;}}";

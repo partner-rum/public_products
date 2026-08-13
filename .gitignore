@@ -51,3 +51,6 @@ china-tech.html
 # Конфиг деплоя воркера: id KV-namespace и биндингов — внутренняя инфраструктура
 wrangler.toml
 .wrangler/
+
+# Скринер ликвидности: коллектор ставок (локальный, как fetch_placements.py)
+fetch_rates.py

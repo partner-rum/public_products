@@ -300,8 +300,14 @@
       <span class="sm">как это работает</span>
       <span class="go"><svg width="16" height="16" viewBox="0 0 14 14" fill="none"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#666C82" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
     </a>
-    <a class="srow rise" style="animation-delay:.46s" href="events.html">
+    <a class="srow rise" style="animation-delay:.46s" href="screener.html">
       <span class="no">06</span>
+      <span><span class="st">Ставки</span><span class="sd">Куда положить свободные деньги на срок от одного дня: денежный рынок, фонды ликвидности, короткие ОФЗ.</span></span>
+      <span class="sm" id="scr-sm">денежный рынок</span>
+      <span class="go"><svg width="16" height="16" viewBox="0 0 14 14" fill="none"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#666C82" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    </a>
+    <a class="srow rise" style="animation-delay:.5s" href="events.html">
+      <span class="no">07</span>
       <span><span class="st">События</span><span class="sd">Онлайн-встречи для агентов и партнёров: разборы продуктов и работа с витриной. С записями прошедших.</span></span>
       <span class="sm" id="ev-sm">встречи и записи</span>
       <span class="go"><svg width="16" height="16" viewBox="0 0 14 14" fill="none"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#666C82" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
@@ -549,6 +555,7 @@
   })();
 </script>
 
+<script src="data/rates.js?v=1"></script>
 <script src="data/events.js?v=1"></script>
 <script>
   // ── События на главной: телефон в герое, дорожка до встречи, строка 06 ──
@@ -614,6 +621,14 @@
         '</span></span></span></a>';
     }
 
+    // Строка «Ставки»: показываем лучшую доходность из скринера
+    var scr = document.getElementById("scr-sm");
+    if (scr && window.RATES) {
+      var pool = [].concat(RATES.rusfar || [], RATES.funds || [], RATES.ofz || []);
+      var best = pool.reduce(function (a, b) { return (!a || b.rate > a.rate) ? b : a; }, null);
+      if (best) scr.textContent = "до " + String(Math.round(best.rate * 10) / 10).replace(".", ",") + "% годовых";
+    }
+
     // Строка 06: пока есть анонс — живая метка с датой
     var sm = document.getElementById("ev-sm");
     if (sm && upcoming) {
@@ -625,7 +640,7 @@
 </script>
 
 <script src="chat.js?v=14"></script>
-<script src="nav-about.js?v=5"></script>
+<script src="nav-about.js?v=6"></script>
 <script src="qualgate.js?v=3"></script>
 </body>
 </html>
