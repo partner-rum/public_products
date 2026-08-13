@@ -276,7 +276,7 @@
     </a>
     <a class="srow rise" style="animation-delay:.46s" href="screener.html">
       <span class="no">06</span>
-      <span><span class="st">Свободные деньги</span><span class="sd">Куда положить свободные деньги на срок от одного дня: вклады, накопительные счета, фонды денежного рынка, короткие ОФЗ.</span></span>
+      <span><span class="st">Лучшие ставки</span><span class="sd">Куда положить деньги на срок до года: вклады, накопительные счета, фонды денежного рынка, короткие ОФЗ.</span></span>
       <span class="sm" id="scr-sm">денежный рынок</span>
       <span class="go"><svg width="16" height="16" viewBox="0 0 14 14" fill="none"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#666C82" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
     </a>
@@ -559,13 +559,16 @@
         '</span></span></span></a>';
     }
 
-    // Строка «Свободные деньги»: показываем лучшую доходность из скринера
+    // Строка «Лучшие ставки»: показываем лучшую доходность из скринера
     var scr = document.getElementById("scr-sm");
     if (scr && window.RATES) {
       // промо-вклады (31% со звёздочкой) в метку не пускаем: на главной без сносок
-      // такая цифра выглядит обещанием, а не спецусловием
-      var deps = (RATES.deposits || []).filter(function (d) { return !d.promo; });
-      var pool = [].concat(deps, RATES.rusfar || [], RATES.funds || [], RATES.ofz || []);
+      // такая цифра выглядит обещанием, а не спецусловием.
+      // Потолок в год — тот же, что на самой странице скринера, иначе метка
+      // обещала бы ставку, которой на странице уже нет
+      var deps = (RATES.deposits || []).filter(function (d) { return !d.promo && (d.termMonths || 0) <= 12; });
+      var ofz = (RATES.ofz || []).filter(function (o) { return o.years <= 1.02; });
+      var pool = [].concat(deps, RATES.rusfar || [], RATES.funds || [], ofz);
       var best = pool.reduce(function (a, b) { return (!a || b.rate > a.rate) ? b : a; }, null);
       if (best) scr.textContent = "до " + String(Math.round(best.rate * 10) / 10).replace(".", ",") + "% годовых";
     }
