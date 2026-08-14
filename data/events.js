@@ -21,7 +21,7 @@ window.EVENTS = {
       "timeMsk": "15:00",
       "durationMin": 30,
       "place": "Онлайн · Контур.Толк · вход свободный",
-      "joinUrl": "",
+      "joinUrl": "https://rumbergcapital.ktalk.ru/app/stream/studios/a9aa8ce6-ed38-4051-8b8b-a10ab731eca3",
       "recordingUrl": "",
       "speaker": "Руслан Сабиров",
       "speakerNote": "Rumberg — автор витрины структурных продуктов",
