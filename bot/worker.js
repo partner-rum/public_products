@@ -82,6 +82,12 @@ async function tg(env, method, body) {
   });
 }
 
+// multipart-вариант для методов с файлами (sendDocument): Content-Type
+// выставит сам fetch по FormData, руками его задавать нельзя — сломается boundary
+async function tgForm(env, method, formData) {
+  return fetch(`https://api.telegram.org/bot${env.BOT_TOKEN}/${method}`, { method: "POST", body: formData });
+}
+
 function json(obj, status, cors) {
   return new Response(JSON.stringify(obj), { status, headers: { "Content-Type": "application/json", ...(cors || {}) } });
 }
@@ -1598,6 +1604,50 @@ async function handleSubmit(request, env, cors) {
     return json({ ok: true }, 200, cors);
   }
 
+  // ── Эмиссионные документы к размещённым выпускам ──
+  // PDF уходит Руслану ПРЯМО В КАРТОЧКУ (sendDocument): файл живёт в самом сообщении,
+  // хранилища нет — и его можно открыть и проверить до одобрения. Через текст карточки
+  // base64 не пролезает (лимит 3400 — пробовали на PDF дайджеста, откатили), а тут
+  // лимитов хватает: у ботов до 50 МБ отправка и до 20 МБ выдача через getFile.
+  // По ✅ бот скачивает файл из Telegram и коммитит docs/<файл> + data/placement_docs.js.
+  if (data.action === "placementdoc") {
+    const isin = cleanStr(data.isin, 20).toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 12);
+    if (!/^[A-Z0-9]{12}$/.test(isin)) return json({ ok: false, error: "bad_isin" }, 422, cors);
+    const kind = ["kuv", "kid", "other"].includes(data.docKind) ? data.docKind : null;
+    if (!kind) return json({ ok: false, error: "bad_kind" }, 422, cors);
+    const docName = cleanStr(data.docName, 80);
+    if (kind === "other" && !docName) return json({ ok: false, error: "no_name" }, 422, cors);
+    const b64 = String(data.fileB64 || "").replace(/^data:[^,]*,/, "");
+    // %PDF- в base64 = JVBERi0: не-PDF отбиваем до похода в Telegram
+    if (!b64.startsWith("JVBERi0")) return json({ ok: false, error: "not_pdf" }, 422, cors);
+    if (b64.length > 20 * 1024 * 1024) return json({ ok: false, error: "too_big" }, 422, cors);
+    let bytes;
+    try { bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)); }
+    catch { return json({ ok: false, error: "bad_base64" }, 422, cors); }
+    const file = kind === "kuv" ? "docs/kuv-" + isin + ".pdf"
+      : kind === "kid" ? "docs/kid-" + isin + ".pdf"
+      : "docs/doc-" + isin + "-" + slugId(docName) + ".pdf";
+    const label = kind === "kuv" ? "Ключевые условия выпуска (КУВ)"
+      : kind === "kid" ? "Ключевой информационный документ (КИД)" : docName;
+    const payload = JSON.stringify({ s: "pdoc", isin, file, label, by: author });
+    if (payload.length > 900) return json({ ok: false, error: "too_long" }, 422, cors); // лимит caption 1024
+    const fd = new FormData();
+    fd.append("chat_id", env.ADMIN_CHAT_ID);
+    fd.append("document", new Blob([bytes], { type: "application/pdf" }), file.split("/").pop());
+    fd.append("caption", "📎 <b>Документ к выпуску</b>\n" + isin + " · " + esc(label) +
+      " · от <b>" + esc(author) + "</b>\n\n<pre>" + esc(payload) + "</pre>");
+    fd.append("parse_mode", "HTML");
+    fd.append("reply_markup", JSON.stringify({ inline_keyboard: [[
+      { text: "✅ Прикрепить", callback_data: "pub" },
+      { text: "❌ Отклонить", callback_data: "rej" },
+    ]] }));
+    const rr = await tgForm(env, "sendDocument", fd);
+    let sentOk = false;
+    try { sentOk = (await rr.json()).ok === true; } catch (e) {}
+    if (!sentOk) return json({ ok: false, error: "telegram_failed" }, 502, cors);
+    return json({ ok: true }, 200, cors);
+  }
+
   // ── Дайджест-самообслуживание (без модерации): идея → черновик, публикация — сейлзом ──
   // Ключ уже проверен выше (author). Правки коммитятся прямо в data/digest.js, Руслану уходит
   // уведомление без кнопок. Board/offerings/remove остаются на аппруве — их не трогаем.
@@ -1788,7 +1838,9 @@ async function handleSubmit(request, env, cors) {
 
 // --- Публикация: правка data-файла в GitHub через Contents API ---
 function b64encodeUtf8(str) {
-  const bytes = new TextEncoder().encode(str);
+  return b64encodeBytes(new TextEncoder().encode(str));
+}
+function b64encodeBytes(bytes) {
   let bin = "";
   for (let i = 0; i < bytes.length; i += 8192) bin += String.fromCharCode(...bytes.subarray(i, i + 8192));
   return btoa(bin);
@@ -2080,6 +2132,55 @@ async function publishItem(env, payload) {
   throw new Error("github_conflict");
 }
 
+// Прикрепление эмиссионного документа: файл скачивается ИЗ КАРТОЧКИ Telegram
+// (он там и жил с момента заявки) и коммитится в docs/ + data/placement_docs.js.
+async function attachPlacementDoc(env, payload, cb) {
+  if (!env.GITHUB_TOKEN || !env.GITHUB_REPO) throw new Error("github_not_configured");
+  const fileId = cb.message && cb.message.document && cb.message.document.file_id;
+  if (!fileId) throw new Error("no_file");
+  const gf = await (await tg(env, "getFile", { file_id: fileId })).json();
+  if (!gf.ok || !gf.result || !gf.result.file_path) throw new Error("tg_getfile");
+  const resp = await fetch("https://api.telegram.org/file/bot" + env.BOT_TOKEN + "/" + gf.result.file_path);
+  if (!resp.ok) throw new Error("tg_download_" + resp.status);
+  const bytes = new Uint8Array(await resp.arrayBuffer());
+
+  const branch = env.GITHUB_BRANCH || "main";
+  // 1) сам PDF (перезапись легальна: свежая версия документа заменяет старую)
+  {
+    const api = "https://api.github.com/repos/" + env.GITHUB_REPO + "/contents/" + payload.file;
+    let sha;
+    const g = await fetch(api + "?ref=" + branch, { headers: ghHeaders(env) });
+    if (g.ok) sha = (await g.json()).sha;
+    const body = { message: "Админка: документ " + payload.file.split("/").pop() + " (от " + payload.by + ")",
+                   content: b64encodeBytes(bytes), branch };
+    if (sha) body.sha = sha;
+    const put = await fetch(api, { method: "PUT", headers: ghHeaders(env), body: JSON.stringify(body) });
+    if (!put.ok) throw new Error("doc_put_" + put.status);
+  }
+  // 2) запись в data/placement_docs.js — по ней паспорт выпуска показывает ссылки
+  const api = "https://api.github.com/repos/" + env.GITHUB_REPO + "/contents/data/placement_docs.js";
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const g = await fetch(api + "?ref=" + branch, { headers: ghHeaders(env) });
+    if (!g.ok) throw new Error("github_get_" + g.status);
+    const meta = await g.json();
+    const text = b64decodeUtf8(meta.content);
+    const obj = JSON.parse(text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1));
+    const list = obj[payload.isin] || (obj[payload.isin] = []);
+    const same = list.find((d) => d.file === payload.file);
+    if (same) same.name = payload.label;
+    else list.push({ name: payload.label, file: payload.file });
+    const body = "// Материалы по выпускам (КУВ/КИД), сопоставлены по ISIN. Обновляется скриптом и админкой сейлзов.\n" +
+      "window.PLACEMENT_DOCS = " + JSON.stringify(obj, null, 1) + ";\n";
+    const put = await fetch(api, { method: "PUT", headers: ghHeaders(env), body: JSON.stringify({
+      message: "Админка: " + payload.label + " → " + payload.isin + " (от " + payload.by + ")",
+      content: b64encodeUtf8(body), sha: meta.sha, branch }) });
+    if (put.ok) return;
+    if (put.status !== 409 && put.status !== 422) throw new Error("github_put_" + put.status);
+    // sha устарел (параллельная правка) — перечитываем и пробуем ещё раз
+  }
+  throw new Error("github_conflict");
+}
+
 // --- (опц.) Вебхук бота: клиент нажал «Написать в Telegram» ---
 // Кому бот доверяет генерацию постов: Руслан плюс сейлзы из ANALYST_CHAT_ID
 // (список через запятую). Свой chat_id человек узнаёт командой /id.
@@ -2202,32 +2303,39 @@ async function handleTelegram(request, env, ctx) {
     if (!env.ADMIN_CHAT_ID || String(cb.from && cb.from.id) !== String(env.ADMIN_CHAT_ID)) {
       await answer("Недостаточно прав"); return new Response("ok");
     }
-    const msgText = (cb.message && cb.message.text) || "";
+    // Карточка-документ (заявка на эмиссионный PDF) несёт payload в caption, не в text
+    const msgText = (cb.message && (cb.message.text || cb.message.caption)) || "";
     const at = msgText.indexOf('{"s":');
     const end = msgText.lastIndexOf("}");
     if (at < 0 || end < at) { await answer("Не нашёл данные заявки", true); return new Response("ok"); }
     let payload;
     try { payload = JSON.parse(msgText.slice(at, end + 1)); } catch { await answer("Данные повреждены", true); return new Response("ok"); }
-    const label = (SUBMIT_SECTIONS[payload.s] || {}).label || payload.s;
-    const title = (payload.item && payload.item.name) || payload.rm || "";
+    const label = payload.s === "pdoc" ? "Документы выпусков" : (SUBMIT_SECTIONS[payload.s] || {}).label || payload.s;
+    const title = payload.s === "pdoc" ? payload.isin + " · " + (payload.label || "")
+      : (payload.item && payload.item.name) || payload.rm || "";
+    // У сообщения-документа текста нет — итог пишется в caption
+    const editCard = (html) => cb.message.document
+      ? tg(env, "editMessageCaption", { chat_id: cb.message.chat.id, message_id: cb.message.message_id, parse_mode: "HTML", caption: html })
+      : tg(env, "editMessageText", { chat_id: cb.message.chat.id, message_id: cb.message.message_id, parse_mode: "HTML", text: html });
 
     if (cb.data === "rej") {
-      await tg(env, "editMessageText", {
-        chat_id: cb.message.chat.id, message_id: cb.message.message_id, parse_mode: "HTML",
-        text: "❌ <b>Отклонено</b> · " + esc(label) + "\n" + esc(title) + " (от " + esc(payload.by) + ")",
-      });
+      await editCard("❌ <b>Отклонено</b> · " + esc(label) + "\n" + esc(title) + " (от " + esc(payload.by) + ")");
       await answer("Отклонено");
       return new Response("ok");
     }
     if (cb.data === "pub") {
       try {
-        const published = await publishItem(env, payload);
-        const head = payload.rm ? "🗑 <b>Снято</b> · " : "✅ <b>Опубликовано</b> · ";
-        const what = payload.rm ? payload.rm : (published.name || published.id);
-        await tg(env, "editMessageText", {
-          chat_id: cb.message.chat.id, message_id: cb.message.message_id, parse_mode: "HTML",
-          text: head + esc(label) + "\n" + esc(what) + " (от " + esc(payload.by) + ")\nСайт обновится через 1–3 минуты.",
-        });
+        let head, what;
+        if (payload.s === "pdoc") {
+          await attachPlacementDoc(env, payload, cb);
+          head = "📎 <b>Прикреплено</b> · ";
+          what = title;
+        } else {
+          const published = await publishItem(env, payload);
+          head = payload.rm ? "🗑 <b>Снято</b> · " : "✅ <b>Опубликовано</b> · ";
+          what = payload.rm ? payload.rm : (published.name || published.id);
+        }
+        await editCard(head + esc(label) + "\n" + esc(what) + " (от " + esc(payload.by) + ")\nСайт обновится через 1–3 минуты.");
         await answer(payload.rm ? "Снято" : "Опубликовано");
       } catch (e) {
         await answer("Ошибка: " + String(e && e.message || e).slice(0, 150), true);
