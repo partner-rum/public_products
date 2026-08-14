@@ -43,7 +43,7 @@ window.EVENTS = {
       "durationMin": 30,
       "place": "Онлайн · Контур.Толк",
       "joinUrl": "https://i1pujnc1.ktalk.ru/app/stream/auditoriums/0f533da2-21e4-4331-bfd7-31eb368befce",
-      "recordingUrl": "",
+      "recordingUrl": "https://i1pujnc1.ktalk.ru/recordings/Sm0YeopyIOdzeBVmF5Kg",
       "speaker": "Руслан Сабиров",
       "speakerNote": "Rumberg — автор витрины структурных продуктов",
       "agenda": [
