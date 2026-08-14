@@ -1097,24 +1097,6 @@ window.SITE_DATA = {
       "chg": 0,
       "minNom": 2000000,
       "src": "sales"
-    },
-    {
-      "id": "p-ofz-26238-14092029-s",
-      "type": "protection",
-      "name": "Участие 220%",
-      "underlying": "ОФЗ 26238",
-      "cls": "Облигации",
-      "tenor": "3 года",
-      "expiry": "14.09.2029",
-      "currency": "RUB",
-      "spot": 100,
-      "strike": 100,
-      "participation": 2.2,
-      "protectionPct": 100,
-      "quote": 100,
-      "chg": 0,
-      "minNom": 1000000,
-      "src": "sales"
     }
   ],
   "underlyings": {}
