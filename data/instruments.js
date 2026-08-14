@@ -1,5 +1,8 @@
+// Файл сгенерирован update_site.py — руками не править (перезапишется при следующем запуске).
+// Продукты с "src": "sales" добавлены через админку и сохраняются при перегенерации.
+// Обновлено: 2026-08-14
 window.SITE_DATA = {
-  "updated": "2026-08-13",
+  "updated": "2026-08-14",
   "instruments": [
     {
       "id": "W-WO3-C100-0827",
@@ -353,7 +356,7 @@ window.SITE_DATA = {
       "currency": "RUB",
       "strike": 100,
       "spot": 100,
-      "participation": 2.0,
+      "participation": 2,
       "protectionPct": 100,
       "tenor": "3 года",
       "quote": 100,
@@ -370,7 +373,7 @@ window.SITE_DATA = {
       "currency": "RUB",
       "strike": 100,
       "spot": 100,
-      "participation": 1.0,
+      "participation": 1,
       "protectionPct": 100,
       "tenor": "2 года",
       "quote": 100,
@@ -387,7 +390,7 @@ window.SITE_DATA = {
       "currency": "RUB",
       "strike": 100,
       "spot": 100,
-      "participation": 1.0,
+      "participation": 1,
       "protectionPct": 100,
       "tenor": "3 года",
       "quote": 100,
@@ -1093,6 +1096,24 @@ window.SITE_DATA = {
       "quote": 15.75,
       "chg": 0,
       "minNom": 2000000,
+      "src": "sales"
+    },
+    {
+      "id": "p-ofz-26238-14092029-s",
+      "type": "protection",
+      "name": "Участие 220%",
+      "underlying": "ОФЗ 26238",
+      "cls": "Облигации",
+      "tenor": "3 года",
+      "expiry": "14.09.2029",
+      "currency": "RUB",
+      "spot": 100,
+      "strike": 100,
+      "participation": 2.2,
+      "protectionPct": 100,
+      "quote": 100,
+      "chg": 0,
+      "minNom": 1000000,
       "src": "sales"
     }
   ],
