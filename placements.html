@@ -285,11 +285,12 @@
       '<div class="sec"><div class="h">Базовый актив</div>' + assets + '</div>' +
       '<div class="sec"><div class="h">Параметры выплаты</div>' + kv(pay) +
         (i.fx ? '<div style="margin-top:12px;padding:9px 13px;border-left:3px solid #EE7D1B;background:rgba(238,125,27,0.12);border-radius:0 7px 7px 0;font-size:12.5px;line-height:1.5;color:#E7B98D">' + S.LEGAL.fx + '</div>' : '') + '</div>' +
+      // (i.dates || {}) — у выпусков из админки дат фиксаций нет, паспорт не должен падать
       '<div class="sec"><div class="h">Даты</div>' + kv([
         ["Размещение", fmtD(i.issueStart), true],
-        ["Начальная фиксация", fmtD(i.dates.initialFixing), true],
-        ["Финальная фиксация", fmtD(i.dates.expiry), true],
-        ["Расчёт", fmtD(i.dates.settlement), true],
+        ["Начальная фиксация", fmtD((i.dates || {}).initialFixing), true],
+        ["Финальная фиксация", fmtD((i.dates || {}).expiry), true],
+        ["Расчёт", fmtD((i.dates || {}).settlement), true],
         ["Погашение", fmtD(i.maturity), true]
       ]) + '</div>' +
       '<div class="sec"><div class="h">Реквизиты</div>' + kv([

@@ -127,6 +127,7 @@
   <div class="tabs">
     <button class="tab on" data-f="f-board" type="button">Текущий продукт</button>
     <button class="tab" data-f="f-offering" type="button">На размещении</button>
+    <button class="tab" data-f="f-placement" type="button">Размещённый выпуск</button>
     <button class="tab" data-f="f-digest" type="button">Идея в дайджест</button>
     <button class="tab" data-f="f-dpdf" type="button">Выпуск недели</button>
     <button class="tab" data-f="f-remove" type="button">Снять с сайта</button>
@@ -239,6 +240,106 @@
     </div>
     <button class="send" type="submit">Отправить на одобрение</button>
     <div class="msg" id="m-offering"></div>
+  </form>
+
+  <!-- ══════════ РАЗМЕЩЁННЫЙ ВЫПУСК ══════════ -->
+  <form id="f-placement">
+    <div class="grp"><div class="gt">Выпуск</div>
+      <div class="row">
+        <label><span class="k">ISIN <b>*</b></span><input name="isin" placeholder="RU000A10XXXX" maxlength="12" style="text-transform:uppercase" autocomplete="off"></label>
+        <label><span class="k">Тип выплаты <b>*</b></span>
+          <select name="kind"><option value="coupon">Купонный</option><option value="participation">Участие в росте</option></select>
+        </label>
+      </div>
+      <label><span class="k">Название <b>*</b></span><input name="name" placeholder="RSP СП-2-90-ЦБ-RUB" maxlength="80">
+        <span class="hint">Как в эмиссионных документах. Серия для кнопки «Обсудить выпуск» возьмётся из названия сама.</span></label>
+      <div class="row3">
+        <label><span class="k">Дата размещения</span><input name="issueStart" placeholder="14.08.2026" maxlength="10"></label>
+        <label><span class="k">Дата погашения <b>*</b></span><input name="maturity" placeholder="14.08.2027" maxlength="10"></label>
+        <label><span class="k">Номинал</span><input name="notional" type="number" value="1000"></label>
+      </div>
+      <div class="row3">
+        <label><span class="k">Валюта</span>
+          <select name="currency"><option>RUB</option><option>USD</option><option>EUR</option><option>CNY</option></select>
+        </label>
+        <label><span class="k">Гос. рег. номер</span><input name="regNumber" placeholder="6-12-00761-R-002P" maxlength="30"></label>
+        <label><span class="k">Валютная переоценка (FX)</span>
+          <select name="fx"><option value="">Нет</option><option value="true">Да — выплата с переоценкой</option></select>
+        </label>
+      </div>
+    </div>
+
+    <div class="grp"><div class="gt">Базовые активы — до четырёх</div>
+      <div class="hint-box">Минимум одна бумага. Начальный фиксинг — из документов выпуска;
+        нет под рукой — оставьте пустым, в паспорте будет прочерк.</div>
+      <div class="row3">
+        <label><span class="k">Название <b>*</b></span><input name="b1n" placeholder="ОФЗ 26238" maxlength="80"></label>
+        <label><span class="k">Тикер</span><input name="b1t" placeholder="SU26238RMFS4" maxlength="20"></label>
+        <label><span class="k">Нач. фиксинг</span><input name="b1f" type="number" step="any" placeholder="79.969"></label>
+      </div>
+      <div class="row3">
+        <label><span class="k">Название</span><input name="b2n" maxlength="80"></label>
+        <label><span class="k">Тикер</span><input name="b2t" maxlength="20"></label>
+        <label><span class="k">Нач. фиксинг</span><input name="b2f" type="number" step="any"></label>
+      </div>
+      <div class="row3">
+        <label><span class="k">Название</span><input name="b3n" maxlength="80"></label>
+        <label><span class="k">Тикер</span><input name="b3t" maxlength="20"></label>
+        <label><span class="k">Нач. фиксинг</span><input name="b3f" type="number" step="any"></label>
+      </div>
+      <div class="row3">
+        <label><span class="k">Название</span><input name="b4n" maxlength="80"></label>
+        <label><span class="k">Тикер</span><input name="b4t" maxlength="20"></label>
+        <label><span class="k">Нач. фиксинг</span><input name="b4f" type="number" step="any"></label>
+      </div>
+    </div>
+
+    <div class="grp" id="p-coupon"><div class="gt">Параметры купона</div>
+      <div class="row3">
+        <label><span class="k">Купон, % годовых <b>*</b></span><input name="couponPa" type="number" step="0.01" placeholder="21.00"></label>
+        <label><span class="k">Купон за период, %</span><input name="couponPeriodPct" type="number" step="0.01" placeholder="5.25"></label>
+        <label><span class="k">Барьер купона, %</span><input name="couponBarrierPct" type="number" step="0.5" placeholder="100"></label>
+      </div>
+      <div class="row3">
+        <label><span class="k">Барьер автоотзыва, %</span><input name="acBarrierPct" type="number" step="0.5" placeholder="100"></label>
+        <label><span class="k">Наблюдений до погашения</span><input name="obsCount" type="number" step="1" placeholder="4"></label>
+        <label><span class="k">Эффект памяти</span>
+          <select name="memory"><option value="">Нет</option><option value="true">Да</option></select>
+        </label>
+      </div>
+      <div class="row">
+        <label><span class="k">Защита на погашение</span>
+          <select name="protType"><option value="">Не предусмотрена</option><option value="EKI">Барьерная (EKI)</option></select>
+        </label>
+        <label><span class="k">Барьер защиты, %</span><input name="protectionBarrierPct" type="number" step="0.5" placeholder="70"></label>
+      </div>
+    </div>
+
+    <div class="grp" id="p-part" style="display:none"><div class="gt">Параметры участия</div>
+      <div class="row">
+        <label><span class="k">Участие в росте, % <b>*</b></span><input name="participationPct" type="number" step="1" placeholder="200"></label>
+        <label><span class="k">Защита номинала, %</span><input name="protectionPct" type="number" step="1" placeholder="100"></label>
+      </div>
+      <div class="row">
+        <label><span class="k">Страйк, % нач. уровня</span><input name="strikePct" type="number" step="0.5" placeholder="100"></label>
+        <label><span class="k">Потолок, % (пусто = без потолка)</span><input name="strike2Pct" type="number" step="0.5"></label>
+      </div>
+      <div class="row">
+        <label><span class="k">Тип опциона</span>
+          <select name="optType"><option>CALL</option><option>PUT</option></select>
+        </label>
+        <label><span class="k">Стиль</span>
+          <select name="optStyle"><option value="EUROPEAN">Европейский</option><option value="">Другой / не указывать</option></select>
+        </label>
+      </div>
+    </div>
+
+    <div class="grp"><div class="gt">Котировка</div>
+      <label><span class="k">Bid, % номинала</span><input name="bid" type="number" step="0.01" placeholder="96.00">
+        <span class="hint">Необязательно. На сайте показывается с пометкой «индикативно» и только до погашения.</span></label>
+    </div>
+    <button class="send" type="submit">Отправить на одобрение</button>
+    <div class="msg" id="m-placement"></div>
   </form>
 
   <!-- ══════════ ИДЕЯ В ДАЙДЖЕСТ ══════════ -->
@@ -388,6 +489,7 @@
       fetch("data/instruments.js" + bust).then(function (r) { return r.text(); }),
       fetch("data/offerings.js" + bust).then(function (r) { return r.text(); }),
       fetch("data/digest.js" + bust).then(function (r) { return r.text(); }),
+      fetch("data/placements.js" + bust).then(function (r) { return r.text(); }),
     ]).then(function (t) {
       var rows = [];
       var si = dataObj(t[0]);
@@ -398,6 +500,11 @@
       var dg = dataObj(t[2]);
       ((dg && dg.issues && dg.issues[0] && dg.issues[0].ideas) || [])
         .forEach(function (i) { rows.push({ section: "digest", id: i.id, name: i.name, label: "Дайджест" }); });
+      // Размещённые выпуски: снять можно только заведённые через админку —
+      // выпуск из бэкофиса вернулся бы ближайшей выгрузкой
+      var pl = dataObj(t[3]);
+      ((pl && pl.issues) || []).filter(function (i) { return i.src === "sales"; })
+        .forEach(function (i) { rows.push({ section: "placement", id: i.isin, name: i.name, label: "Размещённый выпуск" }); });
 
       if (!rows.length) { box.innerHTML = '<div class="rm-empty">Снимать пока нечего: на доске нет продуктов из админки, размещения и идеи дайджеста пусты.</div>'; return; }
       box.innerHTML = "";
@@ -441,6 +548,12 @@
     // Вход по номиналу зашит: показывать сейлзу поле котировки — приглашать к ошибке
     document.getElementById("l-quote").style.display = isProt ? "none" : "";
   });
+  var fPlacement = document.getElementById("f-placement");
+  fPlacement.kind.addEventListener("change", function () {
+    var coupon = fPlacement.kind.value === "coupon";
+    document.getElementById("p-coupon").style.display = coupon ? "" : "none";
+    document.getElementById("p-part").style.display = coupon ? "none" : "";
+  });
   var fDigest = document.getElementById("f-digest");
 
   // ── утилиты ──
@@ -465,7 +578,7 @@
       body: JSON.stringify({ key: key, section: section, item: item }) })
       .then(function (r) { return r.json().then(function (d) { return { s: r.status, d: d }; }); })
       .then(function (x) {
-        if (x.d && x.d.ok) { msgEl.className = "msg ok"; msgEl.textContent = "Отправлено на одобрение ✅ После ✅ Руслана продукт появится на сайте через пару минут."; form.reset(); fBoard.type.dispatchEvent(new Event("change")); }
+        if (x.d && x.d.ok) { msgEl.className = "msg ok"; msgEl.textContent = "Отправлено на одобрение ✅ После ✅ Руслана продукт появится на сайте через пару минут."; form.reset(); fBoard.type.dispatchEvent(new Event("change")); fPlacement.kind.dispatchEvent(new Event("change")); }
         else if (x.d && x.d.error === "bad_key") { msgEl.className = "msg err"; msgEl.textContent = "Ключ не подошёл — проверьте или спросите у Руслана."; }
         else { msgEl.className = "msg err"; msgEl.textContent = "Ошибка: " + ((x.d && x.d.error) || x.s) + ". Проверьте обязательные поля."; }
       })
@@ -477,6 +590,60 @@
     var miss = fields.filter(function (f) { return !val(form, f); });
     if (miss.length) throw new Error("Заполните обязательные поля: " + miss.length + " шт. (помечены *)");
   }
+
+  // ── РАЗМЕЩЁННЫЙ ВЫПУСК ──
+  fPlacement.addEventListener("submit", function (e) {
+    e.preventDefault();
+    submit("placement", fPlacement, document.getElementById("m-placement"), function () {
+      req(fPlacement, ["isin", "name", "maturity", "b1n"]);
+      var isin = val(fPlacement, "isin").toUpperCase().replace(/\s+/g, "");
+      if (!/^[A-Z0-9]{12}$/.test(isin)) throw new Error("ISIN — это 12 букв и цифр, например RU000A10CVH5.");
+      var dre = /^\d{2}\.\d{2}\.\d{4}$/;
+      ["issueStart", "maturity"].forEach(function (f) {
+        var v = val(fPlacement, f);
+        if (v && !dre.test(v)) throw new Error("Дата " + (f === "maturity" ? "погашения" : "размещения") + " — в виде ДД.ММ.ГГГГ.");
+      });
+      var kind = val(fPlacement, "kind");
+      var item = { isin: isin, name: val(fPlacement, "name"), kind: kind,
+                   maturity: val(fPlacement, "maturity"), currency: val(fPlacement, "currency") };
+      // Серия — название без префикса эмитента: ровно так их пишет выгрузка бэкофиса
+      item.serial = item.name.replace(/^RSP\s+/i, "");
+      put(item, "issueStart", val(fPlacement, "issueStart"));
+      put(item, "regNumber", val(fPlacement, "regNumber"));
+      put(item, "notional", num(fPlacement, "notional"));
+      put(item, "bid", num(fPlacement, "bid"));
+      if (val(fPlacement, "fx") === "true") item.fx = true;
+      var basket = [];
+      [1, 2, 3, 4].forEach(function (i) {
+        var n = val(fPlacement, "b" + i + "n");
+        if (!n) return;
+        var b = { n: n };
+        put(b, "t", val(fPlacement, "b" + i + "t"));
+        put(b, "f0", num(fPlacement, "b" + i + "f"));
+        basket.push(b);
+      });
+      item.basket = basket;
+      var p = {};
+      if (kind === "coupon") {
+        if (num(fPlacement, "couponPa") == null) throw new Error("Укажите купон, % годовых — без него карточке нечего показывать.");
+        ["couponPa", "couponPeriodPct", "couponBarrierPct", "acBarrierPct", "obsCount"].forEach(function (k) { put(p, k, num(fPlacement, k)); });
+        if (val(fPlacement, "memory") === "true") p.memory = true;
+        // Защиту включает селект: барьер без выбранной защиты не отправляем
+        if (val(fPlacement, "protType") === "EKI") {
+          var pb = num(fPlacement, "protectionBarrierPct");
+          if (pb == null) throw new Error("Для барьерной защиты (EKI) укажите барьер, %.");
+          p.protectionBarrierPct = pb;
+        }
+      } else {
+        if (num(fPlacement, "participationPct") == null) throw new Error("Укажите участие в росте, %.");
+        ["participationPct", "protectionPct", "strikePct", "strike2Pct"].forEach(function (k) { put(p, k, num(fPlacement, k)); });
+        p.optType = val(fPlacement, "optType");
+        if (val(fPlacement, "optStyle") === "EUROPEAN") p.style = "EUROPEAN";
+      }
+      item.payoff = p;
+      return item;
+    });
+  });
 
   // ── ТЕКУЩИЙ ПРОДУКТ ──
   fBoard.addEventListener("submit", function (e) {

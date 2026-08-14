@@ -1459,6 +1459,16 @@ const SUBMIT_SECTIONS = {
     arr: ["dealers"],
     required: ["id", "family", "kind", "name", "status", "teaser", "issuer", "serial", "price", "how", "risk"],
   },
+  placement: {
+    label: "Размещённые выпуски",
+    file: "data/placements.js",
+    // basket и payoff вложенные — их собирает отдельная ветка sanitizeItem:
+    // страница падает без корзины и без объекта payoff, общая обработка их не соберёт
+    str: ["isin", "name", "serial", "kind", "currency", "issueStart", "maturity", "regNumber"],
+    num: ["notional", "bid"],
+    bool: ["fx"],
+    required: ["isin", "name", "kind", "maturity"],
+  },
   digest: {
     label: "Дайджест (идея недели)",
     file: "data/digest.js",
@@ -1509,6 +1519,52 @@ function sanitizeItem(section, raw) {
       for (const f of fields) { const v = cleanStr(src[f], 200); if (v) o[f] = v; }
       if (Object.keys(o).length) out[k] = o;
     }
+  }
+  if (section === "placement") {
+    // ISIN — ключ выпуска (id у размещений нет): 12 знаков, верхний регистр
+    if (out.isin) out.isin = out.isin.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 12);
+    // Даты храним в ISO, как отдаёт бэкофис: страница сравнивает maturity строково
+    for (const dk of ["issueStart", "maturity"]) {
+      if (!out[dk]) continue;
+      const m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(out[dk]);
+      if (m) out[dk] = m[3] + "-" + m[2] + "-" + m[1];
+      else if (!/^\d{4}-\d{2}-\d{2}$/.test(out[dk])) delete out[dk];
+    }
+    if (out.kind !== "coupon" && out.kind !== "participation") delete out.kind;
+    // Корзина: до 4 бумаг, имя обязательно; без f0 карточка живёт (фиксинг «—»)
+    const basket = (Array.isArray(raw.basket) ? raw.basket : []).map((b) => {
+      if (!b || typeof b !== "object") return null;
+      const o = { n: cleanStr(b.n, 80), w: 1 };
+      const t = cleanStr(b.t, 20); if (t) o.t = t;
+      const f0 = cleanNum(b.f0); if (f0 != null) o.f0 = f0;
+      return o.n ? o : null;
+    }).filter(Boolean).slice(0, 4);
+    if (basket.length) out.basket = basket;
+    // payoff обязан существовать даже пустым — паспорт выпуска читает его поля напрямую
+    const p = raw.payoff && typeof raw.payoff === "object" ? raw.payoff : {};
+    const pp = {};
+    if (out.kind === "coupon") {
+      for (const nk of ["couponPa", "couponPeriodPct", "couponBarrierPct", "acBarrierPct", "obsCount"]) {
+        const v = cleanNum(p[nk]); if (v != null) pp[nk] = v;
+      }
+      if (p.memory === true || p.memory === "true") pp.memory = true;
+      const pb = cleanNum(p.protectionBarrierPct);
+      if (pb != null) pp.protection = { type: "EKI", barrierPct: pb };
+    } else {
+      for (const nk of ["participationPct", "protectionPct", "strikePct", "strike2Pct"]) {
+        const v = cleanNum(p[nk]); if (v != null) pp[nk] = v;
+      }
+      const ot = cleanStr(p.optType, 10).toUpperCase();
+      if (ot === "CALL" || ot === "PUT") pp.optType = ot;
+      if (p.style === "EUROPEAN") pp.style = "EUROPEAN";
+    }
+    out.payoff = pp;
+    out.src = "sales";
+    const missing = cfg.required.filter((k) => out[k] == null || out[k] === "");
+    if (!out.basket) missing.push("basket");
+    if (out.kind === "coupon" && pp.couponPa == null) missing.push("couponPa");
+    if (out.kind === "participation" && pp.participationPct == null) missing.push("participationPct");
+    return { item: out, missing };
   }
   if (out.id) out.id = out.id.toLowerCase().replace(/[^\w.-]+/g, "-").slice(0, 60);
   const missing = cfg.required.filter((k) => out[k] == null || out[k] === "");
@@ -1907,6 +1963,10 @@ const FILE_HEADERS = {
     '// Данные дайджеста. Файл может обновляться автоматикой (админка сейлзов) — руками правь аккуратно:\n' +
     '// тело window.DIGEST_ARCHIVE должно оставаться СТРОГИМ JSON (двойные кавычки, без комментариев внутри).\n' +
     '// Новый недельный выпуск = объект в НАЧАЛО issues. issues[0] — всегда актуальный.\n',
+  "data/placements.js":
+    '// Файл собирается скриптом выгрузки из бэкофиса и админкой сейлзов — руками не править.\n' +
+    '// Выпуски с "src": "sales" добавлены через админку; при перегенерации из бэкофиса они\n' +
+    '// сохраняются, пока их ISIN не появится в выгрузке (тогда побеждают данные бэкофиса).\n',
 };
 
 function renderDataFile(path, obj) {
@@ -1919,6 +1979,11 @@ function renderDataFile(path, obj) {
   if (path === "data/offerings.js") {
     obj.updated = today;
     return FILE_HEADERS[path] + "window.OFFERINGS = " + JSON.stringify(obj, null, 1) + ";\n";
+  }
+  if (path === "data/placements.js") {
+    obj.updated = today;
+    // indent 1 — как пишет fetch_placements.py, чтобы диффы не пухли от переформатирования
+    return FILE_HEADERS[path] + "window.PLACEMENTS_DATA = " + JSON.stringify(obj, null, 1) + ";\n";
   }
   // digest
   return FILE_HEADERS[path] + "window.DIGEST_ARCHIVE = " + JSON.stringify(obj, null, 1) + ";\n\n" +
@@ -1943,16 +2008,31 @@ async function publishItem(env, payload) {
 
     let commitMsg, result;
     if (payload.rm) {
-      const arr = section === "board" ? obj.instruments : section === "offering" ? obj.items : obj.issues[0].ideas;
-      const kept = arr.filter((i) => i.id !== payload.rm);
+      // Размещения ключуются ISIN-ом; снять можно только сейлзовый выпуск —
+      // запись бэкофиса всё равно вернулась бы следующей выгрузкой
+      const arr = section === "board" ? obj.instruments
+        : section === "offering" ? obj.items
+        : section === "placement" ? obj.issues
+        : obj.issues[0].ideas;
+      const kept = section === "placement"
+        ? arr.filter((i) => !(i.src === "sales" && i.isin === payload.rm))
+        : arr.filter((i) => i.id !== payload.rm);
       if (kept.length === arr.length) throw new Error("not_found");
       if (section === "board") obj.instruments = kept;
       else if (section === "offering") obj.items = kept;
+      else if (section === "placement") obj.issues = kept;
       else obj.issues[0].ideas = kept;
       commitMsg = "Админка: снят " + payload.rm + " (от " + by + ")";
       result = { removed: payload.rm };
     } else {
-      if (section === "board") {
+      if (section === "placement") {
+        // Дубль ISIN: сейлзовую запись повторная заявка обновляет (исправление опечатки),
+        // запись бэкофиса не трогаем — там живые фиксинги и цены
+        const dup = obj.issues.find((i) => i.isin === item.isin);
+        if (dup && dup.src !== "sales") throw new Error("isin_in_bo");
+        obj.issues = obj.issues.filter((i) => !(i.src === "sales" && i.isin === item.isin));
+        obj.issues.unshift(item);
+      } else if (section === "board") {
         const taken = new Set(obj.instruments.map((i) => i.id));
         item.id = uniqueId(item.id, taken);
         item.src = "sales";
