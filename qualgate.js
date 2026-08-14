@@ -9,6 +9,12 @@
   var KEY  = "so_qual_v1";                       // подтверждение статуса за сессию
   var demo = /[?&]qual=1(?:&|$)/.test(location.search);
 
+  // Цели Метрики. Без них после платной кампании нельзя отличить слабый креатив
+  // от «холодный трафик упёрся в гейт»: проходимость = qual_yes / qual_shown.
+  function goal(name) {
+    try { if (typeof window.ym === "function") window.ym(110759242, "reachGoal", name); } catch (e) {}
+  }
+
   function seen() {
     if (demo) return false;
     try { if (sessionStorage.getItem(KEY) === "1") return true; } catch (e) {}
@@ -87,6 +93,7 @@
       if (!on) { inerted.forEach(function (el) { el.removeAttribute("inert"); }); inerted = []; }
     }
     function pass() {
+      goal("qual_yes");
       mark();
       document.removeEventListener("keydown", onKey, true);
       setBgInert(false);
@@ -111,6 +118,7 @@
       focusFirst();
     }
     function renderBlocked() {
+      goal("qual_no");
       // Раньше единственной кнопкой была «Я квалифицированный инвестор» — тупик,
       // где честно ответивший «Нет» мог только вернуться и передумать. Добавляем
       // объяснение статуса и реальные выходы (сайт компании, контакт). Саму логику
@@ -136,6 +144,7 @@
     document.body.appendChild(veil);         // сперва в DOM — иначе focus() не сработает
     setBgInert(true);                        // фон недоступен, пока висит гейт
     renderAsk();
+    goal("qual_shown");   // один раз за показ: кнопка «назад» его не удваивает
     document.addEventListener("keydown", onKey, true);
     requestAnimationFrame(function () { veil.classList.add("on"); });
   }

@@ -22,7 +22,11 @@ ym(110759242, "init", {
 // и передают в Telegram строкой «Сейлз: …».
 (function () {
   try {
-    var m = location.search.match(/[?&]ref=([\w.-]{1,40})/);
+    // Метка канала: свой ?ref= в приоритете, иначе utm_source. Без фолбэка заявка
+    // уезжала в Telegram без источника: Метрика UTM разбирает сама, а форма /lead
+    // читает только so_ref, и сейлз в чате не видел, из какого канала человек.
+    var m = location.search.match(/[?&]ref=([\w.-]{1,40})/) ||
+            location.search.match(/[?&]utm_source=([\w.-]{1,40})/);
     if (m) localStorage.setItem("so_ref", m[1].toLowerCase());
     var ref = localStorage.getItem("so_ref");
     if (ref) ym(110759242, "params", { ref: ref });
