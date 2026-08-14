@@ -128,7 +128,6 @@
     <button class="tab on" data-f="f-board" type="button">Текущий продукт</button>
     <button class="tab" data-f="f-offering" type="button">На размещении</button>
     <button class="tab" data-f="f-placement" type="button">Размещённый выпуск</button>
-    <button class="tab" data-f="f-docs" type="button">Документы</button>
     <button class="tab" data-f="f-digest" type="button">Идея в дайджест</button>
     <button class="tab" data-f="f-dpdf" type="button">Выпуск недели</button>
     <button class="tab" data-f="f-remove" type="button">Снять с сайта</button>
@@ -245,15 +244,23 @@
 
   <!-- ══════════ РАЗМЕЩЁННЫЙ ВЫПУСК ══════════ -->
   <form id="f-placement">
+    <div class="grp"><div class="gt">Какой выпуск</div>
+      <label><span class="k">ISIN <b>*</b></span>
+        <input name="isin" placeholder="RU000A10XXXX" maxlength="12" style="text-transform:uppercase" autocomplete="off" list="pl-isins">
+        <datalist id="pl-isins"></datalist>
+        <span class="hint" id="pl-state">Новый выпуск — заполните параметры ниже. Если выпуск уже на сайте,
+          введите его ISIN: форма оставит только документы.</span></label>
+    </div>
+
+    <div id="pl-new">
     <div class="grp"><div class="gt">Выпуск</div>
       <div class="row">
-        <label><span class="k">ISIN <b>*</b></span><input name="isin" placeholder="RU000A10XXXX" maxlength="12" style="text-transform:uppercase" autocomplete="off"></label>
+        <label><span class="k">Название <b>*</b></span><input name="name" placeholder="RSP СП-2-90-ЦБ-RUB" maxlength="80">
+          <span class="hint">Как в эмиссионных документах. Серия для кнопки «Обсудить выпуск» возьмётся из названия сама.</span></label>
         <label><span class="k">Тип выплаты <b>*</b></span>
           <select name="kind"><option value="coupon">Купонный</option><option value="participation">Участие в росте</option></select>
         </label>
       </div>
-      <label><span class="k">Название <b>*</b></span><input name="name" placeholder="RSP СП-2-90-ЦБ-RUB" maxlength="80">
-        <span class="hint">Как в эмиссионных документах. Серия для кнопки «Обсудить выпуск» возьмётся из названия сама.</span></label>
       <div class="row3">
         <label><span class="k">Дата размещения</span><input name="issueStart" placeholder="14.08.2026" maxlength="10"></label>
         <label><span class="k">Дата погашения <b>*</b></span><input name="maturity" placeholder="14.08.2027" maxlength="10"></label>
@@ -339,38 +346,28 @@
       <label><span class="k">Bid, % номинала</span><input name="bid" type="number" step="0.01" placeholder="96.00">
         <span class="hint">Необязательно. На сайте показывается с пометкой «индикативно» и только до погашения.</span></label>
     </div>
-    <button class="send" type="submit">Отправить на одобрение</button>
-    <div class="msg" id="m-placement"></div>
-  </form>
+    </div><!-- /#pl-new -->
 
-  <!-- ══════════ ДОКУМЕНТЫ ВЫПУСКОВ ══════════ -->
-  <form id="f-docs">
-    <div class="grp"><div class="gt">Эмиссионный документ к выпуску</div>
-      <div class="hint-box">PDF уйдёт Руслану в Telegram вместе с заявкой — его можно открыть
-        и проверить до одобрения. После ✅ документ появится в паспорте выпуска на сайте.
-        Повторная загрузка того же типа заменяет старый файл.</div>
+    <div class="grp"><div class="gt">Документы выпуска</div>
+      <div class="hint-box">PDF уходят вместе с заявкой прямо в Telegram Руслану — он открывает
+        и проверяет их до одобрения. После ✅ документы появляются в паспорте выпуска.
+        Повторная загрузка того же типа заменяет прежний файл. Можно оставить пустым и приложить позже.</div>
       <div class="row">
-        <label><span class="k">ISIN выпуска <b>*</b></span>
-          <input name="isin" placeholder="RU000A10CVH5" maxlength="12" style="text-transform:uppercase" autocomplete="off" list="docs-isins">
-          <datalist id="docs-isins"></datalist>
-        </label>
-        <label><span class="k">Тип документа <b>*</b></span>
-          <select name="docKind">
-            <option value="kuv">Ключевые условия выпуска (КУВ)</option>
-            <option value="kid">Ключевой информационный документ (КИД)</option>
-            <option value="other">Другой документ</option>
-          </select>
-        </label>
+        <label><span class="k">Ключевые условия выпуска (КУВ)</span>
+          <input name="fileKuv" type="file" accept="application/pdf,.pdf"></label>
+        <label><span class="k">Ключевой информационный документ (КИД)</span>
+          <input name="fileKid" type="file" accept="application/pdf,.pdf"></label>
       </div>
-      <label id="l-docname" style="display:none"><span class="k">Название документа <b>*</b></span>
-        <input name="docName" placeholder="Презентация выпуска" maxlength="80"></label>
-      <label><span class="k">Файл PDF <b>*</b></span>
-        <input name="file" type="file" accept="application/pdf,.pdf">
-        <span class="hint">Только PDF, до 15 МБ.</span></label>
-      <div class="hint" id="docs-existing"></div>
+      <div class="row">
+        <label><span class="k">Другой документ — название</span>
+          <input name="docName" placeholder="Презентация выпуска" maxlength="80"></label>
+        <label><span class="k">Другой документ — файл</span>
+          <input name="fileOther" type="file" accept="application/pdf,.pdf"></label>
+      </div>
+      <div class="hint">Только PDF, каждый до 15 МБ.<span id="pl-docs-have"></span></div>
     </div>
     <button class="send" type="submit">Отправить на одобрение</button>
-    <div class="msg" id="m-docs"></div>
+    <div class="msg" id="m-placement"></div>
   </form>
 
   <!-- ══════════ ИДЕЯ В ДАЙДЖЕСТ ══════════ -->
@@ -506,7 +503,7 @@
       document.getElementById(target).classList.add("on");
       if (target === "f-remove") loadRemovable();
       if (target === "f-dpdf") loadDraft();
-      if (target === "f-docs") loadDocsRefs();
+      if (target === "f-placement") loadPlacementRefs();
     });
   });
 
@@ -623,125 +620,172 @@
     if (miss.length) throw new Error("Заполните обязательные поля: " + miss.length + " шт. (помечены *)");
   }
 
-  // ── ДОКУМЕНТЫ ВЫПУСКОВ ──
-  var fDocs = document.getElementById("f-docs");
-  var docsRefs = null; // { isins: [...], docs: {ISIN: [{name,file}]} }
-  fDocs.docKind.addEventListener("change", function () {
-    document.getElementById("l-docname").style.display = fDocs.docKind.value === "other" ? "" : "none";
-  });
-  function loadDocsRefs() {
-    if (docsRefs) return;
+  // ── РАЗМЕЩЁННЫЙ ВЫПУСК И ЕГО ДОКУМЕНТЫ ──
+  // Одна вкладка на всё: выпуск и его КУВ/КИД — одна сущность, разделять их незачем.
+  // Если введённый ISIN уже есть на сайте (пришёл из бэкофиса или заведён раньше),
+  // параметры прячутся и остаются только документы — заводить выпуск заново не нужно.
+  var plRefs = null; // { isins: [...], docs: {ISIN: [{name,file}]} }
+  function loadPlacementRefs() {
+    if (plRefs) return;
     var bust = "?cb=" + Date.now();
     Promise.all([
       fetch("data/placements.js" + bust).then(function (r) { return r.text(); }),
       fetch("data/placement_docs.js" + bust).then(function (r) { return r.text(); }),
     ]).then(function (t) {
       var pl = dataObj(t[0]);
-      docsRefs = { isins: ((pl && pl.issues) || []).map(function (i) { return i.isin; }), docs: dataObj(t[1]) || {} };
-      document.getElementById("docs-isins").innerHTML = docsRefs.isins.map(function (i) {
+      plRefs = { isins: ((pl && pl.issues) || []).map(function (i) { return i.isin; }), docs: dataObj(t[1]) || {} };
+      document.getElementById("pl-isins").innerHTML = plRefs.isins.map(function (i) {
         return '<option value="' + esc(i) + '">';
       }).join("");
-      showExistingDocs();
+      syncPlacementMode();
     }).catch(function () {});
   }
-  function showExistingDocs() {
-    var box = document.getElementById("docs-existing");
-    var isin = (fDocs.isin.value || "").trim().toUpperCase();
-    if (!docsRefs || !/^[A-Z0-9]{12}$/.test(isin)) { box.textContent = ""; return; }
-    var cur = docsRefs.docs[isin] || [];
-    box.textContent = cur.length
-      ? "У выпуска уже есть: " + cur.map(function (d) { return d.name; }).join(" · ")
-      : "У этого выпуска документов на сайте пока нет.";
+  function plIsin() { return (fPlacement.isin.value || "").trim().toUpperCase().replace(/\s+/g, ""); }
+  function plKnown() { return !!(plRefs && plRefs.isins.indexOf(plIsin()) >= 0); }
+  function syncPlacementMode() {
+    var known = plKnown(), have = (plRefs && plRefs.docs[plIsin()]) || [];
+    document.getElementById("pl-new").style.display = known ? "none" : "";
+    document.getElementById("pl-state").textContent = known
+      ? "Этот выпуск уже на сайте — параметры заполнять не нужно, приложите документы."
+      : "Новый выпуск — заполните параметры ниже. Если выпуск уже на сайте, введите его ISIN: форма оставит только документы.";
+    document.getElementById("pl-docs-have").textContent = have.length
+      ? " Уже приложено: " + have.map(function (d) { return d.name; }).join(" · ") + "."
+      : "";
   }
-  fDocs.isin.addEventListener("input", showExistingDocs);
-  fDocs.addEventListener("submit", function (e) {
-    e.preventDefault();
-    var key = keyEl.value.trim();
-    var msgEl = document.getElementById("m-docs");
-    msgEl.className = "msg";
-    if (!key) { msgEl.className = "msg err"; msgEl.textContent = "Введите ваш ключ вверху страницы."; keyEl.focus(); return; }
-    var isin = (fDocs.isin.value || "").trim().toUpperCase().replace(/\s+/g, "");
-    if (!/^[A-Z0-9]{12}$/.test(isin)) { msgEl.className = "msg err"; msgEl.textContent = "ISIN — это 12 букв и цифр, например RU000A10CVH5."; return; }
-    var docKind = fDocs.docKind.value;
-    var docName = (fDocs.docName.value || "").trim();
-    if (docKind === "other" && !docName) { msgEl.className = "msg err"; msgEl.textContent = "У «другого документа» должно быть название — оно станет подписью ссылки."; return; }
-    var f = fDocs.file.files && fDocs.file.files[0];
-    if (!f) { msgEl.className = "msg err"; msgEl.textContent = "Выберите файл PDF."; return; }
-    if (f.size > 15 * 1024 * 1024) { msgEl.className = "msg err"; msgEl.textContent = "Файл больше 15 МБ — сожмите PDF или пришлите Руслану напрямую."; return; }
-    var btn = fDocs.querySelector(".send");
-    btn.disabled = true; btn.textContent = "Загружаем…";
-    var reader = new FileReader();
-    reader.onerror = function () { msgEl.className = "msg err"; msgEl.textContent = "Не удалось прочитать файл."; btn.disabled = false; btn.textContent = "Отправить на одобрение"; };
-    reader.onload = function () {
-      var b64 = String(reader.result).replace(/^data:[^,]*,/, "");
-      if (b64.slice(0, 7) !== "JVBERi0") { msgEl.className = "msg err"; msgEl.textContent = "Это не PDF — проверьте файл."; btn.disabled = false; btn.textContent = "Отправить на одобрение"; return; }
-      fetch(ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key: key, action: "placementdoc", isin: isin, docKind: docKind, docName: docName, fileB64: b64 }) })
-        .then(function (r) { return r.json().then(function (d) { return { s: r.status, d: d }; }); })
-        .then(function (x) {
-          if (x.d && x.d.ok) { msgEl.className = "msg ok"; msgEl.textContent = "Документ отправлен на одобрение ✅ После ✅ Руслана он появится в паспорте выпуска."; fDocs.reset(); fDocs.docKind.dispatchEvent(new Event("change")); showExistingDocs(); }
-          else if (x.d && x.d.error === "bad_key") { msgEl.className = "msg err"; msgEl.textContent = "Ключ не подошёл — проверьте или спросите у Руслана."; }
-          else { msgEl.className = "msg err"; msgEl.textContent = "Ошибка: " + ((x.d && x.d.error) || x.s); }
-        })
-        .catch(function () { msgEl.className = "msg err"; msgEl.textContent = "Сеть недоступна — попробуйте ещё раз."; })
-        .finally(function () { btn.disabled = false; btn.textContent = "Отправить на одобрение"; });
-    };
-    reader.readAsDataURL(f);
-  });
+  fPlacement.isin.addEventListener("input", syncPlacementMode);
 
-  // ── РАЗМЕЩЁННЫЙ ВЫПУСК ──
+  // Файл → base64 (без префикса data:), с проверкой, что это действительно PDF
+  function readPdf(file) {
+    return new Promise(function (resolve, reject) {
+      if (file.size > 15 * 1024 * 1024) { reject(new Error("Файл «" + file.name + "» больше 15 МБ — сожмите PDF или пришлите Руслану напрямую.")); return; }
+      var reader = new FileReader();
+      reader.onerror = function () { reject(new Error("Не удалось прочитать файл «" + file.name + "».")); };
+      reader.onload = function () {
+        var b64 = String(reader.result).replace(/^data:[^,]*,/, "");
+        if (b64.slice(0, 7) !== "JVBERi0") { reject(new Error("Файл «" + file.name + "» не PDF — проверьте.")); return; }
+        resolve(b64);
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+  function pickedDocs() {
+    var out = [];
+    var one = function (input, kind, name) {
+      var f = input.files && input.files[0];
+      if (f) out.push({ kind: kind, name: name, file: f });
+    };
+    one(fPlacement.fileKuv, "kuv", "");
+    one(fPlacement.fileKid, "kid", "");
+    var otherName = (fPlacement.docName.value || "").trim();
+    var otherFile = fPlacement.fileOther.files && fPlacement.fileOther.files[0];
+    if (otherFile && !otherName) throw new Error("У «другого документа» должно быть название — оно станет подписью ссылки.");
+    if (otherName && !otherFile) throw new Error("Название «другого документа» есть, а файла нет.");
+    if (otherFile) out.push({ kind: "other", name: otherName, file: otherFile });
+    return out;
+  }
+  function postJson(body) {
+    return fetch(ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
+      .then(function (r) { return r.json().then(function (d) { return { s: r.status, d: d }; }); })
+      .then(function (x) {
+        if (x.d && x.d.ok) return true;
+        if (x.d && x.d.error === "bad_key") throw new Error("Ключ не подошёл — проверьте или спросите у Руслана.");
+        throw new Error("Ошибка: " + ((x.d && x.d.error) || x.s));
+      });
+  }
+
   fPlacement.addEventListener("submit", function (e) {
     e.preventDefault();
-    submit("placement", fPlacement, document.getElementById("m-placement"), function () {
-      req(fPlacement, ["isin", "name", "maturity", "b1n"]);
-      var isin = val(fPlacement, "isin").toUpperCase().replace(/\s+/g, "");
+    var msgEl = document.getElementById("m-placement");
+    msgEl.className = "msg";
+    var key = keyEl.value.trim();
+    if (!key) { msgEl.className = "msg err"; msgEl.textContent = "Введите ваш персональный ключ (в самом верху страницы)."; keyEl.focus(); return; }
+    var isin = plIsin();
+    var known = plKnown();
+    var item = null, docs;
+    try {
       if (!/^[A-Z0-9]{12}$/.test(isin)) throw new Error("ISIN — это 12 букв и цифр, например RU000A10CVH5.");
-      var dre = /^\d{2}\.\d{2}\.\d{4}$/;
-      ["issueStart", "maturity"].forEach(function (f) {
-        var v = val(fPlacement, f);
-        if (v && !dre.test(v)) throw new Error("Дата " + (f === "maturity" ? "погашения" : "размещения") + " — в виде ДД.ММ.ГГГГ.");
+      docs = pickedDocs();
+      if (known && !docs.length) throw new Error("Этот выпуск уже на сайте. Приложите хотя бы один документ — или введите ISIN нового выпуска.");
+      if (!known) item = buildPlacementItem(isin);
+    } catch (err) { msgEl.className = "msg err"; msgEl.textContent = String(err.message || err); return; }
+
+    var btn = fPlacement.querySelector(".send");
+    btn.disabled = true; btn.textContent = "Отправляем…";
+    // Сначала сам выпуск, потом документы: каждая заявка — отдельная карточка на ✅,
+    // и выпуск должен встать в очереди первым
+    var chain = item ? postJson({ key: key, section: "placement", item: item }) : Promise.resolve(true);
+    docs.forEach(function (d) {
+      chain = chain.then(function () {
+        return readPdf(d.file).then(function (b64) {
+          return postJson({ key: key, action: "placementdoc", isin: isin, docKind: d.kind, docName: d.name, fileB64: b64 });
+        });
       });
-      var kind = val(fPlacement, "kind");
-      var item = { isin: isin, name: val(fPlacement, "name"), kind: kind,
-                   maturity: val(fPlacement, "maturity"), currency: val(fPlacement, "currency") };
-      // Серия — название без префикса эмитента: ровно так их пишет выгрузка бэкофиса
-      item.serial = item.name.replace(/^RSP\s+/i, "");
-      put(item, "issueStart", val(fPlacement, "issueStart"));
-      put(item, "regNumber", val(fPlacement, "regNumber"));
-      put(item, "notional", num(fPlacement, "notional"));
-      put(item, "bid", num(fPlacement, "bid"));
-      if (val(fPlacement, "fx") === "true") item.fx = true;
-      var basket = [];
-      [1, 2, 3, 4].forEach(function (i) {
-        var n = val(fPlacement, "b" + i + "n");
-        if (!n) return;
-        var b = { n: n };
-        put(b, "t", val(fPlacement, "b" + i + "t"));
-        put(b, "f0", num(fPlacement, "b" + i + "f"));
-        basket.push(b);
-      });
-      item.basket = basket;
-      var p = {};
-      if (kind === "coupon") {
-        if (num(fPlacement, "couponPa") == null) throw new Error("Укажите купон, % годовых — без него карточке нечего показывать.");
-        ["couponPa", "couponPeriodPct", "couponBarrierPct", "acBarrierPct", "obsCount"].forEach(function (k) { put(p, k, num(fPlacement, k)); });
-        if (val(fPlacement, "memory") === "true") p.memory = true;
-        // Защиту включает селект: барьер без выбранной защиты не отправляем
-        if (val(fPlacement, "protType") === "EKI") {
-          var pb = num(fPlacement, "protectionBarrierPct");
-          if (pb == null) throw new Error("Для барьерной защиты (EKI) укажите барьер, %.");
-          p.protectionBarrierPct = pb;
-        }
-      } else {
-        if (num(fPlacement, "participationPct") == null) throw new Error("Укажите участие в росте, %.");
-        ["participationPct", "protectionPct", "strikePct", "strike2Pct"].forEach(function (k) { put(p, k, num(fPlacement, k)); });
-        p.optType = val(fPlacement, "optType");
-        if (val(fPlacement, "optStyle") === "EUROPEAN") p.style = "EUROPEAN";
-      }
-      item.payoff = p;
-      return item;
     });
+    chain.then(function () {
+      var parts = [];
+      if (item) parts.push("выпуск");
+      if (docs.length) parts.push(docs.length === 1 ? "документ" : "документов: " + docs.length);
+      msgEl.className = "msg ok";
+      msgEl.textContent = "Отправлено на одобрение ✅ (" + parts.join(", ") + "). " +
+        (item && docs.length ? "Руслану придёт карточек: " + (docs.length + 1) + " — выпуск и файлы отдельно. " : "") +
+        "После ✅ всё появится на сайте через пару минут.";
+      fPlacement.reset();
+      fPlacement.kind.dispatchEvent(new Event("change"));
+      syncPlacementMode();
+    }).catch(function (err) {
+      msgEl.className = "msg err";
+      msgEl.textContent = String(err.message || err) +
+        (item ? " Если выпуск уже ушёл — повторно его не отправляйте, приложите документы отдельно." : "");
+    }).finally(function () { btn.disabled = false; btn.textContent = "Отправить на одобрение"; });
   });
+
+  function buildPlacementItem(isin) {
+    req(fPlacement, ["name", "maturity", "b1n"]);
+    var dre = /^\d{2}\.\d{2}\.\d{4}$/;
+    ["issueStart", "maturity"].forEach(function (f) {
+      var v = val(fPlacement, f);
+      if (v && !dre.test(v)) throw new Error("Дата " + (f === "maturity" ? "погашения" : "размещения") + " — в виде ДД.ММ.ГГГГ.");
+    });
+    var kind = val(fPlacement, "kind");
+    var item = { isin: isin, name: val(fPlacement, "name"), kind: kind,
+                 maturity: val(fPlacement, "maturity"), currency: val(fPlacement, "currency") };
+    // Серия — название без префикса эмитента: ровно так их пишет выгрузка бэкофиса
+    item.serial = item.name.replace(/^RSP\s+/i, "");
+    put(item, "issueStart", val(fPlacement, "issueStart"));
+    put(item, "regNumber", val(fPlacement, "regNumber"));
+    put(item, "notional", num(fPlacement, "notional"));
+    put(item, "bid", num(fPlacement, "bid"));
+    if (val(fPlacement, "fx") === "true") item.fx = true;
+    var basket = [];
+    [1, 2, 3, 4].forEach(function (i) {
+      var n = val(fPlacement, "b" + i + "n");
+      if (!n) return;
+      var b = { n: n };
+      put(b, "t", val(fPlacement, "b" + i + "t"));
+      put(b, "f0", num(fPlacement, "b" + i + "f"));
+      basket.push(b);
+    });
+    item.basket = basket;
+    var p = {};
+    if (kind === "coupon") {
+      if (num(fPlacement, "couponPa") == null) throw new Error("Укажите купон, % годовых — без него карточке нечего показывать.");
+      ["couponPa", "couponPeriodPct", "couponBarrierPct", "acBarrierPct", "obsCount"].forEach(function (k) { put(p, k, num(fPlacement, k)); });
+      if (val(fPlacement, "memory") === "true") p.memory = true;
+      // Защиту включает селект: барьер без выбранной защиты не отправляем
+      if (val(fPlacement, "protType") === "EKI") {
+        var pb = num(fPlacement, "protectionBarrierPct");
+        if (pb == null) throw new Error("Для барьерной защиты (EKI) укажите барьер, %.");
+        p.protectionBarrierPct = pb;
+      }
+    } else {
+      if (num(fPlacement, "participationPct") == null) throw new Error("Укажите участие в росте, %.");
+      ["participationPct", "protectionPct", "strikePct", "strike2Pct"].forEach(function (k) { put(p, k, num(fPlacement, k)); });
+      p.optType = val(fPlacement, "optType");
+      if (val(fPlacement, "optStyle") === "EUROPEAN") p.style = "EUROPEAN";
+    }
+    item.payoff = p;
+    return item;
+  }
 
   // ── ТЕКУЩИЙ ПРОДУКТ ──
   fBoard.addEventListener("submit", function (e) {
