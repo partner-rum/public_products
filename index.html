@@ -241,6 +241,11 @@
     <div id="hevslot"></div>
   </section>
 
+  <!-- Анонс ближайшей встречи. Наполняется из data/events.js: нет предстоящих —
+       слот пустой. Живёт отдельно от телефона в герое: телефон виден только
+       на широких экранах, а дату и тему надо показать и на мобильном. -->
+  <div id="evslot"></div>
+
   <a class="launch rise" style="animation-delay:.18s" href="board.html" aria-label="Открыть текущие продукты">
     <div class="tape-cap"><span class="tdot"></span>Можем запустить сейчас<span class="tsub">· текущие продукты под клиента · котировки индикативны</span><span class="launch-go">Смотреть<svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
     <div class="tape-box" aria-hidden="true"><div class="tape" id="tape"></div></div>
@@ -531,13 +536,15 @@
 <script src="data/rates.js?v=2"></script>
 <script src="data/events.js?v=3"></script>
 <script>
-  // ── События на главной: только телефон в герое ──
-  // Раздел «События» из навигации убран (13.08.2026): телефон и был единственным
-  // осмысленным входом, остальные блоки его дублировали. Пуши считаются от
-  // data/events.js: прошла дата — исчезают сами.
+  // ── События на главной: телефон в герое + полоса-анонс под ним ──
+  // Раздел «События» из навигации убран (13.08.2026) — телефон остался
+  // единственным входом, но он без даты и прячется на экранах уже 1100px.
+  // Поэтому вернули полосу с датой и темой (14.08.2026): она видна везде.
+  // Всё считается от data/events.js: прошла дата — блоки исчезают сами.
   (function () {
     var items = (window.EVENTS && EVENTS.items) || [];
     var now = Date.now();
+    function esc(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
     function startOf(e) {
       var d = e.date.split("-").map(Number), t = e.timeMsk.split(":").map(Number);
       return Date.UTC(d[0], d[1] - 1, d[2], t[0] - 3, t[1]);
@@ -562,6 +569,26 @@
         '<span class="feat">эфиры · записи · напоминания</span>' +
         '<span class="pbtn">Открыть раздел</span>' +
         '</span></span></span></a>';
+    }
+
+    // Полоса-анонс под героем: дата и тема ближайшей встречи.
+    // Телефон выше показывает только факт «встреча анонсирована» и прячется
+    // на экранах уже 1100px — конкретику несёт эта полоса, и она видна везде.
+    var evs = document.getElementById("evslot");
+    if (evs && upcoming) {
+      var MON = ["янв", "фев", "мар", "апр", "мая", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"];
+      var dp = upcoming.date.split("-").map(Number);
+      var live = startOf(upcoming) <= now;   // идёт прямо сейчас
+      var sub = live
+        ? "идёт прямо сейчас · " + upcoming.place.split("·")[0].trim()
+        : upcoming.timeMsk + " МСК · " + (upcoming.durationMin || 30) + " минут · онлайн, вход свободный";
+      evs.innerHTML = '<a class="evt rise" style="animation-delay:.16s" href="events.html">' +
+        '<span class="ed"><span class="d">' + dp[2] + '</span><span class="m">' + MON[dp[1] - 1] + '</span></span>' +
+        '<span class="et"><span class="t">' + esc(upcoming.title) + '</span>' +
+        '<span class="s">' + esc(sub) + '</span></span>' +
+        '<span class="eg">' + (live ? "Подключиться" : "Записаться") +
+        '<svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+        '</span></a>';
     }
 
     // Строка «Лучшие ставки»: показываем лучшую доходность из скринера
