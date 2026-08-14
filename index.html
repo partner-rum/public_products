@@ -187,7 +187,14 @@
      в списке разделов удалены как дубли телефона. Телефон намеренно без даты и темы
      встречи — конкретика живёт на events.html, куда он и ведёт. */
   .hero { position:relative; }
-  .hev { position:absolute; right:0; top:2px; width:222px; z-index:2; text-decoration:none; color:var(--ink); }
+  /* Масштаб, а не пересчёт двух десятков px внутри: телефон абсолютный, поэтому
+     уменьшение ничего не двигает, а пропорции остаются авторскими. При 222px он
+     наезжал на заголовок и свисал ниже героя.
+     Своя анимация появления вместо общей .rise: та заканчивается на transform:none
+     и обнуляла бы масштаб — анимация перебивает обычное свойство. */
+  .hev { position:absolute; right:0; top:2px; width:222px; z-index:2; text-decoration:none; color:var(--ink);
+         transform-origin:100% 0; animation:hevRise .6s var(--ease) forwards; }
+  @keyframes hevRise { from { opacity:0; transform:translateY(12px) scale(.8); } to { opacity:1; transform:scale(.8); } }
   @media (max-width:1099px) { .hev { display:none; } }
   .hev .tilt { display:block; transform:rotate(3.5deg); transition:transform .3s ease; }
   .hev:hover .tilt { transform:rotate(1.2deg) translateY(-3px); }
@@ -210,7 +217,7 @@
   .hev .feat { display:block; text-align:center; font-family:var(--m); font-size:9px; color:rgba(242,243,247,.45); margin-top:7px; line-height:1.6; white-space:nowrap; }
   .hev .pbtn { display:block; margin-top:12px; background:var(--solar); color:#0C0A08; border-radius:9px; text-align:center; font-weight:600; font-size:12.5px; padding:9px; transition:background .2s; }
   .hev:hover .pbtn { background:var(--solar-l); }
-  @media (prefers-reduced-motion:reduce) { .hev * { animation:none !important; transition:none !important; } .hev .ntf { opacity:1; transform:none; } }
+  @media (prefers-reduced-motion:reduce) { .hev { animation:none; opacity:1; transform:scale(.8); } .hev * { animation:none !important; transition:none !important; } .hev .ntf { opacity:1; transform:none; } }
 
 </style>
 <script src="metrika.js?v=3" defer></script>
