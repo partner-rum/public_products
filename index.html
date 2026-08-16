@@ -28,13 +28,15 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Rubik:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
-  /* Вариант C «Тёмный терминал»: космос Revolut — тьма, свечение Rumberg (синий+оранжевый), живой тикер */
+  /* ══════════ ПАЛИТРА И ОСНОВА — как на проде ══════════ */
   :root {
     --bg:#0B0C10; --panel:rgba(255,255,255,0.04); --line:rgba(255,255,255,0.09);
     --tx:#F2F3F7; --mut:#A0A5B8; --dim:#888C9C;
     --solar:#EE7D1B; --solar-l:#F58E33; --blue:#4F86E6; --or:#EE7D1B; --up:#55C08A;
     --f:'Onest',system-ui,sans-serif; --m:'JetBrains Mono',Consolas,monospace; --display:'Rubik','Onest',system-ui,sans-serif;
     --ease:cubic-bezier(0.16,1,0.3,1);
+    --rule-soft:rgba(255,255,255,0.05);
+    --shell:1280px;   /* решено: ширина доски и размещённых выпусков */
   }
   * { box-sizing:border-box; }
   body { margin:0; background:var(--bg); color:var(--tx); font-family:var(--f); -webkit-font-smoothing:antialiased; min-height:100dvh; }
@@ -44,16 +46,18 @@
   a { text-decoration:none; color:inherit; cursor:pointer; }
   a:focus-visible { outline:2px solid var(--solar); outline-offset:3px; border-radius:4px; }
 
-  /* Фоновый торговый ряд MOEX→NYSE→LSE — тёмная адаптация: свечи-водяной знак + дымка */
-  .bg-market { position:fixed; inset:0; z-index:0; pointer-events:none; }
+  /* Свечи: как на проде, но полоса ограничена верхом и уходит в глухой фон
+     до начала колонок — под мелкими цифрами просвет читается как шум */
+  .bg-market { position:fixed; inset:0 0 auto 0; height:640px; z-index:0; pointer-events:none; }
   .bg-market svg { width:100%; height:100%; display:block; }
   .bg-market::after { content:""; position:absolute; inset:0;
     background:linear-gradient(180deg,
-      rgba(11,12,16,0.9) 0%, rgba(11,12,16,0.62) 30%,
-      rgba(11,12,16,0.3) 62%, rgba(11,12,16,0.56) 100%); }
+      rgba(11,12,16,0.9) 0%, rgba(11,12,16,0.62) 26%,
+      rgba(11,12,16,0.44) 58%, rgba(11,12,16,0.9) 88%, rgba(11,12,16,1) 100%); }
 
+  /* ── Шапка ── */
   .nav { position:sticky; top:0; z-index:10; background:rgba(11,12,16,0.8); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border-bottom:1px solid var(--line); }
-  .nav-in { max-width:1140px; margin:0 auto; padding:0 44px; height:60px; display:flex; align-items:center; gap:12px; }
+  .nav-in { max-width:var(--shell); margin:0 auto; padding:0 44px; height:60px; display:flex; align-items:center; gap:12px; }
   .nav .name { font-size:14px; font-weight:600; }
   .btn-solar { margin-left:auto; display:inline-flex; align-items:center; gap:8px; background:var(--solar); color:#0C0A08; border-radius:6px; padding:9px 15px; font-size:13px; font-weight:600; transition:background .3s ease-in-out; }
   .btn-solar:hover { background:var(--solar-l); }
@@ -63,34 +67,16 @@
   .btn-tg:hover { border-color:var(--blue); background:rgba(79,134,230,0.12); }
   .btn-tg svg { display:block; }
 
-  .wrap { position:relative; z-index:1; max-width:1140px; margin:0 auto; padding:0 44px; }
+  .wrap { position:relative; z-index:1; max-width:var(--shell); margin:0 auto; padding:0 44px; }
 
-  .hero { padding:66px 0 40px; }
+  /* ── Герой ── */
+  .hero { position:relative; padding:66px 0 40px; }
   .kicker { font-family:var(--m); font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--dim); margin-bottom:20px; }
   h1 { margin:0; font-family:var(--display); font-size:clamp(36px,5vw,60px); font-weight:600; line-height:1.06; letter-spacing:-0.02em; max-width:860px; }
   h1 .lm { color:var(--solar); }
   .sub { margin:20px 0 0; font-size:16px; line-height:1.55; color:var(--mut); max-width:540px; }
 
-  /* Лента «можем запустить сейчас»: подпись сверху + выделенная полоса каталога продуктов */
-  .tape-cap { display:flex; align-items:center; gap:9px; font-family:var(--m); font-size:11px; letter-spacing:.13em; text-transform:uppercase; margin:24px 0 9px; color:var(--solar); }
-  .tape-cap .tdot { width:7px; height:7px; border-radius:50%; background:var(--solar); box-shadow:0 0 0 4px rgba(238,125,27,0.16); flex:none; animation:tpulse 2.2s ease-in-out infinite; }
-  .tape-cap .tsub { color:var(--dim); }
-  @keyframes tpulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:.5; transform:scale(.85); } }
-  .tape-box { position:relative; border:1px solid var(--line); border-left:2px solid var(--solar); border-radius:12px; background:var(--panel); overflow:hidden; padding:12px 0; margin:0 0 8px; }
-  .tape { display:flex; gap:38px; white-space:nowrap; width:max-content; font-family:var(--m); font-size:12px; animation:slide 52s linear infinite; }
-  .tape .it { display:flex; align-items:baseline; }
-  .tape .sym { color:var(--tx); font-weight:500; }
-  .tape .nm { color:var(--mut); }
-  .tape .qt { color:var(--solar); font-weight:500; margin-left:10px; font-variant-numeric:tabular-nums; }
-  @keyframes slide { to { transform:translateX(-50%); } }
-  /* весь блок «можем запустить сейчас» — ссылка на доску «Текущие продукты» */
-  .launch { display:block; }
-  .launch .launch-go { margin-left:auto; display:inline-flex; align-items:center; gap:5px; color:var(--solar-l); text-transform:none; letter-spacing:0; font-size:11px; white-space:nowrap; }
-  .launch .launch-go svg { transition:transform .3s var(--ease); }
-  .launch .tape-box { transition:border-color .2s, background .2s; }
-  .launch:hover .tape-box { border-color:var(--solar); background:rgba(238,125,27,0.05); }
-
-  /* Анонс мероприятия — тонкая полоса между хиро и лентой; убрать после 06.08 (или заменить на «запись») */
+  /* ── Полоса-анонс встречи ── */
   .evt { display:flex; align-items:center; gap:16px; margin:26px 0 0; padding:13px 18px;
     border:1px solid rgba(238,125,27,0.34); border-radius:12px;
     background:linear-gradient(92deg, rgba(238,125,27,0.10), rgba(238,125,27,0.03) 55%, transparent);
@@ -110,45 +96,212 @@
     .evt { flex-wrap:wrap; gap:12px; padding:14px 16px; }
     .evt .eg { margin-left:calc(58px + 12px); margin-top:-6px; }
   }
+
+  /* ── Лента «Можем запустить сейчас» ── */
+  .tape-cap { display:flex; align-items:center; gap:9px; font-family:var(--m); font-size:11px; letter-spacing:.13em; text-transform:uppercase; margin:24px 0 9px; color:var(--solar); }
+  .tape-cap .tdot { width:7px; height:7px; border-radius:50%; background:var(--solar); box-shadow:0 0 0 4px rgba(238,125,27,0.16); flex:none; animation:tpulse 2.2s ease-in-out infinite; }
+  .tape-cap .tsub { color:var(--dim); }
+  @keyframes tpulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:.5; transform:scale(.85); } }
+  .tape-box { position:relative; border:1px solid var(--line); border-left:2px solid var(--solar); border-radius:12px; background:var(--panel); overflow:hidden; padding:12px 0; margin:0 0 8px; }
+  .tape { display:flex; gap:38px; white-space:nowrap; width:max-content; font-family:var(--m); font-size:12px; animation:slide 52s linear infinite; }
+  .tape .it { display:flex; align-items:baseline; }
+  .tape .sym { color:var(--tx); font-weight:500; }
+  .tape .nm { color:var(--mut); }
+  .tape .qt { color:var(--solar); font-weight:500; margin-left:10px; font-variant-numeric:tabular-nums; }
+  @keyframes slide { to { transform:translateX(-50%); } }
+  .launch { display:block; }
+  .launch .launch-go { margin-left:auto; display:inline-flex; align-items:center; gap:5px; color:var(--solar-l); text-transform:none; letter-spacing:0; font-size:11px; white-space:nowrap; }
+  .launch .launch-go svg { transition:transform .3s var(--ease); }
+  .launch .tape-box { transition:border-color .2s, background .2s; }
+  .launch:hover .tape-box { border-color:var(--solar); background:rgba(238,125,27,0.05); }
   .launch:hover .launch-go svg { transform:translateX(4px); }
 
-  .srow { display:grid; grid-template-columns:44px 1fr auto 32px; align-items:center; gap:22px; padding:26px 6px; border-bottom:1px solid var(--line); position:relative; transition:background .25s ease-in-out; }
-  .srow::before { content:""; position:absolute; left:-14px; top:22%; bottom:22%; width:3px; background:var(--solar); border-radius:2px; transform:scaleY(0); transition:transform .3s var(--ease); }
-  .srow .no { font-family:var(--m); font-size:11px; color:var(--dim); }
-  .srow .st { font-family:var(--display); font-size:clamp(21px,2.4vw,29px); font-weight:600; letter-spacing:-0.015em; transition:color .25s; }
-  .srow .sd { display:block; margin-top:5px; font-size:12.5px; font-weight:400; line-height:1.45; color:var(--dim); max-width:520px; }
-  .srow .sm { font-family:var(--m); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--dim); white-space:nowrap; text-align:right; transition:color .25s; }
-  .srow .go svg path { stroke:var(--dim); transition:stroke .25s; }
-  .srow .go svg { transition:transform .3s var(--ease); }
-  .srow:hover { background:var(--panel); }
-  .srow:hover::before { transform:scaleY(1); }
-  .srow:hover .st { color:var(--solar); }
-  .srow:hover .sm { color:var(--or); }
-  .srow:hover .go svg { transform:translateX(4px); }
-  .srow:hover .go svg path { stroke:var(--tx); }
-
-  .foot { display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; padding:22px 0 28px; font-size:11px; color:var(--dim); }
-  .foot .mono { font-family:var(--m); }
+  /* ── Телефон «Rumberg События» ── */
+  @keyframes evPulse { 0%,100% { opacity:1; } 50% { opacity:.3; } }
+  /* Сдвинут левее и ниже прод-положения (было right:0 / top:2px): на краю листа
+     он висел впритык, а верхний угол при наклоне заходил под липкую шапку —
+     её низ на y=60, а угол корпуса оказывался на 58. */
+  .hev { position:absolute; right:112px; top:30px; width:222px; z-index:2; text-decoration:none; color:var(--tx);
+         transform-origin:100% 0; transform:scale(.8);
+         animation:hevFloat 6.5s ease-in-out infinite; }
+  @media (max-width:1099px) { .hev { display:none; } }
+  /* Покачивание: снос только ВНИЗ — вверх телефон уехал бы под липкую шапку
+     (его верх на y≈63, низ шапки — 60). Масштаб продублирован в кадрах,
+     иначе анимация перебила бы scale(.8) из базового правила. */
+  @keyframes hevFloat { 0%,100% { transform:scale(.8) translateY(0); } 50% { transform:scale(.8) translateY(9px); } }
+  /* Наклон дышит вокруг прод-угла 3.5°; на наведении анимацию гасим, иначе
+     она перебьёт transform ховера */
+  @keyframes hevSway { 0%,100% { transform:rotate(3.6deg); } 50% { transform:rotate(2.1deg); } }
+  .hev .tilt { display:block; transform:rotate(3.5deg); transition:transform .35s ease;
+    animation:hevSway 8s ease-in-out infinite; }
+  .hev:hover .tilt { animation:none; transform:rotate(1.2deg) translateY(-4px); }
+  .hev .shell { transition:box-shadow .35s ease; }
+  .hev:hover .shell { box-shadow:0 30px 70px rgba(0,0,0,.6), 0 0 0 6px rgba(238,125,27,.08); }
+  .hev .shell { display:block; border:1px solid rgba(255,255,255,.16); border-radius:30px; background:#0E0F14; box-shadow:0 24px 60px rgba(0,0,0,.55), 0 0 0 6px rgba(255,255,255,.03); padding:9px; }
+  .hev .island { display:block; width:58px; height:14px; border-radius:8px; background:#000; margin:2px auto 7px; }
+  .hev .scr { display:block; position:relative; overflow:hidden; border-radius:21px; background:linear-gradient(170deg,#15171E,#0C0D12); border:1px solid rgba(255,255,255,.07); padding:12px 13px; }
+  /* fill-mode не задан намеренно — см. комментарий в шапке файла */
+  .hev .ntf { display:flex; align-items:flex-start; gap:8px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); border-radius:11px; padding:7px 10px; animation:hevNtf .55s var(--ease); }
+  .hev .ntf + .ntf { margin-top:7px; }
+  .hev .ntf.n1 { animation-delay:.8s; }
+  .hev .ntf.n2 { animation-delay:1.5s; }
+  @keyframes hevNtf { from { opacity:0; transform:translateY(-42px); } }
+  .hev .ntf i { width:7px; height:7px; border-radius:50%; background:var(--solar); box-shadow:0 0 9px var(--solar); flex:none; margin-top:3px; animation:evPulse 1.6s infinite; }
+  .hev .ntf .nb { min-width:0; }
+  .hev .ntf .nt { display:block; font-size:10px; font-weight:600; line-height:1.3; }
+  .hev .ntf .nd { display:block; font-family:var(--m); font-size:8.5px; color:rgba(242,243,247,.45); margin-top:2px; }
+  .hev .ntf .nw { margin-left:auto; flex:none; font-family:var(--m); font-size:8.5px; color:rgba(242,243,247,.4); }
+  .hev .star { display:block; margin:14px auto 0; filter:drop-shadow(0 0 14px rgba(238,125,27,.55)); }
+  .hev .wm2 { display:block; text-align:center; font-family:var(--m); font-size:8.5px; letter-spacing:.34em; text-indent:.34em; text-transform:uppercase; color:rgba(242,243,247,.5); margin-top:10px; }
+  .hev .big { display:block; text-align:center; font-family:var(--display); font-weight:700; font-size:23px; letter-spacing:-.02em; margin-top:2px; }
+  .hev .feat { display:block; text-align:center; font-family:var(--m); font-size:9px; color:rgba(242,243,247,.45); margin-top:7px; line-height:1.6; white-space:nowrap; }
+  .hev .pbtn { display:block; margin-top:12px; background:var(--solar); color:#0C0A08; border-radius:9px; text-align:center; font-weight:600; font-size:12.5px; padding:9px; transition:background .2s; }
+  .hev:hover .pbtn { background:var(--solar-l); }
 
   .rise { opacity:0; transform:translateY(12px); animation:rise .6s var(--ease) forwards; }
   @keyframes rise { to { opacity:1; transform:none; } }
 
+  /* ══════════ НИЖЕ — рабочая полоса (новое) ══════════ */
+  .bandwrap { position:relative; z-index:1; margin-top:30px; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+  /* Колонки разделяет ВОЗДУХ, а не вертикальные линейки: столбец и так читается
+     как стопка под своей подчёркнутой шапкой, линейка была третьей сущностью.
+     Причём воздух дешевле линейки — при gap:40 ширина текста в колонке остаётся
+     прежней (270px), а при линейке с симметричными отступами упала бы до 237. */
+  /* Доли колонок пересчитаны под расширенные «Разделы»: третьей колонке нужно
+     не меньше 250px, иначе шапка «Утро на рынках» уходит в две строки. Часть
+     потерянной ширины возвращаем уменьшенным зазором (24 вместо 28). */
+  .work { display:grid; grid-template-columns:232px minmax(0,.95fr) minmax(0,1.2fr) minmax(0,1fr) minmax(0,.93fr); column-gap:24px; }
+  .cell { padding:16px 0 20px; min-width:0; }
+  .ch { display:flex; align-items:baseline; gap:9px; padding-bottom:9px; border-bottom:1px solid var(--line); }
+  .ch h2 { margin:0; font-family:var(--display); font-size:14px; font-weight:600; letter-spacing:-0.012em; }
+  .ch .cap { font-family:var(--m); font-size:8px; letter-spacing:.17em; text-transform:uppercase; color:var(--dim); }
+  /* Заголовок колонки — ссылка на свой раздел. Стрелка проявляется на наведении,
+     чтобы в покое шапка оставалась просто заголовком */
+  .ch .chl { display:inline-flex; align-items:center; gap:5px; transition:color .18s ease; }
+  .ch .chl::after { content:"→"; font-family:var(--m); font-size:11px; opacity:0;
+    transform:translateX(-3px); transition:opacity .18s ease, transform .26s var(--ease); }
+  .ch .chl:hover { color:var(--solar); }
+  .ch .chl:hover::after { opacity:1; transform:none; }
 
-  @media (prefers-reduced-motion: reduce) { .rise { animation:none; opacity:1; transform:none; } .tape { animation:none; } .tape-cap .tdot { animation:none; } .srow, .srow::before, .srow .st, .srow .sm, .srow .go svg { transition:none; } }
-  @media (max-width: 860px) {
-    .nav-in, .wrap { padding-left:20px; padding-right:20px; }
-    .hero { padding:46px 0 30px; }
-    .bg-market::after { background:rgba(11,12,16,0.84); }
-    .srow { grid-template-columns:1fr 32px; }
-    .srow .no { display:none; } .srow .sm { display:none; }
-  }
-  @media (max-width: 640px) {
-    .nav .name { display:none; }
-    .btn-tg .tg-lbl { display:none; }
-    .btn-tg { padding:8px 10px; }
-  }
+  /* Пометка под подборкой: подбор наш, а не из утреннего обзора */
+  .mnote { margin-top:10px; font-family:var(--m); font-size:8px; letter-spacing:.12em;
+    text-transform:uppercase; color:var(--dim); }
 
-  /* ── Интро при входе на сайт (один раз за сессию; синий+оранжевый Rumberg, нейтральный фон) ── */
+  .rl { display:grid; grid-template-columns:15px minmax(0,1fr) auto; align-items:baseline; gap:8px;
+    padding:8px 0 8px 9px; margin-left:-9px; position:relative; border-bottom:1px solid var(--rule-soft); transition:background .18s ease; }
+  .rl:last-of-type { border-bottom:0; }
+  .rl::before { content:""; position:absolute; left:-9px; top:16%; bottom:16%; width:2px; background:var(--solar);
+    transform:scaleY(0); transition:transform .26s var(--ease); }
+  .rl:hover { background:rgba(255,255,255,0.032); }
+  .rl:hover::before { transform:scaleY(1); }
+  .rl .no { font-family:var(--m); font-size:8.5px; color:var(--dim); }
+  .rl .rt { font-size:12.5px; font-weight:500; letter-spacing:-0.005em; transition:color .18s ease; }
+  .rl:hover .rt { color:var(--solar); }
+  .rl .rm { font-family:var(--m); font-size:8.5px; color:var(--dim); white-space:nowrap; }
+  .stamp { font-family:var(--m); font-size:8px; color:var(--dim); line-height:1.9; letter-spacing:.06em; padding-top:12px; }
+
+  /* ── Разделы: доминанта полосы ────────────────────────────────────────────
+     Колонка была самой тихой из пяти: названия 12,5px и мелкие цифры справа
+     читались наравне со ставками, то есть навигация выглядела ещё одним
+     столбцом данных. Разводим её с соседями сразу по трём признакам:
+       • поверхность — единственный предмет среди воздуха и волосяных линеек;
+       • крупная шапка с подписью — блок объявляет себя навигацией;
+       • крупные названия без номеров 01–06 — цифр в колонке не остаётся.
+     Счётчик («64 шт.», дата выпуска и встречи) уходит ПОД название: сведения
+     сохраняются, но перестают стоять столбиком чисел — ровно то, из-за чего
+     колонка и терялась. Вертикальной отбивки справа нет намеренно: край
+     панели уже отделяет навигацию от данных, линейка была бы второй
+     границей на том же месте. */
+  /* Панель — только с широкого экрана: ниже 1024 колонки и так идут стопкой,
+     разделёнными линейками, и карточка среди них была бы чужой.
+     Отрицательные поля равны внутренним отступам: панель «выпускается» за края
+     колонки, поэтому её текст стоит ровно на той же вертикали, что телефон,
+     лента и подпись внизу, а не сдвинут внутрь на 17px. Заодно длинному
+     «Размещённые выпуски» хватает одной строки (нужно 188px, есть 192). */
+  @media (min-width:1024px) {
+    .nv .nvbox { background:#14161C; border:1px solid var(--line); border-radius:12px;
+      padding:17px 16px 14px; margin:12px -9px 0 -17px; }
+  }
+  .nv .ch { display:block; border-bottom:0; padding-bottom:14px; }
+  .nv .ch h2 { font-size:22px; letter-spacing:-0.028em; line-height:1.05; }
+  .nv .ch h2::after { content:"навигация по витрине"; display:block; font-family:var(--m);
+    font-size:8px; font-weight:400; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--dim); margin-top:7px; }
+  .nv .rl { grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:0 10px;
+    margin-left:0; padding:11px 0 11px 10px; }
+  .nv .rl::before { left:0; }
+  .nv .rl .no { display:none; }
+  .nv .rl .rt { grid-column:1; font-family:var(--display); font-size:16.5px; font-weight:600;
+    letter-spacing:-0.02em; line-height:1.2; }
+  .nv .rl .rm { grid-column:1; font-size:8px; letter-spacing:.1em; text-transform:uppercase; }
+  /* Отступ только у заполненных: у половины разделов счётчика нет, и пустой
+     span не должен раздвигать строку */
+  .nv .rl .rm:not(:empty) { margin-top:4px; }
+  .nv .rl::after { content:"→"; grid-column:2; grid-row:1 / span 2; align-self:center;
+    font-family:var(--m); font-size:12px; color:var(--dim);
+    transition:color .18s ease, transform .26s var(--ease); }
+  .nv .rl:hover::after { color:var(--solar); transform:translateX(3px); }
+  .nv .stamp { padding-top:13px; }
+
+  .mn { padding:11px 0 12px; border-bottom:1px solid var(--rule-soft); }
+  .mn:last-child { border-bottom:0; padding-bottom:2px; }
+  .mn .rub { display:block; font-family:var(--m); font-size:7.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--dim); }
+  .mn .ttl { display:block; font-family:var(--display); font-size:13px; font-weight:600; letter-spacing:-0.01em; line-height:1.35; margin-top:5px; }
+  /* Заголовок-ссылка на полный разбор: стрелка проявляется, чтобы не шуметь в покое */
+  .mn .ttl.lnk svg { opacity:0; margin-left:4px; vertical-align:-1px; transition:opacity .18s ease, transform .26s var(--ease); }
+  .mn .ttl.lnk:hover { color:var(--solar); }
+  .mn .ttl.lnk:hover svg { opacity:1; transform:translateX(2px); }
+
+  /* Пустое состояние колонки: объясняет, что данных нет, и даёт выход */
+  .mnone { padding:16px 0 4px; font-size:11.5px; line-height:1.6; color:var(--dim); }
+  .mnone a { display:inline-flex; align-items:center; gap:6px; margin-top:8px; color:var(--solar-l); }
+  .mnone a:hover { color:var(--solar); }
+
+  /* Продукт, id которого ушёл при перегенерации доски */
+  .prow.gone { border-left-color:var(--line); }
+  .prow.gone .q { color:var(--dim); }
+  .mn .body { margin-top:4px; font-size:11.5px; line-height:1.52; color:var(--mut); }
+  .prow { display:flex; align-items:baseline; gap:9px; margin-top:8px; padding:7px 10px;
+    border:1px solid var(--rule-soft); border-left:2px solid var(--solar); border-radius:6px;
+    background:rgba(255,255,255,0.032); font-size:11.5px; transition:background .18s ease, border-color .18s ease; }
+  .prow:hover { background:rgba(238,125,27,0.07); border-color:rgba(238,125,27,0.34); border-left-color:var(--solar-l); }
+  .prow b { font-weight:500; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  /* В узкой колонке «Актуальные продукты» усечение съедало срок — там переносим */
+  #mprod .prow { align-items:flex-start; }
+  #mprod .prow b { white-space:normal; overflow:visible; text-overflow:clip; line-height:1.35; }
+  .prow .q { margin-left:auto; font-family:var(--m); font-size:12px; color:var(--solar); font-weight:500; white-space:nowrap; font-variant-numeric:tabular-nums; }
+  .prow svg { flex:none; align-self:center; opacity:.5; transition:opacity .18s ease, transform .26s var(--ease); }
+  .prow:hover svg { opacity:1; transform:translateX(2px); }
+
+  .bench { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:10px; padding:10px 0 11px; border-bottom:1px solid var(--rule-soft); }
+  .bench .k { display:block; font-family:var(--m); font-size:7.5px; letter-spacing:.13em; text-transform:uppercase; color:var(--dim); }
+  .bench .v { display:block; font-family:var(--m); font-size:13px; font-weight:500; margin-top:4px; letter-spacing:-0.01em; font-variant-numeric:tabular-nums; }
+  .rt2 { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:10px; align-items:baseline;
+    padding:10px 0 11px; border-bottom:1px solid var(--rule-soft); }
+  .rt2:last-of-type { border-bottom:0; }
+  .rt2 .kind { display:block; font-family:var(--m); font-size:7.5px; letter-spacing:.13em; text-transform:uppercase; color:var(--dim); }
+  .rt2 .n { display:block; font-size:12px; font-weight:500; margin-top:4px; line-height:1.3; transition:color .18s ease; }
+  .rt2 .n em { font-style:normal; color:var(--dim); font-weight:400; font-size:10.5px; }
+  .rt2:hover .n { color:var(--solar); }
+  .rt2 .v { font-family:var(--m); font-size:13px; font-weight:500; color:var(--up); white-space:nowrap; letter-spacing:-0.01em; font-variant-numeric:tabular-nums; }
+
+  .om { display:block; padding:11px 0 12px; border-bottom:1px solid var(--rule-soft); }
+  .om:last-of-type { border-bottom:0; }
+  .om .ok { display:block; font-family:var(--m); font-size:7.5px; letter-spacing:.13em; text-transform:uppercase; color:var(--dim); line-height:1.5; }
+  .om .on { display:block; font-family:var(--display); font-size:13px; font-weight:600; margin-top:5px; line-height:1.3;
+    letter-spacing:-0.01em; transition:color .18s ease; }
+  .om:hover .on { color:var(--solar); }
+  .om .r2 { display:flex; align-items:center; gap:9px; flex-wrap:wrap; margin-top:7px; }
+  .om .ost { font-family:var(--m); font-size:8px; letter-spacing:.05em; padding:3px 7px; border-radius:5px; white-space:nowrap; }
+  .ost.upn { color:var(--solar); border:1px solid rgba(238,125,27,0.36); background:rgba(238,125,27,0.075); }
+  .ost.live { color:var(--up); border:1px solid rgba(85,192,138,0.36); background:rgba(85,192,138,0.075); }
+  .om .ops { font-family:var(--m); font-size:9px; color:var(--dim); }
+  .om .ops b { color:var(--mut); font-weight:500; }
+
+  .foot { display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; padding:18px 0 26px; font-size:11px; color:var(--dim); }
+  .foot .mono { font-family:var(--m); }
+
+/* ── Интро при входе на сайт (один раз за сессию; синий+оранжевый Rumberg, нейтральный фон) ── */
   .intro { position: fixed; inset: 0; z-index: 9999; background: #101114; overflow: hidden; transform: translateY(0); transition: transform .8s var(--ease); }
   .intro.lift { transform: translateY(-102%); }
   .intro.fadeout { opacity: 0; transition: opacity .45s ease; }
@@ -179,52 +332,58 @@
   .intro.brandon .bar { transform: scaleX(1); }
   body.intro-lock { overflow: hidden; }
 
-  /* ══ События (данные: data/events.js; рендер — скрипт в конце страницы) ══ */
-  @keyframes evPulse { 0%,100% { opacity:1; } 50% { opacity:.3; } }
-
-  /* Телефон «Rumberg События» справа от заголовка героя — единственный вход в раздел.
-     13.08.2026 сам раздел убран из навигации, дорожка дней под героем и строка 07
-     в списке разделов удалены как дубли телефона. Телефон намеренно без даты и темы
-     встречи — конкретика живёт на events.html, куда он и ведёт. */
-  .hero { position:relative; }
-  /* Масштаб, а не пересчёт двух десятков px внутри: телефон абсолютный, поэтому
-     уменьшение ничего не двигает, а пропорции остаются авторскими. При 222px он
-     наезжал на заголовок и свисал ниже героя.
-     Своя анимация появления вместо общей .rise: та заканчивается на transform:none
-     и обнуляла бы масштаб — анимация перебивает обычное свойство. */
-  .hev { position:absolute; right:0; top:2px; width:222px; z-index:2; text-decoration:none; color:var(--ink);
-         transform-origin:100% 0; animation:hevRise .6s var(--ease) forwards; }
-  @keyframes hevRise { from { opacity:0; transform:translateY(12px) scale(.8); } to { opacity:1; transform:scale(.8); } }
-  @media (max-width:1099px) { .hev { display:none; } }
-  .hev .tilt { display:block; transform:rotate(3.5deg); transition:transform .3s ease; }
-  .hev:hover .tilt { transform:rotate(1.2deg) translateY(-3px); }
-  .hev .shell { display:block; border:1px solid rgba(255,255,255,.16); border-radius:30px; background:#0E0F14; box-shadow:0 24px 60px rgba(0,0,0,.55), 0 0 0 6px rgba(255,255,255,.03); padding:9px; }
-  .hev .island { display:block; width:58px; height:14px; border-radius:8px; background:#000; margin:2px auto 7px; }
-  .hev .scr { display:block; position:relative; overflow:hidden; border-radius:21px; background:linear-gradient(170deg,#15171E,#0C0D12); border:1px solid rgba(255,255,255,.07); padding:12px 13px; }
-  .hev .ntf { display:flex; align-items:flex-start; gap:8px; background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); border-radius:11px; padding:7px 10px; opacity:0; transform:translateY(-42px); animation:hevNtf .55s forwards var(--ease); }
-  .hev .ntf + .ntf { margin-top:7px; }
-  .hev .ntf.n1 { animation-delay:.8s; }
-  .hev .ntf.n2 { animation-delay:1.5s; }
-  @keyframes hevNtf { to { opacity:1; transform:none; } }
-  .hev .ntf i { width:7px; height:7px; border-radius:50%; background:var(--solar); box-shadow:0 0 9px var(--solar); flex:none; margin-top:3px; animation:evPulse 1.6s infinite; }
-  .hev .ntf .nb { min-width:0; }
-  .hev .ntf .nt { display:block; font-size:10px; font-weight:600; line-height:1.3; }
-  .hev .ntf .nd { display:block; font-family:var(--m); font-size:8.5px; color:rgba(242,243,247,.45); margin-top:2px; }
-  .hev .ntf .nw { margin-left:auto; flex:none; font-family:var(--m); font-size:8.5px; color:rgba(242,243,247,.4); }
-  .hev .star { display:block; margin:14px auto 0; filter:drop-shadow(0 0 14px rgba(238,125,27,.55)); }
-  .hev .wm2 { display:block; text-align:center; font-family:var(--m); font-size:8.5px; letter-spacing:.34em; text-indent:.34em; text-transform:uppercase; color:rgba(242,243,247,.5); margin-top:10px; }
-  .hev .big { display:block; text-align:center; font-family:var(--display); font-weight:700; font-size:23px; letter-spacing:-.02em; margin-top:2px; }
-  .hev .feat { display:block; text-align:center; font-family:var(--m); font-size:9px; color:rgba(242,243,247,.45); margin-top:7px; line-height:1.6; white-space:nowrap; }
-  .hev .pbtn { display:block; margin-top:12px; background:var(--solar); color:#0C0A08; border-radius:9px; text-align:center; font-weight:600; font-size:12.5px; padding:9px; transition:background .2s; }
-  .hev:hover .pbtn { background:var(--solar-l); }
-  @media (prefers-reduced-motion:reduce) { .hev { animation:none; opacity:1; transform:scale(.8); } .hev * { animation:none !important; transition:none !important; } .hev .ntf { opacity:1; transform:none; } }
-
+  @media (prefers-reduced-motion: reduce) {
+    .rise { animation:none; opacity:1; transform:none; }
+    .tape, .tape-cap .tdot { animation:none; }
+    /* и сам .hev тоже: покачивание живёт на нём, а не только на потомках */
+    .hev, .hev * { animation:none !important; }
+  }
+  /* Пять колонок держатся только на широком экране. Ниже — два ряда.
+     Порядок ячеек: 1 Разделы, 2 Лучшие ставки, 3 Утро, 4 Продукты, 5 Размещения —
+     правила ниже опираются на него, при перестановке колонок их надо править. */
+  @media (max-width: 1279px) {
+    .work { grid-template-columns:repeat(3, minmax(0,1fr)); column-gap:28px; }
+    .work .cell:nth-child(n+4) { border-top:1px solid var(--line); margin-top:6px; padding-top:16px; }
+    /* Колонка стала шире — держим меру строки, иначе текст растянется на 700px */
+    .mn .body, .mnone { max-width:66ch; }
+  }
+  @media (max-width: 1023px) {
+    .work { grid-template-columns:repeat(2, minmax(0,1fr)); }
+    .work .cell:nth-child(n+3) { border-top:1px solid var(--line); margin-top:6px; padding-top:16px; }
+    .work .cell:nth-child(5) { grid-column:1 / -1; }      /* размещения широкой строкой */
+    /* Панели здесь уже нет, а рамку под шапкой снимала именно она — возвращаем,
+       иначе «Разделы» единственные из пяти стоят без подчёркивания */
+    .nv .ch { border-bottom:1px solid var(--line); }
+  }
+  @media (max-width: 860px) {
+    .nav-in, .wrap { padding-left:20px; padding-right:20px; }
+    .hero { padding:46px 0 30px; }
+    .work { grid-template-columns:minmax(0,1fr); column-gap:0; }
+    .work .cell { border-top:1px solid var(--line); margin-top:0; padding-top:16px; }
+    .work .cell:nth-child(n) { grid-column:auto; }
+    /* Утром агент открывает телефон ради рынка, а не ради меню: сначала обзор,
+       разделы уезжают в конец. Порядок задан явно — от DOM он теперь отличается. */
+    .work .cell:nth-child(3) { order:1; border-top:0; }   /* Утро на рынках */
+    .work .cell:nth-child(2) { order:2; }                 /* Лучшие ставки */
+    .work .cell:nth-child(4) { order:3; }                 /* Актуальные продукты */
+    .work .cell:nth-child(5) { order:4; }                 /* Размещения */
+    .work .cell:first-child  { order:9; }                 /* Разделы */
+    .work .cell:first-child nav { display:grid; grid-template-columns:1fr 1fr; column-gap:16px; }
+    /* Тач-цель: на десктопе строка раздела 33px, для пальца нужно 44 */
+    .work .cell:first-child .rl { padding-top:13px; padding-bottom:13px; }
+  }
+  @media (max-width: 640px) {
+    .nav .name { display:none; }
+    .btn-tg .tg-lbl { display:none; }
+    .btn-tg { padding:8px 10px; }
+    .bench { gap:8px; }
+  }
 </style>
 <script src="metrika.js?v=3" defer></script>
 </head>
 <body>
 
-<div class="bg-market" aria-hidden="true"><svg id="market" viewBox="0 0 1440 800" preserveAspectRatio="xMidYMid slice"></svg></div>
+<div class="bg-market" aria-hidden="true"><svg id="market" viewBox="0 0 1440 640" preserveAspectRatio="xMidYMid slice"></svg></div>
 
 <header class="nav">
   <div class="nav-in">
@@ -248,9 +407,6 @@
     <div id="hevslot"></div>
   </section>
 
-  <!-- Анонс ближайшей встречи. Наполняется из data/events.js: нет предстоящих —
-       слот пустой. Живёт отдельно от телефона в герое: телефон виден только
-       на широких экранах, а дату и тему надо показать и на мобильном. -->
   <div id="evslot"></div>
 
   <a class="launch rise" style="animation-delay:.18s" href="board.html" aria-label="Открыть текущие продукты">
@@ -258,44 +414,41 @@
     <div class="tape-box" aria-hidden="true"><div class="tape" id="tape"></div></div>
   </a>
 
-  <nav aria-label="Разделы">
-    <a class="srow rise" style="animation-delay:.26s" href="screener.html">
-      <span class="no">01</span>
-      <span><span class="st">Лучшие ставки</span><span class="sd">Куда положить деньги на срок до года: вклады, накопительные счета, фонды денежного рынка, короткие ОФЗ.</span></span>
-      <span class="sm" id="scr-sm">денежный рынок</span>
-      <span class="go"><svg width="16" height="16" viewBox="0 0 14 14" fill="none"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#666C82" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-    </a>
-    <a class="srow rise" style="animation-delay:.3s" href="digest.html">
-      <span class="no">02</span>
-      <span><span class="st">Дайджест</span><span class="sd">Инвестиционные идеи недели: гипотеза, рыночная ситуация, факторы и параметры выпуска.</span></span>
-      <span class="sm" id="m1">идеи недели</span>
-      <span class="go"><svg width="16" height="16" viewBox="0 0 14 14" fill="none"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#666C82" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-    </a>
-    <a class="srow rise" style="animation-delay:.34s" href="offerings.html">
-      <span class="no">03</span>
-      <span><span class="st">На размещении</span><span class="sd">Выпуски, которые размещаем сейчас или готовим: параметры и материалы по выпуску.</span></span>
-      <span class="sm">первичный рынок</span>
-      <span class="go"><svg width="16" height="16" viewBox="0 0 14 14" fill="none"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#666C82" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-    </a>
-    <a class="srow rise" style="animation-delay:.38s" href="board.html?type=warrant">
-      <span class="no">04</span>
-      <span><span class="st">Текущие продукты</span><span class="sd">Доска инструментов: варранты, дисконтные и защитные облигации — котировки в процентах от номинала.</span></span>
-      <span class="sm" id="m2">котировки</span>
-      <span class="go"><svg width="16" height="16" viewBox="0 0 14 14" fill="none"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#666C82" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-    </a>
-    <a class="srow rise" style="animation-delay:.42s" href="placements.html">
-      <span class="no">05</span>
-      <span><span class="st">Размещённые выпуски</span><span class="sd">Выпуски на рынке: базовые активы, параметры выплат, начальные фиксинги и текущая динамика.</span></span>
-      <span class="sm" id="m3">выпуски</span>
-      <span class="go"><svg width="16" height="16" viewBox="0 0 14 14" fill="none"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#666C82" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-    </a>
-    <a class="srow rise" style="animation-delay:.46s" href="about.html">
-      <span class="no">06</span>
-      <span><span class="st">Библиотека</span><span class="sd">Как работает каждый тип продукта — с описанием, сценариями и графиками выплат.</span></span>
-      <span class="sm">как это работает</span>
-      <span class="go"><svg width="16" height="16" viewBox="0 0 14 14" fill="none"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#666C82" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-    </a>
-  </nav>
+  <div class="bandwrap">
+    <div class="work">
+      <section class="cell nv">
+        <!-- Панель охватывает только шапку и список: отметки свежести данных
+             ниже относятся ко всей полосе, а не к навигации, и внутри карточки
+             читались бы как её метаданные -->
+        <div class="nvbox">
+          <div class="ch"><h2>Разделы</h2></div>
+          <nav id="rail-list" aria-label="Разделы"><!-- seo:rail:start --><p>Разделы витрины: дайджест инвестиционных идей; текущие продукты — доска прайсинга, 64 инструмента; размещённые выпуски, 55 выпусков; библиотека типов продуктов; события; о компании.</p><!-- seo:rail:end --></nav>
+        </div>
+        <div class="stamp" id="stamp"></div>
+      </section>
+
+      <section class="cell">
+        <div class="ch"><h2><a class="chl" href="screener.html">Лучшие ставки</a></h2><span class="cap">до года</span></div>
+        <div class="bench" id="bench"></div>
+        <div id="rates"><!-- seo:rates:start --><p>Лучшие ставки на срок до года: вклады, фонды денежного рынка и короткие ОФЗ. Ориентиры — ключевая ставка 14,0%, RUONIA 13,87%.</p><!-- seo:rates:end --></div>
+      </section>
+
+      <section class="cell">
+        <div class="ch"><h2><a class="chl" href="research.html">Утро на рынках</a></h2><span class="cap" id="ndate"></span></div>
+        <div id="news"><!-- seo:news:start --><p>Утро на рынках, обзор от 14.08.2026.</p><ul><li>Commodities. Европа задыхается от жары. Самое жаркое лето за историю наблюдений: +2,79° к норме. Удар по урожаю, рекам и энергетике.</li><li>U.S. Treasurys. Инфляция не разгоняется. PPI за июль — ноль, в годовом 4,7% против 5,5%. Доходность UST-10 упала на 5 б.п.</li><li>Российский рынок. Провал на геополитике. Индекс МосБиржи −3,01% до 2232 п. на атаках по НПЗ и портам. Сбер — лидер сектора.</li></ul><!-- seo:news:end --></div>
+      </section>
+
+      <section class="cell">
+        <div class="ch"><h2><a class="chl" href="board.html">Актуальные продукты</a></h2></div>
+        <div id="mprod"><!-- seo:mprod:start --><p>Актуальные продукты: CALL 100 · Лукойл · 1 год, CALL 105 · ОФЗ 26238 · 3 года, CALL 100 · Сбербанк · 1 год.</p><!-- seo:mprod:end --></div>
+      </section>
+
+      <section class="cell">
+        <div class="ch"><h2><a class="chl" href="offerings.html">Размещения</a></h2></div>
+        <div id="offers"><!-- seo:offers:start --><p>Текущие размещения.</p><ul><li>Энергетика будущего, Структурная облигация · защита капитала 80%, 3 года, Приём заявок с 10.08.2026.</li><li>Perplexity Pre-IPO — структурная облигация, Структурная облигация · Pre-IPO Perplexity, 5 лет, Торгуется на бирже.</li></ul><!-- seo:offers:end --></div>
+      </section>
+    </div>
+  </div>
 
   <footer class="foot">
     <span>Не является индивидуальной инвестиционной рекомендацией.</span>
@@ -303,11 +456,19 @@
   </footer>
 </div>
 
-<script src="intro.js?v=3"></script>
+
 <script src="data/instruments.js?v=fx7"></script>
 <script src="data/lib.js?v=ax2"></script>
 <script src="data/digest.js?v=srv6"></script>
 <script src="data/placements.js?v=1"></script>
+<script src="data/offerings.js?v=srv19"></script>
+<script src="data/rates.js?v=2"></script>
+<script src="data/morning.js?v=1"></script>
+<script src="data/events.js?v=3"></script>
+<script>
+  // Утренний обзор больше НЕ зашит в страницу — он приезжает из data/morning.js,
+  // который пишет бот. Дата там в ISO, свежесть считается ниже в коде.
+</script>
 <script>
   // ── Интро при входе на сайт: полноэкранный «финансовый» ролик один раз за сессию ──
   (function () {
@@ -416,64 +577,285 @@
     document.addEventListener("visibilitychange", onVis);
   })();
 
-  try {
-    var S = window.SITE;
-    document.getElementById("m1").textContent = "идеи от " + window.DIGEST.date;
-    var ni = window.SITE_DATA.instruments.length, n10 = ni % 10, n100 = ni % 100;
-    document.getElementById("m2").textContent = ni + " инструмент" +
-      ((n10 === 1 && n100 !== 11) ? "" : (n10 >= 2 && n10 <= 4 && (n100 < 12 || n100 > 14)) ? "а" : "ов");
-    document.getElementById("m3").textContent = window.PLACEMENTS_DATA.issues.length + " выпуска";
-    document.getElementById("m4").textContent = "данные: " + window.SITE_DATA.updated.split("-").reverse().join(".");
+  (function () {
+    function esc(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+    var fmtQ = (window.SITE && SITE.fmt2) ? SITE.fmt2 : function (n) { return String(n).replace(".", ","); };
+    function dmy(iso) { return String(iso || "").split("-").reverse().join("."); }
+    function pct(n) { return String(Math.round(n * 100) / 100).replace(".", ",") + "%"; }
+    function plural(n, one, few, many) { var a = n % 10, b = n % 100; return (a === 1 && b !== 11) ? one : (a >= 2 && a <= 4 && (b < 12 || b > 14)) ? few : many; }
+    function byId(id) { for (var i = 0; i < SITE_DATA.instruments.length; i++) if (SITE_DATA.instruments[i].id === id) return SITE_DATA.instruments[i]; return null; }
+    var AR = '<svg width="11" height="11" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
-    // Каталог продуктов «можем запустить»: имя + котировка (премия, % от номинала).
-    // Имя делим по «·»: первый сегмент ярче, остальное приглушено; котировка — акцентом.
-    var fmtQ = window.SITE && window.SITE.fmt2 ? window.SITE.fmt2 : function (n) { return String(n).replace(".", ","); };
-    var items = window.SITE_DATA.instruments.slice(0, 12).map(function (r) {
-      var parts = String(r.name).split(" · ");
-      var head = parts.shift();
-      var rest = parts.length ? '<span class="nm"> · ' + parts.join(" · ") + '</span>' : '';
-      // У автоколла quote — купон годовых, не премия: подпись «% г.», как на доске
-      var qt = r.quote != null ? '<span class="qt">' + fmtQ(r.quote) + (r.type === "autocall" ? "% г." : "%") + '</span>' : '';
-      return '<span class="it"><span class="sym">' + head + '</span>' + rest + qt + '</span>';
+    // Что показывать цифрой у продукта. У защиты капитала котировка всегда 100%
+    // (клиент платит номинал) — это пустой показатель. Вместо него говорящий
+    // параметр выплаты: участие. Та же логика работает на research.html.
+    function figure(r) {
+      if (r.type === "protection") {
+        if (r.participation != null) return { v: Math.round(r.participation * 100) + "%", n: "участие" };
+        return { v: r.protectionPct != null ? r.protectionPct + "%" : "—", n: "защита" };
+      }
+      if (r.quote == null) return { v: "—", n: "" };
+      if (r.type === "autocall") return { v: fmtQ(r.quote) + "% г.", n: "купон" };
+      if (r.type === "discount") return { v: fmtQ(r.quote) + "%", n: "цена" };
+      return { v: fmtQ(r.quote) + "%", n: "премия" };
+    }
+
+    var ni = SITE_DATA.instruments.length, np = PLACEMENTS_DATA.issues.length, no = ((window.OFFERINGS && OFFERINGS.items) || []).length;
+
+    // ── Лента ──
+    document.getElementById("tape").innerHTML = (function () {
+      var s = SITE_DATA.instruments.slice(0, 12).map(function (r) {
+        var parts = String(r.name).split(" · ");
+        var head = parts.shift();
+        var rest = parts.length ? '<span class="nm"> · ' + parts.join(" · ") + '</span>' : '';
+        var f = figure(r);
+        return '<span class="it"><span class="sym">' + head + '</span>' + rest +
+          '<span class="qt">' + f.v + '</span></span>';
+      }).join("");
+      return s + s;
+    })();
+
+    // ── События считаем ЗДЕСЬ: дата ближайшей встречи нужна и разделам, и телефону ──
+    var evs = (window.EVENTS && EVENTS.items) || [];
+    var now = Date.now();
+    function startOf(e) { var d = e.date.split("-").map(Number), t = e.timeMsk.split(":").map(Number); return Date.UTC(d[0], d[1] - 1, d[2], t[0] - 3, t[1]); }
+    var upcoming = evs.filter(function (e) { return startOf(e) + (e.durationMin || 30) * 60000 > now; }).sort(function (a, b) { return startOf(a) - startOf(b); })[0] || null;
+    var past = evs.filter(function (e) { return startOf(e) + (e.durationMin || 30) * 60000 <= now; }).sort(function (a, b) { return startOf(b) - startOf(a); })[0] || null;
+
+    // ── Разделы ──
+    var R = window.RATES || {};
+    function best(list) { return (list || []).reduce(function (a, x) { return (!a || x.rate > a.rate) ? x : a; }, null); }
+    var deps = (R.deposits || []).filter(function (d) { return (d.termMonths || 0) <= 12; });
+    // «Лучшие ставки» и «На размещении» из разделов убраны намеренно: они дословно
+    // дублируют третью и четвёртую колонки, где те же данные показаны, а не названы.
+    // Переход туда остаётся — заголовок каждой колонки сам является ссылкой.
+    var rail = [
+      { no: "01", href: "digest.html", t: "Дайджест", m: window.DIGEST ? window.DIGEST.date.slice(0, 5) : "идеи" },
+      { no: "02", href: "board.html?type=warrant", t: "Текущие продукты", m: ni + " шт." },
+      // Термин прод-навигации целиком, без усечения ради ширины: счётчик у этого
+      // пункта убран — глубина архива менее полезна, чем узнаваемое название
+      { no: "03", href: "placements.html", t: "Размещённые выпуски", m: "" },
+      { no: "04", href: "about.html", t: "Библиотека", m: "" },
+      // Метка встречи — конкретная дата из data/events.js, а не общее слово
+      { no: "05", href: "events.html", t: "События", m: upcoming ? dmy(upcoming.date).slice(0, 5) : "записи" },
+      { no: "06", href: "company.html", t: "О компании", m: "" }
+    ];
+    document.getElementById("rail-list").innerHTML = rail.map(function (s) {
+      return '<a class="rl" href="' + s.href + '"><span class="no">' + s.no + '</span><span class="rt">' + s.t + '</span><span class="rm">' + s.m + '</span></a>';
     }).join("");
-    document.getElementById("tape").innerHTML = items + items;
-  } catch (e) {}
 
-  // ── Фоновый торговый ряд: MOEX → NYSE·NASDAQ → LSE (порт с index.html, палитра под тёмный фон) ──
+    // ── Утро на рынках: данные из data/morning.js, свежесть считается сама ──
+    (function () {
+      var M = window.MORNING || {};
+      var news = M.news || [];
+      var cap = document.getElementById("ndate");
+      var box = document.getElementById("news");
+      var pbox = document.getElementById("mprod");
+
+      // ── Актуальные продукты: подбираются ИСХОДЯ ИЗ НОВОСТЕЙ ──
+      // Основной источник — MORNING.products: их выбирает утренний конвейер,
+      // читая саму статью, то есть подбор смысловой. Если списка нет (обзор
+      // написали руками), подбираем сами по тексту новостей: ищем в заголовках
+      // и теле упоминания базовых активов с доски. Так колонка не пустует.
+      var PRODUCT_LIMIT = 5;
+
+      function pickByNews() {
+        var hay = news.map(function (n) {
+          return [n.rubric, n.title, n.body].filter(Boolean).join(" ");
+        }).join(" ").toLowerCase();
+        if (!hay) return [];
+
+        // Совпадение только по ЯВНОМУ упоминанию актива. Смысловые связки вида
+        // «жара → энергетика → нефтяник» тут не выводятся: это работа аналитика,
+        // и её делает утренний конвейер. Здесь — честный поиск по словам.
+        function mentioned(underlying) {
+          var words = String(underlying || "").toLowerCase().split(/[\s\/(),.]+/);
+          for (var i = 0; i < words.length; i++) {
+            var w = words[i];
+            if (w.length < 3) continue;
+            if (hay.indexOf(w) >= 0) return true;
+            // «Сбербанк» на доске против «Сбер» в новости: сверяем по началу слова
+            if (w.length >= 6 && hay.indexOf(w.slice(0, 4)) >= 0) return true;
+          }
+          return false;
+        }
+
+        var picked = [], seenAsset = {};
+        SITE_DATA.instruments.forEach(function (r) {
+          if (picked.length >= PRODUCT_LIMIT) return;
+          var key = String(r.underlying || "").toLowerCase();
+          if (!key || seenAsset[key]) return;      // по одному продукту на актив
+          if (!mentioned(r.underlying)) return;
+          seenAsset[key] = 1;
+          picked.push(r);
+        });
+        return picked;
+      }
+
+      function renderProducts() {
+        var items = (M.products || []).map(byId).filter(Boolean);
+        var derived = false;
+        if (!items.length) { items = pickByNews(); derived = items.length > 0; }
+        if (!items.length) {
+          pbox.innerHTML = '<div class="mnone">Подборка появится с утренним обзором.' +
+            '<a href="board.html">Открыть доску' + AR + '</a></div>';
+          return;
+        }
+        pbox.innerHTML = items.slice(0, PRODUCT_LIMIT).map(function (r) {
+          var f = figure(r);
+          return '<a class="prow" href="instrument.html?id=' + encodeURIComponent(r.id) + '">' +
+            '<b>' + esc(r.name) + '</b><span class="q">' + f.v + '</span>' + AR + '</a>';
+        }).join("") +
+        // Честно помечаем, что подбор наш, а не из обзора: цифра и повод разного веса
+        // Источник подбора называем всегда: «из обзора» — выбор конвейера по статье,
+        // «по темам обзора» — наш поиск по тексту новостей. Разный вес, разная честность.
+        '<div class="mnote">' + (derived ? "подобрано по темам обзора" : "подбор из утреннего обзора") + '</div>';
+      }
+
+      // Возраст обзора в сутках. Сравниваем календарные даты, а не миллисекунды:
+      // пост, написанный в 07:00, не должен «стареть» к вечеру того же дня.
+      var ageDays = null;
+      if (M.date) {
+        var p = String(M.date).split("-").map(Number);
+        var d0 = Date.UTC(p[0], p[1] - 1, p[2]);
+        var t = new Date();
+        var today = Date.UTC(t.getFullYear(), t.getMonth(), t.getDate());
+        ageDays = Math.round((today - d0) / 86400000);
+      }
+
+      // Обзора нет, он пуст или ему больше трёх дней — честная заглушка вместо
+      // протухших новостей. Колонку не прячем: дыра в полосе хуже, чем строка.
+      if (!news.length || ageDays === null || ageDays > 3) {
+        cap.textContent = "";
+        box.innerHTML = '<div class="mnone">Обзор появится утром.' +
+          (news.length && ageDays !== null ? ' Последний был ' + dmy(M.date) + '.' : '') +
+          '<a href="digest.html">Идеи недели в дайджесте' + AR + '</a></div>';
+        // Продукты живут своей жизнью: они с доски и не протухают вместе с обзором
+        renderProducts();
+        return;
+      }
+
+      cap.textContent = ageDays <= 1 ? dmy(M.date) : "обзор от " + dmy(M.date);
+
+      box.innerHTML = news.map(function (n) {
+        var ttl = esc(n.title || "");
+        // Заголовок ведёт на полный разбор, если он есть на «Лучших продуктах»
+        var head = n.link
+          ? '<a class="ttl lnk" href="' + esc(n.link) + '">' + ttl + AR + '</a>'
+          : '<span class="ttl">' + ttl + '</span>';
+
+        return '<article class="mn"><span class="rub">' + esc(n.rubric || "") + '</span>' + head +
+          '<div class="body">' + esc(n.body || "") + '</div></article>';
+      }).join("");
+
+      renderProducts();
+    })();
+
+    // ── Ставки ──
+    var bench = [];
+    if (R.cbr && R.cbr.key) bench.push(["ключевая", pct(R.cbr.key.rate)]);
+    if (R.cbr && R.cbr.ruonia) bench.push(["RUONIA", pct(R.cbr.ruonia.rate)]);
+    var ron = (R.rusfar || []).filter(function (x) { return x.days === 1; })[0];
+    if (ron) bench.push(["RUSFAR o/n", pct(ron.rate)]);
+    document.getElementById("bench").innerHTML = bench.length
+      ? bench.map(function (b) {
+          return '<span class="b"><span class="k">' + b[0] + '</span><span class="v">' + b[1] + '</span></span>';
+        }).join("")
+      : "";
+    if (!bench.length) document.getElementById("bench").style.display = "none";
+
+    var rows = [];
+    var sav = best(deps.filter(function (d) { return d.kind === "savingAccount" && !d.promo; }));
+    if (sav) rows.push({ kind: "накопительный счёт", n: sav.bank, em: "любой день", v: sav.rate, href: sav.url });
+    var dep = best(deps.filter(function (d) { return d.kind === "deposit" && !d.promo; }));
+    if (dep) rows.push({ kind: "вклад", n: dep.bank, em: dep.termMonths + " " + plural(dep.termMonths, "месяц", "месяца", "месяцев"), v: dep.rate, href: dep.url });
+    var fund = best(R.funds);
+    if (fund) rows.push({ kind: "фонд денежного рынка", n: fund.name, em: fund.id, v: fund.rate, href: "https://www.moex.com/ru/issue.aspx?code=" + fund.id });
+    var ofz = best((R.ofz || []).filter(function (o) { return o.years <= 1.02; }));
+    if (ofz) rows.push({ kind: "короткие ОФЗ", n: ofz.name, em: "до " + dmy(ofz.maturity), v: ofz.rate, href: "https://www.moex.com/ru/issue.aspx?code=" + ofz.id });
+    // Пусто — значит fetch_rates.py не отработал. Молчащая колонка выглядит как
+    // поломка вёрстки; строка объясняет, что случилось, и уводит на скринер.
+    document.getElementById("rates").innerHTML = rows.length
+      ? rows.slice(0, 3).map(function (r) {
+          return '<a class="rt2" href="' + r.href + '" target="_blank" rel="noopener">' +
+            '<span><span class="kind">' + r.kind + '</span><span class="n">' + esc(r.n) + ' <em>· ' + esc(r.em) + '</em></span></span>' +
+            '<span class="v">' + pct(r.v) + '</span></a>';
+        }).join("")
+      : '<div class="mnone">Ставки обновляются.<a href="screener.html">Открыть скринер' + AR + '</a></div>';
+
+    // ── Размещения ──
+    var offerItems = ((window.OFFERINGS && OFFERINGS.items) || []).slice(0, 3);
+    document.getElementById("offers").innerHTML = !offerItems.length
+      ? '<div class="mnone">Сейчас размещений нет.<a href="board.html">Смотреть текущие продукты' + AR + '</a></div>'
+      : offerItems.map(function (o) {
+      var ps = [["срок", o.tenor], ["защита", o.protection], ["участие", o.participation]]
+        .filter(function (p) { return p[1]; })
+        .map(function (p) { return p[0] + ' <b>' + esc(p[1]) + '</b>'; }).join(" · ");
+      return '<a class="om" href="offerings.html#' + encodeURIComponent(o.id) + '">' +
+        '<span class="ok">' + esc(o.kind || "") + '</span><span class="on">' + esc(o.name) + '</span>' +
+        '<span class="r2"><span class="ost ' + (o.status === "live" ? "live" : "upn") + '">' + esc(o.statusLabel || "") + '</span>' +
+        '<span class="ops">' + ps + '</span></span></a>';
+    }).join("");
+
+    // ── События: телефон в герое + полоса-анонс (upcoming/past посчитаны выше) ──
+    var hev = document.getElementById("hevslot");
+    if (hev) {
+      var n1 = upcoming ? '<span class="ntf n1"><i></i><span class="nb"><span class="nt">Анонсирована новая встреча</span>' +
+        '<span class="nd">регистрация уже открыта</span></span><span class="nw">сейчас</span></span>' : "";
+      var n2 = past ? (past.recordingUrl
+        ? '<span class="ntf n2"><i></i><span class="nb"><span class="nt">Запись встречи доступна</span><span class="nd">смотреть в разделе</span></span><span class="nw">·</span></span>'
+        : '<span class="ntf n2"><i></i><span class="nb"><span class="nt">Запись прошлой встречи</span><span class="nd">скоро появится в разделе</span></span><span class="nw">·</span></span>') : "";
+      hev.innerHTML = '<a class="hev" href="events.html" aria-label="События Rumberg">' +
+        '<span class="tilt"><span class="shell"><span class="island"></span><span class="scr">' + n1 + n2 +
+        '<svg class="star" width="27" height="27" viewBox="0 0 34 34" aria-hidden="true"><path d="M17 0 L21 13 L34 17 L21 21 L17 34 L13 21 L0 17 L13 13 Z" fill="#EE7D1B"/></svg>' +
+        '<span class="wm2">Rumberg</span><span class="big">События</span>' +
+        '<span class="feat">эфиры · записи · напоминания</span>' +
+        '<span class="pbtn">Открыть раздел</span>' +
+        '</span></span></a>';
+    }
+
+    var evslot = document.getElementById("evslot");
+    if (evslot && upcoming) {
+      var MON = ["янв", "фев", "мар", "апр", "мая", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"];
+      var dp = upcoming.date.split("-").map(Number);
+      var live = startOf(upcoming) <= now;
+      var sub = live
+        ? "идёт прямо сейчас · " + upcoming.place.split("·")[0].trim()
+        : upcoming.timeMsk + " МСК · " + (upcoming.durationMin || 30) + " минут · онлайн, вход свободный";
+      evslot.innerHTML = '<a class="evt rise" style="animation-delay:.16s" href="events.html">' +
+        '<span class="ed"><span class="d">' + dp[2] + '</span><span class="m">' + MON[dp[1] - 1] + '</span></span>' +
+        '<span class="et"><span class="t">' + esc(upcoming.title) + '</span>' +
+        '<span class="s">' + esc(sub) + '</span></span>' +
+        '<span class="eg">' + (live ? "Подключиться" : "Записаться") +
+        '<svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+        '</span></a>';
+    }
+
+    var rd = String((R.updated || "").split(" ")[0]).split("-").reverse().join(".");
+    document.getElementById("stamp").innerHTML = "продукты " + dmy(SITE_DATA.updated) + "<br>ставки " + rd;
+    // Дата данных уже стоит штампом в колонке разделов — в подвале не дублируем
+    document.getElementById("m4").textContent = "invest.rumberg.ru";
+  })();
+
+  // ── Фоновый торговый ряд (порт с прода) ──
   (function () {
     const svg = document.getElementById("market");
-    const W = 1440, H = 800, PT = 46, PB = 26;
+    const W = 1440, H = 640, PT = 46, PB = 26;
     const STEP = 16, BODY = 9;
     const SPEED = 30;
-    // Приглушённые к тьме тона — лента как водяной знак на #0B0C10
     const UP = "#2F7A57", DOWN = "#9A5A26";
     const GRID = "rgba(255,255,255,0.07)", MARK = "rgba(255,255,255,0.14)", LAB = "rgba(255,255,255,0.22)";
     const SNS = "http://www.w3.org/2000/svg";
-
-    const ZONES = [
-      { label: "MOEX · ₽" },
-      { label: "NYSE · NASDAQ · $" },
-      { label: "LSE · £" }
-    ];
-
-    const isStatic = window.matchMedia("(prefers-reduced-motion: reduce)").matches ||
-      new URLSearchParams(location.search).get("motion") === "0";
-    const ZLEN = 30; // свечей в «сессии» — на экране ~3 сессии
-
+    const ZONES = [{ label: "MOEX · ₽" }, { label: "NYSE · NASDAQ · $" }, { label: "LSE · £" }];
+    const isStatic = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const ZLEN = 30;
     const y = v => PT + (1 - v) * (H - PT - PB);
     const zoneOf = i => ZONES[Math.floor(i / ZLEN) % ZONES.length];
-    const el = (tag, attrs) => {
-      const n = document.createElementNS(SNS, tag);
-      for (const k in attrs) n.setAttribute(k, attrs[k]);
-      return n;
-    };
-
+    const el = (tag, attrs) => { const n = document.createElementNS(SNS, tag); for (const k in attrs) n.setAttribute(k, attrs[k]); return n; };
     svg.innerHTML = '<g id="mk-stream"></g>';
     const stream = document.getElementById("mk-stream");
-
     let v = 0.5, nextI = 0, offset = 0;
     const candles = [], nodes = [];
-
     function drawCandle(c) {
       const cx = c.i * STEP + STEP / 2;
       const col = c.c >= c.o ? UP : DOWN;
@@ -484,7 +866,6 @@
       stream.appendChild(g);
       nodes.push({ i: c.i, n: g });
     }
-
     function drawBoundary(i) {
       const x = i * STEP, z = zoneOf(i);
       const g = el("g", {});
@@ -496,7 +877,6 @@
       stream.appendChild(g);
       nodes.push({ i: i, n: g });
     }
-
     function genTo(maxI) {
       while (nextI <= maxI) {
         if (nextI % ZLEN === 0) drawBoundary(nextI);
@@ -504,28 +884,19 @@
         const o = v;
         let c = o + step;
         if (c > 0.92 || c < 0.08) c = o - step;
-        const cd = {
-          i: nextI, o, c,
-          h: Math.max(o, c) + Math.random() * 0.03,
-          l: Math.min(o, c) - Math.random() * 0.03
-        };
+        const cd = { i: nextI, o, c, h: Math.max(o, c) + Math.random() * 0.03, l: Math.min(o, c) - Math.random() * 0.03 };
         candles.push(cd);
         drawCandle(cd);
         v = c;
         nextI++;
       }
     }
-
     function cleanup() {
-      while (nodes.length && nodes[0].i * STEP < offset - 200) {
-        nodes.shift().n.remove();
-      }
+      while (nodes.length && nodes[0].i * STEP < offset - 200) nodes.shift().n.remove();
       while (candles.length > 130) candles.shift();
     }
-
     genTo(Math.ceil(W / STEP) - 1);
     if (isStatic) return;
-
     let prev = performance.now();
     function frame(now) {
       const dt = Math.min(1, (now - prev) / 1000);
@@ -539,81 +910,7 @@
     requestAnimationFrame(frame);
   })();
 </script>
-
-<script src="data/rates.js?v=2"></script>
-<script src="data/events.js?v=3"></script>
-<script>
-  // ── События на главной: телефон в герое + полоса-анонс под ним ──
-  // Раздел «События» из навигации убран (13.08.2026) — телефон остался
-  // единственным входом, но он без даты и прячется на экранах уже 1100px.
-  // Поэтому вернули полосу с датой и темой (14.08.2026): она видна везде.
-  // Всё считается от data/events.js: прошла дата — блоки исчезают сами.
-  (function () {
-    var items = (window.EVENTS && EVENTS.items) || [];
-    var now = Date.now();
-    function esc(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
-    function startOf(e) {
-      var d = e.date.split("-").map(Number), t = e.timeMsk.split(":").map(Number);
-      return Date.UTC(d[0], d[1] - 1, d[2], t[0] - 3, t[1]);
-    }
-    var upcoming = items.filter(function (e) { return startOf(e) + (e.durationMin || 30) * 60000 > now; })
-      .sort(function (a, b) { return startOf(a) - startOf(b); })[0] || null;
-    var past = items.filter(function (e) { return startOf(e) + (e.durationMin || 30) * 60000 <= now; })
-      .sort(function (a, b) { return startOf(b) - startOf(a); })[0] || null;
-
-    // Телефон-заставка: пуши подстраиваются под данные, конкретику не дублируют
-    var hev = document.getElementById("hevslot");
-    if (hev) {
-      var n1 = upcoming ? '<span class="ntf n1"><i></i><span class="nb"><span class="nt">Анонсирована новая встреча</span>' +
-        '<span class="nd">регистрация уже открыта</span></span><span class="nw">сейчас</span></span>' : "";
-      var n2 = past ? (past.recordingUrl
-        ? '<span class="ntf n2"><i></i><span class="nb"><span class="nt">Запись встречи доступна</span><span class="nd">смотреть в разделе</span></span><span class="nw">·</span></span>'
-        : '<span class="ntf n2"><i></i><span class="nb"><span class="nt">Запись прошлой встречи</span><span class="nd">скоро появится в разделе</span></span><span class="nw">·</span></span>') : "";
-      hev.innerHTML = '<a class="hev rise" style="animation-delay:.2s" href="events.html" aria-label="События Rumberg">' +
-        '<span class="tilt"><span class="shell"><span class="island"></span><span class="scr">' + n1 + n2 +
-        '<svg class="star" width="27" height="27" viewBox="0 0 34 34" aria-hidden="true"><path d="M17 0 L21 13 L34 17 L21 21 L17 34 L13 21 L0 17 L13 13 Z" fill="#EE7D1B"/></svg>' +
-        '<span class="wm2">Rumberg</span><span class="big">События</span>' +
-        '<span class="feat">эфиры · записи · напоминания</span>' +
-        '<span class="pbtn">Открыть раздел</span>' +
-        '</span></span></span></a>';
-    }
-
-    // Полоса-анонс под героем: дата и тема ближайшей встречи.
-    // Телефон выше показывает только факт «встреча анонсирована» и прячется
-    // на экранах уже 1100px — конкретику несёт эта полоса, и она видна везде.
-    var evs = document.getElementById("evslot");
-    if (evs && upcoming) {
-      var MON = ["янв", "фев", "мар", "апр", "мая", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"];
-      var dp = upcoming.date.split("-").map(Number);
-      var live = startOf(upcoming) <= now;   // идёт прямо сейчас
-      var sub = live
-        ? "идёт прямо сейчас · " + upcoming.place.split("·")[0].trim()
-        : upcoming.timeMsk + " МСК · " + (upcoming.durationMin || 30) + " минут · онлайн, вход свободный";
-      evs.innerHTML = '<a class="evt rise" style="animation-delay:.16s" href="events.html">' +
-        '<span class="ed"><span class="d">' + dp[2] + '</span><span class="m">' + MON[dp[1] - 1] + '</span></span>' +
-        '<span class="et"><span class="t">' + esc(upcoming.title) + '</span>' +
-        '<span class="s">' + esc(sub) + '</span></span>' +
-        '<span class="eg">' + (live ? "Подключиться" : "Записаться") +
-        '<svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
-        '</span></a>';
-    }
-
-    // Строка «Лучшие ставки»: показываем лучшую доходность из скринера
-    var scr = document.getElementById("scr-sm");
-    if (scr && window.RATES) {
-      // промо-вклады (31% со звёздочкой) в метку не пускаем: на главной без сносок
-      // такая цифра выглядит обещанием, а не спецусловием.
-      // Потолок в год — тот же, что на самой странице скринера, иначе метка
-      // обещала бы ставку, которой на странице уже нет
-      var deps = (RATES.deposits || []).filter(function (d) { return !d.promo && (d.termMonths || 0) <= 12; });
-      var ofz = (RATES.ofz || []).filter(function (o) { return o.years <= 1.02; });
-      var pool = [].concat(deps, RATES.rusfar || [], RATES.funds || [], ofz);
-      var best = pool.reduce(function (a, b) { return (!a || b.rate > a.rate) ? b : a; }, null);
-      if (best) scr.textContent = "до " + String(Math.round(best.rate * 10) / 10).replace(".", ",") + "% годовых";
-    }
-  })();
-</script>
-
+<script src="intro.js?v=3"></script>
 <script src="chat.js?v=14"></script>
 <script src="nav-about.js?v=6"></script>
 <script src="qualgate.js?v=4"></script>
