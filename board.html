@@ -75,6 +75,23 @@
   .kf { border: 1px solid var(--border); background: var(--card); border-radius: 6px; padding: 6px 12px; font-size: 12.5px; font-weight: 500; color: var(--hushed); cursor: pointer; font-family: var(--f-body); }
   .kf:hover { color: var(--ink); }
   .kf.active { background: rgba(238,125,27,0.16); border-color: var(--solar); color: var(--ink); font-weight: 600; }
+  /* Второй ряд — уточнение под клиента, поэтому тише первого: без заливки, мельче */
+  .chips-sub { margin-top: 6px; gap: 14px; }
+  /* На телефоне фильтры едут лентой, а не переносятся: три ряда чипсов занимали
+     138px и отодвигали список за сгиб. Лента понятна без обучения. */
+  @media (max-width: 900px) {
+    /* min-width:0 обязателен: флекс-родители с min-width:auto растягиваются по
+       содержимому ленты и уводят всю страницу в горизонтальный скролл */
+    .aside, .controls, .chips, .chips-sub > .chips { min-width: 0; }
+    .chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+    .chips::-webkit-scrollbar { display: none; }
+    .chips .kf, .chips .cmp-chip { flex: none; }
+    .chips-sub { gap: 8px; }
+  }
+  .kf.sub { border-color: transparent; background: transparent; padding: 4px 9px; font-size: 12px; }
+  .kf.sub:hover { background: rgba(255,255,255,0.05); }
+  .kf.sub.active { background: transparent; border-color: transparent; color: var(--solar-l); font-weight: 600; }
+  .kf.sub .n { opacity: .6; }
   .kf .n { font-family: var(--f-mono); font-size: 11px; opacity: 0.75; margin-left: 4px; }
 
   .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
@@ -97,6 +114,10 @@
   .item .r1 { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
   .item .nm { font-size: 13.5px; font-weight: 600; }
   .item .q { font-family: var(--f-mono); font-size: 12px; white-space: nowrap; }
+  /* Вторая строка: срок, валюта, порог входа — то, по чему агент отсеивает, не открывая паспорт */
+  .item .r2 { margin-top: 3px; }
+  .item .mt { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .04em; color: rgba(242,243,247,0.52); }
+  .item.active .mt { color: rgba(242,243,247,0.68); }
   .empty-list { padding: 22px 14px; font-size: 13px; color: var(--faint); }
 
   /* ── Сравнение продуктов ────────────────────────────────────────────────
@@ -202,13 +223,20 @@
   .fact .k { font-size: 11px; color: var(--faint); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 3px; }
   .fact .v { font-size: 13px; line-height: 1.45; }
 
-  /* Действия — сразу над диаграммой (вниз не долистывают). Один акцент: «Обсудить
-     продукт» оранжевая, one-pager и «Поделиться» — тихие, без рамок. */
+  /* Действия — сразу над диаграммой (вниз не долистывают). Акцент отдан операции
+     АГЕНТА: «Отправить клиенту» залитая и первая. «Обсудить продукт» — заявка нам,
+     агенту на своей рабочей доске она не нужна, поэтому тихая. На instrument.html
+     приоритет обратный: туда приходит клиент. */
   .pp-actions { margin-top: 16px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
   .pp-actions .btn-pdf.btn-secondary { border: none !important; background: transparent !important; color: var(--hushed) !important; padding: 8px 10px; transition: color .2s; }
   .pp-actions .btn-pdf.btn-secondary:hover { color: var(--ink) !important; background: rgba(255,255,255,0.05) !important; }
-  .pp-actions .sh-btn { border-color: transparent; color: var(--hushed); padding: 8px 10px; }
-  .pp-actions .sh-btn:hover { border-color: transparent; color: var(--ink); background: rgba(255,255,255,0.05); }
+  .pp-actions .sh-btn { background: var(--solar); border-color: var(--solar); color: #0C0A08; font-weight: 600; padding: 9px 16px; }
+  /* На телефоне основная операция агента должна попадать под палец: 44px минимум */
+  @media (max-width: 900px) { .pp-actions .sh-btn { padding: 13px 18px; } }
+  .pp-actions .sh-btn:hover { background: var(--solar-l); border-color: var(--solar-l); color: #0C0A08; }
+  .pp-actions .sh-btn svg path { stroke: #0C0A08; }
+  .pp-actions .ct-btn { background: transparent !important; border: 1px solid var(--border) !important; color: var(--hushed) !important; font-weight: 400 !important; }
+  .pp-actions .ct-btn:hover { color: var(--ink) !important; background: rgba(255,255,255,0.05) !important; }
   .btn-pdf { display: inline-flex; align-items: center; gap: 8px; background: var(--solar); color: var(--ink); border-radius: 6px; padding: 9px 16px; font-size: 13.5px; font-weight: 500; transition: background .3s ease-in-out; }
   .btn-pdf:hover { background: var(--solar-l); }
   .btn-secondary { background: transparent !important; color: var(--ink) !important; border: 1px solid var(--border); }
@@ -293,6 +321,7 @@
       <div class="controls">
         <input class="search" id="search" type="search" placeholder="Поиск: название, тикер, актив…" aria-label="Поиск по инструментам">
         <div class="chips" id="kinds"></div>
+        <div class="chips chips-sub"><span class="chips" id="f-tenor"></span><span class="chips" id="f-ccy"></span></div>
       </div>
       <div class="list-top"><button class="ta" id="toggle-all" type="button"></button></div>
       <div class="list" id="list"><!-- seo:start --><div class="seo-pre"><p>Доска инструментов Rumberg: 64 структурных продукта для квалифицированных инвесторов. Котировки индикативные, обновляются по мере пересчёта прайсинга.</p><h2>Дисконтные облигации</h2><ul><li>Дисконтная облигация на ВЭБ.РФ · 3 года.</li><li>Дисконтная облигация на ВЭБ.РФ · 5 лет.</li><li>Дисконтная облигация на Газпром нефть · 3 года.</li><li>Дисконтная облигация на Газпром нефть · 5 лет.</li><li>Дисконтная облигация на Магнит · 3 года.</li><li>Дисконтная облигация на Магнит · 5 лет.</li><li>Дисконтная облигация на Ростелеком · 3 года.</li><li>Дисконтная облигация на Ростелеком · 5 лет.</li><li>Дисконтная облигация на Северсталь · 3 года.</li><li>Дисконтная облигация на Северсталь · 5 лет.</li></ul><h2>Облигации с защитой капитала</h2><ul><li>Защита капитала · худшая из корзины · 1 год, базовый актив — Полюс / Сбербанк / Лукойл.</li><li>Защита капитала · худшая из корзины · 2 года, базовый актив — Полюс / Сбербанк / Лукойл.</li><li>Защита капитала · Сбербанк · 1 год.</li><li>Защита капитала · Лукойл · 1 год.</li><li>Защита капитала · Полюс · 1 год.</li><li>Защита капитала · Сбербанк · 2 года.</li><li>Защита капитала · Лукойл · 2 года.</li><li>Защита капитала · Полюс · 2 года.</li><li>Защита капитала · ОФЗ 26238 · 2 года.</li><li>Защита капитала · ОФЗ 26238 · рост от +5% · 2 года.</li><li>Защита капитала · CSI 300 · 2 года.</li><li>Защита капитала · CSI 300 · 3 года.</li><li>Защита капитала · S&amp;P 500 · 2 года.</li><li>Защита капитала · S&amp;P 500 · 3 года.</li><li>Участие 220%, базовый актив — ОФЗ 26238, срок 3 года.</li></ul><h2>Варранты</h2><ul><li>CALL 100 · худшая из корзины · 1 год, базовый актив — Полюс / Сбербанк / Лукойл.</li><li>CALL 100 · худшая из корзины · 2 года, базовый актив — Полюс / Сбербанк / Лукойл.</li><li>CALL 100 · Сбербанк · 1 год.</li><li>CALL 100 · Лукойл · 1 год.</li><li>CALL 100 · Полюс · 1 год.</li><li>CALL 100 · Сбербанк · 2 года.</li><li>CALL 100 · Лукойл · 2 года.</li><li>CALL 100 · Полюс · 2 года.</li><li>CALL 100 · ОФЗ 26238 · 2 года.</li><li>CALL 100 · ОФЗ 26238 · 3 года.</li><li>CALL 105 · ОФЗ 26238 · 2 года.</li><li>CALL 105 · ОФЗ 26238 · 3 года.</li><li>CALL 100 · NBIS · 2 года, базовый актив — Nebius Group (NBIS), валюта USD.</li><li>CALL 100 · NBIS · 3 года, базовый актив — Nebius Group (NBIS), валюта USD.</li><li>CS 100–150 · NBIS · 2 года, базовый актив — Nebius Group (NBIS), валюта USD.</li><li>CS 100–150 · NBIS · 3 года, базовый актив — Nebius Group (NBIS), валюта USD.</li><li>CALL 100 · NVDA · 2 года, базовый актив — NVIDIA (NVDA), валюта USD.</li><li>CALL 100 · NVDA · 3 года, базовый актив — NVIDIA (NVDA), валюта USD.</li><li>CS 100–150 · NVDA · 2 года, базовый актив — NVIDIA (NVDA), валюта USD.</li><li>CS 100–150 · NVDA · 3 года, базовый актив — NVIDIA (NVDA), валюта USD.</li><li>CALL 100 · SPY · 2 года, базовый актив — S&amp;P 500 (SPY), валюта USD.</li><li>CALL 100 · SPY · 3 года, базовый актив — S&amp;P 500 (SPY), валюта USD.</li><li>CALL 100 · GLD · 2 года, базовый актив — Золото (GLD), валюта USD.</li><li>CALL 100 · GLD · 3 года, базовый актив — Золото (GLD), валюта USD.</li><li>CALL 100 · IBIT · 2 года, базовый актив — Bitcoin (IBIT), валюта USD.</li><li>CALL 100 · IBIT · 3 года, базовый актив — Bitcoin (IBIT), валюта USD.</li><li>CS 100–150 · IBIT · 2 года, базовый актив — Bitcoin (IBIT), валюта USD.</li><li>CS 100–150 · IBIT · 3 года, базовый актив — Bitcoin (IBIT), валюта USD.</li><li>CALL 100 · CSI 300 · 2 года, валюта USD.</li><li>CALL 100 · CSI 300 · 3 года, валюта USD.</li><li>CALL 100 · Hang Seng · 2 года, валюта USD.</li><li>CALL 100 · Hang Seng · 3 года, валюта USD.</li><li>Call, базовый актив — CNYRUB, срок 1 год.</li></ul><h2>Бустеры</h2><ul><li>Бустер · Яндекс · 9 месяцев.</li><li>Бустер · Сбербанк · 9 месяцев.</li><li>Бустер · Лукойл · 9 месяцев.</li><li>Бустер · Т-Банк · 9 месяцев.</li></ul><h2>Автоколлы</h2><ul><li>Автоколл · Полупроводники США · 3 года, базовый актив — NVDA / AMD / INTC, валюта USD.</li><li>Автоколл · Big Tech США · 3 года, базовый актив — NVDA / TSLA / AMZN / GOOGL, валюта USD.</li></ul></div><!-- seo:end --></div>
@@ -312,20 +341,35 @@
 
 <script src="data/instruments.js?v=fx8"></script>
 <script src="data/lib.js?v=ax2"></script>
-<script src="share.js?v=7"></script>
+<script src="share.js?v=8"></script>
 <script src="contact.js?v=9"></script>
 <script>
   const S = window.SITE;
   const TYPE_LABEL = { discount: "Дисконтные облигации", protection: "Защита капитала", warrant: "Варранты", booster: "Бустеры", autocall: "Автоколлы" };
 
-  let type = "all", q = "", selected = null, mode = "payoff";
+  let type = "all", tenor = "all", ccy = "all", q = "", selected = null, mode = "payoff";
   // Храним СВЁРНУТЫЕ группы: по умолчанию раскрыты все. Раньше здесь был набор
   // раскрытых — доска открывалась с нулём видимых инструментов из 38.
   const closedGroups = new Set();
 
-  // ?type= из старых ссылок предвыбирает семейство
-  const qsType = new URLSearchParams(location.search).get("type");
-  if (S.TYPES[qsType]) type = qsType;
+  // Состояние подбора живёт в адресе: агент возвращается кнопкой «Назад», кладёт
+  // отфильтрованную доску в закладки и отправляет коллеге ссылку на свою выборку.
+  // ?type= поддерживался и раньше — старые ссылки продолжают работать.
+  const QS = new URLSearchParams(location.search);
+  if (S.TYPES[QS.get("type")]) type = QS.get("type");
+  if (["short", "mid", "long"].includes(QS.get("tenor"))) tenor = QS.get("tenor");
+  if (["RUB", "USD"].includes(QS.get("ccy"))) ccy = QS.get("ccy");
+  if (QS.get("q")) q = QS.get("q");
+
+  // Пишем состояние в адрес, не засоряя историю: одна запись на визит, чтобы
+  // «Назад» уводил к предыдущей странице, а не отматывал двадцать нажатий фильтра
+  function syncURL() {
+    const p = new URLSearchParams(location.search);
+    [["type", type], ["tenor", tenor], ["ccy", ccy], ["q", q.trim()]]
+      .forEach(([k, v]) => { if (v && v !== "all") p.set(k, v); else p.delete(k); });
+    const s = p.toString();
+    history.replaceState(null, "", location.pathname + (s ? "?" + s : "") + location.hash);
+  }
 
   // --- Графики (SVG строками, Ramp-палитра) ---
   const W = 560, H = 270, PAD = 26;
@@ -904,9 +948,12 @@
   }
 
   function actionsHTML(inst) {
-    return '<span class="ct-host" id="ct-host"></span><a class="btn-pdf btn-secondary" href="onepager.html?id=' + encodeURIComponent(inst.id) + '&print=1">' +
+    // Порядок под агента: на доску приходит он, а не клиент — клиент попадает сразу
+    // на instrument.html по присланной ссылке. Поэтому первой и залитой стоит
+    // «Отправить клиенту», а «Обсудить продукт» (заявка НАМ) уходит в тихие.
+    return '<span class="sh-host" id="sh-host"></span><a class="btn-pdf btn-secondary" href="onepager.html?id=' + encodeURIComponent(inst.id) + '&print=1">' +
       '<svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M7 1 V9 M7 9 L4 6 M7 9 L10 6" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 12 H12" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round"/></svg>' +
-      'Скачать one-pager (PDF)</a><span class="sh-host" id="sh-host"></span>';
+      'Скачать one-pager (PDF)</a><span class="ct-host" id="ct-host"></span>';
   }
 
   function passportHTML(inst) {
@@ -968,7 +1015,8 @@
       // Без .html: GitHub Pages отдаёт p/<id>.html и по короткому пути (проверено на боевом).
       const prodUrl = new URL("p/" + encodeURIComponent(inst.id), location.href).href;
       const params = (c.metrics || []).filter(m => m[1] !== "базовый актив").map(m => [m[1], m[0]]);
-      Share.attach(shHost, { url: prodUrl, title: S.displayName(inst), name: S.displayName(inst), pitch: c.subtitle, params });
+      Share.attach(shHost, { url: prodUrl, title: S.displayName(inst), name: S.displayName(inst),
+        pitch: c.subtitle, params, label: "Отправить клиенту" });
     }
     const ctHost = document.getElementById("ct-host");
     if (ctHost && window.Contact) {
@@ -1001,11 +1049,64 @@
     return "Участие " + Math.round(r.participation * 100) + "%" + wo + (r.strike > 100 ? " · от +" + S.fmtSmart(r.strike - 100) + "%" : "") + " · " + r.tenor;
   }
 
+  // Поисковый индекс продукта. Раньше искали по name+id+underlying — и агент,
+  // которому клиент сказал «в долларах, года на два», не находил ничего: валюты,
+  // срока и типа в индексе не было (22 продукта из 64 в USD, запрос «USD» → 0).
+  // Добавлены синонимы, которыми люди реально говорят: «доллар», «защита», «два года».
+  const CCY_WORDS = { RUB: "rub руб рубль рублях рублёвый", USD: "usd usd$ доллар долларах долларовый", CNY: "cny юань юанях" };
+  const TYPE_WORDS = {
+    discount: "дисконт дисконтная облигация",
+    protection: "защита капитала защитная",
+    warrant: "варрант call колл спред",
+    booster: "бустер",
+    autocall: "автоколл автокол"
+  };
+  const TENOR_WORDS = { "9 месяцев": "9 мес полгода", "1 год": "1 год год годовой", "2 года": "2 года два года",
+                        "3 года": "3 года три года", "5 лет": "5 лет пять лет" };
+  // Активы, записанные латиницей: агент печатает по-русски и не переключает раскладку
+  const RU_ALIAS = {
+    "NVIDIA": "нвидиа энвидиа", "NVDA": "нвидиа", "Bitcoin": "биткоин битка крипта",
+    "IBIT": "биткоин", "Nebius": "небиус", "CSI 300": "китай китайский",
+    "Hang Seng": "гонконг ханг сенг", "S&P 500": "сипи америка сша индекс",
+    "SPY": "сипи", "CNYRUB": "юань юаня китайский", "AMD": "амд", "INTC": "интел",
+    "TSLA": "тесла", "AMZN": "амазон", "GOOGL": "гугл", "GLD": "золото"
+  };
+  function aliasesFor(text) {
+    let out = "";
+    for (const k in RU_ALIAS) if (text.indexOf(k) >= 0) out += " " + RU_ALIAS[k];
+    return out;
+  }
+  const idx = {};
+  S.INSTRUMENTS.forEach(function (r) {
+    const raw = [r.name, r.id, r.underlying, r.cls, r.tenor].join(" ");
+    idx[r.id] = (raw + " " + (CCY_WORDS[r.currency || "RUB"] || "") + " " +
+      (TYPE_WORDS[r.type] || "") + " " + (TENOR_WORDS[r.tenor] || "") +
+      aliasesFor(raw)).toLowerCase();
+  });
+
+  // Срок в годах — из подписи tenor: «9 месяцев» → 0.75, «2 года» → 2
+  function tenorY(r) {
+    const m = /(\d+)\s*мес/i.exec(r.tenor || "");
+    if (m) return +m[1] / 12;
+    const y = /(\d+)/.exec(r.tenor || "");
+    return y ? +y[1] : 0;
+  }
+  const TENOR_TEST = {
+    all: () => true,
+    short: r => tenorY(r) <= 1,          // до года включительно
+    mid: r => tenorY(r) > 1 && tenorY(r) <= 3,
+    long: r => tenorY(r) > 3
+  };
+
   function filtered() {
-    const needle = q.trim().toLowerCase();
+    // Несколько слов через пробел — И, а не подстрока: «сбер защита» находит
+    // защиту капитала на Сбербанк, а не ноль результатов
+    const words = q.trim().toLowerCase().split(/\s+/).filter(Boolean);
     return S.INSTRUMENTS.filter(r =>
       (type === "all" || r.type === type) &&
-      (!needle || (r.name + " " + r.id + " " + r.underlying).toLowerCase().includes(needle)));
+      (tenor === "all" || TENOR_TEST[tenor](r)) &&
+      (ccy === "all" || (r.currency || "RUB") === ccy) &&
+      (!words.length || words.every(w => idx[r.id].includes(w))));
   }
 
   function itemHTML(r) {
@@ -1013,9 +1114,17 @@
       : r.type === "autocall" ? S.fmt2(r.couponPa != null ? r.couponPa : r.quote) + "% г."
       : S.fmt2(r.quote) + "%";
     const picked = cmp.indexOf(r.id) >= 0;
+    // Вторая строка: срок, валюта и порог входа. Без них агент открывал паспорт
+    // только чтобы отсеять долларовый продукт или увидеть, что вход от 30 млн.
+    // Рубли и типовой минимум 1 млн не подписываем — это шум, они у большинства.
+    const meta = [r.tenor,
+      (r.currency && r.currency !== "RUB") ? r.currency : "",
+      (r.minNom && r.minNom > 1000000) ? "от " + Math.round(r.minNom / 1000000) + " млн" : ""
+    ].filter(Boolean).join(" · ");
     return '<button class="item' + (r.id === selected && !cmpMode ? " active" : "") + (picked ? " picked" : "") +
       '" data-id="' + r.id + '"' + (cmpMode ? ' aria-pressed="' + picked + '"' : "") + '>' +
       '<div class="r1"><span class="nm"><span class="ck"></span>' + shortName(r) + '</span><span class="q">' + qv + '</span></div>' +
+      (meta ? '<div class="r2"><span class="mt">' + meta + '</span></div>' : "") +
     '</button>';
   }
 
@@ -1089,15 +1198,61 @@
   document.querySelectorAll(".kf").forEach(b => b.addEventListener("click", () => {
     type = b.getAttribute("data-k");
     document.querySelectorAll(".kf").forEach(x => { const on = x === b; x.classList.toggle("active", on); x.setAttribute("aria-pressed", on); });
-    render();
+    render(); syncURL();
   }));
+
+  // Второй ряд: срок и валюта. Тип отвечает «что за продукт», эти два — «подойдёт
+  // ли клиенту». Раньше и то и другое можно было узнать, только открыв паспорт.
+  const TENOR_LABEL = { all: "Любой срок", short: "До года", mid: "1–3 года", long: "Больше 3 лет" };
+  const CCY_LABEL = { all: "Любая валюта", RUB: "₽", USD: "$" };
+  function subChips(host, map, get, set) {
+    host.innerHTML = Object.keys(map).map(k => {
+      const n = k === "all" ? "" : '<span class="n">' +
+        S.INSTRUMENTS.filter(r => map === TENOR_LABEL ? TENOR_TEST[k](r) : (r.currency || "RUB") === k).length + "</span>";
+      return '<button class="kf sub' + (k === get() ? " active" : "") + '" data-v="' + k + '" aria-pressed="' +
+        (k === get()) + '">' + map[k] + n + "</button>";
+    }).join("");
+    host.querySelectorAll(".kf").forEach(b => b.addEventListener("click", () => {
+      set(b.getAttribute("data-v"));
+      host.querySelectorAll(".kf").forEach(x => { const on = x === b; x.classList.toggle("active", on); x.setAttribute("aria-pressed", on); });
+      render(); syncURL();
+    }));
+  }
+  subChips(document.getElementById("f-tenor"), TENOR_LABEL, () => tenor, v => { tenor = v; });
+  subChips(document.getElementById("f-ccy"), CCY_LABEL, () => ccy, v => { ccy = v; });
 
   // Чипс «Сравнить» — в том же ряду, что фильтры по типу
   document.getElementById("kinds").insertAdjacentHTML("beforeend",
     '<button class="cmp-chip" id="cmp-chip" type="button" aria-pressed="false" title="Сравнить 2–3 продукта">⇄ Сравнить</button>');
   document.getElementById("cmp-chip").addEventListener("click", () => setCmpMode(!cmpMode));
   document.getElementById("cmp-reset").addEventListener("click", () => setCmpMode(false));
-  document.getElementById("search").addEventListener("input", e => { q = e.target.value; render(); });
+  const searchEl = document.getElementById("search");
+  searchEl.value = q;                       // запрос мог прийти из адреса
+  searchEl.addEventListener("input", e => { q = e.target.value; render(); syncURL(); });
+
+  // Клавиатура: доска — рабочий инструмент, до поиска было 9 табов.
+  // «/» ставит курсор в поиск откуда угодно, Escape очищает или закрывает паспорт,
+  // Enter открывает первый найденный продукт — типовой путь «набрал и отправил».
+  searchEl.addEventListener("keydown", e => {
+    if (e.key === "Enter") {
+      const first = document.querySelector("#list .item");
+      if (first) { first.click(); first.scrollIntoView({ block: "nearest" }); }
+    } else if (e.key === "Escape" && searchEl.value) {
+      e.stopPropagation();
+      searchEl.value = ""; q = ""; render(); syncURL();
+    }
+  });
+  document.addEventListener("keydown", e => {
+    const inField = /^(INPUT|TEXTAREA|SELECT)$/.test((e.target.tagName || "")) || e.target.isContentEditable;
+    if (e.key === "/" && !inField && !e.metaKey && !e.ctrlKey) { e.preventDefault(); searchEl.focus(); searchEl.select(); }
+    if (e.key === "Escape") {
+      const w = document.getElementById("panel-wrap");
+      if (w && w.classList.contains("open")) { w.classList.remove("open"); }
+    }
+  });
+  // Фокус в поиске при загрузке — только на десктопе: на телефоне это подняло бы
+  // клавиатуру поверх списка ещё до того, как агент что-то увидел
+  if (window.matchMedia("(min-width: 901px)").matches && !location.hash) searchEl.focus();
   document.getElementById("panel-close").addEventListener("click", () =>
     document.getElementById("panel-wrap").classList.remove("open"));
 

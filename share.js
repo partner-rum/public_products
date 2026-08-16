@@ -73,13 +73,17 @@ window.Share = (function () {
     var pdf = opts.pdf || null;
     var title = opts.title || document.title;
     var text = opts.text || buildText(opts, title);
+    // Подпись кнопки задаёт страница; значение своё, из кода, не пользовательский ввод
+    var label = String(opts.label || "Поделиться").replace(/[<>&"]/g, "");
     var u = encodeURIComponent(url), t = encodeURIComponent(text);
     var wrap = document.createElement("div");
     wrap.className = "sh";
     wrap.innerHTML =
       // role="menu"/"menuitem" убраны: ARIA-меню требует навигации стрелками, которой нет.
       // Это просто список ссылок/кнопок — Tab обходит их нативно. aria-expanded отражает попап.
-      '<button class="sh-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Поделиться">' + IC.share + 'Поделиться</button>' +
+      // Подпись настраивается: на доске это основная операция агента и называется
+      // «Отправить клиенту», на клиентских страницах остаётся нейтральное «Поделиться»
+      '<button class="sh-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-label="' + label + '">' + IC.share + label + '</button>' +
       '<div class="sh-menu">' +
         '<button class="sh-mi" type="button" data-copy><span class="ic">' + IC.link + '</span><span>Скопировать ссылку<small>страница продукта</small></span></button>' +
         '<a class="sh-mi" target="_blank" rel="noopener" href="https://t.me/share/url?url=' + u + '&text=' + t + '"><span class="ic tg">' + IC.tg + '</span><span>Отправить в Telegram</span></a>' +
