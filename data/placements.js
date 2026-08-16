@@ -1,8 +1,8 @@
 // Файл собирается скриптом выгрузки из бэкофиса и админкой сейлзов — руками не править.
 // Выпуски с "src": "sales" добавлены через админку; при перегенерации сохраняются,
-// пока их ISIN не появится в выгрузке. Обновлено: 2026-08-16
+// пока их ISIN не появится в выгрузке. Обновлено: 2026-08-17
 window.PLACEMENTS_DATA = {
- "updated": "2026-08-16",
+ "updated": "2026-08-17",
  "issues": [
   {
    "isin": "RU000A10EM61",
@@ -299,7 +299,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2026-03-06",
    "maturity": "2027-03-17",
    "fx": false,
-   "bid": 95.0,
+   "bid": 95.25,
    "kind": "coupon",
    "wrapper": "NOTE",
    "basket": [
@@ -345,7 +345,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2026-02-09",
    "maturity": "2027-02-17",
    "fx": false,
-   "bid": 97.75,
+   "bid": 97.25,
    "kind": "coupon",
    "wrapper": "NOTE",
    "basket": [
@@ -685,7 +685,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2025-11-20",
    "maturity": "2026-12-17",
    "fx": false,
-   "bid": 101.5,
+   "bid": 101.75,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -888,7 +888,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2025-10-07",
    "maturity": "2026-10-20",
    "fx": false,
-   "bid": 111.25,
+   "bid": 111.0,
    "kind": "coupon",
    "wrapper": "NOTE",
    "basket": [
