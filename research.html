@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Лучшие продукты — разборы и идеи</title>
+<meta name="description" content="Разборы рынка и продукты под них.">
+<!-- Страница СКРЫТАЯ, пока копится: ссылок на неё нет ни в одной шапке,
+     в sitemap.xml она не лежит, поисковикам закрыта. Когда наберётся
+     достаточно записей — убрать noindex, добавить в sitemap и в навигацию. -->
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0B0C10">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Rubik:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0B0C10; --panel:rgba(255,255,255,0.04); --line:rgba(255,255,255,0.09);
+    --tx:#F2F3F7; --mut:#A0A5B8; --dim:#888C9C;
+    --solar:#EE7D1B; --solar-l:#F58E33; --blue:#4F86E6; --up:#55C08A;
+    --rule-soft:rgba(255,255,255,0.05);
+    --f:'Onest',system-ui,sans-serif; --m:'JetBrains Mono',Consolas,monospace; --display:'Rubik','Onest',system-ui,sans-serif;
+    --ease:cubic-bezier(0.16,1,0.3,1);
+    --shell:1280px;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--tx); font-family:var(--f); -webkit-font-smoothing:antialiased; min-height:100dvh; }
+  body::before, body::after { content:""; position:fixed; z-index:0; pointer-events:none; border-radius:50%; filter:blur(90px); }
+  body::before { width:46vw; height:46vw; left:-14vw; top:-20vw; background:radial-gradient(circle, rgba(79,134,230,0.14), transparent 65%); }
+  body::after { width:44vw; height:44vw; right:-12vw; top:-14vw; background:radial-gradient(circle, rgba(238,125,27,0.12), transparent 65%); }
+  a { text-decoration:none; color:inherit; cursor:pointer; }
+  a:focus-visible { outline:2px solid var(--solar); outline-offset:3px; border-radius:4px; }
+
+  .nav { position:sticky; top:0; z-index:10; background:rgba(11,12,16,0.82); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border-bottom:1px solid var(--line); }
+  .nav-in { max-width:var(--shell); margin:0 auto; padding:0 44px; height:60px; display:flex; align-items:center; gap:12px; }
+  .nav .name { font-size:14px; font-weight:600; }
+  .nav-cta { margin-left:auto; display:flex; align-items:center; gap:10px; }
+  .btn-solar { display:inline-flex; align-items:center; gap:8px; background:var(--solar); color:#0C0A08; border-radius:6px; padding:9px 15px; font-size:13px; font-weight:600; transition:background .3s ease-in-out; }
+  .btn-solar:hover { background:var(--solar-l); }
+  .btn-tg { display:inline-flex; align-items:center; gap:7px; background:var(--panel); border:1px solid var(--line); color:var(--tx); border-radius:6px; padding:8px 13px; font-size:13px; font-weight:600; transition:border-color .2s, background .2s; }
+  .btn-tg:hover { border-color:var(--blue); background:rgba(79,134,230,0.12); }
+
+  .wrap { position:relative; z-index:1; max-width:var(--shell); margin:0 auto; padding:0 44px; }
+
+  .head { padding:52px 0 26px; border-bottom:1px solid var(--line); }
+  .kicker { font-family:var(--m); font-size:10.5px; letter-spacing:.17em; text-transform:uppercase; color:var(--dim); }
+  h1 { margin:16px 0 0; font-family:var(--display); font-size:clamp(30px,4vw,46px); font-weight:600; line-height:1.06; letter-spacing:-0.022em; }
+  h1 .lm { color:var(--solar); }
+  .head .sub { margin:16px 0 0; font-size:15px; line-height:1.6; color:var(--mut); max-width:620px; }
+  .head .meta { margin-top:18px; display:flex; gap:22px; flex-wrap:wrap; font-family:var(--m); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--dim); }
+  .head .meta b { color:var(--mut); font-weight:500; }
+
+  /* ── Переключатель выпусков (архив), как в дайджесте ── */
+  .pick { position:relative; display:inline-flex; margin-top:20px; }
+  .pick-btn { display:inline-flex; align-items:center; gap:10px; background:var(--panel); border:1px solid var(--line);
+    color:var(--tx); border-radius:9px; padding:10px 14px; font-family:inherit; font-size:13px; cursor:pointer;
+    transition:border-color .2s, background .2s; }
+  .pick-btn:hover { border-color:rgba(255,255,255,0.26); background:rgba(255,255,255,0.06); }
+  .pick-btn .lbl { font-family:var(--m); font-size:9px; letter-spacing:.16em; text-transform:uppercase; color:var(--dim); }
+  .pick-btn .cur { font-weight:600; }
+  .pick-btn .cv { transition:transform .22s var(--ease); color:var(--dim); }
+  .pick.open .cv { transform:rotate(180deg); }
+  /* visibility в закрытом состоянии убирает пункты из табуляции и из дерева скринридера */
+  .pick-menu { position:absolute; left:0; top:calc(100% + 8px); z-index:40; width:340px; max-width:calc(100vw - 40px);
+    background:#1B1D26; border:1px solid var(--line); border-radius:12px; padding:6px; box-shadow:0 18px 44px rgba(0,0,0,0.58);
+    opacity:0; visibility:hidden; transform:translateY(-4px); transition:opacity .18s ease, transform .18s var(--ease), visibility 0s linear .18s; }
+  .pick.open .pick-menu { opacity:1; visibility:visible; transform:none; transition:opacity .18s ease, transform .18s var(--ease), visibility 0s; }
+  .pick-mh { font-family:var(--m); font-size:9px; letter-spacing:.16em; text-transform:uppercase; color:var(--dim); padding:8px 10px 6px; }
+  .pick-i { display:block; width:100%; text-align:left; background:none; border:none; border-radius:8px; padding:10px 11px;
+    cursor:pointer; font-family:inherit; color:var(--tx); }
+  .pick-i:hover { background:rgba(255,255,255,0.06); }
+  .pick-i.active { background:rgba(238,125,27,0.1); }
+  .pick-i .d { display:flex; align-items:baseline; gap:10px; }
+  .pick-i .t { font-size:13.5px; font-weight:600; }
+  .pick-i.active .t { color:var(--solar); }
+  .pick-i .c { margin-left:auto; font-family:var(--m); font-size:9.5px; color:var(--dim); white-space:nowrap; }
+  .pick-i .s { display:block; font-size:11.5px; line-height:1.45; color:var(--dim); margin-top:4px; }
+
+  /* Фильтр по рубрикам собирается из записей ВЫБРАННОГО выпуска */
+  .chips { display:flex; gap:8px; flex-wrap:wrap; padding:20px 0 0; }
+  .chip { font-family:var(--m); font-size:10.5px; letter-spacing:.06em; padding:7px 13px; border:1px solid var(--line);
+    border-radius:20px; color:var(--mut); background:transparent; cursor:pointer; transition:border-color .2s, background .2s, color .2s; }
+  .chip:hover { border-color:rgba(255,255,255,0.24); color:var(--tx); }
+  .chip.on { background:var(--solar); border-color:var(--solar); color:#0C0A08; font-weight:600; }
+
+  /* ── Запись ресерча ── */
+  .rs { padding:34px 0 32px; border-bottom:1px solid var(--line); scroll-margin-top:76px; }
+  .rs:last-of-type { border-bottom:0; }
+  .rs .top { display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; }
+  .rs .rub { font-family:var(--m); font-size:9.5px; letter-spacing:.17em; text-transform:uppercase; color:var(--solar); }
+  .rs .dt { font-family:var(--m); font-size:9.5px; letter-spacing:.1em; color:var(--dim); }
+  .rs .anchor { margin-left:auto; font-family:var(--m); font-size:9.5px; letter-spacing:.1em; color:var(--dim);
+    opacity:0; transition:opacity .2s, color .2s; }
+  .rs:hover .anchor { opacity:1; }
+  .rs .anchor:hover { color:var(--solar); }
+  .rs h2 { margin:12px 0 0; font-family:var(--display); font-size:25px; font-weight:600; letter-spacing:-0.018em; line-height:1.22; max-width:820px; }
+  .rs .lead { margin:12px 0 0; font-size:15.5px; line-height:1.6; color:var(--tx); max-width:820px; }
+
+  /* Текст разбора: две колонки на широком экране — иначе строка уходит за 100 знаков */
+  .rs .body { margin-top:18px; column-gap:44px; }
+  @media (min-width:1000px) { .rs .body { columns:2; } }
+  .rs .body p { margin:0 0 13px; font-size:14px; line-height:1.68; color:var(--mut);
+    break-inside:avoid-column; -webkit-column-break-inside:avoid; }
+  .rs .body p:last-child { margin-bottom:0; }
+
+  /* Продукты под идею */
+  .prods { margin-top:24px; }
+  .prods .cap { font-family:var(--m); font-size:9.5px; letter-spacing:.17em; text-transform:uppercase; color:var(--dim);
+    padding-bottom:10px; border-bottom:1px solid var(--rule-soft); }
+  .pr { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px 20px; align-items:baseline;
+    padding:14px 14px 15px; margin:0 -14px; border-radius:9px; border-left:2px solid transparent;
+    border-bottom:1px solid var(--rule-soft); transition:background .18s ease, border-color .18s ease; }
+  .pr:last-child { border-bottom:0; }
+  .pr:hover { background:rgba(238,125,27,0.06); border-left-color:var(--solar); }
+  .pr .nm { font-size:14.5px; font-weight:600; letter-spacing:-0.008em; transition:color .18s ease; }
+  .pr:hover .nm { color:var(--solar); }
+  .pr .q { font-family:var(--m); font-size:14.5px; font-weight:500; color:var(--solar); white-space:nowrap;
+    font-variant-numeric:tabular-nums; text-align:right; }
+  .pr .q i { display:block; font-style:normal; font-size:8.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--dim); margin-top:3px; }
+  .pr .why { grid-column:1 / -1; font-size:13px; line-height:1.6; color:var(--mut); max-width:760px; }
+  .pr .par { grid-column:1 / -1; font-family:var(--m); font-size:10px; letter-spacing:.05em; color:var(--dim); }
+  .pr.gone { opacity:.5; }
+  .pr.gone:hover { background:none; border-left-color:transparent; }
+  .pr.gone .nm:hover { color:inherit; }
+
+  /* Пустое состояние: страница только заводится */
+  .empty { padding:64px 0 80px; text-align:center; color:var(--dim); }
+  .empty .t { font-family:var(--display); font-size:20px; font-weight:600; color:var(--mut); }
+  .empty .d { margin-top:10px; font-size:13.5px; line-height:1.6; }
+  .empty code { font-family:var(--m); font-size:12.5px; color:var(--solar); }
+
+  .foot { display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; padding:26px 0 30px;
+    border-top:1px solid var(--line); font-size:11px; color:var(--dim); }
+  .foot .mono { font-family:var(--m); }
+
+  .rise { opacity:0; transform:translateY(10px); animation:rise .55s var(--ease) forwards; }
+  @keyframes rise { to { opacity:1; transform:none; } }
+  @media (prefers-reduced-motion: reduce) { .rise { animation:none; opacity:1; transform:none; } }
+
+  @media (max-width:860px) {
+    .nav-in, .wrap { padding-left:20px; padding-right:20px; }
+    .head { padding:36px 0 22px; }
+    .rs { padding:26px 0 24px; }
+    .rs h2 { font-size:21px; }
+    .pr { grid-template-columns:minmax(0,1fr); }
+    .pr .q { text-align:left; }
+  }
+  @media (max-width:640px) {
+    .nav .name { display:none; }
+    .btn-tg .tg-lbl { display:none; }
+    .btn-tg { padding:8px 10px; }
+  }
+</style>
+<script src="metrika.js?v=3" defer></script>
+</head>
+<body>
+
+<header class="nav">
+  <div class="nav-in">
+    <a href="index.html" style="display:flex;align-items:center;gap:12px">
+      <svg width="21" height="21" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>
+      <span class="name">Структурные продукты</span>
+    </a>
+    <div class="nav-cta">
+      <a class="btn-tg" href="https://t.me/+NHbVOoUI5IBkN2Uy" target="_blank" rel="noopener" aria-label="Наша группа в Telegram">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.27 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z" fill="#4F86E6"/></svg>
+        <span class="tg-lbl">Telegram-группа</span></a>
+      <a class="btn-solar" href="board.html">Открыть доску
+        <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <section class="head rise">
+    <div class="kicker">Ресерч · для квалифицированных инвесторов</div>
+    <h1><span class="lm">Лучшие</span> продукты</h1>
+    <p class="sub">Разборы, на которых строятся наши предложения: что происходит на рынке, почему это важно сейчас и каким продуктом эту идею можно взять.</p>
+    <div class="pick" id="pick" hidden>
+      <button class="pick-btn" id="pick-btn" aria-haspopup="true" aria-expanded="false">
+        <span class="lbl">Выпуск</span><span class="cur" id="pick-cur"></span>
+        <svg class="cv" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 5 L7 9 L11 5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="pick-menu" id="pick-menu"><div class="pick-mh">Архив выпусков</div><div id="pick-list"></div></div>
+    </div>
+    <div class="meta" id="meta"></div>
+    <div class="chips" id="chips"></div>
+  </section>
+
+  <main id="list"></main>
+
+  <footer class="foot">
+    <span>Не является индивидуальной инвестиционной рекомендацией. Котировки индикативны.</span>
+    <span class="mono" id="upd"></span>
+  </footer>
+</div>
+
+<script src="data/instruments.js?v=fx7"></script>
+<script src="data/lib.js?v=ax2"></script>
+<script src="data/research.js?v=1"></script>
+<script>
+  (function () {
+    var ISSUES = (window.RESEARCH && RESEARCH.issues) || [];
+    var list = document.getElementById("list");
+    var issue = null;      // выбранный выпуск
+    var active = "all";    // выбранная рубрика внутри выпуска
+
+    function esc(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+    function dmy(iso) { return String(iso || "").split("-").reverse().join("."); }
+    function plural(n, one, few, many) { var a = n % 10, b = n % 100; return (a === 1 && b !== 11) ? one : (a >= 2 && a <= 4 && (b < 12 || b > 14)) ? few : many; }
+    var fmtQ = (window.SITE && SITE.fmt2) ? SITE.fmt2 : function (n) { return String(n).replace(".", ","); };
+    function byId(id) {
+      var arr = (window.SITE_DATA && SITE_DATA.instruments) || [];
+      for (var i = 0; i < arr.length; i++) if (arr[i].id === id) return arr[i];
+      return null;
+    }
+    var AR = '<svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+    // ── Пустое состояние: страница уже живая, но выпусков ещё нет ──
+    if (!ISSUES.length) {
+      document.getElementById("meta").innerHTML = "<span>выпусков пока нет</span>";
+      list.innerHTML = '<div class="empty"><div class="t">Раздел заполняется</div>' +
+        '<div class="d">Первый выпуск появится здесь, как только будет добавлен в <code>data/research.js</code>.</div></div>';
+      document.getElementById("upd").textContent = "invest.rumberg.ru";
+      return;
+    }
+    document.getElementById("upd").textContent = "обновлено: " + dmy(RESEARCH.updated || ISSUES[0].date);
+
+    // ── Переключатель выпусков: прячется, пока выпуск один ──
+    var pick = document.getElementById("pick");
+    var pickBtn = document.getElementById("pick-btn");
+    function setPickOpen(on) {
+      pick.classList.toggle("open", on);
+      pickBtn.setAttribute("aria-expanded", on ? "true" : "false");
+    }
+    function renderPicker() {
+      document.getElementById("pick-cur").textContent = issue.label || dmy(issue.date);
+      document.getElementById("pick-list").innerHTML = ISSUES.map(function (x) {
+        var n = (x.items || []).length;
+        return '<button class="pick-i' + (x.id === issue.id ? " active" : "") + '" data-iss="' + esc(x.id) + '">' +
+          '<span class="d"><span class="t">' + esc(x.label || dmy(x.date)) + '</span>' +
+          '<span class="c">' + n + " " + plural(n, "разбор", "разбора", "разборов") + '</span></span>' +
+          (x.summary ? '<span class="s">' + esc(x.summary) + '</span>' : '') + '</button>';
+      }).join("");
+    }
+    if (ISSUES.length > 1) {
+      pick.hidden = false;
+      pickBtn.addEventListener("click", function (e) {
+        e.stopPropagation();
+        setPickOpen(!pick.classList.contains("open"));
+      });
+      document.getElementById("pick-list").addEventListener("click", function (e) {
+        var b = e.target.closest(".pick-i");
+        if (!b) return;
+        setPickOpen(false);
+        selectIssue(b.getAttribute("data-iss"), true);
+      });
+      document.addEventListener("click", function (e) { if (!pick.contains(e.target)) setPickOpen(false); });
+      document.addEventListener("keydown", function (e) { if (e.key === "Escape") setPickOpen(false); });
+    }
+
+    // ── Шапка выпуска и фильтр рубрик — пересобираются под выбранный выпуск ──
+    function renderHead() {
+      var items = issue.items || [];
+      var prodCount = items.reduce(function (n, r) { return n + ((r.products || []).length); }, 0);
+      document.getElementById("meta").innerHTML =
+        "<span><b>" + items.length + "</b> " + plural(items.length, "разбор", "разбора", "разборов") + "</span>" +
+        "<span><b>" + prodCount + "</b> " + plural(prodCount, "продукт", "продукта", "продуктов") + " под идеи</span>" +
+        (issue.date ? "<span>выпуск от <b>" + dmy(issue.date) + "</b></span>" : "");
+
+      var rubrics = [];
+      items.forEach(function (r) { if (r.rubric && rubrics.indexOf(r.rubric) < 0) rubrics.push(r.rubric); });
+      var chips = document.getElementById("chips");
+      chips.innerHTML = rubrics.length > 1
+        ? '<button class="chip' + (active === "all" ? " on" : "") + '" data-r="all">Все</button>' +
+          rubrics.map(function (x) {
+            return '<button class="chip' + (active === x ? " on" : "") + '" data-r="' + esc(x) + '">' + esc(x) + '</button>';
+          }).join("")
+        : "";
+    }
+    document.getElementById("chips").addEventListener("click", function (e) {
+      var b = e.target.closest(".chip");
+      if (!b) return;
+      active = b.dataset.r;
+      this.querySelectorAll(".chip").forEach(function (c) { c.classList.toggle("on", c === b); });
+      render();
+    });
+
+    // Выбор выпуска пишется в адрес: research.html?i=2026-08-17 — ссылку можно переслать
+    function selectIssue(id, push) {
+      issue = ISSUES.filter(function (x) { return x.id === id; })[0] || ISSUES[0];
+      active = "all";
+      renderPicker();
+      renderHead();
+      render();
+      if (push) {
+        history.replaceState(null, "", location.pathname + (issue.id === ISSUES[0].id ? "" : "?i=" + encodeURIComponent(issue.id)));
+      }
+    }
+
+    // Что показывать цифрой у продукта. У защиты капитала котировка всегда 100%
+    // (клиент платит номинал) — это пустой показатель, вместо него говорящие
+    // параметры выплаты: участие и уровень защиты.
+    function figure(r) {
+      if (r.type === "protection") {
+        if (r.participation != null) {
+          return { v: Math.round(r.participation * 100) + "%",
+                   n: "участие" + (r.protectionPct != null ? " · защита " + r.protectionPct + "%" : "") };
+        }
+        return { v: r.protectionPct != null ? r.protectionPct + "%" : "—", n: "защита капитала" };
+      }
+      if (r.quote == null) return { v: "—", n: "" };
+      if (r.type === "autocall") return { v: fmtQ(r.quote) + "% г.", n: "купон · индикативно" };
+      if (r.type === "discount") return { v: fmtQ(r.quote) + "%", n: "цена · индикативно" };
+      if (r.type === "warrant") return { v: fmtQ(r.quote) + "%", n: "премия · индикативно" };
+      return { v: fmtQ(r.quote) + "%", n: "индикативно" };
+    }
+
+    function productRow(p) {
+      var r = p.id ? byId(p.id) : null;
+      var why = p.why ? '<span class="why">' + esc(p.why) + '</span>' : '';
+
+      // Продукт с доски: имя, параметры и цифра всегда свежие
+      if (r) {
+        var f = figure(r);
+        var par = [r.underlying, r.tenor, r.currency && r.currency !== "RUB" ? r.currency : null]
+          .filter(Boolean).map(esc).join(" · ");
+        return '<a class="pr" href="instrument.html?id=' + encodeURIComponent(r.id) + '">' +
+          '<span class="nm">' + esc(r.name) + ' ' + AR + '</span>' +
+          '<span class="q">' + f.v + (f.n ? '<i>' + f.n + '</i>' : '') + '</span>' +
+          (par ? '<span class="par">' + par + '</span>' : '') + why + '</a>';
+      }
+
+      // Ссылка мимо доски (размещение, внешняя страница) — берём name/href как есть
+      if (p.href) {
+        return '<a class="pr" href="' + esc(p.href) + '">' +
+          '<span class="nm">' + esc(p.name || p.href) + ' ' + AR + '</span><span class="q"></span>' + why + '</a>';
+      }
+
+      // Продукт был на доске, но снят: запись ресерча остаётся читаемой
+      return '<div class="pr gone"><span class="nm">' + esc(p.name || p.id || "—") + '</span>' +
+        '<span class="q" style="color:var(--dim);font-size:10px">снят с доски</span>' + why + '</div>';
+    }
+
+    function render() {
+      var all = issue.items || [];
+      var items = active === "all" ? all : all.filter(function (r) { return r.rubric === active; });
+      list.innerHTML = items.map(function (r, i) {
+        var body = (r.body || []).map(function (p) { return '<p>' + esc(p) + '</p>'; }).join("");
+        var prods = (r.products || []).map(productRow).join("");
+        return '<article class="rs rise" id="' + esc(r.id || "") + '" style="animation-delay:' + Math.min(i * 0.05, 0.2) + 's">' +
+          '<div class="top">' +
+            (r.rubric ? '<span class="rub">' + esc(r.rubric) + '</span>' : '') +
+            (r.date ? '<span class="dt">' + dmy(r.date) + '</span>' : '') +
+            (r.id ? '<a class="anchor" href="#' + esc(r.id) + '">ссылка на разбор</a>' : '') +
+          '</div>' +
+          '<h2>' + esc(r.title || "") + '</h2>' +
+          (r.lead ? '<p class="lead">' + esc(r.lead) + '</p>' : '') +
+          (body ? '<div class="body">' + body + '</div>' : '') +
+          (prods ? '<div class="prods"><div class="cap">Чем эту идею взять</div>' + prods + '</div>' : '') +
+          '</article>';
+      }).join("");
+
+      // Deep-link на конкретный разбор: research.html?i=2026-08-17#eu-heat-2026-08
+      var h = location.hash.slice(1);
+      if (h) { var el = document.getElementById(h); if (el) el.scrollIntoView(); }
+    }
+
+    // Стартовый выпуск: из ?i=, иначе текущий. Если в адресе якорь разбора из
+    // другого выпуска — открываем тот выпуск, иначе ссылка вела бы в пустоту.
+    var want = new URLSearchParams(location.search).get("i");
+    var hash = location.hash.slice(1);
+    if (!want && hash) {
+      var owner = ISSUES.filter(function (x) {
+        return (x.items || []).some(function (r) { return r.id === hash; });
+      })[0];
+      if (owner) want = owner.id;
+    }
+    selectIssue(want || ISSUES[0].id, false);
+  })();
+</script>
+<script src="chat.js?v=14"></script>
+<script src="nav-about.js?v=6"></script>
+<script src="qualgate.js?v=4"></script>
+</body>
+</html>
