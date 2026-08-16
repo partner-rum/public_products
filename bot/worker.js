@@ -658,6 +658,17 @@ function parseMorningJson(raw) {
 // можно вернуть модели на доработку. ids — множество допустимых id (из ОТФИЛЬТРОВАННОГО
 // каталога: так дедуп недавних продуктов превращается из просьбы в требование).
 const MORNING_FLAGS = ["🌍", "🇺🇸", "🇷🇺"];
+// Рубрика для сайта берётся ПО ФЛАГУ, а не по индексу после фильтрации: блоки-заглушки
+// («тема не затронута») из массива выпадают, и индексы разъезжаются со слотами схемы.
+const MORNING_RUBRICS = { "🌍": "Мир", "🇺🇸": "США", "🇷🇺": "Россия" };
+// Шапка data/morning.js. Файл читает главная; тело — строгий JSON, комментарии только здесь.
+const MORNING_FILE_HEAD =
+  '// УТРЕННИЙ ОБЗОР ДЛЯ ГЛАВНОЙ — колонка «Утро на рынках».\n' +
+  '// Файл пишет БОТ по кнопке «На сайт» под утренним постом. Правки руками не запрещены,\n' +
+  '// но следующая публикация их перезапишет. Тело — строгий JSON внутри window.MORNING.\n' +
+  '//\n' +
+  '// Свежесть главная считает сама по полю date: сегодня-вчера — как есть, 2-3 дня —\n' +
+  '// подпись «обзор от ДД.ММ», старше трёх дней — заглушка вместо протухших новостей.\n';
 // Блок-заглушка «тема не покрыта статьёй» — честный выход вместо сочинительства.
 // В пост и в morning:latest такие блоки не попадают.
 const isMorningStub = (b) => !!(b && typeof b.text === "string" && /не затрагивает/i.test(b.text));
@@ -921,8 +932,27 @@ async function sendMorningDraft(env, article, chatId) {
   if (env.POST_KV) {
     try { await env.POST_KV.put("morning:post:" + to, text, { expirationTtl: 86400 }); } catch (e) {}
   }
+  // Тот же пост в виде данных для главной. Новости и продукты кладём ДВУМЯ
+  // независимыми списками — ровно так их и собирает конвейер. Пары «новость №1 —
+  // продукт №1» не существует, и на витрине её изображать нельзя.
+  // Ссылка на полный разбор пока не проставляется: разборы заводятся руками.
+  if (env.POST_KV) {
+    const siteNews = res.blocks.slice(0, 3).map((b) => ({
+      rubric: MORNING_RUBRICS[b.flag] || "",
+      title: b.title,
+      body: b.text,
+      link: null,
+    }));
+    const siteProducts = res.ideas.slice(0, 3).map((it) => it && it.id).filter(Boolean);
+    const sitePayload = JSON.stringify({ date: mskDate().iso, news: siteNews, products: siteProducts });
+    try { await env.POST_KV.put("morning:site:" + to, sitePayload, { expirationTtl: 86400 }); } catch (e) {}
+  }
+
   const buttons = [{ text: "🔁 Пересобрать", callback_data: "morn" }];
   if (env.CHANNEL_ID) buttons.push({ text: "📢 В канал", callback_data: "mpub" });
+  // Публикация на витрину: коммит data/morning.js через GitHub API — тот же путь,
+  // которым админка правит остальные data-файлы.
+  if (env.GITHUB_TOKEN && env.GITHUB_REPO) buttons.push({ text: "🌐 На сайт", callback_data: "msite" });
   const resp = await tg(env, "sendMessage", { chat_id: to, text, parse_mode: "HTML",
     link_preview_options: preview,
     reply_markup: { inline_keyboard: [buttons] } });
@@ -932,7 +962,13 @@ async function sendMorningDraft(env, article, chatId) {
     try {
       const rj = await resp.json();
       const mid = rj && rj.ok && rj.result && rj.result.message_id;
-      if (mid != null) await env.POST_KV.put("morning:post:" + to + ":" + mid, text, { expirationTtl: 86400 });
+      if (mid != null) {
+        await env.POST_KV.put("morning:post:" + to + ":" + mid, text, { expirationTtl: 86400 });
+        // Данные для сайта привязываем к тому же сообщению и по той же причине:
+        // «На сайт» на старом пузыре не должна выкладывать пересобранную версию
+        const sp = await env.POST_KV.get("morning:site:" + to);
+        if (sp) await env.POST_KV.put("morning:site:" + to + ":" + mid, sp, { expirationTtl: 86400 });
+      }
     } catch (e) { /* привязка — best effort, общий ключ уже записан */ }
   }
   if (res.warn.length) {
@@ -2256,6 +2292,36 @@ async function handleTelegram(request, env, ctx) {
       await tg(env, "editMessageReplyMarkup", { chat_id: chatId, message_id: cb.message.message_id,
         reply_markup: { inline_keyboard: [[{ text: "✅ Опубликовано", callback_data: "noop" }]] } });
       await answer("Опубликовано в канал ✅");
+      return new Response("ok");
+    }
+    // «🌐 На сайт» — коммит data/morning.js, колонка «Утро на рынках» на главной.
+    // В отличие от «В канал» это НЕ разовая отправка: файл перезаписывается целиком,
+    // поэтому повторный тап безопасен и кнопку не гасим — только помечаем.
+    if (cb.data === "msite") {
+      if (!trustedIds(env).includes(String(cb.from && cb.from.id))) {
+        await answer("Недостаточно прав"); return new Response("ok");
+      }
+      if (!env.GITHUB_TOKEN || !env.GITHUB_REPO) { await answer("GitHub не настроен", true); return new Response("ok"); }
+      const chatId = cb.message && cb.message.chat && cb.message.chat.id;
+      let payload = null;
+      if (env.POST_KV && chatId != null) {
+        try {
+          payload = await env.POST_KV.get("morning:site:" + chatId + ":" + cb.message.message_id);
+          if (!payload) payload = await env.POST_KV.get("morning:site:" + chatId);
+        } catch (e) {}
+      }
+      if (!payload) { await answer("Данные устарели — пересоберите пост.", true); return new Response("ok"); }
+      try {
+        const obj = JSON.parse(payload);
+        const body = MORNING_FILE_HEAD + "window.MORNING = " + JSON.stringify(obj, null, 1) + ";\n";
+        await upsertFile(env, "data/morning.js", body,
+          "Главная: утренний обзор за " + obj.date, env.GITHUB_BRANCH || "main");
+        await tg(env, "editMessageReplyMarkup", { chat_id: chatId, message_id: cb.message.message_id,
+          reply_markup: { inline_keyboard: [[{ text: "✅ На сайте", callback_data: "noop" }]] } });
+        await answer("Обзор выложен на главную ✅");
+      } catch (e) {
+        await answer("Не выложилось: " + String((e && e.message) || e).slice(0, 60), true);
+      }
       return new Response("ok");
     }
     // «🔁 Пересобрать» под подборкой для ФИ: тема лежит в KV сутки, дедуп (fi:history)
