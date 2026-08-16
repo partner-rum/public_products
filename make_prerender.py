@@ -160,8 +160,84 @@ def offerings_block():
     return block(intro, [("На размещении", rows)])
 
 
+def index_blocks():
+    """Главная. У неё не один список, а четыре колонки, каждая со своим
+    контейнером, поэтому возвращаем словарь «имя слота -> текст». Скрипт
+    страницы затирает innerHTML каждого из них, так что человек видит обычные
+    колонки, а робот — тот же текст в исходнике."""
+    out = {}
+
+    inst = load("instruments.js")
+    plc = load("placements.js")
+    ofr = load("offerings.js")
+    out["rail"] = (
+        "<p>Разделы витрины: дайджест инвестиционных идей; "
+        "текущие продукты — доска прайсинга, %s; "
+        "размещённые выпуски, %s; библиотека типов продуктов; события; о компании.</p>"
+        % (plural(len(inst["instruments"]), "инструмент", "инструмента", "инструментов"),
+           plural(len(plc["issues"]), "выпуск", "выпуска", "выпусков")))
+
+    m = load("morning.js")
+    rows = []
+    for n in m.get("news", []):
+        bits = [b for b in (n.get("rubric"), n.get("title")) if b]
+        line = ". ".join(bits)
+        if n.get("body"):
+            line += ". " + n["body"]
+        rows.append(esc(line))
+    if rows:
+        out["news"] = ("<p>Утро на рынках, обзор от %s.</p><ul>%s</ul>"
+                       % (ru_date(m.get("date", "")), "".join("<li>%s</li>" % r for r in rows)))
+    # Актуальные продукты — отдельный список под новостями, не привязан к ним
+    names = []
+    by_id = {x["id"]: x for x in inst["instruments"]}
+    for pid in m.get("products", []):
+        it = by_id.get(pid)
+        if it:
+            names.append(esc(it.get("name", "")))
+    if names:
+        out["mprod"] = ("<p>Актуальные продукты: %s.</p>" % ", ".join(names))
+
+    try:
+        r = load("rates.js")
+        bits = []
+        if r.get("cbr", {}).get("key"):
+            bits.append("ключевая ставка %s%%" % str(r["cbr"]["key"]["rate"]).replace(".", ","))
+        if r.get("cbr", {}).get("ruonia"):
+            bits.append("RUONIA %s%%" % str(r["cbr"]["ruonia"]["rate"]).replace(".", ","))
+        if bits:
+            out["rates"] = ("<p>Лучшие ставки на срок до года: вклады, фонды денежного "
+                            "рынка и короткие ОФЗ. Ориентиры — %s.</p>" % ", ".join(bits))
+    except Exception:
+        pass  # rates.js собирается локальным скриптом и может отсутствовать
+
+    rows = []
+    for x in ofr.get("items", []):
+        bits = [x.get("name", "")]
+        for k in ("kind", "tenor", "statusLabel"):
+            if x.get(k):
+                bits.append(x[k])
+        rows.append(esc(", ".join(bits)) + ".")
+    if rows:
+        out["offers"] = "<p>Текущие размещения.</p><ul>%s</ul>" % "".join("<li>%s</li>" % r for r in rows)
+
+    return out
+
+
+# Контейнеры главной: имя слота -> открывающий тег в index.html
+INDEX_SLOTS = {
+    "rail": '<nav id="rail-list" aria-label="Разделы">',
+    # ВАЖНО: только открывающие теги. С полным '<div id="news"></div>' текст
+    # вставлялся ПОСЛЕ закрывающего тега, скрипт его не затирал, и пререндер
+    # дублировался на экране под колонкой.
+    "news": '<div id="news">',
+    "mprod": '<div id="mprod">',
+    "rates": '<div id="rates">',
+    "offers": '<div id="offers">',
+}
+
 PAGES = [("board.html", board_block), ("placements.html", placements_block),
-         ("offerings.html", offerings_block)]
+         ("offerings.html", offerings_block), ("index.html", index_blocks)]
 
 
 def main():
@@ -176,6 +252,27 @@ def main():
         path = os.path.join(ROOT, fname)
         html = io.open(path, encoding="utf-8").read()
         blk = builder()
+
+        # Главная — особый случай: не один список, а четыре слота со своими
+        # маркерами. Каждый слот перерисовывается независимо и идемпотентно.
+        if isinstance(blk, dict):
+            new, total = html, 0
+            for slot, body in blk.items():
+                s, e = "<!-- seo:%s:start -->" % slot, "<!-- seo:%s:end -->" % slot
+                wrapped = s + body + e
+                if s in new:
+                    new = re.sub(re.escape(s) + ".*?" + re.escape(e), lambda m: wrapped, new, flags=re.S)
+                elif INDEX_SLOTS[slot] in new:
+                    new = new.replace(INDEX_SLOTS[slot], INDEX_SLOTS[slot] + wrapped, 1)
+                else:
+                    print("  ! %s: слот %s не найден — пропускаю" % (fname, slot))
+                    continue
+                total += len(re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", body)).strip())
+            print("  %-18s %5d знаков текста%s" % (fname, total, "" if not dry else " (не записано)"))
+            if not dry and new != html:
+                io.open(path, "w", encoding="utf-8", newline="").write(new)
+            continue
+
         if START in html:
             new = re.sub(re.escape(START) + ".*?" + re.escape(END), lambda m: blk, html, flags=re.S)
         elif SLOT in html:
