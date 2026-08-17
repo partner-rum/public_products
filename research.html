@@ -262,10 +262,14 @@
     // ── Шапка выпуска и фильтр рубрик — пересобираются под выбранный выпуск ──
     function renderHead() {
       var items = issue.items || [];
-      var prodCount = items.reduce(function (n, r) { return n + ((r.products || []).length); }, 0);
+      // Считаем И продукты выпуска, и продукты внутри разборов: у выпусков от бота
+      // подборка общая, у заведённых руками — привязана к идее. Учитывать только
+      // вторые значило бы показывать «0 продуктов» там, где их пять.
+      var prodCount = (issue.products || []).length +
+        items.reduce(function (n, r) { return n + ((r.products || []).length); }, 0);
       document.getElementById("meta").innerHTML =
         "<span><b>" + items.length + "</b> " + plural(items.length, "разбор", "разбора", "разборов") + "</span>" +
-        "<span><b>" + prodCount + "</b> " + plural(prodCount, "продукт", "продукта", "продуктов") + " под идеи</span>" +
+        "<span><b>" + prodCount + "</b> " + plural(prodCount, "продукт", "продукта", "продуктов") + " в подборке</span>" +
         (issue.date ? "<span>выпуск от <b>" + dmy(issue.date) + "</b></span>" : "");
 
       var rubrics = [];
@@ -363,6 +367,21 @@
           (prods ? '<div class="prods"><div class="cap">Чем эту идею взять</div>' + prods + '</div>' : '') +
           '</article>';
       }).join("");
+
+      // Продукты ВЫПУСКА — общий список под разборами. Утренний конвейер собирает
+      // новости и продукты двумя независимыми списками: подписать продукт под
+      // конкретный разбор значило бы изобразить связь, которой нет. Продукты внутри
+      // разбора (items[].products) остаются для записей, заведённых руками, — там
+      // человек действительно подбирал бумагу под идею.
+      var dayProds = (issue.products || []).map(productRow).join("");
+      if (dayProds && active === "all") {
+        list.innerHTML += '<section class="rs day-prods rise">' +
+          '<div class="top"><span class="rub">Продукты дня</span>' +
+          (issue.date ? '<span class="dt">' + dmy(issue.date) + '</span>' : '') + '</div>' +
+          '<h2>Что предложить клиенту сегодня</h2>' +
+          '<p class="lead">Подборка собрана к этому выпуску целиком, а не к отдельному разбору.</p>' +
+          '<div class="prods">' + dayProds + '</div></section>';
+      }
 
       // Deep-link на конкретный разбор: research.html?i=2026-08-17#eu-heat-2026-08
       var h = location.hash.slice(1);
