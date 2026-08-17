@@ -677,6 +677,12 @@ open(OUT, "w", encoding="utf-8", newline="\n").write(HTML)
 print("готово: %s" % OUT)
 print("выпуск: %s (%s) | идей: %d | листов: %d" % (ISSUE_ID, DATE, len(ORDERED), len(PAGES)))
 print("PDF_OUT=%s" % PDF)   # стабильная строка для CI: workflow парсит её, чтобы знать путь PDF
+# PDF_MAP=<страница>|<pdf> — что и куда рендерить. Строк столько, сколько выпусков
+# с PDF: workflow гоняет по ним хром. Одного PDF_OUT было мало — правка отрисовки
+# меняет вид ВСЕХ выпусков, а пересобирался только текущий, и в архиве оставались
+# старые листы (так после починки графика защиты клиент открывал архивный PDF и
+# видел прежний потолок).
+print("PDF_MAP=%s|%s" % (PAGE, PDF))
 for idx, idea in enumerate(ORDERED):
     print("   %02d  %-14s %-40s payoff=%s" % (idx + 2, idea.get("family"),
           idea.get("name", "")[:40], (idea.get("payoff") or {}).get("type")))
@@ -706,4 +712,11 @@ if "--all" in sys.argv:
     for it in ISSUES[1:]:
         subprocess.check_call([sys.executable, os.path.abspath(__file__), "--issue=" + it["id"]],
                               stdout=subprocess.DEVNULL)
-        print("архив: digest-print-%s.html" % it["id"])
+        page = "digest-print-%s.html" % it["id"]
+        print("архив: %s" % page)
+        # PDF архивного выпуска перерисовываем ТОЛЬКО если он уже есть в данных:
+        # путь берём из поля pdf (у выпуска 21.07 имя файла не совпадает с id),
+        # а выпускам без PDF его не заводим — иначе на их листах появится кнопка
+        # скачивания, которой раньше не было.
+        if it.get("pdf"):
+            print("PDF_MAP=%s|%s" % (page, it["pdf"]))

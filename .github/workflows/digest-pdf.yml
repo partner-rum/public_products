@@ -39,12 +39,15 @@ jobs:
       - name: Сборка печатной вёрстки из data/digest.js
         id: build
         run: |
-          # --all: текущий выпуск -> digest-print.html (его же рендерим в PDF),
-          # архивные -> digest-print-<дата>.html. Из архива «Печатная версия»
-          # должна открывать выбранный выпуск, а не сегодняшний (правка 10.08.2026).
-          PDF=$(python make_digest.py --all | sed -n 's/^PDF_OUT=//p')
-          echo "pdf=$PDF" >> "$GITHUB_OUTPUT"
-          mkdir -p "$(dirname "$PDF")"
+          # --all: текущий выпуск -> digest-print.html, архивные -> digest-print-<дата>.html.
+          # Из архива «Печатная версия» должна открывать выбранный выпуск, а не
+          # сегодняшний (правка 10.08.2026).
+          python make_digest.py --all | tee /tmp/build.log
+          # PDF_MAP=<страница>|<pdf> — по строке на каждый выпуск с PDF. Рендерим ВСЕ,
+          # а не только текущий: правка отрисовки меняет вид всех выпусков, и раньше
+          # в архиве оставались листы, собранные прежним кодом.
+          sed -n 's/^PDF_MAP=//p' /tmp/build.log > /tmp/pdfmap
+          echo "— к рендеру:"; cat /tmp/pdfmap
 
       - name: Установка Chrome
         id: chrome
@@ -54,19 +57,24 @@ jobs:
         run: |
           python -m http.server 8000 --directory . >/dev/null 2>&1 &
           for i in $(seq 1 20); do curl -sf http://localhost:8000/digest-print.html >/dev/null && break; sleep 0.5; done
-          "${{ steps.chrome.outputs.chrome-path }}" \
-            --headless=new --no-sandbox --disable-gpu \
-            --virtual-time-budget=20000 --run-all-compositor-stages-before-draw \
-            --no-pdf-header-footer \
-            --print-to-pdf="${{ steps.build.outputs.pdf }}" \
-            "http://localhost:8000/digest-print.html"
-          ls -la "${{ steps.build.outputs.pdf }}"
+          while IFS='|' read -r page pdf; do
+            [ -z "$page" ] && continue
+            mkdir -p "$(dirname "$pdf")"
+            echo "→ $page → $pdf"
+            "${{ steps.chrome.outputs.chrome-path }}" \
+              --headless=new --no-sandbox --disable-gpu \
+              --virtual-time-budget=20000 --run-all-compositor-stages-before-draw \
+              --no-pdf-header-footer \
+              --print-to-pdf="$pdf" \
+              "http://localhost:8000/$page"
+          done < /tmp/pdfmap
+          ls -la docs/digest/
 
       - name: Коммит результата
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add digest-print.html digest-print-*.html "${{ steps.build.outputs.pdf }}"
+          git add digest-print.html digest-print-*.html docs/digest/*.pdf
           if git diff --cached --quiet; then
             echo "Изменений нет — коммит не нужен."
           else
