@@ -57,12 +57,16 @@ window.DF = (function () {
       const floor = y(0.6), up = y(0.18), bx = x(0.5);
       el = '<line x1="' + PAD + '" y1="' + floor + '" x2="' + (W - PAD) + '" y2="' + floor + '" stroke="rgba(255,255,255,0.17)" stroke-width="1" stroke-dasharray="2 4"/>' +
         '<text x="' + PAD + '" y="' + (floor + 14) + '" fill="rgba(255,255,255,0.46)" font-size="10.5" ' + MONO + '>защита ' + (p.floorPct || 100) + '%</text>' +
-        '<path d="M' + PAD + ' ' + floor + ' L' + bx + ' ' + floor + ' L' + x(0.86) + ' ' + up + ' L' + (W - PAD) + ' ' + up + '" fill="none" stroke="' + color + '" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>' +
+        // Полку сверху рисуем ТОЛЬКО при реальном потолке (capPct). Без него участие
+        // в росте ничем не ограничено, и горизонтальный хвост справа изображал бы
+        // call-spread вместо обычного колла — то есть врал бы про сам продукт.
+        '<path d="' + (p.capPct
+          ? "M" + PAD + " " + floor + " L" + bx + " " + floor + " L" + x(0.86) + " " + up + " L" + (W - PAD) + " " + up
+          : "M" + PAD + " " + floor + " L" + bx + " " + floor + " L" + (W - PAD) + " " + up) +
+        '" fill="none" stroke="' + color + '" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>' +
         // participation без потолка — «участие 120%»; с потолком остаётся «до N%»
-        (p.partPct || p.capPct
-          ? '<text x="' + (W - PAD) + '" y="' + (up - 8) + '" text-anchor="end" fill="rgba(255,255,255,0.60)" font-size="10.5" ' + MONO + '>' +
-            (p.partPct ? "участие " + p.partPct + "%" : "участие до " + p.capPct + "%") + '</text>'
-          : "");
+        '<text x="' + (W - PAD) + '" y="' + (up - 8) + '" text-anchor="end" fill="rgba(255,255,255,0.60)" font-size="10.5" ' + MONO + '>' +
+          (p.capPct ? "участие до " + p.capPct + "%" : p.partPct ? "участие " + p.partPct + "%" : "участие в росте") + '</text>';
     } else {
       const line = "M" + x(0) + " " + y(0.8) + " C" + x(0.35) + " " + y(0.72) + " " + x(0.6) + " " + y(0.42) + " " + x(1) + " " + y(0.2);
       el = '<path d="' + line + '" fill="none" stroke="' + color + '" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>' +

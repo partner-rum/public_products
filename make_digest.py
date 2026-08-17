@@ -401,10 +401,18 @@ def payoff_svg(p):
                   "купон %s%%" % _gnum(p.get("couponPct", "")), "end"))
     elif t == "protected":
         floor, up, bx = _y(.6), _y(.18), _x(.5)
+        # Полку сверху рисуем ТОЛЬКО при реальном потолке (capPct). Без него участие
+        # в росте ничем не ограничено, и горизонтальный хвост справа изображал бы
+        # call-spread вместо обычного колла — то есть врал бы про сам продукт.
+        if p.get("capPct"):
+            path = "M%.1f %.1f L%.1f %.1f L%.1f %.1f L%.1f %.1f" % (
+                _PAD, floor, bx, floor, _x(.86), up, _W - _PAD, up)
+            label = "участие до +%s%%" % _gnum(p["capPct"])
+        else:
+            path = "M%.1f %.1f L%.1f %.1f L%.1f %.1f" % (_PAD, floor, bx, floor, _W - _PAD, up)
+            label = "участие в росте"
         e = (_base(floor, "защита %s%%" % _gnum(p.get("floorPct", 100))) +
-             _line("M%.1f %.1f L%.1f %.1f L%.1f %.1f L%.1f %.1f" % (_PAD, floor, bx, floor, _x(.86), up, _W - _PAD, up)) +
-             (_txt(_W - _PAD, up - 8, "участие до +%s%%" % _gnum(p["capPct"]), "end") if p.get("capPct") else
-              _txt(_W - _PAD, up - 8, "участие в росте", "end")))
+             _line(path) + _txt(_W - _PAD, up - 8, label, "end"))
     elif t == "booster":
         zero, cap, x0, xc = _y(.58), _y(.16), _x(.42), _x(.7)
         e = (_base(zero, "номинал 100%") +
