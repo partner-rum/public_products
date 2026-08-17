@@ -3,15 +3,15 @@
 // Источники: ЦБ (ключевая, RUONIA), MOEX ISS (RUSFAR, БПИФы, ОФЗ),
 // Финуслуги (вклады и накопительные счета — витрина МосБиржи).
 window.RATES = {
-  "updated": "2026-08-14 11:00",
+  "updated": "2026-08-17 11:56",
   "cbr": {
     "key": {
       "rate": 14.0,
       "date": "2026-07-27"
     },
     "ruonia": {
-      "rate": 13.87,
-      "date": "2026-08-12"
+      "rate": 13.98,
+      "date": "2026-08-13"
     }
   },
   "rusfar": [
@@ -19,82 +19,82 @@ window.RATES = {
       "id": "RUSFAR",
       "term": "овернайт",
       "days": 1,
-      "rate": 13.94
+      "rate": 13.98
     },
     {
       "id": "RUSFAR1W",
       "term": "1 неделя",
       "days": 7,
-      "rate": 13.89
+      "rate": 13.97
     },
     {
       "id": "RUSFAR2W",
       "term": "2 недели",
       "days": 14,
-      "rate": 13.87
+      "rate": 13.94
     },
     {
       "id": "RUSFAR1M",
       "term": "1 месяц",
       "days": 30,
-      "rate": 13.97
+      "rate": 13.99
     },
     {
       "id": "RUSFAR3M",
       "term": "3 месяца",
       "days": 90,
-      "rate": 14.03
+      "rate": 14.04
     }
   ],
   "funds": [
     {
       "id": "BCSD",
       "name": "БКС Денежный рынок",
-      "price": 14.212,
+      "price": 14.216,
       "ter": 0.2,
-      "rate": 13.74
+      "rate": 13.78
     },
     {
       "id": "MONY",
       "name": "АК БАРС Денежный рынок",
-      "price": 131.17,
+      "price": 131.42,
       "ter": 0.2,
-      "rate": 13.74
+      "rate": 13.78
     },
     {
       "id": "LQDT",
       "name": "Ликвидность (ВИМ)",
-      "price": 2.0626,
+      "price": 2.0635,
       "ter": 0.29,
-      "rate": 13.65
+      "rate": 13.69
     },
     {
       "id": "SBMM",
       "name": "Первая Сберегательный",
-      "price": 19.1785,
+      "price": 19.1855,
       "ter": 0.3,
-      "rate": 13.64
+      "rate": 13.68
     },
     {
       "id": "AMNR",
       "name": "АТОН Накопительный",
-      "price": 155.039,
+      "price": 155.1,
       "ter": 0.3,
-      "rate": 13.64
+      "rate": 13.68
     },
     {
       "id": "AKMM",
       "name": "Альфа Денежный рынок",
-      "price": 175.57,
+      "price": 175.66,
       "ter": 0.69,
-      "rate": 13.25
+      "rate": 13.29
     },
     {
       "id": "TMON",
       "name": "Т-Капитал Денежный рынок",
-      "price": 162.65,
+      "price": 162.69,
       "ter": 1.15,
-      "rate": 12.79
+      "rate": 12.83
     }
   ],
   "ofz": [
@@ -102,36 +102,36 @@ window.RATES = {
       "id": "SU26219RMFS4",
       "name": "ОФЗ 26219",
       "maturity": "2026-09-16",
-      "years": 0.09,
-      "rate": 12.24
+      "years": 0.08,
+      "rate": 12.77
     },
     {
       "id": "SU26226RMFS9",
       "name": "ОФЗ 26226",
       "maturity": "2026-10-07",
-      "years": 0.15,
-      "rate": 12.64
+      "years": 0.14,
+      "rate": 12.96
     },
     {
       "id": "SU26207RMFS9",
       "name": "ОФЗ 26207",
       "maturity": "2027-02-03",
       "years": 0.47,
-      "rate": 12.49
+      "rate": 13.03
     },
     {
       "id": "SU26232RMFS7",
       "name": "ОФЗ 26232",
       "maturity": "2027-10-06",
-      "years": 1.15,
-      "rate": 13.04
+      "years": 1.14,
+      "rate": 12.95
     },
     {
       "id": "SU26212RMFS9",
       "name": "ОФЗ 26212",
       "maturity": "2028-01-19",
-      "years": 1.43,
-      "rate": 13.77
+      "years": 1.42,
+      "rate": 13.74
     }
   ],
   "deposits": [
@@ -595,6 +595,19 @@ window.RATES = {
       "name": "Новые деньги",
       "rate": 13.6,
       "kind": "deposit",
+      "termMonths": 6,
+      "daysFrom": 61,
+      "daysTo": 1095,
+      "minAmount": 15000,
+      "url": "https://finuslugi.ru/vklady/gazprombank_novye_dengi",
+      "promo": false,
+      "floating": false
+    },
+    {
+      "bank": "Газпромбанк",
+      "name": "Новые деньги",
+      "rate": 13.6,
+      "kind": "deposit",
       "termMonths": 5,
       "daysFrom": 61,
       "daysTo": 1095,
@@ -682,6 +695,19 @@ window.RATES = {
       "floating": false
     },
     {
+      "bank": "Газпромбанк",
+      "name": "Новые деньги",
+      "rate": 13.45,
+      "kind": "deposit",
+      "termMonths": 3,
+      "daysFrom": 61,
+      "daysTo": 1095,
+      "minAmount": 15000,
+      "url": "https://finuslugi.ru/vklady/gazprombank_novye_dengi",
+      "promo": false,
+      "floating": false
+    },
+    {
       "bank": "ВБРР",
       "name": "Максимум лета",
       "rate": 13.4,
@@ -699,33 +725,7 @@ window.RATES = {
       "name": "Новые деньги",
       "rate": 13.4,
       "kind": "deposit",
-      "termMonths": 3,
-      "daysFrom": 61,
-      "daysTo": 1095,
-      "minAmount": 15000,
-      "url": "https://finuslugi.ru/vklady/gazprombank_novye_dengi",
-      "promo": false,
-      "floating": false
-    },
-    {
-      "bank": "Газпромбанк",
-      "name": "Новые деньги",
-      "rate": 13.4,
-      "kind": "deposit",
       "termMonths": 4,
-      "daysFrom": 61,
-      "daysTo": 1095,
-      "minAmount": 15000,
-      "url": "https://finuslugi.ru/vklady/gazprombank_novye_dengi",
-      "promo": false,
-      "floating": false
-    },
-    {
-      "bank": "Газпромбанк",
-      "name": "Новые деньги",
-      "rate": 13.3,
-      "kind": "deposit",
-      "termMonths": 6,
       "daysFrom": 61,
       "daysTo": 1095,
       "minAmount": 15000,
