@@ -1,0 +1,82 @@
+name: Публикация сайта на сервер
+
+# Push-модель: раннер GitHub сам заходит на сервер по SSH и раскладывает файлы.
+# Так доставка не зависит от того, доступен ли GitHub из России, — а Pages из
+# Москвы сегодня отдаёт три адреса из четырёх с таймаутом.
+#
+# Пока секреты не заданы, воркфлоу ничего не делает и остаётся зелёным.
+# Нужные секреты (Settings → Secrets and variables → Actions):
+#   DEPLOY_HOST         IP или домен сервера
+#   DEPLOY_PORT         порт SSH (если нестандартный)
+#   DEPLOY_USER         пользователь деплоя, напр. deploy
+#   DEPLOY_KEY          ПРИВАТНЫЙ ssh-ключ пары, публичная часть которой лежит
+#                       в ~/.ssh/authorized_keys этого пользователя
+#   DEPLOY_KNOWN_HOSTS  вывод `ssh-keyscan -p <порт> <хост>` — без него мы бы
+#                       подключались к кому угодно, кто ответит по этому адресу
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+concurrency:
+  group: deploy-vps
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Настроен ли деплой
+        id: cfg
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+        run: |
+          if [ -z "$HOST" ]; then
+            echo "Секреты деплоя не заданы — сервер ещё не подключён, пропускаю."
+            echo "ready=no" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=yes" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout
+        if: steps.cfg.outputs.ready == 'yes'
+        uses: actions/checkout@v4
+
+      - name: Ключ и известные хосты
+        if: steps.cfg.outputs.ready == 'yes'
+        env:
+          KEY: ${{ secrets.DEPLOY_KEY }}
+          KNOWN: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$KEY" > ~/.ssh/id_deploy && chmod 600 ~/.ssh/id_deploy
+          printf '%s\n' "$KNOWN" > ~/.ssh/known_hosts && chmod 644 ~/.ssh/known_hosts
+
+      - name: Раскладка файлов
+        if: steps.cfg.outputs.ready == 'yes'
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          USER: ${{ secrets.DEPLOY_USER }}
+          PORT: ${{ secrets.DEPLOY_PORT }}
+        run: |
+          # --delete: на сервере остаётся ровно то, что в репозитории. Иначе
+          # удалённый файл (снятый с сайта продукт, старая страница p/) жил бы
+          # там вечно и открывался по прямой ссылке.
+          # Исключения — служебное: история git и сами воркфлоу на сайте не нужны.
+          rsync -az --delete \
+            --exclude '.git/' --exclude '.github/' --exclude '.gitignore' \
+            -e "ssh -p ${PORT:-22} -i ~/.ssh/id_deploy -o StrictHostKeyChecking=yes" \
+            ./ "$USER@$HOST:/var/www/invest/"
+
+      - name: Проверка, что сайт отвечает
+        if: steps.cfg.outputs.ready == 'yes'
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+        run: |
+          # Стучимся по IP с нужным Host — до переключения DNS домен ещё смотрит
+          # на Pages, а проверить надо именно свежую раскладку.
+          code=$(curl -s -o /dev/null -w '%{http_code}' --resolve "invest.rumberg.ru:443:$HOST" \
+                 https://invest.rumberg.ru/ || echo 000)
+          echo "главная -> HTTP $code"
+          [ "$code" = "200" ] || echo "::warning::сайт ответил $code — проверьте nginx на сервере"
