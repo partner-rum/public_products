@@ -1019,7 +1019,10 @@ async function sendMorningDraft(env, article, chatId) {
       link: null,
     }));
     const siteProducts = res.ideas.slice(0, 5).map((it) => it && it.id).filter(Boolean);
-    const sitePayload = JSON.stringify({ date: mskDate().iso, news: siteNews, products: siteProducts });
+    // date — ключ ДАТЫ (mskDate().key). Поля .iso у mskDate нет: стояло оно, JSON.stringify
+    // молча выбрасывал undefined, файл уезжал без даты, а главная без даты считает возраст
+    // обзора неизвестным и прячет новости, оставляя одни продукты. Ровно так и вышло 17.08.
+    const sitePayload = JSON.stringify({ date: mskDate().key, news: siteNews, products: siteProducts });
     try { await env.POST_KV.put("morning:site:" + to, sitePayload, { expirationTtl: 86400 }); } catch (e) {}
   }
 
@@ -2388,6 +2391,10 @@ async function handleTelegram(request, env, ctx) {
       if (!payload) { await answer("Данные устарели — пересоберите пост.", true); return new Response("ok"); }
       try {
         const obj = JSON.parse(payload);
+        // Файл без даты для главной хуже, чем файл со вчерашней: свежесть считается
+        // по date, и без неё колонка прячет новости совсем. Поэтому дату проставляем
+        // здесь в любом случае — даже если в KV лежит payload, собранный старым кодом.
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(String(obj.date || ""))) obj.date = mskDate().key;
         const body = MORNING_FILE_HEAD + "window.MORNING = " + JSON.stringify(obj, null, 1) + ";\n";
         await upsertFile(env, "data/morning.js", body,
           "Главная: утренний обзор за " + obj.date, env.GITHUB_BRANCH || "main");
