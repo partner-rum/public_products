@@ -310,7 +310,10 @@
         return { v: r.protectionPct != null ? r.protectionPct + "%" : "—", n: "защита капитала" };
       }
       if (r.quote == null) return { v: "—", n: "" };
-      if (r.type === "autocall") return { v: fmtQ(r.quote) + "% г.", n: "купон · индикативно" };
+      // У бустера quote — коэффициент участия (на доске он подписан «КУ»), покупка
+      // идёт по номиналу; назвать это «премией» или просто «индикативно» — обмануть
+      if (r.type === "booster") return { v: Math.round(r.ku || r.quote) + "%", n: "коэффициент участия · индикативно" };
+      if (r.type === "autocall") return { v: fmtQ(r.couponPa != null ? r.couponPa : r.quote) + "% г.", n: "купон · индикативно" };
       if (r.type === "discount") return { v: fmtQ(r.quote) + "%", n: "цена · индикативно" };
       if (r.type === "warrant") return { v: fmtQ(r.quote) + "%", n: "премия · индикативно" };
       return { v: fmtQ(r.quote) + "%", n: "индикативно" };

@@ -270,6 +270,12 @@
   #mprod .prow { align-items:flex-start; }
   #mprod .prow b { white-space:normal; overflow:visible; text-overflow:clip; line-height:1.35; }
   .prow .q { margin-left:auto; font-family:var(--m); font-size:12px; color:var(--solar); font-weight:500; white-space:nowrap; font-variant-numeric:tabular-nums; }
+  /* В «Актуальных продуктах» теперь пять позиций РАЗНЫХ типов, и цифра у каждой
+     значит своё: премия, цена, участие, купон. Пока в колонке стояли три варранта,
+     столбик читался как один показатель — с разными типами это уже обман. Метка
+     мелкая и приглушённая: она поясняет цифру, а не спорит с ней. */
+  .prow .q i { display:block; margin-top:2px; font-style:normal; font-size:7.5px; font-weight:400;
+    letter-spacing:.12em; text-transform:uppercase; color:var(--dim); text-align:right; }
   .prow svg { flex:none; align-self:center; opacity:.5; transition:opacity .18s ease, transform .26s var(--ease); }
   .prow:hover svg { opacity:1; transform:translateX(2px); }
 
@@ -440,7 +446,7 @@
 
       <section class="cell">
         <div class="ch"><h2><a class="chl" href="board.html">Актуальные продукты</a></h2></div>
-        <div id="mprod"><!-- seo:mprod:start --><p>Актуальные продукты: CALL 100 · Лукойл · 1 год, CALL 105 · ОФЗ 26238 · 3 года, CALL 100 · Сбербанк · 1 год.</p><!-- seo:mprod:end --></div>
+        <div id="mprod"><!-- seo:mprod:start --><p>Актуальные продукты: CALL 105 · ОФЗ 26238 · 3 года, Бустер · Сбербанк · 9 месяцев, Защита капитала · Лукойл · 1 год, Дисконтная облигация на Газпром нефть · 3 года, Автоколл · Полупроводники США · 3 года.</p><!-- seo:mprod:end --></div>
       </section>
 
       <section class="cell">
@@ -595,7 +601,12 @@
         return { v: r.protectionPct != null ? r.protectionPct + "%" : "—", n: "защита" };
       }
       if (r.quote == null) return { v: "—", n: "" };
-      if (r.type === "autocall") return { v: fmtQ(r.quote) + "% г.", n: "купон" };
+      // Бустер и автоколл покупаются ПО НОМИНАЛУ: у бустера quote — коэффициент
+      // участия (доска подписывает его «КУ»), у автоколла — купон годовых. Пока в
+      // колонке стояли три варранта, разницы не было видно; с пятью разными типами
+      // обе цифры молча назывались бы премией.
+      if (r.type === "booster") return { v: Math.round(r.ku || r.quote) + "%", n: "коэффициент" };
+      if (r.type === "autocall") return { v: fmtQ(r.couponPa != null ? r.couponPa : r.quote) + "% г.", n: "купон" };
       if (r.type === "discount") return { v: fmtQ(r.quote) + "%", n: "цена" };
       return { v: fmtQ(r.quote) + "%", n: "премия" };
     }
@@ -704,7 +715,8 @@
         pbox.innerHTML = items.slice(0, PRODUCT_LIMIT).map(function (r) {
           var f = figure(r);
           return '<a class="prow" href="instrument.html?id=' + encodeURIComponent(r.id) + '">' +
-            '<b>' + esc(r.name) + '</b><span class="q">' + f.v + '</span>' + AR + '</a>';
+            '<b>' + esc(r.name) + '</b><span class="q">' + f.v +
+            (f.n ? '<i>' + f.n + '</i>' : '') + '</span>' + AR + '</a>';
         }).join("") +
         // Честно помечаем, что подбор наш, а не из обзора: цифра и повод разного веса
         // Источник подбора называем всегда: «из обзора» — выбор конвейера по статье,
