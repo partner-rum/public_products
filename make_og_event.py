@@ -190,7 +190,7 @@ def main():
             pass
     if os.path.exists(OUT) and os.path.getsize(OUT) > 8000:
         print("готово: %s (%.0f КБ)" % (OUT, os.path.getsize(OUT) / 1024))
-        print("не забудь поднять ?v= у og:image в events.html — иначе Telegram отдаст старое превью")
+        print("превью кэшируется по URL картинки: изменил обложку — ПЕРЕИМЕНУЙ файл и поправь og:image в events.html (?v= скрейпер Telegram не берёт)")
     else:
         raise SystemExit("рендер не удался")
 
