@@ -9,8 +9,9 @@ name: Публикация сайта на сервер
 #   DEPLOY_HOST         IP или домен сервера
 #   DEPLOY_PORT         порт SSH (если нестандартный)
 #   DEPLOY_USER         пользователь деплоя, напр. deploy
-#   DEPLOY_KEY          ПРИВАТНЫЙ ssh-ключ пары, публичная часть которой лежит
-#                       в ~/.ssh/authorized_keys этого пользователя
+#   DEPLOY_KEY_B64      ПРИВАТНЫЙ ssh-ключ в base64 одной строкой. Именно base64:
+#                       вставленный как есть, ключ теряет переносы строк, и ssh
+#                       падает с «error in libcrypto» — так и случилось 18.08.2026
 #   DEPLOY_KNOWN_HOSTS  вывод `ssh-keyscan -p <порт> <хост>` — без него мы бы
 #                       подключались к кому угодно, кто ответит по этому адресу
 
@@ -33,7 +34,7 @@ jobs:
           HOST: ${{ secrets.DEPLOY_HOST }}
         run: |
           if [ -z "$HOST" ]; then
-            echo "Секреты деплоя не заданы — сервер ещё не подключён, пропускаю."
+            echo "::warning::Секреты деплоя не заданы — публикация на сервер пропущена"
             echo "ready=no" >> "$GITHUB_OUTPUT"
           else
             echo "ready=yes" >> "$GITHUB_OUTPUT"
@@ -46,11 +47,17 @@ jobs:
       - name: Ключ и известные хосты
         if: steps.cfg.outputs.ready == 'yes'
         env:
-          KEY: ${{ secrets.DEPLOY_KEY }}
+          KEY_B64: ${{ secrets.DEPLOY_KEY_B64 }}
           KNOWN: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
         run: |
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
-          printf '%s\n' "$KEY" > ~/.ssh/id_deploy && chmod 600 ~/.ssh/id_deploy
+          # base64, а не текст как есть: при вставке в поле секрета приватный
+          # ключ теряет переносы строк, и ssh падает с «error in libcrypto»
+          printf '%s' "$KEY_B64" | tr -d ' \n' | base64 -d > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          # проверяем ключ ДО rsync — иначе ошибка тонет в выводе копирования
+          ssh-keygen -y -f ~/.ssh/id_deploy > /dev/null \
+            || { echo "::error::DEPLOY_KEY_B64 не разбирается как приватный ключ"; exit 1; }
           printf '%s\n' "$KNOWN" > ~/.ssh/known_hosts && chmod 644 ~/.ssh/known_hosts
 
       - name: Раскладка файлов
