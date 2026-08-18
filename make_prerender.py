@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """Пререндер списков в HTML: текст для поисковых роботов.
 
-Зачем. Доска, размещённые выпуски и первичка рисуются целиком на клиенте из
-data/*.js. В исходнике страницы при этом остаётся 300-400 знаков: заголовок,
+Зачем. Доска, размещённые выпуски, первичка и разборы рисуются целиком на
+клиенте из data/*.js. В исходнике страницы при этом остаётся 300-400 знаков: заголовок,
 фильтры и пустой <div id="list">. Google такие страницы сканирует и не
 индексирует — вердикт Search Console «Crawled - currently not indexed».
 Яндекс терпимее и сайт взял, Google нет.
@@ -224,9 +224,81 @@ def index_blocks():
     return out
 
 
-# Контейнеры главной: имя слота -> открывающий тег в index.html
+
+def ideas_block():
+    """Разборы. Один слот, но содержимое — не список названий, а текст: тема
+    выпуска, компании со слоем стека, тезис, лид, потенциал и риски. Это
+    единственная страница витрины, у которой контент и есть текст, поэтому
+    робот должен видеть его, а не перечисление тикеров.
+
+    Развёрнутое тело разборов в пререндер НЕ идёт: это ещё 25 КБ, которые
+    скрипт всё равно затирает при первой отрисовке. Тезис, лид и риски дают
+    уникальный текст с названиями компаний — этого достаточно, чтобы страница
+    перестала быть пустой для Google.
+    """
+    d = load("ideas.js")
+    iss = (d.get("issues") or [{}])[0]
+    items = iss.get("items") or []
+
+    # Названия слоёв повторяют ideas.html: в данных лежит только ключ слоя.
+    LAYERS = [("chips", "Кремний"), ("iron", "Железо и сборка"),
+              ("cloud", "Мощности и облако")]
+
+    def usd(v):
+        if v is None:
+            return ""
+        whole = float(v) == int(v)
+        head = "{:,}".format(int(abs(v))).replace(",", " ")
+        cents = "" if whole else ",%02d" % round((abs(v) - int(abs(v))) * 100)
+        return "$" + head + cents
+
+    groups = []
+    for key, title in LAYERS:
+        rows = []
+        for x in items:
+            if x.get("layer") != key:
+                continue
+            bits = ["%s (%s) — %s" % (x.get("company", ""), x.get("ticker", ""),
+                                      (x.get("thesis") or "").rstrip("."))]
+            if x.get("upside5") is not None:
+                bits.append("Потенциал к цели +%d%% (расчёт +%s%%), %s к %s"
+                            % (x["upside5"], str(x.get("upside")).replace(".", ","),
+                               usd(x.get("spot")), usd(x.get("targetNum"))))
+            row = ". ".join(bits) + "."
+            if x.get("lead"):
+                row += " " + x["lead"]
+            if x.get("risks"):
+                row += " Риски: " + x["risks"][0]
+            rows.append(row)
+        groups.append((title, rows))
+
+    intro = ("Разборы Rumberg: %s — %s по трём слоям стека. Потенциал к целевым ценам "
+             "аналитиков на 12 месяцев посчитан от цен закрытия %s и округлён до кратного 5. "
+             "Материал носит информационный характер и не является индивидуальной "
+             "инвестиционной рекомендацией."
+             % (iss.get("title", ""),
+                plural(len(items), "компания", "компании", "компаний"),
+                ru_date(iss.get("spotDate") or iss.get("date"))))
+    return {"ideas": block_body(intro, groups)}
+
+
+def block_body(intro, groups):
+    """То же, что block(), но без маркеров: у слотов свои именованные маркеры."""
+    h = ['<div class="seo-pre"><p>' + esc(intro) + "</p>"]
+    for title, rows in groups:
+        if not rows:
+            continue
+        h.append("<h2>" + esc(title) + "</h2><ul>")
+        h += ["<li>" + esc(r) + "</li>" for r in rows]
+        h.append("</ul>")
+    h.append("</div>")
+    return "".join(h)
+
+
+# Контейнеры слотов: имя слота -> открывающий тег на странице
 INDEX_SLOTS = {
     "rail": '<nav id="rail-list" aria-label="Разделы">',
+    "ideas": '<main id="issue">',
     # ВАЖНО: только открывающие теги. С полным '<div id="news"></div>' текст
     # вставлялся ПОСЛЕ закрывающего тега, скрипт его не затирал, и пререндер
     # дублировался на экране под колонкой.
@@ -237,7 +309,8 @@ INDEX_SLOTS = {
 }
 
 PAGES = [("board.html", board_block), ("placements.html", placements_block),
-         ("offerings.html", offerings_block), ("index.html", index_blocks)]
+         ("offerings.html", offerings_block), ("index.html", index_blocks),
+         ("ideas.html", ideas_block)]
 
 
 def main():
