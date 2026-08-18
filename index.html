@@ -89,12 +89,24 @@
   .evt .et { min-width:0; }
   .evt .et .t { display:block; font-size:14.5px; font-weight:600; }
   .evt .et .s { display:block; font-family:var(--m); font-size:11px; color:var(--mut); margin-top:3px; letter-spacing:.02em; }
-  .evt .eg { margin-left:auto; flex:none; display:inline-flex; align-items:center; gap:7px;
+  /* Полоса несёт ДВА действия — встречу и разбор её темы, — поэтому сама она
+     больше не ссылка: обёртка .ev-main ведёт на события, действия справа живут
+     отдельными ссылками. Вложенная ссылка внутри ссылки была бы невалидна. */
+  .evt .ev-main { flex:1 1 auto; min-width:0; display:flex; align-items:center; gap:16px; }
+  .evt .egs { margin-left:auto; flex:none; display:flex; align-items:center; gap:16px; }
+  .evt .eg { flex:none; display:inline-flex; align-items:center; gap:7px;
     font-family:var(--m); font-size:12px; color:var(--solar); letter-spacing:.06em; white-space:nowrap; }
-  .evt:hover .eg { color:var(--solar-l); }
+  .evt .eg:hover { color:var(--solar-l); }
+  /* Второе действие приглушено: на полосе одна главная кнопка, разбор — спутник */
+  .evt .eg2 { color:var(--mut); }
+  .evt .eg2:hover { color:var(--tx); }
+  @media (max-width:860px) {
+    .evt .egs { gap:12px; }
+    .evt .eg2 { display:none; }
+  }
   @media (max-width:640px) {
     .evt { flex-wrap:wrap; gap:12px; padding:14px 16px; }
-    .evt .eg { margin-left:calc(58px + 12px); margin-top:-6px; }
+    .evt .egs { margin-left:calc(58px + 12px); margin-top:-6px; }
   }
 
   /* ── Лента «Можем запустить сейчас» ── */
@@ -428,7 +440,7 @@
              читались бы как её метаданные -->
         <div class="nvbox">
           <div class="ch"><h2>Разделы</h2></div>
-          <nav id="rail-list" aria-label="Разделы"><!-- seo:rail:start --><p>Разделы витрины: дайджест инвестиционных идей; текущие продукты — доска прайсинга, 64 инструмента; размещённые выпуски, 56 выпусков; библиотека типов продуктов; события; о компании.</p><!-- seo:rail:end --></nav>
+          <nav id="rail-list" aria-label="Разделы"><!-- seo:rail:start --><p>Разделы витрины: дайджест инвестиционных идей; разборы тем и компаний; текущие продукты — доска прайсинга, 64 инструмента; размещённые выпуски, 56 выпусков; библиотека типов продуктов; события; о компании.</p><!-- seo:rail:end --></nav>
         </div>
         <div class="stamp" id="stamp"></div>
       </section>
@@ -470,7 +482,8 @@
 <script src="data/offerings.js?v=srv19"></script>
 <script src="data/rates.js?v=2"></script>
 <script src="data/morning.js?v=1"></script>
-<script src="data/events.js?v=3"></script>
+<script src="data/ideas.js?v=1"></script>
+<script src="data/events.js?v=4"></script>
 <script>
   // Утренний обзор больше НЕ зашит в страницу — он приезжает из data/morning.js,
   // который пишет бот. Дата там в ISO, свежесть считается ниже в коде.
@@ -642,14 +655,16 @@
     // Переход туда остаётся — заголовок каждой колонки сам является ссылкой.
     var rail = [
       { no: "01", href: "digest.html", t: "Дайджест", m: window.DIGEST ? window.DIGEST.date.slice(0, 5) : "идеи" },
-      { no: "02", href: "board.html?type=warrant", t: "Текущие продукты", m: ni + " шт." },
+      // Разбор темы раз в две недели под вебинар: метка — дата выпуска из data/ideas.js
+      { no: "02", href: "ideas.html", t: "Разборы", m: (window.IDEAS && IDEAS.issues && IDEAS.issues[0]) ? dmy(IDEAS.issues[0].date).slice(0, 5) : "темы" },
+      { no: "03", href: "board.html?type=warrant", t: "Текущие продукты", m: ni + " шт." },
       // Термин прод-навигации целиком, без усечения ради ширины: счётчик у этого
       // пункта убран — глубина архива менее полезна, чем узнаваемое название
-      { no: "03", href: "placements.html", t: "Размещённые выпуски", m: "" },
-      { no: "04", href: "about.html", t: "Библиотека", m: "" },
+      { no: "04", href: "placements.html", t: "Размещённые выпуски", m: "" },
+      { no: "05", href: "about.html", t: "Библиотека", m: "" },
       // Метка встречи — конкретная дата из data/events.js, а не общее слово
-      { no: "05", href: "events.html", t: "События", m: upcoming ? dmy(upcoming.date).slice(0, 5) : "записи" },
-      { no: "06", href: "company.html", t: "О компании", m: "" }
+      { no: "06", href: "events.html", t: "События", m: upcoming ? dmy(upcoming.date).slice(0, 5) : "записи" },
+      { no: "07", href: "company.html", t: "О компании", m: "" }
     ];
     document.getElementById("rail-list").innerHTML = rail.map(function (s) {
       return '<a class="rl" href="' + s.href + '"><span class="no">' + s.no + '</span><span class="rt">' + s.t + '</span><span class="rm">' + s.m + '</span></a>';
@@ -834,13 +849,20 @@
       var sub = live
         ? "идёт прямо сейчас · " + upcoming.place.split("·")[0].trim()
         : upcoming.timeMsk + " МСК · " + (upcoming.durationMin || 30) + " минут · онлайн, вход свободный";
-      evslot.innerHTML = '<a class="evt rise" style="animation-delay:.16s" href="events.html">' +
+      var evAr = '<svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      // Разбор темы встречи — второй вход с полосы; появляется, только если у встречи
+      // в data/events.js указан materialUrl
+      var evMat = upcoming.materialUrl
+        ? '<a class="eg eg2" href="' + esc(upcoming.materialUrl) + '">Разбор компаний' + evAr + '</a>'
+        : "";
+      evslot.innerHTML = '<div class="evt rise" style="animation-delay:.16s">' +
+        '<a class="ev-main" href="events.html">' +
         '<span class="ed"><span class="d">' + dp[2] + '</span><span class="m">' + MON[dp[1] - 1] + '</span></span>' +
         '<span class="et"><span class="t">' + esc(upcoming.title) + '</span>' +
-        '<span class="s">' + esc(sub) + '</span></span>' +
-        '<span class="eg">' + (live ? "Подключиться" : "Записаться") +
-        '<svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
-        '</span></a>';
+        '<span class="s">' + esc(sub) + '</span></span></a>' +
+        '<span class="egs">' + evMat +
+        '<a class="eg" href="events.html">' + (live ? "Подключиться" : "Записаться") + evAr + '</a>' +
+        '</span></div>';
     }
 
     var rd = String((R.updated || "").split(" ")[0]).split("-").reverse().join(".");

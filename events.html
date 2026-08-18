@@ -177,6 +177,7 @@
   </a>
   <nav class="topnav">
     <a href="screener.html">Лучшие ставки</a>
+    <a href="ideas.html">Разборы</a>
     <a href="digest.html">Дайджест</a>
     <a href="offerings.html">Размещения</a>
     <a href="placements.html">Выпуски</a>
@@ -232,7 +233,7 @@
   </div>
 </div>
 
-<script src="data/events.js?v=3"></script>
+<script src="data/events.js?v=4"></script>
 <script>
 (function () {
   "use strict";
@@ -280,6 +281,8 @@
         '<button class="btn ghost" id="calBtn" type="button">В календарь</button>'
       : '<button class="btn" id="remindBtn" type="button">Напомнить в Telegram</button>' +
         '<button class="btn ghost" id="calBtn" type="button">В календарь</button>';
+    // Разбор темы встречи: материал живёт своим разделом, здесь только вход в него
+    if (s.materialUrl) actions += '<a class="btn ghost" href="' + esc(s.materialUrl) + '" data-goal="event_material">Разбор компаний ' + ARROW + '</a>';
     return '<section class="poster">' +
       '<div class="p-l">' +
         (live ? '<span class="chip onair"><i></i>Идёт сейчас</span>'
@@ -306,6 +309,7 @@
     else if (e.state !== "past") act = '<span class="chip live">Скоро</span>';
     else if (s.recordingUrl) act = '<a class="lnk" href="' + esc(s.recordingUrl) + '" target="_blank" rel="noopener" data-goal="event_recording">Смотреть запись →</a>';
     else act = '<span class="chip past">Запись готовится</span>';
+    if (s.materialUrl) act += '<a class="lnk" style="margin-left:12px" href="' + esc(s.materialUrl) + '" data-goal="event_material">Разбор →</a>';
     return '<div class="tr" id="' + esc(s.id) + '">' +
       '<div class="dt">' + e.dateShort + '<span class="yr">' + e.year + '</span></div>' +
       '<div><div class="tt">' + esc(s.title) + '</div><div class="ts">' + esc(s.sub) + '</div></div>' +
