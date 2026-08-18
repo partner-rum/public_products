@@ -14,9 +14,12 @@
 
 Данные берутся из data/ideas.js: текущий (нулевой) выпуск.
 
-ВАЖНО: перерисовывать после каждого нового выпуска и поднимать ?v= у og:image
-в ideas.html — Telegram кэширует превью по URL картинки и сам за изменениями
-не следит.
+Формат — JPEG: PNG на 87 КБ Telegram в превью не брал, хотя файл отдавался
+корректно. JPEG весит вдвое меньше и принимается всеми клиентами.
+
+ВАЖНО: превью кэшируется по URL картинки, и query-строку (?v=) скрейпер Telegram
+не понимает. Перерисовал обложку — ПЕРЕИМЕНУЙ файл (og-ideas-2.jpg) и поправь
+og:image в ideas.html.
 
 Запуск: python make_og_ideas.py [путь-к-репозиторию]
 """
@@ -32,8 +35,13 @@ import sys
 import threading
 
 ROOT = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(ROOT, "og-ideas.png")
+OUT = os.path.join(ROOT, "og-ideas.jpg")
+# Chrome умеет снимать только PNG — снимаем во временный файл и сжимаем.
+RAW = os.path.join(ROOT, "_og_ideas_raw.png")
 TPL_NAME = "_og_ideas_tmp.html"
+# Целевой вес превью. PNG на 87 КБ Telegram не забирал; JPEG вдвое легче,
+# и такие обложки принимают все клиенты.
+TARGET_KB = 60
 
 CHROME_CANDIDATES = [
     r"C:\Program Files\Google\Chrome\Application\chrome.exe",
@@ -214,6 +222,21 @@ TEMPLATE = """<!DOCTYPE html>
 """
 
 
+def to_jpeg(src, dst):
+    """PNG со снимка -> JPEG не тяжелее TARGET_KB. Качество снижаем шагами:
+    у тёмного фона JPEG склонен к полосам, поэтому ниже 72 не опускаемся —
+    лучше отдать чуть больший файл, чем грязный градиент."""
+    from PIL import Image
+    im = Image.open(src).convert("RGB")
+    for q in (88, 84, 80, 76, 72):
+        im.save(dst, "JPEG", quality=q, optimize=True, progressive=True, subsampling=1)
+        kb = os.path.getsize(dst) / 1024
+        print("  качество %d -> %.0f КБ" % (q, kb))
+        if kb <= TARGET_KB:
+            return
+    print("  ниже %d КБ не ужалось без потери качества — оставляю как есть" % TARGET_KB)
+
+
 def main():
     iss = current_issue()
     items = iss.get("items") or []
@@ -229,7 +252,7 @@ def main():
         cmd = [chrome, "--headless=new", "--disable-gpu", "--no-sandbox", "--hide-scrollbars",
                "--force-device-scale-factor=1", "--window-size=1200,630",
                "--virtual-time-budget=5000", "--user-data-dir=" + profile,
-               "--screenshot=" + OUT, "http://127.0.0.1:%d/%s" % (port, TPL_NAME)]
+               "--screenshot=" + RAW, "http://127.0.0.1:%d/%s" % (port, TPL_NAME)]
         subprocess.run(cmd, capture_output=True)
     finally:
         srv.shutdown()
@@ -237,11 +260,13 @@ def main():
             os.remove(tpl_path)
         except OSError:
             pass
-    if os.path.exists(OUT) and os.path.getsize(OUT) > 8000:
-        print("готово: %s (%.0f КБ)" % (OUT, os.path.getsize(OUT) / 1024))
-        print("превью кэшируется по URL картинки: изменил обложку — ПЕРЕИМЕНУЙ файл и поправь og:image в ideas.html (?v= скрейпер Telegram не берёт)")
-    else:
+    if not (os.path.exists(RAW) and os.path.getsize(RAW) > 8000):
         raise SystemExit("рендер не удался")
+    to_jpeg(RAW, OUT)
+    os.remove(RAW)
+    print("готово: %s (%.0f КБ)" % (OUT, os.path.getsize(OUT) / 1024))
+    print("превью кэшируется по URL картинки: изменил обложку — ПЕРЕИМЕНУЙ файл "
+          "и поправь og:image в ideas.html (?v= скрейпер Telegram не берёт)")
 
 
 if __name__ == "__main__":
