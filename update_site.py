@@ -48,6 +48,20 @@ WARRANT_UNDERLYINGS = {
     "IBIT":   dict(short="IBIT",      underlying="Bitcoin (IBIT)",      cls="Крипто",     currency="USD", uRef="$37"),
     "CSI300": dict(short="CSI 300",   underlying="CSI 300",             cls="Индекс",     currency="USD", uRef="4 739 пт"),
     "HSI":    dict(short="Hang Seng", underlying="Hang Seng",           cls="Индекс",     currency="USD", uRef="25 132 пт"),
+    # Компании из разборов (ideas.html). Прайсинг деска от 19.08.2026, поэтому
+    # у них своя экспирация: expiry/mmyy перекрывают общую сетку TENOR_META.
+    # uRef — цены закрытия 17.08.2026, округлённые; если деск считал от своего
+    # спота, поправить здесь.
+    "MU":     dict(short="MU",        underlying="Micron Technology (MU)",   cls="Акции США", currency="USD", uRef="$1 012",
+                   expiry={2: ("19.08.2028", "0828"), 3: ("20.08.2029", "0829")}),
+    "QCOM":   dict(short="QCOM",      underlying="Qualcomm (QCOM)",          cls="Акции США", currency="USD", uRef="$162",
+                   expiry={2: ("19.08.2028", "0828"), 3: ("20.08.2029", "0829")}),
+    "DELL":   dict(short="DELL",      underlying="Dell Technologies (DELL)", cls="Акции США", currency="USD", uRef="$480",
+                   expiry={2: ("19.08.2028", "0828"), 3: ("20.08.2029", "0829")}),
+    "SMCI":   dict(short="SMCI",      underlying="Super Micro Computer (SMCI)", cls="Акции США", currency="USD", uRef="$38",
+                   expiry={2: ("19.08.2028", "0828"), 3: ("20.08.2029", "0829")}),
+    "ORCL":   dict(short="ORCL",      underlying="Oracle (ORCL)",            cls="Акции США", currency="USD", uRef="$147",
+                   expiry={2: ("19.08.2028", "0828"), 3: ("20.08.2029", "0829")}),
 }
 
 # структура -> страйк / потолок / подпись / кусок id
@@ -84,6 +98,14 @@ WARRANT_QUOTES = {
     ("CSI300", "call", 2): (11.50, 0), ("CSI300", "call", 3): (13.00, 0),
 
     ("HSI", "call", 2): (17.00, 0),  ("HSI", "call", 3): (20.25, 0),
+
+    # Разборы, 19.08.2026: Offer деска, округлённый вверх до 0,25.
+    # Колл-спредов и трёхлетних сроков деск пока не дал.
+    ("MU", "call", 2): (49.50, 0),
+    ("QCOM", "call", 2): (35.25, 0),
+    ("DELL", "call", 2): (61.25, 0),
+    ("SMCI", "call", 2): (67.75, 0),
+    ("ORCL", "call", 2): (52.00, 0),
 }
 
 
@@ -93,6 +115,10 @@ def build_warrants():
         u = WARRANT_UNDERLYINGS[code]
         sm = STRUCT_META[struct]
         tenor, expiry, mmyy = TENOR_META[years]
+        # Актив с собственной датой прайсинга: своя экспирация и своё ММГГ в id
+        own = (u.get("expiry") or {}).get(years)
+        if own:
+            expiry, mmyy = own
         d = dict(
             id="W-%s-%s-%s" % (code, sm["idpart"], mmyy),
             type="warrant", structure=sm["structure"],
