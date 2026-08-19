@@ -2176,6 +2176,13 @@ function productShell(item, section, ogimg) {
   const id = item.id, B = SHELL_BASE;
   const isOffering = section === "offering";
   const target = isOffering ? "/offerings.html#" + id : "/instrument.html?id=" + id;
+  // Редирект СОХРАНЯЕТ строку запроса: без этого метка сейлза (?ref=…) терялась на
+  // персональной ссылке и до аналитики не доходила вовсе. У карточки в адресе уже
+  // есть ?id=, поэтому метка дописывается через &; у размещения адрес заканчивается
+  // якорем, и запрос обязан встать ПЕРЕД ним.
+  const redir = isOffering
+    ? '"/offerings.html"+location.search+"#' + id + '"'
+    : '"/instrument.html?id=' + id + '"+location.search.replace("?","&")';
   const title = shellEsc(item.name || id);
   const desc = shellEsc(isOffering ? shellDescOffering(item) : shellDesc(item));
   const img = ogimg || "og-cover.png";
@@ -2195,7 +2202,7 @@ function productShell(item, section, ogimg) {
     '<meta name="twitter:card" content="summary_large_image">',
     '<meta name="theme-color" content="#0B0C10">',
     '<link rel="canonical" href="' + B + '/p/' + id + '.html">',
-    '<script>location.replace("' + target + '");</script>',
+    '<script>location.replace(' + redir + ');</script>',
     "<style>html,body{margin:0;height:100%}body{background:#0B0C10;color:rgba(242,243,247,.6);font-family:'Onest',system-ui,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px}a{color:#EE7D1B}</style>",
     '</head>',
     '<body>Открываем продукт… <a href="' + target + '">перейти вручную</a></body>',

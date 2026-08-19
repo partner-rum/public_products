@@ -80,12 +80,27 @@ TEMPLATE = """<!DOCTYPE html>
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#0B0C10">
 <link rel="canonical" href="{base}/p/{id}.html">
-<script>location.replace("/instrument.html?id={id}");</script>
+<script>location.replace({redir});</script>
 <style>html,body{{margin:0;height:100%}}body{{background:#0B0C10;color:rgba(242,243,247,.6);font-family:'Onest',system-ui,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px}}a{{color:#EE7D1B}}</style>
 </head>
-<body>Открываем продукт… <a href="/instrument.html?id={id}">перейти вручную</a></body>
+<body>Открываем продукт… <a href="{target}">перейти вручную</a></body>
 </html>
 """
+
+
+def redirect_parts(pid, offering=False):
+    """(выражение для location.replace, адрес для запасной ссылки).
+
+    Строку запроса сохраняем: без неё метка сейлза ?ref= терялась на редиректе.
+    У карточки в адресе уже есть ?id=, поэтому метка дописывается через &;
+    у размещения адрес заканчивается якорем — запрос обязан встать ПЕРЕД ним.
+    ВАЖНО: те же две формы собирает productShell() в bot/worker.js — если правишь
+    здесь, правь и там, иначе страницы разойдутся.
+    """
+    if offering:
+        return '"/offerings.html"+location.search+"#%s"' % pid, "/offerings.html#%s" % pid
+    return ('"/instrument.html?id=%s"+location.search.replace("?","&")' % pid,
+            "/instrument.html?id=%s" % pid)
 
 
 def load_instruments():
@@ -136,8 +151,9 @@ def main():
         wanted.add(pid)
         img = og_image(pid)
         personal += img != "og-cover.png"
+        redir, target = redirect_parts(pid)
         html = TEMPLATE.format(title=esc(inst.get("name", pid)), desc=esc(describe(inst)),
-                               base=BASE, id=pid, ogimg=img)
+                               base=BASE, id=pid, ogimg=img, redir=redir, target=target)
         with open(os.path.join(OUTDIR, pid + ".html"), "w", encoding="utf-8", newline="\n") as f:
             f.write(html)
     for o in load_offerings():
@@ -145,9 +161,9 @@ def main():
         wanted.add(pid)
         img = og_image(pid)
         personal += img != "og-cover.png"
+        redir, target = redirect_parts(pid, offering=True)
         html = TEMPLATE.format(title=esc(o.get("name", pid)), desc=esc(describe_offering(o)),
-                               base=BASE, id=pid, ogimg=img)
-        html = html.replace('/instrument.html?id=' + pid, '/offerings.html#' + pid)
+                               base=BASE, id=pid, ogimg=img, redir=redir, target=target)
         with open(os.path.join(OUTDIR, pid + ".html"), "w", encoding="utf-8", newline="\n") as f:
             f.write(html)
     # чистим шеллы снятых продуктов
