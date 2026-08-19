@@ -278,10 +278,17 @@
 
   function posterHTML(e) {
     var s = e.src, live = e.state === "live";
-    var actions = live && s.joinUrl
-      ? '<a class="btn" id="joinBtn" href="' + esc(s.joinUrl) + '" target="_blank" rel="noopener">Подключиться ' + ARROW + '</a>' +
-        '<button class="btn ghost" id="calBtn" type="button">В календарь</button>'
-      : '<button class="btn" id="remindBtn" type="button">Напомнить в Telegram</button>' +
+    // Ссылка на комнату видна ВСЕГДА, когда она есть в данных, а не только в эфире:
+    // клиент приходит на страницу заранее и должен видеть, куда заходить. До начала
+    // это вторичная кнопка — главным действием остаётся «Напомнить в Telegram»
+    // (через неё идёт заявка сейлзам), в эфире она становится главной.
+    var joinBtn = s.joinUrl
+      ? '<a class="btn' + (live ? '' : ' ghost') + '" id="joinBtn" href="' + esc(s.joinUrl) +
+        '" target="_blank" rel="noopener">Подключиться ' + ARROW + '</a>'
+      : '';
+    var actions = live
+      ? joinBtn + '<button class="btn ghost" id="calBtn" type="button">В календарь</button>'
+      : '<button class="btn" id="remindBtn" type="button">Напомнить в Telegram</button>' + joinBtn +
         '<button class="btn ghost" id="calBtn" type="button">В календарь</button>';
     // Разбор темы встречи: материал живёт своим разделом, здесь только вход в него
     if (s.materialUrl) actions += '<a class="btn ghost" href="' + esc(s.materialUrl) + '" data-goal="event_material">Разбор компаний ' + ARROW + '</a>';
