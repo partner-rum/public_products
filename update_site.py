@@ -34,7 +34,57 @@ import sys
 # currency — валюта продукта (RUB / USD), показывается меткой; расчёты на сайте в ₽.
 # ============================================================
 
-INSTRUMENTS_BASE = []  # дисконтные/защита капитала сейчас не публикуются
+INSTRUMENTS_BASE = []  # дисконтные добавляются админкой (src: "sales")
+
+# --- Сетка защиты капитала: базовый актив × профиль выплаты × срок ----------
+# Прайсинг деска 19.08.2026. На витрину идёт ТОЛЬКО коэффициент участия,
+# округлённый ВНИЗ до десятков (правило проекта: 203,9% -> 200%). FV и All-in
+# margin остаются у деска: клиент платит номинал, участие — единственный
+# говорящий параметр выплаты.
+# КУ ниже — уже округлённые доли: 0.4 = участие 40%.
+PROTECTION_PARTICIPATION = {
+    # (БА, профиль, срок): участие. Профиль "cs" — учитываемый рост до +50 п.п.
+    ("MU",   "plain", 2): 0.4,  ("MU",   "cs", 2): 1.2,
+    ("QCOM", "plain", 2): 0.6,  ("QCOM", "cs", 2): 1.1,
+    ("DELL", "plain", 2): 0.3,  ("DELL", "cs", 2): 0.8,
+    ("SMCI", "plain", 2): 0.3,  ("SMCI", "cs", 2): 0.9,
+    ("ORCL", "plain", 2): 0.4,  ("ORCL", "cs", 2): 0.9,
+
+    ("MU",   "plain", 3): 0.4,  ("MU",   "cs", 3): 1.3,
+    ("QCOM", "plain", 3): 0.6,  ("QCOM", "cs", 3): 1.2,
+    ("DELL", "plain", 3): 0.3,  ("DELL", "cs", 3): 0.8,
+    ("SMCI", "plain", 3): 0.3,  ("SMCI", "cs", 3): 0.8,
+    ("ORCL", "plain", 3): 0.4,  ("ORCL", "cs", 3): 1.0,
+}
+# Потолок учитываемого роста у профиля cs, п.п. (100–150%)
+PROTECTION_CAP = 50
+
+
+def build_protection():
+    """Записи защиты капитала. Базовый актив, экспирация и класс берутся из той же
+    таблицы, что у варрантов, — чтобы имя и дата не разъезжались между типами."""
+    out = []
+    for (code, profile, years), part in PROTECTION_PARTICIPATION.items():
+        u = WARRANT_UNDERLYINGS[code]
+        tenor, expiry, mmyy = TENOR_META[years]
+        own = (u.get("expiry") or {}).get(years)
+        if own:
+            expiry, mmyy = own
+        capped = profile == "cs"
+        name = "Защита капитала · " + u["short"] + (" · до +%d%%" % PROTECTION_CAP if capped else "") + " · " + tenor
+        d = dict(
+            id="P-%s%s-%s" % (code, "-CS" if capped else "", mmyy),
+            type="protection", name=name,
+            underlying=u["underlying"], cls=u["cls"], currency=u["currency"],
+            strike=100, spot=100, participation=part, protectionPct=100,
+        )
+        if capped:
+            d["cap"] = PROTECTION_CAP
+        if u.get("uRef"):
+            d["uRef"] = u["uRef"]
+        d.update(tenor=tenor, expiry=expiry, quote=100, chg=0, minNom=1_000_000)
+        out.append(d)
+    return out
 
 # --- Сетка варрантов: структура × базовый актив × срок ----------------------
 # Добавить базовый актив — строка в WARRANT_UNDERLYINGS + котировки в WARRANT_QUOTES.
@@ -140,7 +190,7 @@ def build_warrants():
     return out
 
 
-INSTRUMENTS = INSTRUMENTS_BASE + build_warrants()
+INSTRUMENTS = INSTRUMENTS_BASE + build_warrants() + build_protection()
 
 # Показывать ли график динамики базового актива в карточке. Пока данные демонстрационные —
 # держим ВЫКЛ, чтобы на боевом не было ложной динамики (диаграмма выплаты не зависит от этого).
