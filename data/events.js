@@ -5,14 +5,16 @@
 // Поля встречи:
 //   id           — латиницей, уникальный (якорь строки на странице событий)
 //   date         — "ГГГГ-ММ-ДД", timeMsk — "ЧЧ:ММ" по Москве, durationMin — минуты
-//   joinUrl      — комната Контур.Толк; пусто = кнопки «Подключиться» нет
+//   joinUrl      — комната Контур.Толк, ВИД АУДИТОРИИ (/app/stream/auditoriums/…),
+//                  а НЕ студии (/app/stream/studios/…): студия — пульт ведущего,
+//                  клиент туда попадать не должен. Пусто = кнопки «Подключиться» нет
 //   recordingUrl — ссылка на запись; появилась → в расписании кнопка «Смотреть запись»
 //   materialUrl  — разбор темы встречи (ideas.html); появился → кнопка «Разбор компаний»
 //   agenda       — программа (постер ближайшей встречи)
 // Статус (предстоит / идёт / прошла) страницы считают САМИ от date+timeMsk —
 // руками ничего не переключается. Видео в репозиторий не кладём — только ссылки.
 window.EVENTS = {
-  "updated": "2026-08-12",
+  "updated": "2026-08-19",
   "items": [
     {
       "id": "intl-tech-2026-08-20",
@@ -22,7 +24,7 @@ window.EVENTS = {
       "timeMsk": "15:00",
       "durationMin": 30,
       "place": "Онлайн · Контур.Толк · вход свободный",
-      "joinUrl": "https://rumbergcapital.ktalk.ru/app/stream/studios/a9aa8ce6-ed38-4051-8b8b-a10ab731eca3",
+      "joinUrl": "https://rumbergcapital.ktalk.ru/app/stream/auditoriums/cfcb75a2-d95f-439c-945c-2e6c26e8658c",
       "recordingUrl": "",
       "materialUrl": "ideas.html",
       "speaker": "Руслан Сабиров",
