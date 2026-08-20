@@ -428,11 +428,56 @@
     location.reload();
   });
 
-  // Вход, запомненный в браузере: сразу открываем кабинет, не спрашивая ключ.
-  var c = creds();
-  if (c.id && c.key) {
-    $("id").value = c.id;
-    load(c.id, c.key, true);
+  // Демо-вёрстки: ?demo=1 — заполненный кабинет, ?demo=0 — первый день агента.
+  // Данные синтетические, сеть НЕ трогается, ключ в браузер не пишется (иначе
+  // маячок счёл бы этот браузер агентским и перестал считать открытия).
+  // Тот же приём, что ?chatdemo= у консьержа и ?qual=1 у гейта.
+  var demo = location.search.match(/[?&]demo=([01])/);
+  if (demo) {
+    render(demo[1] === "0" ? demoEmpty() : demoFull());
+  } else {
+    // Вход, запомненный в браузере: сразу открываем кабинет, не спрашивая ключ.
+    var c = creds();
+    if (c.id && c.key) {
+      $("id").value = c.id;
+      load(c.id, c.key, true);
+    }
+  }
+
+  function demoEmpty() {
+    return { ok: true, ref: "demo", now: Date.now(),
+      opens: { all: 0, d7: 0, d30: 0 }, views: { all: 0 }, leads: { all: 0, d30: 0 },
+      last: 0, products: [], days: [], truncated: false };
+  }
+  function demoFull() {
+    var now = Date.now(), D = 86400000;
+    var day = function (t) {
+      var d = new Date(t + 3 * 3600 * 1000);
+      return d.getUTCFullYear() + "-" + String(d.getUTCMonth() + 1).padStart(2, "0") +
+             "-" + String(d.getUTCDate()).padStart(2, "0");
+    };
+    var shape = [4, 2, 7, 0, 1, 3, 0, 0, 5, 2, 0, 1, 6, 3, 0, 0, 2, 4, 0, 1, 0, 3, 8, 2, 0, 0, 1, 5, 2, 4];
+    var days = [];
+    for (var i = 0; i < shape.length; i++) {
+      if (shape[i]) days.push({ d: day(now - i * D), n: shape[i] });
+    }
+    return { ok: true, ref: "andrey", now: now,
+      opens: { all: 78, d7: 14, d30: 66 }, views: { all: 31 }, leads: { all: 4, d30: 3 },
+      last: now - 6 * 60000,
+      products: [
+        { p: "D-VEB-3Y",         opens: 17, views: 5, leads: 2, last: now - 6 * 60000 },
+        { p: "W-NVDA-C100-0729", opens: 12, views: 9, leads: 1, last: now - 2 * 3600000 },
+        { p: "P-SPY-3Y",         opens: 9,  views: 4, leads: 1, last: now - 8 * 3600000 },
+        { p: "board",            opens: 8,  views: 7, leads: 0, last: now - D },
+        { p: "sp-2-70",          opens: 7,  views: 2, leads: 0, last: now - 2 * D },
+        { p: "D-GPN-3Y",         opens: 6,  views: 3, leads: 0, last: now - 3 * D },
+        { p: "B-SBER-9M",        opens: 5,  views: 1, leads: 0, last: now - 5 * D },
+        { p: "index",            opens: 4,  views: 0, leads: 0, last: now - 6 * D },
+        { p: "screener",         opens: 3,  views: 0, leads: 0, last: now - 9 * D },
+        { p: "AC-SEMI-US-3Y",    opens: 2,  views: 1, leads: 0, last: now - 12 * D },
+        { p: "digest",           opens: 1,  views: 0, leads: 0, last: now - 21 * D }
+      ],
+      days: days, truncated: false };
   }
 })();
 </script>
