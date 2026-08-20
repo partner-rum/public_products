@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Кабинет агента — Rumberg</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Rubik:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --canvas:#0B0C10; --card:#14161C; --ink:#F2F3F7; --hushed:rgba(242,243,247,.64);
+    --faint:rgba(242,243,247,.56); --border:rgba(255,255,255,.12); --border-soft:rgba(255,255,255,.07);
+    --solar:#EE7D1B; --solar-l:#F58E33; --up:#55C08A; --down:#E0705A;
+    --f:'Onest',system-ui,sans-serif; --m:'JetBrains Mono',Consolas,monospace; --display:'Rubik','Onest',sans-serif;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--canvas); color:var(--ink); font-family:var(--f); -webkit-font-smoothing:antialiased; }
+  a { color:inherit; text-decoration:none; }
+  .wrap { max-width:960px; margin:0 auto; padding:0 20px 80px; }
+
+  .top { display:flex; align-items:center; gap:10px; padding:18px 0 6px; }
+  .top svg { flex:none; }
+  .top .t { font-family:var(--display); font-weight:600; font-size:16px; }
+  .top .s { font-size:12px; color:var(--faint); margin-top:1px; }
+  .top .sp { margin-left:auto; }
+  .exit { border:1px solid var(--border); background:none; color:var(--hushed); border-radius:8px;
+          padding:7px 13px; font-family:var(--f); font-size:12.5px; cursor:pointer; }
+  .exit:hover { border-color:rgba(255,255,255,.3); color:var(--ink); }
+
+  h1 { margin:22px 0 6px; font-family:var(--display); font-size:26px; font-weight:600; letter-spacing:-.02em; }
+  .lead { margin:0 0 22px; font-size:13.5px; line-height:1.55; color:var(--hushed); max-width:640px; }
+
+  label { display:block; margin:0 0 10px; }
+  label .k { display:block; font-size:12px; color:var(--hushed); margin:0 0 5px; }
+  input, select {
+    width:100%; background:rgba(255,255,255,.05); border:1px solid var(--border); border-radius:10px;
+    color:var(--ink); font-family:var(--f); font-size:13.5px; padding:9px 12px; outline:none;
+  }
+  input:focus, select:focus { border-color:rgba(238,125,27,.6); }
+  select { appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23888' fill='none' stroke-width='1.5'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; padding-right:34px; }
+  option { background:#14161C; color:#F2F3F7; }
+
+  .grp { margin:0 0 16px; padding:16px; background:var(--card); border:1px solid var(--border-soft); border-radius:14px; }
+  .grp .gt { font-family:var(--m); font-size:10.5px; letter-spacing:.13em; text-transform:uppercase; color:var(--faint); margin:0 0 12px; }
+  .send { width:100%; margin-top:6px; background:var(--solar); color:#0C0A08; border:0; border-radius:12px;
+          padding:13px; font-family:var(--f); font-size:14.5px; font-weight:600; cursor:pointer; }
+  .send:hover { background:var(--solar-l); }
+  .send:disabled { opacity:.5; cursor:default; }
+  .msg { display:none; margin:14px 0 0; padding:13px 16px; border-radius:12px; font-size:13.5px; line-height:1.5; }
+  .msg.err { display:block; background:rgba(224,112,90,.1); border:1px solid rgba(224,112,90,.45); }
+  .note { font-size:11.5px; color:var(--faint); margin-top:8px; line-height:1.45; }
+
+  /* --- вход --- */
+  #gate { max-width:420px; }
+  #gate .row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  @media (max-width:560px) { #gate .row { grid-template-columns:1fr; } }
+
+  /* --- сводка --- */
+  #dash { display:none; }
+  .tiles { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin:0 0 16px; }
+  @media (max-width:760px) { .tiles { grid-template-columns:repeat(2,1fr); } }
+  .tile { background:var(--card); border:1px solid var(--border-soft); border-radius:14px; padding:15px 16px; }
+  .tile .v { font-family:var(--m); font-size:30px; font-weight:500; letter-spacing:-.03em; line-height:1; }
+  .tile .k { font-size:12px; color:var(--hushed); margin-top:7px; line-height:1.35; }
+  .tile.acc .v { color:var(--solar-l); }
+  .tile.win .v { color:var(--up); }
+  .stamp { font-family:var(--m); font-size:11.5px; color:var(--faint); margin:0 0 22px; }
+
+  /* --- дни --- */
+  .bars { display:flex; align-items:flex-end; gap:3px; height:92px; margin:4px 0 6px; }
+  .bars i { flex:1; min-width:3px; background:rgba(238,125,27,.34); border-radius:2px 2px 0 0; position:relative; }
+  .bars i.hot { background:var(--solar); }
+  .bars i[data-n]:hover::after {
+    content:attr(data-d) " · " attr(data-n); position:absolute; bottom:100%; left:50%; transform:translateX(-50%);
+    white-space:nowrap; font-family:var(--m); font-size:10.5px; background:#1B1E26; border:1px solid var(--border);
+    border-radius:6px; padding:3px 7px; margin-bottom:5px; color:var(--ink); z-index:2;
+  }
+  .axis { display:flex; justify-content:space-between; font-family:var(--m); font-size:10px; color:var(--faint); }
+
+  /* --- таблица продуктов --- */
+  .tbl { width:100%; border-collapse:collapse; }
+  .tbl th { font-family:var(--m); font-size:9.5px; letter-spacing:.11em; text-transform:uppercase; color:var(--faint);
+            font-weight:400; text-align:right; padding:0 0 9px; border-bottom:1px solid var(--border-soft); }
+  .tbl th:first-child { text-align:left; }
+  .tbl td { padding:11px 0; border-bottom:1px solid var(--border-soft); font-size:13.5px; text-align:right;
+            font-family:var(--m); }
+  .tbl td:first-child { text-align:left; font-family:var(--f); line-height:1.35; padding-right:14px; }
+  .tbl tr:last-child td { border-bottom:0; }
+  .tbl td .pid { display:block; font-family:var(--m); font-size:9.5px; color:var(--faint); margin-top:2px;
+                 letter-spacing:.06em; }
+  .tbl td.zero { color:var(--faint); }
+  .tbl td .lead-yes { color:var(--up); }
+  .scroll { overflow-x:auto; }
+  .empty { font-size:13.5px; color:var(--hushed); line-height:1.6; }
+
+  /* --- конструктор ссылок --- */
+  .mk { display:grid; grid-template-columns:1fr auto; gap:10px; align-items:end; }
+  @media (max-width:640px) { .mk { grid-template-columns:1fr; } }
+  .mk .btn { border:1px solid var(--border); background:rgba(255,255,255,.05); color:var(--ink); border-radius:10px;
+             padding:9px 16px; font-family:var(--f); font-size:13.5px; font-weight:500; cursor:pointer; height:38px; }
+  .mk .btn:hover { border-color:rgba(238,125,27,.6); }
+  .out { margin-top:12px; display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+  .out code { flex:1; min-width:240px; font-family:var(--m); font-size:12px; color:var(--solar-l);
+              background:rgba(238,125,27,.08); border:1px solid rgba(238,125,27,.26); border-radius:9px;
+              padding:9px 12px; word-break:break-all; }
+  .copied { font-family:var(--m); font-size:11px; color:var(--up); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <svg width="22" height="22" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>
+    <div><div class="t">Rumberg · кабинет</div><div class="s" id="sub">ваши ссылки и заявки</div></div>
+    <div class="sp"><button class="exit" id="exit" type="button" style="display:none">Выйти</button></div>
+  </div>
+
+  <!-- ВХОД -->
+  <div id="gate">
+    <h1>Кабинет агента</h1>
+    <p class="lead">Здесь видно, что происходит с вашими ссылками: сколько раз их открывали, какие продукты смотрели и какие заявки пришли. ID и ключ выдаёт Rumberg.</p>
+    <div class="grp">
+      <div class="gt">вход</div>
+      <div class="row">
+        <label><span class="k">Ваш ID</span><input id="id" autocomplete="username" placeholder="например andrey" spellcheck="false"></label>
+        <label><span class="k">Ключ</span><input id="key" type="password" autocomplete="current-password" placeholder="выдаётся Rumberg"></label>
+      </div>
+      <button class="send" id="go" type="button">Войти</button>
+      <div class="msg" id="err"></div>
+      <div class="note">Ключ сохраняется в этом браузере, чтобы не вводить его каждый раз. На общем компьютере после работы нажмите «Выйти».</div>
+    </div>
+  </div>
+
+  <!-- КАБИНЕТ -->
+  <div id="dash">
+    <h1 id="hi">Кабинет</h1>
+    <p class="lead" id="dlead">Считаются переходы по ссылкам с вашей меткой. Открытие — визит, начавшийся по вашей ссылке; просмотр — следующий продукт, который человек посмотрел в том же визите.</p>
+
+    <div class="tiles">
+      <div class="tile acc"><div class="v" id="t7">—</div><div class="k">открытий за 7 дней</div></div>
+      <div class="tile"><div class="v" id="t30">—</div><div class="k">открытий за 30 дней</div></div>
+      <div class="tile"><div class="v" id="tv">—</div><div class="k">просмотров продуктов</div></div>
+      <div class="tile win"><div class="v" id="tl">—</div><div class="k">заявок всего</div></div>
+    </div>
+    <div class="stamp" id="stamp"></div>
+
+    <div class="grp" id="daysBox">
+      <div class="gt">открытия по дням, 30 дней</div>
+      <div class="bars" id="bars"></div>
+      <div class="axis"><span id="axL"></span><span id="axR"></span></div>
+    </div>
+
+    <div class="grp">
+      <div class="gt">продукты</div>
+      <div class="scroll">
+        <table class="tbl" id="tbl"></table>
+      </div>
+      <div class="empty" id="tblEmpty" style="display:none">
+        Пока ничего. Соберите ссылку ниже, отправьте клиенту — и открытия появятся здесь.
+      </div>
+    </div>
+
+    <div class="grp">
+      <div class="gt">собрать ссылку с моей меткой</div>
+      <div class="mk">
+        <label style="margin:0"><span class="k">Продукт</span><select id="prod"></select></label>
+        <button class="btn" id="mk" type="button">Собрать</button>
+      </div>
+      <div class="out" id="out" style="display:none">
+        <code id="url"></code>
+        <button class="btn" id="cp" type="button">Скопировать</button>
+        <span class="copied" id="cpOk" style="display:none">скопировано</span>
+      </div>
+      <div class="note">Ссылка ведёт на страницу с превью для мессенджеров: в Telegram и WhatsApp развернётся карточка продукта. Метка нужна, чтобы открытия и заявки попали именно в ваш кабинет.</div>
+    </div>
+  </div>
+</div>
+
+<script src="data/instruments.js?v=fx8"></script>
+<script src="data/offerings.js?v=srv19"></script>
+<script>
+(function () {
+  "use strict";
+  var API = "https://so-leads.ruslan-sabirov.workers.dev/stats";
+  var BASE = "https://invest.rumberg.ru";
+
+  var $ = function (id) { return document.getElementById(id); };
+  var gate = $("gate"), dash = $("dash");
+
+  // ---- справочник продуктов: id -> человеческое имя -------------------------
+  // Ключи событий — это id продуктов и имена страниц. Показывать агенту
+  // «W-OFZ238-C105-0729» нельзя, поэтому разворачиваем в названия из данных.
+  var NAMES = {}, LIST = [];
+  (function () {
+    var ins = (window.SITE_DATA && SITE_DATA.instruments) || [];
+    for (var i = 0; i < ins.length; i++) {
+      NAMES[ins[i].id] = ins[i].name || ins[i].id;
+      LIST.push({ id: ins[i].id, name: ins[i].name || ins[i].id, grp: "Доска" });
+    }
+    var off = (window.OFFERINGS && OFFERINGS.items) || [];
+    for (var j = 0; j < off.length; j++) {
+      NAMES[off[j].id] = off[j].name || off[j].id;
+      LIST.push({ id: off[j].id, name: off[j].name || off[j].id, grp: "На размещении" });
+    }
+  })();
+  // Страницы без продукта: заходы на витрину в целом тоже видны, и подписать их
+  // надо по-русски, иначе в таблице появятся «board» и «index».
+  var PAGES = {
+    index: "Главная", board: "Доска продуктов", offerings: "На размещении",
+    placements: "Размещённые выпуски", screener: "Лучшие ставки", digest: "Дайджест",
+    research: "Разборы", ideas: "Разборы компаний", events: "События",
+    about: "Библиотека", guide: "Зачем вам этот сайт", company: "О компании",
+    instrument: "Карточка продукта", onepager: "One-pager"
+  };
+  function label(key) { return NAMES[key] || PAGES[key] || key; }
+  function isProduct(key) { return !!NAMES[key]; }
+
+  // ---- утилиты -------------------------------------------------------------
+  function plural(n, one, few, many) {
+    var a = Math.abs(n) % 100, b = a % 10;
+    if (a > 10 && a < 20) return many;
+    if (b > 1 && b < 5) return few;
+    if (b === 1) return one;
+    return many;
+  }
+  function ago(ts, now) {
+    if (!ts) return "";
+    var s = Math.max(0, Math.round((now - ts) / 1000));
+    if (s < 90) return "только что";
+    var m = Math.round(s / 60);
+    if (m < 60) return m + " " + plural(m, "минуту", "минуты", "минут") + " назад";
+    var h = Math.round(m / 60);
+    if (h < 24) return h + " " + plural(h, "час", "часа", "часов") + " назад";
+    var d = Math.round(h / 24);
+    return d + " " + plural(d, "день", "дня", "дней") + " назад";
+  }
+  function dmy(iso) {
+    var p = String(iso).split("-");
+    return p.length === 3 ? p[2] + "." + p[1] : iso;
+  }
+
+  // ---- вход ----------------------------------------------------------------
+  function creds() {
+    try {
+      return { id: localStorage.getItem("so_me") || "", key: localStorage.getItem("so_me_key") || "" };
+    } catch (e) { return { id: "", key: "" }; }
+  }
+  function remember(id, key) {
+    try {
+      // so_me читает и маячок в metrika.js: свои же заходы в статистику не идут.
+      localStorage.setItem("so_me", id);
+      localStorage.setItem("so_me_key", key);
+    } catch (e) {}
+  }
+  function forget() {
+    try { localStorage.removeItem("so_me"); localStorage.removeItem("so_me_key"); } catch (e) {}
+  }
+
+  function fail(text) {
+    var e = $("err");
+    e.textContent = text;
+    e.className = "msg err";
+  }
+
+  async function load(id, key, quiet) {
+    var btn = $("go");
+    btn.disabled = true;
+    if (!quiet) btn.textContent = "Проверяем…";
+    try {
+      var r = await fetch(API, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: id, key: key })
+      });
+      var d = await r.json().catch(function () { return {}; });
+      if (!d.ok) {
+        if (d.error === "bad_key") fail("Не подходит ID или ключ. Проверьте раскладку и пробелы.");
+        else if (d.error === "no_storage" || d.error === "not_configured") fail("Кабинет ещё не подключён на сервере. Напишите Руслану.");
+        else fail("Не удалось получить данные. Попробуйте ещё раз.");
+        forget();
+        return false;
+      }
+      remember(id, key);
+      render(d);
+      return true;
+    } catch (e) {
+      fail("Нет связи с сервером. Проверьте интернет и попробуйте ещё раз.");
+      return false;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Войти";
+    }
+  }
+
+  // ---- отрисовка -----------------------------------------------------------
+  function render(d) {
+    gate.style.display = "none";
+    dash.style.display = "block";
+    $("exit").style.display = "inline-block";
+    $("sub").textContent = "метка " + d.ref;
+    $("hi").textContent = "Кабинет · " + d.ref;
+
+    $("t7").textContent = d.opens.d7;
+    $("t30").textContent = d.opens.d30;
+    $("tv").textContent = d.views ? d.views.all : 0;
+    $("tl").textContent = d.leads.all;
+
+    var parts = [];
+    parts.push(d.last ? "последнее открытие " + ago(d.last, d.now) : "открытий пока не было");
+    parts.push("всего за 90 дней: " + d.opens.all + " " + plural(d.opens.all, "открытие", "открытия", "открытий"));
+    if (d.truncated) parts.push("показана часть событий — их слишком много");
+    $("stamp").textContent = parts.join(" · ");
+
+    drawDays(d.days || []);
+    drawTable(d.products || [], d.now);
+    fillProducts(d.ref);
+  }
+
+  // Столбики за 30 дней. Дни без открытий рисуем тоже — иначе непонятно,
+  // что в эти дни ссылки не открывали, и график врёт про плотность.
+  function drawDays(days) {
+    var have = {};
+    for (var i = 0; i < days.length; i++) have[days[i].d] = days[i].n;
+    var rows = [], now = new Date(Date.now() + 3 * 3600 * 1000);
+    for (var k = 29; k >= 0; k--) {
+      var t = new Date(now.getTime() - k * 86400000);
+      var iso = t.getUTCFullYear() + "-" + String(t.getUTCMonth() + 1).padStart(2, "0") +
+                "-" + String(t.getUTCDate()).padStart(2, "0");
+      rows.push({ d: iso, n: have[iso] || 0 });
+    }
+    var max = 1;
+    for (var m = 0; m < rows.length; m++) if (rows[m].n > max) max = rows[m].n;
+    var html = "";
+    for (var j = 0; j < rows.length; j++) {
+      var h = rows[j].n ? Math.max(6, Math.round(rows[j].n / max * 100)) : 2;
+      html += '<i style="height:' + h + '%"' + (rows[j].n === max && max > 1 ? ' class="hot"' : "") +
+              ' data-d="' + dmy(rows[j].d) + '" data-n="' + rows[j].n + '"></i>';
+    }
+    $("bars").innerHTML = html;
+    $("axL").textContent = dmy(rows[0].d);
+    $("axR").textContent = "сегодня";
+  }
+
+  function drawTable(products, now) {
+    var rows = products.filter(function (p) { return p.opens || p.views || p.leads; });
+    if (!rows.length) {
+      $("tbl").innerHTML = "";
+      $("tblEmpty").style.display = "block";
+      return;
+    }
+    $("tblEmpty").style.display = "none";
+    var h = "<tr><th>Продукт или страница</th><th>Открытий</th><th>Просмотров</th><th>Заявок</th><th>Последнее</th></tr>";
+    for (var i = 0; i < rows.length; i++) {
+      var p = rows[i], nm = label(p.p);
+      h += "<tr><td>" + esc(nm) +
+           (isProduct(p.p) ? '<span class="pid">' + esc(p.p) + "</span>" : "") + "</td>" +
+           cell(p.opens) + cell(p.views || 0) +
+           (p.leads ? '<td><span class="lead-yes">' + p.leads + "</span></td>" : cell(0)) +
+           '<td class="zero">' + esc(ago(p.last, now)) + "</td></tr>";
+    }
+    $("tbl").innerHTML = h;
+  }
+  function cell(n) { return '<td' + (n ? "" : ' class="zero"') + ">" + (n || "—") + "</td>"; }
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+    });
+  }
+
+  // ---- конструктор ссылок --------------------------------------------------
+  var myRef = "";
+  function fillProducts(ref) {
+    myRef = ref;
+    var sel = $("prod");
+    if (sel.options.length) return;
+    var grps = {}, order = [];
+    for (var i = 0; i < LIST.length; i++) {
+      if (!grps[LIST[i].grp]) { grps[LIST[i].grp] = []; order.push(LIST[i].grp); }
+      grps[LIST[i].grp].push(LIST[i]);
+    }
+    var h = "";
+    for (var g = 0; g < order.length; g++) {
+      h += '<optgroup label="' + esc(order[g]) + '">';
+      var arr = grps[order[g]];
+      for (var j = 0; j < arr.length; j++) {
+        h += '<option value="' + esc(arr[j].id) + '">' + esc(arr[j].name) + "</option>";
+      }
+      h += "</optgroup>";
+    }
+    sel.innerHTML = h;
+  }
+  $("mk").addEventListener("click", function () {
+    var id = $("prod").value;
+    if (!id || !myRef) return;
+    $("url").textContent = BASE + "/p/" + id + ".html?ref=" + myRef;
+    $("out").style.display = "flex";
+    $("cpOk").style.display = "none";
+  });
+  $("cp").addEventListener("click", function () {
+    var t = $("url").textContent;
+    var done = function () {
+      $("cpOk").style.display = "inline";
+      setTimeout(function () { $("cpOk").style.display = "none"; }, 2000);
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(t).then(done, done);
+    } else {
+      var a = document.createElement("textarea");
+      a.value = t; document.body.appendChild(a); a.select();
+      try { document.execCommand("copy"); } catch (e) {}
+      a.remove(); done();
+    }
+  });
+
+  // ---- события интерфейса --------------------------------------------------
+  $("go").addEventListener("click", function () {
+    var id = $("id").value.trim().toLowerCase(), key = $("key").value.trim();
+    if (!id || !key) { fail("Заполните оба поля."); return; }
+    load(id, key, false);
+  });
+  $("key").addEventListener("keydown", function (e) { if (e.key === "Enter") $("go").click(); });
+  $("id").addEventListener("keydown", function (e) { if (e.key === "Enter") $("key").focus(); });
+  $("exit").addEventListener("click", function () {
+    forget();
+    location.reload();
+  });
+
+  // Вход, запомненный в браузере: сразу открываем кабинет, не спрашивая ключ.
+  var c = creds();
+  if (c.id && c.key) {
+    $("id").value = c.id;
+    load(c.id, c.key, true);
+  }
+})();
+</script>
+</body>
+</html>

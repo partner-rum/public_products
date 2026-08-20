@@ -33,6 +33,64 @@ ym(110759242, "init", {
   } catch (e) {}
 })();
 
+
+// --- Маячок открытия персональной ссылки → кабинет агента (me.html) ---
+// Зачем: агент не видел, что происходит с его ссылками. Здесь считается только
+// «ссылку открыли» и «посмотрели такой-то продукт» — ни кто именно, ни откуда.
+//
+// Считаем ВИЗИТ, а не браузер. Метка so_ref живёт в браузере вечно (она нужна
+// заявкам), поэтому «есть метка — считай» накручивало бы открытия самому агенту
+// при каждом заходе на витрину. Открытием считается визит, НАЧАВШИЙСЯ по ссылке
+// с ?ref= в адресе; дальнейшие страницы того же визита — просмотры.
+(function () {
+  var ENDPOINT = "https://so-leads.ruslan-sabirov.workers.dev/hit";
+
+  // Ключ продукта. ТО ЖЕ правило, что productFromUrl() в bot/worker.js — иначе
+  // открытия и заявки лягут под разными ключами и в кабинете не сойдутся в строку.
+  function productKey() {
+    var byId = location.search.match(/[?&]id=([\w.-]{1,60})/);
+    if (byId) return byId[1];
+    var shell = location.pathname.match(/\/p\/([\w.-]{1,60})\.html$/);
+    if (shell) return shell[1];
+    if (/offerings\.html$/.test(location.pathname) && location.hash.length > 1) {
+      return location.hash.slice(1).slice(0, 60);
+    }
+    var page = (location.pathname.split("/").pop() || "").replace(/\.html$/, "");
+    return page || "index";
+  }
+
+  try {
+    var ref = localStorage.getItem("so_ref");
+    if (!ref) return;
+
+    // Служебные страницы клиент не открывает — считать их незачем.
+    var page = productKey();
+    if (page === "admin" || page === "me") return;
+
+    // Свои заходы не считаем: агент, вошедший в кабинет на этом браузере.
+    if ((localStorage.getItem("so_me") || "") === ref) return;
+
+    // Визит начался по ссылке с меткой? Только такой визит и учитываем.
+    if (/[?&](ref|utm_source)=/.test(location.search)) sessionStorage.setItem("so_hit_ses", ref);
+    if (sessionStorage.getItem("so_hit_ses") !== ref) return;
+
+    // Каждый продукт — один раз за визит: перезагрузка страницы не открытие.
+    if (sessionStorage.getItem("so_hit_" + page)) return;
+    sessionStorage.setItem("so_hit_" + page, "1");
+
+    var kind = sessionStorage.getItem("so_hit_first") ? "view" : "open";
+    sessionStorage.setItem("so_hit_first", "1");
+
+    var payload = JSON.stringify({ ref: ref, p: page, t: kind });
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon(ENDPOINT, payload);
+    } else {
+      fetch(ENDPOINT, { method: "POST", body: payload, keepalive: true,
+                        headers: { "Content-Type": "text/plain" } });
+    }
+  } catch (e) {}
+})();
+
 // Отбивка в Telegram при клике по кнопке «Telegram-группа» в шапке (a.btn-tg).
 // sendBeacon переживает переход по ссылке; шлём максимум один раз за сессию, чтобы
 // повторные клики одного посетителя не спамили. Ошибки глушим — на навигацию не влияем.

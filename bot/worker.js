@@ -56,6 +56,8 @@ export default {
 
     if (url.pathname === "/lead" && request.method === "POST") return handleLead(request, env, cors);
     if (url.pathname === "/click" && request.method === "POST") return handleClick(request, env, cors);
+    if (url.pathname === "/hit" && request.method === "POST") return handleHit(request, env, cors);
+    if (url.pathname === "/stats" && request.method === "POST") return handleStats(request, env, cors);
     if (url.pathname === "/chat" && request.method === "POST") return handleChat(request, env, cors, ctx);
     if (url.pathname === "/submit" && request.method === "POST") return handleSubmit(request, env, cors);
     if (url.pathname === "/tg" && request.method === "POST") return handleTelegram(request, env, ctx);
@@ -115,6 +117,10 @@ async function handleLead(request, env, cors) {
     chat_id: env.CHAT_ID, text, parse_mode: "HTML", disable_web_page_preview: true,
   });
   if (!r.ok) return json({ ok: false, error: "telegram_failed" }, 502, cors);
+  // Заявка попадает и в кабинет агента — под тем же ключом продукта, что и открытия,
+  // чтобы в таблице «открыли 12 раз, заявка 1» стояло одной строкой. Ошибку учёта
+  // глотаем: заявка уже ушла сейлзам, ронять ответ из-за статистики нельзя.
+  await recordHit(env, ref.toLowerCase(), productFromUrl(page), "lead");
   return json({ ok: true }, 200, cors);
 }
 
@@ -147,6 +153,170 @@ async function handleClick(request, env, cors) {
     await tg(env, "sendMessage", { chat_id: chatId, text, parse_mode: "HTML", disable_web_page_preview: true });
   }
   return json({ ok: true }, 200, cors);
+}
+
+
+
+// Продукт по адресу страницы. ОДНО правило на две стороны: так же его считает
+// маячок в metrika.js — иначе открытия и заявки лягут под разными ключами
+// и в таблице кабинета не сойдутся в одну строку.
+//   instrument.html?id=X -> X      offerings.html#X -> X
+//   p/X.html             -> X      прочее           -> имя страницы
+function productFromUrl(u) {
+  let path = "", query = "", hash = "";
+  try {
+    const url = new URL(String(u || ""), SHELL_BASE);
+    path = url.pathname; query = url.search; hash = url.hash;
+  } catch (e) { return ""; }
+  const byId = query.match(/[?&]id=([\w.-]{1,60})/);
+  if (byId) return byId[1];
+  const shell = path.match(/\/p\/([\w.-]{1,60})\.html$/);
+  if (shell) return shell[1];
+  if (/offerings\.html$/.test(path) && hash.length > 1) return hash.slice(1).slice(0, 60);
+  const page = (path.split("/").pop() || "").replace(/\.html$/, "");
+  return page || "index";
+}
+
+// ============================ КАБИНЕТ АГЕНТА ================================
+// Зачем: у агента не было СВОИХ цифр. Метка ?ref= уходила в Метрику, которую он
+// не видит, — то есть работа по персональным ссылкам была для него слепой.
+// Кабинет показывает: сколько раз открывали его ссылки, какие продукты смотрели,
+// какие заявки пришли. Это единственная причина заходить на витрину ежедневно,
+// не связанная с нашим контентом.
+//
+// Что храним: МЕТКА + ПРОДУКТ + ВРЕМЯ. Ни IP, ни user-agent, ни чего-либо, по чему
+// можно узнать конкретного человека, — открытие ссылки не должно превращаться
+// в слежку за клиентом. Агент видит «ссылку открыли», а не «кто открыл».
+//
+// Как храним: ключ на событие, полезная нагрузка в metadata. Тогда весь период
+// читается ОДНИМ list() — без отдельного get на каждое событие. Счётчик одним
+// ключом не годится: KV разрешает запись в ключ примерно раз в секунду, и
+// одновременные открытия затирали бы друг друга.
+const HIT_TTL = 90 * 24 * 3600;   // события живут 90 дней, дальше KV чистит сам
+const HIT_PAGES = 12;             // потолок страниц list() за один запрос статистики
+// Типы события. «Открытие» — первый заход по ссылке за визит, это и есть ответ на
+// вопрос «сколько раз открывали мою ссылку». «Просмотр» — следующий продукт, который
+// человек посмотрел в том же визите: считать его вторым открытием было бы враньём,
+// а выбрасывать жалко — именно он говорит, чем клиент заинтересовался.
+const HIT_KINDS = new Set(["open", "view", "lead"]);
+
+// Имена агентов из SALES_KEYS ("andrey:ключ1,polina:ключ2"). Имя = метка ?ref=.
+function salesNames(env) {
+  const out = [];
+  for (const pair of String(env.SALES_KEYS || "").split(",")) {
+    const i = pair.indexOf(":");
+    if (i > 0) out.push(pair.slice(0, i).trim().toLowerCase());
+  }
+  return out;
+}
+
+// Проверка пары «ID + ключ» (их агенту выдаём мы). Возвращает метку или null.
+function salesLogin(env, id, key) {
+  const wantId = String(id || "").trim().toLowerCase();
+  const wantKey = String(key || "").trim();
+  if (!wantId || !wantKey) return null;
+  for (const pair of String(env.SALES_KEYS || "").split(",")) {
+    const i = pair.indexOf(":");
+    if (i <= 0) continue;
+    const nm = pair.slice(0, i).trim();
+    if (nm.toLowerCase() === wantId && pair.slice(i + 1).trim() === wantKey) return nm.toLowerCase();
+  }
+  return null;
+}
+
+// Дата события по Москве — чтобы «сегодня» в кабинете совпадало с «сегодня» агента.
+function mskDay(ts) {
+  const d = new Date(ts + 3 * 3600 * 1000);
+  return d.getUTCFullYear() + "-" + String(d.getUTCMonth() + 1).padStart(2, "0") +
+         "-" + String(d.getUTCDate()).padStart(2, "0");
+}
+
+// Записать событие. Метки, которых нет в SALES_KEYS (напр. маркетинговые utm),
+// НЕ копим: иначе любой желающий надует нам хранилище через открытый эндпоинт.
+async function recordHit(env, ref, product, kind) {
+  if (!env.POST_KV || !ref) return false;
+  if (!salesNames(env).includes(ref)) return false;
+  const ts = Date.now();
+  const key = "hit:" + ref + ":" + ts + "-" + Math.random().toString(36).slice(2, 8);
+  try {
+    await env.POST_KV.put(key, "", {
+      expirationTtl: HIT_TTL,
+      metadata: { p: String(product || "").slice(0, 80), t: HIT_KINDS.has(kind) ? kind : "open", ts },
+    });
+    return true;
+  } catch (e) { return false; }
+}
+
+// --- Открытие персональной ссылки (маячок с сайта) ---
+// Отвечаем ok всегда, даже если метка чужая: браузер не должен уметь выяснять
+// через этот эндпоинт, какие метки у нас заведены.
+async function handleHit(request, env, cors) {
+  const origin = request.headers.get("Origin");
+  if (env.ALLOW_ORIGIN && env.ALLOW_ORIGIN !== "*" && origin && origin !== env.ALLOW_ORIGIN) {
+    return json({ ok: false, error: "forbidden_origin" }, 403, cors);
+  }
+  let d = {};
+  try { d = await request.json(); } catch (e) {}
+  const ref = String(d.ref || "").trim().toLowerCase().slice(0, 60);
+  const prod = String(d.p || "").trim().slice(0, 80);
+  const kind = d.t === "view" ? "view" : "open";
+  await recordHit(env, ref, prod, kind);
+  return json({ ok: true }, 200, cors);
+}
+
+// --- Статистика агента ---
+async function handleStats(request, env, cors) {
+  if (!env.SALES_KEYS) return json({ ok: false, error: "not_configured" }, 503, cors);
+  let d;
+  try { d = await request.json(); } catch (e) { return json({ ok: false, error: "bad_json" }, 400, cors); }
+  const ref = salesLogin(env, d.id, d.key);
+  if (!ref) return json({ ok: false, error: "bad_key" }, 403, cors);
+  if (!env.POST_KV) return json({ ok: false, error: "no_storage" }, 503, cors);
+
+  const events = [];
+  let cursor = null, pages = 0, truncated = false;
+  do {
+    let r;
+    try {
+      r = await env.POST_KV.list({ prefix: "hit:" + ref + ":", limit: 1000, cursor: cursor || undefined });
+    } catch (e) { return json({ ok: false, error: "storage_failed" }, 502, cors); }
+    for (const k of r.keys) if (k.metadata && k.metadata.ts) events.push(k.metadata);
+    cursor = r.list_complete ? null : r.cursor;
+    if (cursor && ++pages >= HIT_PAGES) { truncated = true; cursor = null; }
+  } while (cursor);
+
+  const now = Date.now(), D = 86400000;
+  const byProd = new Map(), byDay = new Map();
+  let opens = 0, opens7 = 0, opens30 = 0, views = 0, leads = 0, leads30 = 0, last = 0;
+  for (const e of events) {
+    const age = now - e.ts;
+    if (e.ts > last) last = e.ts;
+    if (e.t === "lead") { leads++; if (age <= 30 * D) leads30++; }
+    else if (e.t === "view") { views++; }
+    else { opens++; if (age <= 7 * D) opens7++; if (age <= 30 * D) opens30++; }
+    const id = e.p || "—";
+    const row = byProd.get(id) || { p: id, opens: 0, views: 0, leads: 0, last: 0 };
+    if (e.t === "lead") row.leads++; else if (e.t === "view") row.views++; else row.opens++;
+    if (e.ts > row.last) row.last = e.ts;
+    byProd.set(id, row);
+    // По дням рисуем ТОЛЬКО открытия: это ровно «сколько раз открыли мои ссылки»,
+    // просмотры внутри визита раздували бы график без нового смысла.
+    if (e.t !== "lead" && e.t !== "view" && age <= 30 * D) {
+      const k = mskDay(e.ts);
+      byDay.set(k, (byDay.get(k) || 0) + 1);
+    }
+  }
+  const products = [...byProd.values()]
+    .sort((a, b) => (b.opens + b.views + b.leads) - (a.opens + a.views + a.leads)).slice(0, 60);
+  const days = [...byDay.entries()].map(([d2, n]) => ({ d: d2, n })).sort((a, b) => a.d < b.d ? -1 : 1);
+
+  return json({
+    ok: true, ref, now,
+    opens: { all: opens, d7: opens7, d30: opens30 },
+    views: { all: views },
+    leads: { all: leads, d30: leads30 },
+    last, products, days, truncated,
+  }, 200, cors);
 }
 
 // --- Чат-ассистент (консьерж по сайту) → Claude API ---
