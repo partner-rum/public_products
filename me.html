@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Кабинет агента — Rumberg</title>
+<title>Рабочий стол партнёра — Rumberg</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -95,6 +95,24 @@
   .scroll { overflow-x:auto; }
   .empty { font-size:13.5px; color:var(--hushed); line-height:1.6; }
 
+  /* --- сделки: главное на столе --- */
+  .cur + .cur { margin-top:14px; }
+  .curname { font-family:var(--m); font-size:10px; letter-spacing:.13em; text-transform:uppercase;
+             color:var(--faint); margin:0 0 8px; }
+  /* Денежные суммы длиннее счётчиков, 30px в плитку не влезают. */
+  .tile.m .v { font-size:22px; letter-spacing:-.02em; }
+  .sect { font-family:var(--display); font-size:17px; font-weight:600; margin:30px 0 12px;
+          padding-top:22px; border-top:1px solid var(--border-soft); }
+  #dealTbl td.dt { font-family:var(--m); font-size:12.5px; color:var(--hushed); white-space:nowrap;
+                   text-align:left; padding-right:14px; }
+  #dealTbl td.nm { font-family:var(--f); text-align:left; }
+  #dealTbl td.rw { color:var(--solar-l); }
+  #dealTbl td.st { white-space:nowrap; }
+  #dealTbl td.st span { font-family:var(--f); font-size:12px; border-radius:6px; padding:3px 9px; }
+  #dealTbl td.st .paid { color:var(--up); background:rgba(85,192,138,.13); }
+  #dealTbl td.st .accr { color:var(--solar-l); background:rgba(238,125,27,.13); }
+  #dealTbl th:nth-child(2) { text-align:left; }
+
   /* --- конструктор ссылок --- */
   .mk { display:grid; grid-template-columns:1fr auto; gap:10px; align-items:end; }
   @media (max-width:640px) { .mk { grid-template-columns:1fr; } }
@@ -112,14 +130,14 @@
 <div class="wrap">
   <div class="top">
     <svg width="22" height="22" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>
-    <div><div class="t">Rumberg · кабинет</div><div class="s" id="sub">ваши ссылки и заявки</div></div>
+    <div><div class="t">Rumberg · партнёрам</div><div class="s" id="sub">сделки, вознаграждение, ссылки</div></div>
     <div class="sp"><button class="exit" id="exit" type="button" style="display:none">Выйти</button></div>
   </div>
 
   <!-- ВХОД -->
   <div id="gate">
-    <h1>Кабинет агента</h1>
-    <p class="lead">Здесь видно, что происходит с вашими ссылками: сколько раз их открывали, какие продукты смотрели и какие заявки пришли. ID и ключ выдаёт Rumberg.</p>
+    <h1>Рабочий стол партнёра</h1>
+    <p class="lead">Здесь ваши сделки и вознаграждение по ним, а также что происходит с вашими ссылками: сколько раз их открывали, какие продукты смотрели, какие заявки пришли. ID и ключ выдаёт Rumberg.</p>
     <div class="grp">
       <div class="gt">вход</div>
       <div class="row">
@@ -134,8 +152,22 @@
 
   <!-- КАБИНЕТ -->
   <div id="dash">
-    <h1 id="hi">Кабинет</h1>
-    <p class="lead" id="dlead">Считаются переходы по ссылкам с вашей меткой. Открытие — визит, начавшийся по вашей ссылке; просмотр — следующий продукт, который человек посмотрел в том же визите.</p>
+    <h1 id="hi">Рабочий стол</h1>
+    <p class="lead" id="dlead">Ваши сделки и вознаграждение по ним, а ниже — что происходит с вашими ссылками.</p>
+
+    <div class="grp" id="dealsBox">
+      <div class="gt">мои сделки</div>
+      <div id="dealSum"></div>
+      <div class="scroll" style="margin-top:16px">
+        <table class="tbl" id="dealTbl"></table>
+      </div>
+      <div class="empty" id="dealEmpty" style="display:none">
+        Сделок пока нет. Как только сделка пройдёт, она появится здесь вместе с вознаграждением.
+      </div>
+    </div>
+
+    <div class="sect">Мои ссылки</div>
+    <p class="lead" style="margin-bottom:16px">Открытие — визит, начавшийся по вашей ссылке; просмотр — следующий продукт, который человек посмотрел в том же визите.</p>
 
     <div class="tiles">
       <div class="tile acc"><div class="v" id="t7">—</div><div class="k">открытий за 7 дней</div></div>
@@ -215,6 +247,59 @@
   };
   function label(key) { return NAMES[key] || PAGES[key] || key; }
   function isProduct(key) { return !!NAMES[key]; }
+
+  // ---- сделки: главное на столе ----------------------------------------
+  var CCY_SIGN = { RUB: " ₽", USD: " $", EUR: " €", CNY: " ¥" };
+  var CCY_NAME = { RUB: "рубли", USD: "доллары", EUR: "евро", CNY: "юани" };
+  var ST_NAME = { accrued: "начислено", paid: "выплачено" };
+
+  // Разряды пробелом — как в остальных цифрах на витрине.
+  function money(n, ccy) {
+    var s = Math.round(Number(n) || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    return s + (CCY_SIGN[ccy] || " " + ccy);
+  }
+
+  function drawDeals(deals, totals) {
+    var curs = Object.keys(totals || {});
+    // Валюты не складываем: у каждой свой ряд итогов. Название валюты подписываем
+    // только когда их больше одной — иначе это лишний шум на пустом месте.
+    var many = curs.length > 1;
+    var sum = "";
+    curs.sort(function (a, b) { return totals[b].count - totals[a].count; });
+    for (var i = 0; i < curs.length; i++) {
+      var c = curs[i], t = totals[c];
+      sum += '<div class="cur">' +
+        (many ? '<div class="curname">' + esc(CCY_NAME[c] || c) + "</div>" : "") +
+        '<div class="tiles">' +
+          '<div class="tile m acc"><div class="v">' + money(t.accrued, c) + '</div><div class="k">начислено</div></div>' +
+          '<div class="tile m win"><div class="v">' + money(t.paid, c) + '</div><div class="k">выплачено</div></div>' +
+          '<div class="tile"><div class="v">' + t.count + '</div><div class="k">' +
+            plural(t.count, "сделка", "сделки", "сделок") + '</div></div>' +
+          '<div class="tile m"><div class="v">' + money(t.volume, c) + '</div><div class="k">объём сделок</div></div>' +
+        "</div></div>";
+    }
+    $("dealSum").innerHTML = sum;
+
+    if (!deals || !deals.length) {
+      $("dealTbl").innerHTML = "";
+      $("dealEmpty").style.display = "block";
+      return;
+    }
+    $("dealEmpty").style.display = "none";
+    var h = "<tr><th>Дата</th><th>Продукт</th><th>Объём</th><th>Вознаграждение</th><th>Статус</th></tr>";
+    for (var j = 0; j < deals.length; j++) {
+      var d = deals[j], ccy = d.currency || "RUB";
+      h += "<tr>" +
+        '<td class="dt">' + esc(String(d.date).split("-").reverse().join(".")) + "</td>" +
+        '<td class="nm">' + esc(d.product || "—") + "</td>" +
+        "<td>" + money(d.volume, ccy) + "</td>" +
+        '<td class="rw">' + money(d.reward, ccy) + "</td>" +
+        '<td class="st"><span class="' + (d.status === "paid" ? "paid" : "accr") + '">' +
+          esc(ST_NAME[d.status] || d.status) + "</span></td>" +
+        "</tr>";
+    }
+    $("dealTbl").innerHTML = h;
+  }
 
   // ---- утилиты -------------------------------------------------------------
   function plural(n, one, few, many) {
@@ -300,8 +385,8 @@
     gate.style.display = "none";
     dash.style.display = "block";
     $("exit").style.display = "inline-block";
-    $("sub").textContent = "метка " + d.ref;
-    $("hi").textContent = "Кабинет · " + d.ref;
+    $("sub").textContent = d.ref;
+    $("hi").textContent = "Рабочий стол · " + d.ref;
 
     $("t7").textContent = d.opens.d7;
     $("t30").textContent = d.opens.d30;
@@ -314,6 +399,7 @@
     if (d.truncated) parts.push("показана часть событий — их слишком много");
     $("stamp").textContent = parts.join(" · ");
 
+    drawDeals(d.deals || [], d.totals || {});
     drawDays(d.days || []);
     drawTable(d.products || [], d.now);
     fillProducts(d.ref);
@@ -445,7 +531,8 @@
   }
 
   function demoEmpty() {
-    return { ok: true, ref: "demo", now: Date.now(),
+    return { ok: true, ref: "demo", kind: "partner", now: Date.now(),
+      deals: [], totals: {},
       opens: { all: 0, d7: 0, d30: 0 }, views: { all: 0 }, leads: { all: 0, d30: 0 },
       last: 0, products: [], days: [], truncated: false };
   }
@@ -461,7 +548,27 @@
     for (var i = 0; i < shape.length; i++) {
       if (shape[i]) days.push({ d: day(now - i * D), n: shape[i] });
     }
-    return { ok: true, ref: "andrey", now: now,
+    var deals = [
+      { id: "a1b2c3", product: "Дисконтная облигация на ВЭБ.РФ · 3 года", date: "2026-08-18",
+        volume: 25000000, reward: 562500, currency: "RUB", status: "accrued", ts: now - 2 * D },
+      { id: "d4e5f6", product: "Защита капитала · S&P 500 · 3 года", date: "2026-08-11",
+        volume: 15000000, reward: 450000, currency: "RUB", status: "accrued", ts: now - 9 * D },
+      { id: "g7h8i9", product: "CALL 100 · NVDA · 3 года", date: "2026-07-29",
+        volume: 200000, reward: 9000, currency: "USD", status: "paid", ts: now - 22 * D },
+      { id: "j1k2l3", product: "Дисконтная облигация на Газпром нефть · 3 года", date: "2026-07-14",
+        volume: 40000000, reward: 900000, currency: "RUB", status: "paid", ts: now - 37 * D },
+      { id: "m4n5o6", product: "Бустер · Сбербанк · 9 месяцев", date: "2026-06-30",
+        volume: 8000000, reward: 30000, currency: "RUB", status: "paid", ts: now - 51 * D }
+    ];
+    var totals = {};
+    for (var q = 0; q < deals.length; q++) {
+      var dd = deals[q], cc = dd.currency;
+      var row = totals[cc] || (totals[cc] = { accrued: 0, paid: 0, volume: 0, count: 0 });
+      row.count++; row.volume += dd.volume;
+      if (dd.status === "paid") row.paid += dd.reward; else row.accrued += dd.reward;
+    }
+    return { ok: true, ref: "andrey", kind: "partner", now: now,
+      deals: deals, totals: totals,
       opens: { all: 78, d7: 14, d30: 66 }, views: { all: 31 }, leads: { all: 4, d30: 3 },
       last: now - 6 * 60000,
       products: [

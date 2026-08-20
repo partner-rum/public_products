@@ -200,28 +200,164 @@ const HIT_PAGES = 12;             // потолок страниц list() за �
 // а выбрасывать жалко — именно он говорит, чем клиент заинтересовался.
 const HIT_KINDS = new Set(["open", "view", "lead"]);
 
-// Имена агентов из SALES_KEYS ("andrey:ключ1,polina:ключ2"). Имя = метка ?ref=.
-function salesNames(env) {
+// ДВА РАЗНЫХ СЕКРЕТА, и это важно:
+//   SALES_KEYS   — свои сейлзы. Открывает АДМИНКУ (подача продуктов на модерацию).
+//   PARTNER_KEYS — внешние партнёры. Открывает ТОЛЬКО рабочий стол, не админку.
+// Формат обоих одинаков: "andrey:ключ1,polina:ключ2"; имя = метка ?ref=.
+// Зачем разделять: партнёр с ключом от админки мог бы подавать продукты, а если бы
+// там же жил ввод сделок — вписывать себе вознаграждение. Ввод сделок вообще не в
+// админке: он только командой боту от ADMIN_CHAT_ID.
+function keyPairs(raw) {
   const out = [];
-  for (const pair of String(env.SALES_KEYS || "").split(",")) {
+  for (const pair of String(raw || "").split(",")) {
     const i = pair.indexOf(":");
-    if (i > 0) out.push(pair.slice(0, i).trim().toLowerCase());
+    if (i > 0) out.push([pair.slice(0, i).trim().toLowerCase(), pair.slice(i + 1).trim()]);
   }
   return out;
 }
 
-// Проверка пары «ID + ключ» (их агенту выдаём мы). Возвращает метку или null.
-function salesLogin(env, id, key) {
+// Метки, которые мы вообще знаем: по ним копятся открытия ссылок.
+function knownRefs(env) {
+  return keyPairs(env.PARTNER_KEYS).concat(keyPairs(env.SALES_KEYS)).map(function (x) { return x[0]; });
+}
+function salesNames(env) { return knownRefs(env); }
+
+// Вход в рабочий стол: партнёры И свои сейлзы. Возвращает {ref, kind} или null.
+function deskLogin(env, id, key) {
   const wantId = String(id || "").trim().toLowerCase();
   const wantKey = String(key || "").trim();
   if (!wantId || !wantKey) return null;
-  for (const pair of String(env.SALES_KEYS || "").split(",")) {
-    const i = pair.indexOf(":");
-    if (i <= 0) continue;
-    const nm = pair.slice(0, i).trim();
-    if (nm.toLowerCase() === wantId && pair.slice(i + 1).trim() === wantKey) return nm.toLowerCase();
+  for (const pair of keyPairs(env.PARTNER_KEYS)) {
+    if (pair[0] === wantId && pair[1] === wantKey) return { ref: pair[0], kind: "partner" };
+  }
+  for (const pair of keyPairs(env.SALES_KEYS)) {
+    if (pair[0] === wantId && pair[1] === wantKey) return { ref: pair[0], kind: "sales" };
   }
   return null;
+}
+function salesLogin(env, id, key) {
+  const r = deskLogin(env, id, key);
+  return r ? r.ref : null;
+}
+
+// ---------- СДЕЛКИ ПАРТНЁРА ----------
+// Правды про «чья сделка» в бэк-офисе НЕТ: поле partner там есть только у сделок
+// с облигациями, это свободная строка до 255 знаков, а у автоколлов и защиты
+// капитала его нет вовсе (проверено по схеме API 20.08.2026, 567 маршрутов).
+// Полей вознаграждения нет ни у чего. Поэтому сделки заводятся РУКАМИ — командой
+// боту, и только от ADMIN_CHAT_ID.
+//
+// Хранение: ОДИН ключ на партнёра со списком сделок (deals:<метка>). Пишет только
+// один человек по одной сделке — состязаться за ключ некому, а стол читает список
+// одним get. TTL НЕ ставим: это учётные данные, они не должны исчезать сами.
+const DEAL_STATUS = { accrued: "начислено", paid: "выплачено" };
+const DEAL_CCY = ["RUB", "USD", "EUR", "CNY"];
+const DEAL_SIGN = { RUB: " ₽", USD: " $", EUR: " €", CNY: " ¥" };
+
+async function dealsGet(env, ref) {
+  if (!env.POST_KV) return [];
+  try { return (await env.POST_KV.get("deals:" + ref, "json")) || []; } catch (e) { return []; }
+}
+async function dealsPut(env, ref, list) {
+  await env.POST_KV.put("deals:" + ref, JSON.stringify(list));
+}
+
+// Число из человеческой записи: «5 000 000», «5000000», «112 500,50».
+function dealNum(v) {
+  const t = String(v || "").replace(/[\s _]/g, "").replace(",", ".");
+  if (!/^\d+(\.\d+)?$/.test(t)) return null;
+  const n = Number(t);
+  return isFinite(n) ? n : null;
+}
+
+// Дата ДД.ММ.ГГГГ или ГГГГ-ММ-ДД -> ISO. Иначе null.
+function dealDate(v) {
+  const t = String(v || "").trim();
+  let m = t.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+  if (m) {
+    const mm = Number(m[2]), dd = Number(m[1]);
+    if (mm < 1 || mm > 12 || dd < 1 || dd > 31) return null;
+    return m[3] + "-" + m[2] + "-" + m[1];
+  }
+  m = t.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return null;
+  const mm2 = Number(m[2]), dd2 = Number(m[3]);
+  if (mm2 < 1 || mm2 > 12 || dd2 < 1 || dd2 > 31) return null;
+  return t;
+}
+
+// Разбор строки команды /deal. Статус и валюту узнаём ПО СОДЕРЖИМОМУ, а не по месту:
+// иначе порядок полей приходилось бы помнить наизусть.
+function dealParse(env, line) {
+  const parts = String(line || "").split("|").map(function (x) { return x.trim(); })
+    .filter(function (x) { return x !== ""; });
+  if (parts.length < 5) return { error: "мало полей" };
+  const refRaw = parts.shift().toLowerCase();
+  if (!knownRefs(env).includes(refRaw)) {
+    return { error: "партнёра «" + refRaw + "» нет в списке. Известные: " +
+                    (knownRefs(env).join(", ") || "ни одного") };
+  }
+  let status = "accrued", ccy = "RUB";
+  const rest = [];
+  for (const x of parts) {
+    const low = x.toLowerCase();
+    if (low === "выплачено" || low === "paid") { status = "paid"; continue; }
+    if (low === "начислено" || low === "accrued") { status = "accrued"; continue; }
+    if (DEAL_CCY.includes(x.toUpperCase())) { ccy = x.toUpperCase(); continue; }
+    rest.push(x);
+  }
+  if (rest.length < 4) return { error: "нужны продукт, дата, объём и вознаграждение" };
+  const prod = rest[0], dateRaw = rest[1], volRaw = rest[2], rwRaw = rest[3];
+  const date = dealDate(dateRaw);
+  if (!date) return { error: "дата «" + dateRaw + "» непонятна, нужна ДД.ММ.ГГГГ" };
+  const volume = dealNum(volRaw);
+  if (volume === null || volume <= 0) return { error: "объём «" + volRaw + "» не число" };
+  const reward = dealNum(rwRaw);
+  if (reward === null || reward < 0) return { error: "вознаграждение «" + rwRaw + "» не число" };
+  // Вознаграждение больше объёма — почти наверняка опечатка в разряде.
+  if (reward > volume) return { error: "вознаграждение больше объёма сделки — похоже на опечатку" };
+  return {
+    ref: refRaw,
+    deal: {
+      id: Math.random().toString(36).slice(2, 8),
+      product: prod.slice(0, 80), date: date, volume: volume, reward: reward,
+      currency: ccy, status: status, ts: Date.now(),
+    },
+  };
+}
+
+function dealMoney(n, ccy) {
+  const sign = DEAL_SIGN[ccy] || (" " + ccy);
+  return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + sign;
+}
+
+function dealLine(d) {
+  const dmy = d.date.split("-").reverse().join(".");
+  return "<code>" + esc(d.id) + "</code>  " + esc(dmy) + "  " + esc(d.product) +
+         "\n     объём " + dealMoney(d.volume, d.currency) +
+         " · вознаграждение <b>" + dealMoney(d.reward, d.currency) + "</b> · " +
+         DEAL_STATUS[d.status];
+}
+
+// Итоги по валютам — складывать рубли с долларами нельзя.
+function dealTotals(list) {
+  const t = {};
+  for (const d of list) {
+    const c = d.currency || "RUB";
+    const row = t[c] || (t[c] = { accrued: 0, paid: 0, volume: 0, count: 0 });
+    row.count++;
+    row.volume += d.volume || 0;
+    if (d.status === "paid") row.paid += d.reward || 0; else row.accrued += d.reward || 0;
+  }
+  return t;
+}
+
+// Строка итогов для сообщений бота.
+function dealTotalsText(t) {
+  return Object.keys(t).map(function (c) {
+    return "Итого " + c + ": начислено <b>" + dealMoney(t[c].accrued, c) +
+           "</b>, выплачено <b>" + dealMoney(t[c].paid, c) + "</b>";
+  }).join("\n");
 }
 
 // Дата события по Москве — чтобы «сегодня» в кабинете совпадало с «сегодня» агента.
@@ -266,11 +402,12 @@ async function handleHit(request, env, cors) {
 
 // --- Статистика агента ---
 async function handleStats(request, env, cors) {
-  if (!env.SALES_KEYS) return json({ ok: false, error: "not_configured" }, 503, cors);
+  if (!env.SALES_KEYS && !env.PARTNER_KEYS) return json({ ok: false, error: "not_configured" }, 503, cors);
   let d;
   try { d = await request.json(); } catch (e) { return json({ ok: false, error: "bad_json" }, 400, cors); }
-  const ref = salesLogin(env, d.id, d.key);
-  if (!ref) return json({ ok: false, error: "bad_key" }, 403, cors);
+  const who = deskLogin(env, d.id, d.key);
+  if (!who) return json({ ok: false, error: "bad_key" }, 403, cors);
+  const ref = who.ref;
   if (!env.POST_KV) return json({ ok: false, error: "no_storage" }, 503, cors);
 
   const events = [];
@@ -310,8 +447,14 @@ async function handleStats(request, env, cors) {
     .sort((a, b) => (b.opens + b.views + b.leads) - (a.opens + a.views + a.leads)).slice(0, 60);
   const days = [...byDay.entries()].map(([d2, n]) => ({ d: d2, n })).sort((a, b) => a.d < b.d ? -1 : 1);
 
+  // Сделки — главное на столе, поэтому идут первыми и вместе с итогами по валютам.
+  const deals = (await dealsGet(env, ref)).slice().sort(function (a, b) {
+    return a.date < b.date ? 1 : a.date > b.date ? -1 : (b.ts || 0) - (a.ts || 0);
+  });
+
   return json({
-    ok: true, ref, now,
+    ok: true, ref, kind: who.kind, now,
+    deals: deals, totals: dealTotals(deals),
     opens: { all: opens, d7: opens7, d30: opens30 },
     views: { all: views },
     leads: { all: leads, d30: leads30 },
@@ -2820,6 +2963,101 @@ async function handleTelegram(request, env, ctx) {
       // См. комментарий у «Пересобрать»: вебхук отвечает сразу, генерация — после ответа
       const job = sendMorningDraft(env, msg.text, msg.chat.id);
       if (ctx) ctx.waitUntil(job); else await job;
+      return new Response("ok");
+    }
+
+    // ---- Сделки партнёров: ввод, список, удаление. ТОЛЬКО Руслан (ADMIN_CHAT_ID).
+    // В админке этого нет намеренно: её открывает SALES_KEYS, и партнёр с ключом
+    // вписывал бы себе вознаграждение сам. Здесь проверка сильнее — личка админа.
+    if (/^\/deals?(?:@\w+)?(?:\s|$)/.test(msg.text) || /^\/dealrm(?:@\w+)?(?:\s|$)/.test(msg.text)) {
+      const isAdmin = env.ADMIN_CHAT_ID && String(from.id) === String(env.ADMIN_CHAT_ID);
+      if (!isAdmin || !msg.chat || msg.chat.type !== "private") return new Response("ok");
+      const say = function (t) {
+        return tg(env, "sendMessage", { chat_id: msg.chat.id, text: t,
+                                        parse_mode: "HTML", disable_web_page_preview: true });
+      };
+      if (!env.POST_KV) {
+        await say("Хранилище (POST_KV) не подключено — сделку записать некуда.");
+        return new Response("ok");
+      }
+
+      // /dealrm <партнёр> <id> — убрать ошибочную запись
+      if (/^\/dealrm/.test(msg.text)) {
+        const a = msg.text.replace(/^\/dealrm(@\w+)?\s*/, "").trim().split(/\s+/);
+        const ref = (a[0] || "").toLowerCase(), id = a[1] || "";
+        if (!ref || !id) {
+          await say("Формат: <code>/dealrm партнёр id</code>");
+          return new Response("ok");
+        }
+        const list = await dealsGet(env, ref);
+        const keep = list.filter(function (x) { return x.id !== id; });
+        if (keep.length === list.length) {
+          await say("Сделки <code>" + esc(id) + "</code> у «" + esc(ref) + "» нет.");
+          return new Response("ok");
+        }
+        await dealsPut(env, ref, keep);
+        await say("Удалено. У «" + esc(ref) + "» осталось сделок: " + keep.length);
+        return new Response("ok");
+      }
+
+      // /deals [партнёр] — список
+      if (/^\/deals/.test(msg.text)) {
+        const ref = msg.text.replace(/^\/deals(@\w+)?\s*/, "").trim().toLowerCase();
+        if (!ref) {
+          const rows = [];
+          for (const r of knownRefs(env)) {
+            const list = await dealsGet(env, r);
+            if (!list.length) continue;
+            const t = dealTotals(list);
+            rows.push("<b>" + esc(r) + "</b> — сделок " + list.length + ", " +
+              Object.keys(t).map(function (c) {
+                return "начислено " + dealMoney(t[c].accrued, c) + ", выплачено " + dealMoney(t[c].paid, c);
+              }).join("; "));
+          }
+          await say(rows.length
+            ? "<b>Сделки по партнёрам</b>\n\n" + rows.join("\n")
+            : "Сделок пока не заведено ни у кого.\n\nФормат ввода:\n" +
+              "<code>/deal партнёр | продукт | ДД.ММ.ГГГГ | объём | вознаграждение</code>");
+          return new Response("ok");
+        }
+        const list = await dealsGet(env, ref);
+        if (!list.length) {
+          await say("У «" + esc(ref) + "» сделок нет.");
+          return new Response("ok");
+        }
+        const body = list.slice().sort(function (a, b) { return a.date < b.date ? 1 : -1; })
+          .slice(0, 30).map(dealLine).join("\n");
+        await say("<b>" + esc(ref) + "</b> — сделок " + list.length + "\n" +
+                  dealTotalsText(dealTotals(list)) + "\n\n" + body +
+                  (list.length > 30 ? "\n\n…показаны последние 30" : ""));
+        return new Response("ok");
+      }
+
+      // /deal партнёр | продукт | дата | объём | вознаграждение [| выплачено] [| USD]
+      const line = msg.text.replace(/^\/deal(@\w+)?\s*/, "").trim();
+      if (!line) {
+        await say("<b>Ввод сделки партнёра</b>\n\n" +
+          "<code>/deal партнёр | продукт | ДД.ММ.ГГГГ | объём | вознаграждение</code>\n\n" +
+          "Необязательно, в любом месте строки: <code>выплачено</code> " +
+          "(по умолчанию «начислено») и валюта <code>USD</code>, <code>EUR</code>, " +
+          "<code>CNY</code> (по умолчанию рубли).\n\nПример:\n" +
+          "<code>/deal andrey | Дисконтная облигация на ВЭБ.РФ · 3 года | 20.08.2026 | 5 000 000 | 112 500</code>\n\n" +
+          "Известные партнёры: " + (knownRefs(env).join(", ") || "ни одного — задайте PARTNER_KEYS") +
+          "\nЕщё: <code>/deals</code> — все, <code>/deals партнёр</code> — его сделки, " +
+          "<code>/dealrm партнёр id</code> — удалить.");
+        return new Response("ok");
+      }
+      const parsed = dealParse(env, line);
+      if (parsed.error) {
+        await say("Не понял: " + esc(parsed.error) + "\n\nПодсказка по формату — просто <code>/deal</code>");
+        return new Response("ok");
+      }
+      const list = await dealsGet(env, parsed.ref);
+      list.push(parsed.deal);
+      await dealsPut(env, parsed.ref, list);
+      await say("✅ Записано партнёру <b>" + esc(parsed.ref) + "</b>\n\n" + dealLine(parsed.deal) +
+        "\n\n" + dealTotalsText(dealTotals(list)) +
+        "\n\nОшиблись — <code>/dealrm " + esc(parsed.ref) + " " + esc(parsed.deal.id) + "</code>");
       return new Response("ok");
     }
 
