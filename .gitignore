@@ -4,6 +4,7 @@
 
 # Креды бэкофиса и сырьё выгрузки — не публиковать
 .bo_creds
+.tg_creds
 placements_raw.json
 
 # Python
@@ -39,6 +40,7 @@ _digest/
 # переоценка Bid из бэкофиса и сбор ставок для скринера
 auto_refresh_*.py
 _auto_refresh.log
+_auto_refresh.notify
 
 # Временные рендеры и черновики (underscore-префикс): макеты промо, og-шаблоны,
 # тестовые PDF. Служебное, наружу не публикуем — и не попадёт под `git add *.html`.
