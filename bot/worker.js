@@ -297,13 +297,16 @@ function dealParse(env, line) {
     return { error: "партнёра «" + refRaw + "» нет в списке. Известные: " +
                     (knownRefs(env).join(", ") || "ни одного") };
   }
-  let status = "accrued", ccy = "RUB";
+  let status = "accrued", ccy = "RUB", isin = "";
   const rest = [];
   for (const x of parts) {
     const low = x.toLowerCase();
     if (low === "выплачено" || low === "paid") { status = "paid"; continue; }
     if (low === "начислено" || low === "accrued") { status = "accrued"; continue; }
     if (DEAL_CCY.includes(x.toUpperCase())) { ccy = x.toUpperCase(); continue; }
+    // ISIN — по виду. Он связывает сделку с выпуском на странице «Мои выпуски»:
+    // без него агент видит сделку, но не видит, что с бумагой происходит.
+    if (/^RU[0-9A-Z]{10}$/i.test(x)) { isin = x.toUpperCase(); continue; }
     rest.push(x);
   }
   if (rest.length < 4) return { error: "нужны продукт, дата, объём и вознаграждение" };
@@ -320,7 +323,7 @@ function dealParse(env, line) {
     ref: refRaw,
     deal: {
       id: Math.random().toString(36).slice(2, 8),
-      product: prod.slice(0, 80), date: date, volume: volume, reward: reward,
+      product: prod.slice(0, 80), isin: isin, date: date, volume: volume, reward: reward,
       currency: ccy, status: status, ts: Date.now(),
     },
   };
@@ -3038,7 +3041,7 @@ async function handleTelegram(request, env, ctx) {
       if (!line) {
         await say("<b>Ввод сделки партнёра</b>\n\n" +
           "<code>/deal партнёр | продукт | ДД.ММ.ГГГГ | объём | вознаграждение</code>\n\n" +
-          "Необязательно, в любом месте строки: <code>выплачено</code> " +
+          "Необязательно, в любом месте строки: <code>ISIN</code> выпуска, <code>выплачено</code> " +
           "(по умолчанию «начислено») и валюта <code>USD</code>, <code>EUR</code>, " +
           "<code>CNY</code> (по умолчанию рубли).\n\nПример:\n" +
           "<code>/deal andrey | Дисконтная облигация на ВЭБ.РФ · 3 года | 20.08.2026 | 5 000 000 | 112 500</code>\n\n" +

@@ -113,6 +113,36 @@
   #dealTbl td.st .accr { color:var(--solar-l); background:rgba(238,125,27,.13); }
   #dealTbl th:nth-child(2) { text-align:left; }
 
+  /* --- мои выпуски --- */
+  .iss { padding:14px 0; border-bottom:1px solid var(--border-soft); }
+  .iss:first-child { padding-top:0; }
+  .iss:last-child { border-bottom:0; padding-bottom:0; }
+  .ih { display:flex; align-items:baseline; gap:12px; }
+  .in { font-size:14.5px; font-weight:500; line-height:1.3; }
+  .ii { font-family:var(--m); font-size:9.5px; letter-spacing:.06em; color:var(--faint);
+        display:block; margin-top:3px; }
+  .ist { margin-left:auto; flex:none; font-size:12px; border-radius:6px; padding:4px 10px; white-space:nowrap; }
+  .ist.up { color:var(--up); background:rgba(85,192,138,.13); }
+  .ist.down { color:var(--down); background:rgba(224,112,90,.13); }
+  .ist.off { color:var(--faint); background:rgba(255,255,255,.05); }
+  .ib { display:flex; align-items:flex-start; gap:20px; margin-top:11px; }
+  .iperf { font-family:var(--m); font-size:24px; font-weight:500; letter-spacing:-.02em; flex:none;
+           min-width:112px; line-height:1; }
+  .iperf.up { color:var(--up); } .iperf.down { color:var(--down); } .iperf.off { color:var(--faint); }
+  .iperf .ik { display:block; font-family:var(--f); font-size:11px; color:var(--faint);
+               margin-top:6px; line-height:1.35; letter-spacing:0; }
+  .ipar { font-size:12.5px; color:var(--hushed); line-height:1.5; padding-top:2px; }
+  .ipar .ia { display:block; font-family:var(--m); font-size:11px; color:var(--faint); margin-top:4px; }
+  .irisk { margin-top:10px; font-size:12px; line-height:1.45; color:var(--down);
+           background:rgba(224,112,90,.1); border-left:3px solid var(--down);
+           border-radius:0 7px 7px 0; padding:7px 11px; }
+  .if { font-family:var(--m); font-size:11px; color:var(--faint); margin-top:10px; }
+  .if .ibid { color:var(--up); }
+  @media (max-width:560px) {
+    .ib { flex-direction:column; gap:10px; }
+    .ist { font-size:11px; padding:3px 8px; }
+  }
+
   /* --- конструктор ссылок --- */
   .mk { display:grid; grid-template-columns:1fr auto; gap:10px; align-items:end; }
   @media (max-width:640px) { .mk { grid-template-columns:1fr; } }
@@ -130,14 +160,14 @@
 <div class="wrap">
   <div class="top">
     <svg width="22" height="22" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>
-    <div><div class="t">Rumberg · партнёрам</div><div class="s" id="sub">сделки, вознаграждение, ссылки</div></div>
+    <div><div class="t">Rumberg · партнёрам</div><div class="s" id="sub">сделки, выплаты, выпуски</div></div>
     <div class="sp"><button class="exit" id="exit" type="button" style="display:none">Выйти</button></div>
   </div>
 
   <!-- ВХОД -->
   <div id="gate">
     <h1>Рабочий стол партнёра</h1>
-    <p class="lead">Здесь ваши сделки и вознаграждение по ним, а также что происходит с вашими ссылками: сколько раз их открывали, какие продукты смотрели, какие заявки пришли. ID и ключ выдаёт Rumberg.</p>
+    <p class="lead">Здесь ваши сделки, вознаграждение по ним и состояние выпусков, которые вы продали. ID и ключ выдаёт Rumberg.</p>
     <div class="grp">
       <div class="gt">вход</div>
       <div class="row">
@@ -153,7 +183,7 @@
   <!-- КАБИНЕТ -->
   <div id="dash">
     <h1 id="hi">Рабочий стол</h1>
-    <p class="lead" id="dlead">Ваши сделки и вознаграждение по ним, а ниже — что происходит с вашими ссылками.</p>
+    <p class="lead" id="dlead">Ваши сделки и вознаграждение по ним, ниже — что происходит с выпусками по этим сделкам.</p>
 
     <div class="grp" id="dealsBox">
       <div class="gt">мои сделки</div>
@@ -166,51 +196,21 @@
       </div>
     </div>
 
-    <div class="sect">Мои ссылки</div>
-    <p class="lead" style="margin-bottom:16px">Открытие — визит, начавшийся по вашей ссылке; просмотр — следующий продукт, который человек посмотрел в том же визите.</p>
-
-    <div class="tiles">
-      <div class="tile acc"><div class="v" id="t7">—</div><div class="k">открытий за 7 дней</div></div>
-      <div class="tile"><div class="v" id="t30">—</div><div class="k">открытий за 30 дней</div></div>
-      <div class="tile"><div class="v" id="tv">—</div><div class="k">просмотров продуктов</div></div>
-      <div class="tile win"><div class="v" id="tl">—</div><div class="k">заявок всего</div></div>
-    </div>
-    <div class="stamp" id="stamp"></div>
-
-    <div class="grp" id="daysBox">
-      <div class="gt">открытия по дням, 30 дней</div>
-      <div class="bars" id="bars"></div>
-      <div class="axis"><span id="axL"></span><span id="axR"></span></div>
-    </div>
-
-    <div class="grp">
-      <div class="gt">продукты</div>
-      <div class="scroll">
-        <table class="tbl" id="tbl"></table>
-      </div>
-      <div class="empty" id="tblEmpty" style="display:none">
-        Пока ничего. Соберите ссылку ниже, отправьте клиенту — и открытия появятся здесь.
+    <div class="grp" id="issuesBox">
+      <div class="gt">мои выпуски</div>
+      <div id="issBox"></div>
+      <div class="empty" id="issEmpty" style="display:none">
+        Выпусков пока нет. Здесь будет видно, что происходит с бумагами по вашим сделкам:
+        где базовый актив относительно барьера и сколько осталось до погашения.
       </div>
     </div>
 
-    <div class="grp">
-      <div class="gt">собрать ссылку с моей меткой</div>
-      <div class="mk">
-        <label style="margin:0"><span class="k">Продукт</span><select id="prod"></select></label>
-        <button class="btn" id="mk" type="button">Собрать</button>
-      </div>
-      <div class="out" id="out" style="display:none">
-        <code id="url"></code>
-        <button class="btn" id="cp" type="button">Скопировать</button>
-        <span class="copied" id="cpOk" style="display:none">скопировано</span>
-      </div>
-      <div class="note">Ссылка ведёт на страницу с превью для мессенджеров: в Telegram и WhatsApp развернётся карточка продукта. Метка нужна, чтобы открытия и заявки попали именно в ваш кабинет.</div>
-    </div>
   </div>
 </div>
 
 <script src="data/instruments.js?v=fx8"></script>
 <script src="data/offerings.js?v=srv19"></script>
+<script src="data/placements.js?v=pl21"></script>
 <script>
 (function () {
   "use strict";
@@ -291,7 +291,8 @@
       var d = deals[j], ccy = d.currency || "RUB";
       h += "<tr>" +
         '<td class="dt">' + esc(String(d.date).split("-").reverse().join(".")) + "</td>" +
-        '<td class="nm">' + esc(d.product || "—") + "</td>" +
+        '<td class="nm">' + esc(d.product || "—") +
+          (d.isin ? '<span class="pid">' + esc(d.isin) + "</span>" : "") + "</td>" +
         "<td>" + money(d.volume, ccy) + "</td>" +
         '<td class="rw">' + money(d.reward, ccy) + "</td>" +
         '<td class="st"><span class="' + (d.status === "paid" ? "paid" : "accr") + '">' +
@@ -299,6 +300,151 @@
         "</tr>";
     }
     $("dealTbl").innerHTML = h;
+  }
+
+  // ---- «Мои выпуски»: что происходит с бумагами, которые агент продал -------
+  // Связка со сделкой — по ISIN. Данные берём из data/placements.js, того же
+  // файла, что кормит страницу размещённых выпусков: расходиться им нельзя.
+  var ISSUES = {};
+  (function () {
+    var arr = (window.PLACEMENTS_DATA && PLACEMENTS_DATA.issues) || [];
+    for (var i = 0; i < arr.length; i++) if (arr[i].isin) ISSUES[arr[i].isin] = arr[i];
+  })();
+
+  function todayIso() {
+    var d = new Date(Date.now() + 3 * 3600 * 1000);
+    return d.getUTCFullYear() + "-" + String(d.getUTCMonth() + 1).padStart(2, "0") +
+           "-" + String(d.getUTCDate()).padStart(2, "0");
+  }
+  function daysLeft(iso) {
+    var a = new Date(iso + "T00:00:00Z").getTime(), b = new Date(todayIso() + "T00:00:00Z").getTime();
+    return Math.round((a - b) / 86400000);
+  }
+  function pct1(v) {
+    return (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(1).replace(".", ",") + "%";
+  }
+  function num(v) {
+    return String(v).replace(/\.0$/, "").replace(".", ",");
+  }
+
+  // Состояние выпуска словами. Никаких советов — только факт: где актив
+  // относительно порога, который определяет выплату.
+  function issueState(it) {
+    if (it.maturity && it.maturity < todayIso()) return { t: "погашен", c: "off" };
+    var perf = it.perfPct;
+    if (perf === null || perf === undefined) return { t: "нет данных по активу", c: "off" };
+    var lvl = 100 + perf, po = it.payoff || {};
+    if (it.kind === "coupon") {
+      var bar = po.couponBarrierPct;
+      if (bar === null || bar === undefined) return { t: "актив " + pct1(perf), c: perf >= 0 ? "up" : "down" };
+      return lvl >= bar
+        ? { t: "купон начисляется", c: "up" }
+        : { t: "купон не начисляется", c: "down" };
+    }
+    var strike = po.strikePct;
+    if (strike === null || strike === undefined) return { t: "актив " + pct1(perf), c: perf >= 0 ? "up" : "down" };
+    return lvl > strike
+      ? { t: "выше страйка", c: "up" }
+      : { t: "ниже страйка", c: "down" };
+  }
+
+  // Строка параметров — теми же словами, что на странице размещённых выпусков.
+  function issueParams(it) {
+    var po = it.payoff || {}, out = [];
+    if (it.kind === "coupon") {
+      if (po.couponPa != null) out.push("купон " + num(po.couponPa) + "% годовых");
+      if (po.couponBarrierPct != null) out.push("барьер купона " + num(po.couponBarrierPct) + "%");
+      // protection у купонных — ОБЪЕКТ {type, strikePct, barrierPct}: защита номинала
+      // барьерная. Числом его печатать нельзя, вылезало «[object Object]».
+      var pr = po.protection;
+      if (pr && typeof pr === "object" && pr.barrierPct != null) {
+        out.push("защита номинала до " + num(pr.barrierPct) + "%" +
+                 (pr.type ? " (" + pr.type + ")" : ""));
+      } else if (typeof pr === "number") {
+        out.push("защита на погашение " + num(pr) + "%");
+      }
+    } else {
+      if (po.participationPct != null) out.push("участие в росте " + num(po.participationPct) + "%");
+      if (po.strikePct != null) out.push("страйк " + num(po.strikePct) + "%");
+      if (po.protectionPct != null) out.push("защита на погашение " + num(po.protectionPct) + "%");
+    }
+    return out.join(" · ");
+  }
+
+  // Барьер защиты номинала. Если актив ушёл ниже — на погашении номинал под
+  // риском, и агент должен это видеть раньше, чем ему позвонит клиент.
+  function riskNote(it) {
+    if (it.maturity && it.maturity < todayIso()) return "";
+    var perf = it.perfPct;
+    if (perf == null) return "";
+    var po = it.payoff || {}, bar = null;
+    if (po.protection && typeof po.protection === "object") bar = po.protection.barrierPct;
+    else if (typeof po.protectionPct === "number" && po.protectionPct < 100) bar = po.strikePct;
+    if (bar == null) return "";
+    return (100 + perf) < bar
+      ? "актив ниже барьера защиты " + num(bar) + "% — на погашении номинал под риском"
+      : "";
+  }
+
+  function assetLine(it) {
+    var b = it.basket || [];
+    if (!b.length) return "";
+    return b.map(function (x) {
+      var nm = x.n || x.t || "";
+      return x.perfPct != null ? nm + " " + pct1(x.perfPct) : nm;
+    }).join(" · ");
+  }
+
+  function drawIssues(deals) {
+    // Один выпуск — одна карточка, даже если сделок по нему было несколько.
+    var seen = {}, rows = [];
+    for (var i = 0; i < deals.length; i++) {
+      var code = deals[i].isin;
+      if (!code || seen[code]) continue;
+      seen[code] = 1;
+      var it = ISSUES[code];
+      rows.push({ isin: code, it: it, product: deals[i].product });
+    }
+    if (!rows.length) {
+      $("issBox").innerHTML = "";
+      $("issEmpty").style.display = "block";
+      return;
+    }
+    $("issEmpty").style.display = "none";
+    var html = "";
+    for (var j = 0; j < rows.length; j++) {
+      var r = rows[j], it = r.it;
+      if (!it) {
+        // Сделка есть, а выпуска в данных нет: врать «всё хорошо» нельзя.
+        html += '<div class="iss"><div class="ih"><div class="in">' + esc(r.product || r.isin) +
+                '<span class="ii">' + esc(r.isin) + '</span></div>' +
+                '<div class="ist off">нет в данных выпусков</div></div></div>';
+        continue;
+      }
+      var st = issueState(it), dl = daysLeft(it.maturity);
+      var perf = it.perfPct;
+      html += '<div class="iss">' +
+        '<div class="ih">' +
+          '<div class="in">' + esc(it.name) + '<span class="ii">' + esc(it.isin) + '</span></div>' +
+          '<div class="ist ' + st.c + '">' + esc(st.t) + "</div>" +
+        "</div>" +
+        '<div class="ib">' +
+          '<div class="iperf ' + (perf == null ? "off" : perf >= 0 ? "up" : "down") + '">' +
+            (perf == null ? "—" : pct1(perf)) +
+            '<span class="ik">актив от начального уровня</span></div>' +
+          '<div class="ipar">' + esc(issueParams(it)) +
+            (assetLine(it) ? '<span class="ia">' + esc(assetLine(it)) + "</span>" : "") +
+          "</div>" +
+        "</div>" +
+        (riskNote(it) ? '<div class="irisk">' + esc(riskNote(it)) + "</div>" : "") +
+        '<div class="if">' +
+          (it.maturity ? "погашение " + esc(it.maturity.split("-").reverse().join(".")) +
+            (dl > 0 ? " · через " + dl + " " + plural(dl, "день", "дня", "дней") : "") : "") +
+          (it.bid ? ' · <span class="ibid">Bid ' + num(it.bid) + "% · индикативно</span>" : "") +
+        "</div>" +
+        "</div>";
+    }
+    $("issBox").innerHTML = html;
   }
 
   // ---- утилиты -------------------------------------------------------------
@@ -319,6 +465,11 @@
     if (h < 24) return h + " " + plural(h, "час", "часа", "часов") + " назад";
     var d = Math.round(h / 24);
     return d + " " + plural(d, "день", "дня", "дней") + " назад";
+  }
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+    });
   }
   function dmy(iso) {
     var p = String(iso).split("-");
@@ -388,118 +539,9 @@
     $("sub").textContent = d.ref;
     $("hi").textContent = "Рабочий стол · " + d.ref;
 
-    $("t7").textContent = d.opens.d7;
-    $("t30").textContent = d.opens.d30;
-    $("tv").textContent = d.views ? d.views.all : 0;
-    $("tl").textContent = d.leads.all;
-
-    var parts = [];
-    parts.push(d.last ? "последнее открытие " + ago(d.last, d.now) : "открытий пока не было");
-    parts.push("всего за 90 дней: " + d.opens.all + " " + plural(d.opens.all, "открытие", "открытия", "открытий"));
-    if (d.truncated) parts.push("показана часть событий — их слишком много");
-    $("stamp").textContent = parts.join(" · ");
-
     drawDeals(d.deals || [], d.totals || {});
-    drawDays(d.days || []);
-    drawTable(d.products || [], d.now);
-    fillProducts(d.ref);
+    drawIssues(d.deals || []);
   }
-
-  // Столбики за 30 дней. Дни без открытий рисуем тоже — иначе непонятно,
-  // что в эти дни ссылки не открывали, и график врёт про плотность.
-  function drawDays(days) {
-    var have = {};
-    for (var i = 0; i < days.length; i++) have[days[i].d] = days[i].n;
-    var rows = [], now = new Date(Date.now() + 3 * 3600 * 1000);
-    for (var k = 29; k >= 0; k--) {
-      var t = new Date(now.getTime() - k * 86400000);
-      var iso = t.getUTCFullYear() + "-" + String(t.getUTCMonth() + 1).padStart(2, "0") +
-                "-" + String(t.getUTCDate()).padStart(2, "0");
-      rows.push({ d: iso, n: have[iso] || 0 });
-    }
-    var max = 1;
-    for (var m = 0; m < rows.length; m++) if (rows[m].n > max) max = rows[m].n;
-    var html = "";
-    for (var j = 0; j < rows.length; j++) {
-      var h = rows[j].n ? Math.max(6, Math.round(rows[j].n / max * 100)) : 2;
-      html += '<i style="height:' + h + '%"' + (rows[j].n === max && max > 1 ? ' class="hot"' : "") +
-              ' data-d="' + dmy(rows[j].d) + '" data-n="' + rows[j].n + '"></i>';
-    }
-    $("bars").innerHTML = html;
-    $("axL").textContent = dmy(rows[0].d);
-    $("axR").textContent = "сегодня";
-  }
-
-  function drawTable(products, now) {
-    var rows = products.filter(function (p) { return p.opens || p.views || p.leads; });
-    if (!rows.length) {
-      $("tbl").innerHTML = "";
-      $("tblEmpty").style.display = "block";
-      return;
-    }
-    $("tblEmpty").style.display = "none";
-    var h = "<tr><th>Продукт или страница</th><th>Открытий</th><th>Просмотров</th><th>Заявок</th><th>Последнее</th></tr>";
-    for (var i = 0; i < rows.length; i++) {
-      var p = rows[i], nm = label(p.p);
-      h += "<tr><td>" + esc(nm) +
-           (isProduct(p.p) ? '<span class="pid">' + esc(p.p) + "</span>" : "") + "</td>" +
-           cell(p.opens) + cell(p.views || 0) +
-           (p.leads ? '<td><span class="lead-yes">' + p.leads + "</span></td>" : cell(0)) +
-           '<td class="zero">' + esc(ago(p.last, now)) + "</td></tr>";
-    }
-    $("tbl").innerHTML = h;
-  }
-  function cell(n) { return '<td' + (n ? "" : ' class="zero"') + ">" + (n || "—") + "</td>"; }
-  function esc(s) {
-    return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
-      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
-    });
-  }
-
-  // ---- конструктор ссылок --------------------------------------------------
-  var myRef = "";
-  function fillProducts(ref) {
-    myRef = ref;
-    var sel = $("prod");
-    if (sel.options.length) return;
-    var grps = {}, order = [];
-    for (var i = 0; i < LIST.length; i++) {
-      if (!grps[LIST[i].grp]) { grps[LIST[i].grp] = []; order.push(LIST[i].grp); }
-      grps[LIST[i].grp].push(LIST[i]);
-    }
-    var h = "";
-    for (var g = 0; g < order.length; g++) {
-      h += '<optgroup label="' + esc(order[g]) + '">';
-      var arr = grps[order[g]];
-      for (var j = 0; j < arr.length; j++) {
-        h += '<option value="' + esc(arr[j].id) + '">' + esc(arr[j].name) + "</option>";
-      }
-      h += "</optgroup>";
-    }
-    sel.innerHTML = h;
-  }
-  $("mk").addEventListener("click", function () {
-    var id = $("prod").value;
-    if (!id || !myRef) return;
-    $("url").textContent = BASE + "/p/" + id + ".html?ref=" + myRef;
-    $("out").style.display = "flex";
-    $("cpOk").style.display = "none";
-  });
-  $("cp").addEventListener("click", function () {
-    var t = $("url").textContent;
-    var done = function () {
-      $("cpOk").style.display = "inline";
-      setTimeout(function () { $("cpOk").style.display = "none"; }, 2000);
-    };
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(t).then(done, done);
-    } else {
-      var a = document.createElement("textarea");
-      a.value = t; document.body.appendChild(a); a.select();
-      try { document.execCommand("copy"); } catch (e) {}
-      a.remove(); done();
-    }
-  });
 
   // ---- события интерфейса --------------------------------------------------
   $("go").addEventListener("click", function () {
@@ -531,34 +573,25 @@
   }
 
   function demoEmpty() {
-    return { ok: true, ref: "demo", kind: "partner", now: Date.now(),
-      deals: [], totals: {},
-      opens: { all: 0, d7: 0, d30: 0 }, views: { all: 0 }, leads: { all: 0, d30: 0 },
-      last: 0, products: [], days: [], truncated: false };
+    return { ok: true, ref: "demo", kind: "partner", now: Date.now(), deals: [], totals: {} };
   }
+  // Демо на РЕАЛЬНЫХ выпусках из data/placements.js — иначе не видно, как
+  // выглядят разные состояния: купон идёт, купон не идёт, ниже страйка,
+  // нет данных по активу, и сделка без ISIN (её в выпусках быть не должно).
   function demoFull() {
-    var now = Date.now(), D = 86400000;
-    var day = function (t) {
-      var d = new Date(t + 3 * 3600 * 1000);
-      return d.getUTCFullYear() + "-" + String(d.getUTCMonth() + 1).padStart(2, "0") +
-             "-" + String(d.getUTCDate()).padStart(2, "0");
-    };
-    var shape = [4, 2, 7, 0, 1, 3, 0, 0, 5, 2, 0, 1, 6, 3, 0, 0, 2, 4, 0, 1, 0, 3, 8, 2, 0, 0, 1, 5, 2, 4];
-    var days = [];
-    for (var i = 0; i < shape.length; i++) {
-      if (shape[i]) days.push({ d: day(now - i * D), n: shape[i] });
-    }
     var deals = [
-      { id: "a1b2c3", product: "Дисконтная облигация на ВЭБ.РФ · 3 года", date: "2026-08-18",
-        volume: 25000000, reward: 562500, currency: "RUB", status: "accrued", ts: now - 2 * D },
-      { id: "d4e5f6", product: "Защита капитала · S&P 500 · 3 года", date: "2026-08-11",
-        volume: 15000000, reward: 450000, currency: "RUB", status: "accrued", ts: now - 9 * D },
-      { id: "g7h8i9", product: "CALL 100 · NVDA · 3 года", date: "2026-07-29",
-        volume: 200000, reward: 9000, currency: "USD", status: "paid", ts: now - 22 * D },
-      { id: "j1k2l3", product: "Дисконтная облигация на Газпром нефть · 3 года", date: "2026-07-14",
-        volume: 40000000, reward: 900000, currency: "RUB", status: "paid", ts: now - 37 * D },
-      { id: "m4n5o6", product: "Бустер · Сбербанк · 9 месяцев", date: "2026-06-30",
-        volume: 8000000, reward: 30000, currency: "RUB", status: "paid", ts: now - 51 * D }
+      { id: "a1b2c3", product: "РСП СП-1-10 · участие 120%", isin: "RU000A10A9G1",
+        date: "2026-08-12", volume: 25000000, reward: 562500, currency: "RUB", status: "accrued" },
+      { id: "d4e5f6", product: "РСП СП-2-72-ЦБ-RUB · купонный", isin: "RU000A10CVB8",
+        date: "2026-07-30", volume: 15000000, reward: 337500, currency: "RUB", status: "paid" },
+      { id: "g7h8i9", product: "РСП СП-1-52-ЦБ-RUB · купонный", isin: "RU000A10CBH7",
+        date: "2026-07-16", volume: 40000000, reward: 900000, currency: "RUB", status: "paid" },
+      { id: "j1k2l3", product: "РСП СП-2-69 · участие 27%", isin: "RU000A10CV88",
+        date: "2026-06-24", volume: 12000000, reward: 270000, currency: "RUB", status: "paid" },
+      { id: "m4n5o6", product: "РСП СП-1-12 · участие 100%", isin: "RU000A109EH2",
+        date: "2026-06-03", volume: 8000000, reward: 180000, currency: "RUB", status: "paid" },
+      { id: "p7q8r9", product: "Дисконтная облигация на ВЭБ.РФ · 3 года",
+        date: "2026-05-20", volume: 200000, reward: 9000, currency: "USD", status: "paid" }
     ];
     var totals = {};
     for (var q = 0; q < deals.length; q++) {
@@ -567,24 +600,7 @@
       row.count++; row.volume += dd.volume;
       if (dd.status === "paid") row.paid += dd.reward; else row.accrued += dd.reward;
     }
-    return { ok: true, ref: "andrey", kind: "partner", now: now,
-      deals: deals, totals: totals,
-      opens: { all: 78, d7: 14, d30: 66 }, views: { all: 31 }, leads: { all: 4, d30: 3 },
-      last: now - 6 * 60000,
-      products: [
-        { p: "D-VEB-3Y",         opens: 17, views: 5, leads: 2, last: now - 6 * 60000 },
-        { p: "W-NVDA-C100-0729", opens: 12, views: 9, leads: 1, last: now - 2 * 3600000 },
-        { p: "P-SPY-3Y",         opens: 9,  views: 4, leads: 1, last: now - 8 * 3600000 },
-        { p: "board",            opens: 8,  views: 7, leads: 0, last: now - D },
-        { p: "sp-2-70",          opens: 7,  views: 2, leads: 0, last: now - 2 * D },
-        { p: "D-GPN-3Y",         opens: 6,  views: 3, leads: 0, last: now - 3 * D },
-        { p: "B-SBER-9M",        opens: 5,  views: 1, leads: 0, last: now - 5 * D },
-        { p: "index",            opens: 4,  views: 0, leads: 0, last: now - 6 * D },
-        { p: "screener",         opens: 3,  views: 0, leads: 0, last: now - 9 * D },
-        { p: "AC-SEMI-US-3Y",    opens: 2,  views: 1, leads: 0, last: now - 12 * D },
-        { p: "digest",           opens: 1,  views: 0, leads: 0, last: now - 21 * D }
-      ],
-      days: days, truncated: false };
+    return { ok: true, ref: "andrey", kind: "partner", now: Date.now(), deals: deals, totals: totals };
   }
 })();
 </script>
