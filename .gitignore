@@ -41,6 +41,7 @@ _digest/
 auto_refresh_*.py
 _auto_refresh.log
 _auto_refresh.notify
+_auto_refresh.lock
 
 # Временные рендеры и черновики (underscore-префикс): макеты промо, og-шаблоны,
 # тестовые PDF. Служебное, наружу не публикуем — и не попадёт под `git add *.html`.
