@@ -14,7 +14,7 @@
 // Статус (предстоит / идёт / прошла) страницы считают САМИ от date+timeMsk —
 // руками ничего не переключается. Видео в репозиторий не кладём — только ссылки.
 window.EVENTS = {
-  "updated": "2026-08-19",
+  "updated": "2026-08-21",
   "items": [
     {
       "id": "intl-tech-2026-08-20",
@@ -25,7 +25,7 @@ window.EVENTS = {
       "durationMin": 30,
       "place": "Онлайн · Контур.Толк · вход свободный",
       "joinUrl": "https://rumbergcapital.ktalk.ru/app/stream/auditoriums/cfcb75a2-d95f-439c-945c-2e6c26e8658c",
-      "recordingUrl": "",
+      "recordingUrl": "https://rumbergcapital.ktalk.ru/recordings/AVqjCBrBRsx5E0DUPQyb",
       "materialUrl": "ideas.html",
       "speaker": "Руслан Сабиров",
       "speakerNote": "Rumberg — автор витрины структурных продуктов",
