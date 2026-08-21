@@ -1715,6 +1715,30 @@ function fiPick(list) {
   return go(0) ? res.slice() : null;
 }
 
+// Дополнить УЖЕ выбранные позиции до пяти. Жадный добор здесь заводил в тупик:
+// типов всего шесть, и редкие (бустер, биржевой выпуск, дисконт, автоколл) заперты
+// каждый в своём классе активов. Замер 21.08.2026 на каталоге из 107 позиций:
+// 90 позиций из 107 в одиночку делают пятёрку недостижимой, 57% допустимых пар —
+// тоже. То есть отказ «не удалось собрать 5» возникал при живом каталоге, в котором
+// пятёрка есть. Перебор с возвратом находит её, если она существует.
+function fiComplete(prefix, list) {
+  const used = { type: new Set(), cls: new Set(), under: new Set() };
+  for (const r of prefix) { used.type.add(r.type); used.cls.add(r.cls); used.under.add(fiKey(r)); }
+  const res = prefix.slice();
+  const go = (from) => {
+    if (res.length === 5) return true;
+    for (let j = from; j < list.length; j++) {
+      const r = list[j];
+      if (used.type.has(r.type) || used.cls.has(r.cls) || used.under.has(fiKey(r))) continue;
+      used.type.add(r.type); used.cls.add(r.cls); used.under.add(fiKey(r)); res.push(r);
+      if (go(j + 1)) return true;
+      res.pop(); used.type.delete(r.type); used.cls.delete(r.cls); used.under.delete(fiKey(r));
+    }
+    return false;
+  };
+  return go(0) ? res : null;
+}
+
 // Числа во фразе модели, которых нет в параметрах продукта. В отличие от утреннего
 // поста проверяем ЛЮБЫЕ числа, а не только трёхзначные: перепутать 68% и 80% в цене
 // входа опаснее всего, а оба коротких.
@@ -1855,17 +1879,30 @@ async function generateFi(env, theme) {
     used.type.add(r.type); used.cls.add(r.cls); used.under.add(fiKey(r));
     items.push({ ...r, why: clean || FI_WHY_FALLBACK[r.type] || "" });
   }
-  // Добор кодом: продукты в подборке важнее комментария к ним.
-  if (items.length < 5) {
-    const rest = avail.filter((r) => !used.type.has(r.type) && !used.cls.has(r.cls) && !used.under.has(fiKey(r)));
-    for (const r of fiPick(rest) || rest) {
-      if (items.length === 5) break;
-      if (used.type.has(r.type) || used.cls.has(r.cls) || used.under.has(fiKey(r))) continue;
-      used.type.add(r.type); used.cls.add(r.cls); used.under.add(fiKey(r));
-      items.push({ ...r, why: FI_WHY_FALLBACK[r.type] || "" });
-    }
+  // Добор кодом: продукты в подборке важнее комментария к ним. Дополняем перебором,
+  // а не жадно. Если выбор модели загнал в тупик — снимаем её последние позиции по
+  // одной (первые в ответе она считает лучшими) и пробуем снова; в крайнем случае
+  // берём пятёрку целиком кодом. Подборка должна уйти всегда, когда она существует.
+  let filled = items.length === 5 ? items : null;
+  const kept = items.slice();
+  for (let drop = 0; !filled && drop <= kept.length; drop++) {
+    filled = fiComplete(kept.slice(0, kept.length - drop), avail);
   }
-  if (items.length < 5) throw new Error("не удалось собрать 5 непересекающихся продуктов");
+  if (!filled) filled = fiPick(avail);
+  if (!filled || filled.length < 5) throw new Error("не удалось собрать 5 непересекающихся продуктов");
+  // Фразы модели сохраняем у тех позиций, которые она сама и выбрала.
+  const whyById = new Map(items.map((r) => [r.id, r.why]));
+  const out = filled.map((r) => ({ ...r, why: whyById.get(r.id) || FI_WHY_FALLBACK[r.type] || "" }));
+  const added = out.length - out.filter((r) => whyById.has(r.id)).length;
+  // Честно сообщаем сейлзу, сколько позиций подставил код: у них типовая фраза
+  // вместо авторской, и это видно в посте. Молча подменять — обманывать читателя.
+  if (added > 0) {
+    problems = problems.concat([
+      "позиций подставлено кодом: " + added + " (у них общая фраза; модель не дала пятёрку без пересечений)",
+    ]);
+  }
+  items.length = 0;
+  items.push.apply(items, out);
 
   if (env.POST_KV) {
     try {
