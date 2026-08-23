@@ -42,9 +42,14 @@
     ".ca-ttl-row{display:flex;align-items:center;gap:7px;}" +
     ".ca-ttl{font-family:'Rubik','Onest',sans-serif;font-weight:600;font-size:14.5px;color:#F2F3F7;}" +
     ".ca-chip{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#8FB3F0;background:rgba(79,134,230,.14);border:1px solid rgba(79,134,230,.42);border-radius:5px;padding:2px 6px;}" +
-    ".ca-sub{font-size:11px;color:rgba(242,243,247,.5);margin-top:1px;}" +
-    ".ca-x{margin-left:auto;width:30px;height:30px;border:0;background:none;color:rgba(242,243,247,.55);font-size:20px;line-height:1;cursor:pointer;border-radius:8px;flex:none;}" +
+    ".ca-sub{font-size:12px;color:rgba(242,243,247,.62);margin-top:1px;}" +
+    ".ca-x{margin-left:auto;width:42px;height:42px;border:0;background:none;color:rgba(242,243,247,.55);font-size:20px;line-height:1;cursor:pointer;border-radius:8px;flex:none;}" +
     ".ca-x:hover{color:#F2F3F7;background:rgba(255,255,255,.06);}" +
+    /* Клавиатурный фокус: у кнопок виджета его не было вовсе (outline:none на
+       полях, ни одного правила :focus-visible), а страницы объявляют рамку
+       только на <a> — виджет выпадал из обхода незаметно для глаза. */
+    ".ca-btn:focus-visible,.ca-x:focus-visible,.ca-send:focus-visible,.ca-discuss:focus-visible,.ca-sug button:focus-visible{outline:2px solid #EE7D1B;outline-offset:3px;}" +
+    ".ca-in:focus-visible,.ca-lead input:focus-visible{outline:2px solid #EE7D1B;outline-offset:1px;}" +
     /* — лента сообщений — */
     ".ca-log{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;}" +
     ".ca-msg{max-width:86%;font-size:13.5px;line-height:1.55;padding:9px 13px;border-radius:14px;white-space:pre-wrap;word-wrap:break-word;}" +
@@ -54,7 +59,7 @@
     ".ca-msg.a b{color:#F2F3F7;font-weight:600;}" +
     /* — подсказки-вопросы — */
     ".ca-sug{display:flex;flex-direction:column;gap:8px;align-items:flex-start;}" +
-    ".ca-sug button{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.03);color:rgba(242,243,247,.85);border-radius:12px;padding:8px 12px;font-family:inherit;font-size:12.5px;line-height:1.4;cursor:pointer;text-align:left;transition:border-color .15s,color .15s,background .15s;}" +
+    ".ca-sug button{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.03);color:rgba(242,243,247,.85);border-radius:12px;padding:12px 14px;font-family:inherit;font-size:12.5px;line-height:1.4;cursor:pointer;text-align:left;transition:border-color .15s,color .15s,background .15s;}" +
     ".ca-sug button:hover{border-color:rgba(238,125,27,.6);color:#fff;background:rgba(238,125,27,.06);}" +
     ".ca-sug button svg{flex:none;margin-right:8px;vertical-align:-1px;}" +
     /* — «думает»: мигающий блок-курсор терминала + бегущая полоса; фразы меняются
@@ -73,12 +78,12 @@
     ".ca-row{display:flex;gap:8px;align-items:flex-end;}" +
     ".ca-in{flex:1;resize:none;max-height:96px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:12px;color:#F2F3F7;font-family:inherit;font-size:16px;line-height:1.4;padding:9px 12px;outline:none;}" +
     ".ca-in:focus{border-color:rgba(238,125,27,.6);}" +
-    ".ca-send{flex:none;width:38px;height:38px;border:0;border-radius:11px;background:#EE7D1B;color:#0C0A08;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;}" +
+    ".ca-send{flex:none;width:42px;height:42px;border:0;border-radius:11px;background:#EE7D1B;color:#0C0A08;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;}" +
     ".ca-send:hover{background:#F58E33;}.ca-send:disabled{opacity:.4;cursor:default;}" +
     ".ca-send svg{width:17px;height:17px;}" +
-    ".ca-note{margin:7px 2px 0;font-size:11px;line-height:1.4;color:rgba(242,243,247,.56);text-align:center;}" +
+    ".ca-note{margin:7px 2px 0;font-size:12px;line-height:1.45;color:rgba(242,243,247,.62);text-align:center;}" +
     /* — кнопка и форма «Обсудить с Румбергом» — */
-    ".ca-discuss{width:100%;margin-bottom:8px;background:none;border:1px solid rgba(238,125,27,.4);color:#F58E33;border-radius:11px;padding:9px;font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:background .15s,border-color .15s;}" +
+    ".ca-discuss{width:100%;margin-bottom:8px;background:none;border:1px solid rgba(238,125,27,.4);color:#F58E33;border-radius:11px;padding:14px;font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:background .15s,border-color .15s;}" +
     ".ca-discuss:hover{background:rgba(238,125,27,.08);border-color:rgba(238,125,27,.7);}" +
     ".ca-discuss svg{width:15px;height:15px;}" +
     ".ca-lead{align-self:stretch;background:rgba(238,125,27,.06);border:1px solid rgba(238,125,27,.3);border-radius:14px;padding:13px 14px;display:flex;flex-direction:column;gap:8px;}" +

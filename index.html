@@ -44,7 +44,12 @@
   body::before { width:56vw; height:56vw; left:-16vw; top:-24vw; background:radial-gradient(circle, rgba(79,134,230,0.17), transparent 65%); }
   body::after { width:52vw; height:52vw; right:-14vw; bottom:-22vw; background:radial-gradient(circle, rgba(238,125,27,0.15), transparent 65%); }
   a { text-decoration:none; color:inherit; cursor:pointer; }
-  a:focus-visible { outline:2px solid var(--solar); outline-offset:3px; border-radius:4px; }
+  a:focus-visible, button:focus-visible, [tabindex]:focus-visible { outline:2px solid var(--solar); outline-offset:3px; border-radius:4px; }
+  /* Пропустить к содержимому: на странице 33 фокусируемых элемента, и без этой
+     ссылки клавиатурный обход начинается с шапки на каждой загрузке */
+  .skip { position:absolute; left:-9999px; top:0; z-index:100001; background:var(--solar); color:#0C0A08;
+    font-weight:600; font-size:13px; padding:14px 18px; border-radius:0 0 8px 0; }
+  .skip:focus { left:0; }
 
   /* Свечи: как на проде, но полоса ограничена верхом и уходит в глухой фон
      до начала колонок — под мелкими цифрами просвет читается как шум */
@@ -70,11 +75,10 @@
   .wrap { position:relative; z-index:1; max-width:var(--shell); margin:0 auto; padding:0 44px; }
 
   /* ── Герой ── */
-  .hero { position:relative; padding:66px 0 40px; }
-  .kicker { font-family:var(--m); font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--dim); margin-bottom:20px; }
+  .hero { position:relative; padding:42px 0 28px; }
   h1 { margin:0; font-family:var(--display); font-size:clamp(36px,5vw,60px); font-weight:600; line-height:1.06; letter-spacing:-0.02em; max-width:860px; }
   h1 .lm { color:var(--solar); }
-  .sub { margin:20px 0 0; font-size:16px; line-height:1.55; color:var(--mut); max-width:540px; }
+  .sub { margin:18px 0 0; font-size:17px; line-height:1.5; color:var(--mut); max-width:640px; }
 
   /* ── Полоса-анонс встречи ── */
   .evt { display:flex; align-items:center; gap:16px; margin:26px 0 0; padding:13px 18px;
@@ -85,7 +89,7 @@
   .evt .ed { flex:none; display:flex; flex-direction:column; align-items:center; justify-content:center;
     min-width:58px; padding:7px 10px; border-radius:9px; background:var(--solar); color:#0C0A08; }
   .evt .ed .d { font-family:var(--display); font-weight:700; font-size:16px; line-height:1; }
-  .evt .ed .m { font-family:var(--m); font-size:8.5px; letter-spacing:.14em; text-transform:uppercase; margin-top:3px; }
+  .evt .ed .m { font-family:var(--m); font-size:11px; letter-spacing:.08em; text-transform:uppercase; margin-top:3px; }
   .evt .et { min-width:0; }
   .evt .et .t { display:block; font-size:14.5px; font-weight:600; }
   .evt .et .s { display:block; font-family:var(--m); font-size:11px; color:var(--mut); margin-top:3px; letter-spacing:.02em; }
@@ -110,11 +114,15 @@
   }
 
   /* ── Лента «Можем запустить сейчас» ── */
-  .tape-cap { display:flex; align-items:center; gap:9px; font-family:var(--m); font-size:11px; letter-spacing:.13em; text-transform:uppercase; margin:24px 0 9px; color:var(--solar); }
-  .tape-cap .tdot { width:7px; height:7px; border-radius:50%; background:var(--solar); box-shadow:0 0 0 4px rgba(238,125,27,0.16); flex:none; animation:tpulse 2.2s ease-in-out infinite; }
-  .tape-cap .tsub { color:var(--dim); }
+  .tape-cap { display:flex; align-items:center; gap:9px; font-family:var(--m); font-size:12px; margin:18px 0 8px; color:var(--solar); }
+  .tape-cap .tlbl { letter-spacing:.13em; text-transform:uppercase; font-size:11px; }
+  .tape-cap .tdot { width:7px; height:7px; border-radius:50%; background:var(--solar); box-shadow:0 0 0 4px rgba(238,125,27,0.16); flex:none; animation:tpulse 2.2s ease-in-out 6; }
+  /* Пояснение к ленте — обычным регистром: 76 знаков капсом не читаются */
+  .tape-cap .tsub { color:var(--dim); text-transform:none; letter-spacing:.01em; font-size:11.5px; }
   @keyframes tpulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:.5; transform:scale(.85); } }
-  .tape-box { position:relative; border:1px solid var(--line); border-left:2px solid var(--solar); border-radius:12px; background:var(--panel); overflow:hidden; padding:12px 0; margin:0 0 8px; }
+  .tape-box { position:relative; border:1px solid var(--line); border-left:1px solid var(--solar); border-radius:12px; background:var(--panel); overflow:hidden; padding:12px 0; margin:0 0 8px;
+    -webkit-mask-image:linear-gradient(90deg, transparent 0, #000 28px, #000 calc(100% - 28px), transparent 100%);
+    mask-image:linear-gradient(90deg, transparent 0, #000 28px, #000 calc(100% - 28px), transparent 100%); }
   .tape { display:flex; gap:38px; white-space:nowrap; width:max-content; font-family:var(--m); font-size:12px; animation:slide 52s linear infinite; }
   .tape .it { display:flex; align-items:baseline; }
   .tape .sym { color:var(--tx); font-weight:500; }
@@ -158,15 +166,15 @@
   .hev .ntf.n1 { animation-delay:.8s; }
   .hev .ntf.n2 { animation-delay:1.5s; }
   @keyframes hevNtf { from { opacity:0; transform:translateY(-42px); } }
-  .hev .ntf i { width:7px; height:7px; border-radius:50%; background:var(--solar); box-shadow:0 0 9px var(--solar); flex:none; margin-top:3px; animation:evPulse 1.6s infinite; }
+  .hev .ntf i { width:7px; height:7px; border-radius:50%; background:var(--solar); box-shadow:0 0 0 3px rgba(238,125,27,0.18); flex:none; margin-top:3px; animation:evPulse 1.6s ease-in-out 3; }
   .hev .ntf .nb { min-width:0; }
-  .hev .ntf .nt { display:block; font-size:10px; font-weight:600; line-height:1.3; }
-  .hev .ntf .nd { display:block; font-family:var(--m); font-size:8.5px; color:rgba(242,243,247,.45); margin-top:2px; }
-  .hev .ntf .nw { margin-left:auto; flex:none; font-family:var(--m); font-size:8.5px; color:rgba(242,243,247,.4); }
+  .hev .ntf .nt { display:block; font-size:11.5px; font-weight:600; line-height:1.3; }
+  .hev .ntf .nd { display:block; font-family:var(--m); font-size:12px; color:rgba(242,243,247,.66); margin-top:2px; }
+  .hev .ntf .nw { margin-left:auto; flex:none; font-family:var(--m); font-size:12px; color:rgba(242,243,247,.66); }
   .hev .star { display:block; margin:14px auto 0; filter:drop-shadow(0 0 14px rgba(238,125,27,.55)); }
-  .hev .wm2 { display:block; text-align:center; font-family:var(--m); font-size:8.5px; letter-spacing:.34em; text-indent:.34em; text-transform:uppercase; color:rgba(242,243,247,.5); margin-top:10px; }
+  .hev .wm2 { display:block; text-align:center; font-family:var(--m); font-size:11px; letter-spacing:.22em; text-indent:.22em; text-transform:uppercase; color:rgba(242,243,247,.66); margin-top:10px; }
   .hev .big { display:block; text-align:center; font-family:var(--display); font-weight:700; font-size:23px; letter-spacing:-.02em; margin-top:2px; }
-  .hev .feat { display:block; text-align:center; font-family:var(--m); font-size:9px; color:rgba(242,243,247,.45); margin-top:7px; line-height:1.6; white-space:nowrap; }
+  .hev .feat { display:block; text-align:center; font-family:var(--m); font-size:12px; color:rgba(242,243,247,.66); margin-top:7px; line-height:1.5; }
   .hev .pbtn { display:block; margin-top:12px; background:var(--solar); color:#0C0A08; border-radius:9px; text-align:center; font-weight:600; font-size:12.5px; padding:9px; transition:background .2s; }
   .hev:hover .pbtn { background:var(--solar-l); }
 
@@ -174,7 +182,7 @@
   @keyframes rise { to { opacity:1; transform:none; } }
 
   /* ══════════ НИЖЕ — рабочая полоса (новое) ══════════ */
-  .bandwrap { position:relative; z-index:1; margin-top:30px; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+  .bandwrap { position:relative; z-index:1; margin-top:22px; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
   /* Колонки разделяет ВОЗДУХ, а не вертикальные линейки: столбец и так читается
      как стопка под своей подчёркнутой шапкой, линейка была третьей сущностью.
      Причём воздух дешевле линейки — при gap:40 ширина текста в колонке остаётся
@@ -184,33 +192,40 @@
      потерянной ширины возвращаем уменьшенным зазором (24 вместо 28). */
   .work { display:grid; grid-template-columns:232px minmax(0,.95fr) minmax(0,1.2fr) minmax(0,1fr) minmax(0,.93fr); column-gap:24px; }
   .cell { padding:16px 0 20px; min-width:0; }
-  .ch { display:flex; align-items:baseline; gap:9px; padding-bottom:9px; border-bottom:1px solid var(--line); }
-  .ch h2 { margin:0; font-family:var(--display); font-size:14px; font-weight:600; letter-spacing:-0.012em; }
-  .ch .cap { font-family:var(--m); font-size:8px; letter-spacing:.17em; text-transform:uppercase; color:var(--dim); }
-  /* Заголовок колонки — ссылка на свой раздел. Стрелка проявляется на наведении,
-     чтобы в покое шапка оставалась просто заголовком */
+  /* Шапка колонки: заголовок НЕ переносится, при нехватке места на вторую
+     строку уходит подпись. Высота задана жёстко, поэтому подчёркивание и первая
+     строка данных стоят на одной вертикали во всех пяти колонках независимо от
+     того, перенеслась подпись или нет — ради этой общей линии полоса и читается
+     разворотом, а не пятью независимыми списками. */
+  .ch { display:flex; flex-wrap:wrap; align-items:baseline; align-content:flex-end; gap:3px 9px;
+    min-height:46px; padding-bottom:9px; border-bottom:1px solid var(--line); }
+  .ch h2 { white-space:nowrap; }
+  .ch h2 { margin:0; font-family:var(--display); font-size:16.5px; font-weight:600; letter-spacing:-0.016em; }
+  .ch .cap { font-family:var(--m); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); }
+  /* Заголовок колонки — ссылка на свой раздел. Стрелка видна ПОСТОЯННО: на
+     наведении она проявлялась только для мыши, а на телефоне hover-а нет —
+     четыре из пяти входов в разделы выглядели там нерабочими подписями. */
   .ch .chl { display:inline-flex; align-items:center; gap:5px; transition:color .18s ease; }
-  .ch .chl::after { content:"→"; font-family:var(--m); font-size:11px; opacity:0;
-    transform:translateX(-3px); transition:opacity .18s ease, transform .26s var(--ease); }
+  .ch .chl::after { content:"→"; font-family:var(--m); font-size:12px; opacity:.5;
+    transition:opacity .18s ease, transform .26s var(--ease); }
   .ch .chl:hover { color:var(--solar); }
-  .ch .chl:hover::after { opacity:1; transform:none; }
+  .ch .chl:hover::after { opacity:1; transform:translateX(3px); }
 
   /* Пометка под подборкой: подбор наш, а не из утреннего обзора */
-  .mnote { margin-top:10px; font-family:var(--m); font-size:8px; letter-spacing:.12em;
-    text-transform:uppercase; color:var(--dim); }
+  .mnote { margin-top:10px; font-family:var(--m); font-size:12px; letter-spacing:.01em;
+    color:var(--dim); line-height:1.5; }
 
-  .rl { display:grid; grid-template-columns:15px minmax(0,1fr) auto; align-items:baseline; gap:8px;
+  .rl { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:baseline; gap:8px;
     padding:8px 0 8px 9px; margin-left:-9px; position:relative; border-bottom:1px solid var(--rule-soft); transition:background .18s ease; }
   .rl:last-of-type { border-bottom:0; }
   .rl::before { content:""; position:absolute; left:-9px; top:16%; bottom:16%; width:2px; background:var(--solar);
     transform:scaleY(0); transition:transform .26s var(--ease); }
   .rl:hover { background:rgba(255,255,255,0.032); }
   .rl:hover::before { transform:scaleY(1); }
-  .rl .no { font-family:var(--m); font-size:8.5px; color:var(--dim); }
   .rl .rt { font-size:12.5px; font-weight:500; letter-spacing:-0.005em; transition:color .18s ease; }
   .rl:hover .rt { color:var(--solar); }
-  .rl .rm { font-family:var(--m); font-size:8.5px; color:var(--dim); white-space:nowrap; }
-  .stamp { font-family:var(--m); font-size:8px; color:var(--dim); line-height:1.9; letter-spacing:.06em; padding-top:12px; }
+  .rl .rm { font-family:var(--m); font-size:11px; color:var(--dim); white-space:nowrap; }
+  .stamp { font-family:var(--m); font-size:12px; color:var(--dim); line-height:1.8; letter-spacing:.02em; padding-top:12px; }
 
   /* ── Разделы: доминанта полосы ────────────────────────────────────────────
      Колонка была самой тихой из пяти: названия 12,5px и мелкие цифры справа
@@ -230,22 +245,21 @@
      колонки, поэтому её текст стоит ровно на той же вертикали, что телефон,
      лента и подпись внизу, а не сдвинут внутрь на 17px. Заодно длинному
      «Размещённые выпуски» хватает одной строки (нужно 188px, есть 192). */
-  @media (min-width:1024px) {
+  @media (min-width:1280px) {
     .nv .nvbox { background:#14161C; border:1px solid var(--line); border-radius:12px;
       padding:17px 16px 14px; margin:12px -9px 0 -17px; }
   }
   .nv .ch { display:block; border-bottom:0; padding-bottom:14px; }
   .nv .ch h2 { font-size:22px; letter-spacing:-0.028em; line-height:1.05; }
   .nv .ch h2::after { content:"навигация по витрине"; display:block; font-family:var(--m);
-    font-size:8px; font-weight:400; letter-spacing:.16em; text-transform:uppercase;
+    font-size:11px; font-weight:400; letter-spacing:.08em; text-transform:uppercase;
     color:var(--dim); margin-top:7px; }
   .nv .rl { grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:0 10px;
     margin-left:0; padding:11px 0 11px 10px; }
   .nv .rl::before { left:0; }
-  .nv .rl .no { display:none; }
   .nv .rl .rt { grid-column:1; font-family:var(--display); font-size:16.5px; font-weight:600;
     letter-spacing:-0.02em; line-height:1.2; }
-  .nv .rl .rm { grid-column:1; font-size:8px; letter-spacing:.1em; text-transform:uppercase; }
+  .nv .rl .rm { grid-column:1; font-size:11px; letter-spacing:.08em; text-transform:uppercase; }
   /* Отступ только у заполненных: у половины разделов счётчика нет, и пустой
      span не должен раздвигать строку */
   .nv .rl .rm:not(:empty) { margin-top:4px; }
@@ -257,7 +271,7 @@
 
   .mn { padding:11px 0 12px; border-bottom:1px solid var(--rule-soft); }
   .mn:last-child { border-bottom:0; padding-bottom:2px; }
-  .mn .rub { display:block; font-family:var(--m); font-size:7.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--dim); }
+  .mn .rub { display:block; font-family:var(--m); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); }
   .mn .ttl { display:block; font-family:var(--display); font-size:13px; font-weight:600; letter-spacing:-0.01em; line-height:1.35; margin-top:5px; }
   /* Заголовок-ссылка на полный разбор: стрелка проявляется, чтобы не шуметь в покое */
   .mn .ttl.lnk svg { opacity:0; margin-left:4px; vertical-align:-1px; transition:opacity .18s ease, transform .26s var(--ease); }
@@ -265,17 +279,17 @@
   .mn .ttl.lnk:hover svg { opacity:1; transform:translateX(2px); }
 
   /* Пустое состояние колонки: объясняет, что данных нет, и даёт выход */
-  .mnone { padding:16px 0 4px; font-size:11.5px; line-height:1.6; color:var(--dim); }
+  .mnone { padding:16px 0 4px; font-size:12px; line-height:1.6; color:var(--dim); }
   .mnone a { display:inline-flex; align-items:center; gap:6px; margin-top:8px; color:var(--solar-l); }
   .mnone a:hover { color:var(--solar); }
 
   /* Продукт, id которого ушёл при перегенерации доски */
   .prow.gone { border-left-color:var(--line); }
   .prow.gone .q { color:var(--dim); }
-  .mn .body { margin-top:4px; font-size:11.5px; line-height:1.52; color:var(--mut); }
+  .mn .body { margin-top:4px; font-size:12px; line-height:1.52; color:var(--mut); }
   .prow { display:flex; align-items:baseline; gap:9px; margin-top:8px; padding:7px 10px;
-    border:1px solid var(--rule-soft); border-left:2px solid var(--solar); border-radius:6px;
-    background:rgba(255,255,255,0.032); font-size:11.5px; transition:background .18s ease, border-color .18s ease; }
+    border:1px solid var(--rule-soft); border-left:1px solid var(--solar); border-radius:6px;
+    background:rgba(255,255,255,0.032); font-size:12px; transition:background .18s ease, border-color .18s ease; }
   .prow:hover { background:rgba(238,125,27,0.07); border-color:rgba(238,125,27,0.34); border-left-color:var(--solar-l); }
   .prow b { font-weight:500; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   /* В узкой колонке «Актуальные продукты» усечение съедало срок — там переносим */
@@ -286,37 +300,48 @@
      значит своё: премия, цена, участие, купон. Пока в колонке стояли три варранта,
      столбик читался как один показатель — с разными типами это уже обман. Метка
      мелкая и приглушённая: она поясняет цифру, а не спорит с ней. */
-  .prow .q i { display:block; margin-top:2px; font-style:normal; font-size:7.5px; font-weight:400;
-    letter-spacing:.12em; text-transform:uppercase; color:var(--dim); text-align:right; }
+  .prow .q i { display:block; margin-top:2px; font-style:normal; font-size:11px; font-weight:400;
+    letter-spacing:.08em; text-transform:uppercase; color:var(--dim); text-align:right; }
   .prow svg { flex:none; align-self:center; opacity:.5; transition:opacity .18s ease, transform .26s var(--ease); }
   .prow:hover svg { opacity:1; transform:translateX(2px); }
 
   .bench { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:10px; padding:10px 0 11px; border-bottom:1px solid var(--rule-soft); }
-  .bench .k { display:block; font-family:var(--m); font-size:7.5px; letter-spacing:.13em; text-transform:uppercase; color:var(--dim); }
+  .bench .k { display:block; font-family:var(--m); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); }
   .bench .v { display:block; font-family:var(--m); font-size:13px; font-weight:500; margin-top:4px; letter-spacing:-0.01em; font-variant-numeric:tabular-nums; }
   .rt2 { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:10px; align-items:baseline;
     padding:10px 0 11px; border-bottom:1px solid var(--rule-soft); }
   .rt2:last-of-type { border-bottom:0; }
-  .rt2 .kind { display:block; font-family:var(--m); font-size:7.5px; letter-spacing:.13em; text-transform:uppercase; color:var(--dim); }
-  .rt2 .n { display:block; font-size:12px; font-weight:500; margin-top:4px; line-height:1.3; transition:color .18s ease; }
-  .rt2 .n em { font-style:normal; color:var(--dim); font-weight:400; font-size:10.5px; }
+  .rt2 .kind { display:block; font-family:var(--m); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); }
+  .rt2 .n { display:block; font-size:12px; font-weight:500; margin-top:4px; line-height:1.3; transition:color .18s ease;
+    min-width:0; overflow-wrap:anywhere; }
+  .rt2 .n em { font-style:normal; color:var(--dim); font-weight:400; font-size:11px; }
   .rt2:hover .n { color:var(--solar); }
   .rt2 .v { font-family:var(--m); font-size:13px; font-weight:500; color:var(--up); white-space:nowrap; letter-spacing:-0.01em; font-variant-numeric:tabular-nums; }
 
   .om { display:block; padding:11px 0 12px; border-bottom:1px solid var(--rule-soft); }
   .om:last-of-type { border-bottom:0; }
-  .om .ok { display:block; font-family:var(--m); font-size:7.5px; letter-spacing:.13em; text-transform:uppercase; color:var(--dim); line-height:1.5; }
+  /* Это описание продукта, а не метка: капсом строка в 43 знака не читается */
+  .om .ok { display:block; font-family:var(--m); font-size:12px; letter-spacing:.01em; color:var(--dim); line-height:1.5; }
   .om .on { display:block; font-family:var(--display); font-size:13px; font-weight:600; margin-top:5px; line-height:1.3;
     letter-spacing:-0.01em; transition:color .18s ease; }
   .om:hover .on { color:var(--solar); }
   .om .r2 { display:flex; align-items:center; gap:9px; flex-wrap:wrap; margin-top:7px; }
-  .om .ost { font-family:var(--m); font-size:8px; letter-spacing:.05em; padding:3px 7px; border-radius:5px; white-space:nowrap; }
+  .om .ost { font-family:var(--m); font-size:12px; letter-spacing:.01em; padding:3px 7px; border-radius:5px; white-space:nowrap; }
   .ost.upn { color:var(--solar); border:1px solid rgba(238,125,27,0.36); background:rgba(238,125,27,0.075); }
   .ost.live { color:var(--up); border:1px solid rgba(85,192,138,0.36); background:rgba(85,192,138,0.075); }
-  .om .ops { font-family:var(--m); font-size:9px; color:var(--dim); }
+  .om .ops { font-family:var(--m); font-size:12px; color:var(--dim); }
   .om .ops b { color:var(--mut); font-weight:500; }
 
-  .foot { display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; padding:18px 0 26px; font-size:11px; color:var(--dim); }
+  .foot { display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; padding:16px 0 26px; font-size:12px; color:var(--dim); }
+  /* Страница заканчивалась юридическим отрицанием и больше ничем: последнее,
+     что человек читал, — «не является рекомендацией». Перед ним — тихая строка
+     с двумя реальными следующими шагами, теми же, что в шапке. */
+  .endcta { display:flex; align-items:baseline; gap:18px; flex-wrap:wrap; padding:20px 0 4px; }
+  .endcta .q { font-family:var(--display); font-size:16.5px; font-weight:600; letter-spacing:-0.016em; }
+  .endcta a { display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:500; color:var(--solar-l); }
+  .endcta a:hover { color:var(--solar); }
+  .endcta a + a { margin-left:2px; }
+  @media (max-width:860px) { .endcta { gap:10px; padding:18px 0 2px; } .endcta a { padding:12px 0; } }
   .foot .mono { font-family:var(--m); }
 
 /* ── Интро при входе на сайт (один раз за сессию; синий+оранжевый Rumberg, нейтральный фон) ── */
@@ -362,6 +387,12 @@
   @media (max-width: 1279px) {
     .work { grid-template-columns:repeat(3, minmax(0,1fr)); column-gap:28px; }
     .work .cell:nth-child(n+4) { border-top:1px solid var(--line); margin-top:6px; padding-top:16px; }
+    /* Пять ячеек в три колонки оставляли пустую дыру в конце второго ряда, а
+       панель «Разделы» раздувалась до трети экрана и становилась самым тяжёлым
+       объектом полосы. Размещения занимают две колонки — дыры нет; панель живёт
+       только в пятиколоночной раскладке, под которую и рисовалась. */
+    .work .cell:nth-child(5) { grid-column:span 2; }
+    .nv .ch { border-bottom:1px solid var(--line); }
     /* Колонка стала шире — держим меру строки, иначе текст растянется на 700px */
     .mn .body, .mnone { max-width:66ch; }
   }
@@ -369,13 +400,10 @@
     .work { grid-template-columns:repeat(2, minmax(0,1fr)); }
     .work .cell:nth-child(n+3) { border-top:1px solid var(--line); margin-top:6px; padding-top:16px; }
     .work .cell:nth-child(5) { grid-column:1 / -1; }      /* размещения широкой строкой */
-    /* Панели здесь уже нет, а рамку под шапкой снимала именно она — возвращаем,
-       иначе «Разделы» единственные из пяти стоят без подчёркивания */
-    .nv .ch { border-bottom:1px solid var(--line); }
   }
   @media (max-width: 860px) {
     .nav-in, .wrap { padding-left:20px; padding-right:20px; }
-    .hero { padding:46px 0 30px; }
+    .hero { padding:34px 0 24px; }
     .work { grid-template-columns:minmax(0,1fr); column-gap:0; }
     .work .cell { border-top:1px solid var(--line); margin-top:0; padding-top:16px; }
     .work .cell:nth-child(n) { grid-column:auto; }
@@ -389,11 +417,20 @@
     .work .cell:first-child nav { display:grid; grid-template-columns:1fr 1fr; column-gap:16px; }
     /* Тач-цель: на десктопе строка раздела 33px, для пальца нужно 44 */
     .work .cell:first-child .rl { padding-top:13px; padding-bottom:13px; }
+    /* То же и для заголовков колонок: это входы в разделы, а не подписи.
+       Ниже — тач-цели 44px там, где палец, а не курсор. */
+    .ch { align-items:center; }
+    .ch .chl { padding:12px 0; }
+    .ch h2 { font-size:17px; }
+    /* Заголовок разбора в «Утре» — тоже ссылка, ей нужна та же тач-цель */
+    .mn .ttl.lnk { display:inline-block; padding:13px 0; }
+    .btn-solar { padding:13px 16px; }
+    .btn-tg { padding:12px 11px; }
   }
   @media (max-width: 640px) {
     .nav .name { display:none; }
     .btn-tg .tg-lbl { display:none; }
-    .btn-tg { padding:8px 10px; }
+    .btn-tg { padding:12px 11px; }
     .bench { gap:8px; }
   }
 </style>
@@ -401,7 +438,9 @@
 </head>
 <body>
 
-<div class="bg-market" aria-hidden="true"><svg id="market" viewBox="0 0 1440 640" preserveAspectRatio="xMidYMid slice"></svg></div>
+<div class="bg-market" aria-hidden="true"><svg id="market" aria-hidden="true" role="presentation" focusable="false" viewBox="0 0 1440 640" preserveAspectRatio="xMidYMid slice"></svg></div>
+
+<a class="skip" href="#main">Пропустить к содержимому</a>
 
 <header class="nav">
   <div class="nav-in">
@@ -411,24 +450,24 @@
       <a class="btn-tg" href="https://t.me/+NHbVOoUI5IBkN2Uy" target="_blank" rel="noopener" aria-label="Наша группа в Telegram">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.27 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z" fill="#4F86E6"/></svg>
         <span class="tg-lbl">Telegram-группа</span></a>
-      <a class="btn-solar" href="board.html?type=warrant">Открыть доску
+      <a class="btn-solar" href="board.html">Открыть доску
         <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
     </div>
   </div>
 </header>
 
 <div class="wrap">
+<main id="main">
   <section class="hero">
-    <div class="kicker rise">Структурные облигации · для квалифицированных инвесторов</div>
-    <h1 class="rise" style="animation-delay:.07s"><span class="lm">Уверенность</span><br>в каждой сделке.</h1>
-    <p class="sub rise" style="animation-delay:.14s">От ОФЗ до биткоина: продукты под разный аппетит к риску, с прозрачной формулой выплаты и расчётом на вашу сумму.</p>
+    <h1 class="rise"><span class="lm">Уверенность</span><br>в каждой сделке.</h1>
+    <p class="sub rise" style="animation-delay:.07s">Структурные облигации для квалифицированных инвесторов: от ОФЗ до биткоина, с формулой выплаты, известной до сделки, и расчётом на вашу сумму.</p>
     <div id="hevslot"></div>
   </section>
 
   <div id="evslot"></div>
 
   <a class="launch rise" style="animation-delay:.18s" href="board.html" aria-label="Открыть текущие продукты">
-    <div class="tape-cap"><span class="tdot"></span>Можем запустить сейчас<span class="tsub">· текущие продукты под клиента · котировки индикативны</span><span class="launch-go">Смотреть<svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
+    <div class="tape-cap"><span class="tdot"></span><span class="tlbl">Можем запустить сейчас</span><span class="tsub">· текущие продукты под клиента · котировки индикативны</span><span class="launch-go">Смотреть<svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
     <div class="tape-box" aria-hidden="true"><div class="tape" id="tape"></div></div>
   </a>
 
@@ -448,7 +487,7 @@
       <section class="cell">
         <div class="ch"><h2><a class="chl" href="screener.html">Лучшие ставки</a></h2><span class="cap">до года</span></div>
         <div class="bench" id="bench"></div>
-        <div id="rates"><!-- seo:rates:start --><p>Лучшие ставки на срок до года: вклады, фонды денежного рынка и короткие ОФЗ. Ориентиры — ключевая ставка 14,0%, RUONIA 13,86%.</p><!-- seo:rates:end --></div>
+        <div id="rates"><!-- seo:rates:start --><p>Лучшие ставки на срок до года: вклады, фонды денежного рынка и короткие ОФЗ. Ориентиры — ключевая ставка 14,0%, RUONIA 13,81%.</p><!-- seo:rates:end --></div>
       </section>
 
       <section class="cell">
@@ -468,6 +507,13 @@
     </div>
   </div>
 
+  <div class="endcta">
+    <span class="q">Нужен продукт под конкретного клиента?</span>
+    <a href="board.html">Собрать на доске<svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+    <a href="https://t.me/+NHbVOoUI5IBkN2Uy" target="_blank" rel="noopener">Написать в Telegram<svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+  </div>
+</main>
+
   <footer class="foot">
     <span>Не является индивидуальной инвестиционной рекомендацией.</span>
     <span class="mono" id="m4"></span>
@@ -478,7 +524,6 @@
 <script src="data/instruments.js?v=fx7"></script>
 <script src="data/lib.js?v=ax2"></script>
 <script src="data/digest.js?v=srv6"></script>
-<script src="data/placements.js?v=1"></script>
 <script src="data/offerings.js?v=srv19"></script>
 <script src="data/rates.js?v=2"></script>
 <script src="data/morning.js?v=1"></script>
@@ -624,11 +669,17 @@
       return { v: fmtQ(r.quote) + "%", n: "премия" };
     }
 
-    var ni = SITE_DATA.instruments.length, np = PLACEMENTS_DATA.issues.length, no = ((window.OFFERINGS && OFFERINGS.items) || []).length;
+    // Каталог доски берём ЧЕРЕЗ ОХРАНУ: раньше здесь стояло прямое
+    // SITE_DATA.instruments.length и PLACEMENTS_DATA.issues.length, и один
+    // не доехавший data-файл ронял разом ленту, разделы, ставки, утренний
+    // обзор и размещения — на экране оставался SEO-пререндер без объяснений.
+    // Счётчики np/no при этом не читались нигде, а зависимость создавали.
+    var INSTR = (window.SITE_DATA && SITE_DATA.instruments) || [];
+    var ni = INSTR.length;
 
     // ── Лента ──
     document.getElementById("tape").innerHTML = (function () {
-      var s = SITE_DATA.instruments.slice(0, 12).map(function (r) {
+      var s = INSTR.slice(0, 12).map(function (r) {
         var parts = String(r.name).split(" · ");
         var head = parts.shift();
         var rest = parts.length ? '<span class="nm"> · ' + parts.join(" · ") + '</span>' : '';
@@ -654,20 +705,20 @@
     // дублируют третью и четвёртую колонки, где те же данные показаны, а не названы.
     // Переход туда остаётся — заголовок каждой колонки сам является ссылкой.
     var rail = [
-      { no: "01", href: "digest.html", t: "Дайджест", m: window.DIGEST ? window.DIGEST.date.slice(0, 5) : "идеи" },
+      { href: "digest.html", t: "Дайджест", m: window.DIGEST ? window.DIGEST.date.slice(0, 5) : "идеи" },
       // Разбор темы раз в две недели под вебинар: метка — дата выпуска из data/ideas.js
-      { no: "02", href: "ideas.html", t: "Разборы", m: (window.IDEAS && IDEAS.issues && IDEAS.issues[0]) ? dmy(IDEAS.issues[0].date).slice(0, 5) : "темы" },
-      { no: "03", href: "board.html?type=warrant", t: "Текущие продукты", m: ni + " шт." },
+      { href: "ideas.html", t: "Разборы", m: (window.IDEAS && IDEAS.issues && IDEAS.issues[0]) ? dmy(IDEAS.issues[0].date).slice(0, 5) : "темы" },
+      { href: "board.html", t: "Текущие продукты", m: ni + " шт." },
       // Термин прод-навигации целиком, без усечения ради ширины: счётчик у этого
       // пункта убран — глубина архива менее полезна, чем узнаваемое название
-      { no: "04", href: "placements.html", t: "Размещённые выпуски", m: "" },
-      { no: "05", href: "about.html", t: "Библиотека", m: "" },
+      { href: "placements.html", t: "Размещённые выпуски", m: "" },
+      { href: "about.html", t: "Библиотека", m: "" },
       // Метка встречи — конкретная дата из data/events.js, а не общее слово
-      { no: "06", href: "events.html", t: "События", m: upcoming ? dmy(upcoming.date).slice(0, 5) : "записи" },
-      { no: "07", href: "company.html", t: "О компании", m: "" }
+      { href: "events.html", t: "События", m: upcoming ? dmy(upcoming.date).slice(0, 5) : "записи" },
+      { href: "company.html", t: "О компании", m: "" }
     ];
     document.getElementById("rail-list").innerHTML = rail.map(function (s) {
-      return '<a class="rl" href="' + s.href + '"><span class="no">' + s.no + '</span><span class="rt">' + s.t + '</span><span class="rm">' + s.m + '</span></a>';
+      return '<a class="rl" href="' + s.href + '"><span class="rt">' + s.t + '</span><span class="rm">' + s.m + '</span></a>';
     }).join("");
 
     // ── Утро на рынках: данные из data/morning.js, свежесть считается сама ──
@@ -944,8 +995,8 @@
     requestAnimationFrame(frame);
   })();
 </script>
-<script src="intro.js?v=3"></script>
-<script src="chat.js?v=14"></script>
+<script src="intro.js?v=5"></script>
+<script src="chat.js?v=16"></script>
 <script src="nav-about.js?v=6"></script>
 <script src="qualgate.js?v=4"></script>
 </body>

@@ -51,8 +51,8 @@
     ".in-line a{color:#F58E33;text-decoration:none;font-weight:500;white-space:nowrap;}" +
     ".in-line a:hover{text-decoration:underline;}" +
     /* — вариант 2b: две мини-дорожки — */
-    ".in-mini{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0 0;font-family:'Onest',system-ui,sans-serif;}" +
-    ".in-mc{flex:1 1 230px;display:flex;justify-content:space-between;align-items:baseline;gap:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:12px;padding:13px 16px;text-decoration:none;transition:border-color .15s;}" +
+    ".in-mini{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0 0;font-family:'Onest',system-ui,sans-serif;}" +
+    ".in-mc{flex:1 1 230px;display:flex;justify-content:space-between;align-items:baseline;gap:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:12px;padding:14px 16px;text-decoration:none;transition:border-color .15s;}" +
     ".in-mc:hover{border-color:rgba(255,255,255,.22);}" +
     ".in-mc.accent{border-color:rgba(238,125,27,.45);background:rgba(238,125,27,.06);}" +
     ".in-mc.accent:hover{border-color:rgba(238,125,27,.75);}" +
@@ -141,7 +141,7 @@
           '<div class="go">Смотреть выпуски &rarr;</div>' +
         '</a>' +
       '</div>';
-    if (afterEl && afterEl.parentNode) afterEl.insertAdjacentElement("afterend", el);
+    if (afterEl && afterEl.parentNode) mountAfter(afterEl, el);
     else document.body.appendChild(el);
     return el;
   }
@@ -154,8 +154,19 @@
     el.innerHTML =
       '<span>Впервые со структурными продуктами?</span>' +
       '<a href="' + GUIDE_URL + '">Как это работает — 2 мин &rarr;</a>';
-    if (afterEl && afterEl.parentNode) afterEl.insertAdjacentElement("afterend", el);
+    mountAfter(afterEl, el);
     return el;
+  }
+
+  /* Точка вставки. На главной .tape-box лежит ВНУТРИ ссылки <a class="launch">,
+     и вставка сразу после него давала ссылки внутри ссылки: невалидный HTML,
+     неоднозначный порядок обхода и aria-label внешней ссылки поверх двух чужих
+     адресов. Поднимаемся до ближайшего <a> и встаём после НЕГО. */
+  function mountAfter(afterEl, el) {
+    if (!afterEl || !afterEl.parentNode) return;
+    var host = afterEl.closest ? (afterEl.closest("a") || afterEl) : afterEl;
+    if (!host.parentNode) host = afterEl;
+    host.insertAdjacentElement("afterend", el);
   }
 
   /* ---------- вариант 2b: две мини-дорожки ---------- */
@@ -166,7 +177,7 @@
     el.innerHTML =
       '<a class="in-mc accent" href="' + GUIDE_URL + '"><span>Я впервые здесь</span><em>Как это работает &rarr;</em></a>' +
       '<a class="in-mc" href="digest.html"><span>Идея этой недели</span><em>Читать дайджест &rarr;</em></a>';
-    if (afterEl && afterEl.parentNode) afterEl.insertAdjacentElement("afterend", el);
+    mountAfter(afterEl, el);
     return el;
   }
 
