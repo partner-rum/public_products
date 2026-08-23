@@ -134,6 +134,8 @@
   .launch .launch-go svg { transition:transform .3s var(--ease); }
   .launch .tape-box { transition:border-color .2s, background .2s; }
   .launch:hover .tape-box { border-color:var(--solar); background:rgba(238,125,27,0.05); }
+  /* Прочитать позицию можно было только дождавшись её: наведение останавливает ход */
+  .launch:hover .tape, .tape-box:hover .tape { animation-play-state:paused; }
   .launch:hover .launch-go svg { transform:translateX(4px); }
 
   /* ── Телефон «Rumberg События» ── */
@@ -259,7 +261,8 @@
   .nv .rl::before { left:0; }
   .nv .rl .rt { grid-column:1; font-family:var(--display); font-size:16.5px; font-weight:600;
     letter-spacing:-0.02em; line-height:1.2; }
-  .nv .rl .rm { grid-column:1; font-size:11px; letter-spacing:.08em; text-transform:uppercase; }
+  /* Подписи разделов — не только счётчики, но и короткие пояснения; капс им не идёт */
+  .nv .rl .rm { grid-column:1; font-size:11px; letter-spacing:.01em; }
   /* Отступ только у заполненных: у половины разделов счётчика нет, и пустой
      span не должен раздвигать строку */
   .nv .rl .rm:not(:empty) { margin-top:4px; }
@@ -287,9 +290,22 @@
   .prow.gone { border-left-color:var(--line); }
   .prow.gone .q { color:var(--dim); }
   .mn .body { margin-top:4px; font-size:12px; line-height:1.52; color:var(--mut); }
-  .prow { display:flex; align-items:baseline; gap:9px; margin-top:8px; padding:7px 10px;
+  .prow { display:flex; align-items:baseline; gap:4px; margin-top:8px; padding:7px 4px 7px 10px;
     border:1px solid var(--rule-soft); border-left:1px solid var(--solar); border-radius:6px;
     background:rgba(255,255,255,0.032); font-size:12px; transition:background .18s ease, border-color .18s ease; }
+  /* Сейлз — первый пользователь: с главной ссылку клиенту приходилось собирать руками,
+     хотя каждому продукту уже соответствует страница /p/<id>.html с персональным превью.
+     Кнопка кладёт её в буфер вместе с меткой ?ref=, если она была в адресе входа. */
+  .prow .pmain { display:flex; align-items:baseline; gap:9px; flex:1 1 auto; min-width:0; }
+  .prow .pcopy { flex:none; align-self:center; width:28px; height:28px; padding:0; border:0; border-radius:6px;
+    background:none; color:var(--dim); cursor:pointer; display:flex; align-items:center; justify-content:center;
+    transition:color .18s ease, background .18s ease; }
+  .prow .pcopy:hover { color:var(--solar); background:rgba(238,125,27,0.1); }
+  .prow .pcopy.done { color:var(--up); }
+  .prow .pcopy svg { opacity:1; }
+  .pcopy-said { position:fixed; left:50%; bottom:26px; transform:translateX(-50%); z-index:100002;
+    background:var(--panel); border:1px solid var(--line); border-radius:9px; padding:10px 14px;
+    font-size:13px; color:var(--tx); max-width:min(92vw,520px); overflow-wrap:anywhere; }
   .prow:hover { background:rgba(238,125,27,0.07); border-color:rgba(238,125,27,0.34); border-left-color:var(--solar-l); }
   .prow b { font-weight:500; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   /* В узкой колонке «Актуальные продукты» усечение съедало срок — там переносим */
@@ -426,6 +442,9 @@
     .mn .ttl.lnk { display:inline-block; padding:13px 0; }
     .btn-solar { padding:13px 16px; }
     .btn-tg { padding:12px 11px; }
+    .prow { padding:4px 4px 4px 10px; }
+    .prow .pmain { padding:9px 0; }
+    .prow .pcopy { width:44px; height:44px; }
   }
   @media (max-width: 640px) {
     .nav .name { display:none; }
@@ -647,7 +666,7 @@
     function dmy(iso) { return String(iso || "").split("-").reverse().join("."); }
     function pct(n) { return String(Math.round(n * 100) / 100).replace(".", ",") + "%"; }
     function plural(n, one, few, many) { var a = n % 10, b = n % 100; return (a === 1 && b !== 11) ? one : (a >= 2 && a <= 4 && (b < 12 || b > 14)) ? few : many; }
-    function byId(id) { for (var i = 0; i < SITE_DATA.instruments.length; i++) if (SITE_DATA.instruments[i].id === id) return SITE_DATA.instruments[i]; return null; }
+    function byId(id) { for (var i = 0; i < INSTR.length; i++) if (INSTR[i].id === id) return INSTR[i]; return null; }
     var AR = '<svg width="11" height="11" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
     // Что показывать цифрой у продукта. У защиты капитала котировка всегда 100%
@@ -711,11 +730,11 @@
       { href: "board.html", t: "Текущие продукты", m: ni + " шт." },
       // Термин прод-навигации целиком, без усечения ради ширины: счётчик у этого
       // пункта убран — глубина архива менее полезна, чем узнаваемое название
-      { href: "placements.html", t: "Размещённые выпуски", m: "" },
-      { href: "about.html", t: "Библиотека", m: "" },
+      { href: "placements.html", t: "Размещённые выпуски", m: "архив с документами" },
+      { href: "about.html", t: "Библиотека", m: "как устроены типы продуктов" },
       // Метка встречи — конкретная дата из data/events.js, а не общее слово
       { href: "events.html", t: "События", m: upcoming ? dmy(upcoming.date).slice(0, 5) : "записи" },
-      { href: "company.html", t: "О компании", m: "" }
+      { href: "company.html", t: "О компании", m: "юрлица и контакты" }
     ];
     document.getElementById("rail-list").innerHTML = rail.map(function (s) {
       return '<a class="rl" href="' + s.href + '"><span class="rt">' + s.t + '</span><span class="rm">' + s.m + '</span></a>';
@@ -758,7 +777,7 @@
         }
 
         var picked = [], seenAsset = {};
-        SITE_DATA.instruments.forEach(function (r) {
+        INSTR.forEach(function (r) {
           if (picked.length >= PRODUCT_LIMIT) return;
           var key = String(r.underlying || "").toLowerCase();
           if (!key || seenAsset[key]) return;      // по одному продукту на актив
@@ -780,9 +799,16 @@
         }
         pbox.innerHTML = items.slice(0, PRODUCT_LIMIT).map(function (r) {
           var f = figure(r);
-          return '<a class="prow" href="instrument.html?id=' + encodeURIComponent(r.id) + '">' +
+          return '<div class="prow">' +
+            '<a class="pmain" href="instrument.html?id=' + encodeURIComponent(r.id) + '">' +
             '<b>' + esc(r.name) + '</b><span class="q">' + f.v +
-            (f.n ? '<i>' + f.n + '</i>' : '') + '</span>' + AR + '</a>';
+            (f.n ? '<i>' + f.n + '</i>' : '') + '</span>' + AR + '</a>' +
+            '<button class="pcopy" type="button" data-id="' + esc(r.id) + '" ' +
+            'title="Скопировать ссылку для клиента" aria-label="Скопировать ссылку на продукт ' + esc(r.name) + '">' +
+            '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">' +
+            '<rect x="5.6" y="5.6" width="8.4" height="8.4" rx="2" stroke="currentColor" stroke-width="1.4"/>' +
+            '<path d="M10.4 5.6V4a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v4.4a2 2 0 0 0 2 2h1.6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>' +
+            '</svg></button></div>';
         }).join("") +
         // Честно помечаем, что подбор наш, а не из обзора: цифра и повод разного веса
         // Источник подбора называем всегда: «из обзора» — выбор конвейера по статье,
@@ -851,15 +877,20 @@
     if (fund) rows.push({ kind: "фонд денежного рынка", n: fund.name, em: fund.id, v: fund.rate, href: "https://www.moex.com/ru/issue.aspx?code=" + fund.id });
     var ofz = best((R.ofz || []).filter(function (o) { return o.years <= 1.02; }));
     if (ofz) rows.push({ kind: "короткие ОФЗ", n: ofz.name, em: "до " + dmy(ofz.maturity), v: ofz.rate, href: "https://www.moex.com/ru/issue.aspx?code=" + ofz.id });
-    // Пусто — значит fetch_rates.py не отработал. Молчащая колонка выглядит как
-    // поломка вёрстки; строка объясняет, что случилось, и уводит на скринер.
+    // Пусто — два РАЗНЫХ случая, и раньше оба показывали «Ставки обновляются»:
+    // сбой загрузки был неотличим от ожидания данных. Если window.RATES нет вовсе —
+    // файл не доехал, это ошибка, и человеку надо предложить перезагрузку.
+    // Если объект есть, а строк нет — fetch_rates.py просто ещё не отработал.
     document.getElementById("rates").innerHTML = rows.length
       ? rows.slice(0, 3).map(function (r) {
           return '<a class="rt2" href="' + r.href + '" target="_blank" rel="noopener">' +
             '<span><span class="kind">' + r.kind + '</span><span class="n">' + esc(r.n) + ' <em>· ' + esc(r.em) + '</em></span></span>' +
             '<span class="v">' + pct(r.v) + '</span></a>';
         }).join("")
-      : '<div class="mnone">Ставки обновляются.<a href="screener.html">Открыть скринер' + AR + '</a></div>';
+      : (!window.RATES
+          ? '<div class="mnone">Не удалось загрузить ставки — похоже, оборвалась связь.' +
+            '<a href="" onclick="location.reload();return false;">Обновить страницу' + AR + '</a></div>'
+          : '<div class="mnone">Ставки ещё не обновились сегодня.<a href="screener.html">Открыть скринер' + AR + '</a></div>');
 
     // ── Размещения ──
     var offerItems = ((window.OFFERINGS && OFFERINGS.items) || []).slice(0, 3);
@@ -993,6 +1024,78 @@
       requestAnimationFrame(frame);
     }
     requestAnimationFrame(frame);
+  })();
+
+  /* ── Копирование ссылки для клиента ─────────────────────────────────────
+     У каждого продукта доски есть страница /p/<id>.html с персональным
+     og-превью — именно её сейлз отправляет в мессенджер. С главной её
+     приходилось собирать руками. Метка ?ref= берётся из localStorage
+     (её кладёт metrika.js, когда сейлз входит по своей ссылке).
+     Отказ буфера обмена ловим обязательно: clipboard.writeText отклоняет
+     запись, если вкладка не в фокусе, и молчащая кнопка заставила бы
+     отправить клиенту пустоту — тогда показываем ссылку текстом. */
+  (function () {
+    var box = document.getElementById("mprod");
+    if (!box) return;
+
+    function refTag() {
+      try {
+        var v = localStorage.getItem("so_ref");
+        return v && /^[\w.-]{1,40}$/.test(v) ? v : "";
+      } catch (e) { return ""; }
+    }
+
+    function linkFor(id) {
+      var base = location.origin + location.pathname.replace(/[^/]*$/, "");
+      var u = base + "p/" + encodeURIComponent(id) + ".html";
+      var r = refTag();
+      return r ? u + "?ref=" + encodeURIComponent(r) : u;
+    }
+
+    function say(text, isLink) {
+      var old = document.querySelector(".pcopy-said");
+      if (old) old.remove();
+      var el = document.createElement("div");
+      el.className = "pcopy-said";
+      el.setAttribute("role", "status");
+      el.textContent = isLink ? "Скопировать не удалось, ссылка: " + text : text;
+      document.body.appendChild(el);
+      setTimeout(function () { el.remove(); }, isLink ? 9000 : 1800);
+    }
+
+    function legacyCopy(text) {
+      try {
+        var ta = document.createElement("textarea");
+        ta.value = text;
+        ta.setAttribute("readonly", "");
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        var ok = document.execCommand("copy");
+        ta.remove();
+        return ok;
+      } catch (e) { return false; }
+    }
+
+    function done(btn) {
+      btn.classList.add("done");
+      setTimeout(function () { btn.classList.remove("done"); }, 1600);
+      say("Ссылка скопирована", false);
+    }
+
+    box.addEventListener("click", function (ev) {
+      var btn = ev.target.closest ? ev.target.closest(".pcopy") : null;
+      if (!btn || !box.contains(btn)) return;
+      ev.preventDefault();
+      var url = linkFor(btn.getAttribute("data-id") || "");
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(function () { done(btn); },
+          function () { if (legacyCopy(url)) done(btn); else say(url, true); });
+      } else {
+        if (legacyCopy(url)) done(btn); else say(url, true);
+      }
+    });
   })();
 </script>
 <script src="intro.js?v=5"></script>
