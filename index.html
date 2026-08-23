@@ -696,7 +696,23 @@
     var INSTR = (window.SITE_DATA && SITE_DATA.instruments) || [];
     var ni = INSTR.length;
 
+    // Пустая колонка бывает по двум причинам, и раньше обе выглядели одинаково:
+    // «данных пока нет» и «файл не доехал» — одна и та же фраза. Вторая ситуация
+    // требует не терпения, а перезагрузки, поэтому и называется иначе.
+    function failBox(what) {
+      return '<div class="mnone">Не удалось загрузить ' + what + ' — похоже, оборвалась связь.' +
+        '<a href="" onclick="location.reload();return false;">Обновить страницу' +
+        '<svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">' +
+        '<path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a></div>';
+    }
+
     // ── Лента ──
+    // Каталог не доехал — прячем весь блок целиком: пустая рамка с оранжевой
+    // планкой выглядит как поломка вёрстки, а не как отсутствие данных.
+    if (!INSTR.length) {
+      var lw = document.querySelector(".launch");
+      if (lw) lw.style.display = "none";
+    }
     document.getElementById("tape").innerHTML = (function () {
       var s = INSTR.slice(0, 12).map(function (r) {
         var parts = String(r.name).split(" · ");
@@ -793,8 +809,10 @@
         var derived = false;
         if (!items.length) { items = pickByNews(); derived = items.length > 0; }
         if (!items.length) {
-          pbox.innerHTML = '<div class="mnone">Подборка появится с утренним обзором.' +
-            '<a href="board.html">Открыть доску' + AR + '</a></div>';
+          pbox.innerHTML = !INSTR.length
+            ? failBox("каталог продуктов")
+            : '<div class="mnone">Подборка появится с утренним обзором.' +
+              '<a href="board.html">Открыть доску' + AR + '</a></div>';
           return;
         }
         pbox.innerHTML = items.slice(0, PRODUCT_LIMIT).map(function (r) {
@@ -831,7 +849,9 @@
       // протухших новостей. Колонку не прячем: дыра в полосе хуже, чем строка.
       if (!news.length || ageDays === null || ageDays > 3) {
         cap.textContent = "";
-        box.innerHTML = '<div class="mnone">Обзор появится утром.' +
+        box.innerHTML = !window.MORNING
+          ? failBox("утренний обзор")
+          : '<div class="mnone">Обзор появится утром.' +
           (news.length && ageDays !== null ? ' Последний был ' + dmy(M.date) + '.' : '') +
           '<a href="digest.html">Идеи недели в дайджесте' + AR + '</a></div>';
         // Продукты живут своей жизнью: они с доски и не протухают вместе с обзором
@@ -888,14 +908,15 @@
             '<span class="v">' + pct(r.v) + '</span></a>';
         }).join("")
       : (!window.RATES
-          ? '<div class="mnone">Не удалось загрузить ставки — похоже, оборвалась связь.' +
-            '<a href="" onclick="location.reload();return false;">Обновить страницу' + AR + '</a></div>'
+          ? failBox("ставки")
           : '<div class="mnone">Ставки ещё не обновились сегодня.<a href="screener.html">Открыть скринер' + AR + '</a></div>');
 
     // ── Размещения ──
     var offerItems = ((window.OFFERINGS && OFFERINGS.items) || []).slice(0, 3);
     document.getElementById("offers").innerHTML = !offerItems.length
-      ? '<div class="mnone">Сейчас размещений нет.<a href="board.html">Смотреть текущие продукты' + AR + '</a></div>'
+      ? (!window.OFFERINGS
+          ? failBox("размещения")
+          : '<div class="mnone">Сейчас размещений нет.<a href="board.html">Смотреть текущие продукты' + AR + '</a></div>')
       : offerItems.map(function (o) {
       var ps = [["срок", o.tenor], ["защита", o.protection], ["участие", o.participation]]
         .filter(function (p) { return p[1]; })
