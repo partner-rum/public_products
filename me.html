@@ -10,9 +10,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Rubik:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --canvas:#0B0C10; --raise:#101218; --ink:#F2F3F7; --hushed:rgba(242,243,247,.66);
+    --canvas:#0B0C10; --raise:#101218; --card:#14161C; --ink:#F2F3F7; --hushed:rgba(242,243,247,.66);
     --faint:rgba(242,243,247,.56); --line:rgba(255,255,255,.10); --line-soft:rgba(255,255,255,.055);
-    --solar:#EE7D1B; --solar-l:#F58E33; --up:#55C08A;
+    --solar:#EE7D1B; --solar-l:#F58E33; --up:#55C08A; --down:#E0705A;
     --f:'Onest',system-ui,sans-serif; --m:'JetBrains Mono',Consolas,monospace; --display:'Rubik','Onest',sans-serif;
     --e:cubic-bezier(.22,.61,.36,1);
   }
@@ -28,12 +28,10 @@
   ::-webkit-scrollbar-thumb:hover { background:rgba(255,255,255,.2); }
   * { scrollbar-width:thin; scrollbar-color:rgba(255,255,255,.14) transparent; }
 
-  .wrap { max-width:1160px; margin:0 auto; padding:0 28px 96px; }
+  .wrap { max-width:1220px; margin:0 auto; padding:0 28px 96px; }
   @media (max-width:560px) { .wrap { padding:0 18px 72px; } }
 
-  /* ── верхняя строка ── */
   .top { display:flex; align-items:center; gap:11px; height:66px; border-bottom:1px solid var(--line-soft); }
-  .top .mk { flex:none; }
   .top .t { font-family:var(--display); font-weight:600; font-size:15px; letter-spacing:-.01em; }
   .top .sp { margin-left:auto; }
   .exit { border:1px solid var(--line); background:none; color:var(--hushed); border-radius:8px;
@@ -64,25 +62,43 @@
   #dash.on { display:block; animation:rise .5s var(--e) both; }
   @keyframes rise { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
 
-  /* заголовок стола: имя партнёра и маржа как якорь */
-  .dhead { padding:34px 0 30px; border-bottom:1px solid var(--line); }
-  .who { font-family:var(--m); font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--faint); }
-  .who b { color:var(--hushed); font-weight:500; }
-  .sums { display:flex; flex-wrap:wrap; gap:44px; margin-top:16px; }
+  /* ── ПАРТНЁР: идентификация ── */
+  .idc { padding:34px 0 26px; border-bottom:1px solid var(--line); }
+  .idc .lab { font-family:var(--m); font-size:10.5px; letter-spacing:.14em; text-transform:uppercase;
+              color:var(--faint); margin:0 0 12px; }
+  .idc h1 { margin:0; font-family:var(--display); font-weight:600; font-size:29px; letter-spacing:-.025em;
+            line-height:1.15; }
+  @media (max-width:560px) { .idc h1 { font-size:23px; } }
+  /* Идентификационные признаки: моно-строка «ключ значение», разделённая линейками */
+  .ids { display:flex; flex-wrap:wrap; gap:0 0; margin-top:18px; }
+  .idf { padding:0 20px; border-left:1px solid var(--line-soft); }
+  .idf:first-child { padding-left:0; border-left:0; }
+  .idf .k { display:block; font-family:var(--m); font-size:9.5px; letter-spacing:.13em;
+            text-transform:uppercase; color:var(--faint); }
+  .idf .v { display:block; margin-top:5px; font-family:var(--m); font-size:13.5px; color:var(--ink);
+            letter-spacing:.02em; }
+  .idf .v.acc { color:var(--solar-l); }
+  @media (max-width:640px) {
+    .ids { gap:16px 0; }
+    .idf { padding:0 16px; }
+    .idf:nth-child(odd) { padding-left:0; border-left:0; }
+    .idf { flex:0 0 50%; }
+  }
+  .idnone { margin-top:14px; font-size:12.5px; color:var(--faint); line-height:1.5; max-width:56ch; }
+
+  /* ── деньги + график ── */
+  .mrow { display:flex; align-items:flex-end; justify-content:space-between; gap:40px; flex-wrap:wrap;
+          padding:26px 0 0; }
   .sum .fig { font-family:var(--m); font-weight:500; font-size:40px; letter-spacing:-.03em; line-height:1;
               font-variant-numeric:tabular-nums; }
   .sum .cap { margin-top:10px; font-size:13px; color:var(--hushed); }
   .sum .cap b { color:var(--ink); font-weight:500; font-variant-numeric:tabular-nums; }
-  @media (max-width:560px) { .sum .fig { font-size:32px; } .sums { gap:28px; } }
+  @media (max-width:560px) { .sum .fig { font-size:32px; } }
 
-  .dhrow { display:flex; align-items:flex-end; justify-content:space-between; gap:40px; flex-wrap:wrap; }
-  .dhrow .sums { margin-top:0; }
-
-  /* маржа по месяцам — маленький живой график из его же цифр */
   .mchart { flex:none; }
   .mchart .mcap { font-family:var(--m); font-size:10px; letter-spacing:.13em; text-transform:uppercase;
                   color:var(--faint); text-align:right; margin:0 0 9px; }
-  .mbars { display:flex; align-items:flex-end; gap:6px; height:64px; }
+  .mbars { display:flex; align-items:flex-end; gap:6px; height:58px; }
   .mb { position:relative; width:26px; border-radius:3px 3px 0 0; background:rgba(238,125,27,.42);
         transform:scaleY(0); transform-origin:bottom; animation:grow .55s var(--e) forwards;
         animation-delay:calc(var(--i) * .06s); transition:background .16s; }
@@ -95,88 +111,125 @@
   .maxis { display:flex; gap:6px; margin-top:8px; }
   .maxis span { width:26px; text-align:center; font-family:var(--m); font-size:9.5px; color:var(--faint); }
   @keyframes grow { to { transform:scaleY(1); } }
-  @media (max-width:560px) { .mchart { width:100%; } .mchart .mcap { text-align:left; } .mbars, .maxis { justify-content:flex-start; } }
+  @media (max-width:560px) { .mchart { width:100%; } .mchart .mcap { text-align:left; } }
 
-  /* две зоны */
-  .cols { display:grid; grid-template-columns:minmax(0,1fr) 300px; gap:0; }
-  .cols > .main { padding:30px 0 0; }
-  .cols > .rail { padding:30px 0 0 40px; border-left:1px solid var(--line-soft); }
-  @media (max-width:880px) {
+  /* ── две зоны ── */
+  .cols { display:grid; grid-template-columns:minmax(0,1fr) 296px; gap:0; margin-top:34px; }
+  .cols > .main { padding:0; }
+  .cols > .rail { padding:0 0 0 36px; border-left:1px solid var(--line-soft); }
+  @media (max-width:980px) {
     .cols { grid-template-columns:1fr; }
-    .cols > .rail { padding:36px 0 0; border-left:0; border-top:1px solid var(--line-soft); margin-top:34px; }
+    .cols > .rail { padding:34px 0 0; border-left:0; border-top:1px solid var(--line-soft); margin-top:34px; }
   }
 
   .zt { font-family:var(--m); font-size:11.5px; letter-spacing:.13em; text-transform:uppercase;
-        color:var(--faint); margin:0 0 18px; display:flex; align-items:baseline; gap:10px; }
+        color:var(--faint); margin:0 0 16px; display:flex; align-items:baseline; gap:10px; }
   .zt a.all { margin-left:auto; color:var(--hushed); letter-spacing:.04em; text-transform:none; font-size:12px;
               display:inline-flex; align-items:center; gap:4px; transition:color .16s; }
   .zt a.all:hover { color:var(--solar-l); }
   .zt a.all svg { transition:transform .2s var(--e); }
   .zt a.all:hover svg { transform:translateX(2px); }
 
-  /* ── таблица выпусков (ledger) ── */
-  .tbl { width:100%; border-collapse:collapse; }
-  .tbl th { font-family:var(--m); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--faint);
-            font-weight:400; text-align:right; padding:0 0 12px; border-bottom:1px solid var(--line); }
-  .tbl th.l { text-align:left; }
-  .tbl td { padding:15px 0; border-bottom:1px solid var(--line-soft); font-size:14px; text-align:right;
-            font-family:var(--m); font-variant-numeric:tabular-nums; color:var(--hushed); }
-  .tbl tbody tr { transition:background .14s; }
-  .tbl tbody tr:hover { background:rgba(255,255,255,.018); }
-  .tbl td.nm { text-align:left; font-family:var(--f); padding-right:20px; }
-  .tbl td.nm a { display:inline-flex; align-items:center; gap:7px; color:var(--ink); font-weight:500; line-height:1.3;
-                 transition:color .16s; }
-  .tbl td.nm a:hover { color:var(--solar-l); }
-  .tbl td.nm a svg { flex:none; opacity:0; transform:translateX(-3px); transition:opacity .16s, transform .16s var(--e); color:var(--solar-l); }
-  .tbl td.nm a:hover svg, .tbl tbody tr:hover td.nm a svg { opacity:1; transform:none; }
-  .tbl td.nm span.plain { color:var(--ink); font-weight:500; }
-  .tbl td.isin { text-align:left; font-size:12px; color:var(--faint); letter-spacing:.03em; white-space:nowrap; }
-  .tbl td.desc { text-align:left; font-family:var(--f); color:var(--hushed); font-size:13px; padding-right:18px; }
-  .tbl td.dt { text-align:left; color:var(--faint); font-size:13px; white-space:nowrap; }
-  .tbl td.mg { color:var(--ink); white-space:nowrap; }
+  /* ── управление списком ── */
+  .ctrl { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:0 0 18px; }
+  .chip { border:1px solid var(--line); background:none; color:var(--hushed); border-radius:20px;
+          padding:6px 13px; font-family:var(--f); font-size:12.5px; cursor:pointer;
+          transition:border-color .16s, color .16s, background .16s; }
+  .chip:hover { border-color:rgba(255,255,255,.3); color:var(--ink); }
+  .chip.on { border-color:rgba(238,125,27,.6); color:var(--solar-l); background:rgba(238,125,27,.08); }
+  .ctrl .gap { margin-left:auto; }
+  .ctrl .sl { font-family:var(--m); font-size:10px; letter-spacing:.13em; text-transform:uppercase;
+              color:var(--faint); margin-right:2px; }
+  @media (max-width:560px) { .ctrl .gap { margin-left:0; flex-basis:100%; height:0; } }
 
-  .empty { color:var(--hushed); font-size:14px; line-height:1.6; padding:8px 0; max-width:44ch; }
+  /* ── БЛОКИ СДЕЛОК ── */
+  .tiles { display:grid; grid-template-columns:repeat(auto-fill, minmax(340px,1fr)); gap:14px; }
+  @media (max-width:600px) { .tiles { grid-template-columns:1fr; } }
+  .tile { background:var(--card); border:1px solid var(--line-soft); border-radius:14px; overflow:hidden;
+          transition:border-color .18s, transform .18s var(--e), box-shadow .18s; }
+  .tile:hover { border-color:var(--line); transform:translateY(-2px); box-shadow:0 10px 26px rgba(0,0,0,.32); }
+  .tile.open { border-color:rgba(238,125,27,.34); }
 
-  /* адаптив таблицы: на узком стек, не горизонтальный скролл */
-  @media (max-width:600px) {
-    .tbl thead { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
-    .tbl, .tbl tbody, .tbl tr, .tbl td { display:block; width:100%; }
-    .tbl tbody tr { padding:16px 0; border-bottom:1px solid var(--line-soft); }
-    .tbl tbody tr:hover { background:none; }
-    .tbl td { border:0; padding:0; text-align:left; display:flex; justify-content:space-between; align-items:baseline; gap:16px; }
-    .tbl td.nm { padding:0 0 10px; }
-    .tbl td.nm a svg, .tbl tbody tr:hover td.nm a svg { opacity:1; transform:none; }
-    .tbl td:not(.nm) { padding:5px 0; }
-    .tbl td:not(.nm)::before { content:attr(data-l); font-family:var(--m); font-size:10px; letter-spacing:.1em;
-      text-transform:uppercase; color:var(--faint); font-variant-numeric:normal; }
-  }
+  .th { display:flex; align-items:flex-start; gap:10px; padding:15px 16px 0; }
+  .th .nm { flex:1; min-width:0; }
+  .th .nm a, .th .nm span.plain { font-family:var(--display); font-weight:600; font-size:16px; letter-spacing:-.01em;
+                                  line-height:1.25; display:inline-flex; align-items:center; gap:6px; transition:color .16s; }
+  .th .nm a:hover { color:var(--solar-l); }
+  .th .nm a svg { flex:none; opacity:.45; transition:opacity .16s, transform .16s var(--e); }
+  .th .nm a:hover svg { opacity:1; transform:translateX(2px); }
+  .th .isin { display:block; margin-top:4px; font-family:var(--m); font-size:11px; color:var(--faint); letter-spacing:.05em; }
+  .kind { flex:none; font-family:var(--m); font-size:9.5px; letter-spacing:.1em; text-transform:uppercase;
+          color:var(--hushed); border:1px solid var(--line); border-radius:20px; padding:4px 9px; white-space:nowrap; }
+  .desc { padding:10px 16px 0; font-size:13px; color:var(--hushed); line-height:1.45; }
 
-  /* ── полка актуальных продуктов: карточки-превью ── */
-  /* Картинка = og-карточка продукта, ровно её видит клиент по присланной ссылке. */
+  /* Bid — подтянут из данных выпуска, крупно и с пометкой «индикативно» */
+  .bidrow { display:flex; align-items:flex-end; gap:14px; padding:14px 16px 0; }
+  .bid { flex:1; min-width:0; }
+  .bid .v { font-family:var(--m); font-weight:500; font-size:26px; letter-spacing:-.02em; line-height:1;
+            color:var(--up); font-variant-numeric:tabular-nums; }
+  .bid .v.na { color:var(--faint); font-size:15px; }
+  .bid .k { display:block; margin-top:6px; font-family:var(--m); font-size:9.5px; letter-spacing:.12em;
+            text-transform:uppercase; color:var(--faint); }
+  .perf { flex:none; text-align:right; font-family:var(--m); font-size:14px; font-variant-numeric:tabular-nums; }
+  .perf.up { color:var(--up); } .perf.down { color:var(--down); } .perf.off { color:var(--faint); }
+  .perf .k { display:block; margin-top:5px; font-family:var(--m); font-size:9.5px; letter-spacing:.12em;
+             text-transform:uppercase; color:var(--faint); }
+
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:1px; margin:15px 0 0;
+           background:var(--line-soft); border-top:1px solid var(--line-soft); }
+  .cell { background:var(--card); padding:12px 16px; }
+  .cell .k { display:block; font-family:var(--m); font-size:9.5px; letter-spacing:.12em;
+             text-transform:uppercase; color:var(--faint); }
+  .cell .v { display:block; margin-top:5px; font-family:var(--m); font-size:14px; color:var(--ink);
+             font-variant-numeric:tabular-nums; }
+  .cell .v.mg { color:var(--solar-l); }
+
+  .tf { display:flex; align-items:center; gap:10px; padding:12px 16px; border-top:1px solid var(--line-soft); }
+  .st { font-family:var(--f); font-size:11.5px; padding:3px 10px; border-radius:20px; white-space:nowrap; }
+  .st.paid { color:var(--up); background:rgba(85,192,138,.12); }
+  .st.accr { color:var(--solar-l); background:rgba(238,125,27,.12); }
+  .st.mat { color:var(--faint); background:rgba(255,255,255,.06); }
+  .tf .dt { font-family:var(--m); font-size:11.5px; color:var(--faint); }
+  .more { margin-left:auto; border:0; background:none; color:var(--hushed); font-family:var(--f);
+          font-size:12.5px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; padding:4px 2px;
+          transition:color .16s; }
+  .more:hover { color:var(--solar-l); }
+  .more svg { transition:transform .22s var(--e); }
+  .tile.open .more svg { transform:rotate(180deg); }
+
+  /* раскрытые параметры выпуска */
+  .det { display:none; padding:0 16px 16px; }
+  .tile.open .det { display:block; animation:fade .28s var(--e) both; }
+  @keyframes fade { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:none; } }
+  .det dl { display:grid; grid-template-columns:auto 1fr; gap:8px 14px; margin:14px 0 0;
+            padding-top:14px; border-top:1px solid var(--line-soft); }
+  .det dt { font-size:12.5px; color:var(--faint); }
+  .det dd { margin:0; font-family:var(--m); font-size:12.5px; color:var(--hushed); text-align:right;
+            font-variant-numeric:tabular-nums; }
+  .det .warn { margin-top:12px; font-size:12px; line-height:1.45; color:var(--down); }
+
+  .empty { color:var(--hushed); font-size:14px; line-height:1.6; padding:8px 0; max-width:46ch; }
+
+  /* ── полка актуальных продуктов ── */
   .pcard { margin:0 0 16px; }
   .pcard:last-of-type { margin-bottom:0; }
   .pimg { display:block; position:relative; aspect-ratio:1200/630; border-radius:11px; overflow:hidden;
           border:1px solid var(--line); background:var(--raise); }
-  .pimg img { width:100%; height:100%; object-fit:cover; display:block;
-              transition:transform .4s var(--e), opacity .3s; }
+  .pimg img { width:100%; height:100%; object-fit:cover; display:block; transition:transform .4s var(--e); }
   .pimg:hover img { transform:scale(1.035); }
-  .pimg::after { content:""; position:absolute; inset:0; border-radius:11px; pointer-events:none;
-                 box-shadow:inset 0 0 0 1px rgba(255,255,255,0); transition:box-shadow .16s; }
-  .pimg:hover::after { box-shadow:inset 0 0 0 1px rgba(238,125,27,.5); }
   .pimg.noimg { display:flex; align-items:center; justify-content:center; font-family:var(--m);
                 font-size:11px; color:var(--faint); letter-spacing:.06em; }
   .pfoot { display:flex; align-items:center; gap:10px; margin-top:9px; }
-  .pfoot .q { font-family:var(--m); font-size:14px; color:var(--solar-l); font-weight:500;
+  .pfoot .q { font-family:var(--m); font-size:13.5px; color:var(--solar-l); font-weight:500;
               white-space:nowrap; font-variant-numeric:tabular-nums; }
   .pfoot .q i { font-style:normal; font-size:9.5px; font-weight:400; letter-spacing:.1em;
                 text-transform:uppercase; color:var(--faint); margin-left:6px; }
   .cp { flex:none; margin-left:auto; height:30px; padding:0 12px; border:1px solid var(--line);
         background:none; border-radius:8px; color:var(--hushed); cursor:pointer; font-family:var(--f);
         font-size:12.5px; display:inline-flex; align-items:center; gap:7px;
-        transition:border-color .16s, color .16s, background .16s; }
+        transition:border-color .16s, color .16s; }
   .cp:hover { border-color:rgba(238,125,27,.55); color:var(--solar-l); }
   .cp.done { border-color:rgba(85,192,138,.55); color:var(--up); }
-  .cp .lbl { line-height:1; }
   .snote { font-size:12px; color:var(--faint); margin-top:16px; line-height:1.55; }
   .snote b { color:var(--hushed); font-weight:500; }
   .fall { margin-top:12px; font-size:12.5px; line-height:1.5; color:var(--hushed); }
@@ -185,7 +238,7 @@
                padding:9px 11px; word-break:break-all; user-select:all; }
 
   @media (prefers-reduced-motion:reduce) {
-    #dash.on { animation:none; }
+    #dash.on, .tile.open .det { animation:none; }
     .mb { animation:none !important; transform:none !important; }
     *, *::before, *::after { transition:none !important; }
   }
@@ -194,7 +247,7 @@
 <body>
 <div class="wrap">
   <div class="top">
-    <svg class="mk" width="22" height="22" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>
+    <svg width="22" height="22" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>
     <div class="t">Rumberg · рабочий стол</div>
     <div class="sp"><button class="exit" id="exit" type="button" style="display:none">Выйти</button></div>
   </div>
@@ -202,7 +255,7 @@
   <!-- ВХОД -->
   <div id="gate">
     <h1>Рабочий стол</h1>
-    <p class="lead">Ваши выпуски и заплаченная по ним маржа. ID и ключ выдаёт Rumberg.</p>
+    <p class="lead">Ваши выпуски, котировки по ним и заплаченная маржа. ID и ключ выдаёт Rumberg.</p>
     <div class="field"><span class="k">Ваш ID</span><input id="id" autocomplete="username" placeholder="например andrey" spellcheck="false"></div>
     <div class="field"><span class="k">Ключ</span><input id="key" type="password" autocomplete="current-password" placeholder="выдаётся Rumberg"></div>
     <button class="go" id="go" type="button">Войти</button>
@@ -212,20 +265,35 @@
 
   <!-- СТОЛ -->
   <div id="dash">
-    <div class="dhead">
-      <div class="who">партнёр&nbsp;·&nbsp;<b id="whoRef">—</b></div>
-      <div class="dhrow">
-        <div class="sums" id="dealSum"></div>
-        <div class="mchart" id="mchart"></div>
-      </div>
+    <div class="idc">
+      <div class="lab">партнёр</div>
+      <h1 id="pName">—</h1>
+      <div class="ids" id="pIds"></div>
+      <div class="idnone" id="pNone" style="display:none"></div>
+    </div>
+
+    <div class="mrow">
+      <div class="sum" id="dealSum"></div>
+      <div class="mchart" id="mchart"></div>
     </div>
 
     <div class="cols">
       <section class="main">
-        <div class="zt">мои выпуски</div>
-        <table class="tbl" id="dealTbl"></table>
+        <div class="zt">мои выпуски<span id="cnt"></span></div>
+        <div class="ctrl" id="ctrl" style="display:none">
+          <button class="chip on" type="button" data-f="all">Все</button>
+          <button class="chip" type="button" data-f="accrued">Начислено</button>
+          <button class="chip" type="button" data-f="paid">Выплачено</button>
+          <span class="gap"></span>
+          <span class="sl">сортировка</span>
+          <button class="chip on" type="button" data-s="date">Дата</button>
+          <button class="chip" type="button" data-s="reward">Маржа</button>
+          <button class="chip" type="button" data-s="volume">Объём</button>
+          <button class="chip" type="button" data-s="bid">Bid</button>
+        </div>
+        <div class="tiles" id="tiles"></div>
         <div class="empty" id="dealEmpty" style="display:none">
-          Выпусков пока нет. Как только сделка пройдёт, она появится здесь вместе с заплаченной маржой.
+          Выпусков пока нет. Как только сделка пройдёт, выпуск появится здесь — с котировкой Bid и заплаченной маржой.
         </div>
       </section>
 
@@ -240,6 +308,7 @@
 </div>
 
 <script src="data/instruments.js?v=fx8"></script>
+<script src="data/placements.js?v=pl21"></script>
 <script src="data/morning.js?v=1"></script>
 <script>
 (function () {
@@ -264,80 +333,92 @@
     return many;
   }
   // Платим только в рублях (решение Руслана) — валюту нигде не разбираем.
-  // Разряды пробелом, как в остальных цифрах на витрине.
   function money(n) {
     return Math.round(Number(n) || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " ₽";
   }
-  // Продукт заводится строкой «серия · короткое описание» (напр.
-  // «РСП СП-1-10 · участие 120%»): до первого « · » — название выпуска, дальше —
-  // описание. Нет разделителя — вся строка идёт в название, описание пустое.
+  function num(v) { return String(v).replace(/\.0$/, "").replace(".", ","); }
+  function pct2(v) { return (Math.round(Number(v) * 100) / 100).toFixed(2).replace(".", ",") + "%"; }
+  function pct1(v) {
+    return (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(Number(v)).toFixed(1).replace(".", ",") + "%";
+  }
+  function dmy(iso) { return String(iso || "").split("-").reverse().join("."); }
+  function todayIso() {
+    var d = new Date(Date.now() + 3 * 3600 * 1000);
+    return d.getUTCFullYear() + "-" + String(d.getUTCMonth() + 1).padStart(2, "0") +
+           "-" + String(d.getUTCDate()).padStart(2, "0");
+  }
+  function daysLeft(iso) {
+    if (!iso) return null;
+    return Math.round((new Date(iso + "T00:00:00Z").getTime() -
+                       new Date(todayIso() + "T00:00:00Z").getTime()) / 86400000);
+  }
+  var ARROW = '<svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 7h8M7.5 3.5L11 7l-3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var CHEV = '<svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3.5 5.5L7 9l3.5-3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var COPY = '<svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M4.5 2.5h6a1 1 0 011 1v6M9.5 4.5h-6a1 1 0 00-1 1v6a1 1 0 001 1h6a1 1 0 001-1v-6a1 1 0 00-1-1z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+  // Выпуски витрины по ISIN: отсюда берём Bid, даты, параметры выплаты и актив.
+  // Тот же файл, что кормит placements.html — расходиться им нельзя.
+  var ISSUES = {};
+  (function () {
+    var arr = (window.PLACEMENTS_DATA && PLACEMENTS_DATA.issues) || [];
+    for (var i = 0; i < arr.length; i++) if (arr[i].isin) ISSUES[arr[i].isin] = arr[i];
+  })();
+
+  // Ссылка на сам продукт — ТОЛЬКО по ISIN: placements.html открывает паспорт по
+  // якорю #ISIN. Поле d.id у сделки — это id записи для /dealrm, а НЕ id продукта
+  // доски; ссылку на instrument.html по нему строить нельзя.
+  function dealLink(d) {
+    return d.isin ? "placements.html#" + encodeURIComponent(d.isin) : "";
+  }
+  // «серия · короткое описание» → название + описание
   function splitName(product) {
     var p = String(product || "").split(" · ");
     return { name: p.shift() || "—", desc: p.join(" · ") };
   }
-  var ARROW = '<svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 7h8M7.5 3.5L11 7l-3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-  var COPY = '<svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M4.5 2.5h6a1 1 0 011 1v6M9.5 4.5h-6a1 1 0 00-1 1v6a1 1 0 001 1h6a1 1 0 001-1v-6a1 1 0 00-1-1z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var KIND_NAME = { coupon: "купонный", participation: "участие" };
 
-  // Ссылка на сам продукт — ТОЛЬКО по ISIN. Внешние сейлзы продают размещённые
-  // выпуски: у них есть ISIN, а placements.html открывает паспорт по якорю #ISIN.
-  // Поле d.id у сделки — это id записи для /dealrm, а НЕ id продукта доски; ссылку
-  // на instrument.html по нему строить нельзя (страница откроется пустой). Нет ISIN —
-  // строка без ссылки, врать о переходе не будем.
-  function dealLink(d) {
-    return d.isin ? "placements.html#" + encodeURIComponent(d.isin) : "";
+  // ---- ПАРТНЁР: идентификация ---------------------------------------------
+  // Данные приходят из воркера (профиль в KV), а НЕ из репозитория: репозиторий
+  // публичный, и название партнёра с ИНН/ОГРН в него попадать не должно.
+  function drawIdentity(d) {
+    var p = d.profile || {};
+    $("pName").textContent = p.name || d.ref;
+    var fields = [
+      { k: "метка", v: d.ref, acc: true },
+      { k: "ИНН", v: p.inn },
+      { k: p.ogrnip ? "ОГРНИП" : "ОГРН", v: p.ogrnip || p.ogrn },
+      { k: "договор", v: p.contract },
+      { k: "статус", v: p.status }
+    ].filter(function (f) { return f.v; });
+    $("pIds").innerHTML = fields.map(function (f) {
+      return '<div class="idf"><span class="k">' + esc(f.k) + '</span><span class="v' +
+        (f.acc ? " acc" : "") + '">' + esc(f.v) + "</span></div>";
+    }).join("");
+    // Профиля нет — говорим прямо, а не показываем пустые поля.
+    if (!p.name) {
+      $("pNone").style.display = "block";
+      $("pNone").textContent = "Реквизиты пока не заполнены — на столе видна только рабочая метка. " +
+        "Название, ИНН и ОГРН добавляет Rumberg.";
+    } else {
+      $("pNone").style.display = "none";
+    }
   }
 
-  // ---- ЛЕВО: выпуски партнёра ---------------------------------------------
-  // Одна сделка — одна строка компактной таблицы. «Маржа» = заплаченное партнёру
-  // вознаграждение по сделке (поле reward). Валюта одна — рубли. Итог маржи
-  // (и сколько уже выплачено) вынесен в шапку стола, поэтому строки-итога в
-  // таблице нет и отдельной колонки статуса тоже — не раздуваем список.
-  function drawDeals(deals) {
-    deals = deals || [];
+  // ---- деньги и график ----------------------------------------------------
+  function drawSum(deals) {
     var reward = 0, paid = 0, count = deals.length;
     for (var i = 0; i < deals.length; i++) {
       var r = Number(deals[i].reward) || 0;
       reward += r;
       if (deals[i].status === "paid") paid += r;
     }
-    var sums = '<div class="sum"><div class="fig">' + money(reward) + '</div><div class="cap">маржа' +
+    $("dealSum").innerHTML = '<div class="fig">' + money(reward) + '</div><div class="cap">маржа' +
       (count
         ? (paid ? ' · выплачено <b>' + money(paid) + "</b>" : " · пока не выплачена") +
           " · " + count + " " + plural(count, "выпуск", "выпуска", "выпусков")
-        : " пока не начислена") +
-      "</div></div>";
-    $("dealSum").innerHTML = sums;
-
-    if (!count) {
-      $("dealTbl").innerHTML = "";
-      $("dealTbl").style.display = "none";
-      $("dealEmpty").style.display = "block";
-      return;
-    }
-    $("dealTbl").style.display = "";
-    $("dealEmpty").style.display = "none";
-
-    var h = "<thead><tr><th class='l'>Выпуск</th><th class='l'>ISIN</th><th class='l'>Описание</th>" +
-            "<th class='l'>Дата</th><th>Объём</th><th>Маржа</th></tr></thead><tbody>";
-    for (var j = 0; j < deals.length; j++) {
-      var d = deals[j], sp = splitName(d.product), link = dealLink(d);
-      var name = link
-        ? '<a href="' + esc(link) + '">' + esc(sp.name) + ARROW + "</a>"
-        : '<span class="plain">' + esc(sp.name) + "</span>";
-      h += "<tr>" +
-        '<td class="nm" data-l="Выпуск">' + name + "</td>" +
-        '<td class="isin" data-l="ISIN">' + (d.isin ? esc(d.isin) : "—") + "</td>" +
-        '<td class="desc" data-l="Описание">' + (sp.desc ? esc(sp.desc) : "—") + "</td>" +
-        '<td class="dt" data-l="Дата">' + esc(String(d.date).split("-").reverse().join(".")) + "</td>" +
-        '<td data-l="Объём">' + money(d.volume) + "</td>" +
-        '<td class="mg" data-l="Маржа">' + money(d.reward) + "</td>" +
-        "</tr>";
-    }
-    h += "</tbody>";
-    $("dealTbl").innerHTML = h;
+        : " пока не начислена") + "</div>";
   }
 
-  // ---- маржа по месяцам: маленький живой график из его же сделок -----------
   var MONTHS_SHORT = ["янв", "фев", "мар", "апр", "май", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"];
   function shiftMonth(k, n) {
     var y = +k.slice(0, 4), m = +k.slice(5, 7) - 1 + n;
@@ -346,7 +427,6 @@
   }
   function drawMarginChart(deals) {
     var box = $("mchart");
-    // Один месяц или пусто — рисовать нечего, график только зашумит.
     if (!deals || deals.length < 2) { box.innerHTML = ""; box.style.display = "none"; return; }
     var map = {};
     for (var i = 0; i < deals.length; i++) {
@@ -354,37 +434,200 @@
       map[k] = (map[k] || 0) + (Number(deals[i].reward) || 0);
     }
     var keys = Object.keys(map).sort();
-    // Заполняем пропуски между первым и последним месяцем нулями — иначе шкала врёт
-    // о равномерности, а провал в месяц без сделок должен быть виден.
     var full = [], cur = keys[0], last = keys[keys.length - 1], guard = 0;
     while (guard++ < 60) { full.push(cur); if (cur === last) break; cur = shiftMonth(cur, 1); }
-    if (full.length < 2) { box.style.display = "none"; return; }
-    // Слишком длинный хвост не влезет в шапку — показываем последние 6 месяцев.
+    if (full.length < 2) { box.innerHTML = ""; box.style.display = "none"; return; }
     if (full.length > 6) full = full.slice(-6);
     var vals = full.map(function (k) { return map[k] || 0; });
     var max = Math.max.apply(null, vals) || 1;
-
-    var bars = full.map(function (k, idx) {
-      var v = vals[idx], h = v > 0 ? Math.max(6, Math.round(v / max * 100)) : 2;
-      var label = MONTHS_SHORT[+k.slice(5, 7) - 1] + " " + k.slice(0, 4);
-      return '<i class="mb' + (v > 0 ? "" : " zero") + '" style="height:' + h + "%;--i:" + idx + '"' +
-        (v > 0 ? ' data-t="' + esc(label + " · " + money(v)) + '"' : "") + "></i>";
-    }).join("");
-    var axis = full.map(function (k) { return "<span>" + MONTHS_SHORT[+k.slice(5, 7) - 1] + "</span>"; }).join("");
-
     box.style.display = "";
-    box.innerHTML = '<div class="mcap">маржа по месяцам</div>' +
-      '<div class="mbars">' + bars + "</div>" +
-      '<div class="maxis">' + axis + "</div>";
+    box.innerHTML = '<div class="mcap">маржа по месяцам</div><div class="mbars">' +
+      full.map(function (k, idx) {
+        var v = vals[idx], h = v > 0 ? Math.max(6, Math.round(v / max * 100)) : 2;
+        var label = MONTHS_SHORT[+k.slice(5, 7) - 1] + " " + k.slice(0, 4);
+        return '<i class="mb' + (v > 0 ? "" : " zero") + '" style="height:' + h + "%;--i:" + idx + '"' +
+          (v > 0 ? ' data-t="' + esc(label + " · " + money(v)) + '"' : "") + "></i>";
+      }).join("") + '</div><div class="maxis">' +
+      full.map(function (k) { return "<span>" + MONTHS_SHORT[+k.slice(5, 7) - 1] + "</span>"; }).join("") +
+      "</div>";
   }
 
+  // ---- БЛОКИ ВЫПУСКОВ ------------------------------------------------------
+  var ALL = [], view = { filter: "all", sort: "date" };
+
+  // Bid показываем только у обращающихся выпусков и только с пометкой
+  // «индикативно» — правило витрины. Погашенному Bid не рисуем вовсе.
+  function bidOf(it) {
+    if (!it || it.bid == null) return null;
+    if (it.maturity && it.maturity < todayIso()) return null;
+    return it.bid;
+  }
+  function assetPerf(it) {
+    var b = (it && it.basket) || [];
+    for (var i = 0; i < b.length; i++) if (b[i].perfPct != null) return b[i];
+    return null;
+  }
+  // Параметры выплаты словами — теми же, что на странице размещённых выпусков.
+  function payoffRows(it) {
+    var po = (it && it.payoff) || {}, out = [];
+    if (it.kind === "coupon") {
+      if (po.couponPa != null) out.push(["Купон", num(po.couponPa) + "% годовых"]);
+      if (po.couponBarrierPct != null) out.push(["Барьер купона", num(po.couponBarrierPct) + "%"]);
+      if (po.memory) out.push(["Память купона", "есть"]);
+      var pr = po.protection;
+      if (pr && typeof pr === "object" && pr.barrierPct != null) {
+        out.push(["Защита номинала", "до " + num(pr.barrierPct) + "%" + (pr.type ? " (" + pr.type + ")" : "")]);
+      }
+    } else {
+      if (po.participationPct != null) out.push(["Участие в росте", num(po.participationPct) + "%"]);
+      if (po.strikePct != null) out.push(["Страйк", num(po.strikePct) + "%"]);
+      if (po.protectionPct != null) out.push(["Защита на погашение", num(po.protectionPct) + "%"]);
+    }
+    return out;
+  }
+  // Барьер защиты пробит — партнёр должен увидеть это раньше, чем позвонит клиент.
+  function riskNote(it) {
+    if (!it || (it.maturity && it.maturity < todayIso())) return "";
+    var a = assetPerf(it);
+    if (!a) return "";
+    var po = it.payoff || {}, bar = null;
+    if (po.protection && typeof po.protection === "object") bar = po.protection.barrierPct;
+    else if (typeof po.protectionPct === "number" && po.protectionPct < 100) bar = po.strikePct;
+    if (bar == null) return "";
+    return (100 + a.perfPct) < bar
+      ? "Актив ниже барьера защиты " + num(bar) + "% — на погашении номинал под риском."
+      : "";
+  }
+
+  function tileHtml(d, idx) {
+    var it = ISSUES[d.isin], sp = splitName(d.product), link = dealLink(d);
+    var bid = bidOf(it), a = assetPerf(it);
+    var matured = it && it.maturity && it.maturity < todayIso();
+    var dl = it ? daysLeft(it.maturity) : null;
+
+    var name = link
+      ? '<a href="' + esc(link) + '">' + esc(sp.name) + ARROW + "</a>"
+      : '<span class="plain">' + esc(sp.name) + "</span>";
+
+    var bidCell = bid != null
+      ? '<div class="v">' + pct2(bid) + '</div><span class="k">bid · индикативно</span>'
+      : '<div class="v na">' + (matured ? "выпуск погашен" : it ? "нет котировки" : "нет в данных выпусков") +
+        '</div><span class="k">bid</span>';
+
+    var perfCell = a
+      ? '<div class="perf ' + (a.perfPct >= 0 ? "up" : "down") + '">' + pct1(a.perfPct) +
+        '<span class="k">' + esc(a.t || a.n || "актив") + "</span></div>"
+      : "";
+
+    var rows = it ? payoffRows(it) : [];
+    var det = "";
+    if (it) {
+      det = "<dl>" + rows.map(function (r) {
+        return "<dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]) + "</dd>";
+      }).join("") +
+        (a && a.f0 != null ? "<dt>Начальный фиксинг</dt><dd>" + esc(num(a.f0)) +
+          (a.px != null ? " → " + esc(num(a.px)) : "") + "</dd>" : "") +
+        (it.issueStart ? "<dt>Размещён</dt><dd>" + dmy(it.issueStart) + "</dd>" : "") +
+        (it.maturity ? "<dt>Погашение</dt><dd>" + dmy(it.maturity) +
+          (dl != null && dl > 0 ? " · через " + dl + " " + plural(dl, "день", "дня", "дней") : "") + "</dd>" : "") +
+        (it.regNumber ? "<dt>Регномер</dt><dd>" + esc(it.regNumber) + "</dd>" : "") +
+        "</dl>" +
+        (riskNote(it) ? '<div class="warn">' + esc(riskNote(it)) + "</div>" : "");
+    } else {
+      det = '<dl><dt>Выпуск</dt><dd>нет в данных витрины</dd></dl>';
+    }
+
+    return '<article class="tile" data-i="' + idx + '">' +
+      '<div class="th"><div class="nm">' + name +
+        (d.isin ? '<span class="isin">' + esc(d.isin) + "</span>" : "") + "</div>" +
+        (it && KIND_NAME[it.kind] ? '<span class="kind">' + esc(KIND_NAME[it.kind]) + "</span>" : "") +
+      "</div>" +
+      (sp.desc ? '<div class="desc">' + esc(sp.desc) + "</div>" : "") +
+      '<div class="bidrow"><div class="bid">' + bidCell + "</div>" + perfCell + "</div>" +
+      '<div class="grid2">' +
+        '<div class="cell"><span class="k">объём</span><span class="v">' + money(d.volume) + "</span></div>" +
+        '<div class="cell"><span class="k">маржа</span><span class="v mg">' + money(d.reward) + "</span></div>" +
+      "</div>" +
+      '<div class="tf">' +
+        '<span class="st ' + (d.status === "paid" ? "paid" : "accr") + '">' +
+          (d.status === "paid" ? "выплачено" : "начислено") + "</span>" +
+        (matured ? '<span class="st mat">погашен</span>' : "") +
+        '<span class="dt">' + dmy(d.date) + "</span>" +
+        '<button class="more" type="button" aria-expanded="false">Параметры' + CHEV + "</button>" +
+      "</div>" +
+      '<div class="det">' + det + "</div>" +
+      "</article>";
+  }
+
+  function renderTiles() {
+    var list = ALL.slice();
+    if (view.filter !== "all") {
+      list = list.filter(function (d) {
+        return view.filter === "paid" ? d.status === "paid" : d.status !== "paid";
+      });
+    }
+    var key = view.sort;
+    list.sort(function (x, y) {
+      if (key === "date") return x.date < y.date ? 1 : x.date > y.date ? -1 : 0;
+      if (key === "bid") {
+        var bx = bidOf(ISSUES[x.isin]), by = bidOf(ISSUES[y.isin]);
+        // Выпуски без котировки всегда в конце, независимо от направления.
+        if (bx == null && by == null) return 0;
+        if (bx == null) return 1;
+        if (by == null) return -1;
+        return by - bx;
+      }
+      return (Number(y[key]) || 0) - (Number(x[key]) || 0);
+    });
+
+    $("cnt").textContent = list.length && list.length !== ALL.length
+      ? " · " + list.length + " из " + ALL.length : "";
+
+    if (!list.length) {
+      $("tiles").innerHTML = '<div class="empty">В этой выборке выпусков нет.</div>';
+      return;
+    }
+    $("tiles").innerHTML = list.map(function (d) { return tileHtml(d, ALL.indexOf(d)); }).join("");
+  }
+
+  function drawDeals(deals) {
+    ALL = (deals || []).slice();
+    drawSum(ALL);
+    if (!ALL.length) {
+      $("tiles").innerHTML = "";
+      $("ctrl").style.display = "none";
+      $("dealEmpty").style.display = "block";
+      $("cnt").textContent = "";
+      return;
+    }
+    $("dealEmpty").style.display = "none";
+    // Управление показываем только когда фильтровать реально есть что.
+    $("ctrl").style.display = ALL.length > 2 ? "flex" : "none";
+    renderTiles();
+  }
+
+  // раскрытие параметров + чипсы
+  $("tiles").addEventListener("click", function (e) {
+    var b = e.target.closest ? e.target.closest(".more") : null;
+    if (!b) return;
+    var tile = b.closest(".tile");
+    var open = tile.classList.toggle("open");
+    b.setAttribute("aria-expanded", open ? "true" : "false");
+  });
+  $("ctrl").addEventListener("click", function (e) {
+    var c = e.target.closest ? e.target.closest(".chip") : null;
+    if (!c) return;
+    var f = c.getAttribute("data-f"), s = c.getAttribute("data-s");
+    var group = f ? "data-f" : "data-s";
+    if (f) view.filter = f; else view.sort = s;
+    var sibs = $("ctrl").querySelectorAll("[" + group + "]");
+    for (var i = 0; i < sibs.length; i++) sibs[i].classList.toggle("on", sibs[i] === c);
+    renderTiles();
+  });
+
   // ---- ПРАВО: актуальные продукты -----------------------------------------
-  // Источник тот же, что у одноимённой колонки на главной: MORNING.products —
-  // подбор утреннего конвейера по статье. Старше трёх дней или пусто — начало доски.
   var HOT_LIMIT = 5;
   var fmtQ = (window.SITE && SITE.fmt2) ? SITE.fmt2 : function (n) { return String(n).replace(".", ","); };
-
-  // Что показывать цифрой. Та же функция, что на главной и research.html.
   function figure(r) {
     if (r.type === "protection") {
       if (r.participation != null) return { v: Math.round(r.participation * 100) + "%", n: "участие" };
@@ -409,13 +652,12 @@
     return Math.round((Date.UTC(t.getFullYear(), t.getMonth(), t.getDate()) -
                        Date.UTC(p[0], p[1] - 1, p[2])) / 86400000);
   }
-
   function drawHot(ref) {
     var M = window.MORNING || {}, age = morningAge();
     var items = [], from = "";
     if (age !== null && age <= 3) {
       items = (M.products || []).map(byId).filter(Boolean);
-      if (items.length) from = "подбор из утреннего обзора " + String(M.date).split("-").reverse().join(".");
+      if (items.length) from = "подбор из утреннего обзора " + dmy(M.date);
     }
     if (!items.length) {
       items = ((window.SITE_DATA && SITE_DATA.instruments) || []).slice(0, HOT_LIMIT);
@@ -426,22 +668,15 @@
       $("hotNote").textContent = "";
       return;
     }
-
     $("hot").innerHTML = items.slice(0, HOT_LIMIT).map(function (r) {
       var f = figure(r);
-      // В буфер — персональная страница продукта с меткой партнёра: именно её
-      // он отправляет клиенту, и по ней считается атрибуция.
       var link = BASE + "/p/" + encodeURIComponent(r.id) + ".html?ref=" + encodeURIComponent(ref || "");
-      // Картинка — та самая og-карточка продукта, что увидит клиент по ссылке.
-      // Не загрузилась (продукт добавлен раньше картинки) — прячем img, остаётся
-      // подпись «нет превью», а не битая иконка.
-      var img = 'og/' + encodeURIComponent(r.id) + '.png';
+      var img = "og/" + encodeURIComponent(r.id) + ".png";
       return '<div class="pcard">' +
         '<a class="pimg" href="instrument.html?id=' + encodeURIComponent(r.id) + '" aria-label="' + esc(r.name) + '">' +
           '<img loading="lazy" src="' + esc(img) + '" alt="' + esc(r.name) + '" ' +
             'onerror="this.remove();this.parentNode.classList.add(\'noimg\');this.parentNode.textContent=\'нет превью\';"></a>' +
-        '<div class="pfoot">' +
-          '<span class="q">' + f.v + (f.n ? "<i>" + f.n + "</i>" : "") + "</span>" +
+        '<div class="pfoot"><span class="q">' + f.v + (f.n ? "<i>" + f.n + "</i>" : "") + "</span>" +
           '<button class="cp" type="button" data-l="' + esc(link) +
             '" title="Скопировать ссылку для клиента" aria-label="Скопировать ссылку для клиента">' +
             COPY + '<span class="lbl">Ссылка</span></button>' +
@@ -451,8 +686,8 @@
       esc(ref || "—") + "</b>.";
   }
 
-  // Копирование. clipboard API отклоняет запись, когда вкладка не в фокусе, —
-  // отказ обязательно ловим: запасной путь execCommand, затем ссылка текстом.
+  // Копирование: clipboard отклоняет запись, когда вкладка не в фокусе — отказ
+  // обязательно ловим, иначе партнёр отправит клиенту пустоту.
   function legacyCopy(text) {
     try {
       var ta = document.createElement("textarea");
@@ -491,7 +726,6 @@
   }
   function remember(id, key) {
     try {
-      // so_me читает и маячок в metrika.js: свои же заходы в статистику не идут.
       localStorage.setItem("so_me", id);
       localStorage.setItem("so_me_key", key);
     } catch (e) {}
@@ -516,7 +750,6 @@
       });
       var d = await r.json().catch(function () { return {}; });
       if (!d.ok) {
-        // 404 = маршрут /stats на сервере ещё не появился (воркер не передеплоен).
         if (r.status === 404) fail("Стол ещё не подключён на сервере. Напишите Руслану.");
         else if (d.error === "bad_key") fail("Не подходит ID или ключ. Проверьте раскладку и пробелы.");
         else if (d.error === "no_storage" || d.error === "not_configured") fail("Стол ещё не подключён на сервере. Напишите Руслану.");
@@ -536,18 +769,16 @@
     }
   }
 
-  // ---- отрисовка -----------------------------------------------------------
   function render(d) {
     gate.style.display = "none";
     dash.classList.add("on");
     $("exit").style.display = "inline-block";
-    $("whoRef").textContent = d.ref;
+    drawIdentity(d);
     drawDeals(d.deals || []);
     drawMarginChart(d.deals || []);
     drawHot(d.ref);
   }
 
-  // ---- события интерфейса --------------------------------------------------
   $("go").addEventListener("click", function () {
     var id = $("id").value.trim().toLowerCase(), key = $("key").value.trim();
     if (!id || !key) { fail("Заполните оба поля."); return; }
@@ -557,12 +788,11 @@
   $("id").addEventListener("keydown", function (e) { if (e.key === "Enter") $("key").focus(); });
   $("exit").addEventListener("click", function () { forget(); location.reload(); });
 
-  // Демо-вёрстки: ?demo=1 — заполненный стол, ?demo=0 — первый день партнёра.
-  // Данные синтетические, сеть НЕ трогается, ключ в браузер не пишется (иначе
-  // маячок счёл бы этот браузер агентским и перестал считать открытия).
-  var demo = location.search.match(/[?&]demo=([01])/);
+  // Демо-вёрстки: ?demo=1 — заполненный стол, ?demo=0 — первый день партнёра,
+  // ?demo=2 — партнёр без заполненных реквизитов. Сеть НЕ трогается.
+  var demo = location.search.match(/[?&]demo=([012])/);
   if (demo) {
-    render(demo[1] === "0" ? demoEmpty() : demoFull());
+    render(demo[1] === "0" ? demoEmpty() : demo[1] === "2" ? demoNoProfile() : demoFull());
   } else {
     var c = creds();
     if (c.id && c.key) {
@@ -571,24 +801,31 @@
     }
   }
 
-  function demoEmpty() {
-    return { ok: true, ref: "demo", kind: "partner", now: Date.now(), deals: [] };
-  }
-  function demoFull() {
-    // Только рубли, только размещённые выпуски (с ISIN → ссылка на паспорт).
-    var deals = [
+  function demoDeals() {
+    return [
       { id: "a1b2c3", product: "РСП СП-1-10 · участие 120%", isin: "RU000A10A9G1",
         date: "2026-08-12", volume: 25000000, reward: 562500, status: "accrued" },
-      { id: "d4e5f6", product: "РСП СП-2-72-ЦБ-RUB · купонный 24%", isin: "RU000A10CVB8",
+      { id: "d4e5f6", product: "РСП СП-2-72-ЦБ-RUB · купонный 20%", isin: "RU000A10CVB8",
         date: "2026-07-30", volume: 15000000, reward: 337500, status: "paid" },
-      { id: "g7h8i9", product: "РСП СП-1-52-ЦБ-RUB · купонный 22%", isin: "RU000A10CBH7",
+      { id: "g7h8i9", product: "РСП СП-1-52-ЦБ-RUB · купонный 24,8%", isin: "RU000A10CBH7",
         date: "2026-07-16", volume: 40000000, reward: 900000, status: "paid" },
       { id: "j1k2l3", product: "РСП СП-2-69 · участие 27%", isin: "RU000A10CV88",
         date: "2026-06-24", volume: 12000000, reward: 270000, status: "paid" },
       { id: "m4n5o6", product: "РСП СП-1-12 · участие 100%", isin: "RU000A109EH2",
         date: "2026-06-03", volume: 8000000, reward: 180000, status: "paid" }
     ];
-    return { ok: true, ref: "andrey", kind: "partner", now: Date.now(), deals: deals };
+  }
+  function demoEmpty() {
+    return { ok: true, ref: "demo", kind: "partner", now: Date.now(), deals: [],
+             profile: { name: "ИП Смирнов Андрей Петрович", inn: "770912345678", ogrnip: "318770000123456" } };
+  }
+  function demoFull() {
+    return { ok: true, ref: "andrey", kind: "partner", now: Date.now(), deals: demoDeals(),
+             profile: { name: "ООО «Аркада Капитал»", inn: "7701234567", ogrn: "1157746123456",
+                        contract: "П-14 от 03.02.2026" } };
+  }
+  function demoNoProfile() {
+    return { ok: true, ref: "andrey", kind: "partner", now: Date.now(), deals: demoDeals() };
   }
 })();
 </script>

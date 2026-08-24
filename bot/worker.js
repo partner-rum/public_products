@@ -262,6 +262,64 @@ async function dealsPut(env, ref, list) {
   await env.POST_KV.put("deals:" + ref, JSON.stringify(list));
 }
 
+// ---------- РЕКВИЗИТЫ ПАРТНЁРА ----------
+// Название, ИНН, ОГРН/ОГРНИП и номер договора живут в KV (pinfo:<метка>), а НЕ в
+// репозитории: репозиторий ПУБЛИЧНЫЙ, и список партнёров с их реквизитами в него
+// попадать не должен. Заводит их Руслан командой /partner, стол читает через /stats.
+const PINFO_FIELDS = ["name", "inn", "ogrn", "ogrnip", "contract", "status"];
+
+async function pinfoGet(env, ref) {
+  if (!env.POST_KV) return null;
+  try { return (await env.POST_KV.get("pinfo:" + ref, "json")) || null; } catch (e) { return null; }
+}
+
+// Разбор строки /partner. Поля узнаём ПО СОДЕРЖИМОМУ, как в /deal: порядок
+// запоминать не надо. ИНН — 10 цифр (юрлицо) или 12 (ИП), ОГРН — 13, ОГРНИП — 15.
+function pinfoParse(env, line) {
+  const parts = String(line || "").split("|").map(function (x) { return x.trim(); })
+    .filter(function (x) { return x !== ""; });
+  if (parts.length < 2) return { error: "нужны метка и хотя бы название" };
+  const ref = parts.shift().toLowerCase();
+  if (!knownRefs(env).includes(ref)) {
+    return { error: "партнёра «" + ref + "» нет в списке. Известные: " +
+                    (knownRefs(env).join(", ") || "ни одного") };
+  }
+  const info = {};
+  for (const raw of parts) {
+    const x = raw.replace(/^(ИНН|ОГРНИП|ОГРН|договор|статус)\s*[:№]?\s*/i, "").trim();
+    const digits = x.replace(/\D/g, "");
+    if (/^ИНН/i.test(raw) || (digits.length === 10 || digits.length === 12) && digits === x) {
+      info.inn = digits; continue;
+    }
+    if (/^ОГРНИП/i.test(raw) || (digits.length === 15 && digits === x)) { info.ogrnip = digits; continue; }
+    if (/^ОГРН/i.test(raw) || (digits.length === 13 && digits === x)) { info.ogrn = digits; continue; }
+    if (/^договор/i.test(raw)) { info.contract = x.slice(0, 60); continue; }
+    if (/^статус/i.test(raw)) { info.status = x.slice(0, 40); continue; }
+    if (!info.name) info.name = raw.slice(0, 120);
+  }
+  if (!info.name) return { error: "не понял, где название партнёра" };
+  if (info.inn && info.inn.length !== 10 && info.inn.length !== 12) {
+    return { error: "ИНН «" + info.inn + "» не 10 и не 12 цифр" };
+  }
+  if (info.ogrn && info.ogrn.length !== 13) return { error: "ОГРН должен быть 13 цифр" };
+  if (info.ogrnip && info.ogrnip.length !== 15) return { error: "ОГРНИП должен быть 15 цифр" };
+  return { ref: ref, info: info };
+}
+
+function pinfoText(ref, info) {
+  const rows = [
+    ["Название", info.name],
+    ["ИНН", info.inn],
+    ["ОГРН", info.ogrn],
+    ["ОГРНИП", info.ogrnip],
+    ["Договор", info.contract],
+    ["Статус", info.status],
+  ].filter(function (r) { return r[1]; });
+  return "<b>" + esc(ref) + "</b>\n" + rows.map(function (r) {
+    return r[0] + ": <code>" + esc(String(r[1])) + "</code>";
+  }).join("\n");
+}
+
 // Число из человеческой записи: «5 000 000», «5000000», «112 500,50».
 function dealNum(v) {
   const t = String(v || "").replace(/[\s _]/g, "").replace(",", ".");
@@ -457,6 +515,7 @@ async function handleStats(request, env, cors) {
 
   return json({
     ok: true, ref, kind: who.kind, now,
+    profile: await pinfoGet(env, ref),
     deals: deals, totals: dealTotals(deals),
     opens: { all: opens, d7: opens7, d30: opens30 },
     views: { all: views },
@@ -3003,6 +3062,72 @@ async function handleTelegram(request, env, ctx) {
       // См. комментарий у «Пересобрать»: вебхук отвечает сразу, генерация — после ответа
       const job = sendMorningDraft(env, msg.text, msg.chat.id);
       if (ctx) ctx.waitUntil(job); else await job;
+      return new Response("ok");
+    }
+
+    // ---- Реквизиты партнёров: /partner, /partners, /partnerrm. ТОЛЬКО Руслан.
+    // Хранятся в KV, а не в репозитории: репозиторий публичный, список партнёров
+    // с ИНН/ОГРН в него попадать не должен.
+    if (/^\/partners?(?:@\w+)?(?:\s|$)/.test(msg.text) || /^\/partnerrm(?:@\w+)?(?:\s|$)/.test(msg.text)) {
+      const isAdmin = env.ADMIN_CHAT_ID && String(from.id) === String(env.ADMIN_CHAT_ID);
+      if (!isAdmin || !msg.chat || msg.chat.type !== "private") return new Response("ok");
+      const say = function (t) {
+        return tg(env, "sendMessage", { chat_id: msg.chat.id, text: t,
+                                        parse_mode: "HTML", disable_web_page_preview: true });
+      };
+      if (!env.POST_KV) {
+        await say("Хранилище (POST_KV) не подключено — реквизиты записать некуда.");
+        return new Response("ok");
+      }
+
+      // /partnerrm <метка> — убрать реквизиты
+      if (/^\/partnerrm/.test(msg.text)) {
+        const ref = msg.text.replace(/^\/partnerrm(@\w+)?\s*/, "").trim().toLowerCase();
+        if (!ref) {
+          await say("Формат: <code>/partnerrm метка</code>");
+          return new Response("ok");
+        }
+        await env.POST_KV.delete("pinfo:" + ref);
+        await say("Реквизиты партнёра <b>" + esc(ref) + "</b> удалены. Сделки не тронуты.");
+        return new Response("ok");
+      }
+
+      // /partners — что заполнено у всех известных меток
+      if (/^\/partners(?:@\w+)?(?:\s|$)/.test(msg.text)) {
+        const refs = knownRefs(env);
+        if (!refs.length) {
+          await say("Партнёров нет — задайте PARTNER_KEYS.");
+          return new Response("ok");
+        }
+        const lines = [];
+        for (const ref of refs) {
+          const info = await pinfoGet(env, ref);
+          lines.push(info ? pinfoText(ref, info) : "<b>" + esc(ref) + "</b>\nреквизиты не заполнены");
+        }
+        await say(lines.join("\n\n"));
+        return new Response("ok");
+      }
+
+      // /partner метка | Название | ИНН | ОГРН [| договор ...]
+      const line = msg.text.replace(/^\/partner(@\w+)?\s*/, "").trim();
+      if (!line) {
+        await say("Реквизиты партнёра для рабочего стола.\n\n" +
+          "<code>/partner метка | Название | ИНН | ОГРН [| договор № ...]</code>\n\n" +
+          "Порядок полей помнить не надо: ИНН, ОГРН и ОГРНИП узнаются по числу цифр " +
+          "(10/12, 13, 15), договор — по слову «договор».\n\n" +
+          "Пример:\n<code>/partner andrey | ООО «Аркада Капитал» | 7701234567 | 1157746123456 | " +
+          "договор П-14 от 03.02.2026</code>\n\n" +
+          "Ещё: <code>/partners</code> — у кого что заполнено, " +
+          "<code>/partnerrm метка</code> — удалить.");
+        return new Response("ok");
+      }
+      const parsed = pinfoParse(env, line);
+      if (parsed.error) {
+        await say("Не понял: " + esc(parsed.error) + "\n\nПодсказка по формату — просто <code>/partner</code>");
+        return new Response("ok");
+      }
+      await env.POST_KV.put("pinfo:" + parsed.ref, JSON.stringify(parsed.info));
+      await say("Реквизиты записаны — партнёр увидит их на столе.\n\n" + pinfoText(parsed.ref, parsed.info));
       return new Response("ok");
     }
 
