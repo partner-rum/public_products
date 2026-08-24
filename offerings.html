@@ -221,7 +221,7 @@
   <div class="layout">
     <aside class="aside">
       <div class="filters" id="filters"></div>
-      <div class="list" id="list"><!-- seo:start --><div class="seo-pre"><p>Выпуски Rumberg на размещении: параметры, документы и порядок подачи заявок.</p><h2>На размещении</h2><ul><li>Варрант Call на CSI 300, Варрант · CSI 300, срок 2 года, ISIN RU000A10CV96, ОТС с ЦК 21.08.2026.</li><li>Энергетика будущего, Структурная облигация · защита капитала 80%, базовый актив — Корзина из 8 акций энергетики для ИИ (в USD), срок 3 года, ISIN RU000A10BZ10, Приём заявок с 10.08.2026.</li><li>Perplexity Pre-IPO — структурная облигация, Структурная облигация · Pre-IPO Perplexity, базовый актив — Индекс Румберг Пре-АйПиО 1 (RUMPREIPO), срок 5 лет, ISIN RU000A10CRT8, Торгуется на бирже.</li></ul></div><!-- seo:end --></div>
+      <div class="list" id="list"><!-- seo:start --><div class="seo-pre"><p>Выпуски Rumberg на размещении: параметры, документы и порядок подачи заявок.</p><h2>На размещении</h2><ul><li>Варрант CALL 100 CNYRUB, Варрант CNYRUB, срок 1 год, ISIN RU000A10BZ44, ОТС с ЦК 27.08.26.</li><li>Варрант Call на CSI 300, Варрант · CSI 300, срок 2 года, ISIN RU000A10CV96, ОТС с ЦК 21.08.2026.</li><li>Энергетика будущего, Структурная облигация · защита капитала 80%, базовый актив — Корзина из 8 акций энергетики для ИИ (в USD), срок 3 года, ISIN RU000A10BZ10, Приём заявок с 10.08.2026.</li><li>Perplexity Pre-IPO — структурная облигация, Структурная облигация · Pre-IPO Perplexity, базовый актив — Индекс Румберг Пре-АйПиО 1 (RUMPREIPO), срок 5 лет, ISIN RU000A10CRT8, Торгуется на бирже.</li></ul></div><!-- seo:end --></div>
     </aside>
     <div class="panel" id="panel"><button class="panel-close" id="close">← К списку</button><div id="panel-body"></div></div>
   </div>
@@ -299,7 +299,7 @@
     var c = famCol(o), st = o.status === "live" ? "live" : "up";
     return '<button class="item' + (o.id === selected ? " active" : "") + '"' + (o.id === selected ? ' aria-current="true"' : '') + ' data-id="' + o.id + '" style="--fc:' + c + '">' +
       '<div class="r1"><span class="nm">' + o.name + '</span><span class="pr">' + (o.price != null ? fmt2(o.price) + '%' : '') + '</span></div>' +
-      '<div class="r2"><span class="sub">' + o.reference + ' · ' + o.tenor + '</span>' +
+      '<div class="r2"><span class="sub">' + [o.reference, o.tenor].filter(Boolean).join(" · ") + '</span>' +
         '<span class="st ' + st + '"><span class="dot"></span>' + (o.statusLabel || (o.status === "live" ? "идёт" : "")) + '</span></div>' +
     '</button>';
   }
@@ -332,11 +332,15 @@
     tiles += tile(o.nominal.toLocaleString("ru-RU") + " " + o.currency, "номинал") + tile(o.tenor, "срок");
     if (o.fx) tiles += tile(o.fx, "валюта");
     if (o.placement) tiles += tile(o.placement, o.placementLabel || "старт размещения");
-    if (o.maturity) tiles += tile(o.maturity, "погашение");
+    if (o.maturity) tiles += tile(o.maturity, "дата погашения");
     if (o.isin) tiles += tile(o.isin, "ISIN");
     if (o.venue) tiles += tile(o.venue, "площадка");
-    var refLine = (o.family === "discount" ? "Контрольное лицо: " : "Базовый актив: ") + "<b>" + o.reference + "</b>" +
-      (o.serial ? " · " + o.serial : "");
+    // Базовый актив в форме админки не обязателен, и без охраны в паспорт уезжало
+    // «Базовый актив: undefined» — ровно это и показал варрант на CNYRUB 24.08.2026.
+    var refLine = [
+      o.reference ? (o.family === "discount" ? "Контрольное лицо: " : "Базовый актив: ") + "<b>" + o.reference + "</b>" : "",
+      o.serial || "",
+    ].filter(Boolean).join(" · ");
     var issuerLine = o.issuer ? '<div class="o-ref">Эмитент: <b>' + o.issuer + '</b></div>' : "";
     var aboutBlk = o.about ? '<div class="blk"><h3 class="k">О компании</h3><p>' + o.about + '</p></div>' : "";
     var dealersBlk = (o.dealers && o.dealers.length)
@@ -401,7 +405,7 @@
       : "";
     return '<div class="o-kind">' + o.kind + '</div>' +
       '<div class="o-top"><div><h2 class="o-name">' + o.name + '</h2>' +
-        '<div class="o-ref">' + refLine + '</div>' + issuerLine + partnerLine + '</div>' +
+        (refLine ? '<div class="o-ref">' + refLine + '</div>' : "") + issuerLine + partnerLine + '</div>' +
         '<div class="o-top-right">' + badge + '<div class="o-actions"><span id="o-ct-host"></span>' + topDocBtns + opBtn + '<span id="o-sh-host"></span></div></div></div>' +
       '<div class="o-teaser">' + o.teaser + '</div>' +
       '<div class="tiles">' + tiles + '</div>' +

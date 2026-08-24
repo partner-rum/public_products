@@ -232,7 +232,7 @@
         <label><span class="k">Цена, % ном. <b>*</b></span><input name="price" type="number" step="0.01" placeholder="58.82"></label>
       </div>
       <div class="row3">
-        <label><span class="k">Погашение, % ном.</span><input name="redeem" type="number" value="100"></label>
+        <label><span class="k">Погашение, % ном.</span><input name="redeem" type="number" placeholder="100 — облигация, 0 — варрант"></label>
         <label><span class="k">Дата размещения</span><input name="placement" placeholder="14.07.2026" maxlength="10"></label>
         <label><span class="k">Дата погашения</span><input name="maturity" placeholder="14.07.2031" maxlength="10"></label>
       </div>
@@ -977,10 +977,9 @@
     try {
       docs = editId ? offPickedDocs() : [];
       if (editId) {
-        // Правка: отправляем ТОЛЬКО заполненные поля. Пустое поле сервер пропускает,
-        // поэтому «стереть значение» через форму нельзя — и это защита от случайной
-        // потери текста, который писали вручную.
-        // Отправляем ТОЛЬКО реально изменённые поля. Форма предзаполнена записью,
+        // Отправляем ТОЛЬКО реально изменённые поля; пустое поле сервер пропускает,
+        // то есть «стереть значение» через форму нельзя — это защита от случайной
+        // потери текста, который писали вручную. Форма предзаполнена записью,
         // поэтому «заполнено» в ней всё: без сравнения с исходником заявка раздувалась
         // до лимита payload и врала модератору, будто меняется каждое поле.
         var orig = offAll[editId] || {};
@@ -1014,7 +1013,10 @@
         put(item, "reference", val(fOff, "reference"));
         put(item, "nominal", num(fOff, "nominal") || 1000);
         put(item, "price", num(fOff, "price"));
-        put(item, "redeem", num(fOff, "redeem") || 100);
+        // 0 — законное значение: у варранта возврата номинала нет. Прежний «|| 100»
+        // превращал ноль в сотню, и карточка обещала возврат номинала, которого в
+        // продукте нет (так и вышло у варранта на CNYRUB 24.08.2026).
+        put(item, "redeem", num(fOff, "redeem"));
         put(item, "placement", val(fOff, "placement"));
         put(item, "maturity", val(fOff, "maturity"));
         put(item, "tenor", val(fOff, "tenor"));
