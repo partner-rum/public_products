@@ -37,7 +37,9 @@ window.OFFERINGS = {
      "ext": "PDF",
      "size": "428 КБ"
     }
-   ]
+   ],
+   "placement": "26.08.2026",
+   "maturity": "07.09.2027"
   },
   {
    "id": "sp-2-70",
