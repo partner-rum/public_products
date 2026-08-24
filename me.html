@@ -28,6 +28,14 @@
   ::-webkit-scrollbar-thumb:hover { background:rgba(255,255,255,.2); }
   * { scrollbar-width:thin; scrollbar-color:rgba(255,255,255,.14) transparent; }
 
+  /* Служебное для скринридеров: skip-link виден только при фокусе с клавиатуры */
+  .sr { position:absolute; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden;
+        clip:rect(0 0 0 0); white-space:nowrap; border:0; }
+  .skip { position:absolute; left:10px; top:-60px; z-index:10; background:var(--solar); color:#0C0A08;
+          padding:11px 18px; border-radius:0 0 10px 10px; font-size:13px; font-weight:600;
+          transition:top .16s var(--e); }
+  .skip:focus { top:0; }
+
   .wrap { max-width:1220px; margin:0 auto; padding:0 28px 96px; }
   @media (max-width:560px) { .wrap { padding:0 18px 72px; } }
 
@@ -40,22 +48,22 @@
 
   /* ── вход ── */
   #gate { max-width:400px; margin:14vh auto 0; }
-  #gate h1 { font-family:var(--display); font-weight:600; font-size:27px; letter-spacing:-.025em; margin:0 0 8px; }
-  #gate .lead { color:var(--hushed); font-size:14px; margin:0 0 30px; }
-  .field { margin:0 0 14px; }
-  .field .k { display:block; font-size:12.5px; color:var(--hushed); margin:0 0 6px; }
+  #gate h1 { font-family:var(--display); font-weight:600; font-size:29px; letter-spacing:-.025em; margin:0 0 8px; }
+  #gate .lead { color:var(--hushed); font-size:15px; margin:0 0 30px; }
+  .field { display:block; margin:0 0 14px; }
+  .field .k { display:block; font-size:13px; color:var(--hushed); margin:0 0 6px; }
   input { width:100%; background:var(--raise); border:1px solid var(--line); border-radius:10px;
-          color:var(--ink); caret-color:var(--solar); font-family:var(--f); font-size:14px;
+          color:var(--ink); caret-color:var(--solar); font-family:var(--f); font-size:15px;
           padding:11px 13px; outline:none; transition:border-color .16s; }
   input:focus { border-color:rgba(238,125,27,.65); }
   input::placeholder { color:var(--faint); }
   .go { width:100%; margin-top:6px; background:var(--solar); color:#0C0A08; border:0; border-radius:10px;
-        padding:13px; font-family:var(--f); font-size:14.5px; font-weight:600; cursor:pointer; transition:background .16s; }
+        padding:13px; font-family:var(--f); font-size:15px; font-weight:600; cursor:pointer; transition:background .16s; }
   .go:hover { background:var(--solar-l); }
   .go:disabled { opacity:.55; cursor:default; }
-  .msg { display:none; margin:16px 0 0; font-size:13.5px; line-height:1.5; color:var(--solar-l); }
+  .msg { display:none; margin:16px 0 0; font-size:13px; line-height:1.5; color:var(--solar-l); }
   .msg.err { display:block; }
-  .note { font-size:12px; color:var(--faint); margin-top:22px; line-height:1.5; }
+  .note { font-size:13px; color:var(--faint); margin-top:22px; line-height:1.5; }
 
   /* ── стол ── */
   #dash { display:none; }
@@ -64,7 +72,7 @@
 
   /* ── ПАРТНЁР: идентификация ── */
   .idc { padding:34px 0 26px; border-bottom:1px solid var(--line); }
-  .idc .lab { font-family:var(--m); font-size:10.5px; letter-spacing:.14em; text-transform:uppercase;
+  .idc .lab { font-family:var(--m); font-size:11px; letter-spacing:.12em; text-transform:uppercase;
               color:var(--faint); margin:0 0 12px; }
   .idc h1 { margin:0; font-family:var(--display); font-weight:600; font-size:29px; letter-spacing:-.025em;
             line-height:1.15; }
@@ -73,9 +81,9 @@
   .ids { display:flex; flex-wrap:wrap; gap:0 0; margin-top:18px; }
   .idf { padding:0 20px; border-left:1px solid var(--line-soft); }
   .idf:first-child { padding-left:0; border-left:0; }
-  .idf .k { display:block; font-family:var(--m); font-size:9.5px; letter-spacing:.13em;
+  .idf .k { display:block; font-family:var(--m); font-size:11px; letter-spacing:.11em;
             text-transform:uppercase; color:var(--faint); }
-  .idf .v { display:block; margin-top:5px; font-family:var(--m); font-size:13.5px; color:var(--ink);
+  .idf .v { display:block; margin-top:5px; font-family:var(--m); font-size:13px; color:var(--ink);
             letter-spacing:.02em; }
   .idf .v.acc { color:var(--solar-l); }
   @media (max-width:640px) {
@@ -84,7 +92,7 @@
     .idf:nth-child(odd) { padding-left:0; border-left:0; }
     .idf { flex:0 0 50%; }
   }
-  .idnone { margin-top:14px; font-size:12.5px; color:var(--faint); line-height:1.5; max-width:56ch; }
+  .idnone { margin-top:14px; font-size:13px; color:var(--faint); line-height:1.5; max-width:56ch; }
 
   /* ── деньги + график ── */
   .mrow { display:flex; align-items:flex-end; justify-content:space-between; gap:40px; flex-wrap:wrap;
@@ -96,7 +104,7 @@
   @media (max-width:560px) { .sum .fig { font-size:32px; } }
 
   .mchart { flex:none; }
-  .mchart .mcap { font-family:var(--m); font-size:10px; letter-spacing:.13em; text-transform:uppercase;
+  .mchart .mcap { font-family:var(--m); font-size:11px; letter-spacing:.11em; text-transform:uppercase;
                   color:var(--faint); text-align:right; margin:0 0 9px; }
   .mbars { display:flex; align-items:flex-end; gap:6px; height:58px; }
   .mb { position:relative; width:26px; border-radius:3px 3px 0 0; background:rgba(238,125,27,.42);
@@ -105,13 +113,36 @@
   .mb:hover { background:var(--solar); }
   .mb.zero { background:rgba(255,255,255,.07); }
   .mb[data-t]:hover::after { content:attr(data-t); position:absolute; bottom:calc(100% + 7px); left:50%;
-    transform:translateX(-50%); white-space:nowrap; font-family:var(--m); font-size:10.5px; color:var(--ink);
+    transform:translateX(-50%); white-space:nowrap; font-family:var(--m); font-size:11px; color:var(--ink);
     background:#191C24; border:1px solid var(--line); border-radius:7px; padding:4px 9px; z-index:3;
     box-shadow:0 6px 18px rgba(0,0,0,.4); }
   .maxis { display:flex; gap:6px; margin-top:8px; }
-  .maxis span { width:26px; text-align:center; font-family:var(--m); font-size:9.5px; color:var(--faint); }
+  .maxis span { width:26px; text-align:center; font-family:var(--m); font-size:11px; color:var(--faint); }
   @keyframes grow { to { transform:scaleY(1); } }
   @media (max-width:560px) { .mchart { width:100%; } .mchart .mcap { text-align:left; } }
+
+  /* ── что изменилось с прошлого захода ── */
+  .since { display:flex; flex-wrap:wrap; gap:0; margin-top:26px; padding-top:22px;
+           border-top:1px solid var(--line-soft); }
+  .si { padding:0 22px; border-left:1px solid var(--line-soft); }
+  .si:first-child { padding-left:0; border-left:0; }
+  .si .k { display:block; font-family:var(--m); font-size:11px; letter-spacing:.11em;
+           text-transform:uppercase; color:var(--faint); }
+  .si .v { display:block; margin-top:6px; font-size:13px; color:var(--ink); }
+  .si .v .up { color:var(--up); }
+  .si .v .down { color:var(--down); }
+  .si .v .mut { color:var(--faint); }
+  .si .v.stale { color:var(--down); }
+  @media (max-width:640px) {
+    .since { gap:14px 0; }
+    .si { flex:0 0 100%; padding:0; border-left:0; }
+  }
+
+  /* Движение Bid у блока: рядом с самой котировкой, иначе это просто ещё одно число */
+  .dlt { display:inline-block; margin-left:8px; font-family:var(--m); font-size:11px;
+         font-weight:500; padding:2px 7px; border-radius:20px; vertical-align:2px; }
+  .dlt.up { color:var(--up); background:rgba(85,192,138,.13); }
+  .dlt.down { color:var(--down); background:rgba(224,112,90,.13); }
 
   /* ── две зоны ── */
   .main { margin-top:34px; }
@@ -123,17 +154,17 @@
   .lp { display:flex; align-items:baseline; gap:10px; padding:11px 13px; background:var(--card);
         transition:background .16s; }
   .lp:hover { background:#181B22; }
-  .lp .n { flex:1; min-width:0; font-size:12.5px; line-height:1.3; }
+  .lp .n { flex:1; min-width:0; font-size:13px; line-height:1.3; }
   .lp:hover .n { color:var(--solar-l); }
-  .lp .q { font-family:var(--m); font-size:12.5px; font-weight:500; color:var(--solar-l);
+  .lp .q { font-family:var(--m); font-size:13px; font-weight:500; color:var(--solar-l);
            white-space:nowrap; font-variant-numeric:tabular-nums; }
   /* Цифры у продуктов РАЗНОГО типа значат разное — метка обязательна (как на главной) */
-  .lp .q i { font-style:normal; font-size:8.5px; font-weight:400; letter-spacing:.1em;
+  .lp .q i { font-style:normal; font-size:11px; font-weight:400; letter-spacing:.08em;
              text-transform:uppercase; color:var(--faint); margin-left:5px; }
 
-  .zt { font-family:var(--m); font-size:11.5px; letter-spacing:.13em; text-transform:uppercase;
+  .zt { font-family:var(--m); font-size:12px; letter-spacing:.11em; text-transform:uppercase;
         color:var(--faint); margin:0 0 16px; display:flex; align-items:baseline; gap:10px; }
-  .zt a.all { margin-left:auto; color:var(--hushed); letter-spacing:.04em; text-transform:none; font-size:12px;
+  .zt a.all { margin-left:auto; color:var(--hushed); letter-spacing:.04em; text-transform:none; font-size:13px;
               display:inline-flex; align-items:center; gap:4px; transition:color .16s; }
   .zt a.all:hover { color:var(--solar-l); }
   .zt a.all svg { transition:transform .2s var(--e); }
@@ -142,12 +173,12 @@
   /* ── управление списком ── */
   .ctrl { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:0 0 18px; }
   .chip { border:1px solid var(--line); background:none; color:var(--hushed); border-radius:20px;
-          padding:6px 13px; font-family:var(--f); font-size:12.5px; cursor:pointer;
+          padding:6px 13px; font-family:var(--f); font-size:13px; cursor:pointer;
           transition:border-color .16s, color .16s, background .16s; }
   .chip:hover { border-color:rgba(255,255,255,.3); color:var(--ink); }
   .chip.on { border-color:rgba(238,125,27,.6); color:var(--solar-l); background:rgba(238,125,27,.08); }
   .ctrl .gap { margin-left:auto; }
-  .ctrl .sl { font-family:var(--m); font-size:10px; letter-spacing:.13em; text-transform:uppercase;
+  .ctrl .sl { font-family:var(--m); font-size:11px; letter-spacing:.11em; text-transform:uppercase;
               color:var(--faint); margin-right:2px; }
   @media (max-width:560px) { .ctrl .gap { margin-left:0; flex-basis:100%; height:0; } }
 
@@ -161,16 +192,16 @@
 
   .th { display:flex; align-items:flex-start; gap:8px; padding:13px 14px 0; }
   .th .nm { flex:1; min-width:0; }
-  .th .nm a, .th .nm span.plain { font-family:var(--display); font-weight:600; font-size:14.5px; letter-spacing:-.01em;
+  .th .nm a, .th .nm span.plain { font-family:var(--display); font-weight:600; font-size:15px; letter-spacing:-.01em;
                                   line-height:1.25; display:inline-flex; align-items:center; gap:5px; transition:color .16s; }
   .th .nm a:hover { color:var(--solar-l); }
   .th .nm a svg { flex:none; opacity:.45; transition:opacity .16s, transform .16s var(--e); }
   .th .nm a:hover svg { opacity:1; transform:translateX(2px); }
-  .meta { padding:5px 14px 0; font-family:var(--m); font-size:10.5px; color:var(--faint); letter-spacing:.04em;
+  .meta { padding:5px 14px 0; font-family:var(--m); font-size:11px; color:var(--faint); letter-spacing:.04em;
           white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .meta .dot { opacity:.5; margin:0 5px; }
   .meta .d { font-family:var(--f); letter-spacing:0; color:var(--hushed); }
-  .kind { flex:none; font-family:var(--m); font-size:9px; letter-spacing:.09em; text-transform:uppercase;
+  .kind { flex:none; font-family:var(--m); font-size:11px; letter-spacing:.08em; text-transform:uppercase;
           color:var(--hushed); border:1px solid var(--line); border-radius:20px; padding:3px 8px; white-space:nowrap; }
 
   /* Bid — подтянут из данных выпуска, крупно и с пометкой «индикативно» */
@@ -178,27 +209,27 @@
   .bid { flex:1; min-width:0; }
   .bid .v { font-family:var(--m); font-weight:500; font-size:21px; letter-spacing:-.02em; line-height:1;
             color:var(--up); font-variant-numeric:tabular-nums; }
-  .bid .v.na { color:var(--faint); font-size:13.5px; }
-  .bid .k { display:block; margin-top:5px; font-family:var(--m); font-size:9px; letter-spacing:.11em;
+  .bid .v.na { color:var(--faint); font-size:13px; }
+  .bid .k { display:block; margin-top:5px; font-family:var(--m); font-size:11px; letter-spacing:.09em;
             text-transform:uppercase; color:var(--faint); }
-  .perf { flex:none; text-align:right; font-family:var(--m); font-size:12.5px; font-variant-numeric:tabular-nums; }
+  .perf { flex:none; text-align:right; font-family:var(--m); font-size:13px; font-variant-numeric:tabular-nums; }
   .perf.up { color:var(--up); } .perf.down { color:var(--down); } .perf.off { color:var(--faint); }
-  .perf .k { display:block; margin-top:4px; font-family:var(--m); font-size:9px; letter-spacing:.11em;
+  .perf .k { display:block; margin-top:4px; font-family:var(--m); font-size:11px; letter-spacing:.09em;
              text-transform:uppercase; color:var(--faint); }
 
-  .figs { display:flex; flex-wrap:wrap; gap:0 6px; padding:9px 14px 0; font-family:var(--m); font-size:12px;
+  .figs { display:flex; flex-wrap:wrap; gap:0 6px; padding:9px 14px 0; font-family:var(--m); font-size:13px;
            color:var(--hushed); font-variant-numeric:tabular-nums; }
-  .figs .k { color:var(--faint); font-size:10.5px; }
+  .figs .k { color:var(--faint); font-size:11px; }
   .figs .mg { color:var(--solar-l); }
   .figs .dot { opacity:.45; }
 
   .tf { display:flex; align-items:center; gap:8px; padding:10px 14px; margin-top:11px;
         border-top:1px solid var(--line-soft); }
-  .st { font-family:var(--f); font-size:11px; padding:3px 9px; border-radius:20px; white-space:nowrap;
+  .st { font-family:var(--f); font-size:12px; padding:3px 9px; border-radius:20px; white-space:nowrap;
         color:var(--faint); background:rgba(255,255,255,.06); }
-  .tf .dt { font-family:var(--m); font-size:11.5px; color:var(--faint); }
+  .tf .dt { font-family:var(--m); font-size:12px; color:var(--faint); }
   .more { margin-left:auto; border:0; background:none; color:var(--hushed); font-family:var(--f);
-          font-size:12px; cursor:pointer; display:inline-flex; align-items:center; gap:5px; padding:4px 2px;
+          font-size:13px; cursor:pointer; display:inline-flex; align-items:center; gap:5px; padding:4px 2px;
           transition:color .16s; }
   .more:hover { color:var(--solar-l); }
   .more svg { transition:transform .22s var(--e); }
@@ -210,13 +241,25 @@
   @keyframes fade { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:none; } }
   .det dl { display:grid; grid-template-columns:auto 1fr; gap:8px 14px; margin:14px 0 0;
             padding-top:14px; border-top:1px solid var(--line-soft); }
-  .det dt { font-size:12.5px; color:var(--faint); }
-  .det dd { margin:0; font-family:var(--m); font-size:12.5px; color:var(--hushed); text-align:right;
+  .det dt { font-size:13px; color:var(--faint); }
+  .det dd { margin:0; font-family:var(--m); font-size:13px; color:var(--hushed); text-align:right;
             font-variant-numeric:tabular-nums; }
-  .det .warn { margin-top:12px; font-size:12px; line-height:1.45; color:var(--down); }
+  .det .warn { margin-top:12px; font-size:13px; line-height:1.45; color:var(--down); }
 
-  .empty { color:var(--hushed); font-size:14px; line-height:1.6; padding:8px 0; max-width:46ch; }
+  .empty { color:var(--hushed); font-size:15px; line-height:1.6; padding:8px 0; max-width:46ch; }
 
+
+  /* Тач-цели: аудитория работает с телефона, а основное действие — переход
+     в паспорт выпуска — было самым мелким на странице (18px высотой). */
+  @media (max-width:860px) {
+    .exit { min-height:44px; padding:10px 16px; }
+    .zt a.all { min-height:44px; }
+    .chip { min-height:44px; padding:10px 17px; }
+    .lp { min-height:44px; }
+    .th .nm a, .th .nm span.plain { min-height:44px; }
+    .more { min-height:44px; padding:10px 4px; }
+    .go { padding:15px; }
+  }
 
   @media (prefers-reduced-motion:reduce) {
     #dash.on, .tile.open .det { animation:none; }
@@ -226,6 +269,7 @@
 </style>
 </head>
 <body>
+<a class="skip" href="#content">К содержимому</a>
 <div class="wrap">
   <div class="top">
     <svg width="22" height="22" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>
@@ -233,12 +277,13 @@
     <div class="sp"><button class="exit" id="exit" type="button" style="display:none">Выйти</button></div>
   </div>
 
+  <main id="content">
   <!-- ВХОД -->
   <div id="gate">
     <h1>Рабочий стол</h1>
     <p class="lead">Ваши выпуски, котировки по ним и выплаченная маржа. ID и ключ выдаёт Rumberg.</p>
-    <div class="field"><span class="k">Ваш ID</span><input id="id" autocomplete="username" placeholder="например andrey" spellcheck="false"></div>
-    <div class="field"><span class="k">Ключ</span><input id="key" type="password" autocomplete="current-password" placeholder="выдаётся Rumberg"></div>
+    <label class="field" for="id"><span class="k">Ваш ID</span><input id="id" autocomplete="username" placeholder="например andrey" spellcheck="false"></label>
+    <label class="field" for="key"><span class="k">Ключ</span><input id="key" type="password" autocomplete="current-password" placeholder="выдаётся Rumberg"></label>
     <button class="go" id="go" type="button">Войти</button>
     <div class="msg" id="err"></div>
     <p class="note">Ключ сохраняется в этом браузере, чтобы не вводить его каждый раз. На общем компьютере после работы нажмите «Выйти».</p>
@@ -258,6 +303,8 @@
       <div class="mchart" id="mchart"></div>
     </div>
 
+    <div class="since" id="since" style="display:none"></div>
+
     <section class="live" id="liveBox" style="display:none">
       <div class="zt">актуальные продукты<a class="all" href="board.html">вся доска<svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 7h8M7.5 3.5L11 7l-3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a></div>
       <div class="lrow" id="live"></div>
@@ -267,10 +314,10 @@
       <div class="zt">мои выпуски</div>
         <div class="ctrl" id="ctrl" style="display:none">
           <span class="sl">сортировка</span>
-          <button class="chip on" type="button" data-s="date">Дата</button>
-          <button class="chip" type="button" data-s="reward">Маржа</button>
-          <button class="chip" type="button" data-s="volume">Объём</button>
-          <button class="chip" type="button" data-s="bid">Bid</button>
+          <button class="chip on" type="button" data-s="date" aria-pressed="true">Дата</button>
+          <button class="chip" type="button" data-s="reward" aria-pressed="false">Маржа</button>
+          <button class="chip" type="button" data-s="volume" aria-pressed="false">Объём</button>
+          <button class="chip" type="button" data-s="bid" aria-pressed="false">Bid</button>
         </div>
         <div class="tiles" id="tiles"></div>
         <div class="empty" id="dealEmpty" style="display:none">
@@ -278,6 +325,8 @@
         </div>
       </section>
   </div>
+  </main>
+  <p class="sr" id="say" role="status" aria-live="polite"></p>
 </div>
 
 <script src="data/instruments.js?v=fx8"></script>
@@ -420,6 +469,114 @@
       "</div>";
   }
 
+  // ---- ЧТО ИЗМЕНИЛОСЬ С ПРОШЛОГО ЗАХОДА -----------------------------------
+  // Снимок Bid храним в браузере партнёра: сервер о «прошлом заходе» не знает,
+  // а заводить это в KV ради одной строки — лишняя связь. Храним ДВА снимка:
+  // последний и предыдущий. Иначе второй заход за день сравнивал бы утро с утром
+  // и всегда показывал ноль.
+  var DELTA = {};        // ISIN -> изменение Bid в п.п. с прошлого захода
+  var SEEN_DATE = null;  // дата того захода, с которым сравниваем
+
+  function seenKey(ref) { return "so_me_seen:" + ref; }
+  function seenLoad(ref) {
+    try { return JSON.parse(localStorage.getItem(seenKey(ref)) || "null"); } catch (e) { return null; }
+  }
+  function seenSave(ref, obj) {
+    try { localStorage.setItem(seenKey(ref), JSON.stringify(obj)); } catch (e) {}
+  }
+
+  function computeDeltas(ref, deals) {
+    DELTA = {}; SEEN_DATE = null;
+    var today = todayIso(), now = {};
+    for (var i = 0; i < deals.length; i++) {
+      var it = ISSUES[deals[i].isin], b = bidOf(it);
+      if (b != null) now[deals[i].isin] = b;
+    }
+    var box = seenLoad(ref) || {};
+    // Сравниваем с ПРЕДЫДУЩИМ снимком, если последний сделан сегодня.
+    var base = (box.last && box.last.date === today) ? box.prev : box.last;
+    if (base && base.bids) {
+      SEEN_DATE = base.date;
+      for (var k in now) {
+        if (base.bids[k] != null) {
+          var d = Math.round((now[k] - base.bids[k]) * 100) / 100;
+          if (d !== 0) DELTA[k] = d;
+        }
+      }
+    }
+    // Снимок за сегодня пишем один раз в день, иначе предыдущий затрётся.
+    if (!box.last || box.last.date !== today) {
+      seenSave(ref, { prev: box.last || null, last: { date: today, bids: now } });
+    }
+  }
+
+  // Ближайшее датированное событие по выпускам партнёра. Даты уже лежат в данных
+  // витрины — просто до сих пор были спрятаны внутрь «Параметров».
+  var EV_NAME = { expiry: "финальный фиксинг", settlement: "выплата", maturity: "погашение" };
+  function nextEvent(deals) {
+    var today = todayIso(), best = null, seen = {};
+    for (var i = 0; i < deals.length; i++) {
+      var isin = deals[i].isin, it = ISSUES[isin];
+      if (!it || seen[isin]) continue;
+      seen[isin] = 1;
+      var dts = it.dates || {};
+      var cand = [["expiry", dts.expiry], ["settlement", dts.settlement], ["maturity", it.maturity]];
+      for (var j = 0; j < cand.length; j++) {
+        var kind = cand[j][0], iso = cand[j][1];
+        if (!iso || iso < today) continue;
+        if (!best || iso < best.iso) best = { iso: iso, kind: kind, name: splitName(deals[i].product).name };
+      }
+    }
+    return best;
+  }
+
+  function drawSince(ref, deals) {
+    var box = $("since");
+    if (!deals.length) { box.style.display = "none"; return; }
+    computeDeltas(ref, deals);
+
+    var items = [];
+
+    // 1. движение котировок с прошлого захода
+    var up = 0, down = 0;
+    for (var k in DELTA) { if (DELTA[k] > 0) up++; else down++; }
+    if (!SEEN_DATE) {
+      items.push(["с прошлого захода",
+        '<span class="mut">первый заход — сравнение появится со следующего</span>']);
+    } else if (!up && !down) {
+      items.push(["с " + dmy(SEEN_DATE), '<span class="mut">котировки не изменились</span>']);
+    } else {
+      var parts = [];
+      if (up) parts.push('<span class="up">' + up + " " + plural(up, "выпуск вырос", "выпуска выросли", "выпусков выросли") + "</span>");
+      if (down) parts.push('<span class="down">' + down + " " + plural(down, "снизился", "снизились", "снизились") + "</span>");
+      items.push(["bid с " + dmy(SEEN_DATE), parts.join(" · ")]);
+    }
+
+    // 2. ближайшее событие по его бумагам
+    var ev = nextEvent(deals);
+    if (ev) {
+      var dl = daysLeft(ev.iso);
+      items.push(["ближайшее событие",
+        esc(EV_NAME[ev.kind] || ev.kind) + " · " + esc(ev.name) + ' <span class="mut">' +
+        (dl === 0 ? "сегодня" : "через " + dl + " " + plural(dl, "день", "дня", "дней")) + "</span>"]);
+    }
+
+    // 3. на какое число котировки — иначе вчерашний Bid выглядит сегодняшним
+    var upd = (window.PLACEMENTS_DATA && PLACEMENTS_DATA.updated) || null;
+    if (upd) {
+      var age = daysLeft(upd);   // отрицательное = столько дней назад
+      var stale = age !== null && age < -3;
+      items.push(["котировки", '<span class="' + (stale ? "" : "mut") + '">на ' + dmy(upd) +
+        (stale ? " · давно не обновлялись" : "") + "</span>", stale]);
+    }
+
+    box.style.display = "flex";
+    box.innerHTML = items.map(function (it) {
+      return '<div class="si"><span class="k">' + esc(it[0]) + '</span><span class="v' +
+        (it[2] ? " stale" : "") + '">' + it[1] + "</span></div>";
+    }).join("");
+  }
+
   // ---- БЛОКИ ВЫПУСКОВ ------------------------------------------------------
   var ALL = [], view = { sort: "date" };
 
@@ -477,8 +634,12 @@
       ? '<a href="' + esc(link) + '">' + esc(sp.name) + ARROW + "</a>"
       : '<span class="plain">' + esc(sp.name) + "</span>";
 
+    var dl2 = DELTA[d.isin];
+    var deltaChip = dl2 == null ? "" :
+      '<span class="dlt ' + (dl2 > 0 ? "up" : "down") + '">' + (dl2 > 0 ? "+" : "−") +
+      String(Math.abs(dl2)).replace(".", ",") + " п.п.</span>";
     var bidCell = bid != null
-      ? '<div class="v">' + pct2(bid) + '</div><span class="k">bid · индикативно</span>'
+      ? '<div class="v">' + pct2(bid) + deltaChip + '</div><span class="k">bid · индикативно</span>'
       : '<div class="v na">' + (matured ? "выпуск погашен" : it ? "нет котировки" : "нет в данных выпусков") +
         '</div><span class="k">bid</span>';
 
@@ -575,8 +736,15 @@
     if (!c) return;
     view.sort = c.getAttribute("data-s");
     var sibs = $("ctrl").querySelectorAll("[data-s]");
-    for (var i = 0; i < sibs.length; i++) sibs[i].classList.toggle("on", sibs[i] === c);
+    for (var i = 0; i < sibs.length; i++) {
+      var on = sibs[i] === c;
+      sibs[i].classList.toggle("on", on);
+      sibs[i].setAttribute("aria-pressed", on ? "true" : "false");
+    }
     renderTiles();
+    // Без объявления смена сортировки для скринридера просто не происходит:
+    // список перерисовывается молча.
+    $("say").textContent = "Сортировка по: " + c.textContent.trim() + ". Выпусков: " + ALL.length + ".";
   });
 
 
@@ -687,6 +855,8 @@
     dash.classList.add("on");
     $("exit").style.display = "inline-block";
     drawIdentity(d);
+    // Порядок важен: drawSince считает DELTA, а блоки её печатают.
+    drawSince(d.ref, d.deals || []);
     drawDeals(d.deals || []);
     drawMarginChart(d.deals || []);
     drawLive();
