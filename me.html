@@ -148,19 +148,32 @@
   .main { margin-top:34px; }
 
   /* ── актуальные продукты: полоса под маржой, из данных доски ── */
-  .live { margin-top:32px; padding-top:26px; border-top:1px solid var(--line-soft); }
-  .lrow { display:grid; grid-template-columns:repeat(auto-fill, minmax(250px,1fr)); gap:1px;
+  .live { margin-top:26px; padding-top:20px; border-top:1px solid var(--line-soft); }
+  /* Ровно 3 колонки на 6 позиций: при auto-fill выходило 4 колонки и две пустые
+     ячейки во втором ряду, а названия переносились на 2–3 строки. */
+  .lrow { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:1px;
           background:var(--line-soft); border:1px solid var(--line-soft); border-radius:10px; overflow:hidden; }
-  .lp { display:flex; align-items:baseline; gap:10px; padding:11px 13px; background:var(--card);
+  @media (max-width:980px) { .lrow { grid-template-columns:repeat(2, minmax(0,1fr)); } }
+  .lp { display:flex; align-items:center; gap:10px; padding:9px 12px; background:var(--card);
         transition:background .16s; }
   .lp:hover { background:#181B22; }
-  .lp .n { flex:1; min-width:0; font-size:13px; line-height:1.3; }
+  /* Одна строка на позицию: перенос имени и был главным источником объёма */
+  .lp .n { flex:1; min-width:0; font-size:13px; line-height:1.35;
+           white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .lp:hover .n { color:var(--solar-l); }
   .lp .q { font-family:var(--m); font-size:13px; font-weight:500; color:var(--solar-l);
            white-space:nowrap; font-variant-numeric:tabular-nums; }
   /* Цифры у продуктов РАЗНОГО типа значат разное — метка обязательна (как на главной) */
   .lp .q i { font-style:normal; font-size:11px; font-weight:400; letter-spacing:.08em;
              text-transform:uppercase; color:var(--faint); margin-left:5px; }
+
+  @media (max-width:600px) {
+    .lrow { grid-template-columns:minmax(0,1fr); }
+    /* В одной колонке усечение съедало срок продукта («· 3 года»), а это довод
+       в разговоре с клиентом — здесь имя переносим, а не обрезаем. */
+    .lp { align-items:flex-start; padding:11px 12px; }
+    .lp .n { white-space:normal; overflow:visible; text-overflow:clip; }
+  }
 
   .zt { font-family:var(--m); font-size:12px; letter-spacing:.11em; text-transform:uppercase;
         color:var(--faint); margin:0 0 16px; display:flex; align-items:baseline; gap:10px; }
