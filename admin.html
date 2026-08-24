@@ -194,6 +194,12 @@
 
   <!-- ══════════ НА РАЗМЕЩЕНИИ ══════════ -->
   <form id="f-offering">
+    <div class="grp"><div class="gt">что делаем</div>
+      <label style="margin:0"><span class="k">Выпуск</span>
+        <select name="pick" id="off-pick"><option value="">— новый выпуск —</option></select></label>
+      <div class="hint" id="off-mode">Заполните форму — уйдёт заявка на публикацию нового выпуска.</div>
+    </div>
+
     <div class="grp"><div class="gt">Выпуск</div>
       <label><span class="k">Название <b>*</b></span><input name="name" placeholder="Дисконтная облигация на ВЭБ.РФ" maxlength="90"></label>
       <div class="row">
@@ -241,6 +247,32 @@
       <label><span class="k">Как работает <b>*</b></span><textarea name="how" maxlength="600" placeholder="Покупается с дисконтом — по 58,82% номинала — и при отсутствии кредитного события…"></textarea></label>
       <label><span class="k">Риски <b>*</b></span><textarea name="risk" maxlength="500" placeholder="Кредитный риск на контрольное лицо…"></textarea></label>
     </div>
+    <div class="grp" id="off-docs" style="display:none"><div class="gt">эмиссионные документы и презентация</div>
+      <div class="hint-box">Руслану уходит заявка с параметрами, сами файлы ждут одобрения на сервере
+        и в Telegram не пересылаются. После ✅ документы появляются в карточке выпуска на странице
+        «На размещении». Повторная загрузка того же типа заменяет прежний файл.
+        Заявка живёт неделю — если за это время её не одобрят, файл придётся загрузить заново.</div>
+      <div class="row">
+        <label><span class="k">Ключевые условия выпуска (КУВ)</span>
+          <input name="offKuv" type="file" accept="application/pdf,.pdf"></label>
+        <label><span class="k">Ключевой информационный документ (КИД)</span>
+          <input name="offKid" type="file" accept="application/pdf,.pdf"></label>
+      </div>
+      <div class="row">
+        <label><span class="k">Презентация — файл</span>
+          <input name="offPreso" type="file" accept="application/pdf,.pdf"></label>
+        <label><span class="k">Презентация — уточнение в подписи</span>
+          <input name="presoName" placeholder="Энергетика будущего (АльянсКапитал)" maxlength="80"></label>
+      </div>
+      <div class="row">
+        <label><span class="k">Другой документ — название</span>
+          <input name="offDocName" placeholder="Условия сделки" maxlength="80"></label>
+        <label><span class="k">Другой документ — файл</span>
+          <input name="offOther" type="file" accept="application/pdf,.pdf"></label>
+      </div>
+      <div class="hint">Только PDF, каждый до 15 МБ.<span id="off-docs-have"></span></div>
+    </div>
+
     <button class="send" type="submit">Отправить на одобрение</button>
     <div class="msg" id="m-offering"></div>
   </form>
@@ -829,29 +861,208 @@
 
   // ── НА РАЗМЕЩЕНИИ ──
   var fOff = document.getElementById("f-offering");
+  // ── На размещении: правка существующего выпуска и документы к нему ──
+  // Выбор в списке переключает режим: пусто — заявка на новый выпуск, выбран
+  // выпуск — заявка на ПРАВКУ. Правка на сервере сливается по непустым полям,
+  // поэтому корзина, график, пример расчёта, видео и партнёр не теряются —
+  // форма про них не знает и знать не должна.
+  var offAll = {};                 // id -> запись размещения
+  var offPick = document.getElementById("off-pick");
+  var offDocs = document.getElementById("off-docs");
+  var offMode = document.getElementById("off-mode");
+  var offHave = document.getElementById("off-docs-have");
+  var offBtn = fOff.querySelector(".send");
+
+  // Значение в select, которого нет в списке опций, молча не выставится — и на
+  // отправке подменило бы реальное поле первым вариантом. У размещений так и есть:
+  // family бывает protection и warrant, venue — «Биржа · стакан». Добавляем опцию.
+  function setSel(el, v) {
+    if (!el || v == null || v === "") return;
+    var found = Array.prototype.some.call(el.options, function (o) { return o.value === String(v); });
+    if (!found) {
+      var o = document.createElement("option");
+      o.value = String(v); o.textContent = String(v) + " (из данных)";
+      el.appendChild(o);
+    }
+    el.value = String(v);
+  }
+  function setVal(name, v) {
+    var el = fOff.elements[name];
+    if (!el) return;
+    if (el.tagName === "SELECT") setSel(el, v);
+    else el.value = v == null ? "" : String(v);
+  }
+
+  var OFF_TEXT = ["name", "kind", "serial", "isin", "issuer", "reference", "statusLabel",
+                  "teaser", "placement", "maturity", "tenor", "how", "risk"];
+  var OFF_NUM = ["nominal", "price", "redeem"];
+  var OFF_SEL = ["family", "status", "currency", "venue"];
+
+  function offFill(o) {
+    OFF_TEXT.forEach(function (k) { setVal(k, o[k]); });
+    OFF_NUM.forEach(function (k) { setVal(k, o[k]); });
+    OFF_SEL.forEach(function (k) { setVal(k, o[k]); });
+    setVal("dealers", Array.isArray(o.dealers) ? o.dealers.join(", ") : "");
+  }
+
+  function offSyncMode() {
+    var id = offPick.value;
+    var o = id ? offAll[id] : null;
+    offDocs.style.display = o ? "block" : "none";
+    offBtn.textContent = o ? "Отправить правку" : "Отправить на одобрение";
+    if (!o) {
+      offMode.textContent = "Заполните форму — уйдёт заявка на публикацию нового выпуска.";
+      offHave.textContent = "";
+      return;
+    }
+    offMode.textContent = "Правка выпуска «" + (o.name || id) + "». Меняйте только то, что нужно: " +
+      "пустые поля ничего не затирают, а корзина, график, пример расчёта и видео остаются как есть.";
+    var have = (o.docs || []).map(function (d) { return d.name; });
+    offHave.textContent = have.length
+      ? " Уже приложено: " + have.join("; ") + ". Повторная загрузка того же типа заменит файл."
+      : " Документов пока нет.";
+  }
+
+  offPick.addEventListener("change", function () {
+    var o = offPick.value ? offAll[offPick.value] : null;
+    if (o) offFill(o); else fOff.reset();
+    offSyncMode();
+  });
+
+  (function loadOfferings() {
+    fetch("data/offerings.js?cb=" + Date.now()).then(function (r) { return r.text(); })
+      .then(function (t) {
+        var d = dataObj(t) || {};
+        var opts = ['<option value="">— новый выпуск —</option>'];
+        ((d.items) || []).forEach(function (o) {
+          if (!o || !o.id) return;
+          offAll[o.id] = o;
+          opts.push('<option value="' + esc(o.id) + '">' + esc(o.name || o.id) +
+                    " · " + esc(o.statusLabel || o.status || "") + '</option>');
+        });
+        offPick.innerHTML = opts.join("");
+        offSyncMode();
+      })
+      .catch(function () { offMode.textContent = "Список выпусков не загрузился — правка недоступна, новый выпуск заводится как обычно."; });
+  })();
+
+  // Файлы: КУВ, КИД, презентация, другой
+  function offPickedDocs() {
+    var out = [];
+    var one = function (input, kind, name) {
+      var f = input && input.files && input.files[0];
+      if (f) out.push({ kind: kind, name: name, file: f });
+    };
+    one(fOff.offKuv, "kuv", "");
+    one(fOff.offKid, "kid", "");
+    var presoFile = fOff.offPreso && fOff.offPreso.files && fOff.offPreso.files[0];
+    if (presoFile) out.push({ kind: "preso", name: (fOff.presoName.value || "").trim(), file: presoFile });
+    var otherName = (fOff.offDocName.value || "").trim();
+    var otherFile = fOff.offOther && fOff.offOther.files && fOff.offOther.files[0];
+    if (otherFile && !otherName) throw new Error("У «другого документа» должно быть название — оно станет подписью ссылки.");
+    if (otherName && !otherFile) throw new Error("Название «другого документа» есть, а файла нет.");
+    if (otherFile) out.push({ kind: "other", name: otherName, file: otherFile });
+    return out;
+  }
+
   fOff.addEventListener("submit", function (e) {
     e.preventDefault();
-    submit("offering", fOff, document.getElementById("m-offering"), function () {
-      req(fOff, ["name", "kind", "serial", "issuer", "teaser", "price", "how", "risk"]);
-      var item = { family: val(fOff, "family"), kind: val(fOff, "kind"), name: val(fOff, "name"),
-                   status: val(fOff, "status"), teaser: val(fOff, "teaser"), issuer: val(fOff, "issuer"),
-                   serial: val(fOff, "serial"), currency: val(fOff, "currency"),
-                   venue: val(fOff, "venue"), how: val(fOff, "how"), risk: val(fOff, "risk") };
-      put(item, "statusLabel", val(fOff, "statusLabel"));
-      put(item, "isin", val(fOff, "isin").toUpperCase());
-      put(item, "reference", val(fOff, "reference"));
-      put(item, "nominal", num(fOff, "nominal") || 1000);
-      put(item, "price", num(fOff, "price"));
-      put(item, "redeem", num(fOff, "redeem") || 100);
-      put(item, "placement", val(fOff, "placement"));
-      put(item, "maturity", val(fOff, "maturity"));
-      put(item, "tenor", val(fOff, "tenor"));
-      var dealers = val(fOff, "dealers").split(",").map(function (s) { return s.trim(); }).filter(Boolean);
-      if (dealers.length) item.dealers = dealers;
-      item.id = slug(item.serial || item.name);
-      return item;
+    var msgEl = document.getElementById("m-offering");
+    msgEl.className = "msg";
+    var key = keyEl.value.trim();
+    if (!key) { msgEl.className = "msg err"; msgEl.textContent = "Введите ваш персональный ключ (в самом верху страницы)."; keyEl.focus(); return; }
+
+    var editId = offPick.value;
+    var item, docs;
+    try {
+      docs = editId ? offPickedDocs() : [];
+      if (editId) {
+        // Правка: отправляем ТОЛЬКО заполненные поля. Пустое поле сервер пропускает,
+        // поэтому «стереть значение» через форму нельзя — и это защита от случайной
+        // потери текста, который писали вручную.
+        // Отправляем ТОЛЬКО реально изменённые поля. Форма предзаполнена записью,
+        // поэтому «заполнено» в ней всё: без сравнения с исходником заявка раздувалась
+        // до лимита payload и врала модератору, будто меняется каждое поле.
+        var orig = offAll[editId] || {};
+        var same = function (a, b) {
+          return String(a == null ? "" : a).trim() === String(b == null ? "" : b).trim();
+        };
+        item = { id: editId };
+        OFF_TEXT.concat(OFF_SEL).forEach(function (k) {
+          var v = val(fOff, k);
+          if (k === "isin") v = v.toUpperCase();
+          if (v !== "" && !same(v, orig[k])) item[k] = v;
+        });
+        OFF_NUM.forEach(function (k) {
+          var n = num(fOff, k);
+          if (n != null && !isNaN(n) && !same(n, orig[k])) item[k] = n;
+        });
+        var dl = val(fOff, "dealers").split(",").map(function (s) { return s.trim(); }).filter(Boolean);
+        var was = Array.isArray(orig.dealers) ? orig.dealers.join(", ") : "";
+        if (dl.length && !same(dl.join(", "), was)) item.dealers = dl;
+        if (Object.keys(item).length === 1 && !docs.length) {
+          throw new Error("Ничего не изменено и файлов нет — поменяйте поле или приложите документ.");
+        }
+      } else {
+        req(fOff, ["name", "kind", "serial", "issuer", "teaser", "price", "how", "risk"]);
+        item = { family: val(fOff, "family"), kind: val(fOff, "kind"), name: val(fOff, "name"),
+                 status: val(fOff, "status"), teaser: val(fOff, "teaser"), issuer: val(fOff, "issuer"),
+                 serial: val(fOff, "serial"), currency: val(fOff, "currency"),
+                 venue: val(fOff, "venue"), how: val(fOff, "how"), risk: val(fOff, "risk") };
+        put(item, "statusLabel", val(fOff, "statusLabel"));
+        put(item, "isin", val(fOff, "isin").toUpperCase());
+        put(item, "reference", val(fOff, "reference"));
+        put(item, "nominal", num(fOff, "nominal") || 1000);
+        put(item, "price", num(fOff, "price"));
+        put(item, "redeem", num(fOff, "redeem") || 100);
+        put(item, "placement", val(fOff, "placement"));
+        put(item, "maturity", val(fOff, "maturity"));
+        put(item, "tenor", val(fOff, "tenor"));
+        var dealers = val(fOff, "dealers").split(",").map(function (s) { return s.trim(); }).filter(Boolean);
+        if (dealers.length) item.dealers = dealers;
+        item.id = slug(item.serial || item.name);
+      }
+    } catch (err) { msgEl.className = "msg err"; msgEl.textContent = String(err.message || err); return; }
+
+    var btn = fOff.querySelector(".send");
+    var btnText = btn.textContent;
+    btn.disabled = true; btn.textContent = "Отправляем…";
+
+    // Сначала сам выпуск (или правка), потом документы: каждая заявка — отдельная
+    // карточка на ✅, и выпуск должен встать в очереди первым.
+    var first = editId
+      ? (Object.keys(item).length > 1
+          ? postJson({ key: key, section: "offering", action: "offering_edit", item: item })
+          : Promise.resolve(true))
+      : postJson({ key: key, section: "offering", item: item });
+    var chain = first;
+    docs.forEach(function (d) {
+      chain = chain.then(function () {
+        return readPdf(d.file).then(function (b64) {
+          return postJson({ key: key, action: "offeringdoc", id: editId,
+                            docKind: d.kind, docName: d.name, fileB64: b64 });
+        });
+      });
+    });
+    chain.then(function () {
+      var parts = [];
+      if (editId && Object.keys(item).length > 1) parts.push("правка");
+      if (!editId) parts.push("выпуск");
+      if (docs.length) parts.push(docs.length === 1 ? "документ" : "документов: " + docs.length);
+      msgEl.className = "msg ok";
+      msgEl.textContent = "Отправлено на одобрение ✅ (" + parts.join(", ") + "). " +
+        "После ✅ Руслана изменения появятся на сайте через пару минут.";
+      fOff.reset();
+      offPick.value = "";
+      offSyncMode();
+    }).catch(function (err) {
+      msgEl.className = "msg err";
+      msgEl.textContent = String((err && err.message) || err);
+    }).finally(function () {
+      btn.disabled = false; btn.textContent = btnText;
     });
   });
+
 
   // ── ИДЕЯ В ДАЙДЖЕСТ: выбор готового продукта → авто-подстановка → текст сейлза → черновик ──
   var dgProducts = {};            // "source:id" -> { product, source }

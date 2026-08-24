@@ -1984,7 +1984,8 @@ const SUBMIT_SECTIONS = {
     label: "На размещении",
     file: "data/offerings.js",
     str: ["id", "family", "kind", "name", "status", "statusLabel", "teaser", "issuer", "serial",
-          "isin", "reference", "currency", "placement", "maturity", "tenor", "venue", "how", "risk"],
+          "isin", "reference", "currency", "placement", "placementLabel", "maturity", "tenor",
+          "venue", "how", "risk", "accent", "protection", "participation", "fx"],
     num: ["nominal", "price", "redeem"],
     arr: ["dealers"],
     required: ["id", "family", "kind", "name", "status", "teaser", "issuer", "serial", "price", "how", "risk"],
@@ -2133,6 +2134,63 @@ async function handleSubmit(request, env, cors) {
   // кладётся в KV на неделю, а модератору уходит обычная текстовая заявка с
   // параметрами. По ✅ бот забирает байты из KV и коммитит docs/<файл> +
   // data/placement_docs.js; по ❌ ключ просто удаляется.
+  // ── Документы к размещению: КУВ, КИД, презентация ──
+  // Тот же конвейер, что у документов размещённых выпусков: файл ждёт одобрения
+  // в KV, а не в репозитории. Репозиторий ПУБЛИЧНЫЙ, и неодобренный документ иначе
+  // был бы доступен всем ещё до ✅ — и навсегда остался бы в истории git.
+  // Отличие одно: ключ здесь id размещения, а не ISIN (у части размещений ISIN
+  // ещё нет), и добавился третий тип — презентация.
+  if (data.action === "offeringdoc") {
+    const oid = slugId(cleanStr(data.id, 60));
+    if (!oid || oid === "idea") return json({ ok: false, error: "no_id" }, 422, cors);
+    const kind = ["kuv", "kid", "preso", "other"].includes(data.docKind) ? data.docKind : null;
+    if (!kind) return json({ ok: false, error: "bad_kind" }, 422, cors);
+    const docName = cleanStr(data.docName, 80);
+    if (kind === "other" && !docName) return json({ ok: false, error: "no_name" }, 422, cors);
+    const b64 = String(data.fileB64 || "").replace(/^data:[^,]*,/, "");
+    // %PDF- в base64 = JVBERi0: не-PDF отбиваем до похода в Telegram
+    if (!b64.startsWith("JVBERi0")) return json({ ok: false, error: "not_pdf" }, 422, cors);
+    if (b64.length > 20 * 1024 * 1024) return json({ ok: false, error: "too_big" }, 422, cors);
+    let bytes;
+    try { bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)); }
+    catch { return json({ ok: false, error: "bad_base64" }, 422, cors); }
+
+    // Имена файлов — по уже сложившемуся в docs/ обычаю: kuv-, kid-, preso-.
+    const file = kind === "kuv" ? "docs/kuv-" + oid + ".pdf"
+      : kind === "kid" ? "docs/kid-" + oid + ".pdf"
+      : kind === "preso" ? "docs/preso-" + oid + ".pdf"
+      : "docs/doc-" + oid + "-" + slugId(docName) + ".pdf";
+    const label = kind === "kuv" ? "Ключевые условия выпуска (КУВ)"
+      : kind === "kid" ? "Ключевой информационный документ (КИД)"
+      : kind === "preso" ? (docName ? "Презентация: " + docName : "Презентация")
+      : docName;
+
+    if (!env.POST_KV) return json({ ok: false, error: "kv_not_configured" }, 503, cors);
+    const kvKey = "pdoc:" + crypto.randomUUID();
+    try { await env.POST_KV.put(kvKey, bytes.buffer, { expirationTtl: 604800 }); }
+    catch (e) { return json({ ok: false, error: "kv_put_failed" }, 502, cors); }
+
+    const payload = JSON.stringify({ s: "odoc", oid, file, label, size: docSize(bytes.length), by: author, k: kvKey });
+    const text = "📎 <b>Документ к размещению</b>\n" +
+      "Выпуск: <b>" + esc(oid) + "</b>\n" + esc(label) + "\n" +
+      esc(file.split("/").pop()) + " · " + esc(docSize(bytes.length)) +
+      " · от <b>" + esc(author) + "</b>\n\n<pre>" + esc(payload) + "</pre>";
+    const rr = await tg(env, "sendMessage", {
+      chat_id: env.ADMIN_CHAT_ID, text, parse_mode: "HTML", disable_web_page_preview: true,
+      reply_markup: { inline_keyboard: [[
+        { text: "✅ Прикрепить", callback_data: "pub" },
+        { text: "❌ Отклонить", callback_data: "rej" },
+      ]] },
+    });
+    let sentOk = false;
+    try { sentOk = (await rr.json()).ok === true; } catch (e) {}
+    if (!sentOk) {
+      try { await env.POST_KV.delete(kvKey); } catch (e) {}   // карточки не будет — файл ни к чему
+      return json({ ok: false, error: "telegram_failed" }, 502, cors);
+    }
+    return json({ ok: true }, 200, cors);
+  }
+
   if (data.action === "placementdoc") {
     const isin = cleanStr(data.isin, 20).toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 12);
     if (!/^[A-Z0-9]{12}$/.test(isin)) return json({ ok: false, error: "bad_isin" }, 422, cors);
@@ -2341,6 +2399,36 @@ async function handleSubmit(request, env, cors) {
       ]] },
     });
     if (!rr.ok) return json({ ok: false, error: "telegram_failed" }, 502, cors);
+    return json({ ok: true }, 200, cors);
+  }
+
+  // ── Правка размещения: тот же аппрув, но запись не заменяется, а ДОПОЛНЯЕТСЯ ──
+  // Форма админки покрывает только простые поля. Корзина, график выплаты, пример
+  // расчёта, видео, партнёр и docs в неё не входят — у «Энергетики будущего» это
+  // половина карточки. Замена объекта их бы снесла, поэтому правка сливается по
+  // НЕПУСТЫМ ключам, а payload помечается ed.
+  if (data.action === "offering_edit") {
+    if (section !== "offering") return json({ ok: false, error: "edit_not_supported" }, 422, cors);
+    const { item: eitem } = sanitizeItem(section, data.item || {});
+    if (!eitem.id) return json({ ok: false, error: "no_id" }, 422, cors);
+    const changed = Object.keys(eitem).filter((k) => k !== "id");
+    if (!changed.length) return json({ ok: false, error: "nothing_to_change" }, 422, cors);
+    const epayload = JSON.stringify({ s: section, by: author, ed: 1, item: eitem });
+    if (epayload.length > 3400) return json({ ok: false, error: "too_long" }, 422, cors);
+    const etext =
+      "✏️ <b>Правка размещения</b>\n" +
+      "id: <b>" + esc(eitem.id) + "</b> · от <b>" + esc(author) + "</b>\n" +
+      "Меняются поля: " + esc(changed.join(", ")) + "\n" +
+      "Остальное — корзина, график, пример, видео, документы — остаётся как было.\n\n" +
+      "<pre>" + esc(epayload) + "</pre>";
+    const er = await tg(env, "sendMessage", {
+      chat_id: env.ADMIN_CHAT_ID, text: etext, parse_mode: "HTML", disable_web_page_preview: true,
+      reply_markup: { inline_keyboard: [[
+        { text: "✅ Применить", callback_data: "pub" },
+        { text: "❌ Отклонить", callback_data: "rej" },
+      ]] },
+    });
+    if (!er.ok) return json({ ok: false, error: "telegram_failed" }, 502, cors);
     return json({ ok: true }, 200, cors);
   }
 
@@ -2670,16 +2758,33 @@ async function publishItem(env, payload) {
         item.src = "sales";
         obj.instruments.push(item);
       } else if (section === "offering") {
-        const taken = new Set(obj.items.map((i) => i.id));
-        item.id = uniqueId(item.id, taken);
-        obj.items.unshift(item);
+        if (payload.ed) {
+          // Правка: ДОПОЛНЯЕМ существующую запись, ничего не удаляя. Пустые поля формы
+          // пропускаем — иначе незаполненное поле стирало бы то, что уже опубликовано.
+          const cur = obj.items.find((i) => i.id === item.id);
+          if (!cur) throw new Error("not_found");
+          for (const k of Object.keys(item)) {
+            const v = item[k];
+            if (k === "id" || v === null || v === undefined || v === "") continue;
+            cur[k] = v;
+          }
+          // Страница превью p/<id>.html собирается из item — после слияния он должен
+          // стать ПОЛНОЙ записью, иначе превью потеряет то, чего не было в форме.
+          Object.assign(item, cur);
+          obj.items = obj.items.map((i) => (i.id === cur.id ? cur : i));
+        } else {
+          const taken = new Set(obj.items.map((i) => i.id));
+          item.id = uniqueId(item.id, taken);
+          obj.items.unshift(item);
+        }
       } else {
         const ideas = obj.issues[0].ideas;
         const taken = new Set(ideas.map((i) => i.id));
         item.id = uniqueId(item.id, taken);
         ideas.push(item);
       }
-      commitMsg = "Админка: " + cfg.label + " — " + (item.name || item.id) + " (от " + by + ")";
+      commitMsg = "Админка: " + (payload.ed ? "правка — " : "") + cfg.label + " — " +
+        (item.name || item.id) + " (от " + by + ")";
       result = item;
     }
 
@@ -2714,6 +2819,70 @@ async function publishItem(env, payload) {
 
 // Прикрепление эмиссионного документа: байты забираются из KV (там файл ждал
 // одобрения) и коммитятся в docs/ + data/placement_docs.js.
+// Размер файла по-человечески — теми же единицами, что уже стоят в data/offerings.js
+// («965 КБ», «1,7 МБ»): страница показывает эту строку как есть, рядом с типом.
+function docSize(bytes) {
+  const kb = bytes / 1024;
+  if (kb < 1024) return Math.round(kb) + " КБ";
+  return (Math.round(kb / 1024 * 10) / 10).toString().replace(".", ",") + " МБ";
+}
+
+// Прикрепление документа к РАЗМЕЩЕНИЮ: байты забираются из KV (там файл ждал
+// одобрения) и коммитятся в docs/, затем ссылка дописывается в docs[] этого
+// размещения в data/offerings.js. Поле top не ставим: без него документ выводится
+// строкой со типом и размером — видно, что качаешь, до нажатия.
+async function attachOfferingDoc(env, payload) {
+  if (!env.GITHUB_TOKEN || !env.GITHUB_REPO) throw new Error("github_not_configured");
+  if (!env.POST_KV) throw new Error("kv_not_configured");
+  const buf = await env.POST_KV.get(payload.k, "arrayBuffer");
+  // Ключ живёт неделю: если модерация затянулась, файл просят загрузить заново
+  if (!buf) throw new Error("файл устарел, попросите загрузить заново");
+  const bytes = new Uint8Array(buf);
+  const branch = env.GITHUB_BRANCH || "main";
+
+  // 1) сам PDF (перезапись легальна: свежая версия документа заменяет старую)
+  {
+    const api = "https://api.github.com/repos/" + env.GITHUB_REPO + "/contents/" + payload.file;
+    let sha;
+    const g = await fetch(api + "?ref=" + branch, { headers: ghHeaders(env) });
+    if (g.ok) sha = (await g.json()).sha;
+    const body = { message: "Админка: документ " + payload.file.split("/").pop() + " (от " + payload.by + ")",
+                   content: b64encodeBytes(bytes), branch };
+    if (sha) body.sha = sha;
+    const put = await fetch(api, { method: "PUT", headers: ghHeaders(env), body: JSON.stringify(body) });
+    if (!put.ok) throw new Error("doc_put_" + put.status);
+  }
+
+  // 2) ссылка в docs[] нужного размещения
+  const api = "https://api.github.com/repos/" + env.GITHUB_REPO + "/contents/data/offerings.js";
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const g = await fetch(api + "?ref=" + branch, { headers: ghHeaders(env) });
+    if (!g.ok) throw new Error("github_get_" + g.status);
+    const meta = await g.json();
+    const text = b64decodeUtf8(meta.content);
+    const obj = JSON.parse(text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1));
+    const off = (obj.items || []).find((i) => i.id === payload.oid);
+    if (!off) throw new Error("размещения " + payload.oid + " нет на сайте");
+    // docs у части размещений лежит как null — массив может понадобиться создать
+    if (!Array.isArray(off.docs)) off.docs = [];
+    const entry = { name: payload.label, file: payload.file, ext: "PDF", size: payload.size };
+    const same = off.docs.findIndex((d) => d && d.file === payload.file);
+    if (same >= 0) off.docs[same] = Object.assign({}, off.docs[same], entry);
+    else off.docs.push(entry);
+
+    const put = await fetch(api, { method: "PUT", headers: ghHeaders(env), body: JSON.stringify({
+      message: "Админка: " + payload.label + " → " + payload.oid + " (от " + payload.by + ")",
+      content: b64encodeUtf8(renderDataFile("data/offerings.js", obj)), sha: meta.sha, branch }) });
+    if (put.ok) {
+      try { await env.POST_KV.delete(payload.k); } catch (e) {}   // файл уже в репозитории
+      return;
+    }
+    if (put.status !== 409 && put.status !== 422) throw new Error("github_put_" + put.status);
+    // sha устарел (параллельная правка) — перечитываем и пробуем ещё раз
+  }
+  throw new Error("github_conflict");
+}
+
 async function attachPlacementDoc(env, payload) {
   if (!env.GITHUB_TOKEN || !env.GITHUB_REPO) throw new Error("github_not_configured");
   if (!env.POST_KV) throw new Error("kv_not_configured");
@@ -2939,15 +3108,19 @@ async function handleTelegram(request, env, ctx) {
     if (at < 0 || end < at) { await answer("Не нашёл данные заявки", true); return new Response("ok"); }
     let payload;
     try { payload = JSON.parse(msgText.slice(at, end + 1)); } catch { await answer("Данные повреждены", true); return new Response("ok"); }
-    const label = payload.s === "pdoc" ? "Документы выпусков" : (SUBMIT_SECTIONS[payload.s] || {}).label || payload.s;
+    const isDoc = payload.s === "pdoc" || payload.s === "odoc";
+    const label = payload.s === "pdoc" ? "Документы выпусков"
+      : payload.s === "odoc" ? "Документы размещений"
+      : (SUBMIT_SECTIONS[payload.s] || {}).label || payload.s;
     const title = payload.s === "pdoc" ? payload.isin + " · " + (payload.label || "")
+      : payload.s === "odoc" ? payload.oid + " · " + (payload.label || "")
       : (payload.item && payload.item.name) || payload.rm || "";
     const editCard = (html) => tg(env, "editMessageText",
       { chat_id: cb.message.chat.id, message_id: cb.message.message_id, parse_mode: "HTML", text: html });
 
     if (cb.data === "rej") {
       // отклонённый документ незачем держать в KV до истечения недели
-      if (payload.s === "pdoc" && payload.k && env.POST_KV) {
+      if (isDoc && payload.k && env.POST_KV) {
         try { await env.POST_KV.delete(payload.k); } catch (e) {}
       }
       await editCard("❌ <b>Отклонено</b> · " + esc(label) + "\n" + esc(title) + " (от " + esc(payload.by) + ")");
@@ -2957,13 +3130,14 @@ async function handleTelegram(request, env, ctx) {
     if (cb.data === "pub") {
       try {
         let head, what;
-        if (payload.s === "pdoc") {
-          await attachPlacementDoc(env, payload);
+        if (isDoc) {
+          if (payload.s === "odoc") await attachOfferingDoc(env, payload);
+          else await attachPlacementDoc(env, payload);
           head = "📎 <b>Прикреплено</b> · ";
           what = title;
         } else {
           const published = await publishItem(env, payload);
-          head = payload.rm ? "🗑 <b>Снято</b> · " : "✅ <b>Опубликовано</b> · ";
+          head = payload.rm ? "🗑 <b>Снято</b> · " : payload.ed ? "✏️ <b>Правка применена</b> · " : "✅ <b>Опубликовано</b> · ";
           what = payload.rm ? payload.rm : (published.name || published.id);
         }
         await editCard(head + esc(label) + "\n" + esc(what) + " (от " + esc(payload.by) + ")\nСайт обновится через 1–3 минуты.");
