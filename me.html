@@ -19,7 +19,7 @@
   * { box-sizing:border-box; }
   html { -webkit-text-size-adjust:100%; }
   body { margin:0; background:var(--canvas); color:var(--ink); font-family:var(--f);
-         font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased; }
+         font-size:14px; line-height:1.45; -webkit-font-smoothing:antialiased; }
   ::selection { background:rgba(238,125,27,.26); color:#fff; }
   a { color:inherit; text-decoration:none; }
   :focus-visible { outline:2px solid var(--solar); outline-offset:2px; border-radius:5px; }
@@ -31,25 +31,15 @@
   /* Служебное для скринридеров: skip-link виден только при фокусе с клавиатуры */
   .sr { position:absolute; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden;
         clip:rect(0 0 0 0); white-space:nowrap; border:0; }
-  .skip { position:absolute; left:10px; top:-60px; z-index:10; background:var(--solar); color:#0C0A08;
+  .skip { position:absolute; left:10px; top:-60px; z-index:20; background:var(--solar); color:#0C0A08;
           padding:11px 18px; border-radius:0 0 10px 10px; font-size:13px; font-weight:600;
           transition:top .16s var(--e); }
   .skip:focus { top:0; }
 
-  .wrap { max-width:1220px; margin:0 auto; padding:0 28px 96px; }
-  @media (max-width:560px) { .wrap { padding:0 18px 72px; } }
-
-  .top { display:flex; align-items:center; gap:11px; height:66px; border-bottom:1px solid var(--line-soft); }
-  .top .t { font-family:var(--display); font-weight:600; font-size:15px; letter-spacing:-.01em; }
-  .top .sp { margin-left:auto; }
-  .exit { border:1px solid var(--line); background:none; color:var(--hushed); border-radius:8px;
-          padding:8px 15px; font-family:var(--f); font-size:13px; cursor:pointer; transition:border-color .16s, color .16s; }
-  .exit:hover { border-color:rgba(255,255,255,.32); color:var(--ink); }
-
   /* ── вход ── */
-  #gate { max-width:400px; margin:14vh auto 0; }
-  #gate h1 { font-family:var(--display); font-weight:600; font-size:29px; letter-spacing:-.025em; margin:0 0 8px; }
-  #gate .lead { color:var(--hushed); font-size:15px; margin:0 0 30px; }
+  #gate { max-width:400px; margin:12vh auto 0; padding:0 20px; }
+  #gate h1 { font-family:var(--display); font-weight:600; font-size:27px; letter-spacing:-.025em; margin:0 0 8px; }
+  #gate .lead { color:var(--hushed); font-size:15px; margin:0 0 30px; line-height:1.5; }
   .field { display:block; margin:0 0 14px; }
   .field .k { display:block; font-size:13px; color:var(--hushed); margin:0 0 6px; }
   input { width:100%; background:var(--raise); border:1px solid var(--line); border-radius:10px;
@@ -58,7 +48,7 @@
   input:focus { border-color:rgba(238,125,27,.65); }
   input::placeholder { color:var(--faint); }
   .go { width:100%; margin-top:6px; background:var(--solar); color:#0C0A08; border:0; border-radius:10px;
-        padding:13px; font-family:var(--f); font-size:15px; font-weight:600; cursor:pointer; transition:background .16s; }
+        padding:14px; font-family:var(--f); font-size:15px; font-weight:600; cursor:pointer; transition:background .16s; }
   .go:hover { background:var(--solar-l); }
   .go:disabled { opacity:.55; cursor:default; }
   /* Ошибка — семантическим красным: оранжевый на этой странице значит «деньги/действие» */
@@ -66,233 +56,185 @@
   .msg.err { display:block; }
   .note { font-size:13px; color:var(--faint); margin-top:22px; line-height:1.5; }
 
-  /* ── стол ── */
+  /* ── КОКПИТ: слева сводка партнёра, справа рабочая зона ── */
   #dash { display:none; }
-  #dash.on { display:block; animation:rise .5s var(--e) both; }
-  @keyframes rise { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
+  #dash.on { display:grid; grid-template-columns:288px minmax(0,1fr); min-height:100vh;
+             animation:rise .45s var(--e) both; }
+  @keyframes rise { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
 
-  /* ── ПАРТНЁР: идентификация ──
-     Эйрбрау «партнёр» над названием убран: заголовок несёт себя сам, а роль
-     видна из строки реквизитов (метка · ИНН · ОГРН) прямо под ним. */
-  .idc { padding:32px 0 26px; border-bottom:1px solid var(--line); }
-  .idc h1 { margin:0; font-family:var(--display); font-weight:600; font-size:29px; letter-spacing:-.025em;
-            line-height:1.15; }
-  @media (max-width:560px) { .idc h1 { font-size:23px; } }
-  /* Идентификационные признаки: моно-строка «ключ значение», разделённая линейками */
-  .ids { display:flex; flex-wrap:wrap; gap:0 0; margin-top:18px; }
-  .idf { padding:0 20px; border-left:1px solid var(--line-soft); }
-  .idf:first-child { padding-left:0; border-left:0; }
-  .idf .k { display:block; font-family:var(--m); font-size:11px; letter-spacing:.11em;
-            text-transform:uppercase; color:var(--faint); }
-  .idf .v { display:block; margin-top:5px; font-family:var(--m); font-size:13px; color:var(--ink);
-            letter-spacing:.02em; }
+  .side { background:var(--raise); border-right:1px solid var(--line-soft); padding:18px 20px 26px;
+          position:sticky; top:0; height:100vh; overflow:auto; }
+  .brand { display:flex; align-items:center; gap:9px; margin-bottom:18px; }
+  .brand .t { font-family:var(--display); font-weight:600; font-size:13px; letter-spacing:-.01em; color:var(--hushed); }
+  .brand .exit { margin-left:auto; border:1px solid var(--line); background:none; color:var(--faint);
+                 border-radius:7px; padding:5px 10px; font-family:var(--f); font-size:12px; cursor:pointer;
+                 transition:border-color .16s, color .16s; }
+  .brand .exit:hover { border-color:rgba(255,255,255,.32); color:var(--ink); }
+
+  .idc h1 { margin:0; font-family:var(--display); font-weight:600; font-size:19px; letter-spacing:-.02em; line-height:1.2; }
+  .ids { margin-top:8px; }
+  .idf { display:block; font-family:var(--m); font-size:11px; letter-spacing:.03em; line-height:1.65; }
+  /* Ключ фиксированной ширины: иначе «метка» и значение слипались в одну строку */
+  .idf .k { display:inline-block; min-width:64px; color:var(--faint); }
+  .idf .v { display:inline; color:var(--hushed); }
   .idf .v.acc { color:var(--solar-l); }
-  @media (max-width:640px) {
-    .ids { gap:16px 0; }
-    .idf { padding:0 16px; }
-    .idf:nth-child(odd) { padding-left:0; border-left:0; }
-    .idf { flex:0 0 50%; }
-  }
-  .idnone { margin-top:14px; font-size:13px; color:var(--faint); line-height:1.5; max-width:56ch; }
+  .idnone { margin-top:10px; font-size:12px; color:var(--faint); line-height:1.5; }
 
-  /* ── деньги + график ── */
-  .mrow { display:flex; align-items:flex-end; justify-content:space-between; gap:40px; flex-wrap:wrap;
-          padding:26px 0 0; }
-  .sum .fig { font-family:var(--m); font-weight:500; font-size:40px; letter-spacing:-.03em; line-height:1;
+  /* Блок сводки: моно-метка над значением, разделены волосяной линейкой */
+  .sk { font-family:var(--m); font-size:11px; letter-spacing:.11em; text-transform:uppercase; color:var(--faint);
+        margin:20px 0 7px; padding-top:15px; border-top:1px solid var(--line-soft); }
+  .sum .fig { font-family:var(--m); font-size:27px; font-weight:500; letter-spacing:-.02em; line-height:1;
               font-variant-numeric:tabular-nums; }
-  .sum .cap { margin-top:10px; font-size:13px; color:var(--hushed); }
-  .sum .cap b { color:var(--ink); font-weight:500; font-variant-numeric:tabular-nums; }
-  @media (max-width:560px) { .sum .fig { font-size:32px; } }
+  .sum .cap { margin-top:5px; font-size:12px; color:var(--hushed); line-height:1.4; }
+  .sum .cap b { color:var(--ink); font-weight:500; }
 
-  .mchart { flex:none; }
+  .mchart { margin-top:4px; }
   .mchart .mcap { font-family:var(--m); font-size:11px; letter-spacing:.11em; text-transform:uppercase;
-                  color:var(--faint); text-align:right; margin:0 0 9px; }
-  .mbars { display:flex; align-items:flex-end; gap:6px; height:58px; }
-  .mb { position:relative; width:26px; border-radius:3px 3px 0 0; background:rgba(238,125,27,.42); cursor:pointer;
-        transform:scaleY(0); transform-origin:bottom; animation:grow .55s var(--e) forwards;
-        animation-delay:calc(var(--i) * .06s); transition:background .16s; }
+                  color:var(--faint); margin:0 0 8px; }
+  .mbars { display:flex; align-items:flex-end; gap:5px; height:44px; }
+  .mb { position:relative; flex:1; border-radius:2px 2px 0 0; background:rgba(238,125,27,.42); cursor:pointer;
+        transform:scaleY(0); transform-origin:bottom; animation:grow .5s var(--e) forwards;
+        animation-delay:calc(var(--i) * .05s); transition:background .16s; }
   .mb:hover { background:var(--solar); }
   .mb.zero { background:rgba(255,255,255,.07); }
-  .mb[data-t]:hover::after { content:attr(data-t); position:absolute; bottom:calc(100% + 7px); left:50%;
-    transform:translateX(-50%); white-space:nowrap; font-family:var(--m); font-size:11px; color:var(--ink);
-    background:var(--lift); border:1px solid var(--line); border-radius:7px; padding:4px 9px; z-index:3;
-    box-shadow:0 6px 18px rgba(0,0,0,.4); }
-  .maxis { display:flex; gap:6px; margin-top:8px; }
-  .maxis span { width:26px; text-align:center; font-family:var(--m); font-size:11px; color:var(--faint); }
+  .maxis { display:flex; gap:5px; margin-top:5px; }
+  .maxis span { flex:1; text-align:center; font-family:var(--m); font-size:11px; color:var(--faint); }
   @keyframes grow { to { transform:scaleY(1); } }
-  @media (max-width:560px) { .mchart { width:100%; } .mchart .mcap { text-align:left; } }
 
-  /* ── что изменилось с прошлого захода ── */
-  .since { display:flex; flex-wrap:wrap; gap:0; margin-top:26px; padding-top:22px;
-           border-top:1px solid var(--line-soft); }
-  .si { padding:0 22px; border-left:1px solid var(--line-soft); }
-  .si:first-child { padding-left:0; border-left:0; }
-  .si .k { display:block; font-family:var(--m); font-size:11px; letter-spacing:.11em;
-           text-transform:uppercase; color:var(--faint); }
-  /* Повестка дня — причина ежедневного захода; ей нельзя быть тише реквизитов */
-  .si .v { display:block; margin-top:6px; font-size:15px; color:var(--ink); }
-  .si .v .up { color:var(--up); }
-  .si .v .down { color:var(--down); }
-  .si .v .mut { color:var(--faint); }
+  /* «Что изменилось» — теми же блоками сводки, без рамок */
+  .since { display:block; }
+  .si { display:block; }
+  .si .k { display:block; font-family:var(--m); font-size:11px; letter-spacing:.11em; text-transform:uppercase;
+           color:var(--faint); margin:20px 0 7px; padding-top:15px; border-top:1px solid var(--line-soft); }
+  .si .v { display:block; font-size:13px; line-height:1.5; color:var(--ink); }
+  .si .v .up { color:var(--up); } .si .v .down { color:var(--down); } .si .v .mut { color:var(--faint); }
   .si .v.stale { color:var(--down); }
-  @media (max-width:640px) {
-    .since { gap:14px 0; }
-    .si { flex:0 0 100%; padding:0; border-left:0; }
-  }
 
-  /* Движение Bid у блока: рядом с самой котировкой, иначе это просто ещё одно число */
-  .dlt { display:inline-block; margin-left:8px; font-family:var(--m); font-size:11px;
-         font-weight:500; padding:2px 7px; border-radius:20px; vertical-align:2px; }
-  .dlt.up { color:var(--up); background:rgba(85,192,138,.13); }
-  .dlt.down { color:var(--down); background:rgba(224,112,90,.13); }
+  /* ── рабочая зона ── */
+  .main { padding:18px 24px 48px; min-width:0; }
+  .zt { font-family:var(--m); font-weight:400; font-size:11px; letter-spacing:.12em; text-transform:uppercase;
+        color:var(--faint); margin:0 0 10px; display:flex; gap:10px; align-items:baseline; }
+  .zt:not(:first-child) { margin-top:22px; }
+  .zt .all { margin-left:auto; text-transform:none; letter-spacing:.02em; font-size:12px; color:var(--hushed);
+             display:inline-flex; align-items:center; gap:5px; transition:color .16s; }
+  .zt .all:hover { color:var(--solar-l); }
+  .zt .all svg { transition:transform .2s var(--e); }
+  .zt .all:hover svg { transform:translateX(2px); }
 
-  /* ── две зоны ── */
-  .main { margin-top:34px; }
-
-  /* ── актуальные продукты: полоса под маржой, из данных доски ── */
-  .live { margin-top:26px; padding-top:20px; border-top:1px solid var(--line-soft); }
-  /* Ровно 3 колонки на 6 позиций: при auto-fill выходило 4 колонки и две пустые
-     ячейки во втором ряду, а названия переносились на 2–3 строки. */
-  .lrow { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:1px;
-          background:var(--line-soft); border:1px solid var(--line-soft); border-radius:10px; overflow:hidden; }
-  /* Число колонок подбирается под число позиций: 4 позиции в трёх колонках
-     оставляли пустую ячейку во втором ряду — ту самую дыру, что и раньше. */
-  .lrow.c2 { grid-template-columns:repeat(2, minmax(0,1fr)); }
-  @media (max-width:980px) { .lrow, .lrow.c2 { grid-template-columns:repeat(2, minmax(0,1fr)); } }
-  .lp { display:flex; align-items:center; gap:10px; padding:9px 12px; background:var(--card);
-        transition:background .16s; }
-  .lp:hover { background:var(--lift); }
-  /* Одна строка на позицию: перенос имени и был главным источником объёма */
-  .lp .n { flex:1; min-width:0; font-size:13px; line-height:1.35;
-           white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .lp:hover .n { color:var(--solar-l); }
-  .lp .q { font-family:var(--m); font-size:13px; font-weight:500; color:var(--solar-l);
-           white-space:nowrap; font-variant-numeric:tabular-nums; }
-  /* Цифры у продуктов РАЗНОГО типа значат разное — метка обязательна (как на главной) */
-  .lp .q i { font-style:normal; font-size:11px; font-weight:400; letter-spacing:.08em;
-             text-transform:uppercase; color:var(--faint); margin-left:5px; }
-  /* Подпись «почему это вам» — то, ради чего подборка вообще персональная.
-     Цифр в ней нет by design: их печатает сама страница из данных. */
-  .lp .why { display:block; margin-top:3px; font-size:12px; line-height:1.35; color:var(--hushed); }
-  .lp .txt { flex:1; min-width:0; }
-  .lsrc { margin-top:10px; font-size:12px; color:var(--faint); line-height:1.45; }
-  .lsrc .dot { opacity:.5; margin:0 6px; }
-  .lsrc .wait { color:var(--solar-l); }
-
-  @media (max-width:600px) {
-    .lrow, .lrow.c2 { grid-template-columns:minmax(0,1fr); }
-    /* В одной колонке усечение съедало срок продукта («· 3 года»), а это довод
-       в разговоре с клиентом — здесь имя переносим, а не обрезаем. */
-    .lp { align-items:flex-start; padding:11px 12px; }
-    .lp .n { white-space:normal; overflow:visible; text-overflow:clip; }
-  }
-
-  .zt { font-family:var(--m); font-size:12px; letter-spacing:.11em; text-transform:uppercase;
-        color:var(--faint); margin:0 0 16px; display:flex; align-items:baseline; gap:10px; }
-  .zt a.all { margin-left:auto; color:var(--hushed); letter-spacing:.04em; text-transform:none; font-size:13px;
-              display:inline-flex; align-items:center; gap:4px; transition:color .16s; }
-  .zt a.all:hover { color:var(--solar-l); }
-  .zt a.all svg { transition:transform .2s var(--e); }
-  .zt a.all:hover svg { transform:translateX(2px); }
-
-  /* ── управление списком ── */
-  .ctrl { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:0 0 18px; }
-  .chip { border:1px solid var(--line); background:none; color:var(--hushed); border-radius:20px;
-          padding:6px 13px; font-family:var(--f); font-size:13px; cursor:pointer;
+  .ctrl { display:flex; flex-wrap:wrap; gap:7px; align-items:center; margin:0 0 12px; }
+  .chip { border:1px solid var(--line); background:none; color:var(--hushed); border-radius:18px;
+          padding:6px 13px; font-family:var(--f); font-size:12px; cursor:pointer;
           transition:border-color .16s, color .16s, background .16s; }
   .chip:hover { border-color:rgba(255,255,255,.3); color:var(--ink); }
   .chip.on { border-color:rgba(238,125,27,.6); color:var(--solar-l); background:rgba(238,125,27,.08); }
-  .ctrl .gap { margin-left:auto; }
   .ctrl .sl { font-family:var(--m); font-size:11px; letter-spacing:.11em; text-transform:uppercase;
-              color:var(--faint); margin-right:2px; }
-  @media (max-width:560px) { .ctrl .gap { margin-left:0; flex-basis:100%; height:0; } }
+              color:var(--faint); margin-right:3px; }
 
-  /* ── БЛОКИ СДЕЛОК ── */
-  /* align-items:start — открытый блок не растягивает соседей по ряду пустотой */
-  .tiles { display:grid; grid-template-columns:repeat(auto-fill, minmax(300px,1fr)); gap:12px;
-           align-items:start; }
-  @media (max-width:600px) { .tiles { grid-template-columns:1fr; } }
-  .tile { background:var(--card); border:1px solid var(--line-soft); border-radius:14px; overflow:hidden;
-          transition:border-color .18s, transform .18s var(--e), box-shadow .18s; }
-  /* Подъём только там, где есть настоящий hover: на таче он залипал после тапа */
-  @media (hover:hover) {
-    .tile:hover { border-color:var(--line); transform:translateY(-2px); box-shadow:0 10px 26px rgba(0,0,0,.32); }
-  }
+  /* ── ПЛИТКИ: один язык у выпусков и у подборки ── */
+  .tiles { display:grid; grid-template-columns:repeat(auto-fill, minmax(240px,1fr)); gap:9px; align-items:start; }
+  .tile { background:var(--card); border:1px solid var(--line-soft); border-radius:10px; padding:10px 12px;
+          transition:border-color .16s, background .16s; }
+  @media (hover:hover) { .tile:hover { border-color:var(--line); } }
   .tile.open { border-color:rgba(238,125,27,.34); }
-  /* Пробитый барьер защиты: флаг виден на собранном блоке, не только в «Параметрах».
-     Правило стоит ПОСЛЕ :hover и .open, чтобы красная рамка не перебивалась ими. */
+  /* Пробитый барьер виден на СОБРАННОЙ плитке; правило после :hover и .open */
   .tile.risk { border-color:rgba(224,112,90,.38); }
-  .st.risk { color:var(--down); background:rgba(224,112,90,.12); }
 
-  .th { display:flex; align-items:flex-start; gap:8px; padding:13px 14px 0; }
+  .th { display:flex; align-items:baseline; gap:7px; }
   .th .nm { flex:1; min-width:0; }
-  .th .nm a, .th .nm span.plain { font-family:var(--display); font-weight:600; font-size:15px; letter-spacing:-.01em;
-                                  line-height:1.25; display:inline-flex; align-items:center; gap:5px; transition:color .16s; }
+  .th .nm a, .th .nm span.plain { font-family:var(--display); font-weight:600; font-size:13px; letter-spacing:-.01em;
+      line-height:1.3; display:flex; align-items:center; gap:5px; transition:color .16s; }
   .th .nm a:hover { color:var(--solar-l); }
-  .th .nm a svg { flex:none; opacity:.45; transition:opacity .16s, transform .16s var(--e); }
+  .th .nm a svg { flex:none; opacity:.4; transition:opacity .16s, transform .16s var(--e); }
   .th .nm a:hover svg { opacity:1; transform:translateX(2px); }
-  .meta { padding:5px 14px 0; font-family:var(--m); font-size:11px; color:var(--faint); letter-spacing:.04em;
+  .kind { flex:none; font-family:var(--m); font-size:11px; letter-spacing:.07em; text-transform:uppercase;
+          color:var(--faint); white-space:nowrap; }
+  .meta { font-family:var(--m); font-size:11px; color:var(--faint); margin-top:2px; letter-spacing:.02em;
           white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .meta .dot { opacity:.5; margin:0 5px; }
-  .meta .d { font-family:var(--f); letter-spacing:0; color:var(--hushed); }
-  .kind { flex:none; font-family:var(--m); font-size:11px; letter-spacing:.08em; text-transform:uppercase;
-          color:var(--hushed); border:1px solid var(--line); border-radius:20px; padding:3px 8px; white-space:nowrap; }
+  .meta .dot { opacity:.5; margin:0 4px; }
+  .meta .d { font-family:var(--f); letter-spacing:0; }
 
-  /* Bid — подтянут из данных выпуска, крупно и с пометкой «индикативно» */
-  .bidrow { display:flex; align-items:flex-end; gap:12px; padding:11px 14px 0; }
+  .bidrow { display:flex; align-items:flex-end; gap:10px; margin-top:8px; }
   .bid { flex:1; min-width:0; }
-  .bid .v { font-family:var(--m); font-weight:500; font-size:21px; letter-spacing:-.02em; line-height:1;
+  .bid .v { font-family:var(--m); font-size:18px; font-weight:500; letter-spacing:-.02em; line-height:1.1;
             color:var(--up); font-variant-numeric:tabular-nums; }
-  .bid .v.na { color:var(--faint); font-size:13px; }
-  .bid .k { display:block; margin-top:5px; font-family:var(--m); font-size:11px; letter-spacing:.09em;
+  .bid .v.na { color:var(--faint); font-size:12px; font-weight:400; }
+  .bid .k { display:block; margin-top:3px; font-family:var(--m); font-size:11px; letter-spacing:.09em;
             text-transform:uppercase; color:var(--faint); }
-  .perf { flex:none; text-align:right; font-family:var(--m); font-size:13px; font-variant-numeric:tabular-nums; }
+  .dlt { font-family:var(--m); font-size:11px; padding:1px 5px; border-radius:9px; margin-left:5px;
+         vertical-align:2px; font-weight:500; }
+  .dlt.up { color:var(--up); background:rgba(85,192,138,.12); }
+  .dlt.down { color:var(--down); background:rgba(224,112,90,.12); }
+  .perf { flex:none; text-align:right; font-family:var(--m); font-size:12px; font-variant-numeric:tabular-nums; }
   .perf.up { color:var(--up); } .perf.down { color:var(--down); } .perf.off { color:var(--faint); }
-  .perf .k { display:block; margin-top:4px; font-family:var(--m); font-size:11px; letter-spacing:.09em;
+  .perf .k { display:block; margin-top:3px; font-family:var(--m); font-size:11px; letter-spacing:.06em;
              text-transform:uppercase; color:var(--faint); }
 
-  .figs { display:flex; flex-wrap:wrap; gap:0 6px; padding:9px 14px 0; font-family:var(--m); font-size:13px;
-           color:var(--hushed); font-variant-numeric:tabular-nums; }
+  .figs { display:flex; flex-wrap:wrap; gap:0 5px; margin-top:7px; font-family:var(--m); font-size:12px;
+          color:var(--hushed); font-variant-numeric:tabular-nums; }
   .figs .k { color:var(--faint); font-size:11px; }
   .figs .mg { color:var(--solar-l); }
   .figs .dot { opacity:.45; }
 
-  .tf { display:flex; align-items:center; gap:8px; padding:10px 14px; margin-top:11px;
+  .tf { display:flex; align-items:center; gap:7px; margin-top:8px; padding-top:8px;
         border-top:1px solid var(--line-soft); }
-  .st { font-family:var(--f); font-size:12px; padding:3px 9px; border-radius:20px; white-space:nowrap;
+  .st { font-family:var(--f); font-size:11px; padding:2px 8px; border-radius:20px; white-space:nowrap;
         color:var(--faint); background:rgba(255,255,255,.06); }
-  .tf .dt { font-family:var(--m); font-size:12px; color:var(--faint); }
+  .st.risk { color:var(--down); background:rgba(224,112,90,.12); }
+  .tf .dt { font-family:var(--m); font-size:11px; color:var(--faint); }
   .more { margin-left:auto; border:0; background:none; color:var(--hushed); font-family:var(--f);
-          font-size:13px; cursor:pointer; display:inline-flex; align-items:center; gap:5px; padding:4px 2px;
+          font-size:12px; cursor:pointer; display:inline-flex; align-items:center; gap:5px; padding:3px 2px;
           transition:color .16s; }
   .more:hover { color:var(--solar-l); }
   .more svg { transition:transform .22s var(--e); }
   .tile.open .more svg { transform:rotate(180deg); }
 
-  /* раскрытые параметры выпуска */
-  .det { display:none; padding:0 14px 14px; }
-  .tile.open .det { display:block; animation:fade .28s var(--e) both; }
+  .det { display:none; }
+  .tile.open .det { display:block; animation:fade .25s var(--e) both; }
   @keyframes fade { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:none; } }
-  .det dl { display:grid; grid-template-columns:auto 1fr; gap:8px 14px; margin:14px 0 0;
-            padding-top:14px; border-top:1px solid var(--line-soft); }
-  .det dt { font-size:13px; color:var(--faint); }
-  .det dd { margin:0; font-family:var(--m); font-size:13px; color:var(--hushed); text-align:right;
+  .det dl { display:grid; grid-template-columns:auto 1fr; gap:6px 12px; margin:9px 0 0;
+            padding-top:9px; border-top:1px solid var(--line-soft); }
+  .det dt { font-size:12px; color:var(--faint); }
+  .det dd { margin:0; font-family:var(--m); font-size:12px; color:var(--hushed); text-align:right;
             font-variant-numeric:tabular-nums; }
-  .det .warn { margin-top:12px; font-size:13px; line-height:1.45; color:var(--down); }
+  .det .warn { margin-top:9px; font-size:12px; line-height:1.45; color:var(--down); }
 
-  .empty { color:var(--hushed); font-size:15px; line-height:1.6; padding:8px 0; max-width:46ch; }
+  /* Подборка — те же плитки. Цифра оранжевая (наше предложение), Bid зелёный (рынок). */
+  .lrow { display:grid; grid-template-columns:repeat(auto-fill, minmax(205px,1fr)); gap:9px; align-items:start; }
+  .lp { background:var(--card); border:1px solid var(--line-soft); border-radius:10px; padding:10px 12px;
+        display:block; transition:background .16s, border-color .16s; }
+  .lp:hover { background:var(--lift); border-color:var(--line); }
+  .lp .n { display:block; font-family:var(--display); font-weight:600; font-size:13px; line-height:1.3;
+           white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .lp .q { display:block; margin-top:8px; font-family:var(--m); font-size:18px; font-weight:500;
+           color:var(--solar-l); font-variant-numeric:tabular-nums; }
+  .lp .q i { display:block; margin-top:3px; font-style:normal; font-size:11px; font-weight:400;
+             letter-spacing:.09em; text-transform:uppercase; color:var(--faint); }
+  .lp .why { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+             margin-top:7px; font-size:12px; line-height:1.45; color:var(--hushed); min-height:34px; }
+  .lsrc { margin-top:9px; font-size:12px; color:var(--faint); line-height:1.45; }
+  .lsrc .dot { opacity:.5; margin:0 6px; }
+  .lsrc .wait { color:var(--solar-l); }
+  .lsrc b { color:var(--hushed); font-weight:500; }
 
+  .empty { color:var(--hushed); font-size:14px; line-height:1.6; max-width:46ch; }
 
-  /* Тач-цели: аудитория работает с телефона, а основное действие — переход
-     в паспорт выпуска — было самым мелким на странице (18px высотой). */
-  @media (max-width:860px) {
-    .exit { min-height:44px; padding:10px 16px; }
-    .zt a.all { min-height:44px; }
-    .chip { min-height:44px; padding:10px 17px; }
-    .lp { min-height:44px; }
-    .th .nm a, .th .nm span.plain { min-height:44px; }
-    .more { min-height:44px; padding:10px 4px; }
-    .go { padding:15px; }
+  /* ── телефон: сводка складывается в две колонки и уходит наверх ── */
+  @media (max-width:900px) {
+    #dash.on { grid-template-columns:1fr; }
+    .side { position:static; height:auto; border-right:0; border-bottom:1px solid var(--line-soft);
+            display:grid; grid-template-columns:1fr 1fr; gap:0 18px; padding:14px 18px 18px; }
+    .side .wide { grid-column:1/-1; }
+    .sk, .si .k { margin-top:14px; padding-top:12px; }
+    .main { padding:18px; }
+    .th .nm a, .th .nm span.plain, .lp .n { min-height:44px; }
+    .zt .all, .more { min-height:44px; }
+    .chip { min-height:44px; padding:10px 16px; }
+    .brand .exit { min-height:44px; padding:10px 16px; }
+  }
+  @media (max-width:560px) {
+    .side { grid-template-columns:1fr; }
+    .tiles, .lrow { grid-template-columns:1fr; }
+    .lp .n { white-space:normal; }
   }
 
   @media (prefers-reduced-motion:reduce) {
@@ -304,64 +246,65 @@
 </head>
 <body>
 <a class="skip" href="#content">К содержимому</a>
-<div class="wrap">
-  <div class="top">
-    <svg width="22" height="22" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>
-    <div class="t">Rumberg · рабочий стол</div>
-    <div class="sp"><button class="exit" id="exit" type="button" style="display:none">Выйти</button></div>
-  </div>
 
-  <main id="content">
-  <!-- ВХОД -->
-  <div id="gate">
-    <h1>Рабочий стол</h1>
-    <p class="lead">Ваши выпуски, котировки по ним и выплаченная маржа. ID и ключ выдаёт Rumberg.</p>
-    <label class="field" for="id"><span class="k">Ваш ID</span><input id="id" autocomplete="username" placeholder="например andrey" spellcheck="false"></label>
-    <label class="field" for="key"><span class="k">Ключ</span><input id="key" type="password" autocomplete="current-password" placeholder="выдаётся Rumberg"></label>
-    <button class="go" id="go" type="button">Войти</button>
-    <div class="msg" id="err" role="alert"></div>
-    <p class="note">Ключ сохраняется в этом браузере, чтобы не вводить его каждый раз. На общем компьютере после работы нажмите «Выйти».</p>
-  </div>
+<!-- ВХОД -->
+<div id="gate">
+  <h1>Рабочий стол</h1>
+  <p class="lead">Ваши выпуски, котировки по ним и выплаченная маржа. ID и ключ выдаёт Rumberg.</p>
+  <label class="field" for="id"><span class="k">Ваш ID</span><input id="id" autocomplete="username" placeholder="например andrey" spellcheck="false"></label>
+  <label class="field" for="key"><span class="k">Ключ</span><input id="key" type="password" autocomplete="current-password" placeholder="выдаётся Rumberg"></label>
+  <button class="go" id="go" type="button">Войти</button>
+  <div class="msg" id="err" role="alert"></div>
+  <p class="note">Ключ сохраняется в этом браузере, чтобы не вводить его каждый раз. На общем компьютере после работы нажмите «Выйти».</p>
+</div>
 
-  <!-- СТОЛ -->
-  <div id="dash">
-    <div class="idc">
+<!-- СТОЛ: слева кокпит, справа работа -->
+<div id="dash">
+  <aside class="side">
+    <div class="brand wide">
+      <svg width="18" height="18" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>
+      <div class="t">Rumberg</div>
+      <button class="exit" id="exit" type="button" style="display:none">Выйти</button>
+    </div>
+
+    <div class="idc wide">
       <h1 id="pName">—</h1>
       <div class="ids" id="pIds"></div>
       <div class="idnone" id="pNone" style="display:none"></div>
     </div>
 
-    <div class="mrow">
+    <div class="sumbox">
+      <div class="sk">выплачено маржи</div>
       <div class="sum" id="dealSum"></div>
-      <div class="mchart" id="mchart"></div>
     </div>
 
-    <div class="since" id="since" style="display:none"></div>
+    <div class="mchart" id="mchart"></div>
 
-    <section class="live" id="liveBox" style="display:none">
-      <div class="zt">актуальные продукты<a class="all" href="board.html">вся доска<svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 7h8M7.5 3.5L11 7l-3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a></div>
+    <div class="since" id="since" style="display:none"></div>
+  </aside>
+
+  <main class="main" id="content">
+    <h2 class="zt">мои выпуски</h2>
+    <div class="ctrl" id="ctrl" style="display:none">
+      <span class="sl">сортировка</span>
+      <button class="chip on" type="button" data-s="date" aria-pressed="true">Дата</button>
+      <button class="chip" type="button" data-s="reward" aria-pressed="false">Маржа</button>
+      <button class="chip" type="button" data-s="volume" aria-pressed="false">Объём</button>
+      <button class="chip" type="button" data-s="bid" aria-pressed="false">Bid</button>
+    </div>
+    <div class="tiles" id="tiles"></div>
+    <div class="empty" id="dealEmpty" style="display:none">
+      Выпусков пока нет. Как только сделка пройдёт, выпуск появится здесь — с котировкой Bid и выплаченной маржой.
+    </div>
+
+    <section id="liveBox" style="display:none">
+      <h2 class="zt">актуальные продукты<a class="all" href="board.html">вся доска<svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 7h8M7.5 3.5L11 7l-3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a></h2>
       <div class="lrow" id="live"></div>
       <div class="lsrc" id="liveSrc"></div>
     </section>
-
-    <section class="main">
-      <div class="zt">мои выпуски</div>
-        <div class="ctrl" id="ctrl" style="display:none">
-          <span class="sl">сортировка</span>
-          <button class="chip on" type="button" data-s="date" aria-pressed="true">Дата</button>
-          <button class="chip" type="button" data-s="reward" aria-pressed="false">Маржа</button>
-          <button class="chip" type="button" data-s="volume" aria-pressed="false">Объём</button>
-          <button class="chip" type="button" data-s="bid" aria-pressed="false">Bid</button>
-        </div>
-        <div class="tiles" id="tiles"></div>
-        <div class="empty" id="dealEmpty" style="display:none">
-          Выпусков пока нет. Как только сделка пройдёт, выпуск появится здесь — с котировкой Bid и выплаченной маржой.
-        </div>
-      </section>
-  </div>
   </main>
-  <p class="sr" id="say" role="status" aria-live="polite"></p>
 </div>
+<p class="sr" id="say" role="status" aria-live="polite"></p>
 
 <script src="data/instruments.js?v=fx8"></script>
 <script src="data/placements.js?v=pl21"></script>
@@ -471,10 +414,12 @@
     // героя: без сделок рисуем приветственную строку, а не ноль.
     if (!count) {
       $("dealSum").innerHTML = '<div class="cap">Стол готов — маржа появится с первой сделкой.</div>';
+      var sk = document.querySelector(".sumbox .sk");
+      if (sk) sk.style.display = "none";
       return;
     }
     $("dealSum").innerHTML = '<div class="fig">' + money(reward) + '</div><div class="cap">' +
-      "выплачено маржи · " + count + " " + plural(count, "выпуск", "выпуска", "выпусков") + "</div>";
+      count + " " + plural(count, "выпуск", "выпуска", "выпусков") + "</div>";
   }
 
   var MONTHS_SHORT = ["янв", "фев", "мар", "апр", "май", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"];
@@ -896,14 +841,13 @@
     }).filter(function (x) { return x.r; });
 
     $("liveBox").style.display = "block";
-    // 6 позиций → 3 колонки, 4 → 2: в обоих случаях сетка заполнена целиком.
-    $("live").className = "lrow" + (rows.length % 3 === 0 ? "" : " c2");
+    // Подборка — теми же плитками, что выпуски: один язык на всю рабочую зону.
     $("live").innerHTML = rows.map(function (row) {
       var r = row.r, f = figure(r);
       return '<a class="lp" href="instrument.html?id=' + encodeURIComponent(r.id) + '">' +
-        '<span class="txt"><span class="n">' + esc(r.name) + "</span>" +
-        (row.why ? '<span class="why">' + esc(row.why) + "</span>" : "") + "</span>" +
-        '<span class="q">' + f.v + (f.n ? "<i>" + f.n + "</i>" : "") + "</span></a>";
+        '<span class="n">' + esc(r.name) + "</span>" +
+        '<span class="q">' + f.v + (f.n ? "<i>" + f.n + "</i>" : "") + "</span>" +
+        (row.why ? '<span class="why">' + esc(row.why) + "</span>" : "") + "</a>";
     }).join("");
     $("liveSrc").innerHTML = src || "";
   }
