@@ -3,15 +3,15 @@
 // Источники: ЦБ (ключевая, RUONIA), MOEX ISS (RUSFAR, БПИФы, ОФЗ),
 // Финуслуги (вклады и накопительные счета — витрина МосБиржи).
 window.RATES = {
-  "updated": "2026-08-24 13:30",
+  "updated": "2026-08-24 16:30",
   "cbr": {
     "key": {
       "rate": 14.0,
       "date": "2026-07-27"
     },
     "ruonia": {
-      "rate": 13.81,
-      "date": "2026-08-20"
+      "rate": 13.87,
+      "date": "2026-08-21"
     }
   },
   "rusfar": [
@@ -50,14 +50,14 @@ window.RATES = {
     {
       "id": "BCSD",
       "name": "БКС Денежный рынок",
-      "price": 14.253,
+      "price": 14.25,
       "ter": 0.2,
       "rate": 13.5
     },
     {
       "id": "MONY",
       "name": "АК БАРС Денежный рынок",
-      "price": 131.76,
+      "price": 131.67,
       "ter": 0.2,
       "rate": 13.5
     },
@@ -71,7 +71,7 @@ window.RATES = {
     {
       "id": "SBMM",
       "name": "Первая Сберегательный",
-      "price": 19.238,
+      "price": 19.2375,
       "ter": 0.3,
       "rate": 13.4
     },
@@ -85,14 +85,14 @@ window.RATES = {
     {
       "id": "AKMM",
       "name": "Альфа Денежный рынок",
-      "price": 176.09,
+      "price": 176.08,
       "ter": 0.69,
       "rate": 13.01
     },
     {
       "id": "TMON",
       "name": "Т-Капитал Денежный рынок",
-      "price": 163.04,
+      "price": 163.1,
       "ter": 1.15,
       "rate": 12.55
     }
@@ -103,35 +103,35 @@ window.RATES = {
       "name": "ОФЗ 26219",
       "maturity": "2026-09-16",
       "years": 0.06,
-      "rate": 12.44
+      "rate": 12.24
     },
     {
       "id": "SU26226RMFS9",
       "name": "ОФЗ 26226",
       "maturity": "2026-10-07",
       "years": 0.12,
-      "rate": 12.38
+      "rate": 12.48
     },
     {
       "id": "SU26207RMFS9",
       "name": "ОФЗ 26207",
       "maturity": "2027-02-03",
       "years": 0.45,
-      "rate": 13.15
+      "rate": 13.19
     },
     {
       "id": "SU26232RMFS7",
       "name": "ОФЗ 26232",
       "maturity": "2027-10-06",
       "years": 1.12,
-      "rate": 13.25
+      "rate": 13.3
     },
     {
       "id": "SU26212RMFS9",
       "name": "ОФЗ 26212",
       "maturity": "2028-01-19",
       "years": 1.41,
-      "rate": 13.8
+      "rate": 13.89
     }
   ],
   "deposits": [
@@ -468,7 +468,7 @@ window.RATES = {
       "termMonths": 6,
       "daysFrom": 91,
       "daysTo": 731,
-      "minAmount": 50000,
+      "minAmount": 3000000,
       "url": "https://finuslugi.ru/vklady/promsvyazbank_silnaya_stavka",
       "promo": false,
       "floating": false
