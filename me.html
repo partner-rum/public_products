@@ -75,6 +75,28 @@
   .sum .cap b { color:var(--ink); font-weight:500; font-variant-numeric:tabular-nums; }
   @media (max-width:560px) { .sum .fig { font-size:32px; } .sums { gap:28px; } }
 
+  .dhrow { display:flex; align-items:flex-end; justify-content:space-between; gap:40px; flex-wrap:wrap; }
+  .dhrow .sums { margin-top:0; }
+
+  /* маржа по месяцам — маленький живой график из его же цифр */
+  .mchart { flex:none; }
+  .mchart .mcap { font-family:var(--m); font-size:10px; letter-spacing:.13em; text-transform:uppercase;
+                  color:var(--faint); text-align:right; margin:0 0 9px; }
+  .mbars { display:flex; align-items:flex-end; gap:6px; height:64px; }
+  .mb { position:relative; width:26px; border-radius:3px 3px 0 0; background:rgba(238,125,27,.42);
+        transform:scaleY(0); transform-origin:bottom; animation:grow .55s var(--e) forwards;
+        animation-delay:calc(var(--i) * .06s); transition:background .16s; }
+  .mb:hover { background:var(--solar); }
+  .mb.zero { background:rgba(255,255,255,.07); }
+  .mb[data-t]:hover::after { content:attr(data-t); position:absolute; bottom:calc(100% + 7px); left:50%;
+    transform:translateX(-50%); white-space:nowrap; font-family:var(--m); font-size:10.5px; color:var(--ink);
+    background:#191C24; border:1px solid var(--line); border-radius:7px; padding:4px 9px; z-index:3;
+    box-shadow:0 6px 18px rgba(0,0,0,.4); }
+  .maxis { display:flex; gap:6px; margin-top:8px; }
+  .maxis span { width:26px; text-align:center; font-family:var(--m); font-size:9.5px; color:var(--faint); }
+  @keyframes grow { to { transform:scaleY(1); } }
+  @media (max-width:560px) { .mchart { width:100%; } .mchart .mcap { text-align:left; } .mbars, .maxis { justify-content:flex-start; } }
+
   /* две зоны */
   .cols { display:grid; grid-template-columns:minmax(0,1fr) 300px; gap:0; }
   .cols > .main { padding:30px 0 0; }
@@ -129,20 +151,32 @@
       text-transform:uppercase; color:var(--faint); font-variant-numeric:normal; }
   }
 
-  /* ── полка актуальных продуктов ── */
-  .prow { display:flex; align-items:flex-start; gap:10px; padding:13px 0; border-bottom:1px solid var(--line-soft); }
-  .prow:first-of-type { padding-top:0; }
-  .prow .nmm { flex:1; min-width:0; font-size:13px; font-weight:500; line-height:1.35; color:var(--ink); transition:color .16s; }
-  .prow .nmm:hover { color:var(--solar-l); }
-  .prow .q { font-family:var(--m); font-size:13px; color:var(--solar-l); font-weight:500; text-align:right;
-             white-space:nowrap; font-variant-numeric:tabular-nums; }
-  .prow .q i { display:block; margin-top:3px; font-style:normal; font-size:9.5px; font-weight:400;
-               letter-spacing:.1em; text-transform:uppercase; color:var(--faint); }
-  .cp { flex:none; width:26px; height:26px; margin-top:-2px; padding:0; border:1px solid var(--line);
-        background:none; border-radius:7px; color:var(--faint); cursor:pointer;
-        display:flex; align-items:center; justify-content:center; transition:border-color .16s, color .16s; }
+  /* ── полка актуальных продуктов: карточки-превью ── */
+  /* Картинка = og-карточка продукта, ровно её видит клиент по присланной ссылке. */
+  .pcard { margin:0 0 16px; }
+  .pcard:last-of-type { margin-bottom:0; }
+  .pimg { display:block; position:relative; aspect-ratio:1200/630; border-radius:11px; overflow:hidden;
+          border:1px solid var(--line); background:var(--raise); }
+  .pimg img { width:100%; height:100%; object-fit:cover; display:block;
+              transition:transform .4s var(--e), opacity .3s; }
+  .pimg:hover img { transform:scale(1.035); }
+  .pimg::after { content:""; position:absolute; inset:0; border-radius:11px; pointer-events:none;
+                 box-shadow:inset 0 0 0 1px rgba(255,255,255,0); transition:box-shadow .16s; }
+  .pimg:hover::after { box-shadow:inset 0 0 0 1px rgba(238,125,27,.5); }
+  .pimg.noimg { display:flex; align-items:center; justify-content:center; font-family:var(--m);
+                font-size:11px; color:var(--faint); letter-spacing:.06em; }
+  .pfoot { display:flex; align-items:center; gap:10px; margin-top:9px; }
+  .pfoot .q { font-family:var(--m); font-size:14px; color:var(--solar-l); font-weight:500;
+              white-space:nowrap; font-variant-numeric:tabular-nums; }
+  .pfoot .q i { font-style:normal; font-size:9.5px; font-weight:400; letter-spacing:.1em;
+                text-transform:uppercase; color:var(--faint); margin-left:6px; }
+  .cp { flex:none; margin-left:auto; height:30px; padding:0 12px; border:1px solid var(--line);
+        background:none; border-radius:8px; color:var(--hushed); cursor:pointer; font-family:var(--f);
+        font-size:12.5px; display:inline-flex; align-items:center; gap:7px;
+        transition:border-color .16s, color .16s, background .16s; }
   .cp:hover { border-color:rgba(238,125,27,.55); color:var(--solar-l); }
   .cp.done { border-color:rgba(85,192,138,.55); color:var(--up); }
+  .cp .lbl { line-height:1; }
   .snote { font-size:12px; color:var(--faint); margin-top:16px; line-height:1.55; }
   .snote b { color:var(--hushed); font-weight:500; }
   .fall { margin-top:12px; font-size:12.5px; line-height:1.5; color:var(--hushed); }
@@ -152,6 +186,7 @@
 
   @media (prefers-reduced-motion:reduce) {
     #dash.on { animation:none; }
+    .mb { animation:none !important; transform:none !important; }
     *, *::before, *::after { transition:none !important; }
   }
 </style>
@@ -179,7 +214,10 @@
   <div id="dash">
     <div class="dhead">
       <div class="who">партнёр&nbsp;·&nbsp;<b id="whoRef">—</b></div>
-      <div class="sums" id="dealSum"></div>
+      <div class="dhrow">
+        <div class="sums" id="dealSum"></div>
+        <div class="mchart" id="mchart"></div>
+      </div>
     </div>
 
     <div class="cols">
@@ -299,6 +337,47 @@
     $("dealTbl").innerHTML = h;
   }
 
+  // ---- маржа по месяцам: маленький живой график из его же сделок -----------
+  var MONTHS_SHORT = ["янв", "фев", "мар", "апр", "май", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"];
+  function shiftMonth(k, n) {
+    var y = +k.slice(0, 4), m = +k.slice(5, 7) - 1 + n;
+    y += Math.floor(m / 12); m = ((m % 12) + 12) % 12;
+    return y + "-" + String(m + 1).padStart(2, "0");
+  }
+  function drawMarginChart(deals) {
+    var box = $("mchart");
+    // Один месяц или пусто — рисовать нечего, график только зашумит.
+    if (!deals || deals.length < 2) { box.innerHTML = ""; box.style.display = "none"; return; }
+    var map = {};
+    for (var i = 0; i < deals.length; i++) {
+      var k = String(deals[i].date).slice(0, 7);
+      map[k] = (map[k] || 0) + (Number(deals[i].reward) || 0);
+    }
+    var keys = Object.keys(map).sort();
+    // Заполняем пропуски между первым и последним месяцем нулями — иначе шкала врёт
+    // о равномерности, а провал в месяц без сделок должен быть виден.
+    var full = [], cur = keys[0], last = keys[keys.length - 1], guard = 0;
+    while (guard++ < 60) { full.push(cur); if (cur === last) break; cur = shiftMonth(cur, 1); }
+    if (full.length < 2) { box.style.display = "none"; return; }
+    // Слишком длинный хвост не влезет в шапку — показываем последние 6 месяцев.
+    if (full.length > 6) full = full.slice(-6);
+    var vals = full.map(function (k) { return map[k] || 0; });
+    var max = Math.max.apply(null, vals) || 1;
+
+    var bars = full.map(function (k, idx) {
+      var v = vals[idx], h = v > 0 ? Math.max(6, Math.round(v / max * 100)) : 2;
+      var label = MONTHS_SHORT[+k.slice(5, 7) - 1] + " " + k.slice(0, 4);
+      return '<i class="mb' + (v > 0 ? "" : " zero") + '" style="height:' + h + "%;--i:" + idx + '"' +
+        (v > 0 ? ' data-t="' + esc(label + " · " + money(v)) + '"' : "") + "></i>";
+    }).join("");
+    var axis = full.map(function (k) { return "<span>" + MONTHS_SHORT[+k.slice(5, 7) - 1] + "</span>"; }).join("");
+
+    box.style.display = "";
+    box.innerHTML = '<div class="mcap">маржа по месяцам</div>' +
+      '<div class="mbars">' + bars + "</div>" +
+      '<div class="maxis">' + axis + "</div>";
+  }
+
   // ---- ПРАВО: актуальные продукты -----------------------------------------
   // Источник тот же, что у одноимённой колонки на главной: MORNING.products —
   // подбор утреннего конвейера по статье. Старше трёх дней или пусто — начало доски.
@@ -353,12 +432,20 @@
       // В буфер — персональная страница продукта с меткой партнёра: именно её
       // он отправляет клиенту, и по ней считается атрибуция.
       var link = BASE + "/p/" + encodeURIComponent(r.id) + ".html?ref=" + encodeURIComponent(ref || "");
-      return '<div class="prow">' +
-        '<a class="nmm" href="instrument.html?id=' + encodeURIComponent(r.id) + '">' + esc(r.name) + "</a>" +
-        '<span class="q">' + f.v + (f.n ? "<i>" + f.n + "</i>" : "") + "</span>" +
-        '<button class="cp" type="button" data-l="' + esc(link) +
-          '" title="Скопировать ссылку для клиента" aria-label="Скопировать ссылку для клиента">' + COPY + "</button>" +
-        "</div>";
+      // Картинка — та самая og-карточка продукта, что увидит клиент по ссылке.
+      // Не загрузилась (продукт добавлен раньше картинки) — прячем img, остаётся
+      // подпись «нет превью», а не битая иконка.
+      var img = 'og/' + encodeURIComponent(r.id) + '.png';
+      return '<div class="pcard">' +
+        '<a class="pimg" href="instrument.html?id=' + encodeURIComponent(r.id) + '" aria-label="' + esc(r.name) + '">' +
+          '<img loading="lazy" src="' + esc(img) + '" alt="' + esc(r.name) + '" ' +
+            'onerror="this.remove();this.parentNode.classList.add(\'noimg\');this.parentNode.textContent=\'нет превью\';"></a>' +
+        '<div class="pfoot">' +
+          '<span class="q">' + f.v + (f.n ? "<i>" + f.n + "</i>" : "") + "</span>" +
+          '<button class="cp" type="button" data-l="' + esc(link) +
+            '" title="Скопировать ссылку для клиента" aria-label="Скопировать ссылку для клиента">' +
+            COPY + '<span class="lbl">Ссылка</span></button>' +
+        "</div></div>";
     }).join("");
     $("hotNote").innerHTML = esc(from) + ". Кнопка копирует ссылку для клиента с вашей меткой <b>" +
       esc(ref || "—") + "</b>.";
@@ -456,6 +543,7 @@
     $("exit").style.display = "inline-block";
     $("whoRef").textContent = d.ref;
     drawDeals(d.deals || []);
+    drawMarginChart(d.deals || []);
     drawHot(d.ref);
   }
 
