@@ -58,6 +58,7 @@ export default {
     if (url.pathname === "/click" && request.method === "POST") return handleClick(request, env, cors);
     if (url.pathname === "/hit" && request.method === "POST") return handleHit(request, env, cors);
     if (url.pathname === "/stats" && request.method === "POST") return handleStats(request, env, cors);
+    if (url.pathname === "/picks" && request.method === "POST") return handlePicks(request, env, cors);
     if (url.pathname === "/chat" && request.method === "POST") return handleChat(request, env, cors, ctx);
     if (url.pathname === "/submit" && request.method === "POST") return handleSubmit(request, env, cors);
     if (url.pathname === "/tg" && request.method === "POST") return handleTelegram(request, env, ctx);
@@ -462,6 +463,187 @@ async function handleHit(request, env, cors) {
 }
 
 // --- Статистика агента ---
+// ---------- ПОДБОРКА ПРОДУКТОВ ПОД КОНКРЕТНОГО АГЕНТА ----------
+// Модель читает новости дня и книгу агента (что он уже продаёт) и подбирает
+// продукты с доски именно под него. Считается РАЗ В ДЕНЬ на агента и лежит в KV:
+// иначе каждый заход на стол стоил бы вызова LLM.
+//
+// ЧТО УХОДИТ В МОДЕЛЬ: типы продуктов агента и базовые активы. Объёмы,
+// вознаграждение, ISIN, название партнёра и его реквизиты НЕ отправляются —
+// DeepSeek работает на серверах в Китае, и коммерческие условия партнёра туда
+// попадать не должны. Для персонализации хватает «что он продаёт».
+const PICKS_N = 4;
+const PICKS_TTL = 3 * 86400;
+// Границу слова задаём через \p{L} с флагом u: в JS \b и \w — про латиницу,
+// и с кириллицей запрет молча не срабатывал («Гарантированный» проходил насквозь).
+const PICKS_BAN = /(?<!\p{L})(нот[аыуе]|гарантирован|доходност|прибыл)\p{L}*/iu;
+
+// Книга агента одной строкой на выпуск: тип выплаты + активы, без денег.
+function picksBook(deals, issues) {
+  const byIsin = {};
+  for (const i of issues || []) if (i.isin) byIsin[i.isin] = i;
+  const seen = {}, lines = [];
+  for (const d of deals || []) {
+    const it = d.isin && byIsin[d.isin];
+    const kind = it ? (it.kind === "participation" ? "участие в росте" : "купонный") : null;
+    const assets = it ? (it.basket || []).map((b) => b.n || b.t).filter(Boolean).join(", ") : "";
+    const key = (kind || "") + "|" + assets;
+    if (!kind || seen[key]) continue;
+    seen[key] = 1;
+    lines.push("- " + kind + (assets ? " · актив: " + assets : ""));
+  }
+  return lines;
+}
+
+// Код-подбор на случай, когда модели нет или её ответ не прошёл проверку:
+// по одному продукту на тип, потом добор по разным активам. Та же логика, что
+// на странице, — стол не остаётся пустым никогда.
+function picksFallback(instr, n) {
+  const out = [], seenType = {}, seenAsset = {};
+  const take = (p) => {
+    const a = String(p.underlying || p.id).toLowerCase();
+    if (seenAsset[a]) return;
+    seenAsset[a] = 1; seenType[p.type] = 1; out.push(p);
+  };
+  for (const p of instr) { if (out.length >= n) break; if (!seenType[p.type]) take(p); }
+  for (const p of instr) { if (out.length >= n) break; take(p); }
+  return out.map((p) => ({ id: p.id, why: "" }));
+}
+
+// Проверка ответа модели. Пропускаем только то, что можно доказать каталогом.
+function picksLint(list, instr) {
+  const byId = {};
+  for (const p of instr) byId[p.id] = p;
+  const out = [], problems = [];
+  const seenId = {}, seenAsset = {}, typeCount = {};
+  // Длинные названия вперёд: иначе «ОФЗ» вычеркнется раньше, чем «ОФЗ 26238»,
+  // и в строке останется голое число, которое мы примем за выдумку модели.
+  const assetNames = instr.map((x) => String(x.underlying || "")).filter(Boolean)
+    .sort((a, b) => b.length - a.length);
+  for (const raw of Array.isArray(list) ? list : []) {
+    const id = String((raw && raw.id) || "").trim();
+    const p = byId[id];
+    if (!p) { problems.push("id «" + id + "» не из каталога"); continue; }
+    if (seenId[id]) { problems.push("повтор " + id); continue; }
+    const asset = String(p.underlying || p.id).toLowerCase();
+    if (seenAsset[asset]) { problems.push("второй продукт на актив " + p.underlying); continue; }
+    typeCount[p.type] = (typeCount[p.type] || 0) + 1;
+    if (typeCount[p.type] > 2) { problems.push("третий продукт типа " + p.type); continue; }
+    let why = String((raw && raw.why) || "").trim().replace(/\s+/g, " ");
+    // Цифры в подписи запрещены: проценты и цены страница печатает сама из данных,
+    // а выдуманное моделью число выглядело бы так же убедительно, как настоящее.
+    // Но в названиях активов цифры законны («S&P 500», «ОФЗ 26238»), поэтому
+    // сначала вычёркиваем известные активы и только потом ищем цифры.
+    let bare = why;
+    for (const a of assetNames) bare = bare.split(a).join(" ");
+    if (/\d/.test(bare)) { problems.push("цифры в подписи к " + id); why = ""; }
+    if (PICKS_BAN.test(why)) { problems.push("запрещённое слово в подписи к " + id); why = ""; }
+    if (why.length > 120) { problems.push("длинная подпись у " + id); why = why.slice(0, 117) + "…"; }
+    seenId[id] = 1; seenAsset[asset] = 1;
+    out.push({ id: id, why: why });
+    if (out.length >= PICKS_N) break;
+  }
+  return { picks: out, problems: problems };
+}
+
+const PICKS_SYSTEM = `Ты подбираешь продукты для конкретного агента по продажам структурных продуктов Rumberg (клиенты — квалифицированные инвесторы).
+
+Тебе дают: новости дня (если есть), книгу агента (что он уже продаёт) и каталог продуктов, доступных сегодня.
+
+Верни СТРОГИЙ JSON: {"picks":[{"id":"<id из каталога>","why":"<одна фраза>"}]}
+Ровно ${PICKS_N} позиции, ничего кроме JSON.
+
+Правила:
+- id берёшь ТОЛЬКО из блока «ТЕКУЩИЕ ПРОДУКТЫ» и ТОЛЬКО в квадратных скобках [id].
+- Разные типы выплаты и разные базовые активы: не больше двух продуктов одного типа.
+- why — почему это агенту СЕГОДНЯ: связь с новостью дня либо с тем, что он уже продаёт. Одна короткая фраза, до 100 знаков.
+- В why НЕ пиши цифры, проценты и цены: их страница показывает сама из данных.
+- Запрещены слова «нота», «гарантированный», «доходность», «прибыль».
+- Не давай инвестиционных рекомендаций и обещаний. Пиши по-русски, по-деловому, без эмодзи.`;
+
+async function picksBuild(env, ref) {
+  const cat = await buildCatalog(env);
+  const instr = (cat && cat.instr) || [];
+  if (!instr.length) return { basis: "нет каталога", picks: [], problems: ["каталог пуст"] };
+
+  const deals = await dealsGet(env, ref);
+  const book = picksBook(deals, (cat && cat.issues) || []);
+  const morning = await morningContext(env);
+
+  // Без ключа модели персонализации не будет — честно отдаём общий подбор.
+  if (!env.DEEPSEEK_API_KEY && !env.YANDEX_API_KEY && !env.ANTHROPIC_API_KEY) {
+    return { basis: "общая", picks: picksFallback(instr, PICKS_N), problems: ["модель не подключена"] };
+  }
+
+  const parts = [];
+  if (morning && morning.news) parts.push("НОВОСТИ ДНЯ (" + morning.label + "):\n" + morning.news);
+  parts.push(book.length
+    ? "КНИГА АГЕНТА (что он уже продаёт):\n" + book.join("\n")
+    : "КНИГА АГЕНТА: пока пусто — он ещё ничего не продал.");
+  parts.push(cat.text);
+
+  const provider = (env.CHAT_PROVIDER || "deepseek").toLowerCase();
+  let picks = [], problems = [], basis = "персональная";
+  let messages = [{ role: "user", content: parts.join("\n\n") }];
+
+  for (let attempt = 0; attempt < 2; attempt++) {
+    let raw;
+    try {
+      raw = await callLLM(provider, PICKS_SYSTEM, messages, env,
+        { temperature: 0.5, maxTokens: 700, json: true });
+    } catch (e) { problems.push("модель не ответила"); break; }
+    let parsed = null;
+    try { parsed = JSON.parse(String(raw).replace(/^[^{]*/, "").replace(/[^}]*$/, "")); } catch (e) { parsed = null; }
+    const res = picksLint(parsed && parsed.picks, instr);
+    picks = res.picks; problems = res.problems;
+    if (picks.length >= PICKS_N) break;
+    if (attempt === 0) {
+      messages = messages.concat([{ role: "assistant", content: String(raw).slice(0, 900) },
+        { role: "user", content: "Не годится: " + (problems.join("; ") || "мало позиций") +
+          ". Верни ровно " + PICKS_N + " позиции строго по правилам." }]);
+    }
+  }
+
+  // Недобрали — дополняем кодом, но говорим об этом на странице.
+  if (picks.length < PICKS_N) {
+    const have = {};
+    for (const p of picks) have[p.id] = 1;
+    for (const f of picksFallback(instr, PICKS_N * 2)) {
+      if (picks.length >= PICKS_N) break;
+      if (!have[f.id]) { picks.push(f); have[f.id] = 1; }
+    }
+    basis = picks.some((p) => p.why) ? "частично" : "общая";
+  }
+  return { basis: basis, picks: picks, problems: problems };
+}
+
+async function handlePicks(request, env, cors) {
+  let d;
+  try { d = await request.json(); } catch (e) { return json({ ok: false, error: "bad_json" }, 400, cors); }
+  const who = deskLogin(env, d.id, d.key);
+  if (!who) return json({ ok: false, error: "bad_key" }, 403, cors);
+  const ref = who.ref, day = mskDate().key, key = "picks:" + ref + ":" + day;
+
+  if (env.POST_KV) {
+    try {
+      const hit = await env.POST_KV.get(key, "json");
+      if (hit && hit.picks) return json({ ok: true, cached: true, date: day, ...hit }, 200, cors);
+    } catch (e) { /* кэш необязателен */ }
+  }
+
+  let built;
+  try { built = await picksBuild(env, ref); }
+  catch (e) { return json({ ok: false, error: "build_failed" }, 502, cors); }
+
+  if (env.POST_KV && built.picks && built.picks.length) {
+    try {
+      await env.POST_KV.put(key, JSON.stringify({ basis: built.basis, picks: built.picks }),
+                            { expirationTtl: PICKS_TTL });
+    } catch (e) { /* не смогли закэшировать — не беда */ }
+  }
+  return json({ ok: true, cached: false, date: day, basis: built.basis, picks: built.picks }, 200, cors);
+}
+
 async function handleStats(request, env, cors) {
   if (!env.SALES_KEYS && !env.PARTNER_KEYS) return json({ ok: false, error: "not_configured" }, 503, cors);
   let d;
@@ -621,7 +803,7 @@ async function buildCatalog(env) {
         pay, i.bid != null && "Bid " + i.bid + "%"].filter(Boolean).join(" · "));
     }
   }
-  CATALOG = { text: lines.join("\n"), at: now, instr, offers, ideas: (idea && idea.ideas) || [] };
+  CATALOG = { text: lines.join("\n"), at: now, instr, offers, issues: iss, ideas: (idea && idea.ideas) || [] };
   return CATALOG;
 }
 

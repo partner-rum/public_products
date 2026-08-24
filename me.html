@@ -153,7 +153,10 @@
      ячейки во втором ряду, а названия переносились на 2–3 строки. */
   .lrow { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:1px;
           background:var(--line-soft); border:1px solid var(--line-soft); border-radius:10px; overflow:hidden; }
-  @media (max-width:980px) { .lrow { grid-template-columns:repeat(2, minmax(0,1fr)); } }
+  /* Число колонок подбирается под число позиций: 4 позиции в трёх колонках
+     оставляли пустую ячейку во втором ряду — ту самую дыру, что и раньше. */
+  .lrow.c2 { grid-template-columns:repeat(2, minmax(0,1fr)); }
+  @media (max-width:980px) { .lrow, .lrow.c2 { grid-template-columns:repeat(2, minmax(0,1fr)); } }
   .lp { display:flex; align-items:center; gap:10px; padding:9px 12px; background:var(--card);
         transition:background .16s; }
   .lp:hover { background:#181B22; }
@@ -166,9 +169,16 @@
   /* Цифры у продуктов РАЗНОГО типа значат разное — метка обязательна (как на главной) */
   .lp .q i { font-style:normal; font-size:11px; font-weight:400; letter-spacing:.08em;
              text-transform:uppercase; color:var(--faint); margin-left:5px; }
+  /* Подпись «почему это вам» — то, ради чего подборка вообще персональная.
+     Цифр в ней нет by design: их печатает сама страница из данных. */
+  .lp .why { display:block; margin-top:3px; font-size:12px; line-height:1.35; color:var(--hushed); }
+  .lp .txt { flex:1; min-width:0; }
+  .lsrc { margin-top:10px; font-size:12px; color:var(--faint); line-height:1.45; }
+  .lsrc .dot { opacity:.5; margin:0 6px; }
+  .lsrc .wait { color:var(--solar-l); }
 
   @media (max-width:600px) {
-    .lrow { grid-template-columns:minmax(0,1fr); }
+    .lrow, .lrow.c2 { grid-template-columns:minmax(0,1fr); }
     /* В одной колонке усечение съедало срок продукта («· 3 года»), а это довод
        в разговоре с клиентом — здесь имя переносим, а не обрезаем. */
     .lp { align-items:flex-start; padding:11px 12px; }
@@ -321,6 +331,7 @@
     <section class="live" id="liveBox" style="display:none">
       <div class="zt">актуальные продукты<a class="all" href="board.html">вся доска<svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 7h8M7.5 3.5L11 7l-3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a></div>
       <div class="lrow" id="live"></div>
+      <div class="lsrc" id="liveSrc"></div>
     </section>
 
     <section class="main">
@@ -766,11 +777,33 @@
   // «что висит на сайте». Утренний подбор (MORNING.products) здесь НЕ используется —
   // он про темы дня, а партнёру нужно то, что можно продать сейчас.
   var LIVE_LIMIT = 6;
+  var PICKS_API = "https://so-leads.ruslan-sabirov.workers.dev/picks";
+  var PICKS_SRC_PERSONAL = "подобрано под вас: по новостям дня и вашим выпускам" +
+    '<span class="dot">·</span>обновляется раз в день';
+  var PICKS_SRC_PLAIN = "общая подборка с доски";
+
+  // Демо-подборка: первые продукты разных типов с доски + подписи-образцы.
+  // Нужна, чтобы смотреть вёрстку персональной полосы до деплоя воркера.
+  function demoPicks() {
+    var ins = (window.SITE_DATA && SITE_DATA.instruments) || [];
+    var why = ["У вас уже выпуск на этот индекс — здесь он же, но с защитой номинала",
+               "Продолжает вашу линию по ОФЗ",
+               "Актив в фокусе новостей дня",
+               "Кредитный риск вместо рыночного"];
+    return liveFallback(ins, 4).map(function (it, i) { return { id: it.id, why: why[i] || "" }; });
+  }
   var fmtQ = (window.SITE && SITE.fmt2) ? SITE.fmt2 : function (n) { return String(n).replace(".", ","); };
 
   // Что показывать цифрой. Та же функция, что на index.html и research.html:
   // у защиты капитала котировка всегда 100% (клиент платит номинал) — вместо неё
   // участие; у бустера quote — коэффициент участия, у автоколла — купон годовых.
+  // Продукт доски по id: воркер присылает только id, разворачиваем сами.
+  function byId(id) {
+    var ins = (window.SITE_DATA && SITE_DATA.instruments) || [];
+    for (var i = 0; i < ins.length; i++) if (ins[i].id === id) return ins[i];
+    return null;
+  }
+
   function figure(r) {
     if (r.type === "protection") {
       if (r.participation != null) return { v: Math.round(r.participation * 100) + "%", n: "участие" };
@@ -783,33 +816,72 @@
     return { v: fmtQ(r.quote) + "%", n: "премия" };
   }
 
-  function drawLive() {
-    var ins = (window.SITE_DATA && SITE_DATA.instruments) || [];
-    // Каталог не доехал — молчать нельзя, но и пустую рамку рисовать незачем.
-    if (!ins.length) { $("liveBox").style.display = "none"; return; }
-    // Сначала по ОДНОМУ на тип пэйоффа, потом добор по разным активам. Доска
-    // отсортирована так, что сверху лежат 53 варранта подряд: без разведения по
-    // типам полоса показывала бы шесть строк «CALL 100 · … премия» — та же ошибка,
-    // из-за которой в утреннем посте завели правило про повтор типов.
+  // Общий подбор: по одному на тип пэйоффа, потом добор по разным активам.
+  // Доска отсортирована так, что сверху лежат 53 варранта подряд — без разведения
+  // полоса показывала бы шесть строк «CALL 100 · … премия».
+  function liveFallback(ins, n) {
     var pick = [], seenType = {}, seenAsset = {};
     function take(r) {
       var a = String(r.underlying || r.id).toLowerCase();
       if (seenAsset[a]) return;
-      seenAsset[a] = 1;
-      seenType[r.type] = 1;
-      pick.push(r);
+      seenAsset[a] = 1; seenType[r.type] = 1;
+      pick.push({ id: r.id, why: "" });
     }
-    for (var i = 0; i < ins.length && pick.length < LIVE_LIMIT; i++) {
-      if (!seenType[ins[i].type]) take(ins[i]);
-    }
-    for (var j = 0; j < ins.length && pick.length < LIVE_LIMIT; j++) take(ins[j]);
+    for (var i = 0; i < ins.length && pick.length < n; i++) if (!seenType[ins[i].type]) take(ins[i]);
+    for (var j = 0; j < ins.length && pick.length < n; j++) take(ins[j]);
+    return pick;
+  }
+
+  // items: [{id, why}] — id разворачиваем в продукт САМИ, из данных страницы.
+  // Воркер присылает только id и подпись: цену и метку печатаем из своего
+  // каталога, иначе на столе могла бы осесть цифра, устаревшая на сутки.
+  function drawLive(items, src) {
+    var ins = (window.SITE_DATA && SITE_DATA.instruments) || [];
+    if (!ins.length) { $("liveBox").style.display = "none"; return; }
+    var rows = (items || []).map(function (it) {
+      var r = byId(it.id);
+      return r ? { r: r, why: it.why || "" } : null;
+    }).filter(Boolean);
+    if (!rows.length) rows = liveFallback(ins, LIVE_LIMIT).map(function (it) {
+      return { r: byId(it.id), why: "" };
+    }).filter(function (x) { return x.r; });
+
     $("liveBox").style.display = "block";
-    $("live").innerHTML = pick.map(function (r) {
-      var f = figure(r);
+    // 6 позиций → 3 колонки, 4 → 2: в обоих случаях сетка заполнена целиком.
+    $("live").className = "lrow" + (rows.length % 3 === 0 ? "" : " c2");
+    $("live").innerHTML = rows.map(function (row) {
+      var r = row.r, f = figure(r);
       return '<a class="lp" href="instrument.html?id=' + encodeURIComponent(r.id) + '">' +
-        '<span class="n">' + esc(r.name) + "</span>" +
+        '<span class="txt"><span class="n">' + esc(r.name) + "</span>" +
+        (row.why ? '<span class="why">' + esc(row.why) + "</span>" : "") + "</span>" +
         '<span class="q">' + f.v + (f.n ? "<i>" + f.n + "</i>" : "") + "</span></a>";
     }).join("");
+    $("liveSrc").innerHTML = src || "";
+  }
+
+  // Персональная подборка считается на сервере (модель + новости + книга агента)
+  // и кэшируется на день. Пока она едет, полоса уже показывает общий подбор —
+  // пустое место на экране в обмен на ожидание LLM того не стоит.
+  async function loadPicks(id, key) {
+    try {
+      var r = await fetch(PICKS_API, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: id, key: key })
+      });
+      var d = await r.json().catch(function () { return {}; });
+      // Маршрут не задеплоен или ответил отказом — на полосе уже стоит общий
+      // подбор, надо только снять «подбираем…», иначе строка висит вечно.
+      if (!d.ok || !d.picks || !d.picks.length) { $("liveSrc").textContent = PICKS_SRC_PLAIN; return; }
+      var personal = d.picks.some(function (x) { return x.why; });
+      var src = personal
+        ? PICKS_SRC_PERSONAL +
+          (d.basis === "частично" ? '<span class="dot">·</span>часть позиций добрана автоматически' : "")
+        : "общая подборка с доски — персональная появится, когда подключим модель";
+      drawLive(d.picks, src);
+    } catch (e) {
+      // Полоса уже нарисована общим подбором — просто честно её подписываем.
+      $("liveSrc").textContent = PICKS_SRC_PLAIN;
+    }
   }
 
   // ---- вход ----------------------------------------------------------------
@@ -872,7 +944,14 @@
     drawSince(d.ref, d.deals || []);
     drawDeals(d.deals || []);
     drawMarginChart(d.deals || []);
-    drawLive();
+    // Сразу общий подбор — он мгновенный; персональный подменит его, когда придёт.
+    drawLive(null, '<span class="wait">подбираем под вас…</span>');
+    // ?picksdemo=1 — посмотреть вид персональной подборки без задеплоенного воркера
+    // (тот же приём, что ?chatdemo= у консьержа и ?qual=1 у гейта). Сеть не трогаем.
+    if (/[?&]picksdemo=1/.test(location.search)) { drawLive(demoPicks(), PICKS_SRC_PERSONAL); return; }
+    var c = creds();
+    if (c.id && c.key) loadPicks(c.id, c.key);
+    else $("liveSrc").textContent = PICKS_SRC_PLAIN;
   }
 
   $("go").addEventListener("click", function () {
