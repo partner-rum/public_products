@@ -179,10 +179,8 @@
 
   .tf { display:flex; align-items:center; gap:8px; padding:10px 14px; margin-top:11px;
         border-top:1px solid var(--line-soft); }
-  .st { font-family:var(--f); font-size:11px; padding:3px 9px; border-radius:20px; white-space:nowrap; }
-  .st.paid { color:var(--up); background:rgba(85,192,138,.12); }
-  .st.accr { color:var(--solar-l); background:rgba(238,125,27,.12); }
-  .st.mat { color:var(--faint); background:rgba(255,255,255,.06); }
+  .st { font-family:var(--f); font-size:11px; padding:3px 9px; border-radius:20px; white-space:nowrap;
+        color:var(--faint); background:rgba(255,255,255,.06); }
   .tf .dt { font-family:var(--m); font-size:11.5px; color:var(--faint); }
   .more { margin-left:auto; border:0; background:none; color:var(--hushed); font-family:var(--f);
           font-size:12px; cursor:pointer; display:inline-flex; align-items:center; gap:5px; padding:4px 2px;
@@ -223,7 +221,7 @@
   <!-- ВХОД -->
   <div id="gate">
     <h1>Рабочий стол</h1>
-    <p class="lead">Ваши выпуски, котировки по ним и заплаченная маржа. ID и ключ выдаёт Rumberg.</p>
+    <p class="lead">Ваши выпуски, котировки по ним и выплаченная маржа. ID и ключ выдаёт Rumberg.</p>
     <div class="field"><span class="k">Ваш ID</span><input id="id" autocomplete="username" placeholder="например andrey" spellcheck="false"></div>
     <div class="field"><span class="k">Ключ</span><input id="key" type="password" autocomplete="current-password" placeholder="выдаётся Rumberg"></div>
     <button class="go" id="go" type="button">Войти</button>
@@ -246,12 +244,8 @@
     </div>
 
     <section class="main">
-      <div class="zt">мои выпуски<span id="cnt"></span></div>
+      <div class="zt">мои выпуски</div>
         <div class="ctrl" id="ctrl" style="display:none">
-          <button class="chip on" type="button" data-f="all">Все</button>
-          <button class="chip" type="button" data-f="accrued">Начислено</button>
-          <button class="chip" type="button" data-f="paid">Выплачено</button>
-          <span class="gap"></span>
           <span class="sl">сортировка</span>
           <button class="chip on" type="button" data-s="date">Дата</button>
           <button class="chip" type="button" data-s="reward">Маржа</button>
@@ -260,7 +254,7 @@
         </div>
         <div class="tiles" id="tiles"></div>
         <div class="empty" id="dealEmpty" style="display:none">
-          Выпусков пока нет. Как только сделка пройдёт, выпуск появится здесь — с котировкой Bid и заплаченной маржой.
+          Выпусков пока нет. Как только сделка пройдёт, выпуск появится здесь — с котировкой Bid и выплаченной маржой.
         </div>
       </section>
   </div>
@@ -361,18 +355,15 @@
   }
 
   // ---- деньги и график ----------------------------------------------------
+  // Выпуск на столе = маржа по нему уже выплачена, поэтому разделения на
+  // «начислено/выплачено» нет: одна сумма и число выпусков.
   function drawSum(deals) {
-    var reward = 0, paid = 0, count = deals.length;
-    for (var i = 0; i < deals.length; i++) {
-      var r = Number(deals[i].reward) || 0;
-      reward += r;
-      if (deals[i].status === "paid") paid += r;
-    }
-    $("dealSum").innerHTML = '<div class="fig">' + money(reward) + '</div><div class="cap">маржа' +
+    var reward = 0, count = deals.length;
+    for (var i = 0; i < deals.length; i++) reward += Number(deals[i].reward) || 0;
+    $("dealSum").innerHTML = '<div class="fig">' + money(reward) + '</div><div class="cap">' +
       (count
-        ? (paid ? ' · выплачено <b>' + money(paid) + "</b>" : " · пока не выплачена") +
-          " · " + count + " " + plural(count, "выпуск", "выпуска", "выпусков")
-        : " пока не начислена") + "</div>";
+        ? "выплачено маржи · " + count + " " + plural(count, "выпуск", "выпуска", "выпусков")
+        : "маржа пока не выплачена") + "</div>";
   }
 
   var MONTHS_SHORT = ["янв", "фев", "мар", "апр", "май", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"];
@@ -409,7 +400,7 @@
   }
 
   // ---- БЛОКИ ВЫПУСКОВ ------------------------------------------------------
-  var ALL = [], view = { filter: "all", sort: "date" };
+  var ALL = [], view = { sort: "date" };
 
   // Bid показываем только у обращающихся выпусков и только с пометкой
   // «индикативно» — правило витрины. Погашенному Bid не рисуем вовсе.
@@ -508,8 +499,6 @@
       '<div class="figs"><span class="k">маржа</span><span class="mg">' + money(d.reward) + "</span>" +
         '<span class="dot">·</span><span class="k">объём</span><span>' + money(d.volume) + "</span></div>" +
       '<div class="tf">' +
-        '<span class="st ' + (d.status === "paid" ? "paid" : "accr") + '">' +
-          (d.status === "paid" ? "выплачено" : "начислено") + "</span>" +
         (matured ? '<span class="st mat">погашен</span>' : "") +
         '<span class="dt">' + dmy(d.date) + "</span>" +
         '<button class="more" type="button" aria-expanded="false">Параметры' + CHEV + "</button>" +
@@ -520,11 +509,6 @@
 
   function renderTiles() {
     var list = ALL.slice();
-    if (view.filter !== "all") {
-      list = list.filter(function (d) {
-        return view.filter === "paid" ? d.status === "paid" : d.status !== "paid";
-      });
-    }
     var key = view.sort;
     list.sort(function (x, y) {
       if (key === "date") return x.date < y.date ? 1 : x.date > y.date ? -1 : 0;
@@ -539,13 +523,6 @@
       return (Number(y[key]) || 0) - (Number(x[key]) || 0);
     });
 
-    $("cnt").textContent = list.length && list.length !== ALL.length
-      ? " · " + list.length + " из " + ALL.length : "";
-
-    if (!list.length) {
-      $("tiles").innerHTML = '<div class="empty">В этой выборке выпусков нет.</div>';
-      return;
-    }
     $("tiles").innerHTML = list.map(function (d) { return tileHtml(d, ALL.indexOf(d)); }).join("");
   }
 
@@ -556,7 +533,6 @@
       $("tiles").innerHTML = "";
       $("ctrl").style.display = "none";
       $("dealEmpty").style.display = "block";
-      $("cnt").textContent = "";
       return;
     }
     $("dealEmpty").style.display = "none";
@@ -576,10 +552,8 @@
   $("ctrl").addEventListener("click", function (e) {
     var c = e.target.closest ? e.target.closest(".chip") : null;
     if (!c) return;
-    var f = c.getAttribute("data-f"), s = c.getAttribute("data-s");
-    var group = f ? "data-f" : "data-s";
-    if (f) view.filter = f; else view.sort = s;
-    var sibs = $("ctrl").querySelectorAll("[" + group + "]");
+    view.sort = c.getAttribute("data-s");
+    var sibs = $("ctrl").querySelectorAll("[data-s]");
     for (var i = 0; i < sibs.length; i++) sibs[i].classList.toggle("on", sibs[i] === c);
     renderTiles();
   });
@@ -670,15 +644,15 @@
   function demoDeals() {
     return [
       { id: "a1b2c3", product: "РСП СП-1-10 · участие 120%", isin: "RU000A10A9G1",
-        date: "2026-08-12", volume: 25000000, reward: 562500, status: "accrued" },
+        date: "2026-08-12", volume: 25000000, reward: 562500 },
       { id: "d4e5f6", product: "РСП СП-2-72-ЦБ-RUB · купонный 20%", isin: "RU000A10CVB8",
-        date: "2026-07-30", volume: 15000000, reward: 337500, status: "paid" },
+        date: "2026-07-30", volume: 15000000, reward: 337500 },
       { id: "g7h8i9", product: "РСП СП-1-52-ЦБ-RUB · купонный 24,8%", isin: "RU000A10CBH7",
-        date: "2026-07-16", volume: 40000000, reward: 900000, status: "paid" },
+        date: "2026-07-16", volume: 40000000, reward: 900000 },
       { id: "j1k2l3", product: "РСП СП-2-69 · участие 27%", isin: "RU000A10CV88",
-        date: "2026-06-24", volume: 12000000, reward: 270000, status: "paid" },
+        date: "2026-06-24", volume: 12000000, reward: 270000 },
       { id: "m4n5o6", product: "РСП СП-1-12 · участие 100%", isin: "RU000A109EH2",
-        date: "2026-06-03", volume: 8000000, reward: 180000, status: "paid" }
+        date: "2026-06-03", volume: 8000000, reward: 180000 }
     ];
   }
   function demoEmpty() {
