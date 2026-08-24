@@ -120,7 +120,10 @@
   /* Пояснение к ленте — обычным регистром: 76 знаков капсом не читаются */
   .tape-cap .tsub { color:var(--dim); text-transform:none; letter-spacing:.01em; font-size:11.5px; }
   @keyframes tpulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:.5; transform:scale(.85); } }
-  .tape-box { position:relative; border:1px solid var(--line); border-left:1px solid var(--solar); border-radius:12px; background:var(--panel); overflow:hidden; padding:12px 0; margin:0 0 8px;
+  .tape-box { position:relative; border:1px solid var(--line); border-left:1px solid var(--solar); border-radius:12px; background:var(--panel); overflow:hidden; padding:12px 0; margin:0 0 8px; }
+  /* Затухание по краям — на обёртке содержимого, НЕ на коробке: маска режет
+     весь рендер элемента вместе с рамкой, и планка слева пропадала целиком. */
+  .tclip { overflow:hidden;
     -webkit-mask-image:linear-gradient(90deg, transparent 0, #000 28px, #000 calc(100% - 28px), transparent 100%);
     mask-image:linear-gradient(90deg, transparent 0, #000 28px, #000 calc(100% - 28px), transparent 100%); }
   .tape { display:flex; gap:38px; white-space:nowrap; width:max-content; font-family:var(--m); font-size:12px; animation:slide 52s linear infinite; }
@@ -135,7 +138,7 @@
   .launch .tape-box { transition:border-color .2s, background .2s; }
   .launch:hover .tape-box { border-color:var(--solar); background:rgba(238,125,27,0.05); }
   /* Прочитать позицию можно было только дождавшись её: наведение останавливает ход */
-  .launch:hover .tape, .tape-box:hover .tape { animation-play-state:paused; }
+  .launch:hover .tape, .tape-box:hover .tape, .launch:focus-within .tape { animation-play-state:paused; }
   .launch:hover .launch-go svg { transform:translateX(4px); }
 
   /* ── Телефон «Rumberg События» ── */
@@ -487,7 +490,7 @@
 
   <a class="launch rise" style="animation-delay:.18s" href="board.html" aria-label="Открыть текущие продукты">
     <div class="tape-cap"><span class="tdot"></span><span class="tlbl">Можем запустить сейчас</span><span class="tsub">· текущие продукты под клиента · котировки индикативны</span><span class="launch-go">Смотреть<svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
-    <div class="tape-box" aria-hidden="true"><div class="tape" id="tape"></div></div>
+    <div class="tape-box" aria-hidden="true"><div class="tclip"><div class="tape" id="tape"></div></div></div>
   </a>
 
   <div class="bandwrap">
