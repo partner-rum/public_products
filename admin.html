@@ -41,7 +41,7 @@
 
   .grp { margin:0 0 16px; padding:16px; background:var(--card); border:1px solid var(--border-soft); border-radius:14px; }
   .grp .gt { font-family:var(--m); font-size:11px; letter-spacing:.13em; text-transform:uppercase; color:var(--faint); margin:0 0 12px; }
-  .hint-box { margin:0 0 12px; padding:9px 13px; border-left:3px solid var(--solar); background:rgba(238,125,27,.1);
+  .hint-box { margin:0 0 12px; padding:9px 13px; border-left:1px solid var(--solar); background:rgba(238,125,27,.1);
               border-radius:0 7px 7px 0; font-size:12.5px; line-height:1.5; color:#E7B98D; }
   .row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   .row3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
@@ -50,12 +50,20 @@
   label { display:block; margin:0 0 10px; }
   label .k { display:block; font-size:12px; color:var(--hushed); margin:0 0 5px; }
   label .k b { color:var(--solar-l); font-weight:600; }
+  /* Плейсхолдеров в файле не было ни одного правила: браузер рисовал их своим
+     серым 3,47:1. Наш --faint даёт 5,9:1. */
+  ::placeholder { color:var(--faint); opacity:1; }
   input, select, textarea {
     width:100%; background:rgba(255,255,255,.05); border:1px solid var(--border); border-radius:10px;
     color:var(--ink); font-family:var(--f); font-size:13.5px; padding:9px 12px; outline:none;
   }
   textarea { resize:vertical; min-height:64px; line-height:1.5; }
   input:focus, select:focus, textarea:focus { border-color:rgba(238,125,27,.6); }
+  /* outline:none выше убрал единственный видимый индикатор: подмена цветом рамки
+     давала 3,09:1 и с клавиатуры почти не читалась. Возвращаем настоящую рамку. */
+  input:focus-visible, select:focus-visible, textarea:focus-visible {
+    outline:2px solid var(--solar); outline-offset:2px; border-color:var(--solar);
+  }
   select { appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23888' fill='none' stroke-width='1.5'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; padding-right:34px; }
   option { background:#14161C; color:#F2F3F7; }   /* иначе в раскрытом списке белым по белому */
   .hint { font-size:11px; color:var(--faint); margin-top:4px; line-height:1.45; }
@@ -107,6 +115,9 @@
   .help .note { margin:11px 0 0; padding:9px 12px; background:rgba(85,192,138,.1); border-radius:9px;
     font-size:12.5px; color:var(--ink); }
   /* Лента заявок: состояние каждой отправки, чтобы не спрашивать Руслана */
+  .skip { position:absolute; left:10px; top:-60px; z-index:20; background:var(--solar); color:#0C0A08;
+          padding:11px 18px; border-radius:0 0 10px 10px; font-size:13px; font-weight:600; }
+  .skip:focus { top:0; }
   .queue { margin:0 0 18px; border:1px solid var(--border-soft); border-radius:12px; background:var(--card); }
   .queue .qh { display:flex; align-items:center; gap:10px; padding:11px 14px; border-bottom:1px solid var(--border-soft); }
   .queue .qh .t { font-family:var(--m); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--faint); }
@@ -132,12 +143,13 @@
   @media (max-width:860px) {
     .tab { min-height:44px; padding:11px 15px; }
     input, select, textarea { font-size:16px; min-height:44px; padding:11px 12px; }
-    .send, .rm-row button, .dg-btn, button.ta { min-height:44px; }
+    .send, .rm-row button, .dg-btn, button.ta, .queue .rf { min-height:44px; }
     .keyrow { position:sticky; top:0; z-index:5; background:var(--canvas); padding:8px 0; }
   }
 </style>
 </head>
 <body>
+<a class="skip" href="#content">К содержимому</a>
 <div class="wrap">
   <div class="top">
     <svg width="22" height="22" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>
@@ -156,6 +168,7 @@
     </label>
   </div>
 
+  <main id="content">
   <div class="tabs" role="tablist" aria-label="Разделы админки">
     <button class="tab on" data-f="f-board" type="button">Текущий продукт</button>
     <button class="tab" data-f="f-offering" type="button">На размещении</button>
@@ -568,6 +581,7 @@
     </div>
     <div class="msg" id="m-remove"></div>
   </form>
+  </main>
 </div>
 
 <script src="admin-digest-derive.js?v=2"></script>
@@ -580,6 +594,14 @@
   // maxlength обрезает ввод молча: вставленный текст длиннее лимита теряет хвост,
   // и сейлз об этом не узнаёт (в выпуске 03.08.2026 «Вывод» так уехал в PDF
   // оборванным на полуслове). Показываем остаток и предупреждаем на лимите.
+  // Обязательность была видна только звёздочкой в подписи — для скринридера
+  // сорок два обязательных поля выглядели необязательными.
+  document.querySelectorAll("label").forEach(function (lab) {
+    if (!lab.querySelector(".k b")) return;
+    var f = lab.querySelector("input, select, textarea");
+    if (f) f.setAttribute("aria-required", "true");
+  });
+
   document.querySelectorAll("textarea[maxlength], input[maxlength]").forEach(function (el) {
     var max = parseInt(el.getAttribute("maxlength"), 10);
     if (!max || max < 60) return;                       // короткие поля (ISIN, срок) не засоряем
@@ -611,6 +633,12 @@
   });
 
   // ── табы ──
+  // Начальное состояние тоже надо разметить: без этого скринридер до первого
+  // клика не знает, какая вкладка открыта.
+  document.querySelectorAll(".tab").forEach(function (t) {
+    t.setAttribute("aria-selected", t.classList.contains("on") ? "true" : "false");
+    t.setAttribute("aria-controls", t.getAttribute("data-f"));
+  });
   document.querySelectorAll(".tab").forEach(function (t) {
     t.addEventListener("click", function () {
       document.querySelectorAll(".tab").forEach(function (x) { x.classList.remove("on"); });
@@ -625,6 +653,12 @@
       if (target === "f-dpdf") loadDraft();
       if (target === "f-placement") loadPlacementRefs();
     });
+  });
+
+  // Сообщения об успехе и ошибке скринридер не объявлял вовсе.
+  document.querySelectorAll(".msg").forEach(function (m) {
+    m.setAttribute("role", "status");
+    m.setAttribute("aria-live", "polite");
   });
 
   function esc(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
@@ -664,9 +698,9 @@
     box.style.display = "block";
     var bust = "?cb=" + Date.now();
     Promise.all([
-      fetch("data/instruments.js" + bust).then(function (r) { return r.text(); }).catch(function () { return ""; }),
-      fetch("data/offerings.js" + bust).then(function (r) { return r.text(); }).catch(function () { return ""; }),
-      fetch("data/placements.js" + bust).then(function (r) { return r.text(); }).catch(function () { return ""; })
+      fetchData("data/instruments.js").catch(function () { return ""; }),
+      fetchData("data/offerings.js").catch(function () { return ""; }),
+      fetchData("data/placements.js").catch(function () { return ""; })
     ]).then(function (t) {
       var live = {};
       var si = dataObj(t[0]), so = dataObj(t[1]), sp = dataObj(t[2]);
@@ -696,15 +730,27 @@
   renderQueue();
   function dataObj(text) { try { return JSON.parse(text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1)); } catch (e) { return null; } }
 
+  // Файлы данных тянулись заново на КАЖДЫЙ заход на вкладку с ?cb=, то есть мимо
+  // кэша: «Снять с сайта» стоил 202 КБ за визит, за сессию набегало больше 4 МБ.
+  // Держим ответ 60 секунд — свежести хватает, а лишний трафик уходит.
+  var DATA_TTL = 60000, dataCache = {};
+  function fetchData(file) {
+    var hit = dataCache[file];
+    if (hit && Date.now() - hit.at < DATA_TTL) return hit.p;
+    var pr = fetch(file + "?cb=" + Date.now()).then(function (r) { return r.text(); });
+    dataCache[file] = { at: Date.now(), p: pr };
+    return pr;
+  }
+
   function loadRemovable() {
     var box = document.getElementById("rm-list");
     box.innerHTML = '<div class="rm-empty">Загрузка…</div>';
     var bust = "?cb=" + Date.now();
     Promise.all([
-      fetch("data/instruments.js" + bust).then(function (r) { return r.text(); }),
-      fetch("data/offerings.js" + bust).then(function (r) { return r.text(); }),
-      fetch("data/digest.js" + bust).then(function (r) { return r.text(); }),
-      fetch("data/placements.js" + bust).then(function (r) { return r.text(); }),
+      fetchData("data/instruments.js"),
+      fetchData("data/offerings.js"),
+      fetchData("data/digest.js"),
+      fetchData("data/placements.js"),
     ]).then(function (t) {
       var rows = [];
       var si = dataObj(t[0]);
@@ -729,6 +775,9 @@
         el.innerHTML = '<div class="nm">' + esc(row.name || row.id) + '<div class="sec">' + row.label + '</div></div>';
         var b = document.createElement("button");
         b.type = "button"; b.textContent = "Снять";
+        // 52 кнопки с одинаковым именем «Снять»: название лежало в соседнем div,
+        // программной связи с кнопкой не было — скринридер читал 52 одинаковых.
+        b.setAttribute("aria-label", "Снять с сайта: " + (row.name || row.id) + " (" + row.label + ")");
         b.addEventListener("click", function () { removeItem(row, b); });
         el.appendChild(b);
         box.appendChild(el);
@@ -856,8 +905,8 @@
     if (plRefs) return;
     var bust = "?cb=" + Date.now();
     Promise.all([
-      fetch("data/placements.js" + bust).then(function (r) { return r.text(); }),
-      fetch("data/placement_docs.js" + bust).then(function (r) { return r.text(); }),
+      fetchData("data/placements.js"),
+      fetchData("data/placement_docs.js"),
     ]).then(function (t) {
       var pl = dataObj(t[0]);
       plRefs = { isins: ((pl && pl.issues) || []).map(function (i) { return i.isin; }), docs: dataObj(t[1]) || {} };
@@ -964,7 +1013,7 @@
           '<span class="rm-s">' + esc(String(x.date).split("-").reverse().join(".")) +
           (x.isin ? " · " + esc(x.isin) : "") + " · объём " + money(x.volume) +
           " · вознаграждение " + money(x.reward) + "</span></div>" +
-          '<button class="rm-b" type="button" data-rm="' + esc(x.id) + '">Снять</button></div>';
+          '<button class="rm-b" type="button" aria-label="Снять: ' + esc(x.product || x.id) + '" data-rm="' + esc(x.id) + '">Снять</button></div>';
       }).join("");
     }).catch(function (e) {
       dlList.innerHTML = '<div class="rm-empty">' + esc(e.message) + "</div>";
@@ -987,6 +1036,13 @@
   }
   ["dl-volume", "dl-reward"].forEach(function (id) {
     document.getElementById(id).addEventListener("input", dealShare);
+  });
+
+  // В этой форме нет кнопки type=submit, поэтому Enter из поля ничего не делал.
+  document.getElementById("f-deal").addEventListener("keydown", function (e) {
+    if (e.key !== "Enter" || e.target.tagName === "TEXTAREA") return;
+    e.preventDefault();
+    document.getElementById("dl-send").click();
   });
 
   document.getElementById("dl-send").addEventListener("click", function () {
@@ -1283,7 +1339,7 @@
   });
 
   (function loadOfferings() {
-    fetch("data/offerings.js?cb=" + Date.now()).then(function (r) { return r.text(); })
+    fetchData("data/offerings.js")
       .then(function (t) {
         var d = dataObj(t) || {};
         var opts = ['<option value="">— новый выпуск —</option>'];
@@ -1430,8 +1486,8 @@
   function loadProducts() {
     var bust = "?cb=" + Date.now();
     Promise.all([
-      fetch("data/instruments.js" + bust).then(function (r) { return r.text(); }),
-      fetch("data/offerings.js" + bust).then(function (r) { return r.text(); }),
+      fetchData("data/instruments.js"),
+      fetchData("data/offerings.js"),
     ]).then(function (t) {
       var opts = ['<option value="">— выбери продукт —</option>'];
       [{ label: "Доска", items: (dataObj(t[0]) || {}).instruments || [], source: "board" },
@@ -1507,7 +1563,7 @@
   }
 
   function loadEditable() {
-    fetch("data/digest.js?cb=" + Date.now()).then(function (r) { return r.text(); }).then(function (t) {
+    fetchData("data/digest.js").then(function (t) {
       var dg = dataObj(t) || {};
       dgEditable = [];
       ((dg.draft && dg.draft.ideas) || []).forEach(function (i) {
@@ -1645,7 +1701,7 @@
   function loadDraft() {
     var box = document.getElementById("dg-draft"), prev = document.getElementById("dg-preview");
     box.innerHTML = '<div class="rm-empty">Загрузка…</div>';
-    fetch("data/digest.js?cb=" + Date.now()).then(function (r) { return r.text(); }).then(function (t) {
+    fetchData("data/digest.js").then(function (t) {
       var dg = dataObj(t) || {}, ideas = (dg.draft && dg.draft.ideas) || [];
       if (!ideas.length) {
         box.innerHTML = '<div class="rm-empty">Черновик пуст. Добавь идеи на вкладке «Идея в дайджест».</div>';

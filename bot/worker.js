@@ -2514,8 +2514,14 @@ async function handleSubmit(request, env, cors) {
   // расчёта, видео, партнёр и docs в неё не входят — у «Энергетики будущего» это
   // половина карточки. Замена объекта их бы снесла, поэтому правка сливается по
   // НЕПУСТЫМ ключам, а payload помечается ed.
-  if (data.action === "offering_edit") {
-    if (section !== "offering") return json({ ok: false, error: "edit_not_supported" }, 422, cors);
+  // Правка продукта доски или размещения. Для доски это важнее всего: раньше
+  // опечатка лечилась «снять + завести заново», то есть двумя одобрениями, и у
+  // нового продукта появлялся НОВЫЙ id — разосланная клиентам ссылка
+  // /p/<id>.html умирала. При правке id не меняется никогда.
+  if (data.action === "offering_edit" || data.action === "board_edit") {
+    if (section !== "offering" && section !== "board") {
+      return json({ ok: false, error: "edit_not_supported" }, 422, cors);
+    }
     const { item: eitem } = sanitizeItem(section, data.item || {});
     if (!eitem.id) return json({ ok: false, error: "no_id" }, 422, cors);
     const changed = Object.keys(eitem).filter((k) => k !== "id");
@@ -2523,10 +2529,10 @@ async function handleSubmit(request, env, cors) {
     const epayload = JSON.stringify({ s: section, by: author, ed: 1, item: eitem });
     if (epayload.length > 3400) return json({ ok: false, error: "too_long" }, 422, cors);
     const etext =
-      "✏️ <b>Правка размещения</b>\n" +
+      "✏️ <b>Правка " + (section === "board" ? "продукта доски" : "размещения") + "</b>\n" +
       "id: <b>" + esc(eitem.id) + "</b> · от <b>" + esc(author) + "</b>\n" +
       "Меняются поля: " + esc(changed.join(", ")) + "\n" +
-      "Остальное — корзина, график, пример, видео, документы — остаётся как было.\n\n" +
+      "Остальное остаётся как было" + (section === "board" ? "" : " — корзина, график, пример, видео, документы") + ".\n\n" +
       "<pre>" + esc(epayload) + "</pre>";
     const er = await tg(env, "sendMessage", {
       chat_id: env.ADMIN_CHAT_ID, text: etext, parse_mode: "HTML", disable_web_page_preview: true,
@@ -2860,10 +2866,25 @@ async function publishItem(env, payload) {
         obj.issues = obj.issues.filter((i) => !(i.src === "sales" && i.isin === item.isin));
         obj.issues.unshift(item);
       } else if (section === "board") {
-        const taken = new Set(obj.instruments.map((i) => i.id));
-        item.id = uniqueId(item.id, taken);
-        item.src = "sales";
-        obj.instruments.push(item);
+        if (payload.ed) {
+          // Правка: дополняем запись по НЕПУСТЫМ полям и НЕ трогаем id — иначе
+          // персональная ссылка /p/<id>.html, уже разосланная клиентам, умрёт.
+          const cur = obj.instruments.find((i) => i.id === item.id);
+          if (!cur) throw new Error("not_found");
+          if (cur.src !== "sales") throw new Error("not_editable");
+          for (const k of Object.keys(item)) {
+            const v = item[k];
+            if (k === "id" || v === null || v === undefined || v === "") continue;
+            cur[k] = v;
+          }
+          Object.assign(item, cur);
+          obj.instruments = obj.instruments.map((i) => (i.id === cur.id ? cur : i));
+        } else {
+          const taken = new Set(obj.instruments.map((i) => i.id));
+          item.id = uniqueId(item.id, taken);
+          item.src = "sales";
+          obj.instruments.push(item);
+        }
       } else if (section === "offering") {
         if (payload.ed) {
           // Правка: ДОПОЛНЯЕМ существующую запись, ничего не удаляя. Пустые поля формы
