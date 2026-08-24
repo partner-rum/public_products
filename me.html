@@ -116,6 +116,21 @@
   /* ── две зоны ── */
   .main { margin-top:34px; }
 
+  /* ── актуальные продукты: полоса под маржой, из данных доски ── */
+  .live { margin-top:32px; padding-top:26px; border-top:1px solid var(--line-soft); }
+  .lrow { display:grid; grid-template-columns:repeat(auto-fill, minmax(250px,1fr)); gap:1px;
+          background:var(--line-soft); border:1px solid var(--line-soft); border-radius:10px; overflow:hidden; }
+  .lp { display:flex; align-items:baseline; gap:10px; padding:11px 13px; background:var(--card);
+        transition:background .16s; }
+  .lp:hover { background:#181B22; }
+  .lp .n { flex:1; min-width:0; font-size:12.5px; line-height:1.3; }
+  .lp:hover .n { color:var(--solar-l); }
+  .lp .q { font-family:var(--m); font-size:12.5px; font-weight:500; color:var(--solar-l);
+           white-space:nowrap; font-variant-numeric:tabular-nums; }
+  /* Цифры у продуктов РАЗНОГО типа значат разное — метка обязательна (как на главной) */
+  .lp .q i { font-style:normal; font-size:8.5px; font-weight:400; letter-spacing:.1em;
+             text-transform:uppercase; color:var(--faint); margin-left:5px; }
+
   .zt { font-family:var(--m); font-size:11.5px; letter-spacing:.13em; text-transform:uppercase;
         color:var(--faint); margin:0 0 16px; display:flex; align-items:baseline; gap:10px; }
   .zt a.all { margin-left:auto; color:var(--hushed); letter-spacing:.04em; text-transform:none; font-size:12px;
@@ -243,6 +258,11 @@
       <div class="mchart" id="mchart"></div>
     </div>
 
+    <section class="live" id="liveBox" style="display:none">
+      <div class="zt">актуальные продукты<a class="all" href="board.html">вся доска<svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 7h8M7.5 3.5L11 7l-3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a></div>
+      <div class="lrow" id="live"></div>
+    </section>
+
     <section class="main">
       <div class="zt">мои выпуски</div>
         <div class="ctrl" id="ctrl" style="display:none">
@@ -260,6 +280,7 @@
   </div>
 </div>
 
+<script src="data/instruments.js?v=fx8"></script>
 <script src="data/placements.js?v=pl21"></script>
 <script>
 (function () {
@@ -559,6 +580,57 @@
   });
 
 
+  // ---- АКТУАЛЬНЫЕ ПРОДУКТЫ: то, что сейчас на доске ------------------------
+  // Источник — data/instruments.js, тот же файл, что рисует board.html: это буквально
+  // «что висит на сайте». Утренний подбор (MORNING.products) здесь НЕ используется —
+  // он про темы дня, а партнёру нужно то, что можно продать сейчас.
+  var LIVE_LIMIT = 6;
+  var fmtQ = (window.SITE && SITE.fmt2) ? SITE.fmt2 : function (n) { return String(n).replace(".", ","); };
+
+  // Что показывать цифрой. Та же функция, что на index.html и research.html:
+  // у защиты капитала котировка всегда 100% (клиент платит номинал) — вместо неё
+  // участие; у бустера quote — коэффициент участия, у автоколла — купон годовых.
+  function figure(r) {
+    if (r.type === "protection") {
+      if (r.participation != null) return { v: Math.round(r.participation * 100) + "%", n: "участие" };
+      return { v: r.protectionPct != null ? r.protectionPct + "%" : "—", n: "защита" };
+    }
+    if (r.quote == null) return { v: "—", n: "" };
+    if (r.type === "booster") return { v: Math.round(r.ku || r.quote) + "%", n: "коэффициент" };
+    if (r.type === "autocall") return { v: fmtQ(r.couponPa != null ? r.couponPa : r.quote) + "% г.", n: "купон" };
+    if (r.type === "discount") return { v: fmtQ(r.quote) + "%", n: "цена" };
+    return { v: fmtQ(r.quote) + "%", n: "премия" };
+  }
+
+  function drawLive() {
+    var ins = (window.SITE_DATA && SITE_DATA.instruments) || [];
+    // Каталог не доехал — молчать нельзя, но и пустую рамку рисовать незачем.
+    if (!ins.length) { $("liveBox").style.display = "none"; return; }
+    // Сначала по ОДНОМУ на тип пэйоффа, потом добор по разным активам. Доска
+    // отсортирована так, что сверху лежат 53 варранта подряд: без разведения по
+    // типам полоса показывала бы шесть строк «CALL 100 · … премия» — та же ошибка,
+    // из-за которой в утреннем посте завели правило про повтор типов.
+    var pick = [], seenType = {}, seenAsset = {};
+    function take(r) {
+      var a = String(r.underlying || r.id).toLowerCase();
+      if (seenAsset[a]) return;
+      seenAsset[a] = 1;
+      seenType[r.type] = 1;
+      pick.push(r);
+    }
+    for (var i = 0; i < ins.length && pick.length < LIVE_LIMIT; i++) {
+      if (!seenType[ins[i].type]) take(ins[i]);
+    }
+    for (var j = 0; j < ins.length && pick.length < LIVE_LIMIT; j++) take(ins[j]);
+    $("liveBox").style.display = "block";
+    $("live").innerHTML = pick.map(function (r) {
+      var f = figure(r);
+      return '<a class="lp" href="instrument.html?id=' + encodeURIComponent(r.id) + '">' +
+        '<span class="n">' + esc(r.name) + "</span>" +
+        '<span class="q">' + f.v + (f.n ? "<i>" + f.n + "</i>" : "") + "</span></a>";
+    }).join("");
+  }
+
   // ---- вход ----------------------------------------------------------------
   function creds() {
     try {
@@ -617,6 +689,7 @@
     drawIdentity(d);
     drawDeals(d.deals || []);
     drawMarginChart(d.deals || []);
+    drawLive();
   }
 
   $("go").addEventListener("click", function () {
