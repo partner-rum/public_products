@@ -119,7 +119,7 @@
   </div>
 
   <h1>Добавить продукт</h1>
-  <p class="lead">«Текущий продукт» и «На размещении» уходят Руслану на одобрение. Идеи в дайджест ты собираешь и публикуешь сам («Идея в дайджест» → «Выпуск недели»). Поля с <b style="color:var(--solar-l)">*</b> обязательны.</p>
+  <p class="lead">«Текущий продукт», «На размещении» и «Сделка партнёра» уходят Руслану на одобрение одной кнопкой. Идеи в дайджест ты собираешь и публикуешь сам («Идея в дайджест» → «Выпуск недели»). Поля с <b style="color:var(--solar-l)">*</b> обязательны.</p>
 
   <div class="keyrow">
     <label style="flex:1;margin:0"><span class="k">Ваш персональный ключ <b>*</b></span>
@@ -133,6 +133,7 @@
     <button class="tab" data-f="f-placement" type="button">Размещённый выпуск</button>
     <button class="tab" data-f="f-digest" type="button">Идея в дайджест</button>
     <button class="tab" data-f="f-dpdf" type="button">Выпуск недели</button>
+    <button class="tab" data-f="f-deal" type="button">Сделка партнёра</button>
     <button class="tab" data-f="f-remove" type="button">Снять с сайта</button>
   </div>
 
@@ -489,6 +490,42 @@
   </form>
 
   <!-- ══════════ СНЯТЬ С САЙТА ══════════ -->
+
+  <!-- ══════════ СДЕЛКА ПАРТНЁРА ══════════ -->
+  <form id="f-deal" onsubmit="return false">
+    <div class="grp"><div class="gt">Кому и за что</div>
+      <div class="hint" style="margin:0 0 12px">Заводите сделку сами — Руслану уйдёт карточка с кнопкой «Записать».
+        После подтверждения сделка появится у партнёра на его рабочем столе.</div>
+      <div class="row">
+        <label><span class="k">Партнёр <b>*</b></span>
+          <select name="ref" id="dl-ref"><option value="">Загрузка…</option></select>
+        </label>
+        <label><span class="k">Дата сделки <b>*</b></span><input name="date" id="dl-date" placeholder="12.08.2026" maxlength="10"></label>
+      </div>
+      <label><span class="k">Продукт <b>*</b></span>
+        <input name="product" id="dl-product" placeholder="РСП СП-1-10 · участие 120%" maxlength="80"></label>
+      <label><span class="k">ISIN выпуска</span>
+        <input name="isin" id="dl-isin" placeholder="RU000A10A9G1" maxlength="12" spellcheck="false">
+        <span class="hint">Не обязателен, но с ним партнёр видит на столе котировку Bid и параметры выпуска.</span>
+      </label>
+    </div>
+
+    <div class="grp"><div class="gt">Деньги</div>
+      <div class="row">
+        <label><span class="k">Объём сделки, ₽ <b>*</b></span><input name="volume" id="dl-volume" inputmode="numeric" placeholder="25 000 000"></label>
+        <label><span class="k">Вознаграждение партнёру, ₽ <b>*</b></span><input name="reward" id="dl-reward" inputmode="numeric" placeholder="562 500"></label>
+      </div>
+      <div class="hint" id="dl-share">&nbsp;</div>
+    </div>
+
+    <button class="send" id="dl-send" type="button">Отправить на одобрение</button>
+    <div class="msg" id="m-deal"></div>
+
+    <div class="grp" style="margin-top:18px"><div class="gt">Уже заведено у партнёра</div>
+      <div id="dl-list"><div class="rm-empty">Выберите партнёра.</div></div>
+    </div>
+  </form>
+
   <form id="f-remove" onsubmit="return false">
     <div class="grp"><div class="gt">Снять продукт с сайта</div>
       <div class="hint" style="margin:0 0 12px">Показаны продукты, добавленные через админку (доска), а также выпуски «На размещении» и идеи текущего дайджеста. Снятие тоже уходит Руслану на одобрение.</div>
@@ -537,6 +574,7 @@
       t.classList.add("on");
       var target = t.getAttribute("data-f");
       document.getElementById(target).classList.add("on");
+      if (target === "f-deal") loadPartners();
       if (target === "f-remove") loadRemovable();
       if (target === "f-dpdf") loadDraft();
       if (target === "f-placement") loadPlacementRefs();
@@ -719,6 +757,139 @@
     if (otherFile) out.push({ kind: "other", name: otherName, file: otherFile });
     return out;
   }
+
+  // ── СДЕЛКИ ПАРТНЁРОВ ─────────────────────────────────────────────────────
+  // Сейлз заводит сделку сам; Руслан только жмёт «Записать» в Telegram.
+  // Ключ партнёра админку не открывает (проверено тестом), поэтому вписать
+  // вознаграждение самому себе партнёр не может.
+  var dlRef = document.getElementById("dl-ref");
+  var dlList = document.getElementById("dl-list");
+  var dlLoaded = false;
+
+  function money(n) {
+    return Math.round(Number(n) || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " ₽";
+  }
+  // «25 000 000» и «25000000» — одно и то же число; пробелы вводят все.
+  function dealNum(v) {
+    var t = String(v == null ? "" : v).replace(/\s|\u00A0/g, "").replace(",", ".");
+    if (!/^\d+(\.\d+)?$/.test(t)) return null;
+    return parseFloat(t);
+  }
+
+  function loadPartners() {
+    if (dlLoaded) return;
+    var key = keyEl.value.trim();
+    if (!key) { dlRef.innerHTML = '<option value="">Сначала введите ключ вверху</option>'; return; }
+    postAsk({ key: key, action: "partners" }).then(function (d) {
+      dlLoaded = true;
+      dlRef.innerHTML = '<option value="">— выберите —</option>' + d.partners.map(function (p) {
+        return '<option value="' + esc(p.ref) + '">' + esc(p.ref) +
+          (p.count ? " · " + p.count + " сд. · " + money(p.reward) : " · сделок нет") + "</option>";
+      }).join("");
+    }).catch(function (e) {
+      dlRef.innerHTML = '<option value="">' + esc(e.message) + "</option>";
+    });
+  }
+
+  // Ответ нужен целиком (не только ok), поэтому свой post рядом с postJson.
+  function postAsk(body) {
+    return fetch(ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
+      .then(function (r) { return r.json().then(function (d) { return { s: r.status, d: d }; }); })
+      .then(function (x) {
+        if (x.d && x.d.ok) return x.d;
+        if (x.d && x.d.error === "bad_key") throw new Error("Ключ не подошёл — проверьте или спросите у Руслана.");
+        throw new Error("Ошибка: " + ((x.d && x.d.error) || x.s));
+      });
+  }
+
+  function renderDeals(ref) {
+    if (!ref) { dlList.innerHTML = '<div class="rm-empty">Выберите партнёра.</div>'; return; }
+    dlList.innerHTML = '<div class="rm-empty">Загрузка…</div>';
+    postAsk({ key: keyEl.value.trim(), action: "deals_list", ref: ref }).then(function (d) {
+      if (!d.deals.length) { dlList.innerHTML = '<div class="rm-empty">У этого партнёра сделок пока нет.</div>'; return; }
+      dlList.innerHTML = d.deals.map(function (x) {
+        return '<div class="rm-row"><div class="rm-t"><b>' + esc(x.product || "—") + "</b>" +
+          '<span class="rm-s">' + esc(String(x.date).split("-").reverse().join(".")) +
+          (x.isin ? " · " + esc(x.isin) : "") + " · объём " + money(x.volume) +
+          " · вознаграждение " + money(x.reward) + "</span></div>" +
+          '<button class="rm-b" type="button" data-rm="' + esc(x.id) + '">Снять</button></div>';
+      }).join("");
+    }).catch(function (e) {
+      dlList.innerHTML = '<div class="rm-empty">' + esc(e.message) + "</div>";
+    });
+  }
+
+  dlRef.addEventListener("change", function () { renderDeals(dlRef.value); });
+
+  // Доля вознаграждения от объёма — сразу под полями: опечатка в разряде
+  // (5 625 000 вместо 562 500) видна как «22,5% от объёма», а не как число.
+  function dealShare() {
+    var v = dealNum(document.getElementById("dl-volume").value);
+    var r = dealNum(document.getElementById("dl-reward").value);
+    var box = document.getElementById("dl-share");
+    if (!v || r === null) { box.innerHTML = "&nbsp;"; return; }
+    var pct = Math.round(r / v * 1000) / 10;
+    box.textContent = "Вознаграждение — " + String(pct).replace(".", ",") + "% от объёма." +
+      (pct > 10 ? " Это заметно больше обычного — проверьте разряд." : "");
+    box.style.color = pct > 10 ? "var(--down)" : "";
+  }
+  ["dl-volume", "dl-reward"].forEach(function (id) {
+    document.getElementById(id).addEventListener("input", dealShare);
+  });
+
+  document.getElementById("dl-send").addEventListener("click", function () {
+    var msgEl = document.getElementById("m-deal");
+    msgEl.className = "msg";
+    var key = keyEl.value.trim();
+    if (!key) { msgEl.className = "msg err"; msgEl.textContent = "Введите ваш персональный ключ (в самом верху страницы)."; keyEl.focus(); return; }
+    var ref = dlRef.value;
+    var product = document.getElementById("dl-product").value.trim();
+    var date = document.getElementById("dl-date").value.trim();
+    var isin = document.getElementById("dl-isin").value.trim().toUpperCase();
+    var volume = dealNum(document.getElementById("dl-volume").value);
+    var reward = dealNum(document.getElementById("dl-reward").value);
+    try {
+      if (!ref) throw new Error("Выберите партнёра.");
+      if (!product) throw new Error("Впишите продукт — его увидит партнёр на столе.");
+      if (!/^\d{2}\.\d{2}\.\d{4}$/.test(date)) throw new Error("Дата — в формате ДД.ММ.ГГГГ, например 12.08.2026.");
+      if (isin && !/^RU[0-9A-Z]{10}$/.test(isin)) throw new Error("ISIN — 12 знаков, начинается с RU. Или оставьте поле пустым.");
+      if (volume === null || volume <= 0) throw new Error("Объём сделки — число больше нуля.");
+      if (reward === null || reward < 0) throw new Error("Вознаграждение — число.");
+      if (reward > volume) throw new Error("Вознаграждение больше объёма — похоже на опечатку в разряде.");
+    } catch (e) {
+      msgEl.className = "msg err"; msgEl.textContent = e.message; return;
+    }
+    var btn = this;
+    btn.disabled = true; btn.textContent = "Отправляем…";
+    postJson({ key: key, action: "deal", ref: ref, product: product, isin: isin,
+               date: date, volume: volume, reward: reward })
+      .then(function () {
+        msgEl.className = "msg ok";
+        msgEl.textContent = "Отправлено Руслану на одобрение. После «Записать» сделка появится у партнёра на столе.";
+        document.getElementById("dl-product").value = "";
+        document.getElementById("dl-isin").value = "";
+        document.getElementById("dl-volume").value = "";
+        document.getElementById("dl-reward").value = "";
+        dealShare();
+      })
+      .catch(function (e) { msgEl.className = "msg err"; msgEl.textContent = e.message; })
+      .finally(function () { btn.disabled = false; btn.textContent = "Отправить на одобрение"; });
+  });
+
+  dlList.addEventListener("click", function (e) {
+    var b = e.target.closest ? e.target.closest("[data-rm]") : null;
+    if (!b) return;
+    var msgEl = document.getElementById("m-deal");
+    b.disabled = true; b.textContent = "…";
+    postJson({ key: keyEl.value.trim(), action: "deal_remove", ref: dlRef.value, id: b.getAttribute("data-rm") })
+      .then(function () {
+        msgEl.className = "msg ok";
+        msgEl.textContent = "Заявка на снятие ушла Руслану. Сделка исчезнет у партнёра после подтверждения.";
+      })
+      .catch(function (e) { msgEl.className = "msg err"; msgEl.textContent = e.message; })
+      .finally(function () { b.disabled = false; b.textContent = "Снять"; });
+  });
+
   function postJson(body) {
     return fetch(ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
       .then(function (r) { return r.json().then(function (d) { return { s: r.status, d: d }; }); })

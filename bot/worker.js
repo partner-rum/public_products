@@ -2378,6 +2378,113 @@ async function handleSubmit(request, env, cors) {
     return json({ ok: true, id: result.id, count: result.count }, 200, cors);
   }
 
+  // ── СДЕЛКИ ПАРТНЁРОВ ИЗ АДМИНКИ ──
+  // Раньше сделки заводились ТОЛЬКО командой /deal от ADMIN_CHAT_ID, а в админке
+  // ввода не было намеренно: опасались, что партнёр с ключом впишет себе
+  // вознаграждение. Опасение снято двумя фактами: админку открывает SALES_KEYS
+  // (ключ партнёра получает от /submit 403 — есть тест), и каждая заявка всё
+  // равно проходит ✅ Руслана. Так внутренние сейлзы заводят сделки сами, а
+  // Руслан только подтверждает — вместо того чтобы печатать команду руками.
+
+  // Список партнёров для выпадающего списка: отдаём ТОЛЬКО метки (не ключи) и
+  // сводку по сделкам, чтобы сейлз видел, что уже заведено, и не задваивал.
+  if (data.action === "partners") {
+    const refs = keyPairs(env.PARTNER_KEYS).map((x) => x[0]);
+    const out = [];
+    for (const ref of refs) {
+      const list = await dealsGet(env, ref);
+      let sum = 0;
+      for (const d of list) sum += Number(d.reward) || 0;
+      out.push({ ref: ref, count: list.length, reward: sum });
+    }
+    return json({ ok: true, partners: out }, 200, cors);
+  }
+
+  // Сделки одного партнёра — чтобы сейлз мог свериться и снять ошибочную запись.
+  if (data.action === "deals_list") {
+    const ref = cleanStr(data.ref, 40).toLowerCase();
+    if (!keyPairs(env.PARTNER_KEYS).some((x) => x[0] === ref)) {
+      return json({ ok: false, error: "bad_ref" }, 422, cors);
+    }
+    const list = (await dealsGet(env, ref)).slice().sort(function (a, b) {
+      return a.date < b.date ? 1 : a.date > b.date ? -1 : 0;
+    });
+    return json({ ok: true, ref: ref, deals: list }, 200, cors);
+  }
+
+  // Заявка на новую сделку. Проверки те же, что у команды /deal: чужая метка,
+  // непонятная дата, нечисловые суммы и вознаграждение больше объёма — отказ
+  // ещё до карточки модератору.
+  if (data.action === "deal") {
+    const ref = cleanStr(data.ref, 40).toLowerCase();
+    if (!keyPairs(env.PARTNER_KEYS).some((x) => x[0] === ref)) {
+      return json({ ok: false, error: "bad_ref" }, 422, cors);
+    }
+    const product = cleanStr(data.product, 80);
+    if (!product) return json({ ok: false, error: "no_product" }, 422, cors);
+    const date = dealDate(cleanStr(data.date, 20));
+    if (!date) return json({ ok: false, error: "bad_date" }, 422, cors);
+    const volume = dealNum(data.volume);
+    if (volume === null || volume <= 0) return json({ ok: false, error: "bad_volume" }, 422, cors);
+    const reward = dealNum(data.reward);
+    if (reward === null || reward < 0) return json({ ok: false, error: "bad_reward" }, 422, cors);
+    // Вознаграждение больше объёма — почти всегда опечатка в разряде.
+    if (reward > volume) return json({ ok: false, error: "reward_gt_volume" }, 422, cors);
+    let isin = cleanStr(data.isin, 12).toUpperCase();
+    if (isin && !/^RU[0-9A-Z]{10}$/.test(isin)) return json({ ok: false, error: "bad_isin" }, 422, cors);
+
+    const deal = {
+      id: Math.random().toString(36).slice(2, 8),
+      product: product, isin: isin, date: date, volume: volume, reward: reward,
+      currency: "RUB", status: "paid", ts: Date.now(),
+    };
+    const dpayload = JSON.stringify({ s: "deal", by: author, ref: ref, d: deal });
+    const dtext =
+      "🤝 <b>Заявка на сделку партнёра</b>\n" +
+      "Партнёр: <b>" + esc(ref) + "</b> · от <b>" + esc(author) + "</b>\n" +
+      esc(product) + (isin ? " · <code>" + esc(isin) + "</code>" : "") + "\n" +
+      "Дата: " + esc(date.split("-").reverse().join(".")) + "\n" +
+      "Объём: <b>" + dealMoney(volume, "RUB") + "</b> · вознаграждение: <b>" + dealMoney(reward, "RUB") + "</b>" +
+      "\n\n<pre>" + esc(dpayload) + "</pre>";
+    const dr = await tg(env, "sendMessage", {
+      chat_id: env.ADMIN_CHAT_ID, text: dtext, parse_mode: "HTML", disable_web_page_preview: true,
+      reply_markup: { inline_keyboard: [[
+        { text: "✅ Записать", callback_data: "pub" },
+        { text: "❌ Отклонить", callback_data: "rej" },
+      ]] },
+    });
+    if (!dr.ok) return json({ ok: false, error: "telegram_failed" }, 502, cors);
+    return json({ ok: true, id: deal.id }, 200, cors);
+  }
+
+  // Снятие ошибочной сделки — тоже через аппрув, чтобы правка денег не проходила молча.
+  if (data.action === "deal_remove") {
+    const ref = cleanStr(data.ref, 40).toLowerCase();
+    const dealId = cleanStr(data.id, 20);
+    if (!keyPairs(env.PARTNER_KEYS).some((x) => x[0] === ref)) {
+      return json({ ok: false, error: "bad_ref" }, 422, cors);
+    }
+    if (!dealId) return json({ ok: false, error: "no_id" }, 422, cors);
+    const list = await dealsGet(env, ref);
+    const gone = list.find(function (x) { return x.id === dealId; });
+    if (!gone) return json({ ok: false, error: "not_found" }, 404, cors);
+    const rpayload = JSON.stringify({ s: "dealrm", by: author, ref: ref, id: dealId });
+    const rtext =
+      "🗑 <b>Заявка на снятие сделки</b>\n" +
+      "Партнёр: <b>" + esc(ref) + "</b> · от <b>" + esc(author) + "</b>\n" +
+      esc(gone.product || dealId) + " · " + dealMoney(gone.reward || 0, "RUB") +
+      "\n\n<pre>" + esc(rpayload) + "</pre>";
+    const rr2 = await tg(env, "sendMessage", {
+      chat_id: env.ADMIN_CHAT_ID, text: rtext, parse_mode: "HTML", disable_web_page_preview: true,
+      reply_markup: { inline_keyboard: [[
+        { text: "✅ Снять", callback_data: "pub" },
+        { text: "❌ Отклонить", callback_data: "rej" },
+      ]] },
+    });
+    if (!rr2.ok) return json({ ok: false, error: "telegram_failed" }, 502, cors);
+    return json({ ok: true }, 200, cors);
+  }
+
   const section = cleanStr(data.section, 20);
   if (!SUBMIT_SECTIONS[section]) return json({ ok: false, error: "bad_section" }, 422, cors);
 
@@ -3111,9 +3218,12 @@ async function handleTelegram(request, env, ctx) {
     const isDoc = payload.s === "pdoc" || payload.s === "odoc";
     const label = payload.s === "pdoc" ? "Документы выпусков"
       : payload.s === "odoc" ? "Документы размещений"
+      : payload.s === "deal" || payload.s === "dealrm" ? "Сделки партнёров"
       : (SUBMIT_SECTIONS[payload.s] || {}).label || payload.s;
     const title = payload.s === "pdoc" ? payload.isin + " · " + (payload.label || "")
       : payload.s === "odoc" ? payload.oid + " · " + (payload.label || "")
+      : payload.s === "deal" ? payload.ref + " · " + ((payload.d && payload.d.product) || "")
+      : payload.s === "dealrm" ? payload.ref + " · " + payload.id
       : (payload.item && payload.item.name) || payload.rm || "";
     const editCard = (html) => tg(env, "editMessageText",
       { chat_id: cb.message.chat.id, message_id: cb.message.message_id, parse_mode: "HTML", text: html });
@@ -3130,7 +3240,19 @@ async function handleTelegram(request, env, ctx) {
     if (cb.data === "pub") {
       try {
         let head, what;
-        if (isDoc) {
+        if (payload.s === "deal") {
+          // Пишем в тот же ключ KV, что и команда /deal: стол читает список одним get.
+          const list = await dealsGet(env, payload.ref);
+          list.push(payload.d);
+          await dealsPut(env, payload.ref, list);
+          head = "🤝 <b>Сделка записана</b> · ";
+          what = title;
+        } else if (payload.s === "dealrm") {
+          const list = (await dealsGet(env, payload.ref)).filter(function (x) { return x.id !== payload.id; });
+          await dealsPut(env, payload.ref, list);
+          head = "🗑 <b>Сделка снята</b> · ";
+          what = title;
+        } else if (isDoc) {
           if (payload.s === "odoc") await attachOfferingDoc(env, payload);
           else await attachPlacementDoc(env, payload);
           head = "📎 <b>Прикреплено</b> · ";
