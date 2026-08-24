@@ -507,5 +507,11 @@ window.PLACEMENT_DOCS = {
    "name": "Ключевой информационный документ (КИД)",
    "file": "docs/kid-RU000A10BZ36.pdf"
   }
+ ],
+ "RU000A10E6L3": [
+  {
+   "name": "Ключевой информационный документ (КИД)",
+   "file": "docs/kid-RU000A10E6L3.pdf"
+  }
  ]
 };
