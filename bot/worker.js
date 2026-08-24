@@ -2102,6 +2102,16 @@ function sanitizeItem(section, raw) {
   return { item: out, missing };
 }
 
+// Решение модератора по карточке — в KV под её message_id: админка спрашивает
+// статусы и показывает автору «опубликовано» или «отклонено» вместо вечного
+// «ждёт одобрения».
+async function reqStatus(env, mid, st) {
+  if (!env.POST_KV || !mid) return;
+  try {
+    await env.POST_KV.put("req:" + mid, JSON.stringify({ s: st, ts: Date.now() }), { expirationTtl: REQ_TTL });
+  } catch (e) { /* статус необязателен */ }
+}
+
 async function handleSubmit(request, env, cors) {
   if (!env.SALES_KEYS || !env.ADMIN_CHAT_ID) return json({ ok: false, error: "not_configured" }, 503, cors);
   let data;
@@ -2126,7 +2136,7 @@ async function handleSubmit(request, env, cors) {
       text: "📄 <b>Новый PDF-дайджест</b>\n<b>" + esc(author) + "</b> планирует разместить выпуск <b>" + esc(date) + "</b>.\nФайл придёт вам в Telegram — после этого обновите PDF на сайте.",
     });
     if (!rr.ok) return json({ ok: false, error: "telegram_failed" }, 502, cors);
-    return json({ ok: true }, 200, cors);
+    return json({ ok: true, mid: rr.result && rr.result.message_id }, 200, cors);
   }
 
   // ── Эмиссионные документы к размещённым выпускам ──
@@ -2378,6 +2388,48 @@ async function handleSubmit(request, env, cors) {
     return json({ ok: true, id: result.id, count: result.count }, 200, cors);
   }
 
+  // ── СУДЬБА ЗАЯВКИ: статус и отзыв ──
+  // Очередь модерации живёт сообщениями в Telegram, и браузер её не видит:
+  // сейлз узнавал об отказе только от Руслана. Теперь решение модератора
+  // записывается в KV по message_id карточки, а админка его спрашивает.
+  // Заодно автор может отозвать свою заявку, пока по ней не нажали.
+  if (data.action === "req_status") {
+    const ids = Array.isArray(data.mids) ? data.mids.slice(0, 40) : [];
+    const out = {};
+    if (env.POST_KV) {
+      for (const m of ids) {
+        const k = String(m).replace(/\D/g, "");
+        if (!k) continue;
+        try {
+          const v = await env.POST_KV.get("req:" + k, "json");
+          if (v) out[k] = v;
+        } catch (e) { /* статус необязателен */ }
+      }
+    }
+    return json({ ok: true, status: out }, 200, cors);
+  }
+
+  // Отзыв: правим СВОЮ же карточку в Telegram и снимаем кнопки, чтобы модератор
+  // не нажал ✅ по ошибке уже после отзыва.
+  if (data.action === "withdraw") {
+    const mid = parseInt(String(data.mid || "").replace(/\D/g, ""), 10);
+    if (!mid) return json({ ok: false, error: "no_mid" }, 422, cors);
+    const st = env.POST_KV ? await env.POST_KV.get("req:" + mid, "json").catch(() => null) : null;
+    if (st && st.s !== "wait") return json({ ok: false, error: "already_decided" }, 409, cors);
+    const r = await tg(env, "editMessageText", {
+      chat_id: env.ADMIN_CHAT_ID, message_id: mid, parse_mode: "HTML",
+      text: "⛔ <b>Отозвано автором</b> · " + esc(author) + "\nЗаявка отменена до решения — ничего делать не нужно.",
+    });
+    if (!r.ok) return json({ ok: false, error: "telegram_failed" }, 502, cors);
+    if (env.POST_KV) {
+      try {
+        await env.POST_KV.put("req:" + mid, JSON.stringify({ s: "withdrawn", by: author, ts: Date.now() }),
+                              { expirationTtl: REQ_TTL });
+      } catch (e) {}
+    }
+    return json({ ok: true }, 200, cors);
+  }
+
   // ── СДЕЛКИ ПАРТНЁРОВ ИЗ АДМИНКИ ──
   // Раньше сделки заводились ТОЛЬКО командой /deal от ADMIN_CHAT_ID, а в админке
   // ввода не было намеренно: опасались, что партнёр с ключом впишет себе
@@ -2454,7 +2506,7 @@ async function handleSubmit(request, env, cors) {
       ]] },
     });
     if (!dr.ok) return json({ ok: false, error: "telegram_failed" }, 502, cors);
-    return json({ ok: true, id: deal.id }, 200, cors);
+    return json({ ok: true, id: deal.id, mid: dr.result && dr.result.message_id }, 200, cors);
   }
 
   // Снятие ошибочной сделки — тоже через аппрув, чтобы правка денег не проходила молча.
@@ -2482,7 +2534,7 @@ async function handleSubmit(request, env, cors) {
       ]] },
     });
     if (!rr2.ok) return json({ ok: false, error: "telegram_failed" }, 502, cors);
-    return json({ ok: true }, 200, cors);
+    return json({ ok: true, mid: rr2.result && rr2.result.message_id }, 200, cors);
   }
 
   const section = cleanStr(data.section, 20);
@@ -2506,7 +2558,7 @@ async function handleSubmit(request, env, cors) {
       ]] },
     });
     if (!rr.ok) return json({ ok: false, error: "telegram_failed" }, 502, cors);
-    return json({ ok: true }, 200, cors);
+    return json({ ok: true, mid: rr.result && rr.result.message_id }, 200, cors);
   }
 
   // ── Правка размещения: тот же аппрув, но запись не заменяется, а ДОПОЛНЯЕТСЯ ──
@@ -2542,7 +2594,7 @@ async function handleSubmit(request, env, cors) {
       ]] },
     });
     if (!er.ok) return json({ ok: false, error: "telegram_failed" }, 502, cors);
-    return json({ ok: true }, 200, cors);
+    return json({ ok: true, mid: er.result && er.result.message_id }, 200, cors);
   }
 
   const { item, missing } = sanitizeItem(section, data.item || {});
@@ -2568,7 +2620,7 @@ async function handleSubmit(request, env, cors) {
     ]] },
   });
   if (!r.ok) return json({ ok: false, error: "telegram_failed" }, 502, cors);
-  return json({ ok: true }, 200, cors);
+  return json({ ok: true, mid: r.result && r.result.message_id }, 200, cors);
 }
 
 // --- Публикация: правка data-файла в GitHub через Contents API ---
@@ -3255,6 +3307,7 @@ async function handleTelegram(request, env, ctx) {
         try { await env.POST_KV.delete(payload.k); } catch (e) {}
       }
       await editCard("❌ <b>Отклонено</b> · " + esc(label) + "\n" + esc(title) + " (от " + esc(payload.by) + ")");
+      await reqStatus(env, cb.message.message_id, "rejected");
       await answer("Отклонено");
       return new Response("ok");
     }
@@ -3284,6 +3337,7 @@ async function handleTelegram(request, env, ctx) {
           what = payload.rm ? payload.rm : (published.name || published.id);
         }
         await editCard(head + esc(label) + "\n" + esc(what) + " (от " + esc(payload.by) + ")\nСайт обновится через 1–3 минуты.");
+        await reqStatus(env, cb.message.message_id, "published");
         await answer(payload.rm ? "Снято" : "Опубликовано");
       } catch (e) {
         await answer("Ошибка: " + String(e && e.message || e).slice(0, 150), true);

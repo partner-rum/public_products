@@ -133,6 +133,10 @@
   .qr .st.live { color:var(--up); background:rgba(85,192,138,.12); }
   .qr .st.wait { color:var(--solar-l); background:rgba(238,125,27,.12); }
   .qr .st.old { color:var(--down); background:rgba(224,112,90,.12); }
+  .qr .st.no { color:var(--down); background:rgba(224,112,90,.18); }
+  .qr .wd { flex:none; border:1px solid var(--border-soft); background:none; color:var(--hushed);
+            border-radius:7px; padding:3px 9px; font-family:var(--f); font-size:12px; cursor:pointer; }
+  .qr .wd:hover { border-color:rgba(224,112,90,.5); color:var(--down); }
   .qr a.lk { flex:none; font-size:12px; color:var(--hushed); }
   .qr a.lk:hover { color:var(--solar-l); }
   .queue .qe { padding:12px 14px; font-size:12.5px; color:var(--faint); }
@@ -682,9 +686,10 @@
                  remove: "Снятие", doc: "Документ" };
   function qLoad() { try { return JSON.parse(localStorage.getItem(QKEY) || "[]"); } catch (e) { return []; } }
   function qSave(a) { try { localStorage.setItem(QKEY, JSON.stringify(a.slice(0, QMAX))); } catch (e) {} }
-  function qAdd(sect, name, id) {
+  function qAdd(sect, name, id, mid, kind) {
     var a = qLoad();
-    a.unshift({ ts: Date.now(), sect: sect, name: String(name || "").slice(0, 90), id: id || "" });
+    a.unshift({ ts: Date.now(), sect: sect, name: String(name || "").slice(0, 90),
+                id: id || "", mid: mid || 0, kind: kind || "" });
     qSave(a);
     renderQueue();
   }
@@ -705,35 +710,69 @@
     var all = qLoad().filter(function (r) { return Date.now() - r.ts < 7 * 864e5; });
     if (!all.length) { box.style.display = "none"; return; }
     box.style.display = "block";
-    var bust = "?cb=" + Date.now();
+    // Спрашиваем решение модератора по id карточек. Без ключа не спрашиваем:
+    // маршрут требует авторизации, а лента должна работать и до ввода ключа.
+    var mids = all.map(function (r) { return r.mid; }).filter(Boolean);
+    var key = keyEl.value.trim();
+    var statusP = (mids.length && key)
+      ? postAsk({ key: key, action: "req_status", mids: mids }).then(function (d) { return d.status || {}; })
+                                                              .catch(function () { return {}; })
+      : Promise.resolve({});
     Promise.all([
       fetchData("data/instruments.js").catch(function () { return ""; }),
       fetchData("data/offerings.js").catch(function () { return ""; }),
-      fetchData("data/placements.js").catch(function () { return ""; })
+      fetchData("data/placements.js").catch(function () { return ""; }),
+      statusP
     ]).then(function (t) {
       var live = {};
       var si = dataObj(t[0]), so = dataObj(t[1]), sp = dataObj(t[2]);
       ((si && si.instruments) || []).forEach(function (x) { if (x.id) live[x.id] = "instrument"; });
       ((so && so.items) || []).forEach(function (x) { if (x.id) live[x.id] = "offering"; });
       ((sp && sp.issues) || []).forEach(function (x) { if (x.isin) live[x.isin] = "placement"; });
+      var decided = t[3] || {};
       list.innerHTML = all.map(function (r) {
+        var d = r.mid ? decided[String(r.mid)] : null;
         var onSite = r.id && live[r.id];
         var mins = (Date.now() - r.ts) / 60000;
-        var st, cls;
-        if (onSite) { st = "на сайте"; cls = "live"; }
-        else if (r.sect === "deal" || r.sect === "dealrm" || r.sect === "remove" || r.sect === "doc") {
-          st = mins > 60 ? "нет ответа — напомните" : "ушла на одобрение";
-          cls = mins > 60 ? "old" : "wait";
-        } else if (mins > 60) { st = "висит больше часа — напомните"; cls = "old"; }
-        else { st = "ждёт одобрения"; cls = "wait"; }
-        var link = onSite === "instrument"
+        var st, cls, canWithdraw = false;
+        if (d && d.s === "rejected") { st = "отклонено"; cls = "no"; }
+        else if (d && d.s === "withdrawn") { st = "отозвано"; cls = "no"; }
+        else if (d && d.s === "published") { st = r.kind === "edit" ? "правка применена" : "на сайте"; cls = "live"; }
+        // ПРАВКУ по «id уже на сайте» определять нельзя: id там был и до правки,
+        // и лента говорила «на сайте», пока клиент видел старую цену.
+        else if (onSite && r.kind !== "edit") { st = "на сайте"; cls = "live"; }
+        else if (mins > 60) { st = "нет ответа — напомните"; cls = "old"; canWithdraw = true; }
+        else { st = r.kind === "edit" ? "правка ждёт одобрения" : "ждёт одобрения"; cls = "wait"; canWithdraw = true; }
+        var link = (onSite === "instrument")
           ? '<a class="lk" href="p/' + encodeURIComponent(r.id) + '.html" target="_blank" rel="noopener">ссылка</a>' : "";
+        var wd = (canWithdraw && r.mid)
+          ? '<button class="wd" type="button" data-wd="' + r.mid + '" aria-label="Отозвать заявку: ' +
+            esc(r.name || r.id || "") + '">Отозвать</button>' : "";
         return '<div class="qr"><span class="nm"><span class="sec">' + esc(Q_SECT[r.sect] || r.sect) + "</span>" +
           esc(r.name || r.id || "—") + '</span><span class="st ' + cls + '">' + st + "</span>" +
-          '<span class="ago" style="color:var(--faint);font-size:11px">' + qAgo(r.ts) + "</span>" + link + "</div>";
+          '<span class="ago" style="color:var(--faint);font-size:11px">' + qAgo(r.ts) + "</span>" + link + wd + "</div>";
       }).join("");
     });
   }
+  // Отзыв: правим карточку у модератора и снимаем кнопки, чтобы ✅ не нажали
+  // по уже отменённой заявке.
+  var qList = document.getElementById("q-list");
+  if (qList) qList.addEventListener("click", function (e) {
+    var b = e.target.closest ? e.target.closest("[data-wd]") : null;
+    if (!b) return;
+    var key = keyEl.value.trim();
+    if (!key) { keyEl.focus(); return; }
+    if (!confirm("Отозвать заявку? Руслану уйдёт пометка, что она отменена.")) return;
+    b.disabled = true; b.textContent = "…";
+    postJson({ key: key, action: "withdraw", mid: parseInt(b.getAttribute("data-wd"), 10) })
+      .then(function () {
+        var a = qLoad();
+        a.forEach(function (r) { if (String(r.mid) === b.getAttribute("data-wd")) r.withdrawn = 1; });
+        qSave(a); renderQueue();
+      })
+      .catch(function (err) { b.disabled = false; b.textContent = "Отозвать"; alert(err.message); });
+  });
+
   var qRf = document.getElementById("q-refresh");
   if (qRf) qRf.addEventListener("click", renderQueue);
   function dataObj(text) { try { return JSON.parse(text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1)); } catch (e) { return null; } }
@@ -804,9 +843,9 @@
       body: JSON.stringify({ key: key, action: "remove", section: row.section, id: row.id, name: row.name }) })
       .then(function (r) { return r.json().then(function (d) { return { s: r.status, d: d }; }); })
       .then(function (x) {
-        if (x.d && x.d.ok) { msgEl.className = "msg ok"; msgEl.textContent = "Заявка на снятие «" + (row.name || row.id) + "» отправлена. После ✅ Руслана продукт исчезнет с сайта."; btn.textContent = "Отправлено"; qAdd("remove", row.name || row.id, ""); }
+        if (x.d && x.d.ok) { msgEl.className = "msg ok"; msgEl.textContent = "Заявка на снятие «" + (row.name || row.id) + "» отправлена. После ✅ Руслана продукт исчезнет с сайта."; btn.textContent = "Отправлено"; qAdd("remove", row.name || row.id, "", x.d && x.d.mid, ""); }
         else if (x.d && x.d.error === "bad_key") { msgEl.className = "msg err"; msgEl.textContent = "Ключ не подошёл."; btn.disabled = false; btn.textContent = "Снять"; }
-        else { msgEl.className = "msg err"; msgEl.textContent = "Ошибка: " + ((x.d && x.d.error) || x.s); btn.disabled = false; btn.textContent = "Снять"; }
+        else { msgEl.className = "msg err"; msgEl.textContent = serverError(x); btn.disabled = false; btn.textContent = "Снять"; }
       })
       .catch(function () { msgEl.className = "msg err"; msgEl.textContent = "Сеть недоступна — попробуйте ещё раз."; btn.disabled = false; btn.textContent = "Снять"; });
   }
@@ -871,9 +910,8 @@
       body: JSON.stringify({ key: key, section: section, item: item }) })
       .then(function (r) { return r.json().then(function (d) { return { s: r.status, d: d }; }); })
       .then(function (x) {
-        if (x.d && x.d.ok) { msgEl.className = "msg ok"; msgEl.textContent = "Отправлено на одобрение ✅ После ✅ Руслана продукт появится на сайте через пару минут."; qAdd(section, (item && item.name) || "", (item && item.id) || ""); form.reset(); fBoard.type.dispatchEvent(new Event("change")); fPlacement.kind.dispatchEvent(new Event("change")); }
-        else if (x.d && x.d.error === "bad_key") { msgEl.className = "msg err"; msgEl.textContent = "Ключ не подошёл — проверьте или спросите у Руслана."; }
-        else { msgEl.className = "msg err"; msgEl.textContent = "Ошибка: " + ((x.d && x.d.error) || x.s) + ". Проверьте обязательные поля."; }
+        if (x.d && x.d.ok) { msgEl.className = "msg ok"; msgEl.textContent = "Отправлено на одобрение ✅ После ✅ Руслана продукт появится на сайте через пару минут."; qAdd(section, (item && item.name) || "", (item && item.id) || "", x.d && x.d.mid, ""); form.reset(); fBoard.type.dispatchEvent(new Event("change")); fPlacement.kind.dispatchEvent(new Event("change")); }
+        else { msgEl.className = "msg err"; msgEl.textContent = serverError(x); }
       })
       .catch(function () { msgEl.className = "msg err"; msgEl.textContent = "Сеть недоступна — попробуйте ещё раз."; })
       .finally(function () { btn.disabled = false; btn.textContent = "Отправить на одобрение"; });
@@ -939,10 +977,10 @@
     var btn = fBoard.querySelector(".send");
     btn.disabled = true; btn.textContent = "Отправляем…";
     postJson({ key: key, section: "board", action: "board_edit", item: patch })
-      .then(function () {
+      .then(function (d) {
         msgEl.className = "msg ok";
         msgEl.textContent = "Правка отправлена Руслану: " + changed.join(", ") + ". Адрес продукта не изменится.";
-        qAdd("board", bdOrig.name + " (правка)", bdOrig.id);
+        qAdd("board", bdOrig.name, bdOrig.id, d && d.mid, "edit");
       })
       .catch(function (err) { msgEl.className = "msg err"; msgEl.textContent = err.message; })
       .finally(function () { btn.disabled = false; btn.textContent = "Отправить правку"; });
@@ -1123,10 +1161,10 @@
     btn.disabled = true; btn.textContent = "Отправляем…";
     postJson({ key: key, action: "deal", ref: ref, product: product, isin: isin,
                date: date, volume: volume, reward: reward })
-      .then(function () {
+      .then(function (d) {
         msgEl.className = "msg ok";
         msgEl.textContent = "Отправлено Руслану на одобрение. После «Записать» сделка появится у партнёра на столе.";
-        qAdd("deal", ref + " · " + product, "");
+        qAdd("deal", ref + " · " + product, "", d && d.mid, "");
         document.getElementById("dl-product").value = "";
         document.getElementById("dl-isin").value = "";
         document.getElementById("dl-volume").value = "";
@@ -1143,10 +1181,10 @@
     var msgEl = document.getElementById("m-deal");
     b.disabled = true; b.textContent = "…";
     postJson({ key: keyEl.value.trim(), action: "deal_remove", ref: dlRef.value, id: b.getAttribute("data-rm") })
-      .then(function () {
+      .then(function (d) {
         msgEl.className = "msg ok";
         msgEl.textContent = "Заявка на снятие ушла Руслану. Сделка исчезнет у партнёра после подтверждения.";
-        qAdd("dealrm", dlRef.value, "");
+        qAdd("dealrm", dlRef.value, "", d && d.mid, "");
       })
       .catch(function (e) { msgEl.className = "msg err"; msgEl.textContent = e.message; })
       .finally(function () { b.disabled = false; b.textContent = "Снять"; });
@@ -1185,7 +1223,7 @@
     return fetch(ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
       .then(function (r) { return r.json().then(function (d) { return { s: r.status, d: d }; }); })
       .then(function (x) {
-        if (x.d && x.d.ok) return true;
+        if (x.d && x.d.ok) return x.d;      // в ответе лежит mid — id карточки у модератора
         throw new Error(serverError(x));
       });
   }
@@ -1238,11 +1276,13 @@
 
   function buildPlacementItem(isin) {
     req(fPlacement, ["name", "maturity", "b1n"]);
-    var dre = /^\d{2}\.\d{2}\.\d{4}$/;
+    // Свой инлайновый регэксп пропускал 31.02.2027 — календарь он не проверял.
+    // needDate проверяет и формат, и существование даты.
     ["issueStart", "maturity"].forEach(function (f) {
-      var v = val(fPlacement, f);
-      if (v && !dre.test(v)) throw new Error("Дата " + (f === "maturity" ? "погашения" : "размещения") + " — в виде ДД.ММ.ГГГГ.");
+      if (val(fPlacement, f)) needDate(fPlacement, f);
     });
+    needRange(fPlacement, "price", 0.01, 300, "% номинала");
+    needRange(fPlacement, "redeem", 0, 300, "% номинала");
     var kind = val(fPlacement, "kind");
     var item = { isin: isin, name: val(fPlacement, "name"), kind: kind,
                  maturity: val(fPlacement, "maturity"), currency: val(fPlacement, "currency") };
@@ -1377,6 +1417,14 @@
       var type = val(fBoard, "type");
       // У защиты капитала вход всегда по номиналу — поле котировки скрыто и не требуется
       req(fBoard, ["name", "underlying", "expiry", "tenor"].concat(type === "protection" ? [] : ["quote"]));
+      // Проверки существовали, но подключены были только к правке: создание
+      // принимало «дек 2027» и −500 и отвечало зелёным «Отправлено». Дата ещё и
+      // отравляла id навсегда — он собирается из неё и становится адресом
+      // /p/<id>.html, переименовать который форма не даёт.
+      needDate(fBoard, "expiry");
+      if (type !== "protection") needRange(fBoard, "quote", 0.01, 200, "% номинала");
+      needRange(fBoard, "participation", 0, 1000, "%");
+      needRange(fBoard, "cap", 0, 1000, "%");
       var item = { type: type, name: val(fBoard, "name"), underlying: val(fBoard, "underlying"),
                    cls: val(fBoard, "cls"), expiry: val(fBoard, "expiry"), tenor: val(fBoard, "tenor") };
       put(item, "currency", val(fBoard, "currency") || "RUB");
@@ -1789,7 +1837,7 @@
               ? "Сохранено ✅ Выпуск обновится на сайте, PDF пересоберётся автоматически (1–3 минуты)."
               : "Сохранено ✅ Правка в черновике.";
           } else if (x.d && x.d.error === "bad_key") { msgEl.className = "msg err"; msgEl.textContent = "Ключ не подошёл."; }
-          else { msgEl.className = "msg err"; msgEl.textContent = "Ошибка: " + ((x.d && x.d.error) || x.s); }
+          else { msgEl.className = "msg err"; msgEl.textContent = serverError(x); }
         })
         .catch(function () { msgEl.className = "msg err"; msgEl.textContent = "Сеть недоступна — попробуй ещё раз."; })
         .finally(function () { btn.disabled = false; if (dgEdit) btn.textContent = "Сохранить правку"; else dgWhereSync(); });
@@ -1827,7 +1875,7 @@
           fDigest.reset(); dgDerived.style.display = "none"; dgCurrent = null;
           loadEditable();                  // новая идея сразу доступна для правки
         } else if (x.d && x.d.error === "bad_key") { msgEl.className = "msg err"; msgEl.textContent = "Ключ не подошёл."; }
-        else { msgEl.className = "msg err"; msgEl.textContent = "Ошибка: " + ((x.d && x.d.error) || x.s); }
+        else { msgEl.className = "msg err"; msgEl.textContent = serverError(x); }
       })
       .catch(function () { msgEl.className = "msg err"; msgEl.textContent = "Сеть недоступна — попробуй ещё раз."; })
       .finally(function () { btn.disabled = false; dgWhereSync(); });
@@ -1887,7 +1935,7 @@
         if (x.d && x.d.ok) { msgEl.className = "msg ok"; msgEl.textContent = "Опубликовано ✅ Выпуск от " + x.d.id + " (" + x.d.count + " идей). Сайт и PDF обновятся за 1–3 минуты."; setTimeout(loadDraft, 900); }
         else if (x.d && x.d.error === "empty_draft") { msgEl.className = "msg err"; msgEl.textContent = "Черновик пуст — сначала добавь идеи."; }
         else if (x.d && x.d.error === "bad_key") { msgEl.className = "msg err"; msgEl.textContent = "Ключ не подошёл."; }
-        else { msgEl.className = "msg err"; msgEl.textContent = "Ошибка: " + ((x.d && x.d.error) || x.s); }
+        else { msgEl.className = "msg err"; msgEl.textContent = serverError(x); }
       })
       .catch(function () { msgEl.className = "msg err"; msgEl.textContent = "Сеть недоступна — попробуй ещё раз."; })
       .finally(function () { btn.disabled = false; btn.textContent = "Опубликовать выпуск"; });
