@@ -3,153 +3,196 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Личный кабинет — Rumberg</title>
+<title>Рабочий стол — Rumberg</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Rubik:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --canvas:#0B0C10; --card:#14161C; --ink:#F2F3F7; --hushed:rgba(242,243,247,.64);
-    --faint:rgba(242,243,247,.56); --border:rgba(255,255,255,.12); --border-soft:rgba(255,255,255,.07);
-    --solar:#EE7D1B; --solar-l:#F58E33; --up:#55C08A; --down:#E0705A;
+    --canvas:#0B0C10; --raise:#101218; --ink:#F2F3F7; --hushed:rgba(242,243,247,.66);
+    --faint:rgba(242,243,247,.56); --line:rgba(255,255,255,.10); --line-soft:rgba(255,255,255,.055);
+    --solar:#EE7D1B; --solar-l:#F58E33; --up:#55C08A;
     --f:'Onest',system-ui,sans-serif; --m:'JetBrains Mono',Consolas,monospace; --display:'Rubik','Onest',sans-serif;
+    --e:cubic-bezier(.22,.61,.36,1);
   }
   * { box-sizing:border-box; }
-  body { margin:0; background:var(--canvas); color:var(--ink); font-family:var(--f); -webkit-font-smoothing:antialiased; }
+  html { -webkit-text-size-adjust:100%; }
+  body { margin:0; background:var(--canvas); color:var(--ink); font-family:var(--f);
+         font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased; }
+  ::selection { background:rgba(238,125,27,.26); color:#fff; }
   a { color:inherit; text-decoration:none; }
-  .wrap { max-width:1180px; margin:0 auto; padding:0 20px 80px; }
+  :focus-visible { outline:2px solid var(--solar); outline-offset:2px; border-radius:5px; }
+  ::-webkit-scrollbar { width:11px; height:11px; }
+  ::-webkit-scrollbar-thumb { background:rgba(255,255,255,.12); border-radius:6px; border:3px solid var(--canvas); }
+  ::-webkit-scrollbar-thumb:hover { background:rgba(255,255,255,.2); }
+  * { scrollbar-width:thin; scrollbar-color:rgba(255,255,255,.14) transparent; }
 
-  .top { display:flex; align-items:center; gap:10px; padding:18px 0 6px; }
-  .top svg { flex:none; }
-  .top .t { font-family:var(--display); font-weight:600; font-size:16px; }
-  .top .s { font-size:12px; color:var(--faint); margin-top:1px; }
+  .wrap { max-width:1160px; margin:0 auto; padding:0 28px 96px; }
+  @media (max-width:560px) { .wrap { padding:0 18px 72px; } }
+
+  /* ── верхняя строка ── */
+  .top { display:flex; align-items:center; gap:11px; height:66px; border-bottom:1px solid var(--line-soft); }
+  .top .mk { flex:none; }
+  .top .t { font-family:var(--display); font-weight:600; font-size:15px; letter-spacing:-.01em; }
   .top .sp { margin-left:auto; }
-  .exit { border:1px solid var(--border); background:none; color:var(--hushed); border-radius:8px;
-          padding:7px 13px; font-family:var(--f); font-size:12.5px; cursor:pointer; }
-  .exit:hover { border-color:rgba(255,255,255,.3); color:var(--ink); }
+  .exit { border:1px solid var(--line); background:none; color:var(--hushed); border-radius:8px;
+          padding:8px 15px; font-family:var(--f); font-size:13px; cursor:pointer; transition:border-color .16s, color .16s; }
+  .exit:hover { border-color:rgba(255,255,255,.32); color:var(--ink); }
 
-  h1 { margin:22px 0 6px; font-family:var(--display); font-size:26px; font-weight:600; letter-spacing:-.02em; }
-  .lead { margin:0 0 22px; font-size:13.5px; line-height:1.55; color:var(--hushed); max-width:640px; }
+  /* ── вход ── */
+  #gate { max-width:400px; margin:14vh auto 0; }
+  #gate h1 { font-family:var(--display); font-weight:600; font-size:27px; letter-spacing:-.025em; margin:0 0 8px; }
+  #gate .lead { color:var(--hushed); font-size:14px; margin:0 0 30px; }
+  .field { margin:0 0 14px; }
+  .field .k { display:block; font-size:12.5px; color:var(--hushed); margin:0 0 6px; }
+  input { width:100%; background:var(--raise); border:1px solid var(--line); border-radius:10px;
+          color:var(--ink); caret-color:var(--solar); font-family:var(--f); font-size:14px;
+          padding:11px 13px; outline:none; transition:border-color .16s; }
+  input:focus { border-color:rgba(238,125,27,.65); }
+  input::placeholder { color:var(--faint); }
+  .go { width:100%; margin-top:6px; background:var(--solar); color:#0C0A08; border:0; border-radius:10px;
+        padding:13px; font-family:var(--f); font-size:14.5px; font-weight:600; cursor:pointer; transition:background .16s; }
+  .go:hover { background:var(--solar-l); }
+  .go:disabled { opacity:.55; cursor:default; }
+  .msg { display:none; margin:16px 0 0; font-size:13.5px; line-height:1.5; color:var(--solar-l); }
+  .msg.err { display:block; }
+  .note { font-size:12px; color:var(--faint); margin-top:22px; line-height:1.5; }
 
-  label { display:block; margin:0 0 10px; }
-  label .k { display:block; font-size:12px; color:var(--hushed); margin:0 0 5px; }
-  input {
-    width:100%; background:rgba(255,255,255,.05); border:1px solid var(--border); border-radius:10px;
-    color:var(--ink); font-family:var(--f); font-size:13.5px; padding:9px 12px; outline:none;
-  }
-  input:focus { border-color:rgba(238,125,27,.6); }
-
-  .grp { margin:0 0 16px; padding:16px; background:var(--card); border:1px solid var(--border-soft); border-radius:14px; }
-  .grp .gt { font-family:var(--m); font-size:10.5px; letter-spacing:.13em; text-transform:uppercase; color:var(--faint); margin:0 0 12px; }
-  .grp .gt a { color:inherit; }
-  .grp .gt a:hover { color:var(--solar-l); }
-  .send { width:100%; margin-top:6px; background:var(--solar); color:#0C0A08; border:0; border-radius:12px;
-          padding:13px; font-family:var(--f); font-size:14.5px; font-weight:600; cursor:pointer; }
-  .send:hover { background:var(--solar-l); }
-  .send:disabled { opacity:.5; cursor:default; }
-  .msg { display:none; margin:14px 0 0; padding:13px 16px; border-radius:12px; font-size:13.5px; line-height:1.5; }
-  .msg.err { display:block; background:rgba(224,112,90,.1); border:1px solid rgba(224,112,90,.45); }
-  .note { font-size:11.5px; color:var(--faint); margin-top:8px; line-height:1.45; }
-
-  /* --- вход --- */
-  #gate { max-width:420px; }
-  #gate .row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-  @media (max-width:560px) { #gate .row { grid-template-columns:1fr; } }
-
-  /* --- кабинет: слева его продукты, справа актуальные --- */
+  /* ── стол ── */
   #dash { display:none; }
-  .cols { display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:22px; align-items:start; }
-  @media (max-width:900px) { .cols { grid-template-columns:minmax(0,1fr); } }
+  #dash.on { display:block; animation:rise .5s var(--e) both; }
+  @keyframes rise { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
 
-  /* --- таблица его продуктов --- */
+  /* заголовок стола: имя партнёра и маржа как якорь */
+  .dhead { padding:34px 0 30px; border-bottom:1px solid var(--line); }
+  .who { font-family:var(--m); font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--faint); }
+  .who b { color:var(--hushed); font-weight:500; }
+  .sums { display:flex; flex-wrap:wrap; gap:44px; margin-top:16px; }
+  .sum .fig { font-family:var(--m); font-weight:500; font-size:40px; letter-spacing:-.03em; line-height:1;
+              font-variant-numeric:tabular-nums; }
+  .sum .cap { margin-top:10px; font-size:13px; color:var(--hushed); }
+  .sum .cap b { color:var(--ink); font-weight:500; font-variant-numeric:tabular-nums; }
+  @media (max-width:560px) { .sum .fig { font-size:32px; } .sums { gap:28px; } }
+
+  /* две зоны */
+  .cols { display:grid; grid-template-columns:minmax(0,1fr) 300px; gap:0; }
+  .cols > .main { padding:30px 0 0; }
+  .cols > .rail { padding:30px 0 0 40px; border-left:1px solid var(--line-soft); }
+  @media (max-width:880px) {
+    .cols { grid-template-columns:1fr; }
+    .cols > .rail { padding:36px 0 0; border-left:0; border-top:1px solid var(--line-soft); margin-top:34px; }
+  }
+
+  .zt { font-family:var(--m); font-size:11.5px; letter-spacing:.13em; text-transform:uppercase;
+        color:var(--faint); margin:0 0 18px; display:flex; align-items:baseline; gap:10px; }
+  .zt a.all { margin-left:auto; color:var(--hushed); letter-spacing:.04em; text-transform:none; font-size:12px;
+              display:inline-flex; align-items:center; gap:4px; transition:color .16s; }
+  .zt a.all:hover { color:var(--solar-l); }
+  .zt a.all svg { transition:transform .2s var(--e); }
+  .zt a.all:hover svg { transform:translateX(2px); }
+
+  /* ── таблица выпусков (ledger) ── */
   .tbl { width:100%; border-collapse:collapse; }
-  .tbl th { font-family:var(--m); font-size:9.5px; letter-spacing:.11em; text-transform:uppercase; color:var(--faint);
-            font-weight:400; text-align:right; padding:0 0 9px; border-bottom:1px solid var(--border-soft); }
-  .tbl th:first-child, .tbl th:nth-child(2) { text-align:left; }
-  .tbl td { padding:11px 0; border-bottom:1px solid var(--border-soft); font-size:13.5px; text-align:right;
-            font-family:var(--m); font-variant-numeric:tabular-nums; }
-  .tbl td.dt { font-size:12.5px; color:var(--hushed); white-space:nowrap; text-align:left; padding-right:14px; }
-  .tbl td.nm { font-family:var(--f); text-align:left; line-height:1.35; padding-right:14px; }
-  .tbl td.rw { color:var(--solar-l); }
-  .tbl td.st { white-space:nowrap; }
-  .tbl td.st span { font-family:var(--f); font-size:12px; border-radius:6px; padding:3px 9px; }
-  .tbl td.st .paid { color:var(--up); background:rgba(85,192,138,.13); }
-  .tbl td.st .accr { color:var(--solar-l); background:rgba(238,125,27,.13); }
-  .tbl .pid { display:block; font-family:var(--m); font-size:9.5px; color:var(--faint); margin-top:2px; letter-spacing:.06em; }
-  /* Итог — строкой таблицы, а не отдельными плитками: это сумма её же столбцов. */
-  .tbl tfoot td { border-bottom:0; border-top:1px solid var(--border); padding-top:12px; }
-  .tbl tfoot .tot { font-family:var(--f); text-align:left; color:var(--hushed); font-size:12.5px; }
-  .scroll { overflow-x:auto; }
-  .empty { font-size:13.5px; color:var(--hushed); line-height:1.6; }
+  .tbl th { font-family:var(--m); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--faint);
+            font-weight:400; text-align:right; padding:0 0 12px; border-bottom:1px solid var(--line); }
+  .tbl th.l { text-align:left; }
+  .tbl td { padding:15px 0; border-bottom:1px solid var(--line-soft); font-size:14px; text-align:right;
+            font-family:var(--m); font-variant-numeric:tabular-nums; color:var(--hushed); }
+  .tbl tbody tr { transition:background .14s; }
+  .tbl tbody tr:hover { background:rgba(255,255,255,.018); }
+  .tbl td.nm { text-align:left; font-family:var(--f); padding-right:20px; }
+  .tbl td.nm a { display:inline-flex; align-items:center; gap:7px; color:var(--ink); font-weight:500; line-height:1.3;
+                 transition:color .16s; }
+  .tbl td.nm a:hover { color:var(--solar-l); }
+  .tbl td.nm a svg { flex:none; opacity:0; transform:translateX(-3px); transition:opacity .16s, transform .16s var(--e); color:var(--solar-l); }
+  .tbl td.nm a:hover svg, .tbl tbody tr:hover td.nm a svg { opacity:1; transform:none; }
+  .tbl td.nm span.plain { color:var(--ink); font-weight:500; }
+  .tbl td.isin { text-align:left; font-size:12px; color:var(--faint); letter-spacing:.03em; white-space:nowrap; }
+  .tbl td.desc { text-align:left; font-family:var(--f); color:var(--hushed); font-size:13px; padding-right:18px; }
+  .tbl td.dt { text-align:left; color:var(--faint); font-size:13px; white-space:nowrap; }
+  .tbl td.mg { color:var(--ink); white-space:nowrap; }
 
-  /* --- актуальные продукты: строки как в одноимённой колонке на главной --- */
-  .prow { display:flex; align-items:flex-start; gap:9px; margin-top:8px; padding:8px 10px;
-          border:1px solid var(--border-soft); border-left:2px solid var(--solar); border-radius:6px;
-          background:rgba(255,255,255,.032); font-size:12px;
-          transition:background .18s ease, border-color .18s ease; }
-  .prow:first-of-type { margin-top:0; }
-  .prow:hover { background:rgba(238,125,27,.07); border-color:rgba(238,125,27,.34); border-left-color:var(--solar-l); }
-  .prow .nmm { flex:1; min-width:0; font-weight:500; line-height:1.35; }
-  .prow .q { font-family:var(--m); font-size:12px; color:var(--solar); font-weight:500; white-space:nowrap;
-             text-align:right; font-variant-numeric:tabular-nums; }
-  /* Цифры у продуктов РАЗНОГО типа значат разное — метка обязательна (как на главной). */
-  .prow .q i { display:block; margin-top:2px; font-style:normal; font-size:7.5px; font-weight:400;
-               letter-spacing:.12em; text-transform:uppercase; color:var(--faint); }
-  .cp { flex:none; margin-top:1px; width:24px; height:24px; padding:0; border:1px solid var(--border-soft);
-        background:none; border-radius:6px; color:var(--hushed); cursor:pointer;
-        display:flex; align-items:center; justify-content:center; }
-  .cp:hover { border-color:rgba(238,125,27,.5); color:var(--solar-l); }
-  .cp.done { border-color:rgba(85,192,138,.5); color:var(--up); }
-  .snote { font-size:11.5px; color:var(--faint); margin-top:12px; line-height:1.5; }
+  .empty { color:var(--hushed); font-size:14px; line-height:1.6; padding:8px 0; max-width:44ch; }
+
+  /* адаптив таблицы: на узком стек, не горизонтальный скролл */
+  @media (max-width:600px) {
+    .tbl thead { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+    .tbl, .tbl tbody, .tbl tr, .tbl td { display:block; width:100%; }
+    .tbl tbody tr { padding:16px 0; border-bottom:1px solid var(--line-soft); }
+    .tbl tbody tr:hover { background:none; }
+    .tbl td { border:0; padding:0; text-align:left; display:flex; justify-content:space-between; align-items:baseline; gap:16px; }
+    .tbl td.nm { padding:0 0 10px; }
+    .tbl td.nm a svg, .tbl tbody tr:hover td.nm a svg { opacity:1; transform:none; }
+    .tbl td:not(.nm) { padding:5px 0; }
+    .tbl td:not(.nm)::before { content:attr(data-l); font-family:var(--m); font-size:10px; letter-spacing:.1em;
+      text-transform:uppercase; color:var(--faint); font-variant-numeric:normal; }
+  }
+
+  /* ── полка актуальных продуктов ── */
+  .prow { display:flex; align-items:flex-start; gap:10px; padding:13px 0; border-bottom:1px solid var(--line-soft); }
+  .prow:first-of-type { padding-top:0; }
+  .prow .nmm { flex:1; min-width:0; font-size:13px; font-weight:500; line-height:1.35; color:var(--ink); transition:color .16s; }
+  .prow .nmm:hover { color:var(--solar-l); }
+  .prow .q { font-family:var(--m); font-size:13px; color:var(--solar-l); font-weight:500; text-align:right;
+             white-space:nowrap; font-variant-numeric:tabular-nums; }
+  .prow .q i { display:block; margin-top:3px; font-style:normal; font-size:9.5px; font-weight:400;
+               letter-spacing:.1em; text-transform:uppercase; color:var(--faint); }
+  .cp { flex:none; width:26px; height:26px; margin-top:-2px; padding:0; border:1px solid var(--line);
+        background:none; border-radius:7px; color:var(--faint); cursor:pointer;
+        display:flex; align-items:center; justify-content:center; transition:border-color .16s, color .16s; }
+  .cp:hover { border-color:rgba(238,125,27,.55); color:var(--solar-l); }
+  .cp.done { border-color:rgba(85,192,138,.55); color:var(--up); }
+  .snote { font-size:12px; color:var(--faint); margin-top:16px; line-height:1.55; }
   .snote b { color:var(--hushed); font-weight:500; }
-  /* Запасной путь, когда браузер отказал в копировании: ссылку видно и её можно выделить */
-  .fall { margin-top:10px; font-size:11.5px; line-height:1.5; color:var(--hushed); }
-  .fall code { display:block; margin-top:6px; font-family:var(--m); font-size:11px; color:var(--solar-l);
-               background:rgba(238,125,27,.08); border:1px solid rgba(238,125,27,.26); border-radius:8px;
-               padding:8px 10px; word-break:break-all; user-select:all; }
+  .fall { margin-top:12px; font-size:12.5px; line-height:1.5; color:var(--hushed); }
+  .fall code { display:block; margin-top:7px; font-family:var(--m); font-size:11px; color:var(--solar-l);
+               background:rgba(238,125,27,.07); border:1px solid rgba(238,125,27,.24); border-radius:8px;
+               padding:9px 11px; word-break:break-all; user-select:all; }
+
+  @media (prefers-reduced-motion:reduce) {
+    #dash.on { animation:none; }
+    *, *::before, *::after { transition:none !important; }
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="top">
-    <svg width="22" height="22" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>
-    <div><div class="t">Rumberg · личный кабинет</div><div class="s" id="sub">продукты и вознаграждение</div></div>
+    <svg class="mk" width="22" height="22" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>
+    <div class="t">Rumberg · рабочий стол</div>
     <div class="sp"><button class="exit" id="exit" type="button" style="display:none">Выйти</button></div>
   </div>
 
   <!-- ВХОД -->
   <div id="gate">
-    <h1>Личный кабинет</h1>
-    <p class="lead">Ваши продукты и вознаграждение по ним. ID и ключ выдаёт Rumberg.</p>
-    <div class="grp">
-      <div class="gt">вход</div>
-      <div class="row">
-        <label><span class="k">Ваш ID</span><input id="id" autocomplete="username" placeholder="например andrey" spellcheck="false"></label>
-        <label><span class="k">Ключ</span><input id="key" type="password" autocomplete="current-password" placeholder="выдаётся Rumberg"></label>
-      </div>
-      <button class="send" id="go" type="button">Войти</button>
-      <div class="msg" id="err"></div>
-      <div class="note">Ключ сохраняется в этом браузере, чтобы не вводить его каждый раз. На общем компьютере после работы нажмите «Выйти».</div>
-    </div>
+    <h1>Рабочий стол</h1>
+    <p class="lead">Ваши выпуски и заплаченная по ним маржа. ID и ключ выдаёт Rumberg.</p>
+    <div class="field"><span class="k">Ваш ID</span><input id="id" autocomplete="username" placeholder="например andrey" spellcheck="false"></div>
+    <div class="field"><span class="k">Ключ</span><input id="key" type="password" autocomplete="current-password" placeholder="выдаётся Rumberg"></div>
+    <button class="go" id="go" type="button">Войти</button>
+    <div class="msg" id="err"></div>
+    <p class="note">Ключ сохраняется в этом браузере, чтобы не вводить его каждый раз. На общем компьютере после работы нажмите «Выйти».</p>
   </div>
 
-  <!-- КАБИНЕТ -->
+  <!-- СТОЛ -->
   <div id="dash">
-    <h1 id="hi">Личный кабинет</h1>
-    <p class="lead">Слева — ваши продукты и вознаграждение по ним. Справа — что можно предлагать сейчас.</p>
+    <div class="dhead">
+      <div class="who">партнёр&nbsp;·&nbsp;<b id="whoRef">—</b></div>
+      <div class="sums" id="dealSum"></div>
+    </div>
 
     <div class="cols">
-      <div class="grp" id="dealsBox">
-        <div class="gt">мои продукты</div>
-        <div class="scroll"><table class="tbl" id="dealTbl"></table></div>
+      <section class="main">
+        <div class="zt">мои выпуски</div>
+        <table class="tbl" id="dealTbl"></table>
         <div class="empty" id="dealEmpty" style="display:none">
-          Продуктов пока нет. Как только сделка пройдёт, она появится здесь вместе с вознаграждением.
+          Выпусков пока нет. Как только сделка пройдёт, она появится здесь вместе с заплаченной маржой.
         </div>
-      </div>
+      </section>
 
-      <aside class="grp" id="hotBox">
-        <div class="gt"><a href="board.html">актуальные продукты →</a></div>
+      <aside class="rail">
+        <div class="zt">актуальные продукты<a class="all" href="board.html">вся доска<svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 7h8M7.5 3.5L11 7l-3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a></div>
         <div id="hot"></div>
         <div class="snote" id="hotNote"></div>
         <div class="fall" id="hotFall" style="display:none"></div>
@@ -182,74 +225,87 @@
     if (b === 1) return one;
     return many;
   }
-  var CCY_SIGN = { RUB: " ₽", USD: " $", EUR: " €", CNY: " ¥" };
-  var CCY_NAME = { RUB: "рубли", USD: "доллары", EUR: "евро", CNY: "юани" };
-  var ST_NAME = { accrued: "начислено", paid: "выплачено" };
-  // Разряды пробелом — как в остальных цифрах на витрине.
-  function money(n, ccy) {
-    var s = Math.round(Number(n) || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
-    return s + (CCY_SIGN[ccy] || " " + ccy);
+  // Платим только в рублях (решение Руслана) — валюту нигде не разбираем.
+  // Разряды пробелом, как в остальных цифрах на витрине.
+  function money(n) {
+    return Math.round(Number(n) || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " ₽";
+  }
+  // Продукт заводится строкой «серия · короткое описание» (напр.
+  // «РСП СП-1-10 · участие 120%»): до первого « · » — название выпуска, дальше —
+  // описание. Нет разделителя — вся строка идёт в название, описание пустое.
+  function splitName(product) {
+    var p = String(product || "").split(" · ");
+    return { name: p.shift() || "—", desc: p.join(" · ") };
+  }
+  var ARROW = '<svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 7h8M7.5 3.5L11 7l-3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var COPY = '<svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M4.5 2.5h6a1 1 0 011 1v6M9.5 4.5h-6a1 1 0 00-1 1v6a1 1 0 001 1h6a1 1 0 001-1v-6a1 1 0 00-1-1z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+  // Ссылка на сам продукт — ТОЛЬКО по ISIN. Внешние сейлзы продают размещённые
+  // выпуски: у них есть ISIN, а placements.html открывает паспорт по якорю #ISIN.
+  // Поле d.id у сделки — это id записи для /dealrm, а НЕ id продукта доски; ссылку
+  // на instrument.html по нему строить нельзя (страница откроется пустой). Нет ISIN —
+  // строка без ссылки, врать о переходе не будем.
+  function dealLink(d) {
+    return d.isin ? "placements.html#" + encodeURIComponent(d.isin) : "";
   }
 
-  // ---- ТАБЛИЦА: его продукты ----------------------------------------------
-  // Одна сделка — одна строка. Вознаграждение показываем по каждой, итог —
-  // строкой таблицы: это сумма её же столбцов, а не отдельный показатель.
-  // Валюты не складываем — у каждой свой итог.
-  function drawDeals(deals, totals) {
-    if (!deals || !deals.length) {
+  // ---- ЛЕВО: выпуски партнёра ---------------------------------------------
+  // Одна сделка — одна строка компактной таблицы. «Маржа» = заплаченное партнёру
+  // вознаграждение по сделке (поле reward). Валюта одна — рубли. Итог маржи
+  // (и сколько уже выплачено) вынесен в шапку стола, поэтому строки-итога в
+  // таблице нет и отдельной колонки статуса тоже — не раздуваем список.
+  function drawDeals(deals) {
+    deals = deals || [];
+    var reward = 0, paid = 0, count = deals.length;
+    for (var i = 0; i < deals.length; i++) {
+      var r = Number(deals[i].reward) || 0;
+      reward += r;
+      if (deals[i].status === "paid") paid += r;
+    }
+    var sums = '<div class="sum"><div class="fig">' + money(reward) + '</div><div class="cap">маржа' +
+      (count
+        ? (paid ? ' · выплачено <b>' + money(paid) + "</b>" : " · пока не выплачена") +
+          " · " + count + " " + plural(count, "выпуск", "выпуска", "выпусков")
+        : " пока не начислена") +
+      "</div></div>";
+    $("dealSum").innerHTML = sums;
+
+    if (!count) {
       $("dealTbl").innerHTML = "";
+      $("dealTbl").style.display = "none";
       $("dealEmpty").style.display = "block";
       return;
     }
+    $("dealTbl").style.display = "";
     $("dealEmpty").style.display = "none";
 
-    var h = "<thead><tr><th>Дата</th><th>Продукт</th><th>Объём</th>" +
-            "<th>Вознаграждение</th><th>Статус</th></tr></thead><tbody>";
+    var h = "<thead><tr><th class='l'>Выпуск</th><th class='l'>ISIN</th><th class='l'>Описание</th>" +
+            "<th class='l'>Дата</th><th>Объём</th><th>Маржа</th></tr></thead><tbody>";
     for (var j = 0; j < deals.length; j++) {
-      var d = deals[j], ccy = d.currency || "RUB";
+      var d = deals[j], sp = splitName(d.product), link = dealLink(d);
+      var name = link
+        ? '<a href="' + esc(link) + '">' + esc(sp.name) + ARROW + "</a>"
+        : '<span class="plain">' + esc(sp.name) + "</span>";
       h += "<tr>" +
-        '<td class="dt">' + esc(String(d.date).split("-").reverse().join(".")) + "</td>" +
-        '<td class="nm">' + esc(d.product || "—") +
-          (d.isin ? '<span class="pid">' + esc(d.isin) + "</span>" : "") + "</td>" +
-        "<td>" + money(d.volume, ccy) + "</td>" +
-        '<td class="rw">' + money(d.reward, ccy) + "</td>" +
-        '<td class="st"><span class="' + (d.status === "paid" ? "paid" : "accr") + '">' +
-          esc(ST_NAME[d.status] || d.status) + "</span></td>" +
+        '<td class="nm" data-l="Выпуск">' + name + "</td>" +
+        '<td class="isin" data-l="ISIN">' + (d.isin ? esc(d.isin) : "—") + "</td>" +
+        '<td class="desc" data-l="Описание">' + (sp.desc ? esc(sp.desc) : "—") + "</td>" +
+        '<td class="dt" data-l="Дата">' + esc(String(d.date).split("-").reverse().join(".")) + "</td>" +
+        '<td data-l="Объём">' + money(d.volume) + "</td>" +
+        '<td class="mg" data-l="Маржа">' + money(d.reward) + "</td>" +
         "</tr>";
     }
     h += "</tbody>";
-
-    var curs = Object.keys(totals || {});
-    if (curs.length) {
-      var many = curs.length > 1;
-      curs.sort(function (a, b) { return totals[b].count - totals[a].count; });
-      h += "<tfoot>";
-      for (var i = 0; i < curs.length; i++) {
-        var c = curs[i], t = totals[c], reward = (t.accrued || 0) + (t.paid || 0);
-        h += "<tr>" +
-          '<td class="tot" colspan="2">Итого' + (many ? " · " + esc(CCY_NAME[c] || c) : "") +
-            " · " + t.count + " " + plural(t.count, "сделка", "сделки", "сделок") + "</td>" +
-          "<td>" + money(t.volume, c) + "</td>" +
-          '<td class="rw">' + money(reward, c) +
-            (t.paid ? '<span class="pid">выплачено ' + money(t.paid, c) + "</span>" : "") + "</td>" +
-          "<td></td></tr>";
-      }
-      h += "</tfoot>";
-    }
     $("dealTbl").innerHTML = h;
   }
 
-  // ---- ПОЛКА: актуальные продукты -----------------------------------------
+  // ---- ПРАВО: актуальные продукты -----------------------------------------
   // Источник тот же, что у одноимённой колонки на главной: MORNING.products —
-  // подбор утреннего конвейера по статье. Списка нет или он протух (старше трёх
-  // дней) — берём начало доски, чтобы полка не пустовала.
-  var CP = '<svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M4.5 2.5h6a1 1 0 011 1v6M9.5 4.5h-6a1 1 0 00-1 1v6a1 1 0 001 1h6a1 1 0 001-1v-6a1 1 0 00-1-1z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  // подбор утреннего конвейера по статье. Старше трёх дней или пусто — начало доски.
   var HOT_LIMIT = 5;
   var fmtQ = (window.SITE && SITE.fmt2) ? SITE.fmt2 : function (n) { return String(n).replace(".", ","); };
 
-  // Что показывать цифрой. Та же функция, что на главной и на research.html:
-  // у защиты капитала котировка всегда 100% (клиент платит номинал) — вместо неё
-  // участие; у бустера quote — коэффициент участия, у автоколла — купон годовых.
+  // Что показывать цифрой. Та же функция, что на главной и research.html.
   function figure(r) {
     if (r.type === "protection") {
       if (r.participation != null) return { v: Math.round(r.participation * 100) + "%", n: "участие" };
@@ -266,7 +322,6 @@
     for (var i = 0; i < ins.length; i++) if (ins[i].id === id) return ins[i];
     return null;
   }
-  // Возраст обзора в сутках: считаем по календарным датам, как на главной.
   function morningAge() {
     var M = window.MORNING || {};
     if (!M.date) return null;
@@ -288,32 +343,29 @@
       if (items.length) from = "начало доски продуктов";
     }
     if (!items.length) {
-      $("hot").innerHTML = '<div class="empty">Каталог не загрузился. <a href="board.html">Открыть доску</a></div>';
+      $("hot").innerHTML = '<div class="empty">Каталог не загрузился. <a href="board.html" style="color:var(--solar-l)">Открыть доску</a></div>';
       $("hotNote").textContent = "";
       return;
     }
 
     $("hot").innerHTML = items.slice(0, HOT_LIMIT).map(function (r) {
       var f = figure(r);
-      // В буфер — персональная страница продукта с его меткой: именно её агент
-      // отправляет клиенту, и по ней считается атрибуция.
+      // В буфер — персональная страница продукта с меткой партнёра: именно её
+      // он отправляет клиенту, и по ней считается атрибуция.
       var link = BASE + "/p/" + encodeURIComponent(r.id) + ".html?ref=" + encodeURIComponent(ref || "");
       return '<div class="prow">' +
         '<a class="nmm" href="instrument.html?id=' + encodeURIComponent(r.id) + '">' + esc(r.name) + "</a>" +
         '<span class="q">' + f.v + (f.n ? "<i>" + f.n + "</i>" : "") + "</span>" +
         '<button class="cp" type="button" data-l="' + esc(link) +
-          '" title="Скопировать ссылку для клиента">' + CP + "</button>" +
+          '" title="Скопировать ссылку для клиента" aria-label="Скопировать ссылку для клиента">' + COPY + "</button>" +
         "</div>";
     }).join("");
-    // Источник подбора называем всегда: выбор конвейера и наш добор — разного веса.
     $("hotNote").innerHTML = esc(from) + ". Кнопка копирует ссылку для клиента с вашей меткой <b>" +
       esc(ref || "—") + "</b>.";
   }
 
-  // Копирование. clipboard API есть не всюду (старый Safari, http-локалка), и
-  // даже там, где есть, он ОТКЛОНЯЕТ запись, если вкладка не в фокусе. Поэтому
-  // отказ обязательно ловим: сначала запасной путь через скрытое поле, а если и
-  // он не сработал — показываем ссылку текстом, чтобы её можно было выделить.
+  // Копирование. clipboard API отклоняет запись, когда вкладка не в фокусе, —
+  // отказ обязательно ловим: запасной путь execCommand, затем ссылка текстом.
   function legacyCopy(text) {
     try {
       var ta = document.createElement("textarea");
@@ -338,7 +390,6 @@
       b.classList.add("done");
       setTimeout(function () { b.classList.remove("done"); }, 1400);
     }).catch(function () {
-      // Молчать нельзя: агент решит, что ссылка в буфере, и отправит клиенту пустоту.
       var box = $("hotFall");
       box.innerHTML = "Браузер не дал скопировать. Выделите ссылку сами:<code>" + esc(link) + "</code>";
       box.style.display = "block";
@@ -379,9 +430,9 @@
       var d = await r.json().catch(function () { return {}; });
       if (!d.ok) {
         // 404 = маршрут /stats на сервере ещё не появился (воркер не передеплоен).
-        if (r.status === 404) fail("Кабинет ещё не подключён на сервере. Напишите Руслану.");
+        if (r.status === 404) fail("Стол ещё не подключён на сервере. Напишите Руслану.");
         else if (d.error === "bad_key") fail("Не подходит ID или ключ. Проверьте раскладку и пробелы.");
-        else if (d.error === "no_storage" || d.error === "not_configured") fail("Кабинет ещё не подключён на сервере. Напишите Руслану.");
+        else if (d.error === "no_storage" || d.error === "not_configured") fail("Стол ещё не подключён на сервере. Напишите Руслану.");
         else fail("Не удалось получить данные. Попробуйте ещё раз.");
         forget();
         return false;
@@ -401,11 +452,10 @@
   // ---- отрисовка -----------------------------------------------------------
   function render(d) {
     gate.style.display = "none";
-    dash.style.display = "block";
+    dash.classList.add("on");
     $("exit").style.display = "inline-block";
-    $("sub").textContent = d.ref;
-    $("hi").textContent = "Личный кабинет · " + d.ref;
-    drawDeals(d.deals || [], d.totals || {});
+    $("whoRef").textContent = d.ref;
+    drawDeals(d.deals || []);
     drawHot(d.ref);
   }
 
@@ -419,7 +469,7 @@
   $("id").addEventListener("keydown", function (e) { if (e.key === "Enter") $("key").focus(); });
   $("exit").addEventListener("click", function () { forget(); location.reload(); });
 
-  // Демо-вёрстки: ?demo=1 — заполненный кабинет, ?demo=0 — первый день партнёра.
+  // Демо-вёрстки: ?demo=1 — заполненный стол, ?demo=0 — первый день партнёра.
   // Данные синтетические, сеть НЕ трогается, ключ в браузер не пишется (иначе
   // маячок счёл бы этот браузер агентским и перестал считать открытия).
   var demo = location.search.match(/[?&]demo=([01])/);
@@ -434,31 +484,23 @@
   }
 
   function demoEmpty() {
-    return { ok: true, ref: "demo", kind: "partner", now: Date.now(), deals: [], totals: {} };
+    return { ok: true, ref: "demo", kind: "partner", now: Date.now(), deals: [] };
   }
   function demoFull() {
+    // Только рубли, только размещённые выпуски (с ISIN → ссылка на паспорт).
     var deals = [
       { id: "a1b2c3", product: "РСП СП-1-10 · участие 120%", isin: "RU000A10A9G1",
-        date: "2026-08-12", volume: 25000000, reward: 562500, currency: "RUB", status: "accrued" },
-      { id: "d4e5f6", product: "РСП СП-2-72-ЦБ-RUB · купонный", isin: "RU000A10CVB8",
-        date: "2026-07-30", volume: 15000000, reward: 337500, currency: "RUB", status: "paid" },
-      { id: "g7h8i9", product: "РСП СП-1-52-ЦБ-RUB · купонный", isin: "RU000A10CBH7",
-        date: "2026-07-16", volume: 40000000, reward: 900000, currency: "RUB", status: "paid" },
+        date: "2026-08-12", volume: 25000000, reward: 562500, status: "accrued" },
+      { id: "d4e5f6", product: "РСП СП-2-72-ЦБ-RUB · купонный 24%", isin: "RU000A10CVB8",
+        date: "2026-07-30", volume: 15000000, reward: 337500, status: "paid" },
+      { id: "g7h8i9", product: "РСП СП-1-52-ЦБ-RUB · купонный 22%", isin: "RU000A10CBH7",
+        date: "2026-07-16", volume: 40000000, reward: 900000, status: "paid" },
       { id: "j1k2l3", product: "РСП СП-2-69 · участие 27%", isin: "RU000A10CV88",
-        date: "2026-06-24", volume: 12000000, reward: 270000, currency: "RUB", status: "paid" },
+        date: "2026-06-24", volume: 12000000, reward: 270000, status: "paid" },
       { id: "m4n5o6", product: "РСП СП-1-12 · участие 100%", isin: "RU000A109EH2",
-        date: "2026-06-03", volume: 8000000, reward: 180000, currency: "RUB", status: "paid" },
-      { id: "p7q8r9", product: "Дисконтная облигация на ВЭБ.РФ · 3 года",
-        date: "2026-05-20", volume: 200000, reward: 9000, currency: "USD", status: "paid" }
+        date: "2026-06-03", volume: 8000000, reward: 180000, status: "paid" }
     ];
-    var totals = {};
-    for (var q = 0; q < deals.length; q++) {
-      var dd = deals[q], cc = dd.currency;
-      var row = totals[cc] || (totals[cc] = { accrued: 0, paid: 0, volume: 0, count: 0 });
-      row.count++; row.volume += dd.volume;
-      if (dd.status === "paid") row.paid += dd.reward; else row.accrued += dd.reward;
-    }
-    return { ok: true, ref: "andrey", kind: "partner", now: Date.now(), deals: deals, totals: totals };
+    return { ok: true, ref: "andrey", kind: "partner", now: Date.now(), deals: deals };
   }
 })();
 </script>
