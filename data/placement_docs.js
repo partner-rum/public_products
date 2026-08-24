@@ -512,6 +512,10 @@ window.PLACEMENT_DOCS = {
   {
    "name": "Ключевой информационный документ (КИД)",
    "file": "docs/kid-RU000A10E6L3.pdf"
+  },
+  {
+   "name": "Ключевые условия выпуска (КУВ)",
+   "file": "docs/kuv-RU000A10E6L3.pdf"
   }
  ]
 };
