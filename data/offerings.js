@@ -30,6 +30,12 @@ window.OFFERINGS = {
      "file": "docs/kid-sp-1-45-cb-fx-rub.pdf",
      "ext": "PDF",
      "size": "344 КБ"
+    },
+    {
+     "name": "Ключевые условия выпуска (КУВ)",
+     "file": "docs/kuv-sp-1-45-cb-fx-rub.pdf",
+     "ext": "PDF",
+     "size": "428 КБ"
     }
    ]
   },
