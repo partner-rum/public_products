@@ -114,13 +114,7 @@
   @media (max-width:560px) { .mchart { width:100%; } .mchart .mcap { text-align:left; } }
 
   /* ── две зоны ── */
-  .cols { display:grid; grid-template-columns:minmax(0,1fr) 296px; gap:0; margin-top:34px; }
-  .cols > .main { padding:0; }
-  .cols > .rail { padding:0 0 0 36px; border-left:1px solid var(--line-soft); }
-  @media (max-width:980px) {
-    .cols { grid-template-columns:1fr; }
-    .cols > .rail { padding:34px 0 0; border-left:0; border-top:1px solid var(--line-soft); margin-top:34px; }
-  }
+  .main { margin-top:34px; }
 
   .zt { font-family:var(--m); font-size:11.5px; letter-spacing:.13em; text-transform:uppercase;
         color:var(--faint); margin:0 0 16px; display:flex; align-items:baseline; gap:10px; }
@@ -143,62 +137,62 @@
   @media (max-width:560px) { .ctrl .gap { margin-left:0; flex-basis:100%; height:0; } }
 
   /* ── БЛОКИ СДЕЛОК ── */
-  .tiles { display:grid; grid-template-columns:repeat(auto-fill, minmax(340px,1fr)); gap:14px; }
+  .tiles { display:grid; grid-template-columns:repeat(auto-fill, minmax(300px,1fr)); gap:12px; }
   @media (max-width:600px) { .tiles { grid-template-columns:1fr; } }
   .tile { background:var(--card); border:1px solid var(--line-soft); border-radius:14px; overflow:hidden;
           transition:border-color .18s, transform .18s var(--e), box-shadow .18s; }
   .tile:hover { border-color:var(--line); transform:translateY(-2px); box-shadow:0 10px 26px rgba(0,0,0,.32); }
   .tile.open { border-color:rgba(238,125,27,.34); }
 
-  .th { display:flex; align-items:flex-start; gap:10px; padding:15px 16px 0; }
+  .th { display:flex; align-items:flex-start; gap:8px; padding:13px 14px 0; }
   .th .nm { flex:1; min-width:0; }
-  .th .nm a, .th .nm span.plain { font-family:var(--display); font-weight:600; font-size:16px; letter-spacing:-.01em;
-                                  line-height:1.25; display:inline-flex; align-items:center; gap:6px; transition:color .16s; }
+  .th .nm a, .th .nm span.plain { font-family:var(--display); font-weight:600; font-size:14.5px; letter-spacing:-.01em;
+                                  line-height:1.25; display:inline-flex; align-items:center; gap:5px; transition:color .16s; }
   .th .nm a:hover { color:var(--solar-l); }
   .th .nm a svg { flex:none; opacity:.45; transition:opacity .16s, transform .16s var(--e); }
   .th .nm a:hover svg { opacity:1; transform:translateX(2px); }
-  .th .isin { display:block; margin-top:4px; font-family:var(--m); font-size:11px; color:var(--faint); letter-spacing:.05em; }
-  .kind { flex:none; font-family:var(--m); font-size:9.5px; letter-spacing:.1em; text-transform:uppercase;
-          color:var(--hushed); border:1px solid var(--line); border-radius:20px; padding:4px 9px; white-space:nowrap; }
-  .desc { padding:10px 16px 0; font-size:13px; color:var(--hushed); line-height:1.45; }
+  .meta { padding:5px 14px 0; font-family:var(--m); font-size:10.5px; color:var(--faint); letter-spacing:.04em;
+          white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .meta .dot { opacity:.5; margin:0 5px; }
+  .meta .d { font-family:var(--f); letter-spacing:0; color:var(--hushed); }
+  .kind { flex:none; font-family:var(--m); font-size:9px; letter-spacing:.09em; text-transform:uppercase;
+          color:var(--hushed); border:1px solid var(--line); border-radius:20px; padding:3px 8px; white-space:nowrap; }
 
   /* Bid — подтянут из данных выпуска, крупно и с пометкой «индикативно» */
-  .bidrow { display:flex; align-items:flex-end; gap:14px; padding:14px 16px 0; }
+  .bidrow { display:flex; align-items:flex-end; gap:12px; padding:11px 14px 0; }
   .bid { flex:1; min-width:0; }
-  .bid .v { font-family:var(--m); font-weight:500; font-size:26px; letter-spacing:-.02em; line-height:1;
+  .bid .v { font-family:var(--m); font-weight:500; font-size:21px; letter-spacing:-.02em; line-height:1;
             color:var(--up); font-variant-numeric:tabular-nums; }
-  .bid .v.na { color:var(--faint); font-size:15px; }
-  .bid .k { display:block; margin-top:6px; font-family:var(--m); font-size:9.5px; letter-spacing:.12em;
+  .bid .v.na { color:var(--faint); font-size:13.5px; }
+  .bid .k { display:block; margin-top:5px; font-family:var(--m); font-size:9px; letter-spacing:.11em;
             text-transform:uppercase; color:var(--faint); }
-  .perf { flex:none; text-align:right; font-family:var(--m); font-size:14px; font-variant-numeric:tabular-nums; }
+  .perf { flex:none; text-align:right; font-family:var(--m); font-size:12.5px; font-variant-numeric:tabular-nums; }
   .perf.up { color:var(--up); } .perf.down { color:var(--down); } .perf.off { color:var(--faint); }
-  .perf .k { display:block; margin-top:5px; font-family:var(--m); font-size:9.5px; letter-spacing:.12em;
+  .perf .k { display:block; margin-top:4px; font-family:var(--m); font-size:9px; letter-spacing:.11em;
              text-transform:uppercase; color:var(--faint); }
 
-  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:1px; margin:15px 0 0;
-           background:var(--line-soft); border-top:1px solid var(--line-soft); }
-  .cell { background:var(--card); padding:12px 16px; }
-  .cell .k { display:block; font-family:var(--m); font-size:9.5px; letter-spacing:.12em;
-             text-transform:uppercase; color:var(--faint); }
-  .cell .v { display:block; margin-top:5px; font-family:var(--m); font-size:14px; color:var(--ink);
-             font-variant-numeric:tabular-nums; }
-  .cell .v.mg { color:var(--solar-l); }
+  .figs { display:flex; flex-wrap:wrap; gap:0 6px; padding:9px 14px 0; font-family:var(--m); font-size:12px;
+           color:var(--hushed); font-variant-numeric:tabular-nums; }
+  .figs .k { color:var(--faint); font-size:10.5px; }
+  .figs .mg { color:var(--solar-l); }
+  .figs .dot { opacity:.45; }
 
-  .tf { display:flex; align-items:center; gap:10px; padding:12px 16px; border-top:1px solid var(--line-soft); }
-  .st { font-family:var(--f); font-size:11.5px; padding:3px 10px; border-radius:20px; white-space:nowrap; }
+  .tf { display:flex; align-items:center; gap:8px; padding:10px 14px; margin-top:11px;
+        border-top:1px solid var(--line-soft); }
+  .st { font-family:var(--f); font-size:11px; padding:3px 9px; border-radius:20px; white-space:nowrap; }
   .st.paid { color:var(--up); background:rgba(85,192,138,.12); }
   .st.accr { color:var(--solar-l); background:rgba(238,125,27,.12); }
   .st.mat { color:var(--faint); background:rgba(255,255,255,.06); }
   .tf .dt { font-family:var(--m); font-size:11.5px; color:var(--faint); }
   .more { margin-left:auto; border:0; background:none; color:var(--hushed); font-family:var(--f);
-          font-size:12.5px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; padding:4px 2px;
+          font-size:12px; cursor:pointer; display:inline-flex; align-items:center; gap:5px; padding:4px 2px;
           transition:color .16s; }
   .more:hover { color:var(--solar-l); }
   .more svg { transition:transform .22s var(--e); }
   .tile.open .more svg { transform:rotate(180deg); }
 
   /* раскрытые параметры выпуска */
-  .det { display:none; padding:0 16px 16px; }
+  .det { display:none; padding:0 14px 14px; }
   .tile.open .det { display:block; animation:fade .28s var(--e) both; }
   @keyframes fade { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:none; } }
   .det dl { display:grid; grid-template-columns:auto 1fr; gap:8px 14px; margin:14px 0 0;
@@ -210,32 +204,6 @@
 
   .empty { color:var(--hushed); font-size:14px; line-height:1.6; padding:8px 0; max-width:46ch; }
 
-  /* ── полка актуальных продуктов ── */
-  .pcard { margin:0 0 16px; }
-  .pcard:last-of-type { margin-bottom:0; }
-  .pimg { display:block; position:relative; aspect-ratio:1200/630; border-radius:11px; overflow:hidden;
-          border:1px solid var(--line); background:var(--raise); }
-  .pimg img { width:100%; height:100%; object-fit:cover; display:block; transition:transform .4s var(--e); }
-  .pimg:hover img { transform:scale(1.035); }
-  .pimg.noimg { display:flex; align-items:center; justify-content:center; font-family:var(--m);
-                font-size:11px; color:var(--faint); letter-spacing:.06em; }
-  .pfoot { display:flex; align-items:center; gap:10px; margin-top:9px; }
-  .pfoot .q { font-family:var(--m); font-size:13.5px; color:var(--solar-l); font-weight:500;
-              white-space:nowrap; font-variant-numeric:tabular-nums; }
-  .pfoot .q i { font-style:normal; font-size:9.5px; font-weight:400; letter-spacing:.1em;
-                text-transform:uppercase; color:var(--faint); margin-left:6px; }
-  .cp { flex:none; margin-left:auto; height:30px; padding:0 12px; border:1px solid var(--line);
-        background:none; border-radius:8px; color:var(--hushed); cursor:pointer; font-family:var(--f);
-        font-size:12.5px; display:inline-flex; align-items:center; gap:7px;
-        transition:border-color .16s, color .16s; }
-  .cp:hover { border-color:rgba(238,125,27,.55); color:var(--solar-l); }
-  .cp.done { border-color:rgba(85,192,138,.55); color:var(--up); }
-  .snote { font-size:12px; color:var(--faint); margin-top:16px; line-height:1.55; }
-  .snote b { color:var(--hushed); font-weight:500; }
-  .fall { margin-top:12px; font-size:12.5px; line-height:1.5; color:var(--hushed); }
-  .fall code { display:block; margin-top:7px; font-family:var(--m); font-size:11px; color:var(--solar-l);
-               background:rgba(238,125,27,.07); border:1px solid rgba(238,125,27,.24); border-radius:8px;
-               padding:9px 11px; word-break:break-all; user-select:all; }
 
   @media (prefers-reduced-motion:reduce) {
     #dash.on, .tile.open .det { animation:none; }
@@ -277,9 +245,8 @@
       <div class="mchart" id="mchart"></div>
     </div>
 
-    <div class="cols">
-      <section class="main">
-        <div class="zt">мои выпуски<span id="cnt"></span></div>
+    <section class="main">
+      <div class="zt">мои выпуски<span id="cnt"></span></div>
         <div class="ctrl" id="ctrl" style="display:none">
           <button class="chip on" type="button" data-f="all">Все</button>
           <button class="chip" type="button" data-f="accrued">Начислено</button>
@@ -296,20 +263,10 @@
           Выпусков пока нет. Как только сделка пройдёт, выпуск появится здесь — с котировкой Bid и заплаченной маржой.
         </div>
       </section>
-
-      <aside class="rail">
-        <div class="zt">актуальные продукты<a class="all" href="board.html">вся доска<svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 7h8M7.5 3.5L11 7l-3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></a></div>
-        <div id="hot"></div>
-        <div class="snote" id="hotNote"></div>
-        <div class="fall" id="hotFall" style="display:none"></div>
-      </aside>
-    </div>
   </div>
 </div>
 
-<script src="data/instruments.js?v=fx8"></script>
 <script src="data/placements.js?v=pl21"></script>
-<script src="data/morning.js?v=1"></script>
 <script>
 (function () {
   "use strict";
@@ -354,7 +311,6 @@
   }
   var ARROW = '<svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 7h8M7.5 3.5L11 7l-3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   var CHEV = '<svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3.5 5.5L7 9l3.5-3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-  var COPY = '<svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M4.5 2.5h6a1 1 0 011 1v6M9.5 4.5h-6a1 1 0 00-1 1v6a1 1 0 001 1h6a1 1 0 001-1v-6a1 1 0 00-1-1z" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
   // Выпуски витрины по ISIN: отсюда берём Bid, даты, параметры выплаты и актив.
   // Тот же файл, что кормит placements.html — расходиться им нельзя.
@@ -537,17 +493,20 @@
       det = '<dl><dt>Выпуск</dt><dd>нет в данных витрины</dd></dl>';
     }
 
+    // ISIN и короткое описание — одной строкой: две отдельные строки съедали
+    // высоту блока, а вместе читаются как подпись к названию.
+    var meta = [];
+    if (d.isin) meta.push(esc(d.isin));
+    if (sp.desc) meta.push('<span class="d">' + esc(sp.desc) + "</span>");
+
     return '<article class="tile" data-i="' + idx + '">' +
-      '<div class="th"><div class="nm">' + name +
-        (d.isin ? '<span class="isin">' + esc(d.isin) + "</span>" : "") + "</div>" +
+      '<div class="th"><div class="nm">' + name + "</div>" +
         (it && KIND_NAME[it.kind] ? '<span class="kind">' + esc(KIND_NAME[it.kind]) + "</span>" : "") +
       "</div>" +
-      (sp.desc ? '<div class="desc">' + esc(sp.desc) + "</div>" : "") +
+      (meta.length ? '<div class="meta">' + meta.join('<span class="dot">·</span>') + "</div>" : "") +
       '<div class="bidrow"><div class="bid">' + bidCell + "</div>" + perfCell + "</div>" +
-      '<div class="grid2">' +
-        '<div class="cell"><span class="k">объём</span><span class="v">' + money(d.volume) + "</span></div>" +
-        '<div class="cell"><span class="k">маржа</span><span class="v mg">' + money(d.reward) + "</span></div>" +
-      "</div>" +
+      '<div class="figs"><span class="k">маржа</span><span class="mg">' + money(d.reward) + "</span>" +
+        '<span class="dot">·</span><span class="k">объём</span><span>' + money(d.volume) + "</span></div>" +
       '<div class="tf">' +
         '<span class="st ' + (d.status === "paid" ? "paid" : "accr") + '">' +
           (d.status === "paid" ? "выплачено" : "начислено") + "</span>" +
@@ -625,98 +584,6 @@
     renderTiles();
   });
 
-  // ---- ПРАВО: актуальные продукты -----------------------------------------
-  var HOT_LIMIT = 5;
-  var fmtQ = (window.SITE && SITE.fmt2) ? SITE.fmt2 : function (n) { return String(n).replace(".", ","); };
-  function figure(r) {
-    if (r.type === "protection") {
-      if (r.participation != null) return { v: Math.round(r.participation * 100) + "%", n: "участие" };
-      return { v: r.protectionPct != null ? r.protectionPct + "%" : "—", n: "защита" };
-    }
-    if (r.quote == null) return { v: "—", n: "" };
-    if (r.type === "booster") return { v: Math.round(r.ku || r.quote) + "%", n: "коэффициент" };
-    if (r.type === "autocall") return { v: fmtQ(r.couponPa != null ? r.couponPa : r.quote) + "% г.", n: "купон" };
-    if (r.type === "discount") return { v: fmtQ(r.quote) + "%", n: "цена" };
-    return { v: fmtQ(r.quote) + "%", n: "премия" };
-  }
-  function byId(id) {
-    var ins = (window.SITE_DATA && SITE_DATA.instruments) || [];
-    for (var i = 0; i < ins.length; i++) if (ins[i].id === id) return ins[i];
-    return null;
-  }
-  function morningAge() {
-    var M = window.MORNING || {};
-    if (!M.date) return null;
-    var p = String(M.date).split("-").map(Number);
-    var t = new Date();
-    return Math.round((Date.UTC(t.getFullYear(), t.getMonth(), t.getDate()) -
-                       Date.UTC(p[0], p[1] - 1, p[2])) / 86400000);
-  }
-  function drawHot(ref) {
-    var M = window.MORNING || {}, age = morningAge();
-    var items = [], from = "";
-    if (age !== null && age <= 3) {
-      items = (M.products || []).map(byId).filter(Boolean);
-      if (items.length) from = "подбор из утреннего обзора " + dmy(M.date);
-    }
-    if (!items.length) {
-      items = ((window.SITE_DATA && SITE_DATA.instruments) || []).slice(0, HOT_LIMIT);
-      if (items.length) from = "начало доски продуктов";
-    }
-    if (!items.length) {
-      $("hot").innerHTML = '<div class="empty">Каталог не загрузился. <a href="board.html" style="color:var(--solar-l)">Открыть доску</a></div>';
-      $("hotNote").textContent = "";
-      return;
-    }
-    $("hot").innerHTML = items.slice(0, HOT_LIMIT).map(function (r) {
-      var f = figure(r);
-      var link = BASE + "/p/" + encodeURIComponent(r.id) + ".html?ref=" + encodeURIComponent(ref || "");
-      var img = "og/" + encodeURIComponent(r.id) + ".png";
-      return '<div class="pcard">' +
-        '<a class="pimg" href="instrument.html?id=' + encodeURIComponent(r.id) + '" aria-label="' + esc(r.name) + '">' +
-          '<img loading="lazy" src="' + esc(img) + '" alt="' + esc(r.name) + '" ' +
-            'onerror="this.remove();this.parentNode.classList.add(\'noimg\');this.parentNode.textContent=\'нет превью\';"></a>' +
-        '<div class="pfoot"><span class="q">' + f.v + (f.n ? "<i>" + f.n + "</i>" : "") + "</span>" +
-          '<button class="cp" type="button" data-l="' + esc(link) +
-            '" title="Скопировать ссылку для клиента" aria-label="Скопировать ссылку для клиента">' +
-            COPY + '<span class="lbl">Ссылка</span></button>' +
-        "</div></div>";
-    }).join("");
-    $("hotNote").innerHTML = esc(from) + ". Кнопка копирует ссылку для клиента с вашей меткой <b>" +
-      esc(ref || "—") + "</b>.";
-  }
-
-  // Копирование: clipboard отклоняет запись, когда вкладка не в фокусе — отказ
-  // обязательно ловим, иначе партнёр отправит клиенту пустоту.
-  function legacyCopy(text) {
-    try {
-      var ta = document.createElement("textarea");
-      ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
-      document.body.appendChild(ta); ta.select();
-      var ok = document.execCommand("copy");
-      document.body.removeChild(ta);
-      return ok ? Promise.resolve() : Promise.reject(new Error("no-copy"));
-    } catch (e) { return Promise.reject(e); }
-  }
-  function copy(text) {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      return navigator.clipboard.writeText(text).catch(function () { return legacyCopy(text); });
-    }
-    return legacyCopy(text);
-  }
-  $("hot").addEventListener("click", function (e) {
-    var b = e.target.closest ? e.target.closest(".cp") : null;
-    if (!b) return;
-    var link = b.getAttribute("data-l");
-    copy(link).then(function () {
-      b.classList.add("done");
-      setTimeout(function () { b.classList.remove("done"); }, 1400);
-    }).catch(function () {
-      var box = $("hotFall");
-      box.innerHTML = "Браузер не дал скопировать. Выделите ссылку сами:<code>" + esc(link) + "</code>";
-      box.style.display = "block";
-    });
-  });
 
   // ---- вход ----------------------------------------------------------------
   function creds() {
@@ -776,7 +643,6 @@
     drawIdentity(d);
     drawDeals(d.deals || []);
     drawMarginChart(d.deals || []);
-    drawHot(d.ref);
   }
 
   $("go").addEventListener("click", function () {
