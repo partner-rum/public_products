@@ -167,6 +167,9 @@
   <p class="lead">Продукты, размещения, выпуски, сделки партнёров и снятие с сайта уходят Руслану карточкой с кнопкой — он только подтверждает. Дайджест вы собираете и публикуете сами: «Идея в дайджест» → «Выпуск недели». Поля с <b style="color:var(--solar-l)">*</b> обязательны.</p>
 
   <div class="keyrow">
+    <button class="rf" id="key-out" type="button" style="display:none;border:1px solid var(--border);
+            background:none;color:var(--hushed);border-radius:8px;padding:8px 14px;
+            font-family:var(--f);font-size:12.5px;cursor:pointer;align-self:flex-end">Выйти</button>
     <label style="flex:1;margin:0"><span class="k">Ваш персональный ключ <b>*</b></span>
       <input id="key" type="password" placeholder="выдаётся Русланом" autocomplete="off">
     </label>
@@ -185,12 +188,27 @@
 
   <div class="queue" id="queue" style="display:none">
     <div class="qh"><span class="t">мои заявки</span>
-      <button class="rf" id="q-refresh" type="button">Обновить</button></div>
+      <button class="rf" id="q-remind" type="button" style="margin-left:auto">Скопировать напоминание</button>
+      <button class="rf" id="q-refresh" type="button" style="margin-left:14px">Обновить</button></div>
     <div id="q-list"></div>
   </div>
 
   <!-- ══════════ ТЕКУЩИЙ ПРОДУКТ (доска) ══════════ -->
   <form id="f-board" class="on">
+    <details class="help"><summary>Как это работает<span class="cv">▾</span></summary>
+      <div class="hbody"><ol>
+        <li><b>Новый продукт</b> — заполните форму и отправьте. После ✅ Руслана он появится
+          на доске и получит адрес <b>/p/&lt;id&gt;.html</b> для отправки клиентам.</li>
+        <li><b>Правка</b> — выберите продукт в первом поле. Форма заполнится сама, уйдут только
+          изменённые поля, <b>адрес и разосланные ссылки останутся прежними</b>.</li>
+        <li>Править можно продукты, заведённые через админку. Сгенерированные прайсингом
+          в списке не появятся — их параметры приходят из расчёта.</li>
+        <li>Судьбу заявки видно в блоке <b>«Мои заявки»</b> вверху: ждёт, на сайте или отклонено.
+          Пока Руслан не решил, заявку можно отозвать.</li>
+      </ol>
+      <p class="note">Сломать нельзя: ничего не публикуется без подтверждения Руслана.</p></div>
+    </details>
+
     <div class="grp"><div class="gt">Новый или правка</div>
       <label><span class="k">Что делаем</span>
         <select id="bd-pick"><option value="">— новый продукт —</option></select>
@@ -475,9 +493,9 @@
       </summary>
       <div class="hbody">
         <ol>
-          <li><b>Выбери продукт</b> из списка — цена, срок, график выплаты и проценты подставятся сами. Цифры вводить не нужно.</li>
+          <li><b>Выберите продукт</b> из списка — цена, срок, график выплаты и проценты подставятся сами. Цифры вводить не нужно.</li>
           <li><b>Опиши идею словами:</b> тизер (фраза-крючок), гипотеза (во что верим), факторы (по одному на строку).</li>
-          <li>Нажми <b>«Добавить в черновик»</b>. Повтори для каждой идеи недели.</li>
+          <li>Нажмите <b>«Добавить в черновик»</b>. Повтори для каждой идеи недели.</li>
           <li>Когда идеи собраны — вкладка <b>«Выпуск недели»</b> → проверь превью → «Опубликовать».</li>
           <li>Выпуск уже вышел, а идея дозрела? В блоке <b>«Куда добавить»</b> выбери текущий выпуск — идея встанет в него, сайт и PDF обновятся сами.</li>
         </ol>
@@ -485,7 +503,7 @@
       </div>
     </details>
     <div class="grp" id="dg-edit-grp"><div class="gt">Поправить уже заведённую идею</div>
-      <div class="hint" style="margin:0 0 10px">Опечатка или обрезанный текст? Выбери идею — её описание загрузится в форму ниже.
+      <div class="hint" style="margin:0 0 10px">Опечатка или обрезанный текст? Выберите идею — её описание загрузится в форму ниже.
         Правятся только слова: цифры, график и параметры выпуска остаются как есть.</div>
       <label><span class="k">Идея</span>
         <select id="dg-edit-pick"><option value="">— не правлю, добавляю новую —</option></select>
@@ -493,7 +511,7 @@
       <button class="send" type="button" id="dg-edit-cancel" style="display:none;background:transparent;border:1px solid var(--border);color:var(--ink)">Отменить правку</button>
     </div>
 
-    <div class="grp" id="dg-product-grp"><div class="gt">1. Выбери продукт</div>
+    <div class="grp" id="dg-product-grp"><div class="gt">1. Выберите продукт</div>
       <div class="hint" style="margin:0 0 12px">Цифры, график выплаты и параметры подставятся из продукта сами — вводить руками ничего не нужно. Ты только опишешь идею словами.</div>
       <label><span class="k">Продукт <b>*</b></span>
         <select id="dg-product"><option value="">— загрузка списка… —</option></select>
@@ -534,7 +552,7 @@
         <ol>
           <li>Здесь собраны все идеи, что ты добавил в черновик за неделю.</li>
           <li>Лишнюю идею убери кнопкой <b>«Убрать»</b>.</li>
-          <li>Нажми <b>«Открыть превью»</b> — увидишь выпуск ровно так, как его увидят клиенты. Проверь глазами.</li>
+          <li>Нажмите <b>«Открыть превью»</b> — увидишь выпуск ровно так, как его увидят клиенты. Проверьте глазами.</li>
           <li>Всё нравится — <b>«Опубликовать выпуск»</b>. Через 1–3 минуты выпуск и PDF появятся на сайте сами.</li>
         </ol>
         <div class="note">Публикация видна всем на сайте. Пока не нажал «Опубликовать» — черновик виден только в админке.</div>
@@ -553,6 +571,20 @@
 
   <!-- ══════════ СДЕЛКА ПАРТНЁРА ══════════ -->
   <form id="f-deal" onsubmit="return false">
+    <details class="help"><summary>Как это работает<span class="cv">▾</span></summary>
+      <div class="hbody"><ol>
+        <li>Выберите <b>партнёра</b> — рядом с меткой видно, сколько сделок у него уже заведено.</li>
+        <li>Впишите продукт так, как он называется на витрине: <b>серия · короткое описание</b>
+          («РСП СП-1-10 · участие 120%»). Партнёр увидит эту строку у себя на столе.</li>
+        <li><b>ISIN</b> не обязателен, но с ним на столе появится котировка Bid и параметры выпуска.</li>
+        <li>Проверьте подсказку под суммами: она показывает долю вознаграждения от объёма
+          и краснеет, если доля непохожа на обычную.</li>
+        <li>Заявка уйдёт Руслану. После «Записать» сделка появится у партнёра.</li>
+      </ol>
+      <p class="note">Партнёра нет в списке? Его заводит Руслан — напишите ему метку, название,
+        ИНН и ОГРН. Ошиблись в сумме — снимите сделку в списке ниже и заведите заново.</p></div>
+    </details>
+
     <div class="grp"><div class="gt">Кому и за что</div>
       <div class="hint" style="margin:0 0 12px">Заводите сделку сами — Руслану уйдёт карточка с кнопкой «Записать».
         После подтверждения сделка появится у партнёра на его рабочем столе.</div>
@@ -648,16 +680,24 @@
   // Начальное состояние тоже надо разметить: без этого скринридер до первого
   // клика не знает, какая вкладка открыта.
   document.querySelectorAll(".tab").forEach(function (t) {
+    // aria-selected валиден только на role=tab; на голой кнопке скринридер
+    // читал пустой tablist.
+    t.setAttribute("role", "tab");
     t.setAttribute("aria-selected", t.classList.contains("on") ? "true" : "false");
     t.setAttribute("aria-controls", t.getAttribute("data-f"));
+    t.tabIndex = t.classList.contains("on") ? 0 : -1;
+    var panel = document.getElementById(t.getAttribute("data-f"));
+    if (panel) { panel.setAttribute("role", "tabpanel"); panel.setAttribute("aria-label", t.textContent.trim()); }
   });
   document.querySelectorAll(".tab").forEach(function (t) {
     t.addEventListener("click", function () {
       document.querySelectorAll(".tab").forEach(function (x) { x.classList.remove("on"); });
       document.querySelectorAll("form").forEach(function (f) { f.classList.remove("on"); });
-      document.querySelectorAll(".tab").forEach(function (x) { x.setAttribute("aria-selected", "false"); });
+      document.querySelectorAll(".tab").forEach(function (x) {
+        x.setAttribute("aria-selected", "false"); x.tabIndex = -1;
+      });
       t.classList.add("on");
-      t.setAttribute("aria-selected", "true");
+      t.setAttribute("aria-selected", "true"); t.tabIndex = 0;
       var target = t.getAttribute("data-f");
       document.getElementById(target).classList.add("on");
       if (target === "f-board") bdLoad();
@@ -672,6 +712,18 @@
   document.querySelectorAll(".msg").forEach(function (m) {
     m.setAttribute("role", "status");
     m.setAttribute("aria-live", "polite");
+  });
+
+  // Стрелками по вкладкам — стандартное поведение tablist, без него роль обещает
+  // больше, чем умеет.
+  document.querySelector(".tabs").addEventListener("keydown", function (e) {
+    if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+    var tabs = [].slice.call(document.querySelectorAll(".tab"));
+    var i = tabs.indexOf(document.activeElement);
+    if (i < 0) return;
+    e.preventDefault();
+    var next = tabs[(i + (e.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length];
+    next.focus(); next.click();
   });
 
   function esc(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
@@ -772,6 +824,33 @@
       })
       .catch(function (err) { b.disabled = false; b.textContent = "Отозвать"; alert(err.message); });
   });
+
+  // Страница 25 раз посылает к Руслану и ни разу не даёт до него дойти. Ссылку
+  // на его Telegram выдумывать нельзя — хендла в проекте нет; поэтому готовим
+  // текст напоминания в буфер, а сейлз вставит его в свой чат с Русланом.
+  var qRemind = document.getElementById("q-remind");
+  if (qRemind) qRemind.addEventListener("click", function () {
+    var waiting = qLoad().filter(function (r) { return Date.now() - r.ts < 7 * 864e5; });
+    if (!waiting.length) { qRemind.textContent = "нечего напоминать"; setTimeout(function () { qRemind.textContent = "Скопировать напоминание"; }, 1600); return; }
+    var txt = "Привет! Жду решения по заявкам из админки:\n" + waiting.slice(0, 8).map(function (r) {
+      return "• " + (Q_SECT[r.sect] || r.sect) + ": " + (r.name || r.id) + " (отправлено " + qAgo(r.ts) + ")";
+    }).join("\n");
+    var done = function () { qRemind.textContent = "скопировано"; setTimeout(function () { qRemind.textContent = "Скопировать напоминание"; }, 1600); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(txt).then(done).catch(function () { window.prompt("Скопируйте текст:", txt); });
+    } else { window.prompt("Скопируйте текст:", txt); }
+  });
+
+  // Ключ жил в localStorage без выхода: на общем компьютере он оставался навсегда.
+  var keyOut = document.getElementById("key-out");
+  function syncKeyOut() { keyOut.style.display = keyEl.value.trim() ? "block" : "none"; }
+  keyOut.addEventListener("click", function () {
+    if (!confirm("Выйти? Ключ будет забыт в этом браузере.")) return;
+    try { localStorage.removeItem("so_admin_key"); } catch (e) {}
+    keyEl.value = ""; syncKeyOut(); keyEl.focus();
+  });
+  keyEl.addEventListener("input", syncKeyOut);
+  syncKeyOut();
 
   var qRf = document.getElementById("q-refresh");
   if (qRf) qRf.addEventListener("click", renderQueue);
@@ -1844,7 +1923,7 @@
       return;
     }
 
-    if (!dgCurrent) { msgEl.className = "msg err"; msgEl.textContent = "Сначала выбери продукт из списка."; return; }
+    if (!dgCurrent) { msgEl.className = "msg err"; msgEl.textContent = "Сначала выберите продукт из списка."; return; }
     var teaser = val(fDigest, "teaser"), hypothesis = val(fDigest, "hypothesis");
     if (!teaser || !hypothesis) { msgEl.className = "msg err"; msgEl.textContent = "Заполни тизер и гипотезу."; return; }
     var item = {
@@ -1890,7 +1969,7 @@
     fetchData("data/digest.js").then(function (t) {
       var dg = dataObj(t) || {}, ideas = (dg.draft && dg.draft.ideas) || [];
       if (!ideas.length) {
-        box.innerHTML = '<div class="rm-empty">Черновик пуст. Добавь идеи на вкладке «Идея в дайджест».</div>';
+        box.innerHTML = '<div class="rm-empty">Черновик пуст. Добавьте идеи на вкладке «Идея в дайджест».</div>';
         prev.style.display = "none"; dgPublishBtn.disabled = true; return;
       }
       box.innerHTML = '<div class="dg-count">В черновике: ' + ideas.length + '</div>';
