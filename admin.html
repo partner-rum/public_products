@@ -187,6 +187,14 @@
 
   <!-- ══════════ ТЕКУЩИЙ ПРОДУКТ (доска) ══════════ -->
   <form id="f-board" class="on">
+    <div class="grp"><div class="gt">Новый или правка</div>
+      <label><span class="k">Что делаем</span>
+        <select id="bd-pick"><option value="">— новый продукт —</option></select>
+        <span class="hint" id="bd-hint">Правятся только продукты, заведённые через админку. При правке адрес продукта
+          и разосланные клиентам ссылки остаются прежними.</span>
+      </label>
+    </div>
+
     <div class="grp"><div class="gt">Что за продукт</div>
       <label><span class="k">Тип <b>*</b></span>
         <select name="type">
@@ -648,6 +656,7 @@
       t.setAttribute("aria-selected", "true");
       var target = t.getAttribute("data-f");
       document.getElementById(target).classList.add("on");
+      if (target === "f-board") bdLoad();
       if (target === "f-deal") loadPartners();
       if (target === "f-remove") loadRemovable();
       if (target === "f-dpdf") loadDraft();
@@ -727,7 +736,6 @@
   }
   var qRf = document.getElementById("q-refresh");
   if (qRf) qRf.addEventListener("click", renderQueue);
-  renderQueue();
   function dataObj(text) { try { return JSON.parse(text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1)); } catch (e) { return null; } }
 
   // Файлы данных тянулись заново на КАЖДЫЙ заход на вкладку с ?cb=, то есть мимо
@@ -863,7 +871,7 @@
       body: JSON.stringify({ key: key, section: section, item: item }) })
       .then(function (r) { return r.json().then(function (d) { return { s: r.status, d: d }; }); })
       .then(function (x) {
-        if (x.d && x.d.ok) { msgEl.className = "msg ok"; msgEl.textContent = "Отправлено на одобрение ✅ После ✅ Руслана продукт появится на сайте через пару минут."; qAdd(sect, (item && item.name) || "", (item && item.id) || ""); form.reset(); fBoard.type.dispatchEvent(new Event("change")); fPlacement.kind.dispatchEvent(new Event("change")); }
+        if (x.d && x.d.ok) { msgEl.className = "msg ok"; msgEl.textContent = "Отправлено на одобрение ✅ После ✅ Руслана продукт появится на сайте через пару минут."; qAdd(section, (item && item.name) || "", (item && item.id) || ""); form.reset(); fBoard.type.dispatchEvent(new Event("change")); fPlacement.kind.dispatchEvent(new Event("change")); }
         else if (x.d && x.d.error === "bad_key") { msgEl.className = "msg err"; msgEl.textContent = "Ключ не подошёл — проверьте или спросите у Руслана."; }
         else { msgEl.className = "msg err"; msgEl.textContent = "Ошибка: " + ((x.d && x.d.error) || x.s) + ". Проверьте обязательные поля."; }
       })
@@ -894,6 +902,50 @@
     var first = form[miss[0]];
     if (first && first.scrollIntoView) { first.scrollIntoView({ block: "center" }); first.focus(); }
     throw new Error("Не заполнено: " + miss.map(function (f) { return fieldLabel(form, f); }).join(", ") + ".");
+  }
+
+  // Отправляем ТОЛЬКО отличающиеся поля: иначе заявка упирается в лимит payload
+  // и врёт модератору, будто меняется каждое поле (та же логика, что у размещений).
+  function submitBoardEdit() {
+    var msgEl = document.getElementById("m-board");
+    msgEl.className = "msg";
+    var key = keyEl.value.trim();
+    if (!key) { msgEl.className = "msg err"; msgEl.textContent = "Введите ваш персональный ключ (в самом верху страницы)."; keyEl.focus(); return; }
+
+    var patch = { id: bdOrig.id }, changed = [];
+    var NUM = { quote: 1, minNom: 1, strike: 1, strike2: 1, participation: 1, protectionPct: 1, cap: 1, startFrom: 1 };
+    var snap = bdSnap || {};
+    BD_KEYS.forEach(function (k) {
+      var el = fBoard[k];
+      if (!el) return;
+      var raw = String(el.value || "").trim();
+      if (raw === "") return;                       // пустое поле ничего не затирает
+      if (raw === (snap[k] || "")) return;          // поле не трогали с момента загрузки
+      var v = NUM[k] ? parseFloat(raw.replace(",", ".")) : raw;
+      if (NUM[k] && !isFinite(v)) return;
+      patch[k] = v; changed.push(fieldLabel(fBoard, k) || k);
+    });
+    if (!changed.length) {
+      msgEl.className = "msg err";
+      msgEl.textContent = "Вы ничего не изменили — правку отправлять не с чем.";
+      return;
+    }
+    try {
+      if (patch.expiry) needDate(fBoard, "expiry");
+      if (patch.quote != null) needRange(fBoard, "quote", 0.01, 200, "% номинала");
+    } catch (err) { msgEl.className = "msg err"; msgEl.textContent = err.message; return; }
+
+    if (!confirm("Отправить правку «" + bdOrig.name + "»?\nМеняется: " + changed.join(", ") + ".")) return;
+    var btn = fBoard.querySelector(".send");
+    btn.disabled = true; btn.textContent = "Отправляем…";
+    postJson({ key: key, section: "board", action: "board_edit", item: patch })
+      .then(function () {
+        msgEl.className = "msg ok";
+        msgEl.textContent = "Правка отправлена Руслану: " + changed.join(", ") + ". Адрес продукта не изменится.";
+        qAdd("board", bdOrig.name + " (правка)", bdOrig.id);
+      })
+      .catch(function (err) { msgEl.className = "msg err"; msgEl.textContent = err.message; })
+      .finally(function () { btn.disabled = false; btn.textContent = "Отправить правку"; });
   }
 
   // ── РАЗМЕЩЁННЫЙ ВЫПУСК И ЕГО ДОКУМЕНТЫ ──
@@ -1233,8 +1285,94 @@
   }
 
   // ── ТЕКУЩИЙ ПРОДУКТ ──
+  // ── ПРАВКА ПРОДУКТА ДОСКИ ───────────────────────────────────────────────
+  // Сервер применяет правку, дополняя запись по непустым полям и НЕ трогая id.
+  // Форма поэтому отправляет только изменённые поля, а не всю карточку.
+  var bdPick = document.getElementById("bd-pick");
+  var bdItems = {};            // id -> исходная запись с сайта
+  var bdOrig = null;           // запись, которую сейчас правим
+  var bdSnap = null;           // снимок ФОРМЫ сразу после предзаполнения
+  var BD_KEYS = ["type", "name", "underlying", "cls", "tenor", "expiry", "currency", "about",
+     "quote", "minNom", "strike", "strike2", "participation", "protectionPct", "cap", "startFrom"];
+  // Сравнивать надо со снимком формы, а не с записью: у формы есть умолчания
+  // (участие с 0, защита 100), которых в записи варранта нет вовсе — и они
+  // попадали в правку как «изменённые», хотя сейлз их не трогал.
+  function bdSnapshot() {
+    var out = {};
+    BD_KEYS.forEach(function (k) { var el = fBoard[k]; if (el) out[k] = String(el.value || "").trim(); });
+    return out;
+  }
+
+  function bdLoad() {
+    if (Object.keys(bdItems).length) return;
+    // Элемент ищем ЗДЕСЬ, а не через переменную: функция поднимается наверх и
+    // может вызваться раньше, чем присвоится var bdPick (тогда список молча пуст).
+    var sel = document.getElementById("bd-pick");
+    if (!sel) return;
+    fetchData("data/instruments.js").then(function (t) {
+      var o = dataObj(t);
+      var arr = ((o && o.instruments) || []).filter(function (x) { return x.src === "sales"; });
+      arr.forEach(function (x) { bdItems[x.id] = x; });
+      sel.innerHTML = '<option value="">— новый продукт —</option>' + arr.map(function (x) {
+        return '<option value="' + esc(x.id) + '">' + esc(x.name) + "</option>";
+      }).join("");
+      if (!arr.length) {
+        document.getElementById("bd-hint").textContent =
+          "Пока править нечего: через админку на доску ещё ничего не заводили.";
+      }
+    }).catch(function () {
+      document.getElementById("bd-hint").textContent = "Список продуктов не загрузился — обновите страницу.";
+    });
+  }
+
+  // Значение вне списка опций молча не выставляется и на отправке подменилось бы
+  // первым вариантом — дописываем отсутствующую опцию (та же грабля, что в форме
+  // размещения).
+  function bdSetSel(name, v) {
+    var el = fBoard[name];
+    if (!el || v == null || v === "") return;
+    var has = [].some.call(el.options, function (o) { return o.value === String(v); });
+    if (!has) { var o = document.createElement("option"); o.value = String(v); o.textContent = String(v); el.appendChild(o); }
+    el.value = String(v);
+  }
+  function bdFill(x) {
+    bdSetSel("type", x.type);
+    bdSetSel("cls", x.cls);
+    bdSetSel("currency", x.currency || "RUB");
+    ["name", "underlying", "tenor", "expiry", "quote", "minNom", "strike", "strike2",
+     "participation", "protectionPct", "cap", "startFrom", "about"].forEach(function (k) {
+      var el = fBoard[k];
+      if (el && x[k] != null) el.value = x[k];
+    });
+    fBoard.type.dispatchEvent(new Event("change"));
+    bdSnap = bdSnapshot();
+  }
+
+  bdPick.addEventListener("change", function () {
+    var id = bdPick.value;
+    var btn = fBoard.querySelector(".send");
+    var msgEl = document.getElementById("m-board");
+    msgEl.className = "msg";
+    if (!id) {
+      bdOrig = null; fBoard.reset(); bdPick.value = "";
+      fBoard.type.dispatchEvent(new Event("change"));
+      btn.textContent = "Отправить на одобрение";
+      document.getElementById("bd-hint").textContent =
+        "Правятся только продукты, заведённые через админку. При правке адрес продукта и разосланные клиентам ссылки остаются прежними.";
+      return;
+    }
+    bdOrig = bdItems[id];
+    bdFill(bdOrig);
+    btn.textContent = "Отправить правку";
+    document.getElementById("bd-hint").innerHTML =
+      "Правим <b>" + esc(bdOrig.name) + "</b> · id <code>" + esc(id) + "</code> не изменится, ссылка " +
+      "<code>/p/" + esc(id) + ".html</code> продолжит работать. Уйдут только изменённые поля.";
+  });
+
   fBoard.addEventListener("submit", function (e) {
     e.preventDefault();
+    // Правка идёт своим маршрутом: собираем ДИФФ, а не карточку целиком.
+    if (bdOrig) { submitBoardEdit(); return; }
     submit("board", fBoard, document.getElementById("m-board"), function () {
       var type = val(fBoard, "type");
       // У защиты капитала вход всегда по номиналу — поле котировки скрыто и не требуется
@@ -1756,6 +1894,11 @@
   });
 
   loadProducts();
+  // Старт — в самом конце: объявления функций поднимаются наверх, а присваивания
+  // переменных (dataCache, bdItems, bdPick) нет. Ранний вызов падал на undefined.
+  renderQueue();
+  bdLoad();
+
 })();
 </script>
 </body>
