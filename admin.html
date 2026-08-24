@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Добавить продукт — Rumberg</title>
+<title>Рабочее место сейлза — Rumberg</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -40,7 +40,7 @@
   form.on { display:block; }
 
   .grp { margin:0 0 16px; padding:16px; background:var(--card); border:1px solid var(--border-soft); border-radius:14px; }
-  .grp .gt { font-family:var(--m); font-size:10.5px; letter-spacing:.13em; text-transform:uppercase; color:var(--faint); margin:0 0 12px; }
+  .grp .gt { font-family:var(--m); font-size:11px; letter-spacing:.13em; text-transform:uppercase; color:var(--faint); margin:0 0 12px; }
   .hint-box { margin:0 0 12px; padding:9px 13px; border-left:3px solid var(--solar); background:rgba(238,125,27,.1);
               border-radius:0 7px 7px 0; font-size:12.5px; line-height:1.5; color:#E7B98D; }
   .row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
@@ -61,13 +61,13 @@
   .hint { font-size:11px; color:var(--faint); margin-top:4px; line-height:1.45; }
   /* Счётчик символов у длинных полей: браузер по maxlength обрезает молча, и в выпуске
      03.08.2026 «Вывод» уехал в PDF оборванным на полуслове. Теперь видно, что упёрлись. */
-  .cnt { display:block; font-family:var(--m); font-size:10px; color:var(--faint); margin-top:3px; text-align:right; }
+  .cnt { display:block; font-family:var(--m); font-size:11px; color:var(--faint); margin-top:3px; text-align:right; }
   .cnt.near { color:var(--solar-l); }
   .cnt.full { color:#E0705A; }
   .rm-row { display:flex; align-items:center; gap:10px; padding:11px 0; border-bottom:1px solid var(--border-soft); }
   .rm-row:last-child { border-bottom:0; }
   .rm-row .nm { flex:1; font-size:13.5px; line-height:1.35; }
-  .rm-row .sec { font-family:var(--m); font-size:9.5px; color:var(--faint); text-transform:uppercase; letter-spacing:.11em; margin-top:2px; }
+  .rm-row .sec { font-family:var(--m); font-size:11px; color:var(--faint); text-transform:uppercase; letter-spacing:.11em; margin-top:2px; }
   .rm-row button { flex:none; border:1px solid rgba(224,112,90,.5); background:none; color:var(--down); border-radius:8px; padding:7px 14px; font-family:var(--f); font-size:12.5px; font-weight:500; cursor:pointer; }
   .rm-row button:hover { background:rgba(224,112,90,.12); }
   .rm-row button:disabled { opacity:.5; cursor:default; }
@@ -84,7 +84,7 @@
 
   /* авто-превью выведенных из продукта параметров */
   .derived { margin-top:12px; padding:14px 16px; background:rgba(238,125,27,.07); border:1px solid rgba(238,125,27,.28); border-radius:12px; }
-  .derived .dh { font-family:var(--m); font-size:10.5px; letter-spacing:.11em; text-transform:uppercase; color:var(--solar); margin-bottom:9px; }
+  .derived .dh { font-family:var(--m); font-size:11px; letter-spacing:.11em; text-transform:uppercase; color:var(--solar); margin-bottom:9px; }
   .derived .drow { display:flex; justify-content:space-between; gap:12px; padding:5px 0; border-bottom:1px solid var(--border-soft); font-size:13px; }
   .derived .drow:last-child { border-bottom:0; }
   .derived .drow .dk { color:var(--faint); } .derived .drow .dv { font-family:var(--m); text-align:right; }
@@ -106,20 +106,49 @@
   .help li b { color:var(--ink); }
   .help .note { margin:11px 0 0; padding:9px 12px; background:rgba(85,192,138,.1); border-radius:9px;
     font-size:12.5px; color:var(--ink); }
+  /* Лента заявок: состояние каждой отправки, чтобы не спрашивать Руслана */
+  .queue { margin:0 0 18px; border:1px solid var(--border-soft); border-radius:12px; background:var(--card); }
+  .queue .qh { display:flex; align-items:center; gap:10px; padding:11px 14px; border-bottom:1px solid var(--border-soft); }
+  .queue .qh .t { font-family:var(--m); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--faint); }
+  .queue .qh .rf { margin-left:auto; border:0; background:none; color:var(--hushed); font-family:var(--f);
+                   font-size:12px; cursor:pointer; padding:4px 2px; }
+  .queue .qh .rf:hover { color:var(--solar-l); }
+  .qr { display:flex; align-items:baseline; gap:10px; padding:9px 14px; border-bottom:1px solid var(--border-soft); font-size:13px; }
+  .qr:last-child { border-bottom:0; }
+  .qr .nm { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .qr .nm .sec { font-family:var(--m); font-size:11px; color:var(--faint); text-transform:uppercase;
+                 letter-spacing:.09em; margin-right:7px; }
+  .qr .st { flex:none; font-size:12px; padding:2px 9px; border-radius:20px; white-space:nowrap; }
+  .qr .st.live { color:var(--up); background:rgba(85,192,138,.12); }
+  .qr .st.wait { color:var(--solar-l); background:rgba(238,125,27,.12); }
+  .qr .st.old { color:var(--down); background:rgba(224,112,90,.12); }
+  .qr a.lk { flex:none; font-size:12px; color:var(--hushed); }
+  .qr a.lk:hover { color:var(--solar-l); }
+  .queue .qe { padding:12px 14px; font-size:12.5px; color:var(--faint); }
+
+  /* Телефон: 16px в полях убирают автозум iOS (после него вёрстка едет и её
+     приходится отщипывать обратно на каждом поле), тач-цели доводим до 44px,
+     а строка ключа прилипает — иначе ошибка ключа утаскивает в самый верх. */
+  @media (max-width:860px) {
+    .tab { min-height:44px; padding:11px 15px; }
+    input, select, textarea { font-size:16px; min-height:44px; padding:11px 12px; }
+    .send, .rm-row button, .dg-btn, button.ta { min-height:44px; }
+    .keyrow { position:sticky; top:0; z-index:5; background:var(--canvas); padding:8px 0; }
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="top">
     <svg width="22" height="22" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>
-    <div><div class="t">Rumberg · админка</div><div class="s">добавление продуктов на сайт</div></div>
+    <div><div class="t">Rumberg · админка</div><div class="s">продукты, выпуски, дайджест и сделки партнёров</div></div>
     <!-- Ссылка на рабочий стол партнёра (me.html) снята 20.08.2026: первая версия
          стола забракована и ждёт постановки задачи. Вернуть, когда стол будет готов —
          иначе сейлзы ходят на страницу, которая ничего им не даёт. -->
   </div>
 
-  <h1>Добавить продукт</h1>
-  <p class="lead">«Текущий продукт», «На размещении» и «Сделка партнёра» уходят Руслану на одобрение одной кнопкой. Идеи в дайджест ты собираешь и публикуешь сам («Идея в дайджест» → «Выпуск недели»). Поля с <b style="color:var(--solar-l)">*</b> обязательны.</p>
+  <h1>Рабочее место сейлза</h1>
+  <p class="lead">Продукты, размещения, выпуски, сделки партнёров и снятие с сайта уходят Руслану карточкой с кнопкой — он только подтверждает. Дайджест вы собираете и публикуете сами: «Идея в дайджест» → «Выпуск недели». Поля с <b style="color:var(--solar-l)">*</b> обязательны.</p>
 
   <div class="keyrow">
     <label style="flex:1;margin:0"><span class="k">Ваш персональный ключ <b>*</b></span>
@@ -127,7 +156,7 @@
     </label>
   </div>
 
-  <div class="tabs">
+  <div class="tabs" role="tablist" aria-label="Разделы админки">
     <button class="tab on" data-f="f-board" type="button">Текущий продукт</button>
     <button class="tab" data-f="f-offering" type="button">На размещении</button>
     <button class="tab" data-f="f-placement" type="button">Размещённый выпуск</button>
@@ -135,6 +164,12 @@
     <button class="tab" data-f="f-dpdf" type="button">Выпуск недели</button>
     <button class="tab" data-f="f-deal" type="button">Сделка партнёра</button>
     <button class="tab" data-f="f-remove" type="button">Снять с сайта</button>
+  </div>
+
+  <div class="queue" id="queue" style="display:none">
+    <div class="qh"><span class="t">мои заявки</span>
+      <button class="rf" id="q-refresh" type="button">Обновить</button></div>
+    <div id="q-list"></div>
   </div>
 
   <!-- ══════════ ТЕКУЩИЙ ПРОДУКТ (доска) ══════════ -->
@@ -564,14 +599,25 @@
   // ── ключ сейлза: запоминаем в браузере ──
   var keyEl = document.getElementById("key");
   try { keyEl.value = localStorage.getItem("so_admin_key") || ""; } catch (e) {}
-  keyEl.addEventListener("input", function () { try { localStorage.setItem("so_admin_key", keyEl.value); } catch (e) {} });
+  keyEl.addEventListener("input", function () {
+    try { localStorage.setItem("so_admin_key", keyEl.value); } catch (e) {}
+    // Вкладка сделок открыта, а ключ ввели только сейчас — список партнёров
+    // должен подтянуться сам: иначе он висит «Сначала введите ключ» и выглядит
+    // поломкой (ровно этот тупик поймал аудит).
+    var fd = document.getElementById("f-deal");
+    if (fd && fd.classList.contains("on") && keyEl.value.trim().length > 3) {
+      dlLoaded = false; loadPartners();
+    }
+  });
 
   // ── табы ──
   document.querySelectorAll(".tab").forEach(function (t) {
     t.addEventListener("click", function () {
       document.querySelectorAll(".tab").forEach(function (x) { x.classList.remove("on"); });
       document.querySelectorAll("form").forEach(function (f) { f.classList.remove("on"); });
+      document.querySelectorAll(".tab").forEach(function (x) { x.setAttribute("aria-selected", "false"); });
       t.classList.add("on");
+      t.setAttribute("aria-selected", "true");
       var target = t.getAttribute("data-f");
       document.getElementById(target).classList.add("on");
       if (target === "f-deal") loadPartners();
@@ -582,6 +628,72 @@
   });
 
   function esc(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+
+  // ── МОИ ЗАЯВКИ ───────────────────────────────────────────────────────────
+  // Судьба отправленного была невидима: сейлз отправлял и шёл спрашивать Руслана.
+  // Очередь модерации живёт в Telegram и клиенту недоступна, но результат виден
+  // в данных сайта — по ним и определяем состояние, ничего не выдумывая.
+  var QKEY = "so_admin_sent", QMAX = 25;
+  var Q_SECT = { board: "Доска", offering: "Размещение", placement: "Выпуск",
+                 digest: "Дайджест", deal: "Сделка", dealrm: "Снятие сделки",
+                 remove: "Снятие", doc: "Документ" };
+  function qLoad() { try { return JSON.parse(localStorage.getItem(QKEY) || "[]"); } catch (e) { return []; } }
+  function qSave(a) { try { localStorage.setItem(QKEY, JSON.stringify(a.slice(0, QMAX))); } catch (e) {} }
+  function qAdd(sect, name, id) {
+    var a = qLoad();
+    a.unshift({ ts: Date.now(), sect: sect, name: String(name || "").slice(0, 90), id: id || "" });
+    qSave(a);
+    renderQueue();
+  }
+  function qAgo(ts) {
+    var m = Math.round((Date.now() - ts) / 60000);
+    if (m < 1) return "только что";
+    if (m < 60) return m + " мин назад";
+    var h = Math.round(m / 60);
+    if (h < 24) return h + " ч назад";
+    return Math.round(h / 24) + " дн назад";
+  }
+  // Состояние определяем по данным сайта: id найден — значит Руслан одобрил и
+  // публикация прошла. Сделки в данных сайта не отражаются (они в KV), поэтому
+  // у них честно показываем только «ушла на одобрение».
+  function renderQueue() {
+    var box = document.getElementById("queue"), list = document.getElementById("q-list");
+    if (!box) return;
+    var all = qLoad().filter(function (r) { return Date.now() - r.ts < 7 * 864e5; });
+    if (!all.length) { box.style.display = "none"; return; }
+    box.style.display = "block";
+    var bust = "?cb=" + Date.now();
+    Promise.all([
+      fetch("data/instruments.js" + bust).then(function (r) { return r.text(); }).catch(function () { return ""; }),
+      fetch("data/offerings.js" + bust).then(function (r) { return r.text(); }).catch(function () { return ""; }),
+      fetch("data/placements.js" + bust).then(function (r) { return r.text(); }).catch(function () { return ""; })
+    ]).then(function (t) {
+      var live = {};
+      var si = dataObj(t[0]), so = dataObj(t[1]), sp = dataObj(t[2]);
+      ((si && si.instruments) || []).forEach(function (x) { if (x.id) live[x.id] = "instrument"; });
+      ((so && so.items) || []).forEach(function (x) { if (x.id) live[x.id] = "offering"; });
+      ((sp && sp.issues) || []).forEach(function (x) { if (x.isin) live[x.isin] = "placement"; });
+      list.innerHTML = all.map(function (r) {
+        var onSite = r.id && live[r.id];
+        var mins = (Date.now() - r.ts) / 60000;
+        var st, cls;
+        if (onSite) { st = "на сайте"; cls = "live"; }
+        else if (r.sect === "deal" || r.sect === "dealrm" || r.sect === "remove" || r.sect === "doc") {
+          st = mins > 60 ? "нет ответа — напомните" : "ушла на одобрение";
+          cls = mins > 60 ? "old" : "wait";
+        } else if (mins > 60) { st = "висит больше часа — напомните"; cls = "old"; }
+        else { st = "ждёт одобрения"; cls = "wait"; }
+        var link = onSite === "instrument"
+          ? '<a class="lk" href="p/' + encodeURIComponent(r.id) + '.html" target="_blank" rel="noopener">ссылка</a>' : "";
+        return '<div class="qr"><span class="nm"><span class="sec">' + esc(Q_SECT[r.sect] || r.sect) + "</span>" +
+          esc(r.name || r.id || "—") + '</span><span class="st ' + cls + '">' + st + "</span>" +
+          '<span class="ago" style="color:var(--faint);font-size:11px">' + qAgo(r.ts) + "</span>" + link + "</div>";
+      }).join("");
+    });
+  }
+  var qRf = document.getElementById("q-refresh");
+  if (qRf) qRf.addEventListener("click", renderQueue);
+  renderQueue();
   function dataObj(text) { try { return JSON.parse(text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1)); } catch (e) { return null; } }
 
   function loadRemovable() {
@@ -635,7 +747,7 @@
       body: JSON.stringify({ key: key, action: "remove", section: row.section, id: row.id, name: row.name }) })
       .then(function (r) { return r.json().then(function (d) { return { s: r.status, d: d }; }); })
       .then(function (x) {
-        if (x.d && x.d.ok) { msgEl.className = "msg ok"; msgEl.textContent = "Заявка на снятие «" + (row.name || row.id) + "» отправлена. После ✅ Руслана продукт исчезнет с сайта."; btn.textContent = "Отправлено"; }
+        if (x.d && x.d.ok) { msgEl.className = "msg ok"; msgEl.textContent = "Заявка на снятие «" + (row.name || row.id) + "» отправлена. После ✅ Руслана продукт исчезнет с сайта."; btn.textContent = "Отправлено"; qAdd("remove", row.name || row.id, ""); }
         else if (x.d && x.d.error === "bad_key") { msgEl.className = "msg err"; msgEl.textContent = "Ключ не подошёл."; btn.disabled = false; btn.textContent = "Снять"; }
         else { msgEl.className = "msg err"; msgEl.textContent = "Ошибка: " + ((x.d && x.d.error) || x.s); btn.disabled = false; btn.textContent = "Снять"; }
       })
@@ -666,6 +778,27 @@
       .replace(/[^\w.-]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "").slice(0, 50);
   }
   function val(form, name) { var el = form[name]; return el ? String(el.value || "").trim() : ""; }
+  // Форма доски принимала «дек 2027» в дату и −500 в котировку — и то и другое
+  // уезжало на сайт с зелёным «Отправлено».
+  var DATE_RE = /^\d{2}\.\d{2}\.\d{4}$/;
+  function needDate(form, name) {
+    var v = val(form, name);
+    if (!DATE_RE.test(v)) throw new Error(fieldLabel(form, name) + " — в виде ДД.ММ.ГГГГ, например 18.12.2027.");
+    var p2 = v.split("."), d = new Date(+p2[2], +p2[1] - 1, +p2[0]);
+    if (d.getDate() !== +p2[0] || d.getMonth() !== +p2[1] - 1) {
+      throw new Error(fieldLabel(form, name) + ": такой даты нет в календаре.");
+    }
+    return v;
+  }
+  function needRange(form, name, min, max, unit) {
+    var raw = val(form, name);
+    if (raw === "") return null;
+    var n = parseFloat(raw.replace(",", "."));
+    if (!isFinite(n) || n < min || n > max) {
+      throw new Error(fieldLabel(form, name) + " — число от " + min + " до " + max + (unit ? " " + unit : "") + ".");
+    }
+    return n;
+  }
   function num(form, name) { var v = val(form, name); return v === "" ? null : Number(v); }
   function put(obj, k, v) { if (v !== "" && v != null && !(typeof v === "number" && isNaN(v))) obj[k] = v; }
 
@@ -681,7 +814,7 @@
       body: JSON.stringify({ key: key, section: section, item: item }) })
       .then(function (r) { return r.json().then(function (d) { return { s: r.status, d: d }; }); })
       .then(function (x) {
-        if (x.d && x.d.ok) { msgEl.className = "msg ok"; msgEl.textContent = "Отправлено на одобрение ✅ После ✅ Руслана продукт появится на сайте через пару минут."; form.reset(); fBoard.type.dispatchEvent(new Event("change")); fPlacement.kind.dispatchEvent(new Event("change")); }
+        if (x.d && x.d.ok) { msgEl.className = "msg ok"; msgEl.textContent = "Отправлено на одобрение ✅ После ✅ Руслана продукт появится на сайте через пару минут."; qAdd(sect, (item && item.name) || "", (item && item.id) || ""); form.reset(); fBoard.type.dispatchEvent(new Event("change")); fPlacement.kind.dispatchEvent(new Event("change")); }
         else if (x.d && x.d.error === "bad_key") { msgEl.className = "msg err"; msgEl.textContent = "Ключ не подошёл — проверьте или спросите у Руслана."; }
         else { msgEl.className = "msg err"; msgEl.textContent = "Ошибка: " + ((x.d && x.d.error) || x.s) + ". Проверьте обязательные поля."; }
       })
@@ -689,9 +822,29 @@
       .finally(function () { btn.disabled = false; btn.textContent = "Отправить на одобрение"; });
   }
 
+  // Счётчик «5 шт.» заставлял искать поля вслепую на форме из сорока полей.
+  // Теперь: подсветка, прокрутка к первому и перечисление по именам.
+  function fieldLabel(form, name) {
+    var el = form[name];
+    if (!el) return name;
+    var lab = el.closest ? el.closest("label") : null;
+    var k = lab ? lab.querySelector(".k") : null;
+    return k ? k.textContent.replace("*", "").trim() : name;
+  }
   function req(form, fields) {
     var miss = fields.filter(function (f) { return !val(form, f); });
-    if (miss.length) throw new Error("Заполните обязательные поля: " + miss.length + " шт. (помечены *)");
+    if (!miss.length) return;
+    miss.forEach(function (f) {
+      var el = form[f];
+      if (!el || !el.style) return;
+      el.style.borderColor = "var(--down)";
+      el.addEventListener("input", function h() {
+        el.style.borderColor = ""; el.removeEventListener("input", h);
+      });
+    });
+    var first = form[miss[0]];
+    if (first && first.scrollIntoView) { first.scrollIntoView({ block: "center" }); first.focus(); }
+    throw new Error("Не заполнено: " + miss.map(function (f) { return fieldLabel(form, f); }).join(", ") + ".");
   }
 
   // ── РАЗМЕЩЁННЫЙ ВЫПУСК И ЕГО ДОКУМЕНТЫ ──
@@ -797,8 +950,7 @@
       .then(function (r) { return r.json().then(function (d) { return { s: r.status, d: d }; }); })
       .then(function (x) {
         if (x.d && x.d.ok) return x.d;
-        if (x.d && x.d.error === "bad_key") throw new Error("Ключ не подошёл — проверьте или спросите у Руслана.");
-        throw new Error("Ошибка: " + ((x.d && x.d.error) || x.s));
+        throw new Error(serverError(x));
       });
   }
 
@@ -866,6 +1018,7 @@
       .then(function () {
         msgEl.className = "msg ok";
         msgEl.textContent = "Отправлено Руслану на одобрение. После «Записать» сделка появится у партнёра на столе.";
+        qAdd("deal", ref + " · " + product, "");
         document.getElementById("dl-product").value = "";
         document.getElementById("dl-isin").value = "";
         document.getElementById("dl-volume").value = "";
@@ -885,18 +1038,47 @@
       .then(function () {
         msgEl.className = "msg ok";
         msgEl.textContent = "Заявка на снятие ушла Руслану. Сделка исчезнет у партнёра после подтверждения.";
+        qAdd("dealrm", dlRef.value, "");
       })
       .catch(function (e) { msgEl.className = "msg err"; msgEl.textContent = e.message; })
       .finally(function () { b.disabled = false; b.textContent = "Снять"; });
   });
+
+  // Сервер отдаёт коды вроде telegram_failed или kv_not_configured — печатать их
+  // сейлзу как есть означает отправить его к Руслану за переводом.
+  var ERR_RU = {
+    bad_key: "Ключ не подошёл — проверьте раскладку или спросите новый у Руслана.",
+    bad_ref: "Партнёра нет в списке — обновите страницу; если не появился, его ещё не завели.",
+    bad_date: "Дата не распознана — нужен вид ДД.ММ.ГГГГ.",
+    bad_volume: "Объём сделки должен быть числом больше нуля.",
+    bad_reward: "Вознаграждение должно быть числом.",
+    reward_gt_volume: "Вознаграждение больше объёма — похоже на опечатку в разряде.",
+    bad_isin: "ISIN — 12 знаков, начинается с RU.",
+    no_product: "Не заполнен продукт.",
+    not_found: "Запись не найдена — возможно, её уже сняли.",
+    too_long: "Слишком длинный текст — сократите описание.",
+    file_too_big: "Файл больше 15 МБ — сожмите PDF.",
+    kv_not_configured: "Хранилище файлов не подключено. Это на нашей стороне — напишите Руслану.",
+    telegram_failed: "Не удалось отправить заявку в Telegram. Попробуйте ещё раз через минуту.",
+    github_conflict: "Файл сайта изменился в этот же момент. Просто отправьте заявку ещё раз.",
+    not_configured: "Сервис ещё не настроен. Это на нашей стороне — напишите Руслану.",
+    bad_section: "Внутренняя ошибка раздела — сообщите Руслану, что именно вы отправляли.",
+    isin_in_bo: "Этот ISIN уже приходит из бэкофиса — его параметры правятся там, а не здесь."
+  };
+  function serverError(x) {
+    var code = (x.d && x.d.error) || "";
+    if (ERR_RU[code]) return ERR_RU[code];
+    if (x.s === 429) return "Слишком много заявок подряд — подождите минуту.";
+    if (x.s >= 500) return "Что-то пошло не так на нашей стороне. Данные в форме сохранены — попробуйте ещё раз.";
+    return "Не получилось отправить" + (code ? " (" + code + ")" : "") + ". Данные в форме сохранены.";
+  }
 
   function postJson(body) {
     return fetch(ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
       .then(function (r) { return r.json().then(function (d) { return { s: r.status, d: d }; }); })
       .then(function (x) {
         if (x.d && x.d.ok) return true;
-        if (x.d && x.d.error === "bad_key") throw new Error("Ключ не подошёл — проверьте или спросите у Руслана.");
-        throw new Error("Ошибка: " + ((x.d && x.d.error) || x.s));
+        throw new Error(serverError(x));
       });
   }
 
