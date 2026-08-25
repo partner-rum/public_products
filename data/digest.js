@@ -162,7 +162,7 @@ window.DIGEST_ARCHIVE = {
      "id": "zaschita-kapitala-dell-do-50-2-goda",
      "family": "protection",
      "kind": "Структурная облигация · защита капитала",
-     "name": "Защита капитала · DELL · участие 80% в росте до +50% · 2 года",
+     "name": "Защита капитала · DELL · участие 80% в росте до +50% · 2 г",
      "underlying": "Dell Technologies (DELL)",
      "teaser": "Участие 80% в потенциальном росте акций Dell до 50%, сохраняя защиту капитала на погашении",
      "tenor": "2 года",
