@@ -71,6 +71,11 @@
   .btn-tg { display:inline-flex; align-items:center; gap:7px; background:var(--panel); border:1px solid var(--line); color:var(--tx); border-radius:6px; padding:8px 13px; font-size:13px; font-weight:600; transition:border-color .2s, background .2s; }
   .btn-tg:hover { border-color:var(--blue); background:rgba(79,134,230,0.12); }
   .btn-tg svg { display:block; }
+  /* Вход партнёра в свой кабинет. Тише соседей намеренно: оранжевая кнопка —
+     действие для всех гостей, эта — для тех, у кого уже есть ключ. */
+  .btn-ghost { display:inline-flex; align-items:center; gap:7px; background:var(--panel); border:1px solid var(--line); color:var(--mut); border-radius:6px; padding:8px 13px; font-size:13px; font-weight:600; transition:border-color .2s, color .2s; }
+  .btn-ghost:hover { border-color:var(--solar); color:var(--tx); }
+  .btn-ghost svg { display:block; }
 
   .wrap { position:relative; z-index:1; max-width:var(--shell); margin:0 auto; padding:0 44px; }
 
@@ -444,15 +449,22 @@
     /* Заголовок разбора в «Утре» — тоже ссылка, ей нужна та же тач-цель */
     .mn .ttl.lnk { display:inline-block; padding:13px 0; }
     .btn-solar { padding:13px 16px; }
-    .btn-tg { padding:12px 11px; }
+    /* Свёрнутые в иконку кнопки давали 41px — ниже порога 44, который на этой
+       странице держится для всей шапки. Высоту задаём явно, как у .ch. */
+    .btn-tg, .btn-ghost { padding:12px 11px; min-height:44px; }
     .prow { padding:4px 4px 4px 10px; }
     .prow .pmain { padding:9px 0; }
     .prow .pcopy { width:44px; height:44px; }
   }
+  @media (max-width: 900px) {
+    /* Подпись длинная (23 знака) и переполняет шапку раньше остальных —
+       сворачиваем её в иконку на 260px раньше, чем ярлык Telegram. */
+    .btn-ghost .gh-lbl { display:none; }
+  }
   @media (max-width: 640px) {
     .nav .name { display:none; }
     .btn-tg .tg-lbl { display:none; }
-    .btn-tg { padding:12px 11px; }
+    .btn-tg, .btn-ghost { padding:12px 11px; }
     .bench { gap:8px; }
   }
 </style>
@@ -469,6 +481,9 @@
     <svg width="21" height="21" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>
     <span class="name">Структурные продукты</span>
     <div class="nav-cta">
+      <a class="btn-ghost" href="me.html" aria-label="Личный кабинет партнёра">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8" r="3.4" stroke="currentColor" stroke-width="1.7"/><path d="M5 19.6c0-3.5 3.1-5.4 7-5.4s7 1.9 7 5.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+        <span class="gh-lbl">Личный кабинет партнёра</span></a>
       <a class="btn-tg" href="https://t.me/+NHbVOoUI5IBkN2Uy" target="_blank" rel="noopener" aria-label="Наша группа в Telegram">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.27 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z" fill="#4F86E6"/></svg>
         <span class="tg-lbl">Telegram-группа</span></a>
