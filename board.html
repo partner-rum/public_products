@@ -91,8 +91,9 @@
   .kf.sub { border-color: transparent; background: transparent; padding: 4px 9px; font-size: 12px; }
   .kf.sub:hover { background: rgba(255,255,255,0.05); }
   .kf.sub.active { background: transparent; border-color: transparent; color: var(--solar-l); font-weight: 600; }
-  .kf.sub .n { opacity: .6; }
-  .kf .n { font-family: var(--f-mono); font-size: 11px; opacity: 0.75; margin-left: 4px; }
+  /* opacity .6 поверх приглушённого цвета давал 3,36:1 — ниже порога 4,5 */
+  .kf.sub .n { opacity: .85; }
+  .kf .n { font-family: var(--f-mono); font-size: 11px; opacity: 0.9; margin-left: 4px; }
 
   .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
   .list-top { display: flex; justify-content: flex-end; margin: -2px 0 8px; }
@@ -113,10 +114,17 @@
   .item.active { background: rgba(255,255,255,0.05); border-left-color: var(--solar); }
   .item .r1 { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
   .item .nm { font-size: 13.5px; font-weight: 600; }
-  .item .q { font-family: var(--f-mono); font-size: 12px; white-space: nowrap; }
+  .item .q { font-family: var(--f-mono); font-size: 12px; white-space: nowrap; text-align: right; }
+  .item .q i { display: block; font-style: normal; font-weight: 500; font-size: 11px; letter-spacing: .05em; color: rgba(242,243,247,0.52); }
+  /* h2-обёртки заголовков не тащат UA-стили */
+  .gh { margin: 0; font-size: inherit; font-weight: inherit; }
+  .sec h2.h { margin: 0 0 4px; font-weight: 600; }
+  .skip { position: absolute; left: 10px; top: -60px; z-index: 40; background: var(--solar); color: #0C0A08;
+          padding: 11px 18px; border-radius: 0 0 10px 10px; font-size: 13px; font-weight: 600; }
+  .skip:focus { top: 0; }
   /* Вторая строка: срок, валюта, порог входа — то, по чему агент отсеивает, не открывая паспорт */
   .item .r2 { margin-top: 3px; }
-  .item .mt { font-family: var(--f-mono); font-size: 10.5px; letter-spacing: .04em; color: rgba(242,243,247,0.52); }
+  .item .mt { font-family: var(--f-mono); font-size: 11px; letter-spacing: .04em; color: rgba(242,243,247,0.52); }
   .item.active .mt { color: rgba(242,243,247,0.68); }
   .empty-list { padding: 22px 14px; font-size: 13px; color: var(--faint); }
 
@@ -281,11 +289,20 @@
     .nav-in { height: auto; flex-wrap: wrap; padding: 12px 20px; row-gap: 10px; }
     .topnav { margin-left: 0; width: 100%; gap: 16px; font-size: 13.5px; }
   }
+  /* Тач-цели >=44px там, где палец, а не курсор (правило витрины) */
+  @media (max-width: 860px) {
+    .group-h { min-height: 44px; }
+    .kf, .kf.sub, .cmp-chip { min-height: 44px; display: inline-flex; align-items: center; }
+    .ta { min-height: 44px; padding: 10px 8px; }
+    .btn-solar { min-height: 44px; }
+    .item { min-height: 48px; }
+  }
 </style>
 <script src="metrika.js?v=4" defer></script>
 </head>
 <body>
 
+<a class="skip" href="#content">Пропустить к содержимому</a>
 <header class="nav">
   <div class="nav-in">
     <a class="brand" href="index.html" aria-label="На главную">
@@ -310,7 +327,7 @@
 
 <div class="ticker" id="ticker" aria-hidden="true"><svg class="tk-sine" id="tk-sine"></svg><div class="tk-rot" id="tk-rot"></div></div>
 
-<div class="wrap">
+<div class="wrap" role="main" id="content">
   <div class="head">
     <h1>Текущие продукты</h1>
     <span class="count" id="count" role="status" aria-live="polite"></span>
@@ -346,6 +363,19 @@
 <script src="contact.js?v=9"></script>
 <script>
   const S = window.SITE;
+  // Охрана данных: не доехал data/lib.js или data/instruments.js — страница
+  // обязана сказать об этом, а не молча умереть на первой же строке (без охраны
+  // сбой выглядел как статический список без единого рабочего элемента).
+  if (!S || !Array.isArray(S.INSTRUMENTS) || !S.INSTRUMENTS.length) {
+    var __lb = document.getElementById("list");
+    if (__lb) __lb.innerHTML = '<div class="empty-list">Не удалось загрузить данные доски.' +
+      '<br><button type="button" style="margin-top:10px;border:1px solid var(--border);background:none;' +
+      'color:var(--hushed);border-radius:8px;padding:9px 16px;font:500 13px var(--f-body);cursor:pointer" ' +
+      'onclick="location.reload()">Обновить страницу</button></div>';
+    var __pn = document.getElementById("panel");
+    if (__pn) __pn.innerHTML = '<div class="placeholder">Данные доски недоступны</div>';
+    throw new Error("SITE/INSTRUMENTS недоступны");
+  }
   const TYPE_LABEL = { discount: "Дисконтные облигации", protection: "Защита капитала", warrant: "Варранты", booster: "Бустеры", autocall: "Автоколлы" };
 
   let type = "all", tenor = "all", ccy = "all", q = "", selected = null, mode = "payoff";
@@ -634,7 +664,7 @@
     const price0 = atPar ? inst.minNom : Math.round(inst.minNom * inst.quote / 100), cfg = S.calc.move(inst);
     const slider = cfg ? '<div class="calc-row"><label class="calc-l">' + inst.underlying + ': <b id="calc-mv"></b></label>' +
       '<input class="calc-range" id="calc-move" type="range" min="' + cfg.min + '" max="' + cfg.max + '" value="' + cfg.val + '" step="1" aria-label="Сценарий по базовому активу"></div>' : '';
-    return '<div class="sec"><div class="h">Калькулятор выплаты</div>' +
+    return '<div class="sec"><h2 class="h">Калькулятор выплаты</h2>' +
       '<div class="calc">' +
         '<div class="calc-row"><label class="calc-l" for="calc-amt">Сумма вложения, ₽</label>' +
           '<input class="calc-input" id="calc-amt" type="number" inputmode="numeric" min="0" max="1000000000" step="1000" value="' + price0 + '"></div>' +
@@ -836,7 +866,7 @@
         '<div class="calc-note">По вертикали — результат на вложенную сумму, по горизонтали — изменение базового актива продукта. ' +
           'Приведено к вложенной сумме, потому что цена входа у продуктов разная.</div>' +
       '</div>' +
-      '<div class="sec"><div class="h">Общий калькулятор</div><div class="calc">' +
+      '<div class="sec"><h2 class="h">Общий калькулятор</h2><div class="calc">' +
         '<div class="calc-row"><label class="calc-l" for="cmp-amt">Сумма вложения в каждый, ₽</label>' +
           '<input class="calc-input" id="cmp-amt" type="number" inputmode="numeric" min="0" max="1000000000" step="1000" value="1000000"></div>' +
         '<div class="calc-row"><label class="calc-l">Базовый актив каждого продукта: <b id="cmp-mv"></b></label>' +
@@ -937,9 +967,7 @@
     if (!on) {
       cmp = [];
       document.querySelectorAll(".item").forEach(el => { el.classList.remove("picked"); el.removeAttribute("aria-pressed"); });
-      document.getElementById("panel").innerHTML = selected
-        ? '<div class="placeholder">Выберите инструмент из списка</div>'
-        : '<div class="placeholder">Выберите инструмент из списка</div>';
+      document.getElementById("panel").innerHTML = '<div class="placeholder">Выберите инструмент из списка</div>';
       if (selected) select(selected);
     } else {
       document.getElementById("panel").innerHTML =
@@ -979,10 +1007,10 @@
       '</div>' +
       '<div class="metrics">' + c.metrics.map(m => '<div class="metric"><div class="v">' + m[0] + '</div><div class="k">' + m[1] + '</div></div>').join("") + '</div>' +
       calcHTML(inst) +
-      '<div class="sec"><div class="h">Пример расчёта</div><div class="intro">' + c.exampleIntro + '</div>' +
+      '<div class="sec"><h2 class="h">Пример расчёта</h2><div class="intro">' + c.exampleIntro + '</div>' +
         c.scenarios.map(s => '<div class="scenario"><div class="l">' + s[0] + '</div><div class="d">' + s[1] + '</div><div class="r" style="color:' + s[3] + '">' + s[2] + '</div></div>').join("") +
-        (S.isFxSensitive(inst.underlying) ? '<div style="margin-top:12px;padding:9px 13px;border-left:3px solid #EE7D1B;background:rgba(238,125,27,0.12);border-radius:0 7px 7px 0;font-size:12.5px;line-height:1.5;color:#E7B98D">' + S.LEGAL.fx + '</div>' : '') + '</div>' +
-      '<div class="sec"><div class="h">Как устроен продукт</div><div class="explainer">' + c.explainer + '</div>' +
+        (S.isFxSensitive(inst.underlying) ? '<div style="margin-top:12px;padding:9px 13px;border-left:1px solid #EE7D1B;background:rgba(238,125,27,0.12);border-radius:0 7px 7px 0;font-size:12.5px;line-height:1.5;color:#E7B98D">' + S.LEGAL.fx + '</div>' : '') + '</div>' +
+      '<div class="sec"><h2 class="h">Как устроен продукт</h2><div class="explainer">' + c.explainer + '</div>' +
         '<div class="facts">' + c.facts.map(f => '<div class="fact"><div class="k">' + f[0] + '</div><div class="v">' + f[1] + '</div></div>').join("") + '</div></div>';
   }
 
@@ -1030,7 +1058,12 @@
     if (tu) tu.addEventListener("click", () => setMode("under", inst, c, U));
     setMode("payoff", inst, c, U);
     document.querySelectorAll(".item").forEach(el =>
-      el.classList.toggle("active", el.getAttribute("data-id") === id));
+      {
+        const on = el.getAttribute("data-id") === id;
+        el.classList.toggle("active", on);
+        // aria-current живёт и тут: select() подсвечивает строку без render()
+        if (on) el.setAttribute("aria-current", "true"); else el.removeAttribute("aria-current");
+      });
     history.replaceState(null, "", "#" + id);
     if (fromUser && window.matchMedia("(max-width: 900px)").matches) {
       document.getElementById("panel-wrap").classList.add("open");
@@ -1111,9 +1144,19 @@
   }
 
   function itemHTML(r) {
-    var qv = r.type === "booster" ? "КУ " + Math.round(r.quote) + "%"
-      : r.type === "autocall" ? S.fmt2(r.couponPa != null ? r.couponPa : r.quote) + "% г."
-      : S.fmt2(r.quote) + "%";
+    // Метка метрики обязательна: в одном столбце премии варрантов, цены
+    // дисконтных, купоны автоколлов и КУ бустеров — голая цифра обманывает
+    // (та же правка была на главной 24.08). Защита капитала показывает
+    // УЧАСТИЕ, а не «100,00%» — правило витрины.
+    var qv, ql;
+    if (r.type === "booster") { qv = Math.round(r.ku || r.quote) + "%"; ql = "КУ"; }
+    else if (r.type === "autocall") { qv = S.fmt2(r.couponPa != null ? r.couponPa : r.quote) + "% г."; ql = "купон"; }
+    else if (r.type === "protection") {
+      if (r.participation != null) { qv = Math.round(r.participation * 100) + "%"; ql = "участие"; }
+      else { qv = S.fmt2(r.quote) + "%"; ql = "котировка"; }
+    }
+    else if (r.type === "discount") { qv = S.fmt2(r.quote) + "%"; ql = "цена"; }
+    else { qv = S.fmt2(r.quote) + "%"; ql = "премия"; }
     const picked = cmp.indexOf(r.id) >= 0;
     // Вторая строка: срок, валюта и порог входа. Без них агент открывал паспорт
     // только чтобы отсеять долларовый продукт или увидеть, что вход от 30 млн.
@@ -1123,15 +1166,24 @@
       (r.minNom && r.minNom > 1000000) ? "от " + Math.round(r.minNom / 1000000) + " млн" : ""
     ].filter(Boolean).join(" · ");
     return '<button class="item' + (r.id === selected && !cmpMode ? " active" : "") + (picked ? " picked" : "") +
-      '" data-id="' + r.id + '"' + (cmpMode ? ' aria-pressed="' + picked + '"' : "") + '>' +
-      '<div class="r1"><span class="nm"><span class="ck"></span>' + shortName(r) + '</span><span class="q">' + qv + '</span></div>' +
+      '" data-id="' + r.id + '"' + (cmpMode ? ' aria-pressed="' + picked + '"' : "") +
+      (r.id === selected && !cmpMode ? ' aria-current="true"' : "") + '>' +
+      '<div class="r1"><span class="nm"><span class="ck"></span>' + shortName(r) + '</span><span class="q">' + qv + '<i>' + ql + '</i></span></div>' +
       (meta ? '<div class="r2"><span class="mt">' + meta + '</span></div>' : "") +
     '</button>';
   }
 
   // Свёрнутая группа тоже должна нести цифру: «4 · 15,00–86,50%»
   function groupRange(items) {
-    const vals = items.map(r => r.quote).filter(v => typeof v === "number");
+    // Квоты защиты капитала (всегда 100) в диапазон не идут — они раздували
+    // верхнюю границу и врали про смешанные группы.
+    if (items.every(r => r.type === "protection")) {
+      const ps = items.map(r => r.participation).filter(v => typeof v === "number").map(v => Math.round(v * 100));
+      if (!ps.length) return "";
+      const pl = Math.min(...ps), ph = Math.max(...ps);
+      return "участие " + (pl === ph ? pl + "%" : pl + "–" + ph + "%");
+    }
+    const vals = items.filter(r => r.type !== "protection").map(r => r.quote).filter(v => typeof v === "number");
     if (!vals.length) return "";
     const lo = Math.min(...vals), hi = Math.max(...vals);
     // У бустеров quote — коэффициент участия, а не цена: подписываем как в строке списка
@@ -1156,16 +1208,10 @@
     document.getElementById("list").innerHTML = sorted.length ? sorted.map(([name, items], gi) => {
       const open = searching || !closedGroups.has(name);
       const meta = items.length + (open ? "" : " · " + groupRange(items));
-      return '<button class="group-h' + (open ? " open" : "") + '" data-g="' + name.replace(/"/g, "&quot;") + '" aria-expanded="' + open + '">' +
-          '<span class="chev">▶</span><span class="name">' + name + '</span><span class="gc">' + meta + '</span></button>' +
+      return '<h2 class="gh"><button class="group-h' + (open ? " open" : "") + '" data-g="' + name.replace(/"/g, "&quot;") + '" aria-expanded="' + open + '">' +
+          '<span class="chev">▶</span><span class="name">' + name + '</span><span class="gc">' + meta + '</span></button></h2>' +
         '<div class="group-items' + (open ? " open" : "") + '">' + items.map(itemHTML).join("") + '</div>';
     }).join("") : '<div class="empty-list">Ничего не найдено — измените фильтр или запрос.</div>';
-
-    document.querySelectorAll(".group-h").forEach(el => el.addEventListener("click", () => {
-      const g = el.getAttribute("data-g");
-      if (closedGroups.has(g)) closedGroups.delete(g); else closedGroups.add(g);
-      render();
-    }));
 
     // «Развернуть всё / Свернуть всё» — при поиске группы раскрыты принудительно
     const names = sorted.map(g => g[0]);
@@ -1178,17 +1224,28 @@
       else names.forEach(n => closedGroups.add(n));
       render();
     };
-    document.querySelectorAll(".item").forEach(el =>
-      el.addEventListener("click", () => {
-        const id = el.getAttribute("data-id");
-        if (cmpMode) cmpToggleItem(id); else select(id, true);
-      }));
-
     if (selected && !list.some(r => r.id === selected)) {
       selected = null;
       document.getElementById("panel").innerHTML = '<div class="placeholder">Выберите инструмент из списка</div>';
     }
   }
+
+  // Один делегирующий обработчик вместо ~140 навешиваемых на каждый render():
+  // список перерисовывается целиком при каждом фильтре и каждой букве поиска.
+  document.getElementById("list").addEventListener("click", e => {
+    const gh = e.target.closest ? e.target.closest(".group-h") : null;
+    if (gh) {
+      const g = gh.getAttribute("data-g");
+      if (closedGroups.has(g)) closedGroups.delete(g); else closedGroups.add(g);
+      render();
+      return;
+    }
+    const it = e.target.closest ? e.target.closest(".item") : null;
+    if (it) {
+      const id = it.getAttribute("data-id");
+      if (cmpMode) cmpToggleItem(id); else select(id, true);
+    }
+  });
 
   // Фильтр по семейству
   const counts = { all: S.INSTRUMENTS.length };
@@ -1229,13 +1286,21 @@
   document.getElementById("cmp-reset").addEventListener("click", () => setCmpMode(false));
   const searchEl = document.getElementById("search");
   searchEl.value = q;                       // запрос мог прийти из адреса
-  searchEl.addEventListener("input", e => { q = e.target.value; render(); syncURL(); });
+  // Каждая буква перестраивала весь список из ~104 позиций — debounce 160 мс.
+  var qTimer = null;
+  searchEl.addEventListener("input", e => {
+    q = e.target.value;
+    clearTimeout(qTimer);
+    qTimer = setTimeout(() => { render(); syncURL(); }, 160);
+  });
 
   // Клавиатура: доска — рабочий инструмент, до поиска было 9 табов.
   // «/» ставит курсор в поиск откуда угодно, Escape очищает или закрывает паспорт,
   // Enter открывает первый найденный продукт — типовой путь «набрал и отправил».
   searchEl.addEventListener("keydown", e => {
     if (e.key === "Enter") {
+      // Enter сразу после набора не должен кликать по СТАРОМУ списку
+      clearTimeout(qTimer); render(); syncURL();
       const first = document.querySelector("#list .item");
       if (first) { first.click(); first.scrollIntoView({ block: "nearest" }); }
     } else if (e.key === "Escape" && searchEl.value) {
