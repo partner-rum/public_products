@@ -1976,8 +1976,14 @@ const SUBMIT_SECTIONS = {
     label: "Текущие продукты (доска)",
     file: "data/instruments.js",
     // currency: без неё всё, что заводит сейлз, молча становилось рублёвым
-    str: ["id", "type", "structure", "name", "underlying", "cls", "uRef", "tenor", "expiry", "currency"],
-    num: ["spot", "strike", "strike2", "participation", "protectionPct", "cap", "quote", "chg", "minNom"],
+    // settle: валюта расчётов автоколла отличается от валюты номинала
+    str: ["id", "type", "structure", "name", "underlying", "cls", "uRef", "tenor", "expiry", "currency", "settle"],
+    // ku — коэффициент участия бустера; couponPa/couponBarrier/callBarrier/
+    // nonCall/obsPerYear — автоколл. Без них белый список молча выбрасывал
+    // параметры, и продукт уезжал на доску пустой оболочкой.
+    num: ["spot", "strike", "strike2", "participation", "protectionPct", "cap", "quote", "chg", "minNom",
+          "ku", "couponPa", "couponBarrier", "callBarrier", "nonCall", "obsPerYear"],
+    arr: ["basket"],
     required: ["id", "type", "name", "underlying", "cls", "expiry", "quote"],
   },
   offering: {

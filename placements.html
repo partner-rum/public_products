@@ -244,7 +244,10 @@
 <script src="contact.js?v=9"></script>
 <script>
   const S = window.SITE;
-  const D = window.PLACEMENTS_DATA;
+  // Без охраны страница умирала целиком: не доехал data/placements.js — скрипт
+  // падал на первой же строке с issues, и посетитель видел статичный SEO-текст
+  // без единого признака поломки. Тот же приём, что уже применён на главной.
+  const D = window.PLACEMENTS_DATA || null;
   const TODAY = new Date().toISOString().slice(0, 10);
   const KINDS = {
     coupon:        { label: "Купонный", fg: "#EE7D1B", bg: "rgba(238,125,27,0.16)" },
@@ -255,6 +258,19 @@
   const fmtN = v => v == null ? "—" : String(v).replace(".", ",").replace("-", "−");
   const fmtPerf = v => v == null ? null : (v > 0 ? "+" : "") + fmtN(v) + "%";
   const perfColor = v => v > 0 ? "var(--up)" : (v < 0 ? "var(--loss)" : "rgba(242,243,247,0.64)");
+
+  // Сбой данных должен выглядеть сбоем, а не пустой витриной: показываем причину
+  // и предлагаем перезагрузку, вместо того чтобы молча оставить SEO-текст.
+  if (!D || !Array.isArray(D.issues)) {
+    const host = document.getElementById("list") || document.querySelector(".layout");
+    if (host) {
+      host.innerHTML = '<div class="empty-list">Не удалось загрузить список выпусков.' +
+        '<button class="reset-f" type="button" onclick="location.reload()">Обновить страницу</button></div>';
+    }
+    const pnl = document.getElementById("panel");
+    if (pnl) pnl.innerHTML = '<div class="placeholder">Данные выпусков недоступны</div>';
+    throw new Error("PLACEMENTS_DATA недоступен");
+  }
 
   const issues = D.issues.map(i => ({ ...i, matured: i.maturity && i.maturity < TODAY }));
   let kind = "all", showMatured = false, q = "", selected = null;
@@ -454,12 +470,11 @@
   // Защита номинала — факт из данных, не доходность. Без него красная цифра
   // рядом читается как убыток по выпуску, хотя это движение базового актива:
   // при защите 100% клиенту оно на погашении ничего не стоит.
+  // Бейдж ставим только при ПОЛНОЙ защите: барьерная (EKI) полной не является,
+  // и обещать по ней сохранность номинала нельзя.
   function protBadge(i) {
-    const p = i.payoff || {};
-    const pct = p.protectionPct != null ? p.protectionPct
-      : (p.protection && p.protection.barrierPct != null ? null : null);
-    if (pct != null && pct >= 100) return '<span class="prot">защита 100%</span>';
-    return "";
+    const pct = (i.payoff || {}).protectionPct;
+    return (pct != null && pct >= 100) ? '<span class="prot">защита 100%</span>' : "";
   }
 
   function itemHTML(i) {
@@ -559,6 +574,16 @@
   renderFacts();
   document.getElementById("panel-close").addEventListener("click", () =>
     document.getElementById("panel-wrap").classList.remove("open"));
+  // Полноэкранный паспорт закрывался только кнопкой: Escape — то, что нажимают
+  // не глядя, и на клавиатуре это единственный выход из оверлея.
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    const w = document.getElementById("panel-wrap");
+    if (!w || !w.classList.contains("open")) return;
+    w.classList.remove("open");
+    const back = document.getElementById("panel-close");
+    if (back) back.blur();
+  });
 
   // Deep-link: открыть группу выбранного выпуска
   const hash = location.hash.slice(1);

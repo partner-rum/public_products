@@ -121,6 +121,7 @@
   .queue { margin:0 0 18px; border:1px solid var(--border-soft); border-radius:12px; background:var(--card); }
   .queue .qh { display:flex; align-items:center; gap:10px; padding:11px 14px; border-bottom:1px solid var(--border-soft); }
   .queue .qh .t { font-family:var(--m); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--faint); }
+  .queue .qn { padding:9px 14px; border-top:1px solid var(--border-soft); font-size:12px; color:var(--faint); }
   .queue .qh .rf { margin-left:auto; border:0; background:none; color:var(--hushed); font-family:var(--f);
                    font-size:12px; cursor:pointer; padding:4px 2px; }
   .queue .qh .rf:hover { color:var(--solar-l); }
@@ -191,6 +192,9 @@
       <button class="rf" id="q-remind" type="button" style="margin-left:auto">Скопировать напоминание</button>
       <button class="rf" id="q-refresh" type="button" style="margin-left:14px">Обновить</button></div>
     <div id="q-list"></div>
+    <!-- Дайджест публикуется сразу, без ✅, поэтому в ленте его не бывает. Без этой
+         строки его отсутствие читалось бы как «заявка потерялась». -->
+    <div class="qn">Идеи и выпуск дайджеста сюда не попадают — они уходят на сайт сразу, без одобрения.</div>
   </div>
 
   <!-- ══════════ ТЕКУЩИЙ ПРОДУКТ (доска) ══════════ -->
@@ -223,6 +227,8 @@
           <option value="discount">Дисконтная облигация</option>
           <option value="protection">Защита капитала</option>
           <option value="warrant">Варрант (CALL / колл-спред)</option>
+          <option value="autocall">Автоколл</option>
+          <option value="booster">Бустер</option>
         </select>
       </label>
       <label><span class="k">Название <b>*</b></span><input name="name" placeholder="CALL 100 · Газпром · 1 год" maxlength="80"></label>
@@ -266,6 +272,35 @@
           <label><span class="k">Текущий уровень БА (текстом)</span><input name="uRef" placeholder="$54,80 или 6 320 пт" maxlength="30"></label>
         </div>
       </div>
+      <!-- Автоколл и бустер есть на доске (2 и 4 позиции), но завести их через
+           форму было нельзя — оба типа отсутствовали в списке. -->
+      <div id="b-autocall" style="display:none">
+        <div class="hint-box">Все барьеры — в % ОТ СТАРТА базового актива. Корзина worst-of:
+          перечислите тикеры через запятую, выплата считается по худшей бумаге.</div>
+        <label><span class="k">Корзина (тикеры через запятую) <b>*</b></span><input name="basket" placeholder="NVDA, AMD, INTC" maxlength="80"></label>
+        <div class="row">
+          <label><span class="k">Купон, % годовых <b>*</b></span><input name="couponPa" type="number" step="0.5" placeholder="20"></label>
+          <label><span class="k">Барьер купона, % <b>*</b></span><input name="couponBarrier" type="number" step="1" placeholder="65"></label>
+        </div>
+        <div class="row">
+          <label><span class="k">Барьер автоотзыва, % <b>*</b></span><input name="callBarrier" type="number" step="1" placeholder="100"></label>
+          <label><span class="k">Защита номинала, %</span><input name="acProtectionPct" type="number" step="1" placeholder="65"></label>
+        </div>
+        <div class="row3">
+          <label><span class="k">Периодов без отзыва</span><input name="nonCall" type="number" step="1" placeholder="3"></label>
+          <label><span class="k">Наблюдений в году</span><input name="obsPerYear" type="number" step="1" placeholder="4"></label>
+          <label><span class="k">Валюта расчётов</span><input name="settle" placeholder="RUB" maxlength="8"></label>
+        </div>
+      </div>
+      <div id="b-booster" style="display:none">
+        <div class="hint-box">Покупка по номиналу. Уровни — в % ОТ СТАРТА базового актива;
+          коэффициент участия (КУ) на витрине печатается как котировка.</div>
+        <div class="row3">
+          <label><span class="k">Начало участия, % <b>*</b></span><input name="bStrike" type="number" step="1" value="100" placeholder="100"></label>
+          <label><span class="k">Потолок участия, % <b>*</b></span><input name="bStrike2" type="number" step="1" placeholder="110"></label>
+          <label><span class="k">Коэффициент участия, % <b>*</b></span><input name="ku" type="number" step="5" placeholder="175"></label>
+        </div>
+      </div>
     </div>
     <button class="send" type="submit">Отправить на одобрение</button>
     <div class="msg" id="m-board"></div>
@@ -273,6 +308,20 @@
 
   <!-- ══════════ НА РАЗМЕЩЕНИИ ══════════ -->
   <form id="f-offering">
+    <details class="help"><summary>Как это работает<span class="cv">▾</span></summary>
+      <div class="hbody"><ol>
+        <li><b>Новый выпуск</b> — оставьте первое поле пустым и заполните форму. После ✅ Руслана
+          карточка появится в разделе «На размещении».</li>
+        <li><b>Правка</b> — выберите выпуск в первом поле. Форма заполнится сама, уйдут только
+          изменённые поля. Корзина, график выплаты, пример расчёта, видео и партнёр
+          <b>сохранятся</b> — форма их не знает и не затирает.</li>
+        <li>Пустое поле ничего не стирает. Чтобы убрать значение — напишите Руслану.</li>
+        <li><b>Документы</b> (КУВ, КИД, презентация) прикладываются здесь же, каждый уходит
+          отдельной карточкой на одобрение.</li>
+        <li>Погашение <b>0</b> — законное значение: у варранта возврата номинала нет.
+          Пустое поле = плитки «погашение» на карточке не будет вовсе.</li>
+      </ol></div>
+    </details>
     <div class="grp"><div class="gt">что делаем</div>
       <label style="margin:0"><span class="k">Выпуск</span>
         <select name="pick" id="off-pick"><option value="">— новый выпуск —</option></select></label>
@@ -358,6 +407,20 @@
 
   <!-- ══════════ РАЗМЕЩЁННЫЙ ВЫПУСК ══════════ -->
   <form id="f-placement">
+    <details class="help"><summary>Как это работает<span class="cv">▾</span></summary>
+      <div class="hbody"><ol>
+        <li><b>ISIN — первое поле, и оно решает всё.</b> Незнакомый ISIN — форма попросит
+          параметры выпуска. ISIN уже на сайте — параметры скроются, останутся только документы.</li>
+        <li>Выпуск и каждый документ уходят <b>отдельными карточками</b> на одобрение —
+          выпуск первым. Если ошибка пришла после отправки выпуска, повторно его не отправляйте:
+          приложите документы отдельным заходом.</li>
+        <li>Серия для сайта берётся из названия без «RSP ». Даты — в виде ДД.ММ.ГГГГ.</li>
+        <li>Со следующей выгрузки бэк-офиса по этому ISIN подтянутся живые фиксинги
+          и Bid — заведённая руками карточка уступит им место автоматически.</li>
+        <li>Файлы (до 15 МБ) ждут вашего ✅ неделю и в Telegram не пересылаются —
+          в публичный репозиторий они попадают только после одобрения.</li>
+      </ol></div>
+    </details>
     <div class="grp"><div class="gt">Какой выпуск</div>
       <label><span class="k">ISIN <b>*</b></span>
         <input name="isin" placeholder="RU000A10XXXX" maxlength="12" style="text-transform:uppercase" autocomplete="off" list="pl-isins">
@@ -619,6 +682,17 @@
   </form>
 
   <form id="f-remove" onsubmit="return false">
+    <details class="help"><summary>Как это работает<span class="cv">▾</span></summary>
+      <div class="hbody"><ol>
+        <li>Снятие — тоже заявка: продукт исчезнет с сайта <b>после ✅ Руслана</b>, не сразу.</li>
+        <li>Снять можно только заведённое через админку. Продукты из прайсинга здесь
+          не показываются — их параметры приходят из расчёта.</li>
+        <li>Снятый продукт вернуть кнопкой нельзя — придётся завести заново,
+          и адрес <b>/p/&lt;id&gt;.html</b> будет тот же, если совпадут актив и дата экспирации.</li>
+        <li>Клиенту, у которого уже открыта ссылка, страница продукта перестанет отвечать —
+          предупредите, если рассылали её на этой неделе.</li>
+      </ol></div>
+    </details>
     <div class="grp"><div class="gt">Снять продукт с сайта</div>
       <div class="hint" style="margin:0 0 12px">Показаны продукты, добавленные через админку (доска), а также выпуски «На размещении» и идеи текущего дайджеста. Снятие тоже уходит Руслану на одобрение.</div>
       <div id="rm-list"><div class="rm-empty">Загрузка…</div></div>
@@ -932,11 +1006,15 @@
   // ── условные поля ──
   var fBoard = document.getElementById("f-board");
   fBoard.type.addEventListener("change", function () {
-    var isProt = fBoard.type.value === "protection";
+    var t = fBoard.type.value;
+    var isProt = t === "protection";
     document.getElementById("b-protection").style.display = isProt ? "" : "none";
-    document.getElementById("b-warrant").style.display = fBoard.type.value === "warrant" ? "" : "none";
-    // Вход по номиналу зашит: показывать сейлзу поле котировки — приглашать к ошибке
-    document.getElementById("l-quote").style.display = isProt ? "none" : "";
+    document.getElementById("b-warrant").style.display = t === "warrant" ? "" : "none";
+    document.getElementById("b-autocall").style.display = t === "autocall" ? "" : "none";
+    document.getElementById("b-booster").style.display = t === "booster" ? "" : "none";
+    // Вход по номиналу зашит: показывать сейлзу поле котировки — приглашать к ошибке.
+    // У автоколла котировка = купон, у бустера = КУ; оба считаются из своих полей.
+    document.getElementById("l-quote").style.display = (isProt || t === "autocall" || t === "booster") ? "none" : "";
   });
   var fPlacement = document.getElementById("f-placement");
   fPlacement.kind.addEventListener("change", function () {
@@ -1317,7 +1395,9 @@
     var known = plKnown();
     var item = null, docs;
     try {
-      if (!/^[A-Z0-9]{12}$/.test(isin)) throw new Error("ISIN — это 12 букв и цифр, например RU000A10CVH5.");
+      // Было `[A-Z0-9]{12}` — здесь проходило то, что вкладка сделки отвергала.
+      // Все 57 выпусков на витрине — RU+10, расхождение проверок сбивало сейлза.
+      if (!/^RU[0-9A-Z]{10}$/.test(isin)) throw new Error("ISIN — 12 знаков, начинается с RU, например RU000A10CVH5.");
       docs = pickedDocs();
       if (known && !docs.length) throw new Error("Этот выпуск уже на сайте. Приложите хотя бы один документ — или введите ISIN нового выпуска.");
       if (!known) item = buildPlacementItem(isin);
@@ -1327,11 +1407,21 @@
     btn.disabled = true; btn.textContent = "Отправляем…";
     // Сначала сам выпуск, потом документы: каждая заявка — отдельная карточка на ✅,
     // и выпуск должен встать в очереди первым
-    var chain = item ? postJson({ key: key, section: "placement", item: item }) : Promise.resolve(true);
+    // Судьба заявки: лента умеет находить выпуск по ISIN среди sp.issues, но
+    // qAdd тут не вызывался — самая длинная форма админки не попадала в ленту.
+    var chain = item
+      ? postJson({ key: key, section: "placement", item: item }).then(function (d) {
+          if (d && d.mid) qAdd("placement", item.name || isin, isin, d.mid, "");
+        })
+      : Promise.resolve(true);
     docs.forEach(function (d) {
       chain = chain.then(function () {
         return readPdf(d.file).then(function (b64) {
-          return postJson({ key: key, action: "placementdoc", isin: isin, docKind: d.kind, docName: d.name, fileB64: b64 });
+          return postJson({ key: key, action: "placementdoc", isin: isin, docKind: d.kind, docName: d.name, fileB64: b64 })
+            .then(function (r) {
+              if (r && r.mid) qAdd("doc", (d.name || d.kind) + " · " + isin, "", r.mid, "");
+              return r;
+            });
         });
       });
     });
@@ -1494,20 +1584,40 @@
     if (bdOrig) { submitBoardEdit(); return; }
     submit("board", fBoard, document.getElementById("m-board"), function () {
       var type = val(fBoard, "type");
-      // У защиты капитала вход всегда по номиналу — поле котировки скрыто и не требуется
-      req(fBoard, ["name", "underlying", "expiry", "tenor"].concat(type === "protection" ? [] : ["quote"]));
+      // Вход по номиналу — у защиты, автоколла и бустера: поле котировки скрыто,
+      // требовать его значит требовать невидимое поле.
+      var byNominal = type === "protection" || type === "autocall" || type === "booster";
+      req(fBoard, ["name", "underlying", "expiry", "tenor"].concat(byNominal ? [] : ["quote"]));
       // Проверки существовали, но подключены были только к правке: создание
       // принимало «дек 2027» и −500 и отвечало зелёным «Отправлено». Дата ещё и
       // отравляла id навсегда — он собирается из неё и становится адресом
       // /p/<id>.html, переименовать который форма не даёт.
       needDate(fBoard, "expiry");
-      if (type !== "protection") needRange(fBoard, "quote", 0.01, 200, "% номинала");
+      if (!byNominal) needRange(fBoard, "quote", 0.01, 200, "% номинала");
       needRange(fBoard, "participation", 0, 1000, "%");
       needRange(fBoard, "cap", 0, 1000, "%");
+      if (type === "autocall") {
+        needRange(fBoard, "couponPa", 0.1, 200, "% годовых");
+        needRange(fBoard, "couponBarrier", 1, 200, "%");
+        needRange(fBoard, "callBarrier", 1, 300, "%");
+        needRange(fBoard, "acProtectionPct", 0, 100, "%");
+        needRange(fBoard, "nonCall", 0, 40, "");
+        needRange(fBoard, "obsPerYear", 1, 12, "");
+      }
+      if (type === "booster") {
+        needRange(fBoard, "bStrike", 1, 300, "%");
+        needRange(fBoard, "bStrike2", 1, 300, "%");
+        needRange(fBoard, "ku", 1, 1000, "%");
+      }
       var item = { type: type, name: val(fBoard, "name"), underlying: val(fBoard, "underlying"),
                    cls: val(fBoard, "cls"), expiry: val(fBoard, "expiry"), tenor: val(fBoard, "tenor") };
       put(item, "currency", val(fBoard, "currency") || "RUB");
-      put(item, "quote", type === "protection" ? 100 : num(fBoard, "quote"));
+      // Котировка на витрине: у защиты — номинал, у автоколла её место занимает
+      // купон, у бустера — коэффициент участия (доска подписывает его «КУ»).
+      put(item, "quote", type === "protection" ? 100
+        : type === "autocall" ? num(fBoard, "couponPa")
+        : type === "booster" ? num(fBoard, "ku")
+        : num(fBoard, "quote"));
       item.chg = 0;
       put(item, "minNom", num(fBoard, "minNom") || 1000000);
       if (type === "protection") {
@@ -1527,7 +1637,33 @@
         item.spot = 100; item.strike = 100;
         if (item.structure === "cs") item.strike2 = 150;
       }
-      var pfx = type === "discount" ? "d" : type === "protection" ? "p" : "w";
+      if (type === "autocall") {
+        req(fBoard, ["basket", "couponPa", "couponBarrier", "callBarrier"]);
+        var bk = val(fBoard, "basket").split(",").map(function (s) { return s.trim().toUpperCase(); }).filter(Boolean);
+        if (!bk.length) throw new Error("Корзина: перечислите хотя бы один тикер.");
+        item.basket = bk;
+        put(item, "couponPa", num(fBoard, "couponPa"));
+        put(item, "couponBarrier", num(fBoard, "couponBarrier"));
+        put(item, "callBarrier", num(fBoard, "callBarrier"));
+        // Своё поле защиты: у автоколла барьерная защита (65%), а не 100% как у
+        // «Защиты капитала», и делить с ней одно поле нельзя — они в разных блоках
+        // и общее значение подставлялось бы из скрытого.
+        put(item, "protectionPct", num(fBoard, "acProtectionPct"));
+        put(item, "nonCall", num(fBoard, "nonCall"));
+        put(item, "obsPerYear", num(fBoard, "obsPerYear"));
+        put(item, "settle", val(fBoard, "settle"));
+      }
+      if (type === "booster") {
+        req(fBoard, ["bStrike2", "ku"]);
+        item.strike = num(fBoard, "bStrike") || 100;
+        put(item, "strike2", num(fBoard, "bStrike2"));
+        put(item, "ku", num(fBoard, "ku"));
+        if (item.strike2 != null && item.strike2 <= item.strike) {
+          throw new Error("Потолок участия должен быть выше начала участия.");
+        }
+      }
+      var pfx = type === "discount" ? "d" : type === "protection" ? "p"
+        : type === "autocall" ? "ac" : type === "booster" ? "b" : "w";
       item.id = pfx + "-" + slug(item.underlying) + "-" + slug(item.expiry).replace(/\./g, "") + "-s";
       return item;
     });
@@ -1678,6 +1814,13 @@
         }
       } else {
         req(fOff, ["name", "kind", "serial", "issuer", "teaser", "price", "how", "risk"]);
+        // Валидация стояла на доске и размещённых выпусках, а здесь её не было
+        // вовсе: форма принимала «дек 2027» и цену 3000% — ошибка доезжала до
+        // карточки Руслану вместо мгновенного отказа на клиенте.
+        ["placement", "maturity"].forEach(function (f) { if (val(fOff, f)) needDate(fOff, f); });
+        needRange(fOff, "price", 0.01, 300, "% номинала");
+        needRange(fOff, "redeem", 0, 300, "% номинала");
+        needRange(fOff, "nominal", 1, 1e9, "");
         item = { family: val(fOff, "family"), kind: val(fOff, "kind"), name: val(fOff, "name"),
                  status: val(fOff, "status"), teaser: val(fOff, "teaser"), issuer: val(fOff, "issuer"),
                  serial: val(fOff, "serial"), currency: val(fOff, "currency"),
@@ -1706,17 +1849,29 @@
 
     // Сначала сам выпуск (или правка), потом документы: каждая заявка — отдельная
     // карточка на ✅, и выпуск должен встать в очереди первым.
+    // Лента «Мои заявки» умела показывать размещения (Q_SECT.offering и поиск по
+    // so.items), но вызова qAdd тут не было: сейлз отправлял выпуск и не видел
+    // его судьбу, хотя страница обещает обратное. mid ловим у ПЕРВОЙ заявки —
+    // дальше цепочка документов вернёт уже свои ответы.
+    var isEdit = !!editId && Object.keys(item).length > 1;
     var first = editId
-      ? (Object.keys(item).length > 1
+      ? (isEdit
           ? postJson({ key: key, section: "offering", action: "offering_edit", item: item })
-          : Promise.resolve(true))
+          : Promise.resolve(null))
       : postJson({ key: key, section: "offering", item: item });
-    var chain = first;
+    var chain = first.then(function (d) {
+      if (d && d.mid) qAdd("offering", item.name || editId || "", editId || item.id || "",
+                           d.mid, isEdit ? "edit" : "");
+    });
     docs.forEach(function (d) {
       chain = chain.then(function () {
         return readPdf(d.file).then(function (b64) {
           return postJson({ key: key, action: "offeringdoc", id: editId,
-                            docKind: d.kind, docName: d.name, fileB64: b64 });
+                            docKind: d.kind, docName: d.name, fileB64: b64 })
+            .then(function (r) {
+              if (r && r.mid) qAdd("doc", (d.name || d.kind) + " · " + (editId || ""), "", r.mid, "");
+              return r;
+            });
         });
       });
     });
