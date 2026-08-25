@@ -191,7 +191,9 @@
     <div class="qh"><span class="t">мои заявки</span>
       <button class="rf" id="q-remind" type="button" style="margin-left:auto">Скопировать напоминание</button>
       <button class="rf" id="q-refresh" type="button" style="margin-left:14px">Обновить</button></div>
-    <div id="q-list"></div>
+    <!-- Статусы заявок меняются фоном (по ответу req_status), и без aria-live
+         скринридер о смене «ждёт одобрения» → «на сайте» не сообщал. -->
+    <div id="q-list" role="status" aria-live="polite"></div>
     <!-- Дайджест публикуется сразу, без ✅, поэтому в ленте его не бывает. Без этой
          строки его отсутствие читалось бы как «заявка потерялась». -->
     <div class="qn">Идеи и выпуск дайджеста сюда не попадают — они уходят на сайт сразу, без одобрения.</div>
@@ -1826,6 +1828,18 @@
         if (Object.keys(item).length === 1 && !docs.length) {
           throw new Error("Ничего не изменено и файлов нет — поменяйте поле или приложите документ.");
         }
+        // Правка уходила без единой проверки, хотя создание проверяется: править
+        // уже опубликованную карточку опаснее, чем заводить новую.
+        // Проверяем ТОЛЬКО изменённые поля: у «Энергетики будущего» в placement
+        // лежит период «10.08–28.08.2026», вписанный в данные руками, и проверка
+        // всех подряд блокировала бы правку нетронутого поля.
+        ["placement", "maturity"].forEach(function (f) { if (item[f] != null) needDate(fOff, f); });
+        if (item.price != null) needRange(fOff, "price", 0.01, 300, "% номинала");
+        if (item.redeem != null) needRange(fOff, "redeem", 0, 300, "% номинала");
+        if (item.nominal != null) needRange(fOff, "nominal", 1, 1e9, "");
+        if (item.isin != null && !/^RU[0-9A-Z]{10}$/.test(item.isin)) {
+          throw new Error("ISIN — 12 знаков, начинается с RU, например RU000A10CVH5.");
+        }
       } else {
         req(fOff, ["name", "kind", "serial", "issuer", "teaser", "price", "how", "risk"]);
         // Валидация стояла на доске и размещённых выпусках, а здесь её не было
@@ -1835,6 +1849,11 @@
         needRange(fOff, "price", 0.01, 300, "% номинала");
         needRange(fOff, "redeem", 0, 300, "% номинала");
         needRange(fOff, "nominal", 1, 1e9, "");
+        // Третье поле ISIN в файле — единственное, что не проверялось нигде.
+        var offIsin = val(fOff, "isin").toUpperCase();
+        if (offIsin && !/^RU[0-9A-Z]{10}$/.test(offIsin)) {
+          throw new Error("ISIN — 12 знаков, начинается с RU, например RU000A10CVH5. Или оставьте поле пустым.");
+        }
         item = { family: val(fOff, "family"), kind: val(fOff, "kind"), name: val(fOff, "name"),
                  status: val(fOff, "status"), teaser: val(fOff, "teaser"), issuer: val(fOff, "issuer"),
                  serial: val(fOff, "serial"), currency: val(fOff, "currency"),
