@@ -706,11 +706,20 @@
 
   function demoPicks() {
     var ins = (window.SITE_DATA && SITE_DATA.instruments) || [];
-    var why = ["У вас уже выпуск на этот индекс — здесь он же, но с защитой номинала",
-               "Продолжает вашу линию по ОФЗ",
-               "Актив в фокусе новостей дня",
-               "Кредитный риск вместо рыночного"];
-    return liveFallback(ins, 4).map(function (it, i) { return { id: it.id, why: why[i] || "" }; });
+    // Подпись-образец собирается из ТИПА выбранного продукта, а не по порядку
+    // из списка: раньше фраза «про ОФЗ» доставалась карточке MU (поймал Руслан
+    // 25.08.2026) — образец врал правдоподобно, как настоящая подпись модели.
+    var WHY_BY_TYPE = {
+      protection: "Тот же разговор о росте, но с возвратом номинала",
+      warrant: "Недорогой вход в рост актива без покупки самой бумаги",
+      autocall: "Купонный поток на случай бокового рынка",
+      booster: "Ускоренное участие в росте на коротком сроке",
+      discount: "Кредитный риск вместо рыночного"
+    };
+    return liveFallback(ins, 4).map(function (it) {
+      var r = byId(it.id);
+      return { id: it.id, why: (r && WHY_BY_TYPE[r.type]) || "" };
+    });
   }
   var fmtQ = (window.SITE && SITE.fmt2) ? SITE.fmt2 : function (n) { return String(n).replace(".", ","); };
 
