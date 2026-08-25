@@ -550,7 +550,7 @@
 
   <!-- ══════════ ИДЕЯ В ДАЙДЖЕСТ ══════════ -->
   <form id="f-digest" onsubmit="return false">
-    <details class="help" open>
+    <details class="help">
       <summary>Как это работает
         <svg class="cv" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 5l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </summary>
@@ -607,7 +607,7 @@
 
   <!-- ══════════ ВЫПУСК НЕДЕЛИ (черновик + публикация) ══════════ -->
   <form id="f-dpdf" onsubmit="return false">
-    <details class="help" open>
+    <details class="help">
       <summary>Как это работает
         <svg class="cv" width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 5l4 4 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </summary>
@@ -1285,11 +1285,20 @@
     document.getElementById(id).addEventListener("input", dealShare);
   });
 
-  // В этой форме нет кнопки type=submit, поэтому Enter из поля ничего не делал.
-  document.getElementById("f-deal").addEventListener("keydown", function (e) {
-    if (e.key !== "Enter" || e.target.tagName === "TEXTAREA") return;
-    e.preventDefault();
-    document.getElementById("dl-send").click();
+  // Формы с onsubmit="return false" не отправляются по Enter: в трёх вкладках из
+  // семи привычная клавиша молча ничего не делала, а в остальных работала.
+  // Enter из поля жмёт главную кнопку формы — ту же, что и мышь.
+  // «Выпуск недели» намеренно НЕ включён: его кнопка публикует выпуск сразу и
+  // без ✅ — Enter, нажатый не глядя, увёл бы дайджест на сайт.
+  [["f-deal", "dl-send"], ["f-digest", "dg-add"]].forEach(function (pair) {
+    var form = document.getElementById(pair[0]);
+    var btn = document.getElementById(pair[1]);
+    if (!form || !btn) return;
+    form.addEventListener("keydown", function (e) {
+      if (e.key !== "Enter" || e.target.tagName === "TEXTAREA") return;
+      e.preventDefault();
+      btn.click();
+    });
   });
 
   document.getElementById("dl-send").addEventListener("click", function () {
@@ -1421,6 +1430,11 @@
             .then(function (r) {
               if (r && r.mid) qAdd("doc", (d.name || d.kind) + " · " + isin, "", r.mid, "");
               return r;
+            })
+            // Цепочка обрывается на первом сбое, и без имени файла сейлз не знал,
+            // что дошло, а что нет — шёл спрашивать Руслана.
+            .catch(function (err) {
+              throw new Error("Файл «" + (d.name || d.kind) + "»: " + (err.message || err));
             });
         });
       });
@@ -1871,6 +1885,9 @@
             .then(function (r) {
               if (r && r.mid) qAdd("doc", (d.name || d.kind) + " · " + (editId || ""), "", r.mid, "");
               return r;
+            })
+            .catch(function (err) {
+              throw new Error("Файл «" + (d.name || d.kind) + "»: " + (err.message || err));
             });
         });
       });
