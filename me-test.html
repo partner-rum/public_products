@@ -207,12 +207,12 @@
 </head>
 <body>
 <a class="skip" href="#content">К содержимому</a>
-
 <div class="tbar" role="note">
   <span class="tt">тестовая версия</span>
   <span class="td">Так выглядит рабочий стол внешнего партнёра. <b>Все цифры вымышленные</b> — это витрина для замечаний, а не чей-то настоящий кабинет.</span>
   <span class="tc">Замечания — Руслану</span>
 </div>
+
 
 <div class="bar-in">
   <a class="logo" href="index.html">
@@ -286,9 +286,35 @@
 
 <script src="data/instruments.js?v=fx9"></script>
 <script src="data/placements.js?v=pl22"></script>
-<!-- AI-консьерж: партнёр задаёт вопросы о продуктах, не уходя со стола.
-     Тот же виджет, что на витринных страницах (запрос Руслана 25.08.2026). -->
-<script src="chat.js?v=16"></script>
+<!-- AI-консьерж в режиме партнёра (запрос Руслана 25.08.2026): chat.js читает
+     CHAT_SETUP и прикладывает к /chat пару ID+ключ стола из localStorage — воркер
+     по ней даёт ассистенту выпуски партнёра. В модель уходят только публичные
+     параметры выпусков, без объёмов и вознаграждения (то же правило, что у /picks).
+     В демо-режиме пара не прикладывается — см. IS_DEMO ниже. -->
+<script>
+(function () {
+  // В демо приветствие не должно обещать «вижу ваши выпуски»: пара в демо не
+  // прикладывается (см. IS_DEMO ниже). Протухший ключ откатывает его же — forget().
+  var demo = /[?&]demo=[012]/.test(location.search);
+  var entered = false;
+  try { entered = !demo && !!(localStorage.getItem("so_me") && localStorage.getItem("so_me_key")); } catch (e) {}
+  var GREET_GUEST = "Здравствуйте! Я AI-ассистент Rumberg: помогу объяснить продукты простыми словами и подготовить ответ клиенту. После входа в стол буду видеть и ваши выпуски.";
+  window.CHAT_SETUP = {
+    desk: true,
+    partner: true,
+    greetingGuest: GREET_GUEST,
+    greeting: entered
+      ? "Здравствуйте! Я AI-ассистент Rumberg: вижу актуальный каталог и ваши выпуски. Помогу объяснить продукт простыми словами и подготовить ответ клиенту."
+      : GREET_GUEST,
+    suggestions: [
+      "Как простыми словами объяснить клиенту автоколл?",
+      "Что ответить клиенту: почему Bid индикативный?",
+      "Какие продукты с доски продолжают линию моих выпусков?"
+    ]
+  };
+})();
+</script>
+<script src="chat.js?v=17"></script>
 <script>
 (function () {
   "use strict";
@@ -304,6 +330,15 @@
   }
   // Демо-режим не трогает ни сеть, ни данные настоящего партнёра в localStorage.
   var IS_DEMO = /[?&]demo=[012]/.test(location.search);
+  // Демо-стол не подмешивает ассистенту книгу НАСТОЯЩЕГО партнёра из localStorage:
+  // на странице вымышленные цифры, а в чате были бы настоящие. chat.js читает
+  // поле partner при каждой отправке, а greeting — при открытии панели, поэтому
+  // выключение здесь успевает всегда (важно для me-test: там demo дописывается
+  // в адрес позже CHAT_SETUP, и проверка demo в нём самом не срабатывает).
+  if (IS_DEMO && window.CHAT_SETUP) {
+    window.CHAT_SETUP.partner = false;
+    window.CHAT_SETUP.greeting = window.CHAT_SETUP.greetingGuest;
+  }
 
   // ---- утилиты -------------------------------------------------------------
   function esc(s) {
@@ -846,6 +881,9 @@
   }
   function forget() {
     try { localStorage.removeItem("so_me"); localStorage.removeItem("so_me_key"); } catch (e) {}
+    // Пары больше нет — приветствие чата не должно обещать «вижу ваши выпуски»
+    // (протухший ключ: greeting выбирался ДО автологина, chat.js читает его лениво).
+    if (window.CHAT_SETUP) window.CHAT_SETUP.greeting = window.CHAT_SETUP.greetingGuest;
   }
   function fail(text) {
     var e = $("err");

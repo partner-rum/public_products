@@ -495,6 +495,39 @@ function picksBook(deals, issues) {
   return lines;
 }
 
+// Выпуски партнёра для промпта ассистента (режим партнёра на рабочем столе).
+// В модель уходят ТОЛЬКО публичные параметры из data/placements.js: название,
+// ISIN, тип, активы, купон/участие, Bid. Объёмы, вознаграждение, название
+// партнёра и его реквизиты НЕ отправляются — то же правило, что у /picks
+// (DeepSeek — серверы в Китае, коммерческие условия туда не попадают).
+// Сделки БЕЗ матча по ISIN в данных витрины ПРОПУСКАЮТСЯ ЦЕЛИКОМ (прецедент
+// picksBook): d.product — свободная строка админа из /deal, в ней может
+// оказаться что угодно, вплоть до сумм. Каталог упал (issues пуст) — книги нет
+// вовсе; про это состояние handleChat говорит модели отдельной честной фразой.
+function partnerChatContext(deals, issues) {
+  const byIsin = {};
+  for (const i of issues || []) if (i.isin) byIsin[i.isin] = i;
+  const today = mskDate().key, seen = {}, lines = [];
+  for (const d of deals || []) {
+    const it = d.isin && byIsin[d.isin];
+    if (!it || seen[d.isin]) continue;
+    seen[d.isin] = 1;
+    const kind = it.kind === "participation" ? "участие в росте" : "купонный";
+    const assets = (it.basket || []).map((b) => b.n || b.t).filter(Boolean).join(", ");
+    const pay = it.kind === "participation"
+      ? (it.payoff && it.payoff.participationPct != null && "участие " + it.payoff.participationPct + "%")
+      : (it.payoff && it.payoff.couponPa != null && "купон " + it.payoff.couponPa + "% годовых");
+    // Bid — только у обращающихся (правило витрины); погашенный так и называем.
+    const matured = it.maturity && it.maturity < today;
+    const quote = matured ? "выпуск уже погашен"
+      : (it.bid != null ? "Bid " + it.bid + "% (индикативно)" : "котировки Bid сейчас нет");
+    lines.push("- " + [it.serial || it.name, "ISIN " + d.isin, kind,
+      assets && "актив: " + assets, pay, quote].filter(Boolean).join(" · "));
+    if (lines.length >= 20) break;
+  }
+  return lines.join("\n");
+}
+
 // Код-подбор на случай, когда модели нет или её ответ не прошёл проверку:
 // по одному продукту на тип, потом добор по разным активам. Та же логика, что
 // на странице, — стол не остаётся пустым никогда.
@@ -930,6 +963,22 @@ async function handleChat(request, env, cors, ctx) {
   let cat = { text: "", instr: [], offers: [], ideas: [] };
   try { cat = await buildCatalog(env); } catch (e) { /* каталог необязателен */ }
   const prodCtx = productContext(cat, pageUrl);
+  // Режим партнёра: рабочий стол (me.html) прикладывает к запросу пару ID+ключ.
+  // Валидная пара — тот же deskLogin, что у /stats и /picks — включает блок про
+  // выпуски партнёра. Невалидная или отсутствующая просто игнорируется: чат
+  // отвечает как обычному посетителю, ошибкой это не является.
+  let partnerMode = false, partnerCtx = "", partnerHasDeals = false;
+  if (data.partner && data.partner.id && data.partner.key) {
+    const pwho = deskLogin(env, data.partner.id, data.partner.key);
+    if (pwho) {
+      partnerMode = true;
+      try {
+        const pdeals = await dealsGet(env, pwho.ref);
+        partnerHasDeals = pdeals.length > 0;
+        partnerCtx = partnerChatContext(pdeals, cat.issues || []);
+      } catch (e) { /* книга необязательна */ }
+    }
+  }
   let morn = null;
   try { morn = await morningContext(env); } catch (e) { /* контекст необязателен */ }
   const system = SYSTEM_PROMPT +
@@ -938,7 +987,14 @@ async function handleChat(request, env, cors, ctx) {
             "\nИспользуй как фон при вопросах о рынке, ссылайся как на «наш утренний обзор». " +
             "О событиях позже этой даты данных нет — так и говори. Прогнозов и обещаний доходности из него не выводи." : "") +
     (pageTitle ? `\n\nСейчас клиент на странице: «${pageTitle}»${pageUrl ? " (" + pageUrl + ")" : ""}.` : "") +
-    (prodCtx ? "\n\n=== ПРОДУКТ, КОТОРЫЙ КЛИЕНТ СЕЙЧАС СМОТРИТ (отвечай в первую очередь про него) ===\n" + prodCtx : "");
+    (prodCtx ? "\n\n=== ПРОДУКТ, КОТОРЫЙ КЛИЕНТ СЕЙЧАС СМОТРИТ (отвечай в первую очередь про него) ===\n" + prodCtx : "") +
+    (partnerMode ? "\n\n=== РЕЖИМ ПАРТНЁРА (рабочий стол) ===\n" +
+      "Сейчас с тобой говорит НЕ клиент, а партнёр-агент Rumberg: он продаёт наши продукты своим клиентам и пишет со своего рабочего стола. Помогай ему готовить ответы клиентам: объясняй параметры его выпусков простыми словами, предлагай нейтральные формулировки для разговора с клиентом, сравнивай с продуктами каталога. Запрет инвестрекомендаций и правила стиля действуют и здесь. Кнопку «Обсудить с Румбергом» ему предлагать не нужно — он и так на связи со своим менеджером Rumberg.\n" +
+      (partnerCtx ? "Выпуски этого партнёра (наши данные, все параметры публичные):\n" + partnerCtx
+                  : partnerHasDeals
+                    ? "Данные по выпускам этого партнёра сейчас недоступны — отвечай по каталогу и его выпуски не выдумывай."
+                    : "Размещённых выпусков за этим партнёром в наших данных пока нет.") +
+      "\nОбъёмы сделок и вознаграждение партнёра тебе не переданы — про них отвечай, что точные цифры видны на его столе." : "");
 
   const provider = (env.CHAT_PROVIDER || "yandex").toLowerCase();
 

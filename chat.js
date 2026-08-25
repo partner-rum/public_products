@@ -25,6 +25,24 @@
     ]
   };
 
+  // Настройка со страницы: window.CHAT_SETUP задаётся ДО подключения chat.js.
+  // partner:true — прикладывать к /chat пару ID+ключ рабочего стола партнёра
+  // (localStorage so_me/so_me_key): воркер по ней добавит в промпт его выпуски.
+  // Пара уходит только нашему воркеру — тому же, куда стол шлёт /stats.
+  // Поле partner читается при КАЖДОЙ отправке (страница может выключить его позже,
+  // например в демо-режиме стола). greeting/suggestions — свои тексты страницы.
+  // desk:true — статичная метка рабочего стола: у диалога СВОЙ ключ истории
+  // (иначе партнёрский разговор переезжал бы через sessionStorage на витринные
+  // страницы, где воркер уже считает собеседника клиентом, и ассистент менял бы
+  // персону посреди диалога) и НЕТ кнопки-заявки «Обсудить с Румбергом» (партнёр
+  // и так на связи с менеджером, а заявка ушла бы сейлзам с подписью «Клиент:»).
+  // greeting читается ЛЕНИВО при открытии панели — страница может поменять его
+  // после загрузки chat.js (демо-режим стола, протухший ключ).
+  var SETUP = window.CHAT_SETUP || {};
+  if (Array.isArray(SETUP.suggestions) && SETUP.suggestions.length) CFG.suggestions = SETUP.suggestions.slice(0, 4);
+  function greeting() { return (typeof SETUP.greeting === "string" && SETUP.greeting) || CFG.greeting; }
+  var STORE = SETUP.desk ? "so_chat_desk" : "so_chat";
+
   var css = "" +
     /* — кнопка: тёмный круг с тонкой линией и фирменной звездой; без свечений и вращений — */
     ".ca-btn{position:fixed;right:20px;bottom:20px;z-index:300;width:56px;height:56px;border:1px solid rgba(255,255,255,.18);border-radius:50%;background:#101114;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 28px rgba(0,0,0,.5);transition:border-color .18s;}" +
@@ -116,10 +134,10 @@
 
   var msgs = [];         // {role, content}; живёт в sessionStorage — диалог не теряется при переходах
   try {
-    var saved = JSON.parse(sessionStorage.getItem("so_chat") || "[]");
+    var saved = JSON.parse(sessionStorage.getItem(STORE) || "[]");
     if (Array.isArray(saved)) msgs = saved.filter(function (m) { return m && m.content && (m.role === "user" || m.role === "assistant"); });
   } catch (e) {}
-  function saveChat() { try { sessionStorage.setItem("so_chat", JSON.stringify(msgs.slice(-30))); } catch (e) {} }
+  function saveChat() { try { sessionStorage.setItem(STORE, JSON.stringify(msgs.slice(-30))); } catch (e) {} }
   var busy = false;
   var locked = false;    // достигнут лимит вопросов
   var els = {};
@@ -291,12 +309,22 @@
       return;
     }
 
+    // stream — печатать ответ по мере генерации (см. CFG.stream; сейчас выключено).
+    // Воркер при stream:false отвечает обычным JSON; различаем ниже по Content-Type.
+    var payload = { messages: msgs.slice(-20), stream: !!CFG.stream, page: { title: document.title, url: location.href } };
+    // Рабочий стол партнёра (CHAT_SETUP.partner): прикладываем пару входа — воркер
+    // проверит её и покажет ассистенту выпуски партнёра. Без пары чат работает как
+    // обычно, поэтому отказ localStorage молча игнорируем.
+    if (SETUP.partner) {
+      try {
+        var pid = localStorage.getItem("so_me"), pkey = localStorage.getItem("so_me_key");
+        if (pid && pkey) payload.partner = { id: pid, key: pkey };
+      } catch (e) {}
+    }
     fetch(CFG.endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      // stream — печатать ответ по мере генерации (см. CFG.stream; сейчас выключено).
-      // Воркер при stream:false отвечает обычным JSON; различаем ниже по Content-Type.
-      body: JSON.stringify({ messages: msgs.slice(-20), stream: !!CFG.stream, page: { title: document.title, url: location.href } })
+      body: JSON.stringify(payload)
     })
       .then(function (r) {
         if (!r.ok) return Promise.reject(r.status);
@@ -394,7 +422,7 @@
         '<button class="ca-x" aria-label="Закрыть">&times;</button></div>' +
       '<div class="ca-log" role="log" aria-live="polite" aria-label="Диалог с ассистентом"></div>' +
       '<div class="ca-foot">' +
-        '<button class="ca-discuss" type="button">' + ICON_CHAT + 'Обсудить с Румбергом</button>' +
+        (SETUP.desk ? "" : '<button class="ca-discuss" type="button">' + ICON_CHAT + 'Обсудить с Румбергом</button>') +
         '<div class="ca-row">' +
         '<textarea class="ca-in" rows="1" placeholder="Спросите про продукт…" aria-label="Сообщение"></textarea>' +
         '<button class="ca-send" aria-label="Отправить">' + ICON_SEND + '</button>' +
@@ -412,7 +440,7 @@
       panel.classList.add("on"); btn.classList.add("hide");
       if (!opened) {
         opened = true;
-        addMsg("assistant", CFG.greeting);
+        addMsg("assistant", greeting());
         if (msgs.length) {
           // Восстанавливаем диалог, начатый на другой странице (sessionStorage)
           msgs.forEach(function (m) { addMsg(m.role, m.content); });
@@ -428,7 +456,8 @@
 
     btn.addEventListener("click", open);
     panel.querySelector(".ca-x").addEventListener("click", close);
-    panel.querySelector(".ca-discuss").addEventListener("click", showLeadForm);
+    var disc = panel.querySelector(".ca-discuss");
+    if (disc) disc.addEventListener("click", showLeadForm);
     els.send.addEventListener("click", send);
     els.input.addEventListener("keydown", function (e) {
       if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
