@@ -101,6 +101,32 @@
   .pp-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; flex-wrap: wrap; }
   .pp-title { font-family: var(--display); font-size: 24px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1; }
   .pp-sub { margin-top: 5px; font-family: var(--f-mono); font-size: 11.5px; color: var(--faint); display: flex; gap: 10px; flex-wrap: wrap; }
+  .item .perf-k { font-family: var(--f-mono); font-size: 11px; color: var(--faint); margin-right: 5px;
+    letter-spacing: 0.06em; }
+  .item .prot { font-family: var(--f-mono); font-size: 11px; color: var(--up); background: rgba(85,192,138,0.12);
+    border-radius: 20px; padding: 2px 8px; margin-left: auto; margin-right: 8px; white-space: nowrap; }
+  .empty-list .reset-f { display: block; margin: 10px auto 0; border: 1px solid var(--border);
+    background: none; color: var(--hushed); border-radius: 8px; padding: 9px 16px;
+    font-family: var(--f-body); font-size: 13px; cursor: pointer; }
+  .empty-list .reset-f:hover { border-color: var(--solar); color: var(--ink); }
+  /* Факты считаются из данных: ни одной цифры доходности, только состав витрины */
+  .facts { flex-basis: 100%; margin: 6px 0 0; font-family: var(--f-mono); font-size: 12px;
+    line-height: 1.7; color: var(--hushed); }
+  .facts .dot { opacity: 0.45; margin: 0 8px; }
+  .facts .stale { color: var(--loss); }
+  .skip-link { position: absolute; left: 10px; top: -60px; z-index: 30; background: var(--solar);
+    color: #0C0A08; padding: 11px 18px; border-radius: 0 0 10px 10px; font-size: 13px; font-weight: 600;
+    text-decoration: none; }
+  .skip-link:focus { top: 0; }
+  /* Тач-цели: шапки групп — основной способ навигации по 57 выпускам, а были 40px */
+  @media (max-width: 900px) {
+    .group-h { min-height: 44px; padding: 13px 14px; }
+    .kf { min-height: 44px; padding: 10px 14px; }
+    .matured-toggle { min-height: 44px; }
+    .doc-link { min-height: 44px; padding: 13px; }
+    .ct-btn, .panel-close { min-height: 44px; }
+    .search { min-height: 44px; }
+  }
   .kind-chip { display: inline-block; font-size: 11.5px; font-weight: 600; border-radius: 999px; padding: 3px 10px; white-space: nowrap; }
   .status { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hushed); }
   .status.live::before { content: "●"; color: var(--up); margin-right: 5px; font-size: 11px; }
@@ -137,7 +163,9 @@
     body:has(.panel-wrap.open) .ca-btn, body:has(.panel-wrap.open) .ca-panel { display: none; }
     .layout { grid-template-columns: 1fr; }
     .aside { position: static; max-height: none; }
-    .list { max-height: 60dvh; }
+    /* Два скролл-контекста внутри скроллящейся страницы: список жил в 60dvh
+       и показывал 8 строк из 53. Пусть скроллится страница. */
+    .list { max-height: none; overflow-y: visible; }
     .panel-wrap { display: none; position: fixed; inset: 0; z-index: 40; background: var(--canvas); padding: 14px; overflow-y: auto; overflow-x: hidden; }
     .panel-wrap.open { display: block; }
     /* .panel не свой скролл-контекст: overflow-y:auto давал overflow-x:auto и
@@ -181,10 +209,12 @@
   </div>
 </header>
 
-<div class="wrap">
+<a class="skip-link" href="#issues">К списку выпусков</a>
+<main class="wrap" id="issues">
   <div class="head">
     <h1>Размещённые выпуски</h1>
     <span class="count" id="count" role="status" aria-live="polite"></span>
+    <p class="facts" id="facts"></p>
     <span class="sr-only" id="sr-live" aria-live="polite"></span>
   </div>
 
@@ -206,7 +236,7 @@
       <div class="disclaimer">Информация предназначена только для квалифицированных инвесторов и носит справочный характер. Не является офертой и не является индивидуальной инвестиционной рекомендацией. Полные условия — в эмиссионной документации.</div>
     </div>
   </div>
-</div>
+</main>
 
 <script src="data/lib.js?v=ax2"></script>
 <script src="data/placements.js?v=1"></script>
@@ -218,7 +248,8 @@
   const TODAY = new Date().toISOString().slice(0, 10);
   const KINDS = {
     coupon:        { label: "Купонный", fg: "#EE7D1B", bg: "rgba(238,125,27,0.16)" },
-    participation: { label: "Участие в росте", fg: "#4F86E6", bg: "rgba(79,134,230,0.16)" }
+    // #4F86E6 на своей заливке давал 4,14:1 — ниже порога; светлее проходит.
+    participation: { label: "Участие в росте", fg: "#89B0F0", bg: "rgba(79,134,230,0.16)" }
   };
   const fmtD = s => s ? s.split("-").reverse().join(".") : "—";
   const fmtN = v => v == null ? "—" : String(v).replace(".", ",").replace("-", "−");
@@ -228,13 +259,60 @@
   const issues = D.issues.map(i => ({ ...i, matured: i.maturity && i.maturity < TODAY }));
   let kind = "all", showMatured = false, q = "", selected = null;
   const openGroups = new Set();
+  let groupsInited = false;
 
   const assetOf = i => i.basket.map(b => b.n).join(", ");
+  const CCY_SIGN = c => ({ RUB: "₽", USD: "$", EUR: "€", CNY: "¥" }[c] || c || "");
 
+  // Единственным агрегатом был счётчик «выпусков: 53», и он же противоречил
+  // чипсу «Все 57». Строка фактов отвечает на вопрос «серьёзная ли компания»
+  // составом витрины — без единой цифры доходности.
+  function renderFacts() {
+    const box = document.getElementById("facts");
+    if (!box) return;
+    const assets = new Set();
+    issues.forEach(i => (i.basket || []).forEach(b => { if (b.n) assets.add(b.n); }));
+    const starts = issues.map(i => i.issueStart).filter(Boolean).sort();
+    const docs = window.PLACEMENT_DOCS || {};
+    const withDocs = issues.filter(i => (docs[i.isin] || []).length).length;
+    // Именительный падеж: «первое размещение — апрель 2024», а не «апреля 2024»
+    const MON = ["январь","февраль","март","апрель","май","июнь","июль","август","сентябрь","октябрь","ноябрь","декабрь"];
+    let firstTxt = "";
+    if (starts.length) {
+      const d = starts[0].split("-");
+      firstTxt = MON[+d[1] - 1] + " " + d[0];
+    }
+    // Дата переоценки нигде не подписывалась: вчерашний Bid выглядел сегодняшним.
+    const upd = D.updated;
+    let updTxt = "", stale = false;
+    if (upd) {
+      const days = Math.round((Date.parse(TODAY) - Date.parse(upd)) / 864e5);
+      stale = days > 3;
+      updTxt = "котировки на " + fmtD(upd) + (stale ? " · давно не обновлялись" : "");
+    }
+    const parts = [
+      issues.length + " " + plural(issues.length, "выпуск", "выпуска", "выпусков"),
+      assets.size + " " + plural(assets.size, "базовый актив", "базовых актива", "базовых активов"),
+      firstTxt ? "первое размещение — " + firstTxt : "",
+      withDocs + " из " + issues.length + " с эмиссионной документацией"
+    ].filter(Boolean);
+    box.innerHTML = parts.join('<span class="dot">·</span>') +
+      (updTxt ? '<span class="dot">·</span><span class="' + (stale ? "stale" : "") + '">' + updTxt + "</span>" : "");
+  }
+  function plural(n, one, few, many) {
+    const a = Math.abs(n) % 100, b = a % 10;
+    if (a > 10 && a < 20) return many;
+    if (b > 1 && b < 5) return few;
+    if (b === 1) return one;
+    return many;
+  }
+
+  // Ноль здесь означает «параметра нет», а не «ставка ноль»: «купон 0%» в списке
+  // трек-рекорда читается как ошибка данных.
   function keyParam(i) {
     const p = i.payoff;
-    if (i.kind === "coupon") return p.couponPa != null ? "купон " + fmtN(p.couponPa) + "%" : "купонный";
-    return p.participationPct != null ? "участие " + fmtN(p.participationPct) + "%" : "участие";
+    if (i.kind === "coupon") return p.couponPa ? "купон " + fmtN(p.couponPa) + "%" : "купонный";
+    return p.participationPct ? "участие " + fmtN(p.participationPct) + "%" : "участие";
   }
 
   function passportHTML(i) {
@@ -249,11 +327,21 @@
     }).join("");
     const pay = [];
     if (i.kind === "coupon") {
-      if (p.couponPa != null) pay.push(["Купон", fmtN(p.couponPa) + "% годовых" + (p.couponPeriodPct != null ? " (" + fmtN(p.couponPeriodPct) + "% за период)" : "")]);
+      // Ноль ≠ пусто: «купон 0% годовых» на трек-рекорде читается как ошибка.
+      if (p.couponPa) pay.push(["Купон", fmtN(p.couponPa) + "% годовых" + (p.couponPeriodPct ? " (" + fmtN(p.couponPeriodPct) + "% за период)" : "")]);
+      else pay.push(["Купон", "не предусмотрен"]);
       if (p.couponBarrierPct != null) pay.push(["Барьер купона", fmtN(p.couponBarrierPct) + "% нач. уровня"]);
       pay.push(["Эффект памяти", p.memory ? "да" : "нет"]);
       pay.push(["Автоотзыв", p.acBarrierPct != null ? "барьер " + fmtN(p.acBarrierPct) + "%" : "не предусмотрен"]);
-      if (p.protection) pay.push(["Защита на погашение", (p.protection.type === "EKI" ? "барьерная (EKI)" : p.protection.type) + (p.protection.barrierPct != null ? " · барьер " + fmtN(p.protection.barrierPct) + "%" : "")]);
+      // Клиенту показывали внутренние коды: «Защита на погашение: MULTI · барьер 500%».
+      // Неизвестный код не печатаем вовсе, барьер выше 200% — служебное значение.
+      if (p.protection) {
+        const PT = { EKI: "барьерная", MULTI: "барьерная по корзине", AKI: "барьерная" };
+        const human = PT[p.protection.type];
+        const bar = p.protection.barrierPct;
+        const barTxt = (bar != null && bar <= 200) ? " · барьер " + fmtN(bar) + "%" : "";
+        if (human) pay.push(["Защита на погашение", human + barTxt]);
+      }
       if (p.obsCount) pay.push(["Наблюдений до погашения", String(p.obsCount), true]);
     } else {
       pay.push(["Участие в росте", p.participationPct != null ? fmtN(p.participationPct) + "%" : "—", true]);
@@ -279,7 +367,12 @@
       '</div>' +
       '<span class="kind-chip" style="color:' + k.fg + ';background:' + k.bg + '">' + k.label + '</span></div>' +
       '<div class="tiles">' +
-        '<div class="tile"><div class="v">' + keyParam(i).replace(/^(купон|участие) /, "") + '</div><div class="k">' + (i.kind === "coupon" ? "купон годовых" : "участие в росте") + '</div></div>' +
+        // keyParam при отсутствии параметра возвращает слово «купонный» без пробела,
+        // и replace не срабатывал: в слот ЗНАЧЕНИЯ попадало слово под меткой
+        // «КУПОН ГОДОВЫХ». Нет параметра — плитки нет.
+        ((i.kind === "coupon" ? i.payoff.couponPa : i.payoff.participationPct)
+          ? '<div class="tile"><div class="v">' + keyParam(i).replace(/^(купон|участие) /, "") + '</div><div class="k">' + (i.kind === "coupon" ? "купон годовых" : "участие в росте") + '</div></div>'
+          : '') +
         '<div class="tile"><div class="v" style="color:' + (i.perfPct != null ? perfColor(i.perfPct) : "var(--faint)") + '">' + (fmtPerf(i.perfPct) || "—") + '</div><div class="k">динамика БА</div></div>' +
         '<div class="tile"><div class="v">' + fmtD(i.maturity) + '</div><div class="k">погашение</div></div>' +
       '</div>' +
@@ -295,8 +388,12 @@
         ["Погашение", fmtD(i.maturity), true]
       ]) + '</div>' +
       '<div class="sec"><div class="h">Реквизиты</div>' + kv([
-        ["Номинал", i.notional ? Math.round(i.notional) + " " + (i.currency || "") : "—", true],
-        ["Рег. номер", i.regNumber || "—", true],
+        // Было «1000 RUB» — код валюты и без разрядов; у одного выпуска «15015 USD».
+        ["Номинал", i.notional
+          ? new Intl.NumberFormat("ru-RU").format(Math.round(i.notional)) + " " + CCY_SIGN(i.currency)
+          : "—", true],
+        // В выгрузке бэкофиса попадаются лишние пробелы: «6-53 00761-R-001P».
+        ["Рег. номер", String(i.regNumber || "—").replace(/\s+/g, ""), true],
         ["ISIN", i.isin, true]
       ]) + '</div>' + docsHTML;
   }
@@ -308,6 +405,24 @@
       (showMatured || !i.matured) &&
       (!needle || (i.serial + " " + i.isin + " " + assetOf(i)).toLowerCase().includes(needle)));
   }
+
+  // Вторая ссылка placements.html#<ISIN> в уже открытую вкладку меняла адрес,
+  // но не паспорт. Это основной сценарий рабочего стола партнёра: у него
+  // несколько выпусков, и каждая следующая ссылка выглядела мёртвой.
+  window.addEventListener("hashchange", () => {
+    const h = decodeURIComponent(location.hash.slice(1));
+    if (!h || h === selected) return;
+    const i = issues.find(x => x.isin === h);
+    if (!i) return;
+    if (i.matured && !showMatured) {
+      showMatured = true;
+      const cb = document.getElementById("show-matured");
+      if (cb) cb.checked = true;
+    }
+    openGroups.add(assetOf(i));
+    render();
+    select(h, true);
+  });
 
   function select(isin, fromUser) {
     selected = isin;
@@ -336,17 +451,34 @@
     }
   }
 
+  // Защита номинала — факт из данных, не доходность. Без него красная цифра
+  // рядом читается как убыток по выпуску, хотя это движение базового актива:
+  // при защите 100% клиенту оно на погашении ничего не стоит.
+  function protBadge(i) {
+    const p = i.payoff || {};
+    const pct = p.protectionPct != null ? p.protectionPct
+      : (p.protection && p.protection.barrierPct != null ? null : null);
+    if (pct != null && pct >= 100) return '<span class="prot">защита 100%</span>';
+    return "";
+  }
+
   function itemHTML(i) {
-    return '<button class="item' + (i.matured ? " matured" : "") + (i.isin === selected ? " active" : "") + '" data-isin="' + i.isin + '">' +
+    const perfTxt = fmtPerf(i.perfPct);
+    return '<button class="item' + (i.matured ? " matured" : "") + (i.isin === selected ? " active" : "") +
+      '" data-isin="' + i.isin + '" aria-label="' + i.serial + ", " + keyParam(i) + ", ISIN " + i.isin +
+      (perfTxt ? ", базовый актив " + perfTxt : "") + '">' +
       '<div class="r1"><span class="serial">' + i.serial + '</span><span class="param">' + keyParam(i) + '</span></div>' +
-      '<div class="r2"><span class="isin">' + i.isin + '</span>' +
-      '<span class="perf" style="color:' + (i.perfPct != null ? perfColor(i.perfPct) : "var(--faint)") + '">' + (fmtPerf(i.perfPct) || "—") + '</span></div>' +
+      '<div class="r2"><span class="isin">' + i.isin + '</span>' + protBadge(i) +
+      // Подпись обязательна: голое «−13,6%» ничего не сообщает о том, ЧЬЯ это динамика
+      '<span class="perf" style="color:' + (i.perfPct != null ? perfColor(i.perfPct) : "var(--faint)") + '">' +
+        (perfTxt ? '<span class="perf-k">БА</span>' + perfTxt : "—") + '</span></div>' +
     '</button>';
   }
 
   function render() {
     const list = filtered();
     document.getElementById("count").textContent = "выпусков: " + list.length;
+    renderChips();
 
     // Группы по базовому активу, крупные сверху
     const groups = new Map();
@@ -357,21 +489,44 @@
     });
     const sorted = [...groups.entries()].sort((a, b) => b[1].length - a[1].length || a[0].localeCompare(b[0], "ru"));
     const searching = q.trim().length > 0;
+    // Состояние групп задаём ОДИН раз. Раньше открытость первой группы была
+    // неявным правилом, и клик по ней сначала добавлял ключ, а следующей строкой
+    // удалял — группа схлопывалась и тут же открывалась обратно.
+    if (!groupsInited && sorted.length) { openGroups.add(sorted[0][0]); groupsInited = true; }
 
     document.getElementById("list").innerHTML = sorted.length ? sorted.map(([name, items], gi) => {
-      const open = searching || openGroups.has(name) || (openGroups.size === 0 && gi === 0);
+      const open = searching || openGroups.has(name);
       return '<button class="group-h' + (open ? " open" : "") + '" data-g="' + name.replace(/"/g, "&quot;") + '" aria-expanded="' + open + '">' +
           '<span class="chev">▶</span><span class="name">' + name + '</span><span class="gc">' + items.length + '</span></button>' +
         '<div class="group-items' + (open ? " open" : "") + '">' + items.map(itemHTML).join("") + '</div>';
-    }).join("") : '<div class="empty-list">Ничего не найдено — измените фильтры или запрос.</div>';
+    }).join("") : '<div class="empty-list">Ничего не найдено по запросу.' +
+        '<button class="reset-f" id="reset-f" type="button">Сбросить фильтры</button></div>';
+
+    // Слева «ничего не найдено», справа — полный паспорт чужого выпуска с Bid,
+    // документами и кнопкой «Обсудить»: страница показывала то, чего в списке нет.
+    if (!sorted.length) {
+      selected = null;
+      const pnl = document.getElementById("panel");
+      if (pnl) pnl.innerHTML = '<div class="placeholder">По запросу ничего не найдено</div>';
+      try { history.replaceState(null, "", location.pathname + location.search); } catch (e) {}
+    }
 
     document.querySelectorAll(".group-h").forEach(el => el.addEventListener("click", () => {
+      // Во время поиска группы раскрыты принудительно — клик по шапке ничего не
+      // менял, но выглядел рабочим. Теперь шапки при поиске вообще не рисуются.
+      if (searching) return;
       const g = el.getAttribute("data-g");
-      // Материализуем неявно открытую первую группу, чтобы клики не схлопывали её
-      if (openGroups.size === 0 && sorted.length) openGroups.add(sorted[0][0]);
       if (openGroups.has(g)) openGroups.delete(g); else openGroups.add(g);
       render();
     }));
+    const rf = document.getElementById("reset-f");
+    if (rf) rf.addEventListener("click", () => {
+      const se = document.getElementById("search");
+      if (se) se.value = "";
+      q = ""; kind = "all";
+      document.querySelectorAll(".kf").forEach(k => k.classList.toggle("on", k.getAttribute("data-k") === "all"));
+      render();
+    });
     document.querySelectorAll(".item").forEach(el =>
       el.addEventListener("click", () => select(el.getAttribute("data-isin"), true)));
 
@@ -382,18 +537,26 @@
     }
   }
 
-  const counts = { all: issues.length };
-  issues.forEach(i => counts[i.kind] = (counts[i.kind] || 0) + 1);
-  document.getElementById("kinds").innerHTML = ["all", "coupon", "participation"].map(kk =>
-    '<button class="kf' + (kk === "all" ? " active" : "") + '" data-k="' + kk + '">' +
-    (kk === "all" ? "Все" : KINDS[kk].label) + '<span class="n">' + (counts[kk] || 0) + '</span></button>').join("");
-  document.querySelectorAll(".kf").forEach(b => b.addEventListener("click", () => {
-    kind = b.getAttribute("data-k");
-    document.querySelectorAll(".kf").forEach(x => x.classList.toggle("active", x === b));
-    render();
-  }));
+  // Чипсы считали ВСЕ выпуски, включая погашенные, а список их по умолчанию
+  // прячет: «Все 57» давало «выпусков: 53». Считаем от того же среза, что и список.
+  function renderChips() {
+    const base = issues.filter(i => showMatured || !i.matured);
+    const counts = { all: base.length };
+    base.forEach(i => counts[i.kind] = (counts[i.kind] || 0) + 1);
+    document.getElementById("kinds").innerHTML = ["all", "coupon", "participation"].map(kk =>
+      '<button class="kf' + (kk === kind ? " active" : "") + '" data-k="' + kk + '" aria-pressed="' + (kk === kind) + '">' +
+      (kk === "all" ? "Все" : KINDS[kk].label) + '<span class="n">' + (counts[kk] || 0) + '</span></button>').join("");
+    document.querySelectorAll(".kf").forEach(b => b.addEventListener("click", () => {
+      kind = b.getAttribute("data-k");
+      render();
+    }));
+  }
+  renderChips();
   document.getElementById("show-matured").addEventListener("change", e => { showMatured = e.target.checked; render(); });
+  document.getElementById("kinds").setAttribute("role", "group");
+  document.getElementById("kinds").setAttribute("aria-label", "Тип выплаты");
   document.getElementById("search").addEventListener("input", e => { q = e.target.value; render(); });
+  renderFacts();
   document.getElementById("panel-close").addEventListener("click", () =>
     document.getElementById("panel-wrap").classList.remove("open"));
 
