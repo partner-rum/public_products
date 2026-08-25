@@ -107,6 +107,7 @@
   .zt h2 { font:600 19px var(--d); letter-spacing:-.01em; }
   .zt .n { font:500 12.5px var(--m); color:var(--faint); }
   .zt a.all { margin-left:auto; font:500 13.5px var(--f); color:var(--solar-l); }
+  .zt h2 .ai { color:var(--solar-l); }
   .zt a.all:hover { text-decoration:underline; }
 
   /* сортировка */
@@ -256,7 +257,7 @@
     <div class="tiles" id="tiles"></div>
 
     <section id="liveBox" style="display:none">
-      <div class="zt"><h2>Актуальные продукты</h2><a class="all" href="board.html">вся доска</a></div>
+      <div class="zt"><h2 id="liveTitle">Актуальные продукты</h2><a class="all" href="board.html">вся доска</a></div>
       <div class="promo-row" id="live"></div>
       <div class="lsrc" id="liveSrc"></div>
     </section>
@@ -691,9 +692,16 @@
   // ---- АКТУАЛЬНЫЕ ПРОДУКТЫ -------------------------------------------------
   var LIVE_LIMIT = 6;
   var PICKS_API = "https://so-leads.ruslan-sabirov.workers.dev/picks";
-  // Формулировка Руслана 25.08.2026: маркировка ИИ — явная.
-  var PICKS_SRC_PERSONAL = "подобрано при помощи ИИ под вас: по новостям дня и вашим выпускам" +
-    '<span class="dot">·</span>обновляется раз в день';
+  // Маркировка ИИ — В ЗАГОЛОВКЕ блока, а не сноской: мелкую строку внизу
+  // Руслан на скриншоте просто не увидел (25.08.2026).
+  function setLiveTitle(personal) {
+    var t = $("liveTitle");
+    if (t) t.innerHTML = personal
+      ? 'Подобрано при помощи <span class="ai">ИИ</span> под вас'
+      : "Актуальные продукты";
+  }
+  var PICKS_SRC_PERSONAL = "по новостям дня и вашим выпускам" +
+    '<span class="dot">·</span>обновляется раз в день<span class="dot">·</span>цифры индикативно';
   var PICKS_SRC_PLAIN = "общая подборка с доски · цифры индикативно";
 
   function demoPicks() {
@@ -783,6 +791,7 @@
       // подбор, надо только снять «подбираем…», иначе строка висит вечно.
       if (!d.ok || !d.picks || !d.picks.length) { $("liveSrc").textContent = PICKS_SRC_PLAIN; return; }
       var personal = d.picks.some(function (x) { return x.why; });
+      setLiveTitle(personal);
       var src = personal
         ? PICKS_SRC_PERSONAL +
           (d.basis === "частично" ? '<span class="dot">·</span>часть позиций добрана автоматически' : "")
@@ -861,7 +870,7 @@
     drawStates(d.deals || []);
     drawDeals(d.deals || []);
     // ?picksdemo=1 — посмотреть вид персональной подборки без задеплоенного воркера.
-    if (/[?&]picksdemo=1/.test(location.search)) { drawLive(demoPicks(), PICKS_SRC_PERSONAL); return; }
+    if (/[?&]picksdemo=1/.test(location.search)) { setLiveTitle(true); drawLive(demoPicks(), PICKS_SRC_PERSONAL); return; }
     // Демо не ходит в сеть: demo-состояния не должны стучаться в боевой воркер.
     if (IS_DEMO) { drawLive(null, PICKS_SRC_PLAIN); return; }
     // Сразу общий подбор — он мгновенный; персональный подменит его, когда придёт.
