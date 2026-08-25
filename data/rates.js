@@ -3,15 +3,15 @@
 // Источники: ЦБ (ключевая, RUONIA), MOEX ISS (RUSFAR, БПИФы, ОФЗ),
 // Финуслуги (вклады и накопительные счета — витрина МосБиржи).
 window.RATES = {
-  "updated": "2026-08-25 13:31",
+  "updated": "2026-08-25 14:47",
   "cbr": {
     "key": {
       "rate": 14.0,
       "date": "2026-07-27"
     },
     "ruonia": {
-      "rate": 13.87,
-      "date": "2026-08-21"
+      "rate": 13.88,
+      "date": "2026-08-24"
     }
   },
   "rusfar": [
@@ -57,7 +57,7 @@ window.RATES = {
     {
       "id": "MONY",
       "name": "АК БАРС Денежный рынок",
-      "price": 131.71,
+      "price": 131.7,
       "ter": 0.2,
       "rate": 13.5
     },
@@ -71,28 +71,28 @@ window.RATES = {
     {
       "id": "SBMM",
       "name": "Первая Сберегательный",
-      "price": 19.2445,
+      "price": 19.245,
       "ter": 0.3,
       "rate": 13.4
     },
     {
       "id": "AMNR",
       "name": "АТОН Накопительный",
-      "price": 155.557,
+      "price": 155.562,
       "ter": 0.3,
       "rate": 13.4
     },
     {
       "id": "AKMM",
       "name": "Альфа Денежный рынок",
-      "price": 176.15,
+      "price": 176.16,
       "ter": 0.69,
       "rate": 13.01
     },
     {
       "id": "TMON",
       "name": "Т-Капитал Денежный рынок",
-      "price": 163.17,
+      "price": 163.1,
       "ter": 1.15,
       "rate": 12.55
     }
@@ -103,21 +103,21 @@ window.RATES = {
       "name": "ОФЗ 26219",
       "maturity": "2026-09-16",
       "years": 0.06,
-      "rate": 12.47
+      "rate": 12.0
     },
     {
       "id": "SU26226RMFS9",
       "name": "ОФЗ 26226",
       "maturity": "2026-10-07",
       "years": 0.12,
-      "rate": 12.49
+      "rate": 12.8
     },
     {
       "id": "SU26207RMFS9",
       "name": "ОФЗ 26207",
       "maturity": "2027-02-03",
       "years": 0.44,
-      "rate": 13.35
+      "rate": 13.29
     },
     {
       "id": "SU26232RMFS7",
@@ -131,7 +131,7 @@ window.RATES = {
       "name": "ОФЗ 26212",
       "maturity": "2028-01-19",
       "years": 1.4,
-      "rate": 13.82
+      "rate": 13.9
     }
   ],
   "deposits": [
@@ -290,6 +290,19 @@ window.RATES = {
       "url": "https://finuslugi.ru/vklady/gazprombank_klyuchevoj_moment",
       "promo": false,
       "floating": true
+    },
+    {
+      "bank": "Банк ПСБ",
+      "name": "Драгоценный",
+      "rate": 15.8,
+      "kind": "deposit",
+      "termMonths": 6,
+      "daysFrom": 91,
+      "daysTo": 367,
+      "minAmount": 50000,
+      "url": "https://finuslugi.ru/vklady/promsvyazbank_dragocennyj",
+      "promo": false,
+      "floating": false
     },
     {
       "bank": "Банк «Санкт-Петербург»",
@@ -457,6 +470,19 @@ window.RATES = {
       "daysTo": 731,
       "minAmount": 3000000,
       "url": "https://finuslugi.ru/vklady/promsvyazbank_silnaya_stavka",
+      "promo": false,
+      "floating": false
+    },
+    {
+      "bank": "Московский Кредитный Банк",
+      "name": "МКБ. Перспектива (% в конце срока)",
+      "rate": 14.2,
+      "kind": "deposit",
+      "termMonths": 6,
+      "daysFrom": 95,
+      "daysTo": 1100,
+      "minAmount": 10000,
+      "url": "https://finuslugi.ru/vklady/mkb_mkb_perspektiva_procenty_v_konce_sroka",
       "promo": false,
       "floating": false
     },
@@ -635,6 +661,19 @@ window.RATES = {
       "rate": 13.6,
       "kind": "deposit",
       "termMonths": 12,
+      "daysFrom": 120,
+      "daysTo": 1095,
+      "minAmount": 100000,
+      "url": "https://finuslugi.ru/vklady/gazprombank_klyuchevoj_moment",
+      "promo": false,
+      "floating": true
+    },
+    {
+      "bank": "Газпромбанк",
+      "name": "Ключевой момент",
+      "rate": 13.55,
+      "kind": "deposit",
+      "termMonths": 6,
       "daysFrom": 120,
       "daysTo": 1095,
       "minAmount": 100000,
@@ -856,6 +895,19 @@ window.RATES = {
       "rate": 11.5,
       "kind": "deposit",
       "termMonths": 5,
+      "daysFrom": 31,
+      "daysTo": 730,
+      "minAmount": 50000,
+      "url": "https://finuslugi.ru/vklady/tbank_bank_smartvklad",
+      "promo": false,
+      "floating": false
+    },
+    {
+      "bank": "Т-Банк",
+      "name": "СмартВклад",
+      "rate": 11.5,
+      "kind": "deposit",
+      "termMonths": 6,
       "daysFrom": 31,
       "daysTo": 730,
       "minAmount": 50000,
