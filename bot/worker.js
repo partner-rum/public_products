@@ -58,6 +58,7 @@ export default {
     if (url.pathname === "/click" && request.method === "POST") return handleClick(request, env, cors);
     if (url.pathname === "/hit" && request.method === "POST") return handleHit(request, env, cors);
     if (url.pathname === "/stats" && request.method === "POST") return handleStats(request, env, cors);
+    if (url.pathname === "/picks" && request.method === "POST") return handlePicks(request, env, cors);
     if (url.pathname === "/chat" && request.method === "POST") return handleChat(request, env, cors, ctx);
     if (url.pathname === "/submit" && request.method === "POST") return handleSubmit(request, env, cors);
     if (url.pathname === "/tg" && request.method === "POST") return handleTelegram(request, env, ctx);
@@ -262,6 +263,64 @@ async function dealsPut(env, ref, list) {
   await env.POST_KV.put("deals:" + ref, JSON.stringify(list));
 }
 
+// ---------- РЕКВИЗИТЫ ПАРТНЁРА ----------
+// Название, ИНН, ОГРН/ОГРНИП и номер договора живут в KV (pinfo:<метка>), а НЕ в
+// репозитории: репозиторий ПУБЛИЧНЫЙ, и список партнёров с их реквизитами в него
+// попадать не должен. Заводит их Руслан командой /partner, стол читает через /stats.
+const PINFO_FIELDS = ["name", "inn", "ogrn", "ogrnip", "contract", "status"];
+
+async function pinfoGet(env, ref) {
+  if (!env.POST_KV) return null;
+  try { return (await env.POST_KV.get("pinfo:" + ref, "json")) || null; } catch (e) { return null; }
+}
+
+// Разбор строки /partner. Поля узнаём ПО СОДЕРЖИМОМУ, как в /deal: порядок
+// запоминать не надо. ИНН — 10 цифр (юрлицо) или 12 (ИП), ОГРН — 13, ОГРНИП — 15.
+function pinfoParse(env, line) {
+  const parts = String(line || "").split("|").map(function (x) { return x.trim(); })
+    .filter(function (x) { return x !== ""; });
+  if (parts.length < 2) return { error: "нужны метка и хотя бы название" };
+  const ref = parts.shift().toLowerCase();
+  if (!knownRefs(env).includes(ref)) {
+    return { error: "партнёра «" + ref + "» нет в списке. Известные: " +
+                    (knownRefs(env).join(", ") || "ни одного") };
+  }
+  const info = {};
+  for (const raw of parts) {
+    const x = raw.replace(/^(ИНН|ОГРНИП|ОГРН|договор|статус)\s*[:№]?\s*/i, "").trim();
+    const digits = x.replace(/\D/g, "");
+    if (/^ИНН/i.test(raw) || (digits.length === 10 || digits.length === 12) && digits === x) {
+      info.inn = digits; continue;
+    }
+    if (/^ОГРНИП/i.test(raw) || (digits.length === 15 && digits === x)) { info.ogrnip = digits; continue; }
+    if (/^ОГРН/i.test(raw) || (digits.length === 13 && digits === x)) { info.ogrn = digits; continue; }
+    if (/^договор/i.test(raw)) { info.contract = x.slice(0, 60); continue; }
+    if (/^статус/i.test(raw)) { info.status = x.slice(0, 40); continue; }
+    if (!info.name) info.name = raw.slice(0, 120);
+  }
+  if (!info.name) return { error: "не понял, где название партнёра" };
+  if (info.inn && info.inn.length !== 10 && info.inn.length !== 12) {
+    return { error: "ИНН «" + info.inn + "» не 10 и не 12 цифр" };
+  }
+  if (info.ogrn && info.ogrn.length !== 13) return { error: "ОГРН должен быть 13 цифр" };
+  if (info.ogrnip && info.ogrnip.length !== 15) return { error: "ОГРНИП должен быть 15 цифр" };
+  return { ref: ref, info: info };
+}
+
+function pinfoText(ref, info) {
+  const rows = [
+    ["Название", info.name],
+    ["ИНН", info.inn],
+    ["ОГРН", info.ogrn],
+    ["ОГРНИП", info.ogrnip],
+    ["Договор", info.contract],
+    ["Статус", info.status],
+  ].filter(function (r) { return r[1]; });
+  return "<b>" + esc(ref) + "</b>\n" + rows.map(function (r) {
+    return r[0] + ": <code>" + esc(String(r[1])) + "</code>";
+  }).join("\n");
+}
+
 // Число из человеческой записи: «5 000 000», «5000000», «112 500,50».
 function dealNum(v) {
   const t = String(v || "").replace(/[\s _]/g, "").replace(",", ".");
@@ -404,6 +463,187 @@ async function handleHit(request, env, cors) {
 }
 
 // --- Статистика агента ---
+// ---------- ПОДБОРКА ПРОДУКТОВ ПОД КОНКРЕТНОГО АГЕНТА ----------
+// Модель читает новости дня и книгу агента (что он уже продаёт) и подбирает
+// продукты с доски именно под него. Считается РАЗ В ДЕНЬ на агента и лежит в KV:
+// иначе каждый заход на стол стоил бы вызова LLM.
+//
+// ЧТО УХОДИТ В МОДЕЛЬ: типы продуктов агента и базовые активы. Объёмы,
+// вознаграждение, ISIN, название партнёра и его реквизиты НЕ отправляются —
+// DeepSeek работает на серверах в Китае, и коммерческие условия партнёра туда
+// попадать не должны. Для персонализации хватает «что он продаёт».
+const PICKS_N = 4;
+const PICKS_TTL = 3 * 86400;
+// Границу слова задаём через \p{L} с флагом u: в JS \b и \w — про латиницу,
+// и с кириллицей запрет молча не срабатывал («Гарантированный» проходил насквозь).
+const PICKS_BAN = /(?<!\p{L})(нот[аыуе]|гарантирован|доходност|прибыл)\p{L}*/iu;
+
+// Книга агента одной строкой на выпуск: тип выплаты + активы, без денег.
+function picksBook(deals, issues) {
+  const byIsin = {};
+  for (const i of issues || []) if (i.isin) byIsin[i.isin] = i;
+  const seen = {}, lines = [];
+  for (const d of deals || []) {
+    const it = d.isin && byIsin[d.isin];
+    const kind = it ? (it.kind === "participation" ? "участие в росте" : "купонный") : null;
+    const assets = it ? (it.basket || []).map((b) => b.n || b.t).filter(Boolean).join(", ") : "";
+    const key = (kind || "") + "|" + assets;
+    if (!kind || seen[key]) continue;
+    seen[key] = 1;
+    lines.push("- " + kind + (assets ? " · актив: " + assets : ""));
+  }
+  return lines;
+}
+
+// Код-подбор на случай, когда модели нет или её ответ не прошёл проверку:
+// по одному продукту на тип, потом добор по разным активам. Та же логика, что
+// на странице, — стол не остаётся пустым никогда.
+function picksFallback(instr, n) {
+  const out = [], seenType = {}, seenAsset = {};
+  const take = (p) => {
+    const a = String(p.underlying || p.id).toLowerCase();
+    if (seenAsset[a]) return;
+    seenAsset[a] = 1; seenType[p.type] = 1; out.push(p);
+  };
+  for (const p of instr) { if (out.length >= n) break; if (!seenType[p.type]) take(p); }
+  for (const p of instr) { if (out.length >= n) break; take(p); }
+  return out.map((p) => ({ id: p.id, why: "" }));
+}
+
+// Проверка ответа модели. Пропускаем только то, что можно доказать каталогом.
+function picksLint(list, instr) {
+  const byId = {};
+  for (const p of instr) byId[p.id] = p;
+  const out = [], problems = [];
+  const seenId = {}, seenAsset = {}, typeCount = {};
+  // Длинные названия вперёд: иначе «ОФЗ» вычеркнется раньше, чем «ОФЗ 26238»,
+  // и в строке останется голое число, которое мы примем за выдумку модели.
+  const assetNames = instr.map((x) => String(x.underlying || "")).filter(Boolean)
+    .sort((a, b) => b.length - a.length);
+  for (const raw of Array.isArray(list) ? list : []) {
+    const id = String((raw && raw.id) || "").trim();
+    const p = byId[id];
+    if (!p) { problems.push("id «" + id + "» не из каталога"); continue; }
+    if (seenId[id]) { problems.push("повтор " + id); continue; }
+    const asset = String(p.underlying || p.id).toLowerCase();
+    if (seenAsset[asset]) { problems.push("второй продукт на актив " + p.underlying); continue; }
+    typeCount[p.type] = (typeCount[p.type] || 0) + 1;
+    if (typeCount[p.type] > 2) { problems.push("третий продукт типа " + p.type); continue; }
+    let why = String((raw && raw.why) || "").trim().replace(/\s+/g, " ");
+    // Цифры в подписи запрещены: проценты и цены страница печатает сама из данных,
+    // а выдуманное моделью число выглядело бы так же убедительно, как настоящее.
+    // Но в названиях активов цифры законны («S&P 500», «ОФЗ 26238»), поэтому
+    // сначала вычёркиваем известные активы и только потом ищем цифры.
+    let bare = why;
+    for (const a of assetNames) bare = bare.split(a).join(" ");
+    if (/\d/.test(bare)) { problems.push("цифры в подписи к " + id); why = ""; }
+    if (PICKS_BAN.test(why)) { problems.push("запрещённое слово в подписи к " + id); why = ""; }
+    if (why.length > 120) { problems.push("длинная подпись у " + id); why = why.slice(0, 117) + "…"; }
+    seenId[id] = 1; seenAsset[asset] = 1;
+    out.push({ id: id, why: why });
+    if (out.length >= PICKS_N) break;
+  }
+  return { picks: out, problems: problems };
+}
+
+const PICKS_SYSTEM = `Ты подбираешь продукты для конкретного агента по продажам структурных продуктов Rumberg (клиенты — квалифицированные инвесторы).
+
+Тебе дают: новости дня (если есть), книгу агента (что он уже продаёт) и каталог продуктов, доступных сегодня.
+
+Верни СТРОГИЙ JSON: {"picks":[{"id":"<id из каталога>","why":"<одна фраза>"}]}
+Ровно ${PICKS_N} позиции, ничего кроме JSON.
+
+Правила:
+- id берёшь ТОЛЬКО из блока «ТЕКУЩИЕ ПРОДУКТЫ» и ТОЛЬКО в квадратных скобках [id].
+- Разные типы выплаты и разные базовые активы: не больше двух продуктов одного типа.
+- why — почему это агенту СЕГОДНЯ: связь с новостью дня либо с тем, что он уже продаёт. Одна короткая фраза, до 100 знаков.
+- В why НЕ пиши цифры, проценты и цены: их страница показывает сама из данных.
+- Запрещены слова «нота», «гарантированный», «доходность», «прибыль».
+- Не давай инвестиционных рекомендаций и обещаний. Пиши по-русски, по-деловому, без эмодзи.`;
+
+async function picksBuild(env, ref) {
+  const cat = await buildCatalog(env);
+  const instr = (cat && cat.instr) || [];
+  if (!instr.length) return { basis: "нет каталога", picks: [], problems: ["каталог пуст"] };
+
+  const deals = await dealsGet(env, ref);
+  const book = picksBook(deals, (cat && cat.issues) || []);
+  const morning = await morningContext(env);
+
+  // Без ключа модели персонализации не будет — честно отдаём общий подбор.
+  if (!env.DEEPSEEK_API_KEY && !env.YANDEX_API_KEY && !env.ANTHROPIC_API_KEY) {
+    return { basis: "общая", picks: picksFallback(instr, PICKS_N), problems: ["модель не подключена"] };
+  }
+
+  const parts = [];
+  if (morning && morning.news) parts.push("НОВОСТИ ДНЯ (" + morning.label + "):\n" + morning.news);
+  parts.push(book.length
+    ? "КНИГА АГЕНТА (что он уже продаёт):\n" + book.join("\n")
+    : "КНИГА АГЕНТА: пока пусто — он ещё ничего не продал.");
+  parts.push(cat.text);
+
+  const provider = (env.CHAT_PROVIDER || "deepseek").toLowerCase();
+  let picks = [], problems = [], basis = "персональная";
+  let messages = [{ role: "user", content: parts.join("\n\n") }];
+
+  for (let attempt = 0; attempt < 2; attempt++) {
+    let raw;
+    try {
+      raw = await callLLM(provider, PICKS_SYSTEM, messages, env,
+        { temperature: 0.5, maxTokens: 700, json: true });
+    } catch (e) { problems.push("модель не ответила"); break; }
+    let parsed = null;
+    try { parsed = JSON.parse(String(raw).replace(/^[^{]*/, "").replace(/[^}]*$/, "")); } catch (e) { parsed = null; }
+    const res = picksLint(parsed && parsed.picks, instr);
+    picks = res.picks; problems = res.problems;
+    if (picks.length >= PICKS_N) break;
+    if (attempt === 0) {
+      messages = messages.concat([{ role: "assistant", content: String(raw).slice(0, 900) },
+        { role: "user", content: "Не годится: " + (problems.join("; ") || "мало позиций") +
+          ". Верни ровно " + PICKS_N + " позиции строго по правилам." }]);
+    }
+  }
+
+  // Недобрали — дополняем кодом, но говорим об этом на странице.
+  if (picks.length < PICKS_N) {
+    const have = {};
+    for (const p of picks) have[p.id] = 1;
+    for (const f of picksFallback(instr, PICKS_N * 2)) {
+      if (picks.length >= PICKS_N) break;
+      if (!have[f.id]) { picks.push(f); have[f.id] = 1; }
+    }
+    basis = picks.some((p) => p.why) ? "частично" : "общая";
+  }
+  return { basis: basis, picks: picks, problems: problems };
+}
+
+async function handlePicks(request, env, cors) {
+  let d;
+  try { d = await request.json(); } catch (e) { return json({ ok: false, error: "bad_json" }, 400, cors); }
+  const who = deskLogin(env, d.id, d.key);
+  if (!who) return json({ ok: false, error: "bad_key" }, 403, cors);
+  const ref = who.ref, day = mskDate().key, key = "picks:" + ref + ":" + day;
+
+  if (env.POST_KV) {
+    try {
+      const hit = await env.POST_KV.get(key, "json");
+      if (hit && hit.picks) return json({ ok: true, cached: true, date: day, ...hit }, 200, cors);
+    } catch (e) { /* кэш необязателен */ }
+  }
+
+  let built;
+  try { built = await picksBuild(env, ref); }
+  catch (e) { return json({ ok: false, error: "build_failed" }, 502, cors); }
+
+  if (env.POST_KV && built.picks && built.picks.length) {
+    try {
+      await env.POST_KV.put(key, JSON.stringify({ basis: built.basis, picks: built.picks }),
+                            { expirationTtl: PICKS_TTL });
+    } catch (e) { /* не смогли закэшировать — не беда */ }
+  }
+  return json({ ok: true, cached: false, date: day, basis: built.basis, picks: built.picks }, 200, cors);
+}
+
 async function handleStats(request, env, cors) {
   if (!env.SALES_KEYS && !env.PARTNER_KEYS) return json({ ok: false, error: "not_configured" }, 503, cors);
   let d;
@@ -457,6 +697,7 @@ async function handleStats(request, env, cors) {
 
   return json({
     ok: true, ref, kind: who.kind, now,
+    profile: await pinfoGet(env, ref),
     deals: deals, totals: dealTotals(deals),
     opens: { all: opens, d7: opens7, d30: opens30 },
     views: { all: views },
@@ -562,7 +803,7 @@ async function buildCatalog(env) {
         pay, i.bid != null && "Bid " + i.bid + "%"].filter(Boolean).join(" · "));
     }
   }
-  CATALOG = { text: lines.join("\n"), at: now, instr, offers, ideas: (idea && idea.ideas) || [] };
+  CATALOG = { text: lines.join("\n"), at: now, instr, offers, issues: iss, ideas: (idea && idea.ideas) || [] };
   return CATALOG;
 }
 
@@ -3380,6 +3621,72 @@ async function handleTelegram(request, env, ctx) {
       // См. комментарий у «Пересобрать»: вебхук отвечает сразу, генерация — после ответа
       const job = sendMorningDraft(env, msg.text, msg.chat.id);
       if (ctx) ctx.waitUntil(job); else await job;
+      return new Response("ok");
+    }
+
+    // ---- Реквизиты партнёров: /partner, /partners, /partnerrm. ТОЛЬКО Руслан.
+    // Хранятся в KV, а не в репозитории: репозиторий публичный, список партнёров
+    // с ИНН/ОГРН в него попадать не должен.
+    if (/^\/partners?(?:@\w+)?(?:\s|$)/.test(msg.text) || /^\/partnerrm(?:@\w+)?(?:\s|$)/.test(msg.text)) {
+      const isAdmin = env.ADMIN_CHAT_ID && String(from.id) === String(env.ADMIN_CHAT_ID);
+      if (!isAdmin || !msg.chat || msg.chat.type !== "private") return new Response("ok");
+      const say = function (t) {
+        return tg(env, "sendMessage", { chat_id: msg.chat.id, text: t,
+                                        parse_mode: "HTML", disable_web_page_preview: true });
+      };
+      if (!env.POST_KV) {
+        await say("Хранилище (POST_KV) не подключено — реквизиты записать некуда.");
+        return new Response("ok");
+      }
+
+      // /partnerrm <метка> — убрать реквизиты
+      if (/^\/partnerrm/.test(msg.text)) {
+        const ref = msg.text.replace(/^\/partnerrm(@\w+)?\s*/, "").trim().toLowerCase();
+        if (!ref) {
+          await say("Формат: <code>/partnerrm метка</code>");
+          return new Response("ok");
+        }
+        await env.POST_KV.delete("pinfo:" + ref);
+        await say("Реквизиты партнёра <b>" + esc(ref) + "</b> удалены. Сделки не тронуты.");
+        return new Response("ok");
+      }
+
+      // /partners — что заполнено у всех известных меток
+      if (/^\/partners(?:@\w+)?(?:\s|$)/.test(msg.text)) {
+        const refs = knownRefs(env);
+        if (!refs.length) {
+          await say("Партнёров нет — задайте PARTNER_KEYS.");
+          return new Response("ok");
+        }
+        const lines = [];
+        for (const ref of refs) {
+          const info = await pinfoGet(env, ref);
+          lines.push(info ? pinfoText(ref, info) : "<b>" + esc(ref) + "</b>\nреквизиты не заполнены");
+        }
+        await say(lines.join("\n\n"));
+        return new Response("ok");
+      }
+
+      // /partner метка | Название | ИНН | ОГРН [| договор ...]
+      const line = msg.text.replace(/^\/partner(@\w+)?\s*/, "").trim();
+      if (!line) {
+        await say("Реквизиты партнёра для рабочего стола.\n\n" +
+          "<code>/partner метка | Название | ИНН | ОГРН [| договор № ...]</code>\n\n" +
+          "Порядок полей помнить не надо: ИНН, ОГРН и ОГРНИП узнаются по числу цифр " +
+          "(10/12, 13, 15), договор — по слову «договор».\n\n" +
+          "Пример:\n<code>/partner andrey | ООО «Аркада Капитал» | 7701234567 | 1157746123456 | " +
+          "договор П-14 от 03.02.2026</code>\n\n" +
+          "Ещё: <code>/partners</code> — у кого что заполнено, " +
+          "<code>/partnerrm метка</code> — удалить.");
+        return new Response("ok");
+      }
+      const parsed = pinfoParse(env, line);
+      if (parsed.error) {
+        await say("Не понял: " + esc(parsed.error) + "\n\nПодсказка по формату — просто <code>/partner</code>");
+        return new Response("ok");
+      }
+      await env.POST_KV.put("pinfo:" + parsed.ref, JSON.stringify(parsed.info));
+      await say("Реквизиты записаны — партнёр увидит их на столе.\n\n" + pinfoText(parsed.ref, parsed.info));
       return new Response("ok");
     }
 
