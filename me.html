@@ -249,6 +249,9 @@
 
 <script src="data/instruments.js?v=fx9"></script>
 <script src="data/placements.js?v=pl22"></script>
+<!-- AI-консьерж: партнёр задаёт вопросы о продуктах, не уходя со стола.
+     Тот же виджет, что на витринных страницах (запрос Руслана 25.08.2026). -->
+<script src="chat.js?v=16"></script>
 <script>
 (function () {
   "use strict";
@@ -665,7 +668,8 @@
   // ---- АКТУАЛЬНЫЕ ПРОДУКТЫ -------------------------------------------------
   var LIVE_LIMIT = 6;
   var PICKS_API = "https://so-leads.ruslan-sabirov.workers.dev/picks";
-  var PICKS_SRC_PERSONAL = "подобрано под вас: по новостям дня и вашим выпускам" +
+  // Формулировка Руслана 25.08.2026: маркировка ИИ — явная.
+  var PICKS_SRC_PERSONAL = "подобрано при помощи ИИ под вас: по новостям дня и вашим выпускам" +
     '<span class="dot">·</span>обновляется раз в день';
   var PICKS_SRC_PLAIN = "общая подборка с доски · цифры индикативно";
 

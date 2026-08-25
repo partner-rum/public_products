@@ -1,8 +1,7 @@
 <!doctype html>
 <!-- ТЕСТОВАЯ КОПИЯ рабочего стола (me.html) для просмотра сейлзами.
      Отличий от боевого ровно два: демо включено по умолчанию и сверху
-     плашка. Правишь стол — перекопируй файл целиком, не правь здесь.
-     Оригинальный комментарий боевой страницы ниже. -->
+     плашка. Правишь стол — перекопируй файл целиком, не правь здесь. -->
 <!-- Рабочий стол внешнего партнёра. Дизайн «E2» — выбор Руслана 25.08.2026
      («топчик»): структура продавцового кабинета (референс Ozon Seller) в
      фирменной «полярной ночи». Три тонированных карточки-состояния (оранжевая —
@@ -44,8 +43,6 @@
   a { color:inherit; text-decoration:none; }
   button { font:inherit; }
   :focus-visible { outline:2px solid var(--solar); outline-offset:2px; border-radius:8px; }
-  /* Плашка тестовой копии. Стоит первой и не прячется: сейлз должен понимать,
-     что цифры вымышленные, до того как начнёт их обсуждать. */
   .tbar { display:flex; align-items:baseline; gap:12px; flex-wrap:wrap;
           padding:10px 20px; background:rgba(238,125,27,.12); border-bottom:1px solid rgba(238,125,27,.4); }
   .tbar .tt { font:600 11px var(--m); letter-spacing:.12em; text-transform:uppercase;
@@ -269,6 +266,9 @@
 
 <script src="data/instruments.js?v=fx9"></script>
 <script src="data/placements.js?v=pl22"></script>
+<!-- AI-консьерж: партнёр задаёт вопросы о продуктах, не уходя со стола.
+     Тот же виджет, что на витринных страницах (запрос Руслана 25.08.2026). -->
+<script src="chat.js?v=16"></script>
 <script>
 (function () {
   "use strict";
@@ -691,7 +691,8 @@
   // ---- АКТУАЛЬНЫЕ ПРОДУКТЫ -------------------------------------------------
   var LIVE_LIMIT = 6;
   var PICKS_API = "https://so-leads.ruslan-sabirov.workers.dev/picks";
-  var PICKS_SRC_PERSONAL = "подобрано под вас: по новостям дня и вашим выпускам" +
+  // Формулировка Руслана 25.08.2026: маркировка ИИ — явная.
+  var PICKS_SRC_PERSONAL = "подобрано при помощи ИИ под вас: по новостям дня и вашим выпускам" +
     '<span class="dot">·</span>обновляется раз в день';
   var PICKS_SRC_PLAIN = "общая подборка с доски · цифры индикативно";
 
