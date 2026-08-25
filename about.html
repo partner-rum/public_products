@@ -106,6 +106,16 @@
   .usecase .v { font-size: 15px; line-height: 1.55; color: var(--ink); font-weight: 500; text-wrap: pretty; }
   .boardlink { display: inline-flex; align-items: center; gap: 7px; margin-top: 4px; font-size: 14px; font-weight: 600; color: var(--fc); }
   .boardlink .cnt { font-family: var(--f-mono); font-size: 11.5px; font-weight: 400; color: var(--faint); }
+
+  /* «Сейчас на доске»: живые продукты этого типа, ссылками в карточки */
+  .live { margin-top: 22px; border-top: 1px solid var(--border-soft); padding-top: 14px; }
+  .live .k { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.11em; text-transform: uppercase; color: var(--faint); margin-bottom: 4px; }
+  .lrow { display: flex; align-items: center; gap: 10px; padding: 9px 0; font-size: 13.5px; color: var(--hushed); border-bottom: 1px solid var(--border-soft); transition: color .18s; }
+  .lrow:hover { color: var(--ink); }
+  .lrow .nm { flex: 1; min-width: 0; line-height: 1.4; }
+  .lrow svg { flex: none; opacity: 0.55; }
+  .live .empty { font-size: 13.5px; line-height: 1.55; color: var(--hushed); padding: 8px 0 10px; text-wrap: pretty; }
+  .live .boardlink { margin-top: 12px; }
   .gloss { margin-top: 26px; border-top: 1px solid var(--border-soft); padding-top: 16px; }
   .gloss summary { cursor: pointer; font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); list-style: none; display: flex; align-items: center; gap: 8px; }
   .gloss summary::-webkit-details-marker { display: none; }
@@ -190,6 +200,7 @@
     .seg button { min-height: 44px; padding: 8px 14px; }
     .backmx { padding: 12px 0 16px; }
     .boardlink { min-height: 44px; }
+    .lrow { min-height: 44px; }
     .gloss summary { min-height: 44px; }
   }
 </style>
@@ -498,6 +509,32 @@
       (n ? '<span class="cnt">· ' + n + ' шт.</span>' : '') +
       '<svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>';
   }
+  // Подтип варранта → код structure в data/instruments.js. На доске сейчас живут
+  // только call и cs; у остальных подтипов совпадений не будет, пока деск не
+  // заведёт такие выпуски (тогда дописать код сюда).
+  var STRUCT = { call: "call", callspread: "cs" };
+  function liveFor(id, famKey) {
+    var items = (window.SITE_DATA || {}).instruments || [];
+    return items.filter(function (it) {
+      if (it.type !== famKey) return false;
+      if (famKey === "warrant") return (it.structure || "") === (STRUCT[id] || "—");
+      return true;
+    });
+  }
+  // «Сейчас на доске»: до 4 живых продуктов типа ссылками в карточки; пусто —
+  // честная строка «собираем под запрос» (продукты собираются под клиента).
+  function liveListHTML(id, famKey, fam) {
+    if (!fam.board) return "";
+    var list = liveFor(id, famKey);
+    var rows = list.slice(0, 4).map(function (it) {
+      return '<a class="lrow" href="instrument.html?id=' + encodeURIComponent(it.id) + '"><span class="nm">' + it.name + '</span>' +
+        '<svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>';
+    }).join("");
+    var footLabel = famKey === "warrant" ? "Все варранты на доске" : "Вся подборка на доске";
+    return '<div class="live"><div class="k">Сейчас на доске</div>' +
+      (rows || '<div class="empty">Таких выпусков сейчас на доске нет — собираем под запрос.</div>') +
+      boardLink(fam, famKey, footLabel) + '</div>';
+  }
 
   function articleHTML(id) {
     var famKey = famOf(id), fam = FAM[famKey];
@@ -538,7 +575,7 @@
       '<div class="kv"><div class="k">Как работает</div><div class="v">' + d.how + '</div></div>' +
       metricsHTML(d) +
       '<div class="plaque"><div class="k">Риск</div>' + d.risk + '</div>' +
-      (fam.board ? boardLink(fam, famKey, "Смотреть выпуски на доске") : "");
+      liveListHTML(id, famKey, fam);
     var viz;
     if (id === "protection") {
       viz = '<div class="prot-ctrls">' +
