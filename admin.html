@@ -166,7 +166,7 @@
   </div>
 
   <h1>Рабочее место сейлза</h1>
-  <p class="lead">Продукты, размещения, выпуски, сделки партнёров и снятие с сайта уходят Руслану карточкой с кнопкой — он только подтверждает. Дайджест вы собираете и публикуете сами: «Идея в дайджест» → «Выпуск недели». Поля с <b style="color:var(--solar-l)">*</b> обязательны.</p>
+  <p class="lead">Продукты, размещения, выпуски, новые партнёры и снятие с сайта уходят Руслану карточкой с кнопкой — он только подтверждает. Сделки партнёров записываются сразу, без одобрения. Дайджест вы собираете и публикуете сами: «Идея в дайджест» → «Выпуск недели». Поля с <b style="color:var(--solar-l)">*</b> обязательны.</p>
 
   <div class="keyrow">
     <button class="rf" id="key-out" type="button" style="display:none;border:1px solid var(--border);
@@ -645,15 +645,16 @@
         <li><b>ISIN</b> не обязателен, но с ним на столе появится котировка Bid и параметры выпуска.</li>
         <li>Проверьте подсказку под суммами: она показывает долю вознаграждения от объёма
           и краснеет, если доля непохожа на обычную.</li>
-        <li>Заявка уйдёт Руслану. После «Записать» сделка появится у партнёра.</li>
+        <li>Сделка <b>записывается сразу</b> — партнёр тут же видит её на столе,
+          Руслану уходит уведомление. Ошиблись — снимите её в списке ниже и заведите заново.</li>
       </ol>
-      <p class="note">Партнёра нет в списке? Его заводит Руслан — напишите ему метку, название,
-        ИНН и ОГРН. Ошиблись в сумме — снимите сделку в списке ниже и заведите заново.</p></div>
+      <p class="note">Партнёра нет в списке? Заведите его в блоке «Новый партнёр» внизу вкладки —
+        эта заявка уходит Руслану на одобрение.</p></div>
     </details>
 
     <div class="grp"><div class="gt">Кому и за что</div>
-      <div class="hint" style="margin:0 0 12px">Заводите сделку сами — Руслану уйдёт карточка с кнопкой «Записать».
-        После подтверждения сделка появится у партнёра на его рабочем столе.</div>
+      <div class="hint" style="margin:0 0 12px">Сделка записывается сразу и появляется у партнёра
+        на рабочем столе — Руслан получает уведомление, одобрение не нужно.</div>
       <div class="row">
         <label><span class="k">Партнёр <b>*</b></span>
           <select name="ref" id="dl-ref"><option value="">Загрузка…</option></select>
@@ -676,11 +677,35 @@
       <div class="hint" id="dl-share">&nbsp;</div>
     </div>
 
-    <button class="send" id="dl-send" type="button">Отправить на одобрение</button>
+    <button class="send" id="dl-send" type="button">Записать сделку</button>
     <div class="msg" id="m-deal"></div>
 
     <div class="grp" style="margin-top:18px"><div class="gt">Уже заведено у партнёра</div>
       <div id="dl-list"><div class="rm-empty">Выберите партнёра.</div></div>
+    </div>
+
+    <!-- Заведение партнёра — единственный шаг конвейера с ✅ Руслана
+         (его решение 26.08.2026). Ключ входа на стол остаётся за ним. -->
+    <div class="grp" id="pn-box" style="margin-top:18px"><div class="gt">Новый партнёр</div>
+      <div class="hint" style="margin:0 0 12px">Уходит Руслану на одобрение. После «Завести» партнёр
+        появится в списке выше (обновите страницу), и сделки можно записывать сразу. Вход в «Рабочий стол»
+        Руслан открывает отдельно — выдаёт партнёру ID и ключ.</div>
+      <div class="row">
+        <label><span class="k">Метка <b>*</b></span>
+          <input name="pref" id="pn-ref" placeholder="arkada" maxlength="40" spellcheck="false" autocomplete="off">
+          <span class="hint">Латиница и цифры. Станет меткой ссылок <b>?ref=</b> и логином стола.</span>
+        </label>
+        <label><span class="k">Название <b>*</b></span>
+          <input name="pname" id="pn-name" placeholder="ООО «Аркада Капитал»" maxlength="120"></label>
+      </div>
+      <div class="row">
+        <label><span class="k">ИНН</span><input name="pinn" id="pn-inn" inputmode="numeric" placeholder="7701234567" maxlength="12"></label>
+        <label><span class="k">ОГРН / ОГРНИП</span><input name="pogrn" id="pn-ogrn" inputmode="numeric" placeholder="1157746123456" maxlength="15"></label>
+      </div>
+      <label><span class="k">Договор</span>
+        <input name="pcontract" id="pn-contract" placeholder="П-14 от 03.02.2026" maxlength="60"></label>
+      <button class="send" id="pn-send" type="button" style="margin-top:12px">Отправить на одобрение</button>
+      <div class="msg" id="m-partner"></div>
     </div>
   </form>
 
@@ -812,7 +837,7 @@
   var QKEY = "so_admin_sent", QMAX = 25;
   var Q_SECT = { board: "Доска", offering: "Размещение", placement: "Выпуск",
                  digest: "Дайджест", deal: "Сделка", dealrm: "Снятие сделки",
-                 remove: "Снятие", doc: "Документ" };
+                 partner: "Новый партнёр", remove: "Снятие", doc: "Документ" };
   function qLoad() { try { return JSON.parse(localStorage.getItem(QKEY) || "[]"); } catch (e) { return []; } }
   function qSave(a) { try { localStorage.setItem(QKEY, JSON.stringify(a.slice(0, QMAX))); } catch (e) {} }
   function qAdd(sect, name, id, mid, kind) {
@@ -1210,8 +1235,9 @@
     return out;
   }
 
-  // ── СДЕЛКИ ПАРТНЁРОВ ─────────────────────────────────────────────────────
-  // Сейлз заводит сделку сам; Руслан только жмёт «Записать» в Telegram.
+  // ── ПАРТНЁРЫ И ИХ СДЕЛКИ ─────────────────────────────────────────────────
+  // Конвейер 26.08.2026: нового партнёра сейлз заводит заявкой с ✅ Руслана,
+  // сделки под заведённого партнёра записываются СРАЗУ (Руслану — уведомление).
   // Ключ партнёра админку не открывает (проверено тестом), поэтому вписать
   // вознаграждение самому себе партнёр не может.
   var dlRef = document.getElementById("dl-ref");
@@ -1235,7 +1261,7 @@
     postAsk({ key: key, action: "partners" }).then(function (d) {
       dlLoaded = true;
       dlRef.innerHTML = '<option value="">— выберите —</option>' + d.partners.map(function (p) {
-        return '<option value="' + esc(p.ref) + '">' + esc(p.ref) +
+        return '<option value="' + esc(p.ref) + '">' + esc(p.ref) + (p.name ? " — " + esc(p.name) : "") +
           (p.count ? " · " + p.count + " сд. · " + money(p.reward) : " · сделок нет") + "</option>";
       }).join("");
     }).catch(function (e) {
@@ -1300,7 +1326,10 @@
     form.addEventListener("keydown", function (e) {
       if (e.key !== "Enter" || e.target.tagName === "TEXTAREA") return;
       e.preventDefault();
-      btn.click();
+      // Блок «Новый партнёр» живёт в той же форме — Enter из его полей не должен
+      // записывать сделку.
+      var pn = e.target.closest ? e.target.closest("#pn-box") : null;
+      (pn ? document.getElementById("pn-send") : btn).click();
     });
   });
 
@@ -1332,13 +1361,50 @@
                date: date, volume: volume, reward: reward })
       .then(function (d) {
         msgEl.className = "msg ok";
-        msgEl.textContent = "Отправлено Руслану на одобрение. После «Записать» сделка появится у партнёра на столе.";
-        qAdd("deal", ref + " · " + product, "", d && d.mid, "");
+        msgEl.textContent = "Сделка записана — партнёр уже видит её на столе. Руслану ушло уведомление.";
+        // В «Мои заявки» не пишем: очередь — про ожидание решения, а решать нечего.
         document.getElementById("dl-product").value = "";
         document.getElementById("dl-isin").value = "";
         document.getElementById("dl-volume").value = "";
         document.getElementById("dl-reward").value = "";
         dealShare();
+        renderDeals(ref);
+      })
+      .catch(function (e) { msgEl.className = "msg err"; msgEl.textContent = e.message; })
+      .finally(function () { btn.disabled = false; btn.textContent = "Записать сделку"; });
+  });
+
+  // ── НОВЫЙ ПАРТНЁР ────────────────────────────────────────────────────────
+  // Единственная заявка вкладки, которая идёт через ✅ Руслана: партнёр — это
+  // контрагент. Ключ входа на стол (PARTNER_KEYS) Руслан выдаёт отдельно.
+  document.getElementById("pn-send").addEventListener("click", function () {
+    var msgEl = document.getElementById("m-partner");
+    msgEl.className = "msg";
+    var key = keyEl.value.trim();
+    if (!key) { msgEl.className = "msg err"; msgEl.textContent = "Введите ваш персональный ключ (в самом верху страницы)."; keyEl.focus(); return; }
+    var ref = document.getElementById("pn-ref").value.trim().toLowerCase();
+    var name = document.getElementById("pn-name").value.trim();
+    var inn = document.getElementById("pn-inn").value.replace(/\D/g, "");
+    var ogrn = document.getElementById("pn-ogrn").value.replace(/\D/g, "");
+    var contract = document.getElementById("pn-contract").value.trim();
+    try {
+      if (!/^[a-z0-9][a-z0-9._-]{0,39}$/.test(ref)) throw new Error("Метка — латиница и цифры без пробелов, например arkada.");
+      if (!name) throw new Error("Впишите название партнёра.");
+      if (inn && inn.length !== 10 && inn.length !== 12) throw new Error("ИНН — 10 цифр (юрлицо) или 12 (ИП).");
+      if (ogrn && ogrn.length !== 13 && ogrn.length !== 15) throw new Error("ОГРН — 13 цифр, ОГРНИП — 15.");
+    } catch (e) {
+      msgEl.className = "msg err"; msgEl.textContent = e.message; return;
+    }
+    var btn = this;
+    btn.disabled = true; btn.textContent = "Отправляем…";
+    postJson({ key: key, action: "partner_create", ref: ref, name: name, inn: inn, ogrn: ogrn, contract: contract })
+      .then(function (d) {
+        msgEl.className = "msg ok";
+        msgEl.textContent = "Ушло Руслану. После «Завести» партнёр появится в списке — обновите страницу.";
+        qAdd("partner", ref + " · " + name, "", d && d.mid, "");
+        ["pn-ref", "pn-name", "pn-inn", "pn-ogrn", "pn-contract"].forEach(function (id) {
+          document.getElementById(id).value = "";
+        });
       })
       .catch(function (e) { msgEl.className = "msg err"; msgEl.textContent = e.message; })
       .finally(function () { btn.disabled = false; btn.textContent = "Отправить на одобрение"; });
@@ -1352,8 +1418,8 @@
     postJson({ key: keyEl.value.trim(), action: "deal_remove", ref: dlRef.value, id: b.getAttribute("data-rm") })
       .then(function (d) {
         msgEl.className = "msg ok";
-        msgEl.textContent = "Заявка на снятие ушла Руслану. Сделка исчезнет у партнёра после подтверждения.";
-        qAdd("dealrm", dlRef.value, "", d && d.mid, "");
+        msgEl.textContent = "Сделка снята — у партнёра на столе её больше нет. Руслану ушло уведомление.";
+        renderDeals(dlRef.value);
       })
       .catch(function (e) { msgEl.className = "msg err"; msgEl.textContent = e.message; })
       .finally(function () { b.disabled = false; b.textContent = "Снять"; });
@@ -1364,6 +1430,12 @@
   var ERR_RU = {
     bad_key: "Ключ не подошёл — проверьте раскладку или спросите новый у Руслана.",
     bad_ref: "Партнёра нет в списке — обновите страницу; если не появился, его ещё не завели.",
+    bad_new_ref: "Метка — латиница и цифры без пробелов, до 40 знаков.",
+    ref_taken: "Такая метка уже занята — выберите другую.",
+    no_name: "Впишите название партнёра.",
+    bad_inn: "ИНН — 10 цифр (юрлицо) или 12 (ИП).",
+    bad_ogrn: "ОГРН — 13 цифр, ОГРНИП — 15.",
+    kv_not_configured: "Хранилище на сервере не подключено — напишите Руслану.",
     bad_date: "Дата не распознана — нужен вид ДД.ММ.ГГГГ.",
     bad_volume: "Объём сделки должен быть числом больше нуля.",
     bad_reward: "Вознаграждение должно быть числом.",
