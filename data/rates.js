@@ -3,15 +3,15 @@
 // Источники: ЦБ (ключевая, RUONIA), MOEX ISS (RUSFAR, БПИФы, ОФЗ),
 // Финуслуги (вклады и накопительные счета — витрина МосБиржи).
 window.RATES = {
-  "updated": "2026-08-26 13:30",
+  "updated": "2026-08-26 16:30",
   "cbr": {
     "key": {
       "rate": 14.0,
       "date": "2026-07-27"
     },
     "ruonia": {
-      "rate": 13.88,
-      "date": "2026-08-24"
+      "rate": 13.85,
+      "date": "2026-08-25"
     }
   },
   "rusfar": [
@@ -57,7 +57,7 @@ window.RATES = {
     {
       "id": "MONY",
       "name": "АК БАРС Денежный рынок",
-      "price": 131.75,
+      "price": 131.91,
       "ter": 0.2,
       "rate": 13.38
     },
@@ -71,28 +71,28 @@ window.RATES = {
     {
       "id": "SBMM",
       "name": "Первая Сберегательный",
-      "price": 19.252,
+      "price": 19.2525,
       "ter": 0.3,
       "rate": 13.28
     },
     {
       "id": "AMNR",
       "name": "АТОН Накопительный",
-      "price": 155.614,
+      "price": 155.62,
       "ter": 0.3,
       "rate": 13.28
     },
     {
       "id": "AKMM",
       "name": "Альфа Денежный рынок",
-      "price": 176.22,
+      "price": 176.21,
       "ter": 0.69,
       "rate": 12.89
     },
     {
       "id": "TMON",
       "name": "Т-Капитал Денежный рынок",
-      "price": 163.22,
+      "price": 163.23,
       "ter": 1.15,
       "rate": 12.43
     }
@@ -103,35 +103,35 @@ window.RATES = {
       "name": "ОФЗ 26219",
       "maturity": "2026-09-16",
       "years": 0.06,
-      "rate": 11.73
+      "rate": 11.71
     },
     {
       "id": "SU26226RMFS9",
       "name": "ОФЗ 26226",
       "maturity": "2026-10-07",
       "years": 0.12,
-      "rate": 12.68
+      "rate": 12.75
     },
     {
       "id": "SU26207RMFS9",
       "name": "ОФЗ 26207",
       "maturity": "2027-02-03",
       "years": 0.44,
-      "rate": 13.23
+      "rate": 12.76
     },
     {
       "id": "SU26232RMFS7",
       "name": "ОФЗ 26232",
       "maturity": "2027-10-06",
       "years": 1.11,
-      "rate": 13.0
+      "rate": 13.1
     },
     {
       "id": "SU26212RMFS9",
       "name": "ОФЗ 26212",
       "maturity": "2028-01-19",
       "years": 1.4,
-      "rate": 13.78
+      "rate": 13.8
     }
   ],
   "deposits": [
@@ -167,45 +167,6 @@ window.RATES = {
       "rate": 30.0,
       "kind": "deposit",
       "termMonths": 1,
-      "daysFrom": 32,
-      "daysTo": 150,
-      "minAmount": 10000,
-      "url": "https://finuslugi.ru/vklady/promsvyazbank_narodnyj_vklad",
-      "promo": true,
-      "floating": false
-    },
-    {
-      "bank": "Банк ПСБ",
-      "name": "Александр Невский",
-      "rate": 23.0,
-      "kind": "deposit",
-      "termMonths": 3,
-      "daysFrom": 32,
-      "daysTo": 122,
-      "minAmount": 10000,
-      "url": "https://finuslugi.ru/vklady/promsvyazbank_aleksandr_nevskij",
-      "promo": true,
-      "floating": false
-    },
-    {
-      "bank": "Банк ПСБ",
-      "name": "Ярослав Мудрый",
-      "rate": 23.0,
-      "kind": "deposit",
-      "termMonths": 3,
-      "daysFrom": 32,
-      "daysTo": 122,
-      "minAmount": 10000,
-      "url": "https://finuslugi.ru/vklady/promsvyazbank_yaroslav_mudryj",
-      "promo": true,
-      "floating": false
-    },
-    {
-      "bank": "Банк ПСБ",
-      "name": "Народный вклад",
-      "rate": 22.0,
-      "kind": "deposit",
-      "termMonths": 3,
       "daysFrom": 32,
       "daysTo": 150,
       "minAmount": 10000,
@@ -266,19 +227,6 @@ window.RATES = {
       "floating": false
     },
     {
-      "bank": "Сбербанк",
-      "name": "Выгодный старт+",
-      "rate": 19.0,
-      "kind": "deposit",
-      "termMonths": 3,
-      "daysFrom": 91,
-      "daysTo": 91,
-      "minAmount": 10000,
-      "url": "https://finuslugi.ru/vklady/sberbank_vygodnyj_start_plyus",
-      "promo": true,
-      "floating": false
-    },
-    {
       "bank": "Газпромбанк",
       "name": "Ключевой момент",
       "rate": 16.0,
@@ -290,19 +238,6 @@ window.RATES = {
       "url": "https://finuslugi.ru/vklady/gazprombank_klyuchevoj_moment",
       "promo": false,
       "floating": true
-    },
-    {
-      "bank": "Банк ПСБ",
-      "name": "Драгоценный",
-      "rate": 15.8,
-      "kind": "deposit",
-      "termMonths": 6,
-      "daysFrom": 91,
-      "daysTo": 367,
-      "minAmount": 50000,
-      "url": "https://finuslugi.ru/vklady/promsvyazbank_dragocennyj",
-      "promo": false,
-      "floating": false
     },
     {
       "bank": "Банк «Санкт-Петербург»",
@@ -370,28 +305,15 @@ window.RATES = {
       "floating": false
     },
     {
-      "bank": "Банк «Санкт-Петербург»",
-      "name": "Пенсионный (% в конце срока)",
-      "rate": 15.2,
-      "kind": "deposit",
-      "termMonths": 3,
-      "daysFrom": 31,
-      "daysTo": 1097,
-      "minAmount": 10000,
-      "url": "https://finuslugi.ru/vklady/bank_sankt_peterburg_pensionnyj_procenty_v_konce_sroka",
-      "promo": false,
-      "floating": false
-    },
-    {
-      "bank": "Вайлдберриз Банк",
-      "name": "Оптимальный",
-      "rate": 15.1,
-      "kind": "deposit",
-      "termMonths": 2,
-      "daysFrom": 60,
-      "daysTo": 365,
-      "minAmount": 50000,
-      "url": "https://finuslugi.ru/vklady/wbbank_optimalnyy",
+      "bank": "Яндекс Банк",
+      "name": "Счет в Сейвах",
+      "rate": 15.0,
+      "kind": "saving",
+      "termMonths": 0,
+      "daysFrom": 1,
+      "daysTo": 62,
+      "minAmount": 1,
+      "url": "https://finuslugi.ru/vklady/yandeks_bank_sejv_bezsroka",
       "promo": false,
       "floating": false
     },
@@ -483,19 +405,6 @@ window.RATES = {
       "daysTo": 1100,
       "minAmount": 10000,
       "url": "https://finuslugi.ru/vklady/mkb_mkb_perspektiva_procenty_v_konce_sroka",
-      "promo": false,
-      "floating": false
-    },
-    {
-      "bank": "Реалист Банк",
-      "name": "На ежедневный остаток",
-      "rate": 14.1,
-      "kind": "saving",
-      "termMonths": 0,
-      "daysFrom": 1,
-      "daysTo": 0,
-      "minAmount": 1000,
-      "url": "https://finuslugi.ru/vklady/realist_bank_na_ezhednevnyj_ostatok",
       "promo": false,
       "floating": false
     },
@@ -695,19 +604,6 @@ window.RATES = {
       "floating": false
     },
     {
-      "bank": "РосДорБанк",
-      "name": "ONLINE-Ключевая минус 0,5%",
-      "rate": 13.5,
-      "kind": "deposit",
-      "termMonths": 9,
-      "daysFrom": 62,
-      "daysTo": 546,
-      "minAmount": 100000,
-      "url": "https://finuslugi.ru/vklady/rosdorbank_online_klyuchevaya_minus_0_5",
-      "promo": false,
-      "floating": false
-    },
-    {
       "bank": "Московский Кредитный Банк",
       "name": "МКБ. Перспектива (% в конце срока)",
       "rate": 13.5,
@@ -855,6 +751,19 @@ window.RATES = {
       "name": "СмартВклад",
       "rate": 12.0,
       "kind": "deposit",
+      "termMonths": 1,
+      "daysFrom": 31,
+      "daysTo": 730,
+      "minAmount": 50000,
+      "url": "https://finuslugi.ru/vklady/tbank_bank_smartvklad",
+      "promo": false,
+      "floating": false
+    },
+    {
+      "bank": "Т-Банк",
+      "name": "СмартВклад",
+      "rate": 12.0,
+      "kind": "deposit",
       "termMonths": 2,
       "daysFrom": 31,
       "daysTo": 730,
@@ -868,7 +777,7 @@ window.RATES = {
       "name": "СмартВклад",
       "rate": 12.0,
       "kind": "deposit",
-      "termMonths": 1,
+      "termMonths": 3,
       "daysFrom": 31,
       "daysTo": 730,
       "minAmount": 50000,
@@ -921,19 +830,6 @@ window.RATES = {
       "rate": 11.2,
       "kind": "deposit",
       "termMonths": 9,
-      "daysFrom": 31,
-      "daysTo": 730,
-      "minAmount": 50000,
-      "url": "https://finuslugi.ru/vklady/tbank_bank_smartvklad",
-      "promo": false,
-      "floating": false
-    },
-    {
-      "bank": "Т-Банк",
-      "name": "СмартВклад",
-      "rate": 11.0,
-      "kind": "deposit",
-      "termMonths": 12,
       "daysFrom": 31,
       "daysTo": 730,
       "minAmount": 50000,
