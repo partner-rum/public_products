@@ -205,9 +205,9 @@ const HIT_KINDS = new Set(["open", "view", "lead"]);
 //   SALES_KEYS   — свои сейлзы. Открывает АДМИНКУ (подача продуктов на модерацию).
 //   PARTNER_KEYS — внешние партнёры. Открывает ТОЛЬКО рабочий стол, не админку.
 // Формат обоих одинаков: "andrey:ключ1,polina:ключ2"; имя = метка ?ref=.
-// Зачем разделять: партнёр с ключом от админки мог бы подавать продукты, а если бы
-// там же жил ввод сделок — вписывать себе вознаграждение. Ввод сделок вообще не в
-// админке: он только командой боту от ADMIN_CHAT_ID.
+// Зачем разделять: партнёр с ключом от админки мог бы подавать продукты и (с
+// 26.08.2026 сделки пишутся из админки напрямую) вписывать себе вознаграждение.
+// Ключ партнёра открывает ТОЛЬКО стол — /submit отвечает ему 403 (есть тест).
 function keyPairs(raw) {
   const out = [];
   for (const pair of String(raw || "").split(",")) {
@@ -265,12 +265,13 @@ function salesLogin(env, id, key) {
 // Правды про «чья сделка» в бэк-офисе НЕТ: поле partner там есть только у сделок
 // с облигациями, это свободная строка до 255 знаков, а у автоколлов и защиты
 // капитала его нет вовсе (проверено по схеме API 20.08.2026, 567 маршрутов).
-// Полей вознаграждения нет ни у чего. Поэтому сделки заводятся РУКАМИ — командой
-// боту, и только от ADMIN_CHAT_ID.
+// Полей вознаграждения нет ни у чего. Поэтому сделки заводятся РУКАМИ: командой
+// боту от ADMIN_CHAT_ID или (с 26.08.2026) сейлзом из админки — там запись идёт
+// сразу, без одобрения, Руслану уходит отбивка.
 //
-// Хранение: ОДИН ключ на партнёра со списком сделок (deals:<метка>). Пишет только
-// один человек по одной сделке — состязаться за ключ некому, а стол читает список
-// одним get. TTL НЕ ставим: это учётные данные, они не должны исчезать сами.
+// Хранение: ОДИН ключ на партнёра со списком сделок (deals:<метка>). Сделки по
+// одному партнёру заводит один человек, а стол читает список одним get. TTL НЕ
+// ставим: это учётные данные, они не должны исчезать сами.
 const DEAL_STATUS = { accrued: "начислено", paid: "выплачено" };
 const DEAL_CCY = ["RUB", "USD", "EUR", "CNY"];
 const DEAL_SIGN = { RUB: " ₽", USD: " $", EUR: " €", CNY: " ¥" };
@@ -370,14 +371,16 @@ function dealDate(v) {
 
 // Разбор строки команды /deal. Статус и валюту узнаём ПО СОДЕРЖИМОМУ, а не по месту:
 // иначе порядок полей приходилось бы помнить наизусть.
-function dealParse(env, line) {
+function dealParse(env, line, extraRefs) {
   const parts = String(line || "").split("|").map(function (x) { return x.trim(); })
     .filter(function (x) { return x !== ""; });
   if (parts.length < 5) return { error: "мало полей" };
   const refRaw = parts.shift().toLowerCase();
-  if (!knownRefs(env).includes(refRaw)) {
+  // extraRefs — партнёры, заведённые через админку (pinfo без ключа входа).
+  const known = knownRefs(env).concat(extraRefs || []);
+  if (!known.includes(refRaw)) {
     return { error: "партнёра «" + refRaw + "» нет в списке. Известные: " +
-                    (knownRefs(env).join(", ") || "ни одного") };
+                    (known.join(", ") || "ни одного") };
   }
   let status = "accrued", ccy = "RUB", isin = "";
   const rest = [];
@@ -2789,6 +2792,9 @@ async function handleSubmit(request, env, cors) {
     if (!/^[a-z0-9][a-z0-9._-]{0,39}$/.test(ref)) return json({ ok: false, error: "bad_new_ref" }, 422, cors);
     const taken = new Set((await partnerRefs(env)).concat(knownRefs(env)));
     if (taken.has(ref)) return json({ ok: false, error: "ref_taken" }, 422, cors);
+    // У освободившейся метки (/partnerrm) могла остаться книга сделок прежнего
+    // контрагента — новый партнёр унаследовал бы чужие объёмы и вознаграждения.
+    if ((await dealsGet(env, ref)).length) return json({ ok: false, error: "ref_has_deals" }, 422, cors);
     const p = { name: cleanStr(data.name, 120) };
     if (!p.name) return json({ ok: false, error: "no_name" }, 422, cors);
     const inn = cleanStr(data.inn, 20).replace(/\D/g, "");
@@ -2820,7 +2826,10 @@ async function handleSubmit(request, env, cors) {
       ]] },
     });
     if (!pr.ok) return json({ ok: false, error: "telegram_failed" }, 502, cors);
-    return json({ ok: true, mid: pr.result && pr.result.message_id }, 200, cors);
+    // tg() отдаёт сырой Response — message_id лежит в JSON-теле, без разбора mid
+    // был бы undefined и статус заявки в «Моих заявках» не обновлялся бы никогда.
+    const pj = await pr.json().catch(() => null);
+    return json({ ok: true, mid: (pj && pj.result && pj.result.message_id) || 0 }, 200, cors);
   }
 
   // Сделки одного партнёра — чтобы сейлз мог свериться и снять ошибочную запись.
@@ -2865,23 +2874,29 @@ async function handleSubmit(request, env, cors) {
       product: product, isin: isin, date: date, volume: volume, reward: reward,
       currency: "RUB", status: "paid", ts: Date.now(),
     };
-    const list = await dealsGet(env, ref);
+    // Чтение книги СТРОГОЕ: dealsGet глотает ошибки и отдаёт [], а здесь пустой
+    // список ушёл бы в dealsPut и стёр бы всю книгу партнёра одной записью.
+    let list;
+    try { list = (await env.POST_KV.get("deals:" + ref, "json")) || []; }
+    catch (e) { return json({ ok: false, error: "kv_read_failed" }, 502, cors); }
     list.push(deal);
     await dealsPut(env, ref, list);
     // Отбивка Руслану — уже свершившийся факт, кнопок нет. Telegram упал —
-    // сделка всё равно записана, заявку не роняем.
+    // сделка всё равно записана, заявку не роняем, но честно отдаём notified.
     const dtext =
       "🤝 <b>Сделка заведена</b> (без одобрения) · от <b>" + esc(author) + "</b>\n" +
       "Партнёр: <b>" + esc(ref) + "</b>\n" +
       esc(product) + (isin ? " · <code>" + esc(isin) + "</code>" : "") + "\n" +
       "Дата: " + esc(date.split("-").reverse().join(".")) + "\n" +
       "Объём: <b>" + dealMoney(volume, "RUB") + "</b> · вознаграждение: <b>" + dealMoney(reward, "RUB") + "</b>";
+    let notified = false;
     try {
-      await tg(env, "sendMessage", {
+      const nr = await tg(env, "sendMessage", {
         chat_id: env.ADMIN_CHAT_ID, text: dtext, parse_mode: "HTML", disable_web_page_preview: true,
       });
+      notified = !!(nr && nr.ok);
     } catch (e) { /* отбивка не критична */ }
-    return json({ ok: true, id: deal.id, direct: true }, 200, cors);
+    return json({ ok: true, id: deal.id, direct: true, notified: notified }, 200, cors);
   }
 
   // Снятие ошибочной сделки — тоже сразу, иначе сейлз, заведший сделку без
@@ -2894,7 +2909,9 @@ async function handleSubmit(request, env, cors) {
       return json({ ok: false, error: "bad_ref" }, 422, cors);
     }
     if (!dealId) return json({ ok: false, error: "no_id" }, 422, cors);
-    const list = await dealsGet(env, ref);
+    let list;
+    try { list = (await env.POST_KV.get("deals:" + ref, "json")) || []; }
+    catch (e) { return json({ ok: false, error: "kv_read_failed" }, 502, cors); }
     const gone = list.find(function (x) { return x.id === dealId; });
     if (!gone) return json({ ok: false, error: "not_found" }, 404, cors);
     await dealsPut(env, ref, list.filter(function (x) { return x.id !== dealId; }));
@@ -2903,12 +2920,14 @@ async function handleSubmit(request, env, cors) {
       "Партнёр: <b>" + esc(ref) + "</b>\n" +
       esc(gone.product || dealId) + " · объём " + dealMoney(gone.volume || 0, "RUB") +
       " · вознаграждение " + dealMoney(gone.reward || 0, "RUB");
+    let notified = false;
     try {
-      await tg(env, "sendMessage", {
+      const nr = await tg(env, "sendMessage", {
         chat_id: env.ADMIN_CHAT_ID, text: rtext, parse_mode: "HTML", disable_web_page_preview: true,
       });
+      notified = !!(nr && nr.ok);
     } catch (e) { /* отбивка не критична */ }
-    return json({ ok: true, direct: true }, 200, cors);
+    return json({ ok: true, direct: true, notified: notified }, 200, cors);
   }
 
   const section = cleanStr(data.section, 20);
@@ -3657,7 +3676,10 @@ async function handleTelegram(request, env, ctx) {
     }
     // Карточка-документ (заявка на эмиссионный PDF) несёт payload в caption, не в text
     const msgText = (cb.message && (cb.message.text || cb.message.caption)) || "";
-    const at = msgText.indexOf('{"s":');
+    // ПОСЛЕДНЕЕ вхождение: payload всегда в замыкающем <pre>, а выше в тексте
+    // карточки печатаются свободные строки (название партнёра, продукта) — та же
+    // подстрока в них уводила парсер и делала карточку нерешаемой.
+    const at = msgText.lastIndexOf('{"s":');
     const end = msgText.lastIndexOf("}");
     if (at < 0 || end < at) { await answer("Не нашёл данные заявки", true); return new Response("ok"); }
     let payload;
@@ -3703,6 +3725,16 @@ async function handleTelegram(request, env, ctx) {
           head = "🗑 <b>Сделка снята</b> · ";
           what = title;
         } else if (payload.s === "partner") {
+          // Перепроверка при ✅: между заявкой и решением метку могли занять
+          // (вторая такая же карточка, ключ в PARTNER_KEYS), а у освободившейся
+          // метки могла остаться книга сделок — слепая запись перезаписала бы
+          // реквизиты или отдала новому контрагенту чужие вознаграждения.
+          if ((await pinfoGet(env, payload.ref)) || knownRefs(env).includes(payload.ref)) {
+            throw new Error("метка «" + payload.ref + "» уже занята — партнёр не заведён");
+          }
+          if ((await dealsGet(env, payload.ref)).length) {
+            throw new Error("под меткой «" + payload.ref + "» уже лежат сделки — партнёр не заведён");
+          }
           // Тот же ключ, что у команды /partner: стол и админка читают pinfo.
           await env.POST_KV.put("pinfo:" + payload.ref, JSON.stringify(payload.p));
           head = "🆕 <b>Партнёр заведён</b> · ";
@@ -3722,7 +3754,7 @@ async function handleTelegram(request, env, ctx) {
         await editCard(head + esc(label) + "\n" + esc(what) + " (от " + esc(payload.by) + ")" +
                        (kvOnly ? "" : "\nСайт обновится через 1–3 минуты."));
         await reqStatus(env, cb.message.message_id, "published");
-        await answer(payload.rm ? "Снято" : "Опубликовано");
+        await answer(payload.rm ? "Снято" : payload.s === "partner" ? "Заведено" : "Опубликовано");
       } catch (e) {
         await answer("Ошибка: " + String(e && e.message || e).slice(0, 150), true);
       }
@@ -3790,7 +3822,7 @@ async function handleTelegram(request, env, ctx) {
 
       // /partners — что заполнено у всех известных меток
       if (/^\/partners(?:@\w+)?(?:\s|$)/.test(msg.text)) {
-        const refs = knownRefs(env);
+        const refs = [...new Set((await partnerRefs(env)).concat(knownRefs(env)))];
         if (!refs.length) {
           await say("Партнёров нет — задайте PARTNER_KEYS.");
           return new Response("ok");
@@ -3827,9 +3859,9 @@ async function handleTelegram(request, env, ctx) {
       return new Response("ok");
     }
 
-    // ---- Сделки партнёров: ввод, список, удаление. ТОЛЬКО Руслан (ADMIN_CHAT_ID).
-    // В админке этого нет намеренно: её открывает SALES_KEYS, и партнёр с ключом
-    // вписывал бы себе вознаграждение сам. Здесь проверка сильнее — личка админа.
+    // ---- Сделки партнёров командами: ввод, список, удаление. ТОЛЬКО Руслан
+    // (ADMIN_CHAT_ID). С 26.08.2026 сделки заводит и админка (action "deal",
+    // без одобрения) — команды остались как ручной канал и для сводки /deals.
     if (/^\/deals?(?:@\w+)?(?:\s|$)/.test(msg.text) || /^\/dealrm(?:@\w+)?(?:\s|$)/.test(msg.text)) {
       const isAdmin = env.ADMIN_CHAT_ID && String(from.id) === String(env.ADMIN_CHAT_ID);
       if (!isAdmin || !msg.chat || msg.chat.type !== "private") return new Response("ok");
@@ -3866,7 +3898,7 @@ async function handleTelegram(request, env, ctx) {
         const ref = msg.text.replace(/^\/deals(@\w+)?\s*/, "").trim().toLowerCase();
         if (!ref) {
           const rows = [];
-          for (const r of knownRefs(env)) {
+          for (const r of [...new Set((await partnerRefs(env)).concat(knownRefs(env)))]) {
             const list = await dealsGet(env, r);
             if (!list.length) continue;
             const t = dealTotals(list);
@@ -3908,7 +3940,7 @@ async function handleTelegram(request, env, ctx) {
           "<code>/dealrm партнёр id</code> — удалить.");
         return new Response("ok");
       }
-      const parsed = dealParse(env, line);
+      const parsed = dealParse(env, line, await partnerRefs(env));
       if (parsed.error) {
         await say("Не понял: " + esc(parsed.error) + "\n\nПодсказка по формату — просто <code>/deal</code>");
         return new Response("ok");

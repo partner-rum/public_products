@@ -891,7 +891,7 @@
         var st, cls, canWithdraw = false;
         if (d && d.s === "rejected") { st = "отклонено"; cls = "no"; }
         else if (d && d.s === "withdrawn") { st = "отозвано"; cls = "no"; }
-        else if (d && d.s === "published") { st = r.kind === "edit" ? "правка применена" : "на сайте"; cls = "live"; }
+        else if (d && d.s === "published") { st = r.kind === "edit" ? "правка применена" : r.sect === "partner" ? "заведён" : "на сайте"; cls = "live"; }
         // ПРАВКУ по «id уже на сайте» определять нельзя: id там был и до правки,
         // и лента говорила «на сайте», пока клиент видел старую цену.
         else if (onSite && r.kind !== "edit") { st = "на сайте"; cls = "live"; }
@@ -1324,7 +1324,9 @@
     var btn = document.getElementById(pair[1]);
     if (!form || !btn) return;
     form.addEventListener("keydown", function (e) {
-      if (e.key !== "Enter" || e.target.tagName === "TEXTAREA") return;
+      // Кнопки (в т.ч. «Снять» в списке сделок) Enter активирует сам — перехват
+      // жал бы «Записать сделку», а это теперь мгновенная запись.
+      if (e.key !== "Enter" || e.target.tagName === "TEXTAREA" || e.target.tagName === "BUTTON") return;
       e.preventDefault();
       // Блок «Новый партнёр» живёт в той же форме — Enter из его полей не должен
       // записывать сделку.
@@ -1361,7 +1363,9 @@
                date: date, volume: volume, reward: reward })
       .then(function (d) {
         msgEl.className = "msg ok";
-        msgEl.textContent = "Сделка записана — партнёр уже видит её на столе. Руслану ушло уведомление.";
+        msgEl.textContent = d.notified === false
+          ? "Сделка записана и видна партнёру, но уведомление Руслану не дошло — продублируйте ему сами."
+          : "Сделка записана — партнёр уже видит её на столе. Руслану ушло уведомление.";
         // В «Мои заявки» не пишем: очередь — про ожидание решения, а решать нечего.
         document.getElementById("dl-product").value = "";
         document.getElementById("dl-isin").value = "";
@@ -1418,7 +1422,9 @@
     postJson({ key: keyEl.value.trim(), action: "deal_remove", ref: dlRef.value, id: b.getAttribute("data-rm") })
       .then(function (d) {
         msgEl.className = "msg ok";
-        msgEl.textContent = "Сделка снята — у партнёра на столе её больше нет. Руслану ушло уведомление.";
+        msgEl.textContent = d.notified === false
+          ? "Сделка снята, но уведомление Руслану не дошло — продублируйте ему сами."
+          : "Сделка снята — у партнёра на столе её больше нет. Руслану ушло уведомление.";
         renderDeals(dlRef.value);
       })
       .catch(function (e) { msgEl.className = "msg err"; msgEl.textContent = e.message; })
@@ -1432,10 +1438,11 @@
     bad_ref: "Партнёра нет в списке — обновите страницу; если не появился, его ещё не завели.",
     bad_new_ref: "Метка — латиница и цифры без пробелов, до 40 знаков.",
     ref_taken: "Такая метка уже занята — выберите другую.",
+    ref_has_deals: "Под этой меткой уже лежат сделки прежнего партнёра — выберите другую.",
     no_name: "Впишите название партнёра.",
     bad_inn: "ИНН — 10 цифр (юрлицо) или 12 (ИП).",
     bad_ogrn: "ОГРН — 13 цифр, ОГРНИП — 15.",
-    kv_not_configured: "Хранилище на сервере не подключено — напишите Руслану.",
+    kv_read_failed: "Не удалось прочитать книгу сделок — попробуйте ещё раз, ничего не записано.",
     bad_date: "Дата не распознана — нужен вид ДД.ММ.ГГГГ.",
     bad_volume: "Объём сделки должен быть числом больше нуля.",
     bad_reward: "Вознаграждение должно быть числом.",
@@ -1445,7 +1452,7 @@
     not_found: "Запись не найдена — возможно, её уже сняли.",
     too_long: "Слишком длинный текст — сократите описание.",
     file_too_big: "Файл больше 15 МБ — сожмите PDF.",
-    kv_not_configured: "Хранилище файлов не подключено. Это на нашей стороне — напишите Руслану.",
+    kv_not_configured: "Хранилище на сервере не подключено. Это на нашей стороне — напишите Руслану.",
     telegram_failed: "Не удалось отправить заявку в Telegram. Попробуйте ещё раз через минуту.",
     github_conflict: "Файл сайта изменился в этот же момент. Просто отправьте заявку ещё раз.",
     not_configured: "Сервис ещё не настроен. Это на нашей стороне — напишите Руслану.",
