@@ -81,16 +81,17 @@
   .lcard { display: block; background: var(--card); border: 1px solid var(--border-soft); border-radius: 12px; padding: 13px 15px; margin-bottom: 9px; transition: border-color .2s, transform .2s var(--ease); }
   a.lcard:hover { border-color: var(--border); transform: translateY(-1px); }
   .lcard.best { border-color: rgba(238,125,27,.5); background: linear-gradient(180deg, rgba(238,125,27,.07), transparent 60%), var(--card); }
-  .lcard .r { font-family: var(--f-mono); font-size: 21px; font-weight: 600; letter-spacing: -.02em; }
+  .lcard .r { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 7px; font-family: var(--f-mono); font-size: 21px; font-weight: 600; letter-spacing: -.02em; }
   .lcard.best .r { color: var(--solar); }
-  .lcard .n { font-size: 13px; font-weight: 500; margin-top: 5px; line-height: 1.35; }
+  .lcard .n { font-size: 13px; font-weight: 600; margin-top: 5px; line-height: 1.35; }
+  .lcard .n .org { font-weight: 400; color: var(--hushed); }
   .lcard .s { font-size: 11.5px; color: var(--faint); margin-top: 3px; line-height: 1.4; }
   .lcard .tag { display: inline-block; font-family: var(--f-mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; border-radius: 5px; padding: 2px 7px; margin-top: 7px; }
   .t-dep { color: var(--solar); background: rgba(238,125,27,.13); }
   .t-sav { color: #E7B98D; background: rgba(238,125,27,.08); }
   .t-fund { color: var(--up); background: rgba(85,192,138,.12); }
   .t-ofz { color: var(--ink); background: rgba(255,255,255,.08); }
-  .flag { color: var(--solar); font-family: var(--f-mono); font-size: 11px; }
+  .flag { color: var(--solar); font-family: var(--f-mono); font-size: 11px; white-space: nowrap; }
   .flag.fl { color: var(--blue); }
 
   /* Полка: последняя ступень лестницы — то, что дальше вкладов */
@@ -204,7 +205,7 @@
   var R = window.RATES || {};
   var esc = function (s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); };
   var fmt = function (n) { return (Math.round(n * 100) / 100).toFixed(2).replace(/\.?0+$/, "").replace(".", ","); };
-  var money = function (n) { return n >= 1000000 ? (n / 1000000 + " млн ₽") : (String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " ₽"); };
+  var money = function (n) { return n >= 1000000 ? (fmt(n / 1000000) + " млн ₽") : (String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " ₽"); };
   // «2026-08-25 16:31» из данных → человеку «обновлено 25.08.2026 16:31»
   var updH = String(R.updated || "").replace(/^(\d{4})-(\d{2})-(\d{2})/, "$3.$2.$1");
   document.getElementById("upd").textContent = updH ? "обновлено " + updH : "";
@@ -224,18 +225,27 @@
   // фонды и ОФЗ → карточка бумаги на МосБирже. RUSFAR — бенчмарк, в лестнице его нет.
   var rows = [];
   (R.deposits || []).forEach(function (d) {
-    rows.push({ kind: d.kind === "saving" ? "sav" : "dep", name: d.bank, sub: d.name,
+    // Условия вклада — то, что реально есть в данных: минималка (от 1000 ₽ —
+    // «от 1 ₽» у накопительных счетов было шумом), пополнение, капитализация
+    // и короткая фраза условия с витрины Финуслуг. Фраза про привязку к ключевой
+    // не дублируется — её уже несёт флаг «плав.» у самой ставки.
+    var cond = [];
+    if (d.minAmount >= 1000) cond.push("от " + money(d.minAmount));
+    if (d.refill) cond.push("пополняемый");
+    if (d.capitalization) cond.push("капитализация");
+    if (d.feature && !(d.floating && /ключев/i.test(d.feature))) cond.push(d.feature);
+    rows.push({ kind: d.kind === "saving" ? "sav" : "dep", prod: d.name, org: d.bank, cond: cond,
       rate: d.rate, days: d.termMonths > 0 ? Math.round(d.termMonths * 30.44) : 1,
       termLabel: d.termMonths > 0 ? d.termMonths + " мес" : "гибкий срок",
-      min: d.minAmount, promo: d.promo, floating: d.floating, url: d.url });
+      promo: d.promo, floating: d.floating, url: d.url });
   });
   (R.funds || []).forEach(function (f) {
-    rows.push({ kind: "fund", name: f.name, sub: "БПИФ " + f.id + " · продать можно в любой день",
+    rows.push({ kind: "fund", prod: f.name, cond: ["БПИФ " + f.id, "продать можно в любой день"],
       rate: f.rate, days: 1, termLabel: "любой день",
       url: "https://www.moex.com/ru/issue.aspx?code=" + f.id });
   });
   (R.ofz || []).forEach(function (o) {
-    rows.push({ kind: "ofz", name: o.name, sub: "доходность к погашению",
+    rows.push({ kind: "ofz", prod: o.name, cond: ["доходность к погашению"],
       rate: o.rate, days: Math.round(o.years * 365),
       termLabel: o.years < 1 ? Math.round(o.years * 12) + " мес" : fmt(o.years) + " г.",
       url: "https://www.moex.com/ru/issue.aspx?code=" + o.id });
@@ -267,8 +277,10 @@
     // организацию дважды, и только потом добираем по ставке.
     var picked = [], seenOrg = {};
     function take(p) {
-      if (!p || picked.length >= 4 || seenOrg[p.name]) return;
-      seenOrg[p.name] = 1;
+      if (!p || picked.length >= 4) return;
+      var org = p.org || p.prod;   // у вкладов организация — банк, у фондов и ОФЗ — сама бумага
+      if (seenOrg[org]) return;
+      seenOrg[org] = 1;
       picked.push(p);
     }
     ["sav", "dep", "fund", "ofz"].forEach(function (k) {
@@ -282,11 +294,13 @@
     var h = '<div class="lcol"><h2 class="lh">' + b.label + '</h2>';
     show.forEach(function (p, i) {
       var t = TAG[p.kind];
+      // Название продукта — жирным, банк — тем же кеглем, но тише: клиент ищет
+      // «что покупаю», не теряя «у кого». Подпись .s — только условия.
       var inner = '<div class="r">' + fmt(p.rate) + '%' +
         (p.promo ? ' <span class="flag">★ промо</span>' : '') +
         (p.floating ? ' <span class="flag fl">плав.</span>' : '') + '</div>' +
-        '<div class="n">' + esc(p.name) + '</div>' +
-        '<div class="s">' + esc(p.sub || "") + (p.min ? " · от " + money(p.min) : "") + '</div>' +
+        '<div class="n">' + esc(p.prod) + (p.org ? ' <span class="org">· ' + esc(p.org) + '</span>' : '') + '</div>' +
+        (p.cond && p.cond.length ? '<div class="s">' + p.cond.map(esc).join(" · ") + '</div>' : '') +
         '<span class="tag ' + t[0] + '">' + t[1] + " · " + esc(p.termLabel) + '</span>';
       var best = (i === 0 && !p.promo) ? " best" : "";
       h += p.url
