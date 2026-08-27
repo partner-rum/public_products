@@ -136,6 +136,10 @@
   .stack::after { content:""; position:absolute; left:5px; bottom:8px; width:12px; height:12px;
     border-right:2px solid var(--solar); border-bottom:2px solid var(--solar);
     transform:rotate(45deg); opacity:.5 }
+  /* Тема без направления: ни линии, ни стрелки, ни вертикальной подписи —
+     только сами группы. Отступ слева тоже снимаем, он был под направляющую. */
+  .stack.noflow { padding-left:0 }
+  .stack.noflow::before, .stack.noflow::after { content:none }
   .flow { position:absolute; left:-6px; top:0; font-family:var(--m); font-size:10px;
     color:var(--mute); letter-spacing:.14em; text-transform:uppercase; white-space:nowrap;
     transform-origin:0 0; transform:rotate(90deg) translate(4px,-14px) }
@@ -360,7 +364,11 @@
          "задаёт ключевая ставка, у внутреннего рынка — спрос внутри страны, у экспортёров — " +
          "мировые цены и курс рубля. Это разные риски: одна и та же новость двигает группы " +
          "в разные стороны.",
-      f: "деньги приходят из разных мест"
+      // f пуст НАМЕРЕННО: стрелка и линия рисуют направление, а у этих групп
+      // его нет — финансы, внутренний рынок и сырьё не звенья цепочки, а
+      // параллельные источники выручки. Стрелка обещала бы последовательность,
+      // которой не существует.
+      f: ""
     }
   };
   // Слои ТЕКУЩЕГО выпуска, в порядке LAYERS: пустых секций на странице не бывает.
@@ -564,6 +572,7 @@
     var counts = {};
     items.forEach(function (d) { counts[d.layer] = (counts[d.layer] || 0) + 1; });
     var LS = layersOf(items);
+    var flow = MAP[iss.id] ? MAP[iss.id].f : "";
     var chips = '<div class="lchips">' + LS.map(function (l) {
       return '<a class="lchip" href="#stack"><i style="background:' + l.c + '"></i>' +
         esc(l.n) + ' <b>' + (counts[l.k] || 0) + '</b></a>';
@@ -609,8 +618,10 @@
         '<div class="sec-h"><h2>' + esc(MAP[iss.id] ? MAP[iss.id].h : "Карта разбора") + '</h2>' +
         '<span>карта разбора</span></div>' +
         '<p class="sec-p">' + esc(MAP[iss.id] ? MAP[iss.id].p : "") + '</p>' +
-        '<div class="stack"><div class="flow">' +
-        esc(MAP[iss.id] ? MAP[iss.id].f : "") + '</div>' + stackHTML(items) + '</div>' +
+        // Направляющая рисуется ТОЛЬКО у темы с настоящим потоком (см. MAP.f)
+        '<div class="stack' + (flow ? '' : ' noflow') + '">' +
+        (flow ? '<div class="flow">' + esc(flow) + '</div>' : '') +
+        stackHTML(items) + '</div>' +
       '</div></section>' +
 
       '<section class="sec"><div class="wrap">' +
