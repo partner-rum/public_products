@@ -377,13 +377,27 @@
     .nav { margin-left:-264px; padding-left:0 }
     .nav-in { max-width:none; margin:0; padding:0 28px 0 24px }
     /* Колонка начинается ПОД шапкой (61px) и лежит НИЖЕ неё по слоям.
-       Отступ 85px доводит верх списка до строки «Разбор темы · дата». */
+       Отступ 27px доводит верх списка ровно до строки «Разбор темы · дата». */
     .isides { display:block; position:fixed; left:0; top:61px; bottom:0; width:264px; z-index:50;
       background:#0E0F14; border-right:1px solid var(--border); overflow-y:auto;
-      padding:85px 14px 28px }
+      padding:27px 14px 28px }
+    /* Поиск: при двадцати выпусках «в каком разборе был Сбер» — обычный вопрос,
+       а перебирать двести компаний глазами нельзя. Ищет и по теме, и по
+       компаниям внутри выпусков. */
+    .isides .sfind { position:relative; margin:0 4px 20px }
+    .isides .sfind svg { position:absolute; left:11px; top:50%; margin-top:-7px;
+      color:var(--mute); pointer-events:none }
+    .isides .sfind input { width:100%; height:38px; padding:0 12px 0 34px;
+      background:rgba(255,255,255,.045); border:1px solid var(--border); border-radius:9px;
+      color:var(--ink); font:400 13px var(--f); outline:none; transition:.16s }
+    .isides .sfind input::placeholder { color:var(--mute) }
+    .isides .sfind input:focus { border-color:rgba(238,125,27,.55);
+      background:rgba(255,255,255,.06) }
+    .isides .sfind input::-webkit-search-cancel-button { filter:invert(.6) }
     .isides .sh { display:flex; justify-content:space-between; align-items:baseline;
       font-family:var(--m); font-size:10.5px; letter-spacing:.12em; text-transform:uppercase;
       color:var(--mute); padding:0 10px 10px }
+    .isides .snone { padding:14px 10px; font-size:12.5px; color:var(--mute); line-height:1.5 }
     .isides .sh span { font-size:11.5px; color:var(--hushed) }
     .isides .arow { grid-template-columns:1fr; gap:4px; padding:11px 10px; border:0 }
     .isides .arow + .arow { border-top:1px solid rgba(255,255,255,.05) }
@@ -835,14 +849,44 @@
     // Колонка слева: тот же список строк, что и в шапке, но всегда на виду
     var side = document.getElementById("isides");
     if (side) {
-      side.innerHTML = '<div class="sh">Все разборы<span>' + IDEAS.issues.length + '</span></div>' +
-        IDEAS.issues.map(function (x, i) { return archRow(x, i, idx); }).join("");
+      side.innerHTML =
+        '<div class="sfind">' +
+          '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">' +
+          '<circle cx="7" cy="7" r="4.6" stroke="currentColor" stroke-width="1.5"/>' +
+          '<path d="M10.6 10.6 L14 14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>' +
+          '<input type="search" id="ifind" placeholder="Компания или тема" aria-label="Поиск по разборам">' +
+        '</div>' +
+        '<div class="sh">Все разборы<span id="ifn">' + IDEAS.issues.length + '</span></div>' +
+        IDEAS.issues.map(function (x, i) { return archRow(x, i, idx); }).join("") +
+        '<div class="snone" hidden>Ничего не нашлось. Попробуйте тикер или название компании.</div>';
       side.onclick = function (e3) {
         var b3 = e3.target.closest("button[data-i]");
         if (!b3) return;
         render(parseInt(b3.dataset.i, 10));
         window.scrollTo({ top: 0, behavior: "auto" });
       };
+      // Ищем и по теме выпуска, и по компаниям внутри него: чаще всего сейлзу
+      // нужно «где разбирали Сбер», а не «как назывался тот выпуск».
+      var find = side.querySelector("#ifind");
+      var haystack = IDEAS.issues.map(function (x) {
+        return (x.title + " " + (x.items || []).map(function (d) {
+          return d.company + " " + d.ticker;
+        }).join(" ")).toLowerCase().replace(/ё/g, "е");
+      });
+      find.addEventListener("input", function () {
+        var q = find.value.trim().toLowerCase().replace(/ё/g, "е");
+        var shown = 0;
+        side.querySelectorAll(".arow").forEach(function (r, i) {
+          var hit = !q || haystack[i].indexOf(q) >= 0;
+          r.hidden = !hit;
+          if (hit) shown++;
+        });
+        side.querySelector("#ifn").textContent = q ? shown + " из " + IDEAS.issues.length : IDEAS.issues.length;
+        side.querySelector(".snone").hidden = shown > 0;
+      });
+      find.addEventListener("keydown", function (e7) {
+        if (e7.key === "Escape" && find.value) { find.value = ""; find.dispatchEvent(new Event("input")); }
+      });
     }
 
     var arch = box.querySelector(".arch");
