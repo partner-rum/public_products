@@ -212,8 +212,12 @@
   .co-target .n { font-size:11px; color:var(--mute); margin-top:7px; line-height:1.45;
     padding-top:7px; border-top:1px solid var(--border) }
   .co-body { position:relative }
+  /* 620px — самый длинный тезис просит 600px и встаёт в ОДНУ строку; ватермарка
+     с тикером начинается на 634px, так что запас есть. Прежние 26ch (417px)
+     ломали заголовок надвое посреди фразы при пустом правом поле.
+     balance остаётся для узких экранов, где перенос неизбежен. */
   .co-body h3 { font-size:24px; font-weight:600; line-height:1.25; letter-spacing:-.01em;
-    max-width:26ch; text-wrap:balance }
+    max-width:620px; text-wrap:balance }
   .wm { position:absolute; top:-20px; right:0; font-family:var(--m); font-weight:700;
     font-size:110px; letter-spacing:-.05em; color:var(--c); opacity:.055; line-height:1;
     pointer-events:none; user-select:none }
