@@ -751,6 +751,14 @@
   function render(idx) {
     var box = document.getElementById("issue");
     var iss = IDEAS.issues[idx];
+    // Адрес всегда показывает открытый выпуск: ссылку можно скопировать прямо
+    // из строки браузера. replaceState, а не push — «Назад» уводит со страницы,
+    // а не отматывает переключения выпусков.
+    try {
+      var qs = new URLSearchParams(location.search);
+      qs.set("i", iss.id);
+      history.replaceState(null, "", location.pathname + "?" + qs.toString());
+    } catch (e0) { /* адресная строка не критична для отрисовки */ }
     if (!iss) { box.innerHTML = '<div class="wrap"><p class="sec-p">Разборов пока нет.</p></div>'; return; }
     var items = iss.items || [];
     SPOT_HUMAN = human(iss.spotDate) || human(iss.date);
@@ -907,7 +915,18 @@
     }
   }
 
-  render(0);
+  // Прямая ссылка на выпуск: ideas.html?i=<id>. Нужна ссылкам со страницы
+  // событий — встреча привязана к КОНКРЕТНОМУ разбору, а без параметра
+  // открывался бы самый свежий (после нового выпуска августовская встреча
+  // уводила на чужую тему).
+  var want = new URLSearchParams(location.search).get("i");
+  var start = 0;
+  if (want) {
+    for (var wi = 0; wi < IDEAS.issues.length; wi++) {
+      if (IDEAS.issues[wi].id === want) { start = wi; break; }
+    }
+  }
+  render(start);
 })();
 </script>
 <script src="chat.js?v=17"></script>

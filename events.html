@@ -235,7 +235,7 @@
   </div>
 </div>
 
-<script src="data/events.js?v=5"></script>
+<script src="data/events.js?v=6"></script>
 <script>
 (function () {
   "use strict";
@@ -290,11 +290,13 @@
       ? joinBtn + '<button class="btn ghost" id="calBtn" type="button">В календарь</button>'
       : '<button class="btn" id="remindBtn" type="button">Напомнить в Telegram</button>' + joinBtn +
         '<button class="btn ghost" id="calBtn" type="button">В календарь</button>';
-    // Материал встречи: живёт своим разделом, здесь только вход в него. Подпись
-    // берётся из данных — у разных встреч материал разный (разбор компаний,
-    // скринер ставок), и одна зашитая подпись врала бы про половину из них.
-    if (s.materialUrl) actions += '<a class="btn ghost" href="' + esc(s.materialUrl) + '" data-goal="event_material">' +
-      esc(s.materialLabel || "Разбор компаний") + ' ' + ARROW + '</a>';
+    // Материалы встречи: живут своими разделами, здесь только входы в них.
+    // Их может быть несколько (скринер ставок И разбор компаний), а подпись
+    // берётся из данных — одна зашитая врала бы про половину встреч.
+    materialsOf(s).forEach(function (m) {
+      actions += '<a class="btn ghost" href="' + esc(m.url) + '" data-goal="event_material">' +
+        esc(m.label) + ' ' + ARROW + '</a>';
+    });
     return '<section class="poster">' +
       '<div class="p-l">' +
         (live ? '<span class="chip onair"><i></i>Идёт сейчас</span>'
@@ -315,14 +317,26 @@
     '</section>';
   }
 
+  // Материалы встречи в одном виде: новый массив materials или прежняя пара
+  // materialUrl/materialLabel — старые записи продолжают работать без правки.
+  function materialsOf(s) {
+    if (Array.isArray(s.materials) && s.materials.length) {
+      return s.materials.filter(function (m) { return m && m.url; })
+        .map(function (m) { return { url: m.url, label: m.label || "Разбор компаний" }; });
+    }
+    return s.materialUrl ? [{ url: s.materialUrl, label: s.materialLabel || "Разбор компаний" }] : [];
+  }
+
   function rowHTML(e) {
     var s = e.src, act;
     if (e.state === "live" && s.joinUrl) act = '<a class="btn" style="padding:8px 14px;font-size:13px" href="' + esc(s.joinUrl) + '" target="_blank" rel="noopener">Подключиться</a>';
     else if (e.state !== "past") act = '<span class="chip live">Скоро</span>';
     else if (s.recordingUrl) act = '<a class="lnk" href="' + esc(s.recordingUrl) + '" target="_blank" rel="noopener" data-goal="event_recording">Смотреть запись →</a>';
     else act = '<span class="chip past">Запись готовится</span>';
-    if (s.materialUrl) act += '<a class="lnk" style="margin-left:12px" href="' + esc(s.materialUrl) + '" data-goal="event_material">' +
-      esc(s.materialLabel || "Разбор") + ' →</a>';
+    materialsOf(s).forEach(function (m) {
+      act += '<a class="lnk" style="margin-left:12px" href="' + esc(m.url) + '" data-goal="event_material">' +
+        esc(m.label) + ' →</a>';
+    });
     return '<div class="tr" id="' + esc(s.id) + '">' +
       '<div class="dt">' + e.dateShort + '<span class="yr">' + e.year + '</span></div>' +
       '<div><div class="tt">' + esc(s.title) + '</div><div class="ts">' + esc(s.sub) + '</div></div>' +

@@ -9,8 +9,10 @@
 //                  а НЕ студии (/app/stream/studios/…): студия — пульт ведущего,
 //                  клиент туда попадать не должен. Пусто = кнопки «Подключиться» нет
 //   recordingUrl — ссылка на запись; появилась → в расписании кнопка «Смотреть запись»
-//   materialUrl  — материал по теме встречи; появился → кнопка входа в него
-//   materialLabel— подпись этой кнопки (по умолчанию «Разбор компаний»)
+//   materials    — материалы по теме: [{url, label}, …]; появились → кнопки входа.
+//                  На ideas.html ссылаться С ПАРАМЕТРОМ ?i=<id выпуска>: без него
+//                  откроется самый свежий разбор, а не тот, про который встреча.
+//                  Старая пара materialUrl/materialLabel тоже понимается
 //   agenda       — программа (постер ближайшей встречи)
 // Статус (предстоит / идёт / прошла) страницы считают САМИ от date+timeMsk —
 // руками ничего не переключается. Видео в репозиторий не кладём — только ссылки.
@@ -27,8 +29,10 @@ window.EVENTS = {
       "place": "Онлайн · Контур.Толк · вход свободный",
       "joinUrl": "",
       "recordingUrl": "",
-      "materialUrl": "screener.html",
-      "materialLabel": "Лучшие ставки",
+      "materials": [
+        { "url": "screener.html", "label": "Лучшие ставки" },
+        { "url": "ideas.html?i=ru-market", "label": "Разбор: российский рынок" }
+      ],
       "speaker": "Руслан Сабиров",
       "speakerNote": "Rumberg — автор витрины структурных продуктов",
       "agenda": [
@@ -50,7 +54,9 @@ window.EVENTS = {
       "place": "Онлайн · Контур.Толк · вход свободный",
       "joinUrl": "https://rumbergcapital.ktalk.ru/app/stream/auditoriums/cfcb75a2-d95f-439c-945c-2e6c26e8658c",
       "recordingUrl": "https://rumbergcapital.ktalk.ru/recordings/AVqjCBrBRsx5E0DUPQyb",
-      "materialUrl": "ideas.html",
+      "materials": [
+        { "url": "ideas.html?i=ai-infra", "label": "Разбор компаний" }
+      ],
       "speaker": "Руслан Сабиров",
       "speakerNote": "Rumberg — автор витрины структурных продуктов",
       "agenda": [
