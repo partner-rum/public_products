@@ -27,7 +27,7 @@ window.EVENTS = {
       "timeMsk": "15:00",
       "durationMin": 30,
       "place": "Онлайн · Контур.Толк · вход свободный",
-      "joinUrl": "",
+      "joinUrl": "https://rumbergcapital.ktalk.ru/app/stream/auditoriums/e10ed169-3fd6-421f-a235-9f9a92f6932d",
       "recordingUrl": "",
       "materials": [
         { "url": "screener.html", "label": "Лучшие ставки" },
