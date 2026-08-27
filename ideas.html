@@ -184,6 +184,10 @@
   .tp .tbase { display:block; font-size:11px; font-weight:400; color:var(--mute); margin-top:4px }
   .tprod { text-align:right; white-space:nowrap; font-family:var(--m); font-size:12.5px;
     color:var(--up) }
+  /* Число продуктов — рабочая ссылка на инструменты компании, а не просто цифра */
+  .tprod a { display:inline-block; min-width:34px; padding:5px 9px; border-radius:8px;
+    border:1px solid rgba(85,192,138,.3); transition:.16s }
+  .tprod a:hover { background:rgba(85,192,138,.12); border-color:rgba(85,192,138,.6) }
   .tprod.none { color:var(--mute) }
   th:nth-child(5), th:nth-child(6) { text-align:right }
 
@@ -225,7 +229,10 @@
   .risk p:last-child { margin:0 }
 
   /* ── продукты под компанию ─────────────────────────────── */
-  .prod { margin-top:24px; padding-top:22px; border-top:1px solid var(--border) }
+  /* scroll-margin — под липкую шапку 60px: без него переход из полосы «наши
+     продукты» и из таблицы прятал заголовок блока под навигацию */
+  .prod { margin-top:24px; padding-top:22px; border-top:1px solid var(--border);
+    scroll-margin-top:78px }
   .prod-h { display:flex; align-items:baseline; gap:10px; margin-bottom:14px }
   .prod-h b { font-family:var(--m); font-size:10.5px; letter-spacing:.12em;
     text-transform:uppercase; color:var(--up); font-weight:400 }
@@ -244,9 +251,23 @@
   .pc-meta .fk { font-family:var(--m); font-size:10px; letter-spacing:.08em;
     text-transform:uppercase }
   .pc-basket { color:var(--steel) }
-  .prod.empty { color:var(--mute); font-size:13.5px }
-  .prod.empty .prod-h b { color:var(--mute) }
+  /* Пустое состояние — одна строка, а не блок: у большинства компаний разбора
+     продуктов нет, и шесть одинаковых заглушек забивали страницу */
+  .prod.empty { margin-top:22px; padding-top:16px; border-top:1px solid var(--border);
+    color:var(--mute); font-size:13px; scroll-margin-top:78px }
   .prod.empty a { color:var(--solar); border-bottom:1px solid rgba(238,125,27,.4) }
+
+  /* Полоса «где есть наши продукты» — первый экран отвечает на вопрос сейлза */
+  .haveprod { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-top:22px;
+    padding-top:20px; border-top:1px solid var(--border) }
+  .haveprod .hk { font-family:var(--m); font-size:11px; letter-spacing:.12em;
+    text-transform:uppercase; color:var(--up); margin-right:2px }
+  .hp { display:inline-flex; align-items:baseline; gap:8px; padding:8px 14px;
+    border:1px solid rgba(85,192,138,.32); border-radius:999px; background:var(--card);
+    font-size:13.5px; color:var(--hushed); transition:.16s }
+  .hp:hover { color:var(--ink); border-color:rgba(85,192,138,.6) }
+  .hp b { font-family:var(--m); font-size:12.5px; font-weight:700; color:var(--up) }
+  .haveprod .rest { font-size:12.5px; color:var(--mute) }
 
   /* ── подвал ────────────────────────────────────────────── */
   footer { border-top:1px solid var(--border); margin-top:30px; padding:32px 0 64px }
@@ -278,6 +299,10 @@
     .facts { gap:20px }
     .pill { min-width:100% }
     .co-body h3 { font-size:21px }
+    /* Тач-цели ≥44px: полоса продуктов и число в таблице — основные переходы
+       к инструментам, с телефона по ним и попадают */
+    .hp { min-height:44px; padding:10px 15px }
+    .tprod a { min-height:44px; display:inline-flex; align-items:center; justify-content:center }
   }
   @media (prefers-reduced-motion:reduce) {
     html { scroll-behavior:auto }
@@ -470,15 +495,18 @@
 
   function prodBlock(d) {
     var p = products(d);
+    // Якорь на блок продуктов: с него ведут полоса в шапке и колонка таблицы,
+    // чтобы сейлз попадал сразу на инструменты, а не на начало разбора.
+    var id = ' id="p-' + esc(d.ticker) + '"';
     if (!p.total) {
-      return '<div class="prod empty"><div class="prod-h"><b>Продукты Rumberg</b></div>' +
-        'На ' + esc(d.company) + ' сейчас нет инструментов на витрине. ' +
-        'Нужен продукт под эту идею — <a href="board.html">напишите нам с доски</a>, ' +
-        'деск считает структуру под запрос.</div>';
+      // Пустое состояние — ОДНА тихая строка. Шесть полноразмерных заглушек
+      // в странице на 18 экранов читались как шум, а не как информация.
+      return '<div class="prod empty"' + id + '>Инструментов на ' + esc(d.company) +
+        ' на витрине сейчас нет — <a href="board.html">деск соберёт под запрос</a>.</div>';
     }
     var cards = p.direct.map(function (r) { return pcard(r, false); })
       .concat(p.basket.map(function (r) { return pcard(r, true); })).join("");
-    return '<div class="prod"><div class="prod-h"><b>Продукты Rumberg</b>' +
+    return '<div class="prod"' + id + '><div class="prod-h"><b>Продукты Rumberg</b>' +
       '<span>' + p.total + ' на витрине · котировки индикативные</span></div>' +
       '<div class="pgrid">' + cards + '</div></div>';
   }
@@ -513,11 +541,12 @@
         '<td class="tp">' + (d.upside != null ? esc(pctShown(d)) : "—") +
         '<span class="tbase">' + esc(money(d.spot)) + ' → ' + esc(money(d.targetNum) || d.target) +
         (d.upside != null ? ' · расчёт ' + esc(pct(d.upside)) : '') + '</span></td>' +
-        '<td class="tprod' + (p.total ? '' : ' none') + '">' + (p.total ? p.total : "—") + '</td>' +
+        '<td class="tprod' + (p.total ? '' : ' none') + '">' +
+        (p.total ? '<a href="#p-' + esc(d.ticker) + '">' + p.total + '</a>' : "—") + '</td>' +
         '</tr>';
     }).join("");
     return '<div class="tw"><table><thead><tr>' +
-      '<th scope="col">Тикер</th><th scope="col">Компания</th><th scope="col">Слой</th>' +
+      '<th scope="col">Тикер</th><th scope="col">Компания</th><th scope="col">Группа</th>' +
       '<th scope="col">Тезис</th><th scope="col">Потенциал к цели</th><th scope="col">Продукты</th>' +
       '</tr></thead><tbody>' + rows + '</tbody></table></div>';
   }
@@ -539,8 +568,10 @@
         '<div class="v">' + (d.upside != null ? esc(pctShown(d)) : esc(d.target)) + '</div>' +
         (d.spot ? '<div class="b">' + esc(money(d.spot)) + ' → ' + esc(money(d.targetNum) || d.target) +
                   (d.upside != null ? ' · расчёт ' + esc(pct(d.upside)) : '') + '</div>' +
-                  '<div class="n">округлено до 5% · от закрытия ' + esc(SPOT_HUMAN) +
-                  ' · не ИИР</div>' : '') +
+                  // База расчёта нужна у каждой цифры (её проверяют), а вот
+                  // «округлено» и «не ИИР» сказаны в шапке выпуска — здесь
+                  // они повторялись десять раз подряд и читались как шум.
+                  '<div class="n">от закрытия ' + esc(SPOT_HUMAN) + '</div>' : '') +
         '</div>' +
       '</aside>' +
       '<div class="co-body">' +
@@ -580,6 +611,22 @@
 
     var withProd = items.filter(function (d) { return products(d).total > 0; }).length;
 
+    // Полоса «где есть наши продукты». Главный вопрос сейлза к разбору —
+    // «что из этого я могу продать» — раньше требовал прокрутки до 5000 px.
+    // Каждая ссылка ведёт СРАЗУ на блок инструментов этой компании.
+    var haveList = items.filter(function (d) { return products(d).total > 0; })
+      .sort(function (a, b) { return products(b).total - products(a).total; });
+    var noneN = items.length - haveList.length;
+    var haveprod = haveList.length
+      ? '<div class="haveprod"><span class="hk">наши продукты есть на</span>' +
+        haveList.map(function (d) {
+          return '<a class="hp" href="#p-' + esc(d.ticker) + '">' + esc(d.company) +
+            '<b>' + products(d).total + '</b></a>';
+        }).join("") +
+        (noneN ? '<span class="rest">у остальных ' + noneN + ' — под запрос</span>' : '') +
+        '</div>'
+      : "";
+
     var ev = iss.eventId
       ? '<a class="ev" href="events.html#' + esc(iss.eventId) + '"><span class="dot"></span>' +
         'Тема вебинара <b>' + humanShort(iss.eventDate) + '</b> — ' + esc(iss.eventTitle) +
@@ -591,11 +638,10 @@
         '<div class="kick">Разбор темы · ' + human(iss.date) + '</div>' +
         '<h1>' + esc(iss.title) + '</h1>' +
         '<p class="sub">' + esc(iss.sub) + '</p>' +
-        ev + chips +
+        ev + chips + haveprod +
         '<div class="facts">' +
           '<div class="fact"><div class="v">' + items.length + '</div><div class="k">компаний в разборе</div></div>' +
           '<div class="fact"><div class="v">' + LS.length + '</div><div class="k">' + (LS.length === 1 ? 'группа' : 'группы') + ' в разборе</div></div>' +
-          '<div class="fact"><div class="v">' + withProd + '</div><div class="k">доступны через наши продукты</div></div>' +
           '<div class="fact"><div class="v">12 мес</div><div class="k">горизонт целевых цен</div></div>' +
         '</div>' +
         (iss.context ? '<div class="note ctx"><b>' + esc(iss.context.split(".")[0]) + '.</b>' +
