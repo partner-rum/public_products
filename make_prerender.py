@@ -241,16 +241,22 @@ def ideas_block():
     items = iss.get("items") or []
 
     # Названия слоёв повторяют ideas.html: в данных лежит только ключ слоя.
+    # Здесь перечислены слои ВСЕХ тем; в выпуск попадают только непустые.
     LAYERS = [("chips", "Кремний"), ("iron", "Железо и сборка"),
-              ("cloud", "Мощности и облако")]
+              ("cloud", "Мощности и облако"),
+              ("fin", "Финансы"), ("domestic", "Внутренний рынок"),
+              ("export", "Сырьё и экспорт")]
 
-    def usd(v):
+    sign = iss.get("currency") or "USD"
+
+    def money(v):
         if v is None:
             return ""
         whole = float(v) == int(v)
-        head = "{:,}".format(int(abs(v))).replace(",", " ")
+        head = "{:,}".format(int(abs(v))).replace(",", " ")
         cents = "" if whole else ",%02d" % round((abs(v) - int(abs(v))) * 100)
-        return "$" + head + cents
+        n = head + cents
+        return (n + " ₽") if sign == "RUB" else ("$" + n)
 
     groups = []
     for key, title in LAYERS:
@@ -263,7 +269,7 @@ def ideas_block():
             if x.get("upside5") is not None:
                 bits.append("Потенциал к цели +%d%% (расчёт +%s%%), %s к %s"
                             % (x["upside5"], str(x.get("upside")).replace(".", ","),
-                               usd(x.get("spot")), usd(x.get("targetNum"))))
+                               money(x.get("spot")), money(x.get("targetNum"))))
             row = ". ".join(bits) + "."
             if x.get("lead"):
                 row += " " + x["lead"]
@@ -272,12 +278,14 @@ def ideas_block():
             rows.append(row)
         groups.append((title, rows))
 
-    intro = ("Разборы Rumberg: %s — %s по трём слоям стека. Потенциал к целевым ценам "
+    ngroups = len([g for g in groups if g[1]])
+    intro = ("Разборы Rumberg: %s — %s, %s. Потенциал к целевым ценам "
              "аналитиков на 12 месяцев посчитан от цен закрытия %s и округлён до кратного 5. "
              "Материал носит информационный характер и не является индивидуальной "
              "инвестиционной рекомендацией."
              % (iss.get("title", ""),
                 plural(len(items), "компания", "компании", "компаний"),
+                plural(ngroups, "группа", "группы", "групп"),
                 ru_date(iss.get("spotDate") or iss.get("date"))))
     return {"ideas": block_body(intro, groups)}
 
