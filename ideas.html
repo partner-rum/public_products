@@ -111,14 +111,33 @@
   .fact .k { font-size:12.5px; color:var(--mute); margin-top:5px }
 
   /* ── архив выпусков ────────────────────────────────────── */
-  .arch { display:flex; flex-wrap:wrap; gap:8px; margin-top:30px }
-  .arch b { font-family:var(--m); font-size:10.5px; letter-spacing:.12em; text-transform:uppercase;
-    color:var(--mute); align-self:center; margin-right:6px; font-weight:400 }
-  .arch button { font:500 13px var(--f); color:var(--hushed); background:var(--card);
-    border:1px solid var(--border); border-radius:999px; padding:7px 14px; cursor:pointer;
+  /* Список выпусков: строки, а не таблетки — двадцать штук должны читаться
+     сверху вниз и сравниваться по дате и охвату */
+  .arch { margin-top:32px; border-top:1px solid var(--border); max-width:820px }
+  .arch-h { display:flex; align-items:baseline; gap:9px; padding:16px 0 6px;
+    font-family:var(--m); font-size:10.5px; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--mute) }
+  .arch-h span { font-size:11px; color:var(--hushed) }
+  .arow { display:grid; grid-template-columns:104px 1fr auto; gap:16px; align-items:baseline;
+    width:100%; text-align:left; padding:13px 12px 13px 10px; background:none; border:0;
+    border-radius:10px; cursor:pointer; font-family:var(--f); transition:background .14s }
+  .arow + .arow, .arest .arow:first-child { border-top:1px solid var(--border) }
+  .arow:hover { background:rgba(255,255,255,.04) }
+  .arow .ad { font-family:var(--m); font-size:12px; color:var(--mute); white-space:nowrap }
+  .arow .at { font-size:15px; font-weight:500; color:var(--hushed); line-height:1.35 }
+  .arow .an { font-size:12px; color:var(--mute); white-space:nowrap; text-align:right }
+  .arow .ap { display:block; font-style:normal; font-family:var(--m); font-size:11px;
+    color:var(--up); margin-top:3px }
+  .arow:hover .at { color:var(--ink) }
+  /* Открытый выпуск: оранжевая дата и плотный заголовок, без заливки —
+     строка остаётся строкой, а не превращается в кнопку */
+  .arow.on .at { color:var(--ink); font-weight:600 }
+  .arow.on .ad { color:var(--solar) }
+  .arow.on { background:rgba(238,125,27,.07) }
+  .amore { margin-top:10px; font:500 13px var(--f); color:var(--hushed); background:none;
+    border:1px solid var(--border); border-radius:999px; padding:9px 16px; cursor:pointer;
     transition:.16s }
-  .arch button:hover { color:var(--ink); border-color:rgba(255,255,255,.24) }
-  .arch button[aria-pressed="true"] { color:#0C0A08; background:var(--solar); border-color:var(--solar) }
+  .amore:hover { color:var(--ink); border-color:rgba(255,255,255,.24) }
 
   /* ── секции ────────────────────────────────────────────── */
   .sec { padding:58px 0 }
@@ -335,6 +354,14 @@
        к инструментам, с телефона по ним и попадают */
     .hp { min-height:44px; padding:10px 15px }
     .tprod a { min-height:44px; display:inline-flex; align-items:center; justify-content:center }
+    /* Список выпусков в два яруса: три колонки на 339px рвали заголовок
+       на четыре строки, а счётчик переполнял строку */
+    .arow { grid-template-columns:1fr; gap:5px; padding:12px 10px }
+    .arow .ad { grid-row:1 }
+    .arow .at { grid-row:2; font-size:15.5px }
+    .arow .an { grid-row:3; text-align:left }
+    .arow .ap { display:inline; margin:0 0 0 8px }
+    .amore { min-height:44px; width:100% }
   }
   @media (prefers-reduced-motion:reduce) {
     html { scroll-behavior:auto }
@@ -633,12 +660,43 @@
       '</div></article>';
   }
 
+  // Список выпусков. Ряд таблеток годился на два разбора и рассыпался бы на
+  // двадцати: у каждой строки теперь дата, охват и число компаний, на которые
+  // у нас есть инструменты, — по этому и выбирают, какой разбор открыть.
+  // Показываем ARCH_OPEN свежих, остальные под кнопкой: список — навигация,
+  // а не содержимое страницы.
+  var ARCH_OPEN = 6;
+  function archRow(x, i, cur) {
+    var items = x.items || [];
+    var withP = items.filter(function (d) { return products(d).total > 0; }).length;
+    return '<button type="button" class="arow' + (i === cur ? ' on' : '') + '" data-i="' + i + '"' +
+      (i === cur ? ' aria-current="true"' : '') + '>' +
+      '<span class="ad">' + esc(humanShort(x.date)) + '</span>' +
+      '<span class="at">' + esc(x.title) + '</span>' +
+      '<span class="an">' + items.length + ' ' + plural(items.length, "компания", "компании", "компаний") +
+      (withP ? '<i class="ap">' + withP + ' с продуктами</i>' : '') + '</span>' +
+      '</button>';
+  }
   function archHTML(cur) {
-    if (IDEAS.issues.length < 2) return "";
-    return '<div class="arch"><b>архив</b>' + IDEAS.issues.map(function (x, i) {
-      return '<button type="button" data-i="' + i + '" aria-pressed="' + (i === cur) + '">' +
-        esc(x.title) + ' · ' + human(x.date) + '</button>';
-    }).join("") + '</div>';
+    var n = IDEAS.issues.length;
+    if (n < 2) return "";
+    var rows = IDEAS.issues.map(function (x, i) { return archRow(x, i, cur); });
+    var head = '<div class="arch-h">Все разборы<span>' + n + '</span></div>';
+    // Открыт старый выпуск — список остаётся раскрытым целиком. Подставлять
+    // активную строку шестой нельзя: даты прыгали (2 июля → 12 февраля),
+    // и список читался как несортированный.
+    if (n <= ARCH_OPEN || cur >= ARCH_OPEN) {
+      return '<div class="arch">' + head + rows.join("") + '</div>';
+    }
+    return '<div class="arch">' + head + rows.slice(0, ARCH_OPEN).join("") +
+      '<div class="arest" hidden>' + rows.slice(ARCH_OPEN).join("") + '</div>' +
+      '<button type="button" class="amore" aria-expanded="false">Показать все ' + n + '</button></div>';
+  }
+  function plural(n, one, few, many) {
+    var m10 = n % 10, m100 = n % 100;
+    if (m10 === 1 && m100 !== 11) return one;
+    if (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return few;
+    return many;
   }
 
   function render(idx) {
@@ -742,6 +800,13 @@
     var arch = box.querySelector(".arch");
     if (arch) {
       arch.addEventListener("click", function (ev2) {
+        var more = ev2.target.closest(".amore");
+        if (more) {
+          var rest = arch.querySelector(".arest");
+          rest.hidden = false;
+          more.remove();
+          return;
+        }
         var b = ev2.target.closest("button[data-i]");
         if (!b) return;
         render(parseInt(b.dataset.i, 10));
