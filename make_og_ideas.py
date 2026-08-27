@@ -35,7 +35,7 @@ import sys
 import threading
 
 ROOT = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(ROOT, "og-ideas.jpg")
+OUT = os.path.join(ROOT, "og-ideas-2.jpg")
 # Chrome умеет снимать только PNG — снимаем во временный файл и сжимаем.
 RAW = os.path.join(ROOT, "_og_ideas_raw.png")
 TPL_NAME = "_og_ideas_tmp.html"
@@ -53,7 +53,8 @@ MONTHS = ["января", "февраля", "марта", "апреля", "ма�
           "июля", "августа", "сентября", "октября", "ноября", "декабря"]
 
 # Цвета слоёв стека повторяют ideas.html: в данных лежит только ключ слоя.
-LAYER_COLOR = {"chips": "#EE7D1B", "iron": "#4F86E6", "cloud": "#55C08A"}
+LAYER_COLOR = {"chips": "#EE7D1B", "iron": "#4F86E6", "cloud": "#55C08A",
+               "fin": "#4F86E6", "domestic": "#EE7D1B", "export": "#55C08A"}
 
 
 def find_chrome():
@@ -130,7 +131,7 @@ def build_html(iss):
 
     layers = len({x.get("layer") for x in items if x.get("layer")})
     chips = [plural(len(items), "компания", "компании", "компаний"),
-             plural(layers, "слой стека", "слоя стека", "слоёв стека"),
+             plural(layers, "группа", "группы", "групп"),
              "целевые цены на 12 месяцев"]
     chip_html = "".join(
         '<span class="chip%s">%s</span>' % (" hot" if i == 0 else "", esc(c))
