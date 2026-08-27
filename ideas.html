@@ -370,12 +370,17 @@
   .isides { display:none }
   @media (min-width:1200px){
     body { padding-left:264px }
-    /* Верх содержимого колонки выровнен по строке «Разбор темы · дата»:
-       61px шапка + 39px крошки + 46px отступ героя. Сама колонка остаётся
-       сплошной от края до края — иначе слева над ней зияет пустой угол. */
-    .isides { display:block; position:fixed; left:0; top:0; bottom:0; width:264px; z-index:70;
+    /* Шапка идёт во всю ширину: иначе она обрывалась на границе колонки и
+       левый верхний угол торчал отдельным куском. Логотип встаёт НАД колонкой
+       (24px — та же вертикаль, что у строк списка), пункты меню держат правый
+       край текста; шапка и колонка читаются одной рамкой. */
+    .nav { margin-left:-264px; padding-left:0 }
+    .nav-in { max-width:none; margin:0; padding:0 28px 0 24px }
+    /* Колонка начинается ПОД шапкой (61px) и лежит НИЖЕ неё по слоям.
+       Отступ 85px доводит верх списка до строки «Разбор темы · дата». */
+    .isides { display:block; position:fixed; left:0; top:61px; bottom:0; width:264px; z-index:50;
       background:#0E0F14; border-right:1px solid var(--border); overflow-y:auto;
-      padding:146px 14px 28px }
+      padding:85px 14px 28px }
     .isides .sh { display:flex; justify-content:space-between; align-items:baseline;
       font-family:var(--m); font-size:10.5px; letter-spacing:.12em; text-transform:uppercase;
       color:var(--mute); padding:0 10px 10px }
