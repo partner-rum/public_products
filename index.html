@@ -151,21 +151,22 @@
   /* Сдвинут левее и ниже прод-положения (было right:0 / top:2px): на краю листа
      он висел впритык, а верхний угол при наклоне заходил под липкую шапку —
      её низ на y=60, а угол корпуса оказывался на 58. */
-  .hev { position:absolute; right:112px; top:30px; width:222px; z-index:2; text-decoration:none; color:var(--tx);
-         transform-origin:100% 0; transform:scale(.8);
+  .hev { position:absolute; right:112px; top:24px; width:222px; z-index:2; text-decoration:none; color:var(--tx);
+         --hs:.72;  /* масштаб корпуса: ОДНО место — кейфреймы ниже берут его же */
+         transform-origin:100% 0; transform:scale(var(--hs));
          animation:hevFloat 6.5s ease-in-out infinite; }
   @media (max-width:1099px) { .hev { display:none; } }
-  /* Полоса-анонс идёт во всю ширину героя и заезжала ПОД телефон: её правый
-     край с кнопкой «Записаться» уходил на 290px за левую границу корпуса.
-     Видно это стало только 27.08.2026, когда появилась предстоящая встреча —
-     до неё полоса не рисовалась вовсе. Освобождаем ровно ту полосу справа,
-     которую занимает телефон (right 112 + ширина 178 после scale(.8)), плюс
-     воздух. Ниже 1100px телефона нет — и ограничение снимается. */
-  @media (min-width:1100px) { .evt { margin-right:308px; } }
+  /* Полоса-анонс идёт во всю ширину героя. Чтобы она не уходила под телефон,
+     корпус сделан НИЖЕ (короче текст уведомлений + масштаб .72) и заканчивается
+     выше полосы. Полосу не подрезаем — решение Руслана 27.08.2026: короткая
+     полоса с кнопкой у левого края ему не понравилась. */
   /* Покачивание: снос только ВНИЗ — вверх телефон уехал бы под липкую шапку
      (его верх на y≈63, низ шапки — 60). Масштаб продублирован в кадрах,
      иначе анимация перебила бы scale(.8) из базового правила. */
-  @keyframes hevFloat { 0%,100% { transform:scale(.8) translateY(0); } 50% { transform:scale(.8) translateY(9px); } }
+  /* Снос 6px, а не 9: на 1100px заголовок героя мельче, полоса-анонс поднимается,
+     и в нижней точке покачивания корпус её касался */
+  @keyframes hevFloat { 0%,100% { transform:scale(var(--hs)) translateY(0); }
+                        50%     { transform:scale(var(--hs)) translateY(6px); } }
   /* Наклон дышит вокруг прод-угла 3.5°; на наведении анимацию гасим, иначе
      она перебьёт transform ховера */
   @keyframes hevSway { 0%,100% { transform:rotate(3.6deg); } 50% { transform:rotate(2.1deg); } }
@@ -957,16 +958,19 @@
     // ── События: телефон в герое + полоса-анонс (upcoming/past посчитаны выше) ──
     var hev = document.getElementById("hevslot");
     if (hev) {
-      var n1 = upcoming ? '<span class="ntf n1"><i></i><span class="nb"><span class="nt">Анонсирована новая встреча</span>' +
-        '<span class="nd">регистрация уже открыта</span></span><span class="nw">сейчас</span></span>' : "";
+      // Текст уведомлений КОРОТКИЙ намеренно: в корпусе ~115px строка вмещает
+      // немного, а каждая лишняя строка поднимала карточку до 89px и опускала
+      // низ телефона на полосу-анонс. Смысл сохранён, длина срезана вдвое.
+      var n1 = upcoming ? '<span class="ntf n1"><i></i><span class="nb"><span class="nt">Новая встреча</span>' +
+        '<span class="nd">регистрация открыта</span></span><span class="nw">сейчас</span></span>' : "";
       var n2 = past ? (past.recordingUrl
-        ? '<span class="ntf n2"><i></i><span class="nb"><span class="nt">Запись встречи доступна</span><span class="nd">смотреть в разделе</span></span><span class="nw">·</span></span>'
-        : '<span class="ntf n2"><i></i><span class="nb"><span class="nt">Запись прошлой встречи</span><span class="nd">скоро появится в разделе</span></span><span class="nw">·</span></span>') : "";
+        ? '<span class="ntf n2"><i></i><span class="nb"><span class="nt">Запись готова</span><span class="nd">смотреть в разделе</span></span><span class="nw">·</span></span>'
+        : '<span class="ntf n2"><i></i><span class="nb"><span class="nt">Запись готовится</span><span class="nd">скоро в разделе</span></span><span class="nw">·</span></span>') : "";
       hev.innerHTML = '<a class="hev" href="events.html" aria-label="События Rumberg">' +
         '<span class="tilt"><span class="shell"><span class="island"></span><span class="scr">' + n1 + n2 +
         '<svg class="star" width="27" height="27" viewBox="0 0 34 34" aria-hidden="true"><path d="M17 0 L21 13 L34 17 L21 21 L17 34 L13 21 L0 17 L13 13 Z" fill="#EE7D1B"/></svg>' +
         '<span class="wm2">Rumberg</span><span class="big">События</span>' +
-        '<span class="feat">эфиры · записи · напоминания</span>' +
+        '<span class="feat">эфиры и записи</span>' +
         '<span class="pbtn">Открыть раздел</span>' +
         '</span></span></a>';
     }
