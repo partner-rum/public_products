@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Рисует og-events-2.png — обложку превью для events.html (1200x630).
+Рисует og-events-3.png — обложку превью для events.html (1200x630).
 Имя с номером: Telegram кэширует превью по URL картинки и ?v= не понимает,
 поэтому сброс кэша — только переименованием файла (и правкой тега в events.html).
 
@@ -20,7 +20,7 @@ og:image в events.html — Telegram кэширует превью по URL ка
 import os, sys, re, json, socket, subprocess, threading, functools, http.server, shutil, datetime
 
 ROOT = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(ROOT, "og-events-2.png")
+OUT = os.path.join(ROOT, "og-events-3.png")
 TPL_NAME = "_og_event_tmp.html"
 
 CHROME_CANDIDATES = [

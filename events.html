@@ -14,7 +14,7 @@
 <link rel="canonical" href="https://invest.rumberg.ru/events.html">
 <!-- Без ?v= : скрейпер Telegram картинку с query-строкой не забирает.
      Перерисовал обложку — переименуй файл, а не добавляй параметр. -->
-<meta property="og:image" content="https://invest.rumberg.ru/og-events-2.png">
+<meta property="og:image" content="https://invest.rumberg.ru/og-events-3.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Rumberg — онлайн-встречи для агентов и партнёров">
@@ -235,7 +235,7 @@
   </div>
 </div>
 
-<script src="data/events.js?v=4"></script>
+<script src="data/events.js?v=5"></script>
 <script>
 (function () {
   "use strict";
@@ -290,8 +290,11 @@
       ? joinBtn + '<button class="btn ghost" id="calBtn" type="button">В календарь</button>'
       : '<button class="btn" id="remindBtn" type="button">Напомнить в Telegram</button>' + joinBtn +
         '<button class="btn ghost" id="calBtn" type="button">В календарь</button>';
-    // Разбор темы встречи: материал живёт своим разделом, здесь только вход в него
-    if (s.materialUrl) actions += '<a class="btn ghost" href="' + esc(s.materialUrl) + '" data-goal="event_material">Разбор компаний ' + ARROW + '</a>';
+    // Материал встречи: живёт своим разделом, здесь только вход в него. Подпись
+    // берётся из данных — у разных встреч материал разный (разбор компаний,
+    // скринер ставок), и одна зашитая подпись врала бы про половину из них.
+    if (s.materialUrl) actions += '<a class="btn ghost" href="' + esc(s.materialUrl) + '" data-goal="event_material">' +
+      esc(s.materialLabel || "Разбор компаний") + ' ' + ARROW + '</a>';
     return '<section class="poster">' +
       '<div class="p-l">' +
         (live ? '<span class="chip onair"><i></i>Идёт сейчас</span>'
@@ -318,7 +321,8 @@
     else if (e.state !== "past") act = '<span class="chip live">Скоро</span>';
     else if (s.recordingUrl) act = '<a class="lnk" href="' + esc(s.recordingUrl) + '" target="_blank" rel="noopener" data-goal="event_recording">Смотреть запись →</a>';
     else act = '<span class="chip past">Запись готовится</span>';
-    if (s.materialUrl) act += '<a class="lnk" style="margin-left:12px" href="' + esc(s.materialUrl) + '" data-goal="event_material">Разбор →</a>';
+    if (s.materialUrl) act += '<a class="lnk" style="margin-left:12px" href="' + esc(s.materialUrl) + '" data-goal="event_material">' +
+      esc(s.materialLabel || "Разбор") + ' →</a>';
     return '<div class="tr" id="' + esc(s.id) + '">' +
       '<div class="dt">' + e.dateShort + '<span class="yr">' + e.year + '</span></div>' +
       '<div><div class="tt">' + esc(s.title) + '</div><div class="ts">' + esc(s.sub) + '</div></div>' +
