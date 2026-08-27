@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Как это работает — библиотека структурных продуктов</title>
-<meta name="description" content="Библиотека продуктов: как работают дисконтные облигации, облигации с защитой капитала и варранты (CALL, PUT, спреды, барьеры KO). Профиль выплаты, риск и срок — известны заранее.">
+<meta name="description" content="Библиотека: облигация и акция как базовые бумаги (фиксированный купон, флоатер, дисконтная, ОФЗ, НКД, оферта, ISIN) и продукты, которые из них собраны — дисконтные облигации, защита капитала, автоколл, бустер и варранты. Профиль выплаты, риск и срок известны заранее.">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Rumberg">
 <meta property="og:locale" content="ru_RU">
 <meta property="og:title" content="Как это работает — библиотека структурных продуктов">
-<meta property="og:description" content="Как работают дисконтные облигации, облигации с защитой капитала и варранты. Профиль выплаты, риск и срок — известны заранее.">
+<meta property="og:description" content="От базовых бумаг — облигации и акции — до продуктов, которые из них собраны. Профиль выплаты, риск и срок известны заранее.">
 <meta property="og:url" content="https://invest.rumberg.ru/about.html">
 <link rel="canonical" href="https://invest.rumberg.ru/about.html">
 <meta property="og:image" content="https://invest.rumberg.ru/og-cover.png">
@@ -66,6 +66,9 @@
   .layout { display: grid; grid-template-columns: 296px minmax(0, 1fr); gap: 40px; align-items: start; margin-top: 34px; }
   .toc { position: sticky; top: 82px; }
   .toc-h { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint); margin-bottom: 8px; }
+  /* Две группы содержания: сначала из чего собраны продукты, потом сами продукты */
+  .toc-sec { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint); padding: 0 9px 7px; }
+  .toc-sec + .toc-sec, .toc-i + .toc-sec, .toc-kids + .toc-sec { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border-soft); }
   .toc-i { display: flex; gap: 11px; align-items: baseline; width: 100%; text-align: left; background: none; border: none; cursor: pointer; padding: 8px 9px; border-radius: 8px; font-family: var(--f-body); color: var(--ink); }
   .toc-i:hover { background: rgba(255,255,255,0.05); }
   .toc-i.active { background: rgba(238,125,27,0.16); color: var(--ink); }
@@ -116,6 +119,32 @@
   .lrow svg { flex: none; opacity: 0.55; }
   .live .empty { font-size: 13.5px; line-height: 1.55; color: var(--hushed); padding: 8px 0 10px; text-wrap: pretty; }
   .live .boardlink { margin-top: 12px; }
+  /* ── Базовые бумаги ──
+     Тройка «вид купона» / «характер бумаги» вынесена ПОД две колонки во всю
+     ширину: в левой колонке она давала 1400px текста против 460px графика,
+     и справа зияла пустота. Тройкой это ещё и читается как сравнение,
+     чем она и является. Разделители — как у .principles в шапке страницы */
+  .rows-k { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.11em; text-transform: uppercase; color: var(--faint); margin: 30px 0 0; }
+  .lrow .cnt { font-family: var(--f-mono); font-size: 11.5px; color: var(--faint); white-space: nowrap; }
+  .trio { display: grid; grid-template-columns: repeat(3, 1fr); margin: 10px 0 4px; border-top: 1px solid var(--border); }
+  .trio > div { padding: 14px 26px 6px 0; }
+  .trio > div + div { border-left: 1px solid var(--border-soft); padding-left: 26px; }
+  .trio .t { font-size: 15px; font-weight: 600; line-height: 1.3; }
+  .trio .en { display: block; font-family: var(--f-mono); font-size: 11px; font-weight: 400; color: var(--faint); margin-top: 4px; }
+  .trio .d { font-size: 13.5px; line-height: 1.6; color: var(--hushed); margin-top: 9px; text-wrap: pretty; }
+  .trio a { color: var(--ink); font-weight: 600; border-bottom: 1px solid rgba(238,125,27,0.5); }
+  .trio a:hover { border-bottom-color: var(--solar); }
+  /* Колонка, которая и есть наш продукт: единственная точка, где базовая бумага
+     смыкается с витриной, — помечена акцентной планкой, а не заливкой */
+  .trio .ours { box-shadow: inset 0 2px 0 var(--solar); }
+  .trio .ours .t { color: var(--solar); }
+
+  /* Легенда сравнительного графика (акция) */
+  .lgnd { margin-top: 12px; display: grid; gap: 7px; }
+  .lgi { display: flex; gap: 9px; align-items: baseline; font-size: 12.5px; line-height: 1.45; color: var(--hushed); }
+  .lgi i { flex: none; width: 16px; height: 3px; border-radius: 2px; background: var(--lc); position: relative; top: -3px; }
+  .lgi b { color: var(--ink); font-weight: 600; }
+
   .gloss { margin-top: 26px; border-top: 1px solid var(--border-soft); padding-top: 16px; }
   .gloss summary { cursor: pointer; font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); list-style: none; display: flex; align-items: center; gap: 8px; }
   .gloss summary::-webkit-details-marker { display: none; }
@@ -141,7 +170,9 @@
   .ctrl .k { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); margin-bottom: 7px; }
   .seg { display: inline-flex; background: rgba(255,255,255,0.06); border-radius: 9px; padding: 3px; gap: 2px; }
   .seg button { border: none; background: none; cursor: pointer; font-family: var(--f-mono); font-size: 12.5px; color: var(--hushed); padding: 6px 12px; border-radius: 7px; transition: background .18s, color .18s; }
-  .seg button.on { background: #262A33; color: var(--steel); font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.35); }
+  /* Выбранная кнопка: #4F86E6 на подложке #262A33 давал 4,03:1 при кегле 12,5px —
+     ниже порога 4,5. Осветлённый тон того же синего — 4,89:1 */
+  .seg button.on { background: #262A33; color: #6796EC; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.35); }
   .prot-read { font-size: 13px; line-height: 1.55; color: var(--hushed); margin-top: 12px; text-wrap: pretty; }
   .prot-read b { color: var(--ink); }
 
@@ -151,7 +182,11 @@
   .mx .rl { display: flex; flex-direction: column; justify-content: center; }
   .mx .rl .t { font-size: 15px; font-weight: 600; color: var(--amber-t); }
   .mx .rl .s { font-family: var(--f-mono); font-size: 11px; color: var(--faint); margin-top: 2px; }
-  .cell { background: var(--card); border: 1px solid var(--border-soft); border-radius: 11px; padding: 10px 11px 9px; cursor: pointer; text-align: left; font-family: var(--f-body); transition: box-shadow .18s, transform .18s, border-color .18s; }
+  /* color обязателен: <button> не наследует цвет от body, а берёт системный
+     buttontext (чёрный). Без этой строки названия шести типов варрантов
+     печатались чёрным по тёмной карточке — контраст 1,16:1, то есть их не было
+     видно вовсе, при живых подписи и ссылке под ними */
+  .cell { background: var(--card); border: 1px solid var(--border-soft); border-radius: 11px; padding: 10px 11px 9px; cursor: pointer; text-align: left; font-family: var(--f-body); color: var(--ink); transition: box-shadow .18s, transform .18s, border-color .18s; }
   .cell:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.4); }
   .cell svg { display: block; width: 100%; height: auto; }
   .cell svg text { display: none; }
@@ -187,6 +222,10 @@
     .layout { grid-template-columns: 1fr; gap: 22px; }
     .toc { position: static; }
     .art-grid { grid-template-columns: 1fr; }
+    .trio { grid-template-columns: 1fr; }
+    .trio > div { padding: 14px 0 4px; }
+    .trio > div + div { border-left: none; border-top: 1px solid var(--border-soft); padding-left: 0; }
+    .trio .ours { box-shadow: inset 2px 0 0 var(--solar); padding-left: 14px; }
     .mx { grid-template-columns: 1fr; }
     .mx .hd, .mx .rl { display: none; }
   }
@@ -232,7 +271,7 @@
 
 <section class="wrap page-head">
   <h1>Как это работает</h1>
-  <p>Библиотека продуктов. Выберите инструмент в содержании — по каждому: как устроен, профиль выплаты, риск и когда уместен.</p>
+  <p>Сначала базовые бумаги, из которых всё собрано, затем сами продукты. По каждому: как устроен, профиль выплаты, риск и когда уместен.</p>
 </section>
 
 <section class="wrap principles">
@@ -243,7 +282,9 @@
 
 <div class="wrap layout" id="content">
   <aside class="toc" aria-label="Содержание библиотеки">
-    <div class="toc-h">Содержание</div>
+    <!-- Заголовок «Содержание» снят: группы ниже («Базовые бумаги» / «Наши
+         продукты») набраны тем же моно-капсом, и два одинаковых ярлыка подряд
+         читались как один сбитый. Скринридеру название даёт aria-label у aside -->
     <div id="toc"></div>
   </aside>
   <main>
@@ -274,6 +315,12 @@
 
   // ── Контент (проверен на финансовую корректность) ──
   var LIB = {
+    // Базовые бумаги — слой ПОД продуктами: из чего они собраны и какие термины
+    // витрина печатает, нигде не объясняя (ОФЗ, ISIN, «плав.», номинал, купон).
+    // Проверка к каждому абзацу: объясняет ли он наш продукт. Если абзац одинаково
+    // подошёл бы сайту брокера — он лишний, для общего ликбеза есть другие сайты.
+    bond: {"name":"Облигация","tagline":"Заём компании или государству с заранее заданным правилом выплаты. Всё, что лежит на этой витрине, — тоже облигации: в них вместо купона стоит формула.","whenToUse":"Клиент говорит «у меня вклад и ОФЗ» — и это тот же класс бумаг, что и наши выпуски. Разговор проще начинать не с продукта, а с того, чем его облигация отличается от нашей.","how":"Покупая облигацию, инвестор даёт в долг: эмитент обязуется вернуть номинал в дату погашения и по ходу срока платить купон. Держатель — кредитор, а не совладелец: доли в прибыли ему не положено, зато порядок и размер выплат заданы заранее. Цена указывается в процентах от номинала, поэтому «вход по 50%» означает половину той суммы, которую вернут на погашении. Различаются облигации прежде всего тем, как устроен купон.","risk":"У любой облигации, включая наши структурные выпуски, есть кредитный риск эмитента: не исполнит обязательство — выплаты не будет, независимо от того, как отработала формула. Второй риск касается только фиксированного купона: когда ставки в экономике растут, выпущенная раньше бумага с низким купоном дешевеет, и продать её до погашения можно ниже цены покупки. У флоатера этого почти нет — за ставкой идёт сам купон, а не цена."},
+    equity: {"name":"Акция","tagline":"Доля в компании. На витрине акции не покупаются напрямую — они служат базовым активом, и от характера бумаги зависит, какая конструкция под неё подойдёт.","whenToUse":"Клиент называет бумагу — «хочу Сбер», «хочу NVIDIA». Дальше вопрос не в том, нравится ли она, а в том, какая конструкция под неё уместна: одна и та же акция даёт очень разные продукты.","how":"Акция — доля в капитале компании. Источников дохода два: рост цены и дивиденд, то есть часть прибыли, которую компания решила распределить. Ни срок, ни размер выплаты заранее не заданы — этим акция и отличается от облигации. У части российских компаний обращаются два типа бумаг: обыкновенные дают голос на собрании, привилегированные голоса не дают, но при том же дивиденде обычно стоят дешевле. В структурном продукте акция сама не покупается — она задаёт уровень, от которого формула считает выплату.","risk":"Дивиденд не является обязательством: совет директоров может его не рекомендовать, и по обыкновенным бумагам это происходит регулярно. Держателю структурного продукта дивиденды не достаются вовсе — они уже учтены в цене опциона, из которого продукт собран. Само движение акции ничем не ограничено: за один и тот же срок бумага может вырасти вдвое и упасть вдвое, и именно эта неопределённость определяет, сколько стоит участие в ней."},
     discount: {"name":"Дисконтная облигация","tagline":"Покупка ниже номинала; при отсутствии кредитного события — погашение по 100%. Размер дохода известен заранее.","how":"Облигация приобретается дешевле номинала — например, по 50%. Если за срок обращения по референс-энтити не наступает кредитное событие, на погашении выплачивается 100% номинала. Доход — это дисконт, разница между ценой входа и номиналом; он фиксируется в день сделки. Купонов нет: весь результат заложен в цену покупки.","risk":"Главный риск — кредитный на референс-энтити: при кредитном событии по нему выплата на погашении снижается вплоть до нуля. Максимальный убыток ограничен вложенной суммой и известен в день сделки.","profit":"Дисконт до номинала: при входе по 50% доход равен вложенной сумме, возврат на погашении — 100% номинала.","loss":"Вплоть до всей вложенной суммы — при кредитном событии по референс-энтити.","whenToUse":"Когда вы готовы принять кредитный риск на конкретное контрольное лицо ради заранее известной доходности к погашению без купонов.","payoffNote":"Без кредитного события — 100% номинала на погашении; при кредитном событии выплата снижается вплоть до нуля. Вход по 50% на диаграмме — пример: цена входа своя у каждого выпуска."},
     protection: {"name":"Защита капитала","tagline":"Защищённый уровень номинала и участие в движении базового актива.","how":"Структурная облигация: в неблагоприятном сценарии возвращается заранее заданный уровень номинала — 50, 70, 90 или 100%. Одновременно облигация даёт участие в динамике базового актива; направление участия фиксируется при выпуске — в росте либо в падении. Компромисс задан конструкцией: чем выше уровень защиты, тем ниже коэффициент участия, и наоборот.","risk":"Рыночный убыток ограничен и известен заранее: в неблагоприятном сценарии инвестор получает защищённый уровень, а разницу до полного номинала берёт на себя. Отдельно действует кредитный риск эмитента облигации: защитой он не покрывается.","profit":"Формируется сверх защищённого уровня участием в движении базового актива с коэффициентом, заданным при выпуске. При участии в росте жёсткий потолок обычно не задан; при участии в падении потенциал ограничен снижением БА до нуля.","loss":"До «100% минус уровень защиты» номинала (например, до 50% при защите 50%; ноль при полной защите). Отдельно — кредитный риск эмитента.","whenToUse":"Когда нужен контролируемый риск на капитал при сохранении доли в движении базового актива — вверх или вниз.","payoffNote":"Выплата на экспирацию в % от номинала: не ниже защищённого уровня, далее — участие в движении БА в выбранном направлении."},
     call: {"name":"Варрант CALL","tagline":"Участие в росте базового актива сверх страйка за фиксированную премию.","how":"CALL — колл-опцион в обёртке структурной облигации. Инвестор платит только премию и получает выплату, равную росту базового актива выше страйка K. Пока актив не превысил страйк, выплата нулевая; выше страйка она растёт линейно вместе с активом. Страйк, как правило, задаётся на уровне 100% базового актива в день покупки.","risk":"Если к погашению базовый актив не поднялся выше страйка, премия теряется полностью. Максимальный убыток известен заранее и ограничен уплаченной премией.","profit":"Не ограничена — растёт вместе с базовым активом.","loss":"Уплаченная премия.","whenToUse":"При уверенном взгляде на рост, когда потеря премии приемлема ради неограниченного потенциала.","payoffNote":"До страйка K — фиксированный убыток на уровне премии; выше страйка выплата растёт линейно вместе с активом."},
@@ -288,6 +335,9 @@
   };
 
   var FAM = {
+    // Нейтральный серый у базовых бумаг — намеренно: цвет на этой странице означает
+    // семейство продуктов, а облигация и акция — не продукт, а материал
+    basic:      { label: "Базовая бумага", color: "#8A93A6" },
     discount:   { label: "Консервативный", color: "#5E9B82", board: "board.html?type=discount" },
     protection: { label: "Сбалансированный", color: "#4F86E6", board: "board.html?type=protection" },
     warrant:    { label: "Активный", color: "#E0A24A", text: "#E0A24A", board: "board.html?type=warrant" },
@@ -297,14 +347,15 @@
   };
   var WTYPES = ["call", "callspread", "callko", "put", "putspread", "putko"];
   var WSUB = { call: "рост · без потолка", callspread: "рост · потолок K₂", callko: "рост · барьер KO", put: "падение · без потолка", putspread: "падение · потолок", putko: "падение · барьер KO" };
-  var ORDER = ["discount", "protection", "autocall", "warrants"].concat(WTYPES).concat(["booster", "preipo"]);
+  var BASICS = ["bond", "equity"];
+  var ORDER = BASICS.concat(["discount", "protection", "autocall", "warrants"]).concat(WTYPES).concat(["booster", "preipo"]);
   var TITLE = { warrants: "Варранты" };
   function nameOf(id) { return id === "warrants" ? "Варранты — обзор" : LIB[id].name; }
-  function famOf(id) { return id === "discount" ? "discount" : id === "protection" ? "protection" : id === "preipo" ? "preipo" : id === "booster" ? "booster" : id === "autocall" ? "autocall" : "warrant"; }
+  function famOf(id) { return BASICS.indexOf(id) >= 0 ? "basic" : id === "discount" ? "discount" : id === "protection" ? "protection" : id === "preipo" ? "preipo" : id === "booster" ? "booster" : id === "autocall" ? "autocall" : "warrant"; }
 
   // ── Движок пэйоффов ──
   var W = 340, H = 178, PADX = 24, TOP = 26, ZERO = 108, PREM = 134, CAP = 62;
-  var GRID = "rgba(255,255,255,0.09)", AX = "rgba(255,255,255,0.17)", LAB = "rgba(255,255,255,0.68)", KOc = "#EE7D1B";
+  var GRID = "rgba(255,255,255,0.09)", AX = "rgba(255,255,255,0.17)", LAB = "rgba(255,255,255,0.68)", KOc = "#EE7D1B", LITE = "#E7E9F0";
   var MONO = 'font-family="JetBrains Mono, monospace"';
   function xu(u) { return (PADX + (u / 2) * (W - 2 * PADX)); }
   function svgWrap(inner) { return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="display:block" aria-hidden="true" focusable="false">' + inner + '</svg>'; }
@@ -338,6 +389,57 @@
         '<text x="' + (x1 + bw / 2) + '" y="' + (base + 14) + '" text-anchor="middle" font-size="11" ' + MONO + ' fill="' + LAB + '">вход 50%</text>' +
         '<text x="' + (x2 + bw / 2) + '" y="' + (base + 14) + '" text-anchor="middle" font-size="11" ' + MONO + ' fill="#E7E9F0">погашение 100%</text>' +
         '<text x="' + ((x1 + x2 + bw) / 2) + '" y="' + (base - h50 - 8) + '" text-anchor="middle" font-size="11" ' + MONO + ' fill="#EE7D1B">+50 п.п.</text>';
+      return svgWrap(inner);
+    }
+    // Денежный поток облигации: купоны по периодам плюс номинал на погашении.
+    // Три режима — ровно те три строки, что перечислены в статье слева.
+    if (kind === "bond") {
+      var mode = opt.mode || "fixed";
+      var bBase = 150, bw2 = 26, stp = (W - 2 * PADX) / 5, cx = [], bi;
+      for (bi = 0; bi < 5; bi++) cx.push(PADX + stp * (bi + 0.5));
+      var nomH = 100, nomY = bBase - nomH;
+      var lite = LITE, mute = "rgba(255,255,255,0.22)";
+      var bar = function (x, y, h, fill) {
+        return '<rect class="pf-bar" x="' + (x - bw2 / 2) + '" y="' + y + '" width="' + bw2 + '" height="' + h + '" rx="3" fill="' + fill + '"/>';
+      };
+      // «номинал 100%» подписан СЛЕВА: справа над последним столбиком стоит купон,
+      // и подпись у правого края накладывалась бы на него
+      inner = '<line x1="' + PADX + '" y1="' + nomY + '" x2="' + (W - PADX) + '" y2="' + nomY + '" stroke="' + GRID + '" stroke-width="1" stroke-dasharray="3 4"/>' +
+        '<text x="' + PADX + '" y="' + (nomY - 7) + '" font-size="11" ' + MONO + ' fill="' + LAB + '">номинал 100%</text>' +
+        '<line x1="' + PADX + '" y1="' + bBase + '" x2="' + (W - PADX) + '" y2="' + bBase + '" stroke="' + AX + '" stroke-width="1"/>';
+      if (mode === "zero") {
+        // «Доход» здесь оранжевый, а не серый семейства: это ровно та же цифра,
+        // что подписана «+50 п.п.» на графике нашей дисконтной облигации, — и
+        // рифма между базовой бумагой и продуктом должна быть видна глазом
+        inner += '<text x="' + ((cx[0] + cx[3]) / 2) + '" y="' + (bBase - 16) + '" text-anchor="middle" font-size="11" ' + MONO + ' fill="' + LAB + '">купонов нет</text>' +
+          bar(cx[4], bBase - 50, 50, mute) + bar(cx[4], nomY, 50, KOc) +
+          '<text x="' + (cx[4] - bw2 / 2 - 8) + '" y="' + (bBase - 20) + '" text-anchor="end" font-size="11" ' + MONO + ' fill="' + LAB + '">вход 50%</text>' +
+          '<text x="' + (cx[4] - bw2 / 2 - 8) + '" y="' + (nomY + 30) + '" text-anchor="end" font-size="11" ' + MONO + ' fill="' + KOc + '">доход</text>';
+      } else {
+        // Фиксированный — купон одинаковый; плавающий — разной высоты, без тренда:
+        // купон идёт за ставкой, а она может и вырасти, и снизиться
+        var hs = mode === "float" ? [20, 13, 18, 25] : [16, 16, 16, 16];
+        var last = mode === "float" ? 22 : 16;
+        for (bi = 0; bi < 4; bi++) inner += bar(cx[bi], bBase - hs[bi], hs[bi], c);
+        inner += bar(cx[4], nomY, nomH, lite) + bar(cx[4], nomY - last - 3, last, c);
+      }
+      ["1", "2", "3", "4", "погашение"].forEach(function (t, i) {
+        inner += '<text x="' + cx[i] + '" y="' + (bBase + 15) + '" text-anchor="middle" font-size="11" ' + MONO + ' fill="' + (i === 4 ? lite : LAB) + '">' + t + '</text>';
+      });
+      return svgWrap(inner);
+    }
+    // Одна и та же акция тремя способами. Линии намеренно пересекаются: ниже −25%
+    // варрант теряет меньше самой бумаги, ниже −10% её обгоняет защита капитала
+    if (kind === "equity") {
+      var ZE = 92, sc = 0.58, xm = xu(1), xa = PADX, xb = W - PADX;
+      var ye = function (p) { return ZE - p * sc; };
+      inner = '<line x1="' + xa + '" y1="' + ye(0) + '" x2="' + xb + '" y2="' + ye(0) + '" stroke="' + AX + '" stroke-width="1"/>' +
+        '<line x1="' + xm + '" y1="' + TOP + '" x2="' + xm + '" y2="' + (H - 26) + '" stroke="' + GRID + '" stroke-width="1" stroke-dasharray="3 4"/>' +
+        '<text x="' + xm + '" y="' + (H - 12) + '" text-anchor="middle" font-size="11" ' + MONO + ' fill="' + LAB + '">старт 100%</text>' +
+        '<text x="' + (xa + 2) + '" y="' + (ye(0) - 7) + '" font-size="11" ' + MONO + ' fill="' + LAB + '">0</text>' +
+        line("M" + xa + " " + ye(-100) + " L" + xb + " " + ye(100), LITE) +
+        line("M" + xa + " " + ye(-25) + " L" + xm + " " + ye(-25) + " L" + xb + " " + ye(75), FAM.warrant.color) +
+        line("M" + xa + " " + ye(-10) + " L" + xm + " " + ye(-10) + " L" + xb + " " + ye(60), FAM.protection.color);
       return svgWrap(inner);
     }
     if (kind === "autocall") {
@@ -461,7 +563,9 @@
 
   function tocItem(id, indent) {
     var fam = FAM[famOf(id)];
-    var sub = id === "discount" ? "кредитный риск · дисконт" :
+    var sub = id === "bond" ? "купон · номинал · погашение" :
+      id === "equity" ? "базовый актив продуктов" :
+      id === "discount" ? "кредитный риск · дисконт" :
       id === "protection" ? "защита 50–100% · участие" :
       id === "warrants" ? "6 типов · направление × структура" :
       id === "preipo" ? "Pre-IPO · доступ через облигацию" :
@@ -474,14 +578,17 @@
     '</button>';
   }
   document.getElementById("toc").innerHTML =
+    '<div class="toc-sec">Базовые бумаги</div>' +
+    tocItem("bond") + tocItem("equity") +
+    '<div class="toc-sec">Наши продукты</div>' +
     tocItem("discount") + tocItem("protection") + tocItem("autocall") + tocItem("warrants") +
     '<div class="toc-kids" id="toc-kids"><div class="toc-kids-in">' + WTYPES.map(function (k) { return tocItem(k); }).join("") + '</div></div>' +
     tocItem("booster") + tocItem("preipo");
 
   // ── Статьи ──
-  function usecaseHTML(d) {
+  function usecaseHTML(d, label) {
     return '<div class="usecase"><span class="ic" aria-hidden="true"><svg width="17" height="17" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="6.4" stroke="#EE7D1B" stroke-width="1.5"/><circle cx="9" cy="9" r="1.9" fill="#EE7D1B"/></svg></span>' +
-      '<div><div class="k">Когда уместен</div><div class="v">' + d.whenToUse + '</div></div></div>';
+      '<div><div class="k">' + (label || "Когда уместен") + '</div><div class="v">' + d.whenToUse + '</div></div></div>';
   }
   function metricsHTML(d) {
     return '<div class="metrics">' +
@@ -536,8 +643,131 @@
       boardLink(fam, famKey, footLabel) + '</div>';
   }
 
+  // ── Базовые бумаги ──
+  function plural(n, one, few, many) {
+    var m10 = n % 10, m100 = n % 100;
+    if (m10 === 1 && m100 !== 11) return one;
+    if (m10 >= 2 && m10 <= 4 && (m100 < 10 || m100 >= 20)) return few;
+    return many;
+  }
+  function trioHTML(label, rows) {
+    return '<div class="rows-k">' + label + '</div><div class="trio">' + rows.map(function (r) {
+      return '<div' + (r.ours ? ' class="ours"' : '') + '><div class="t">' + r.t +
+        (r.en ? '<span class="en">' + r.en + '</span>' : '') + '</div><div class="d">' + r.d + '</div></div>';
+    }).join("") + '</div>';
+  }
+  var ARROW = '<svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  function lrow(href, name, cnt) {
+    return '<a class="lrow" href="' + href + '"><span class="nm">' + name + '</span>' +
+      (cnt ? '<span class="cnt">' + cnt + '</span>' : '') + ARROW + '</a>';
+  }
+  // Где облигация встречается на самой витрине: страница объясняет термин и сразу
+  // показывает, куда с ним идти. Счётчик дисконтных — живой, из data/instruments.js
+  function bondLinksHTML() {
+    var n = liveCount("discount");
+    return '<div class="live"><div class="k">Где это на витрине</div>' +
+      lrow("screener.html", "Короткие ОФЗ, вклады и фонды — ставки до года", "") +
+      lrow("board.html?type=discount", "Дисконтные облигации — наш выпуск без купона", n ? n + " шт." : "") +
+      lrow("placements.html", "Размещённые выпуски — ISIN, параметры, документы", "") +
+    '</div>';
+  }
+  // Базовые активы, которые сейчас стоят под продуктами доски. Ссылка ведёт в поиск
+  // доски: ?q= ищет в том числе по полю cls, то есть по классу актива
+  function assetsHTML() {
+    var items = (window.SITE_DATA || {}).instruments || [];
+    if (!items.length) return "";
+    var by = {}, keys = [];
+    items.forEach(function (it) {
+      var k = it.cls || "Прочее";
+      if (!by[k]) { by[k] = { n: 0, u: {} }; keys.push(k); }
+      by[k].n++;
+      if (it.underlying) by[k].u[it.underlying] = 1;
+    });
+    keys.sort(function (a, b) { return by[b].n - by[a].n; });
+    var rows = keys.slice(0, 5).map(function (k) {
+      var g = by[k], a = Object.keys(g.u).length;
+      return lrow("board.html?q=" + encodeURIComponent(k), k, a + " " + plural(a, "актив", "актива", "активов") + " · " + g.n + " шт.");
+    }).join("");
+    return '<div class="live"><div class="k">Базовые активы на доске</div>' + rows +
+      '<a class="boardlink" href="board.html">Вся доска' + ARROW + '</a></div>';
+  }
+  var BOND_ROWS = [
+    { t: "Фиксированный купон", en: "fixed", d: "Размер купона задан при выпуске и не меняется до погашения. Инвестор знает каждую выплату заранее, но цена такой бумаги ходит против ставки. Так устроены короткие ОФЗ из раздела <a href=\"screener.html\">«Лучшие ставки»</a>." },
+    { t: "Плавающий купон", en: "floater · «плав.»", d: "Купон привязан к ключевой ставке или RUONIA и пересчитывается каждый период. Доход идёт за рынком, а цена почти не реагирует на движение ставок. В «Лучших ставках» такие предложения помечены флажком «плав.»." },
+    { t: "Без купона — дисконтная", en: "zero coupon", d: "Купонов нет вовсе: бумага покупается дешевле номинала, а на погашении возвращается 100%. Весь доход — это разница, и он известен в день сделки. <b>Так устроен наш продукт</b> — <a href=\"#discount\" data-go=\"discount\">дисконтная облигация</a>.", ours: true }
+  ];
+  var EQ_ROWS = [
+    { t: "Быстрая, волатильная", en: "на доске: NVIDIA, Яндекс", d: "Сильное движение окупает премию: за небольшие деньги берётся участие в росте. Отсюда <a href=\"#warrants\" data-go=\"warrants\">варранты</a> и <a href=\"#booster\" data-go=\"booster\">бустер</a>." },
+    { t: "Спокойная, дивидендная", en: "на доске: Сбербанк, Лукойл", d: "Резких движений не ждут, поэтому платят не за рост, а за то, что бумага держится выше барьера. Отсюда <a href=\"#autocall\" data-go=\"autocall\">автоколл</a> и <a href=\"#protection\" data-go=\"protection\">защита капитала</a>." },
+    { t: "Несколько бумаг сразу", en: "корзина · worst-of", d: "Условия считаются по худшей бумаге корзины. Чем больше имён, тем выше купон — и тем выше вероятность, что одно из них подведёт. Так устроен <a href=\"#autocall\" data-go=\"autocall\">автоколл</a>." }
+  ];
+  var BOND_MODES = [
+    { k: "fixed", b: "фикс.", a: "Фиксированный купон", r: "Купон одинаковый весь срок и известен в день покупки; на погашении возвращается номинал плюс последняя выплата. Плата за определённость — цена: когда ставки в экономике растут, такая бумага дешевеет." },
+    { k: "float", b: "плав.", a: "Плавающий купон", r: "Купон пересчитывается каждый период по ключевой ставке или RUONIA, поэтому доход идёт за рынком, а цена стоит почти на месте. Ставку угадывать не нужно — она приходит сама." },
+    { k: "zero", b: "без купона", a: "Без купона — дисконтная", r: "Выплата ровно одна: номинал на погашении. Инвестор платит меньше номинала, и разница между входом и 100% — весь его доход, зафиксированный в день сделки. Так устроена наша дисконтная облигация." }
+  ];
+  var bMode = "fixed";
+  function bondRead() {
+    var el = document.getElementById("bond-read");
+    if (!el) return;
+    var m = BOND_MODES.filter(function (x) { return x.k === bMode; })[0];
+    el.innerHTML = "<b>" + m.a + ".</b> " + m.r;
+  }
+  function basicHTML(id, fam) {
+    var d = LIB[id], isBond = id === "bond";
+    var left = usecaseHTML(d, "Зачем это знать") +
+      '<div class="kv"><div class="k">Как устроена</div><div class="v">' + d.how + '</div></div>' +
+      '<div class="plaque"><div class="k">Риск</div>' + d.risk + '</div>' +
+      (isBond ? bondLinksHTML() : assetsHTML());
+    var trio = isBond ? trioHTML("Три вида — по тому, как устроен купон", BOND_ROWS)
+                      : trioHTML("Характер бумаги задаёт конструкцию", EQ_ROWS);
+    var viz;
+    if (isBond) {
+      viz = '<div class="prot-ctrls"><div class="ctrl"><div class="k">Вид купона</div>' +
+          '<div class="seg" id="seg-bond" role="group" aria-label="Вид купона">' +
+          BOND_MODES.map(function (m) {
+            return '<button data-v="' + m.k + '" aria-pressed="' + (m.k === bMode) + '"' + (m.k === bMode ? ' class="on"' : '') + ' aria-label="' + m.a + '">' + m.b + '</button>';
+          }).join("") + '</div></div></div>' +
+        '<div class="pf" id="pf-main">' + payoff("bond", { mode: bMode, color: fam.color }) + '</div>' +
+        '<div class="pf-axis">периоды до погашения →</div>' +
+        '<div class="pf-cap">Столбики — выплаты держателю по периодам; последний включает возврат номинала. Уровни условные: у каждого выпуска свои.</div>' +
+        '<div class="prot-read" id="bond-read" aria-live="polite"></div>';
+    } else {
+      var lg = [
+        { c: LITE, t: "Прямая покупка", d: "результат один к одному с бумагой" },
+        { c: FAM.warrant.color, t: "Варрант", d: "ниже старта теряется премия, выше начинается участие в росте" },
+        { c: FAM.protection.color, t: "Защита капитала", d: "снизу пол, сверху доля роста" }
+      ].map(function (x) { return '<div class="lgi" style="--lc:' + x.c + '"><i aria-hidden="true"></i><span><b>' + x.t + '</b> — ' + x.d + '</span></div>'; }).join("");
+      viz = '<div class="pf" id="pf-main">' + payoff("equity", { color: fam.color }) + '</div>' +
+        '<div class="pf-axis">уровень акции на погашении →</div>' +
+        '<div class="lgnd">' + lg + '</div>' +
+        '<div class="pf-cap">Одна бумага — три способа участия. По вертикали результат в процентах от номинала (экспозиции), по горизонтали уровень акции на дату погашения. Экспозиция у всех трёх одинаковая, разная только сумма входа: акция берётся на всю, варрант — на премию. Уровни премии, защиты и участия условные.</div>';
+    }
+    return headHTML("Базовая бумага · " + (isBond ? "долг" : "доля"), d.name, d.tagline) +
+      '<div class="art-grid"><div>' + left + '</div><div class="viz" style="--fc:' + fam.color + '">' + viz + '</div></div>' + trio +
+      (isBond
+        ? '<details class="gloss"><summary>Термины облигаций</summary><dl>' +
+            '<dt>Номинал<span class="en">face value</span></dt><dd>Сумма, которую эмитент возвращает на погашении. Цена всегда указывается в процентах от неё: 50% — половина номинала, 101,5% — чуть дороже номинала.</dd>' +
+            '<dt>Купон</dt><dd>Периодическая выплата держателю, обычно раз в квартал или в полгода. У структурных выпусков вместо купона может стоять условие: платится, только если базовый актив выше барьера.</dd>' +
+            '<dt>НКД<span class="en">накопленный купонный доход</span></dt><dd>Часть купона, набежавшая с последней выплаты. Покупатель доплачивает её продавцу, поэтому списывается со счёта больше, чем показано в цене.</dd>' +
+            '<dt>Погашение<span class="en">maturity</span></dt><dd>Дата, в которую возвращается номинал и бумага перестаёт существовать. До неё выйти можно только продажей на рынке — по той цене, которая там есть.</dd>' +
+            '<dt>Оферта</dt><dd>Заранее назначенная дата, когда эмитент обязан выкупить бумагу по требованию держателя. Для длинного выпуска это фактический срок инвестиции: дальше условия могут измениться.</dd>' +
+            '<dt>ОФЗ<span class="en">облигация федерального займа</span></dt><dd>Долг государства в рублях. На витрине встречается дважды: короткие ОФЗ в «Лучших ставках» как альтернатива вкладу и ОФЗ 26238 как базовый актив части варрантов.</dd>' +
+            '<dt>ISIN</dt><dd>Международный код бумаги из 12 знаков — единственный точный способ её назвать. Все наши размещённые выпуски адресуются именно по нему.</dd>' +
+          '</dl></details>'
+        : '<details class="gloss"><summary>Термины по акциям</summary><dl>' +
+            '<dt>Базовый актив<span class="en">underlying</span></dt><dd>Бумага или индекс, от уровня которого считается выплата продукта. Сам актив при этом не покупается — он только задаёт числа для формулы.</dd>' +
+            '<dt>Волатильность</dt><dd>Мера того, насколько сильно бумага ходит. Чем она выше, тем дороже участие в движении: премия варранта на спокойную бумагу и на быструю различается в разы.</dd>' +
+            '<dt>Дивиденд</dt><dd>Часть прибыли, распределённая между акционерами. Держателю структурного продукта не выплачивается: дивиденды уже учтены в цене опциона, из которого продукт собран.</dd>' +
+            '<dt>Привилегированная акция<span class="en">преф</span></dt><dd>Не даёт голоса на собрании, но при том же дивиденде обычно стоит дешевле обыкновенной. На российском рынке у ряда компаний обращаются оба типа.</dd>' +
+            '<dt>Тикер</dt><dd>Короткий код бумаги на бирже: SBER, YDEX, NVDA. В названиях продуктов на доске базовый актив подписан именно так.</dd>' +
+            '<dt>Индекс</dt><dd>Корзина бумаг, считаемая по правилу: S&amp;P 500, CSI 300, Hang Seng. Как базовый актив ведёт себя спокойнее отдельной акции — риск размазан по составу.</dd>' +
+          '</dl></details>');
+  }
+
   function articleHTML(id) {
     var famKey = famOf(id), fam = FAM[famKey];
+    if (famKey === "basic") return basicHTML(id, fam);
     if (id === "preipo") {
       var dp = LIB.preipo;
       return headHTML("Продукт · альтернативный", dp.name, dp.tagline) +
@@ -624,6 +854,23 @@
     }
     var back = art.querySelector("[data-back]");
     if (back) back.addEventListener("click", function () { select("warrants", true); });
+    // Переходы из текста базовых бумаг в статьи продуктов. Адрес в href настоящий
+    // (#discount), поэтому ссылка работает и средним кликом, и без JS
+    art.querySelectorAll("[data-go]").forEach(function (a) {
+      a.addEventListener("click", function (e) { e.preventDefault(); select(a.getAttribute("data-go"), true); });
+    });
+    if (id === "bond") {
+      bondRead();
+      art.querySelector("#seg-bond").addEventListener("click", function (e) {
+        var b = e.target.closest("button"); if (!b) return;
+        bMode = b.getAttribute("data-v");
+        this.querySelectorAll("button").forEach(function (x) { var on = x === b; x.classList.toggle("on", on); x.setAttribute("aria-pressed", on ? "true" : "false"); });
+        var pf = document.getElementById("pf-main");
+        pf.innerHTML = payoff("bond", { mode: bMode, color: FAM.basic.color });
+        bondRead();
+        animate(pf.parentNode);
+      });
+    }
     if (id === "protection") {
       protRead();
       art.querySelector("#seg-level").addEventListener("click", function (e) {
@@ -694,7 +941,7 @@
   document.getElementById("next").addEventListener("click", function (e) { select(e.currentTarget.dataset.id, true); });
 
   var hash = decodeURIComponent(location.hash.slice(1));
-  select(ORDER.indexOf(hash) >= 0 ? hash : "discount", false);
+  select(ORDER.indexOf(hash) >= 0 ? hash : "bond", false);
 
   var u = (window.SITE_DATA || {}).updated;
   if (u) document.getElementById("updated").textContent = u.split("-").reverse().join(".");
