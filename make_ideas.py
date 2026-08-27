@@ -216,6 +216,31 @@ def parse(path, cfg, spot_map):
     upside5 = int(math.floor(upside / 5.0 + 0.5) * 5) if upside is not None else None
 
     rest = p[3:]
+
+    # «Показатели: метка = значение; метка = значение» — плитка ключевых цифр
+    # над телом разбора. Без неё все числа тонули в прозе и текст читался стеной.
+    facts = []
+    fi = next((i for i, s in enumerate(rest) if s.startswith("Показатели:")), None)
+    if fi is not None:
+        raw_f = rest.pop(fi)[len("Показатели:"):]
+        for chunk in raw_f.split(";"):
+            if "=" not in chunk:
+                continue
+            k, v = chunk.split("=", 1)
+            facts.append({"k": k.strip(), "v": v.strip()})
+
+    # «Что проверять дальше: A; B; C» — это список, а не абзац; разбираем в пункты
+    watch = []
+    wi = next((i for i, s in enumerate(rest) if s.startswith("Что проверять")), None)
+    if wi is not None:
+        raw_w = rest.pop(wi)
+        tail = raw_w.split(":", 1)[1] if ":" in raw_w else ""
+        for chunk in tail.split(";"):
+            t = chunk.strip().rstrip(".").lstrip()
+            t = re.sub(r"^и\s+", "", t)          # «и подтвердит ли…» — остаток перечисления
+            if t:
+                watch.append(t[:1].upper() + t[1:])
+
     ri = next((i for i, s in enumerate(rest) if RISK_START.match(s)), len(rest))
     body_src, risks = rest[:ri], rest[ri:]
     risks = [re.sub(r"^Риски[.:]\s*", "", s) for s in risks]
@@ -233,7 +258,7 @@ def parse(path, cfg, spot_map):
         "thesis": thesis, "lead": p[1],
         "target": target, "targetNum": target_num,
         "spot": spot, "upside": upside, "upside5": upside5,
-        "body": body, "risks": risks,
+        "facts": facts, "body": body, "watch": watch, "risks": risks,
     }
 
 

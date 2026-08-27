@@ -273,8 +273,14 @@ def ideas_block():
             row = ". ".join(bits) + "."
             if x.get("lead"):
                 row += " " + x["lead"]
+            # Показатели дают роботу проверяемые цифры компании — самый ценный
+            # уникальный текст страницы после лида
+            if x.get("facts"):
+                row += " Показатели: " + "; ".join(
+                    "%s — %s" % (f.get("k", ""), f.get("v", "")) for f in x["facts"]) + "."
+            # Риски теперь разбиты на пункты — в пререндер идут все
             if x.get("risks"):
-                row += " Риски: " + x["risks"][0]
+                row += " Риски: " + " ".join(x["risks"])
             rows.append(row)
         groups.append((title, rows))
 
