@@ -60,7 +60,7 @@ export default {
     if (url.pathname === "/stats" && request.method === "POST") return handleStats(request, env, cors);
     if (url.pathname === "/picks" && request.method === "POST") return handlePicks(request, env, cors);
     if (url.pathname === "/chat" && request.method === "POST") return handleChat(request, env, cors, ctx);
-    if (url.pathname === "/submit" && request.method === "POST") return handleSubmit(request, env, cors);
+    if (url.pathname === "/submit" && request.method === "POST") return handleSubmit(request, env, cors, ctx);
     if (url.pathname === "/tg" && request.method === "POST") return handleTelegram(request, env, ctx);
 
     return new Response("OK", { status: 200, headers: cors });
@@ -228,15 +228,17 @@ function salesNames(env) { return knownRefs(env); }
 // PARTNER_KEYS. Ключи — только про вход на стол; сделки, подборка и чат от них
 // не зависят. Раньше реестром были одни ключи, и партнёр «появлялся» лишь после
 // ручной правки секрета в Cloudflare — теперь его заводит сейлз через админку.
-// Кэш реестра в изоляте: list по префиксу зовётся и на КАЖДОЕ открытие ссылки
-// (recordHit), а партнёры заводятся раз в недели. Запись pinfo сбрасывает кэш
-// сама (pinfoInvalidate), поэтому свежий партнёр виден админке сразу.
+// Кэш реестра в изоляте нужен ровно одному месту — recordHit, который зовётся на
+// КАЖДОЕ открытие ссылки. Пути админки и бота ходят с fresh=true: сброс кэша
+// (pinfoInvalidate) работает только в СВОЁМ изоляте, а вебхук ✅ и запрос сейлза
+// почти всегда попадают в разные — без fresh сейлз до 30 с получал бы «партнёра
+// нет в списке» сразу после одобрения.
 let PREFS = { at: 0, refs: [] };
 function pinfoInvalidate() { PREFS = { at: 0, refs: [] }; }
 
-async function partnerRefs(env) {
+async function partnerRefs(env, fresh) {
   const now = Date.now();
-  if (PREFS.at && now - PREFS.at < 30000) return PREFS.refs;
+  if (!fresh && PREFS.at && now - PREFS.at < 30000) return PREFS.refs;
   const set = new Set(keyPairs(env.PARTNER_KEYS).map(function (x) { return x[0]; }));
   if (env.POST_KV) {
     try {
@@ -254,12 +256,21 @@ async function partnerRefs(env) {
 
 // ---------- КЛЮЧИ ВХОДА В РАБОЧИЙ СТОЛ ----------
 // Раньше пара «метка:ключ» жила ТОЛЬКО в секрете PARTNER_KEYS, и завести партнёра
-// без похода Руслана в Cloudflare было нельзя. Теперь ключ выдаётся сам при ✅:
-// в KV ложится ХЭШ (pkey:<метка>) — по хранилищу войти нельзя, — а сам ключ
-// показывается один раз (Руслану в карточке, сейлзу в админке через pshow).
-// Старый секрет остаётся рабочим: deskLogin проверяет оба источника.
+// без похода Руслана в Cloudflare было нельзя. Теперь ключ выдаётся сам при ✅ и
+// показывается ОДИН раз: Руслану в карточке, сейлзу в админке.
+// Хранение — ОДНА запись `pkey:<метка>`: хэш живёт вечно, а сам ключ лежит рядом
+// в поле `show` только до забора (и не дольше KEY_SHOW_TTL). Двумя записями
+// (хэш отдельно, ключ отдельно) двойное ✅ могло записать хэш от одного ключа, а
+// показать другой — партнёр получал бы «ключ не подошёл» без всякой диагностики.
+// Срок показа продублирован в metadata: список партнёров тогда собирается одним
+// list, без чтения значений (а значит и без открытых ключей в памяти воркера).
+// Старый секрет PARTNER_KEYS остаётся рабочим: deskLogin проверяет оба источника.
 const KEY_ALPHABET = "abcdefghjkmnpqrstuvwxyz23456789";   // без похожих 0/o/1/l/i
-const KEY_SHOW_TTL = 604800;                              // неделя на забрать
+const KEY_SHOW_TTL = 172800;      // 2 суток на забрать: дальше проще перевыпустить
+const KEY_REPEAT_TTL = 900;       // 15 минут на повтор, если ответ не доехал
+// Формат ключа — чтобы отсеивать мусор ДО похода в KV (вход открыт всему интернету)
+const KEY_SHAPE = /^[a-hj-km-np-z2-9]{5}(-[a-hj-km-np-z2-9]{5}){3}$/;
+const REF_SHAPE = /^[a-z0-9][a-z0-9._-]{0,39}$/;
 
 function makeDeskKey() {
   const out = [];
@@ -290,16 +301,33 @@ function safeEq(a, b) {
   return d === 0;
 }
 
-// Выдать (или перевыпустить) ключ: хэш — в KV навсегда, сам ключ — на неделю в
-// pshow, откуда его забирают ОДИН раз. Перевыпуск гасит прежний ключ сразу.
+// Выдать (или перевыпустить) ключ. Одна запись: хэш + сам ключ до забора.
+// Перевыпуск затирает прежний хэш, то есть старый ключ перестаёт пускать (в KV
+// чтение может отдавать прежнее значение ещё до минуты — это не «мгновенно»).
 async function issueDeskKey(env, ref, by) {
   const key = makeDeskKey();
+  const until = Date.now() + KEY_SHOW_TTL * 1000;
   await env.POST_KV.put("pkey:" + ref, JSON.stringify({
-    h: await keyHash(ref, key), ts: Date.now(), by: by || "",
-  }));
-  await env.POST_KV.put("pshow:" + ref, JSON.stringify({ k: key, ts: Date.now() }),
-                        { expirationTtl: KEY_SHOW_TTL });
+    h: await keyHash(ref, key), ts: Date.now(), by: by || "", show: key, until: until,
+  }), { metadata: { until: until } });
   return key;
+}
+
+// Забрать выданный ключ. Первый показ не стирает его сразу, а сокращает срок до
+// KEY_REPEAT_TTL: оборвись ответ на пути к браузеру — ключ был бы потерян совсем
+// (в KV только хэш), и сейлзу пришлось бы просить перевыпуск, не понимая почему.
+async function takeDeskKey(env, ref, by) {
+  const rec = await env.POST_KV.get("pkey:" + ref, "json");
+  if (!rec) return { error: "no_key" };
+  if (!rec.show || !rec.until || rec.until < Date.now()) return { error: "key_gone" };
+  const first = !rec.by_shown;
+  const until = Math.min(rec.until, Date.now() + KEY_REPEAT_TTL * 1000);
+  try {
+    await env.POST_KV.put("pkey:" + ref, JSON.stringify({
+      h: rec.h, ts: rec.ts, by: rec.by, show: rec.show, until: until, by_shown: by || rec.by_shown || "?",
+    }), { metadata: { until: until } });
+  } catch (e) { /* пометку не записали — ключ всё равно отдаём */ }
+  return { key: rec.show, first: first };
 }
 
 // Вход в рабочий стол: партнёры И свои сейлзы. Возвращает {ref, kind} или null.
@@ -316,11 +344,16 @@ async function deskLogin(env, id, key) {
   for (const pair of keyPairs(env.SALES_KEYS)) {
     if (pair[0] === wantId && pair[1] === wantKey) return { ref: pair[0], kind: "sales" };
   }
-  if (env.POST_KV) {
+  // Дальше — ключи, выданные конвейером. Вход открыт всему интернету, поэтому
+  // мусор отсекаем по форме ДО чтения KV, а не платим за него хранилищем.
+  if (env.POST_KV && REF_SHAPE.test(wantId) && KEY_SHAPE.test(wantKey)) {
     try {
       const rec = await env.POST_KV.get("pkey:" + wantId, "json");
       if (rec && rec.h && safeEq(rec.h, await keyHash(wantId, wantKey))) {
-        return { ref: wantId, kind: "partner" };
+        // Метка обязана быть в реестре: иначе ключ, выданный партнёру, которого
+        // потом убрали из PARTNER_KEYS (а /partnerrm никто не звал — реквизитов
+        // у метки не было), пускал бы бывшего контрагента на стол вечно.
+        if ((await partnerRefs(env)).includes(wantId)) return { ref: wantId, kind: "partner" };
       }
     } catch (e) { /* сбой хранилища — просто не пускаем */ }
   }
@@ -2509,7 +2542,7 @@ async function reqStatus(env, mid, st) {
   } catch (e) { /* статус необязателен */ }
 }
 
-async function handleSubmit(request, env, cors) {
+async function handleSubmit(request, env, cors, ctx) {
   if (!env.SALES_KEYS || !env.ADMIN_CHAT_ID) return json({ ok: false, error: "not_configured" }, 503, cors);
   let data;
   try { data = await request.json(); } catch { return json({ ok: false, error: "bad_json" }, 400, cors); }
@@ -2838,18 +2871,24 @@ async function handleSubmit(request, env, cors) {
   // Список партнёров для выпадающего списка: отдаём ТОЛЬКО метки (не ключи) и
   // сводку по сделкам, чтобы сейлз видел, что уже заведено, и не задваивал.
   if (data.action === "partners") {
-    const refs = await partnerRefs(env);
-    // Кто уже может войти на стол и у кого ключ ещё ждёт, чтобы его забрали:
-    // два list дешевле, чем два get на каждого партнёра.
+    const refs = await partnerRefs(env, true);
+    // Кто может войти на стол и у кого ключ ещё ждёт: ОДИН list по pkey — срок
+    // показа продублирован в metadata, поэтому значения (а с ними открытые ключи)
+    // читать не нужно. Сбой list отдаёт флаги как null: «не знаем» и «входа нет» —
+    // разные вещи, а второе отправило бы сейлза гасить рабочий ключ перевыпуском.
     const hasKey = new Set(keyPairs(env.PARTNER_KEYS).map(function (x) { return x[0]; }));
     const ready = new Set();
+    let flagsOk = true;
     if (env.POST_KV) {
       try {
+        const now = Date.now();
         const k = await env.POST_KV.list({ prefix: "pkey:", limit: 1000 });
-        for (const x of k.keys) hasKey.add(x.name.slice(5));
-        const s = await env.POST_KV.list({ prefix: "pshow:", limit: 1000 });
-        for (const x of s.keys) ready.add(x.name.slice(6));
-      } catch (e) { /* флаги необязательны */ }
+        for (const x of k.keys) {
+          const r2 = x.name.slice(5);
+          hasKey.add(r2);
+          if (x.metadata && x.metadata.until && x.metadata.until > now) ready.add(r2);
+        }
+      } catch (e) { flagsOk = false; }
     }
     const out = [];
     for (const ref of refs) {
@@ -2858,7 +2897,7 @@ async function handleSubmit(request, env, cors) {
       for (const d of list) sum += Number(d.reward) || 0;
       const info = await pinfoGet(env, ref);
       out.push({ ref: ref, name: (info && info.name) || "", count: list.length, reward: sum,
-                 hasKey: hasKey.has(ref), keyReady: ready.has(ref) });
+                 hasKey: flagsOk ? hasKey.has(ref) : null, keyReady: flagsOk ? ready.has(ref) : null });
     }
     out.sort(function (a, b) { return a.ref < b.ref ? -1 : 1; });
     return json({ ok: true, partners: out }, 200, cors);
@@ -2870,21 +2909,25 @@ async function handleSubmit(request, env, cors) {
   if (data.action === "partner_key") {
     if (!env.POST_KV) return json({ ok: false, error: "kv_not_configured" }, 503, cors);
     const ref = cleanStr(data.ref, 40).toLowerCase();
-    if (!(await partnerRefs(env)).includes(ref)) return json({ ok: false, error: "bad_ref" }, 422, cors);
-    let rec;
-    try { rec = await env.POST_KV.get("pshow:" + ref, "json"); }
-    catch (e) { return json({ ok: false, error: "kv_read_failed" }, 502, cors); }
-    if (!rec || !rec.k) return json({ ok: false, error: "key_gone" }, 404, cors);
-    await env.POST_KV.delete("pshow:" + ref);
-    try {
-      await tg(env, "sendMessage", {
+    if (!(await partnerRefs(env, true)).includes(ref)) return json({ ok: false, error: "bad_ref" }, 422, cors);
+    let got;
+    try { got = await takeDeskKey(env, ref, author); }
+    catch (e) { return json({ ok: false, error: "kv_key_failed" }, 502, cors); }
+    if (got.error) return json({ ok: false, error: got.error }, 404, cors);
+    // След Руслану — только на ПЕРВЫЙ показ: повтор в окне 15 минут это тот же
+    // сейлз, у которого не доехал ответ, и второе уведомление сбивало бы с толку.
+    if (got.first) {
+      const note = tg(env, "sendMessage", {
         chat_id: env.ADMIN_CHAT_ID, parse_mode: "HTML", disable_web_page_preview: true,
         text: "🔑 <b>Ключ входа забран</b>\nПартнёр: <b>" + esc(ref) + "</b> · забрал <b>" +
-              esc(author) + "</b>\n<i>Больше ключ нигде не показывается. Перевыпуск — " +
+              esc(author) + "</b>\n<i>Дальше ключ есть только у партнёра. Перевыпуск — " +
               "<code>/partnerkey " + esc(ref) + "</code></i>",
-      });
-    } catch (e) { /* след не критичен */ }
-    return json({ ok: true, ref: ref, key: rec.k }, 200, cors);
+      }).catch(function () {});
+      // Не задерживаем ответ: ключ уже в руках, а обрыв на этом шаге стоил бы
+      // сейлзу самого ключа.
+      if (ctx && ctx.waitUntil) ctx.waitUntil(note); else await note;
+    }
+    return json({ ok: true, ref: ref, key: got.key }, 200, cors);
   }
 
   // Заявка на нового партнёра — единственный шаг конвейера, который остаётся
@@ -2894,8 +2937,16 @@ async function handleSubmit(request, env, cors) {
     if (!env.POST_KV) return json({ ok: false, error: "kv_not_configured" }, 503, cors);
     const ref = cleanStr(data.ref, 40).toLowerCase();
     if (!/^[a-z0-9][a-z0-9._-]{0,39}$/.test(ref)) return json({ ok: false, error: "bad_new_ref" }, 422, cors);
-    const taken = new Set((await partnerRefs(env)).concat(knownRefs(env)));
+    const taken = new Set((await partnerRefs(env, true)).concat(knownRefs(env)));
     if (taken.has(ref)) return json({ ok: false, error: "ref_taken" }, 422, cors);
+    // Ключ под меткой мог остаться от прежнего контрагента (реквизиты сняли, а
+    // вход — нет): новый партнёр получил бы метку, на которую у чужого человека
+    // уже есть рабочий ключ.
+    try {
+      if (await env.POST_KV.get("pkey:" + ref, "json")) {
+        return json({ ok: false, error: "ref_taken" }, 422, cors);
+      }
+    } catch (e) { /* не смогли проверить — дальше перепроверит ✅ */ }
     // У освободившейся метки (/partnerrm) могла остаться книга сделок прежнего
     // контрагента — новый партнёр унаследовал бы чужие объёмы и вознаграждения.
     if ((await dealsGet(env, ref)).length) return json({ ok: false, error: "ref_has_deals" }, 422, cors);
@@ -2939,7 +2990,7 @@ async function handleSubmit(request, env, cors) {
   // Сделки одного партнёра — чтобы сейлз мог свериться и снять ошибочную запись.
   if (data.action === "deals_list") {
     const ref = cleanStr(data.ref, 40).toLowerCase();
-    if (!(await partnerRefs(env)).includes(ref)) {
+    if (!(await partnerRefs(env, true)).includes(ref)) {
       return json({ ok: false, error: "bad_ref" }, 422, cors);
     }
     const list = (await dealsGet(env, ref)).slice().sort(function (a, b) {
@@ -2957,7 +3008,7 @@ async function handleSubmit(request, env, cors) {
   if (data.action === "deal") {
     if (!env.POST_KV) return json({ ok: false, error: "kv_not_configured" }, 503, cors);
     const ref = cleanStr(data.ref, 40).toLowerCase();
-    if (!(await partnerRefs(env)).includes(ref)) {
+    if (!(await partnerRefs(env, true)).includes(ref)) {
       return json({ ok: false, error: "bad_ref" }, 422, cors);
     }
     const product = cleanStr(data.product, 80);
@@ -3009,7 +3060,7 @@ async function handleSubmit(request, env, cors) {
     if (!env.POST_KV) return json({ ok: false, error: "kv_not_configured" }, 503, cors);
     const ref = cleanStr(data.ref, 40).toLowerCase();
     const dealId = cleanStr(data.id, 20);
-    if (!(await partnerRefs(env)).includes(ref)) {
+    if (!(await partnerRefs(env, true)).includes(ref)) {
       return json({ ok: false, error: "bad_ref" }, 422, cors);
     }
     if (!dealId) return json({ ok: false, error: "no_id" }, 422, cors);
@@ -3833,7 +3884,12 @@ async function handleTelegram(request, env, ctx) {
           // (вторая такая же карточка, ключ в PARTNER_KEYS), а у освободившейся
           // метки могла остаться книга сделок — слепая запись перезаписала бы
           // реквизиты или отдала новому контрагенту чужие вознаграждения.
-          if ((await pinfoGet(env, payload.ref)) || knownRefs(env).includes(payload.ref)) {
+          // Занятость — про ЧУЖУЮ метку. Свои же реквизиты (первое ✅ записало
+          // pinfo, а выдача ключа упала) не должны выглядеть занятостью: иначе
+          // повтор отвечает «метка занята», хотя партнёр заведён и сидит без входа.
+          const already = await pinfoGet(env, payload.ref);
+          const mine = already && JSON.stringify(already) === JSON.stringify(payload.p);
+          if ((already && !mine) || knownRefs(env).includes(payload.ref)) {
             throw new Error("метка «" + payload.ref + "» уже занята — партнёр не заведён");
           }
           if ((await dealsGet(env, payload.ref)).length) {
@@ -3849,7 +3905,7 @@ async function handleTelegram(request, env, ctx) {
           what = title + " — сделки можно записывать сразу";
           tail = "\n\n<b>Вход в рабочий стол</b>\nID: <code>" + esc(payload.ref) + "</code>\n" +
                  "Ключ: <code>" + esc(issued) + "</code>\n" +
-                 "<i>Ключ показан один раз. Сейлз может забрать его в админке в течение недели; " +
+                 "<i>Ключ показан один раз. Сейлз может забрать его в админке двое суток; " +
                  "потерялся — перевыпустите командой /partnerkey " + esc(payload.ref) + "</i>";
         } else if (isDoc) {
           if (payload.s === "odoc") await attachOfferingDoc(env, payload);
@@ -3929,14 +3985,21 @@ async function handleTelegram(request, env, ctx) {
                     "(прежний сразу перестаёт работать).");
           return new Response("ok");
         }
-        if (!(await partnerRefs(env)).includes(ref)) {
+        if (!(await partnerRefs(env, true)).includes(ref)) {
           await say("Партнёра «" + esc(ref) + "» нет в списке. Посмотреть всех: <code>/partners</code>");
           return new Response("ok");
         }
         const fresh = await issueDeskKey(env, ref, "admin");
+        // Ключ из секрета этой командой НЕ гасится: deskLogin проверяет
+        // PARTNER_KEYS первым, и утёкшая пара продолжала бы пускать — молчать
+        // об этом нельзя, перевыпуск затевают как раз ради такого случая.
+        const inSecret = keyPairs(env.PARTNER_KEYS).some(function (x) { return x[0] === ref; });
         await say("<b>Новый ключ входа</b>\nID: <code>" + esc(ref) + "</code>\nКлюч: <code>" +
-                  esc(fresh) + "</code>\n\n<i>Прежний ключ больше не работает. Сейлз может забрать " +
-                  "этот в админке в течение недели.</i>");
+                  esc(fresh) + "</code>\n\n<i>Прежний выданный ключ перестаёт работать " +
+                  "(хранилище обновляется до минуты). Сейлз может забрать этот в админке " +
+                  "двое суток.</i>" +
+                  (inSecret ? "\n\n⚠️ У метки есть ещё и ключ в секрете <b>PARTNER_KEYS</b> — " +
+                              "он продолжает пускать. Уберите пару в Cloudflare." : ""));
         return new Response("ok");
       }
 
@@ -3951,10 +4014,10 @@ async function handleTelegram(request, env, ctx) {
         // Вместе с реквизитами гасим и вход: иначе ключ продолжал бы пускать на
         // стол партнёра, которого мы только что убрали из реестра.
         await env.POST_KV.delete("pkey:" + ref);
-        await env.POST_KV.delete("pshow:" + ref);
+        await env.POST_KV.delete("pshow:" + ref);   // записи прежней схемы, если остались
         pinfoInvalidate();
-        await say("Реквизиты партнёра <b>" + esc(ref) + "</b> удалены, ключ входа погашен. " +
-                  "Сделки не тронуты." +
+        await say("Реквизиты партнёра <b>" + esc(ref) + "</b> удалены, ключ входа погашен " +
+                  "(хранилище обновляется до минуты). Сделки не тронуты." +
                   (keyPairs(env.PARTNER_KEYS).some(function (x) { return x[0] === ref; })
                     ? "\n\n⚠️ У этой метки есть ещё и ключ в секрете PARTNER_KEYS — уберите его в Cloudflare."
                     : ""));
@@ -3963,7 +4026,7 @@ async function handleTelegram(request, env, ctx) {
 
       // /partners — что заполнено у всех известных меток
       if (/^\/partners(?:@\w+)?(?:\s|$)/.test(msg.text)) {
-        const refs = [...new Set((await partnerRefs(env)).concat(knownRefs(env)))];
+        const refs = [...new Set((await partnerRefs(env, true)).concat(knownRefs(env)))];
         if (!refs.length) {
           await say("Партнёров нет — задайте PARTNER_KEYS.");
           return new Response("ok");
@@ -3991,7 +4054,7 @@ async function handleTelegram(request, env, ctx) {
           "<code>/partnerrm метка</code> — удалить.");
         return new Response("ok");
       }
-      const parsed = pinfoParse(env, line, await partnerRefs(env));
+      const parsed = pinfoParse(env, line, await partnerRefs(env, true));
       if (parsed.error) {
         await say("Не понял: " + esc(parsed.error) + "\n\nПодсказка по формату — просто <code>/partner</code>");
         return new Response("ok");
@@ -4041,7 +4104,7 @@ async function handleTelegram(request, env, ctx) {
         const ref = msg.text.replace(/^\/deals(@\w+)?\s*/, "").trim().toLowerCase();
         if (!ref) {
           const rows = [];
-          for (const r of [...new Set((await partnerRefs(env)).concat(knownRefs(env)))]) {
+          for (const r of [...new Set((await partnerRefs(env, true)).concat(knownRefs(env)))]) {
             const list = await dealsGet(env, r);
             if (!list.length) continue;
             const t = dealTotals(list);
@@ -4083,7 +4146,7 @@ async function handleTelegram(request, env, ctx) {
           "<code>/dealrm партнёр id</code> — удалить.");
         return new Response("ok");
       }
-      const parsed = dealParse(env, line, await partnerRefs(env));
+      const parsed = dealParse(env, line, await partnerRefs(env, true));
       if (parsed.error) {
         await say("Не понял: " + esc(parsed.error) + "\n\nПодсказка по формату — просто <code>/deal</code>");
         return new Response("ok");
