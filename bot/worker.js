@@ -228,7 +228,15 @@ function salesNames(env) { return knownRefs(env); }
 // PARTNER_KEYS. Ключи — только про вход на стол; сделки, подборка и чат от них
 // не зависят. Раньше реестром были одни ключи, и партнёр «появлялся» лишь после
 // ручной правки секрета в Cloudflare — теперь его заводит сейлз через админку.
+// Кэш реестра в изоляте: list по префиксу зовётся и на КАЖДОЕ открытие ссылки
+// (recordHit), а партнёры заводятся раз в недели. Запись pinfo сбрасывает кэш
+// сама (pinfoInvalidate), поэтому свежий партнёр виден админке сразу.
+let PREFS = { at: 0, refs: [] };
+function pinfoInvalidate() { PREFS = { at: 0, refs: [] }; }
+
 async function partnerRefs(env) {
+  const now = Date.now();
+  if (PREFS.at && now - PREFS.at < 30000) return PREFS.refs;
   const set = new Set(keyPairs(env.PARTNER_KEYS).map(function (x) { return x[0]; }));
   if (env.POST_KV) {
     try {
@@ -238,13 +246,67 @@ async function partnerRefs(env) {
         for (const k of r.keys) set.add(k.name.slice(6));
         cursor = r.list_complete ? null : r.cursor;
       } while (cursor);
-    } catch (e) { /* реестр дополним тем, что есть */ }
+    } catch (e) { return [...set]; }   // сбой чтения не кэшируем
   }
-  return [...set];
+  PREFS = { at: now, refs: [...set] };
+  return PREFS.refs;
+}
+
+// ---------- КЛЮЧИ ВХОДА В РАБОЧИЙ СТОЛ ----------
+// Раньше пара «метка:ключ» жила ТОЛЬКО в секрете PARTNER_KEYS, и завести партнёра
+// без похода Руслана в Cloudflare было нельзя. Теперь ключ выдаётся сам при ✅:
+// в KV ложится ХЭШ (pkey:<метка>) — по хранилищу войти нельзя, — а сам ключ
+// показывается один раз (Руслану в карточке, сейлзу в админке через pshow).
+// Старый секрет остаётся рабочим: deskLogin проверяет оба источника.
+const KEY_ALPHABET = "abcdefghjkmnpqrstuvwxyz23456789";   // без похожих 0/o/1/l/i
+const KEY_SHOW_TTL = 604800;                              // неделя на забрать
+
+function makeDeskKey() {
+  const out = [];
+  // Отбрасываем хвост диапазона: иначе первые буквы алфавита выпадали бы чаще.
+  const limit = 256 - (256 % KEY_ALPHABET.length);
+  while (out.length < 20) {
+    const b = new Uint8Array(24);
+    crypto.getRandomValues(b);
+    for (const x of b) {
+      if (x >= limit || out.length >= 20) continue;
+      out.push(KEY_ALPHABET[x % KEY_ALPHABET.length]);
+    }
+  }
+  return out.join("").replace(/(.{5})(?=.)/g, "$1-");     // xxxxx-xxxxx-xxxxx-xxxxx
+}
+
+async function keyHash(ref, key) {
+  const data = new TextEncoder().encode("rumberg:" + ref + ":" + key);
+  const h = await crypto.subtle.digest("SHA-256", data);
+  return [...new Uint8Array(h)].map(function (x) { return x.toString(16).padStart(2, "0"); }).join("");
+}
+// Сравнение хэшей за постоянное время — привычка, а не паранойя: обычный === на
+// секрете подсказывает длину общего префикса.
+function safeEq(a, b) {
+  if (typeof a !== "string" || typeof b !== "string" || a.length !== b.length) return false;
+  let d = 0;
+  for (let i = 0; i < a.length; i++) d |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return d === 0;
+}
+
+// Выдать (или перевыпустить) ключ: хэш — в KV навсегда, сам ключ — на неделю в
+// pshow, откуда его забирают ОДИН раз. Перевыпуск гасит прежний ключ сразу.
+async function issueDeskKey(env, ref, by) {
+  const key = makeDeskKey();
+  await env.POST_KV.put("pkey:" + ref, JSON.stringify({
+    h: await keyHash(ref, key), ts: Date.now(), by: by || "",
+  }));
+  await env.POST_KV.put("pshow:" + ref, JSON.stringify({ k: key, ts: Date.now() }),
+                        { expirationTtl: KEY_SHOW_TTL });
+  return key;
 }
 
 // Вход в рабочий стол: партнёры И свои сейлзы. Возвращает {ref, kind} или null.
-function deskLogin(env, id, key) {
+// ТРИ источника: секреты PARTNER_KEYS и SALES_KEYS (заводит Руслан руками) плюс
+// ключи, выданные конвейером админки, — от них в KV лежит только хэш.
+// Асинхронный: за хэшем надо сходить в KV. Зовётся из /stats, /picks и /chat.
+async function deskLogin(env, id, key) {
   const wantId = String(id || "").trim().toLowerCase();
   const wantKey = String(key || "").trim();
   if (!wantId || !wantKey) return null;
@@ -254,11 +316,15 @@ function deskLogin(env, id, key) {
   for (const pair of keyPairs(env.SALES_KEYS)) {
     if (pair[0] === wantId && pair[1] === wantKey) return { ref: pair[0], kind: "sales" };
   }
+  if (env.POST_KV) {
+    try {
+      const rec = await env.POST_KV.get("pkey:" + wantId, "json");
+      if (rec && rec.h && safeEq(rec.h, await keyHash(wantId, wantKey))) {
+        return { ref: wantId, kind: "partner" };
+      }
+    } catch (e) { /* сбой хранилища — просто не пускаем */ }
+  }
   return null;
-}
-function salesLogin(env, id, key) {
-  const r = deskLogin(env, id, key);
-  return r ? r.ref : null;
 }
 
 // ---------- СДЕЛКИ ПАРТНЁРА ----------
@@ -459,7 +525,9 @@ function mskDay(ts) {
 // НЕ копим: иначе любой желающий надует нам хранилище через открытый эндпоинт.
 async function recordHit(env, ref, product, kind) {
   if (!env.POST_KV || !ref) return false;
-  if (!salesNames(env).includes(ref)) return false;
+  // Партнёр, заведённый через админку, живёт в KV, а не в секрете — без реестра
+  // его ссылки не считались бы вовсе (список кэшируется на 30 с, см. partnerRefs).
+  if (!salesNames(env).includes(ref) && !(await partnerRefs(env)).includes(ref)) return false;
   const ts = Date.now();
   const key = "hit:" + ref + ":" + ts + "-" + Math.random().toString(36).slice(2, 8);
   try {
@@ -679,7 +747,7 @@ async function picksBuild(env, ref) {
 async function handlePicks(request, env, cors) {
   let d;
   try { d = await request.json(); } catch (e) { return json({ ok: false, error: "bad_json" }, 400, cors); }
-  const who = deskLogin(env, d.id, d.key);
+  const who = await deskLogin(env, d.id, d.key);
   if (!who) return json({ ok: false, error: "bad_key" }, 403, cors);
   const ref = who.ref, day = mskDate().key, key = "picks:" + ref + ":" + day;
 
@@ -707,7 +775,7 @@ async function handleStats(request, env, cors) {
   if (!env.SALES_KEYS && !env.PARTNER_KEYS) return json({ ok: false, error: "not_configured" }, 503, cors);
   let d;
   try { d = await request.json(); } catch (e) { return json({ ok: false, error: "bad_json" }, 400, cors); }
-  const who = deskLogin(env, d.id, d.key);
+  const who = await deskLogin(env, d.id, d.key);
   if (!who) return json({ ok: false, error: "bad_key" }, 403, cors);
   const ref = who.ref;
   if (!env.POST_KV) return json({ ok: false, error: "no_storage" }, 503, cors);
@@ -995,7 +1063,7 @@ async function handleChat(request, env, cors, ctx) {
   // отвечает как обычному посетителю, ошибкой это не является.
   let partnerMode = false, partnerCtx = "", partnerHasDeals = false;
   if (data.partner && data.partner.id && data.partner.key) {
-    const pwho = deskLogin(env, data.partner.id, data.partner.key);
+    const pwho = await deskLogin(env, data.partner.id, data.partner.key);
     if (pwho) {
       partnerMode = true;
       try {
@@ -2771,16 +2839,52 @@ async function handleSubmit(request, env, cors) {
   // сводку по сделкам, чтобы сейлз видел, что уже заведено, и не задваивал.
   if (data.action === "partners") {
     const refs = await partnerRefs(env);
+    // Кто уже может войти на стол и у кого ключ ещё ждёт, чтобы его забрали:
+    // два list дешевле, чем два get на каждого партнёра.
+    const hasKey = new Set(keyPairs(env.PARTNER_KEYS).map(function (x) { return x[0]; }));
+    const ready = new Set();
+    if (env.POST_KV) {
+      try {
+        const k = await env.POST_KV.list({ prefix: "pkey:", limit: 1000 });
+        for (const x of k.keys) hasKey.add(x.name.slice(5));
+        const s = await env.POST_KV.list({ prefix: "pshow:", limit: 1000 });
+        for (const x of s.keys) ready.add(x.name.slice(6));
+      } catch (e) { /* флаги необязательны */ }
+    }
     const out = [];
     for (const ref of refs) {
       const list = await dealsGet(env, ref);
       let sum = 0;
       for (const d of list) sum += Number(d.reward) || 0;
       const info = await pinfoGet(env, ref);
-      out.push({ ref: ref, name: (info && info.name) || "", count: list.length, reward: sum });
+      out.push({ ref: ref, name: (info && info.name) || "", count: list.length, reward: sum,
+                 hasKey: hasKey.has(ref), keyReady: ready.has(ref) });
     }
     out.sort(function (a, b) { return a.ref < b.ref ? -1 : 1; });
     return json({ ok: true, partners: out }, 200, cors);
+  }
+
+  // Забрать выданный ключ входа — ОДИН раз. Ключ лежит в pshow только до первого
+  // показа: дальше его нет ни у кого, кроме партнёра, и перевыпуск делает Руслан
+  // (/partnerkey). Руслану уходит след — кто и когда забрал.
+  if (data.action === "partner_key") {
+    if (!env.POST_KV) return json({ ok: false, error: "kv_not_configured" }, 503, cors);
+    const ref = cleanStr(data.ref, 40).toLowerCase();
+    if (!(await partnerRefs(env)).includes(ref)) return json({ ok: false, error: "bad_ref" }, 422, cors);
+    let rec;
+    try { rec = await env.POST_KV.get("pshow:" + ref, "json"); }
+    catch (e) { return json({ ok: false, error: "kv_read_failed" }, 502, cors); }
+    if (!rec || !rec.k) return json({ ok: false, error: "key_gone" }, 404, cors);
+    await env.POST_KV.delete("pshow:" + ref);
+    try {
+      await tg(env, "sendMessage", {
+        chat_id: env.ADMIN_CHAT_ID, parse_mode: "HTML", disable_web_page_preview: true,
+        text: "🔑 <b>Ключ входа забран</b>\nПартнёр: <b>" + esc(ref) + "</b> · забрал <b>" +
+              esc(author) + "</b>\n<i>Больше ключ нигде не показывается. Перевыпуск — " +
+              "<code>/partnerkey " + esc(ref) + "</code></i>",
+      });
+    } catch (e) { /* след не критичен */ }
+    return json({ ok: true, ref: ref, key: rec.k }, 200, cors);
   }
 
   // Заявка на нового партнёра — единственный шаг конвейера, который остаётся
@@ -2815,8 +2919,8 @@ async function handleSubmit(request, env, cors) {
     const ptext =
       "🆕 <b>Заявка на нового партнёра</b> · от <b>" + esc(author) + "</b>\n" +
       pinfoText(ref, p) +
-      "\n\nПосле «Завести» сейлзы смогут записывать его сделки (без одобрения). " +
-      "Вход на стол откроется, когда добавите ключ метки в PARTNER_KEYS." +
+      "\n\nПосле «Завести» бот сам выдаст ключ входа в рабочий стол и покажет его здесь, " +
+      "а сейлзы смогут записывать сделки этого партнёра без одобрения." +
       "\n\n<pre>" + esc(ppayload) + "</pre>";
     const pr = await tg(env, "sendMessage", {
       chat_id: env.ADMIN_CHAT_ID, text: ptext, parse_mode: "HTML", disable_web_page_preview: true,
@@ -3711,7 +3815,7 @@ async function handleTelegram(request, env, ctx) {
     }
     if (cb.data === "pub") {
       try {
-        let head, what;
+        let head, what, tail = "";
         if (payload.s === "deal") {
           // Пишем в тот же ключ KV, что и команда /deal: стол читает список одним get.
           const list = await dealsGet(env, payload.ref);
@@ -3737,8 +3841,16 @@ async function handleTelegram(request, env, ctx) {
           }
           // Тот же ключ, что у команды /partner: стол и админка читают pinfo.
           await env.POST_KV.put("pinfo:" + payload.ref, JSON.stringify(payload.p));
+          pinfoInvalidate();
+          // Ключ входа выдаётся сразу: в KV — только его хэш, сам ключ показываем
+          // здесь и один раз сейлзу в админке. В Cloudflare заходить не нужно.
+          const issued = await issueDeskKey(env, payload.ref, payload.by);
           head = "🆕 <b>Партнёр заведён</b> · ";
-          what = title + " — сделки можно записывать; вход на стол откроется после ключа в PARTNER_KEYS";
+          what = title + " — сделки можно записывать сразу";
+          tail = "\n\n<b>Вход в рабочий стол</b>\nID: <code>" + esc(payload.ref) + "</code>\n" +
+                 "Ключ: <code>" + esc(issued) + "</code>\n" +
+                 "<i>Ключ показан один раз. Сейлз может забрать его в админке в течение недели; " +
+                 "потерялся — перевыпустите командой /partnerkey " + esc(payload.ref) + "</i>";
         } else if (isDoc) {
           if (payload.s === "odoc") await attachOfferingDoc(env, payload);
           else await attachPlacementDoc(env, payload);
@@ -3752,7 +3864,7 @@ async function handleTelegram(request, env, ctx) {
         // Сделки и партнёры живут в KV — действуют сразу, сайт-пересборка ни при чём.
         const kvOnly = payload.s === "deal" || payload.s === "dealrm" || payload.s === "partner";
         await editCard(head + esc(label) + "\n" + esc(what) + " (от " + esc(payload.by) + ")" +
-                       (kvOnly ? "" : "\nСайт обновится через 1–3 минуты."));
+                       (kvOnly ? "" : "\nСайт обновится через 1–3 минуты.") + tail);
         await reqStatus(env, cb.message.message_id, "published");
         await answer(payload.rm ? "Снято" : payload.s === "partner" ? "Заведено" : "Опубликовано");
       } catch (e) {
@@ -3796,7 +3908,8 @@ async function handleTelegram(request, env, ctx) {
     // ---- Реквизиты партнёров: /partner, /partners, /partnerrm. ТОЛЬКО Руслан.
     // Хранятся в KV, а не в репозитории: репозиторий публичный, список партнёров
     // с ИНН/ОГРН в него попадать не должен.
-    if (/^\/partners?(?:@\w+)?(?:\s|$)/.test(msg.text) || /^\/partnerrm(?:@\w+)?(?:\s|$)/.test(msg.text)) {
+    if (/^\/partners?(?:@\w+)?(?:\s|$)/.test(msg.text) || /^\/partnerrm(?:@\w+)?(?:\s|$)/.test(msg.text) ||
+        /^\/partnerkey(?:@\w+)?(?:\s|$)/.test(msg.text)) {
       const isAdmin = env.ADMIN_CHAT_ID && String(from.id) === String(env.ADMIN_CHAT_ID);
       if (!isAdmin || !msg.chat || msg.chat.type !== "private") return new Response("ok");
       const say = function (t) {
@@ -3808,6 +3921,25 @@ async function handleTelegram(request, env, ctx) {
         return new Response("ok");
       }
 
+      // /partnerkey <метка> — перевыпустить ключ входа (прежний перестаёт работать)
+      if (/^\/partnerkey/.test(msg.text)) {
+        const ref = msg.text.replace(/^\/partnerkey(@\w+)?\s*/, "").trim().toLowerCase();
+        if (!ref) {
+          await say("Формат: <code>/partnerkey метка</code> — выдать новый ключ входа " +
+                    "(прежний сразу перестаёт работать).");
+          return new Response("ok");
+        }
+        if (!(await partnerRefs(env)).includes(ref)) {
+          await say("Партнёра «" + esc(ref) + "» нет в списке. Посмотреть всех: <code>/partners</code>");
+          return new Response("ok");
+        }
+        const fresh = await issueDeskKey(env, ref, "admin");
+        await say("<b>Новый ключ входа</b>\nID: <code>" + esc(ref) + "</code>\nКлюч: <code>" +
+                  esc(fresh) + "</code>\n\n<i>Прежний ключ больше не работает. Сейлз может забрать " +
+                  "этот в админке в течение недели.</i>");
+        return new Response("ok");
+      }
+
       // /partnerrm <метка> — убрать реквизиты
       if (/^\/partnerrm/.test(msg.text)) {
         const ref = msg.text.replace(/^\/partnerrm(@\w+)?\s*/, "").trim().toLowerCase();
@@ -3816,7 +3948,16 @@ async function handleTelegram(request, env, ctx) {
           return new Response("ok");
         }
         await env.POST_KV.delete("pinfo:" + ref);
-        await say("Реквизиты партнёра <b>" + esc(ref) + "</b> удалены. Сделки не тронуты.");
+        // Вместе с реквизитами гасим и вход: иначе ключ продолжал бы пускать на
+        // стол партнёра, которого мы только что убрали из реестра.
+        await env.POST_KV.delete("pkey:" + ref);
+        await env.POST_KV.delete("pshow:" + ref);
+        pinfoInvalidate();
+        await say("Реквизиты партнёра <b>" + esc(ref) + "</b> удалены, ключ входа погашен. " +
+                  "Сделки не тронуты." +
+                  (keyPairs(env.PARTNER_KEYS).some(function (x) { return x[0] === ref; })
+                    ? "\n\n⚠️ У этой метки есть ещё и ключ в секрете PARTNER_KEYS — уберите его в Cloudflare."
+                    : ""));
         return new Response("ok");
       }
 
@@ -3846,6 +3987,7 @@ async function handleTelegram(request, env, ctx) {
           "Пример:\n<code>/partner andrey | ООО «Аркада Капитал» | 7701234567 | 1157746123456 | " +
           "договор П-14 от 03.02.2026</code>\n\n" +
           "Ещё: <code>/partners</code> — у кого что заполнено, " +
+          "<code>/partnerkey метка</code> — перевыпустить ключ входа, " +
           "<code>/partnerrm метка</code> — удалить.");
         return new Response("ok");
       }
@@ -3855,6 +3997,7 @@ async function handleTelegram(request, env, ctx) {
         return new Response("ok");
       }
       await env.POST_KV.put("pinfo:" + parsed.ref, JSON.stringify(parsed.info));
+      pinfoInvalidate();
       await say("Реквизиты записаны — партнёр увидит их на столе.\n\n" + pinfoText(parsed.ref, parsed.info));
       return new Response("ok");
     }

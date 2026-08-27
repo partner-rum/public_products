@@ -35,6 +35,22 @@
   .tab { border:1px solid var(--border); background:var(--card); color:var(--hushed); border-radius:9px;
          padding:9px 15px; font-family:var(--f); font-size:13.5px; font-weight:500; cursor:pointer; }
   .tab.on { background:rgba(238,125,27,.14); border-color:var(--solar); color:var(--ink); font-weight:600; }
+  /* Выданный ключ входа: показывается ОДИН раз, поэтому выделен и с копированием */
+  .keyrow { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:10px;
+            padding:10px 12px; border:1px solid rgba(238,125,27,.4); background:rgba(238,125,27,.08);
+            border-radius:10px; font-size:13px; }
+  .keyrow b { color:var(--ink); }
+  .keybox { margin-top:10px; padding:12px 14px; border:1px solid var(--border);
+            background:var(--card); border-radius:10px; }
+  .keybox .kt { font:600 11px var(--f-mono,monospace); letter-spacing:.1em; text-transform:uppercase;
+                color:var(--solar-l); margin-bottom:8px; }
+  .keybox .kv { display:flex; align-items:center; gap:8px; margin-top:6px; font-family:var(--f-mono,monospace);
+                font-size:14px; color:var(--ink); word-break:break-all; }
+  .keybox .kv span.l { color:var(--faint); min-width:44px; }
+  .keybox .note { margin-top:10px; font-size:12px; color:var(--hushed); line-height:1.5; }
+  .kcopy { border:1px solid var(--border); background:none; color:var(--hushed); border-radius:8px;
+           padding:7px 12px; font:inherit; font-size:12px; cursor:pointer; min-height:36px; }
+  .kcopy:hover { border-color:var(--solar); color:var(--ink); }
 
   form { display:none; }
   form.on { display:block; }
@@ -147,6 +163,8 @@
      а строка ключа прилипает — иначе ошибка ключа утаскивает в самый верх. */
   @media (max-width:860px) {
     .tab { min-height:44px; padding:11px 15px; }
+    .keybox .kv { font-size:13px; }
+    .kcopy { min-height:44px; }
     input, select, textarea { font-size:16px; min-height:44px; padding:11px 12px; }
     .send, .rm-row button, .dg-btn, button.ta, .queue .rf { min-height:44px; }
     .keyrow { position:sticky; top:0; z-index:5; background:var(--canvas); padding:8px 0; }
@@ -649,7 +667,9 @@
           Руслану уходит уведомление. Ошиблись — снимите её в списке ниже и заведите заново.</li>
       </ol>
       <p class="note">Партнёра нет в списке? Заведите его в блоке «Новый партнёр» внизу вкладки —
-        эта заявка уходит Руслану на одобрение.</p></div>
+        эта заявка уходит Руслану на одобрение. После «Завести» здесь же появится
+        <b>ключ входа</b> в «Рабочий стол»: показывается один раз, передайте его партнёру
+        вместе с ID (это метка).</p></div>
     </details>
 
     <div class="grp"><div class="gt">Кому и за что</div>
@@ -661,6 +681,13 @@
         </label>
         <label><span class="k">Дата сделки <b>*</b></span><input name="date" id="dl-date" placeholder="12.08.2026" maxlength="10"></label>
       </div>
+      <!-- Ключ входа партнёра: бот выдал его при одобрении, здесь сейлз забирает
+           его ОДИН раз и передаёт партнёру. Дальше ключ нигде не показывается. -->
+      <div id="dl-keyrow" class="keyrow" style="display:none">
+        <span id="dl-keytext">Для этого партнёра готов ключ входа в «Рабочий стол».</span>
+        <button class="kcopy" type="button" id="dl-keyshow">Показать ключ</button>
+      </div>
+      <div id="dl-keybox" style="display:none"></div>
       <label><span class="k">Продукт <b>*</b></span>
         <input name="product" id="dl-product" placeholder="РСП СП-1-10 · участие 120%" maxlength="80"></label>
       <label><span class="k">ISIN выпуска</span>
@@ -688,8 +715,8 @@
          (его решение 26.08.2026). Ключ входа на стол остаётся за ним. -->
     <div class="grp" id="pn-box" style="margin-top:18px"><div class="gt">Новый партнёр</div>
       <div class="hint" style="margin:0 0 12px">Уходит Руслану на одобрение. После «Завести» партнёр
-        появится в списке выше (обновите страницу), и сделки можно записывать сразу. Вход в «Рабочий стол»
-        Руслан открывает отдельно — выдаёт партнёру ID и ключ.</div>
+        появится в списке выше (обновите страницу), сделки можно записывать сразу, а ключ входа
+        в «Рабочий стол» бот выдаст сам — заберёте его здесь, выбрав партнёра в списке.</div>
       <div class="row">
         <label><span class="k">Метка <b>*</b></span>
           <input name="pref" id="pn-ref" placeholder="arkada" maxlength="40" spellcheck="false" autocomplete="off">
@@ -1260,9 +1287,12 @@
     if (!key) { dlRef.innerHTML = '<option value="">Сначала введите ключ вверху</option>'; return; }
     postAsk({ key: key, action: "partners" }).then(function (d) {
       dlLoaded = true;
+      dlPartners = {};
       dlRef.innerHTML = '<option value="">— выберите —</option>' + d.partners.map(function (p) {
+        dlPartners[p.ref] = p;
         return '<option value="' + esc(p.ref) + '">' + esc(p.ref) + (p.name ? " — " + esc(p.name) : "") +
-          (p.count ? " · " + p.count + " сд. · " + money(p.reward) : " · сделок нет") + "</option>";
+          (p.count ? " · " + p.count + " сд. · " + money(p.reward) : " · сделок нет") +
+          (p.keyReady ? " · ключ ждёт" : p.hasKey ? "" : " · без входа") + "</option>";
       }).join("");
     }).catch(function (e) {
       dlRef.innerHTML = '<option value="">' + esc(e.message) + "</option>";
@@ -1296,7 +1326,80 @@
     });
   }
 
-  dlRef.addEventListener("change", function () { renderDeals(dlRef.value); });
+  // ── КЛЮЧ ВХОДА ПАРТНЁРА ──────────────────────────────────────────────────
+  // Бот выдаёт ключ при одобрении партнёра; сейлз забирает его здесь ОДИН раз
+  // (дальше он есть только у партнёра, перевыпуск — командой Руслана).
+  var dlPartners = {};
+  var dlKeyRow = document.getElementById("dl-keyrow");
+  var dlKeyBox = document.getElementById("dl-keybox");
+  var dlKeyText = document.getElementById("dl-keytext");
+  var dlKeyShow = document.getElementById("dl-keyshow");
+
+  function syncKeyRow(ref) {
+    dlKeyBox.style.display = "none";
+    dlKeyBox.innerHTML = "";
+    var p = ref && dlPartners[ref];
+    if (p && p.keyReady) {
+      dlKeyText.textContent = "Для этого партнёра готов ключ входа в «Рабочий стол».";
+      dlKeyShow.style.display = "";
+      dlKeyRow.style.display = "";
+    } else if (p && !p.hasKey) {
+      // Ключа нет вовсе: старый партнёр из секрета или ключ уже забрали и потеряли.
+      dlKeyText.textContent = "У этого партнёра нет ключа входа — перевыпуск попросите у Руслана.";
+      dlKeyShow.style.display = "none";
+      dlKeyRow.style.display = "";
+    } else {
+      dlKeyRow.style.display = "none";
+    }
+  }
+
+  dlKeyShow.addEventListener("click", function () {
+    var ref = dlRef.value;
+    if (!ref) return;
+    var btn = this;
+    btn.disabled = true; btn.textContent = "Получаем…";
+    postAsk({ key: keyEl.value.trim(), action: "partner_key", ref: ref })
+      .then(function (d) {
+        if (dlPartners[ref]) { dlPartners[ref].keyReady = false; dlPartners[ref].hasKey = true; }
+        dlKeyRow.style.display = "none";
+        dlKeyBox.className = "keybox";
+        dlKeyBox.style.display = "";
+        dlKeyBox.innerHTML =
+          '<div class="kt">ключ показан один раз</div>' +
+          '<div class="kv"><span class="l">ID</span><b id="dl-kid">' + esc(d.ref) + "</b></div>" +
+          '<div class="kv"><span class="l">Ключ</span><b id="dl-kkey">' + esc(d.key) + "</b>" +
+          '<button class="kcopy" type="button" id="dl-kcopy">Скопировать</button></div>' +
+          '<div class="note">Передайте партнёру: вход на <b>invest.rumberg.ru/me.html</b>. ' +
+          "Здесь ключ больше не появится — потеряется, попросите Руслана перевыпустить.</div>";
+        // Копирование тремя уровнями, как в кабинете: в фоновой вкладке буфер
+        // отказывает, и ключ должен остаться на экране, а не потеряться молча.
+        document.getElementById("dl-kcopy").addEventListener("click", function () {
+          var self = this, text = "ID: " + d.ref + "\nКлюч: " + d.key;
+          var done = function () { self.textContent = "Скопировано"; setTimeout(function () { self.textContent = "Скопировать"; }, 1600); };
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(done).catch(fallback);
+          } else fallback();
+          function fallback() {
+            try {
+              var ta = document.createElement("textarea");
+              ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+              document.body.appendChild(ta); ta.select();
+              var ok = document.execCommand("copy");
+              document.body.removeChild(ta);
+              if (ok) return done();
+            } catch (e) {}
+            self.textContent = "Скопируйте вручную";
+          }
+        });
+      })
+      .catch(function (e) {
+        dlKeyText.textContent = e.message;
+        dlKeyShow.style.display = "none";
+      })
+      .finally(function () { btn.disabled = false; btn.textContent = "Показать ключ"; });
+  });
+
+  dlRef.addEventListener("change", function () { renderDeals(dlRef.value); syncKeyRow(dlRef.value); });
 
   // Доля вознаграждения от объёма — сразу под полями: опечатка в разряде
   // (5 625 000 вместо 562 500) видна как «22,5% от объёма», а не как число.
@@ -1404,7 +1507,8 @@
     postJson({ key: key, action: "partner_create", ref: ref, name: name, inn: inn, ogrn: ogrn, contract: contract })
       .then(function (d) {
         msgEl.className = "msg ok";
-        msgEl.textContent = "Ушло Руслану. После «Завести» партнёр появится в списке — обновите страницу.";
+        msgEl.textContent = "Ушло Руслану. После «Завести» обновите страницу: партнёр появится в списке, " +
+          "а рядом — кнопка «Показать ключ» для входа в рабочий стол.";
         qAdd("partner", ref + " · " + name, "", d && d.mid, "");
         ["pn-ref", "pn-name", "pn-inn", "pn-ogrn", "pn-contract"].forEach(function (id) {
           document.getElementById(id).value = "";
@@ -1439,6 +1543,7 @@
     bad_new_ref: "Метка — латиница и цифры без пробелов, до 40 знаков.",
     ref_taken: "Такая метка уже занята — выберите другую.",
     ref_has_deals: "Под этой меткой уже лежат сделки прежнего партнёра — выберите другую.",
+    key_gone: "Ключ уже забрали раньше. Перевыпустить может только Руслан — попросите его.",
     no_name: "Впишите название партнёра.",
     bad_inn: "ИНН — 10 цифр (юрлицо) или 12 (ИП).",
     bad_ogrn: "ОГРН — 13 цифр, ОГРНИП — 15.",
