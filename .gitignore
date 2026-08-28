@@ -81,5 +81,5 @@ _*.js
 
 # Метрика: токен OAuth (область только «Просмотр статистики») и локальный
 # коллектор отчётов. Токен читается из env METRIKA_TOKEN, файл — запасной путь.
-.metrika_token
+.metrika_token*
 fetch_metrika.py
