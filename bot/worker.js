@@ -59,6 +59,7 @@ export default {
     if (url.pathname === "/hit" && request.method === "POST") return handleHit(request, env, cors);
     if (url.pathname === "/stats" && request.method === "POST") return handleStats(request, env, cors);
     if (url.pathname === "/picks" && request.method === "POST") return handlePicks(request, env, cors);
+    if (url.pathname === "/boss" && request.method === "POST") return handleBoss(request, env, cors);
     if (url.pathname === "/chat" && request.method === "POST") return handleChat(request, env, cors, ctx);
     if (url.pathname === "/submit" && request.method === "POST") return handleSubmit(request, env, cors, ctx);
     if (url.pathname === "/tg" && request.method === "POST") return handleTelegram(request, env, ctx);
@@ -358,6 +359,142 @@ async function deskLogin(env, id, key) {
     } catch (e) { /* сбой хранилища — просто не пускаем */ }
   }
   return null;
+}
+
+// ---------- СВОДНЫЙ КАБИНЕТ ВЛАДЕЛЬЦА ----------
+// Отдельный вход, не связанный с SALES_KEYS: сводка по ВСЕМ агентам — это книга
+// вознаграждений целиком, её видит только Руслан. Ключ выдаётся командой
+// /bosskey, в KV лежит его хэш (та же схема, что у ключей стола); запасной
+// вариант — переменная BOSS_KEY, если однажды захочется задать ключ руками.
+async function bossLogin(env, key) {
+  const want = String(key || "").trim();
+  if (!want) return false;
+  if (env.BOSS_KEY && safeEq(String(env.BOSS_KEY).trim(), want)) return true;
+  if (!env.POST_KV || !KEY_SHAPE.test(want)) return false;
+  try {
+    const rec = await env.POST_KV.get("bkey:main", "json");
+    return !!(rec && rec.h && safeEq(rec.h, await keyHash("boss", want)));
+  } catch (e) { return false; }
+}
+
+// События открытий/просмотров/заявок. prefix — "hit:" (все агенты) или
+// "hit:<метка>:" (один). Читаем метаданные ключей: значения пустые, см. recordHit.
+async function hitEvents(env, prefix) {
+  const out = [];
+  let cursor = null, pages = 0, truncated = false;
+  do {
+    const r = await env.POST_KV.list({ prefix: prefix, limit: 1000, cursor: cursor || undefined });
+    for (const k of r.keys) {
+      if (!k.metadata || !k.metadata.ts) continue;
+      // Метка события — между "hit:" и меткой времени: hit:<ref>:<ts>-<rnd>
+      const rest = k.name.slice(4);
+      const i = rest.indexOf(":");
+      out.push({ ref: i > 0 ? rest.slice(0, i) : "", m: k.metadata });
+    }
+    cursor = r.list_complete ? null : r.cursor;
+    if (cursor && ++pages >= HIT_PAGES) { truncated = true; cursor = null; }
+  } while (cursor);
+  return { events: out, truncated: truncated };
+}
+
+// Сводка активности по одной метке из уже прочитанных событий.
+function hitSummary(events, now) {
+  const D = 86400000, byProd = new Map(), byDay = new Map();
+  let opens = 0, opens7 = 0, opens30 = 0, views = 0, leads = 0, leads30 = 0, last = 0;
+  for (const e of events) {
+    const age = now - e.ts;
+    if (e.ts > last) last = e.ts;
+    if (e.t === "lead") { leads++; if (age <= 30 * D) leads30++; }
+    else if (e.t === "view") { views++; }
+    else { opens++; if (age <= 7 * D) opens7++; if (age <= 30 * D) opens30++; }
+    const id = e.p || "—";
+    const row = byProd.get(id) || { p: id, opens: 0, views: 0, leads: 0, last: 0 };
+    if (e.t === "lead") row.leads++; else if (e.t === "view") row.views++; else row.opens++;
+    if (e.ts > row.last) row.last = e.ts;
+    byProd.set(id, row);
+    if (e.t !== "lead" && e.t !== "view" && age <= 30 * D) {
+      const k = mskDay(e.ts);
+      byDay.set(k, (byDay.get(k) || 0) + 1);
+    }
+  }
+  return {
+    opens: { all: opens, d7: opens7, d30: opens30 },
+    views: { all: views }, leads: { all: leads, d30: leads30 }, last: last,
+    products: [...byProd.values()].sort(function (a, b) {
+      return (b.opens + b.views + b.leads) - (a.opens + a.views + a.leads);
+    }).slice(0, 60),
+    days: [...byDay.entries()].map(function (x) { return { d: x[0], n: x[1] }; })
+      .sort(function (a, b) { return a.d < b.d ? -1 : 1; }),
+  };
+}
+
+async function handleBoss(request, env, cors) {
+  let d;
+  try { d = await request.json(); } catch (e) { return json({ ok: false, error: "bad_json" }, 400, cors); }
+  if (!(await bossLogin(env, d.key))) return json({ ok: false, error: "bad_key" }, 403, cors);
+  if (!env.POST_KV) return json({ ok: false, error: "no_storage" }, 503, cors);
+  const now = Date.now();
+
+  // Состояние входа у каждой метки — одним list по metadata (как в action partners).
+  const hasKey = new Set(keyPairs(env.PARTNER_KEYS).map(function (x) { return x[0]; }));
+  const ready = new Set();
+  try {
+    const k = await env.POST_KV.list({ prefix: "pkey:", limit: 1000 });
+    for (const x of k.keys) {
+      const r2 = x.name.slice(5);
+      hasKey.add(r2);
+      if (x.metadata && x.metadata.until && x.metadata.until > now) ready.add(r2);
+    }
+  } catch (e) { /* флаги необязательны */ }
+
+  const refs = await partnerRefs(env, true);
+
+  // Разбор одного агента: то же, что видит он сам на столе, плюс активность.
+  const one = cleanStr(d.ref, 40).toLowerCase();
+  if (one) {
+    if (!refs.includes(one)) return json({ ok: false, error: "bad_ref" }, 422, cors);
+    let ev = { events: [], truncated: false };
+    try { ev = await hitEvents(env, "hit:" + one + ":"); }
+    catch (e) { return json({ ok: false, error: "storage_failed" }, 502, cors); }
+    const deals = (await dealsGet(env, one)).slice().sort(function (a, b) {
+      return a.date < b.date ? 1 : a.date > b.date ? -1 : (b.ts || 0) - (a.ts || 0);
+    });
+    return json({
+      ok: true, now: now, ref: one, profile: await pinfoGet(env, one),
+      deals: deals, totals: dealTotals(deals),
+      hasKey: hasKey.has(one), keyReady: ready.has(one),
+      ...hitSummary(ev.events.map(function (x) { return x.m; }), now),
+      truncated: ev.truncated,
+    }, 200, cors);
+  }
+
+  // Сводка: события всех агентов читаем ОДНИМ проходом по префиксу, а не по
+  // списку на каждого — иначе десяток агентов стоил бы десятка обходов хранилища.
+  let all = { events: [], truncated: false };
+  try { all = await hitEvents(env, "hit:"); } catch (e) { /* активность необязательна */ }
+  const byRef = new Map();
+  for (const e of all.events) {
+    if (!byRef.has(e.ref)) byRef.set(e.ref, []);
+    byRef.get(e.ref).push(e.m);
+  }
+
+  const partners = [];
+  for (const ref of refs) {
+    const deals = await dealsGet(env, ref);
+    const info = await pinfoGet(env, ref);
+    const t = dealTotals(deals).RUB || { accrued: 0, paid: 0, volume: 0, count: 0 };
+    let lastDeal = "";
+    for (const x of deals) if (x.date > lastDeal) lastDeal = x.date;
+    const h = hitSummary(byRef.get(ref) || [], now);
+    partners.push({
+      ref: ref, name: (info && info.name) || "", profile: info || null,
+      count: deals.length, volume: t.volume, reward: t.accrued + t.paid, lastDeal: lastDeal,
+      opens: h.opens, leads: h.leads, lastHit: h.last,
+      hasKey: hasKey.has(ref), keyReady: ready.has(ref),
+    });
+  }
+  partners.sort(function (a, b) { return b.reward - a.reward; });
+  return json({ ok: true, now: now, partners: partners, truncated: all.truncated }, 200, cors);
 }
 
 // ---------- СДЕЛКИ ПАРТНЁРА ----------
@@ -3958,6 +4095,28 @@ async function handleTelegram(request, env, ctx) {
       // См. комментарий у «Пересобрать»: вебхук отвечает сразу, генерация — после ответа
       const job = sendMorningDraft(env, msg.text, msg.chat.id);
       if (ctx) ctx.waitUntil(job); else await job;
+      return new Response("ok");
+    }
+
+    // ---- Ключ сводного кабинета: /bosskey. ТОЛЬКО Руслан.
+    if (/^\/bosskey(?:@\w+)?(?:\s|$)/.test(msg.text)) {
+      const isAdmin = env.ADMIN_CHAT_ID && String(from.id) === String(env.ADMIN_CHAT_ID);
+      if (!isAdmin || !msg.chat || msg.chat.type !== "private") return new Response("ok");
+      const say = function (t) {
+        return tg(env, "sendMessage", { chat_id: msg.chat.id, text: t,
+                                        parse_mode: "HTML", disable_web_page_preview: true });
+      };
+      if (!env.POST_KV) {
+        await say("Хранилище (POST_KV) не подключено — ключ записать некуда.");
+        return new Response("ok");
+      }
+      const bk = makeDeskKey();
+      await env.POST_KV.put("bkey:main", JSON.stringify({ h: await keyHash("boss", bk), ts: Date.now() }));
+      await say("<b>Ключ сводного кабинета</b>\n<code>" + esc(bk) + "</code>\n\n" +
+                "Вход: <b>invest.rumberg.ru/boss.html</b>\n" +
+                "<i>Прежний ключ перестаёт работать (хранилище обновляется до минуты). " +
+                "Кабинет показывает сделки, вознаграждение и активность ВСЕХ агентов — " +
+                "ключ никому не передавайте.</i>");
       return new Response("ok");
     }
 

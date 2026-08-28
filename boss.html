@@ -1,0 +1,645 @@
+<!doctype html>
+<!-- Сводный кабинет владельца: все агенты в одном месте — сделки, вознаграждение,
+     активность их ссылок, разбор книги каждого. Вход отдельным ключом (/bosskey у
+     бота), маршрут воркера /boss. Дизайн — тот же «E2», что у рабочего стола
+     партнёра, чтобы не заводить второй визуальный язык.
+     Страница СЛУЖЕБНАЯ: noindex, в sitemap нет, гейта квалинвестора нет,
+     AI-консьерж не подключается. Демо-вёрстка: ?demo=1 (сеть не трогается). -->
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Сводный кабинет — Rumberg</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;600;700&family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --canvas:#0B0C10; --card:#14161C; --lift:#191C24; --ink:#F2F3F7;
+    --hushed:rgba(242,243,247,.68); --faint:rgba(242,243,247,.56);
+    --line:rgba(255,255,255,.10); --line-soft:rgba(255,255,255,.055); --pill:rgba(255,255,255,.06);
+    --solar:#EE7D1B; --solar-l:#F58E33;
+    --up:#55C08A; --down:#E0705A; --blue:#4F86E6;
+    --or-ink:#FFC894; --or-mut:rgba(255,200,148,.74);
+    --gr-ink:#9ADDBB; --gr-mut:rgba(154,221,187,.74);
+    --bl-ink:#AFC9F6; --bl-mut:rgba(175,201,246,.74);
+    --rd-ink:#F2A896;
+    --f:'Onest',system-ui,sans-serif; --m:'JetBrains Mono',Consolas,monospace; --d:'Rubik','Onest',sans-serif;
+    --e:cubic-bezier(.22,.61,.36,1);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--canvas); color:var(--ink); font:15px/1.55 var(--f); }
+  ::selection { background:rgba(238,125,27,.3); }
+  a { color:inherit; text-decoration:none; }
+  button { font:inherit; color:var(--ink); }
+  :focus-visible { outline:2px solid var(--solar); outline-offset:2px; border-radius:8px; }
+  .skip { position:absolute; left:10px; top:-60px; z-index:20; background:var(--solar); color:#0C0A08;
+          padding:11px 18px; border-radius:0 0 10px 10px; font-size:13px; font-weight:600; transition:top .16s var(--e); }
+  .skip:focus { top:0; }
+  .sr { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+
+  .bar-in { max-width:1240px; margin:0 auto; padding:16px 24px 0; display:flex; align-items:center; gap:12px; }
+  .logo { display:flex; align-items:center; gap:9px; font:600 15px var(--d); }
+  .exit { margin-left:auto; border:1px solid var(--line); background:var(--card); border-radius:10px; padding:8px 16px; font:500 13px var(--f); color:var(--hushed); cursor:pointer; transition:border-color .2s,color .2s; }
+  .exit:hover { border-color:var(--solar); color:var(--ink); }
+
+  /* ── вход ── */
+  #gate { max-width:400px; margin:9vh auto 60px; padding:0 24px; }
+  #gate h1 { font:600 27px var(--d); letter-spacing:-.02em; }
+  #gate .lead { margin:8px 0 22px; color:var(--hushed); font-size:14.5px; }
+  .field { display:block; margin-bottom:13px; }
+  .field .k { display:block; font:500 11px var(--m); letter-spacing:.1em; text-transform:uppercase; color:var(--faint); margin-bottom:6px; }
+  .field input { width:100%; background:var(--card); border:1px solid var(--line); border-radius:10px; padding:12px 14px; font:400 15px var(--f); color:var(--ink); }
+  .field input:focus { outline:none; border-color:var(--solar); }
+  .go { width:100%; margin-top:6px; background:var(--solar); color:#0C0A08; border:0; border-radius:10px; padding:13px; font:600 15px var(--f); cursor:pointer; }
+  .go:hover { background:var(--solar-l); }
+  .go:disabled { opacity:.6; cursor:default; }
+  .err { margin-top:12px; color:var(--down); font-size:13.5px; min-height:19px; }
+  .hint { margin-top:16px; color:var(--faint); font-size:12.5px; line-height:1.5; }
+
+  /* ── общее ── */
+  #dash { display:none; }
+  #dash.on { display:block; }
+  .wrap { max-width:1240px; margin:0 auto; padding:18px 24px 70px; }
+  .hi { margin:6px 0 3px; font:600 25px/1.25 var(--d); letter-spacing:-.02em; }
+  .hi-sub { color:var(--faint); font:400 13px var(--m); }
+
+  .states { margin-top:18px; display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+  .st { border-radius:18px; padding:18px 20px; min-width:0; border:1px solid transparent; }
+  .st.or { background:linear-gradient(135deg,rgba(238,125,27,.17),rgba(238,125,27,.05)); border-color:rgba(238,125,27,.3); color:var(--or-ink); }
+  .st.gr { background:linear-gradient(135deg,rgba(85,192,138,.15),rgba(85,192,138,.04)); border-color:rgba(85,192,138,.28); color:var(--gr-ink); }
+  .st.bl { background:linear-gradient(135deg,rgba(79,134,230,.17),rgba(79,134,230,.05)); border-color:rgba(79,134,230,.3); color:var(--bl-ink); }
+  .st.pl { background:var(--card); border-color:var(--line-soft); color:var(--ink); }
+  .st .k { font-size:13px; font-weight:500; }
+  .st.or .k { color:var(--or-mut); } .st.gr .k { color:var(--gr-mut); } .st.bl .k { color:var(--bl-mut); } .st.pl .k { color:var(--faint); }
+  .st .v { margin-top:6px; font:600 25px/1.05 var(--m); letter-spacing:-.02em; font-variant-numeric:tabular-nums; }
+  .st .s { margin-top:6px; font-size:12.5px; }
+  .st.or .s { color:var(--or-mut); } .st.gr .s { color:var(--gr-mut); } .st.bl .s { color:var(--bl-mut); } .st.pl .s { color:var(--faint); }
+
+  .zt { display:flex; align-items:baseline; gap:12px; margin:32px 0 14px; flex-wrap:wrap; }
+  .zt h2 { font:600 19px var(--d); letter-spacing:-.01em; }
+  .zt .n { font:500 12.5px var(--m); color:var(--faint); }
+  .zt .back { margin-left:auto; border:1px solid var(--line); background:var(--card); border-radius:10px; padding:8px 14px; font:500 13px var(--f); color:var(--hushed); cursor:pointer; }
+  .zt .back:hover { border-color:var(--solar); color:var(--ink); }
+
+  #ctrl { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:-4px 0 14px; }
+  #ctrl .cl { font:500 11px var(--m); letter-spacing:.1em; text-transform:uppercase; color:var(--faint); margin-right:2px; }
+  .chip { border:1px solid var(--line); background:var(--card); border-radius:999px; padding:7px 14px; font:500 13px var(--f); color:var(--hushed); cursor:pointer; }
+  .chip.on { border-color:var(--solar); color:var(--ink); background:rgba(238,125,27,.12); }
+
+  /* ── список агентов ── */
+  .ag { display:grid; grid-template-columns:repeat(auto-fill,minmax(360px,1fr)); gap:14px; align-items:start; }
+  .agent { width:100%; text-align:left; background:var(--card); border:1px solid var(--line-soft); border-radius:16px;
+           padding:16px 18px; cursor:pointer; transition:transform .18s var(--e), border-color .18s, background .18s; }
+  @media (hover:hover) { .agent:hover { transform:translateY(-2px); border-color:rgba(255,255,255,.16); background:var(--lift); } }
+  .agent .ah { display:flex; align-items:center; gap:10px; }
+  .agent .nm { font:600 15.5px var(--f); min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .agent .kch { margin-left:auto; flex:none; font:500 11.5px var(--f); border-radius:999px; padding:3px 10px; }
+  .agent .kch.ok { background:rgba(85,192,138,.15); color:var(--gr-ink); }
+  .agent .kch.wait { background:rgba(238,125,27,.15); color:var(--or-ink); }
+  .agent .kch.no { background:var(--pill); color:var(--faint); }
+  .agent .meta { margin-top:3px; font:400 12px var(--m); color:var(--faint); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .agent .mid { display:flex; align-items:baseline; gap:12px; margin:14px 0 2px; }
+  .agent .rw { font:600 23px var(--m); letter-spacing:-.02em; font-variant-numeric:tabular-nums; color:var(--or-ink); }
+  .agent .bl2 { font:500 11px var(--m); letter-spacing:.08em; text-transform:uppercase; color:var(--faint); }
+  .agent .figs { margin-top:10px; padding-top:11px; border-top:1px solid var(--line-soft); display:flex; gap:6px 14px;
+                 font-size:13px; color:var(--hushed); flex-wrap:wrap; align-items:baseline; }
+  .agent .figs b { font:600 13px var(--m); color:var(--ink); font-variant-numeric:tabular-nums; }
+  .agent .figs .dt { margin-left:auto; font:400 12px var(--m); color:var(--faint); }
+
+  /* ── разбор агента ── */
+  #agent { display:none; }
+  #agent.on { display:block; }
+  .idr { display:flex; gap:10px; padding:6px 0; border-bottom:1px solid var(--line-soft); font:400 12.5px var(--m); max-width:640px; }
+  .idr:last-child { border-bottom:none; }
+  .idr .k { color:var(--faint); flex:none; width:104px; }
+  .idr .v { color:var(--hushed); min-width:0; overflow-wrap:anywhere; }
+
+  .tiles { display:grid; grid-template-columns:repeat(auto-fill,minmax(330px,1fr)); gap:16px; align-items:start; }
+  .tile { background:var(--card); border:1px solid var(--line-soft); border-radius:16px; padding:16px 18px; }
+  .tile.risk { border-color:rgba(224,112,90,.4); }
+  .tile .th { display:flex; align-items:center; gap:10px; }
+  .tile .nm { font:600 15px var(--f); min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .tile .nm a:hover { color:var(--solar-l); }
+  .tile .kch { margin-left:auto; flex:none; font:500 11.5px var(--f); border-radius:999px; padding:3px 10px; }
+  .tile .kch.cp { background:rgba(238,125,27,.15); color:var(--or-ink); }
+  .tile .kch.pt2 { background:rgba(79,134,230,.17); color:var(--bl-ink); }
+  .tile .kch.rk { background:rgba(224,112,90,.17); color:var(--rd-ink); font-weight:600; }
+  .tile .kch.off { background:var(--pill); color:var(--faint); }
+  .tile .meta { margin-top:3px; font:400 12px var(--m); color:var(--faint); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .tile .mid { display:flex; align-items:baseline; gap:12px; margin:14px 0 2px; }
+  .tile .bid { font:600 25px var(--m); letter-spacing:-.02em; font-variant-numeric:tabular-nums; color:var(--up); }
+  .tile .bid.mut { font:500 14px var(--f); color:var(--faint); }
+  .tile .bl2 { font:500 11px var(--m); letter-spacing:.08em; text-transform:uppercase; color:var(--faint); }
+  .tile .perf { margin-left:auto; font:500 13px var(--m); text-align:right; }
+  .tile .perf .w { display:block; color:var(--faint); font:400 11px var(--f); margin-top:2px; }
+  .tile .figs { margin-top:10px; padding-top:11px; border-top:1px solid var(--line-soft); display:flex; gap:6px 14px;
+                font-size:13px; color:var(--hushed); flex-wrap:wrap; align-items:baseline; }
+  .tile .figs b { font:600 13px var(--m); color:var(--ink); font-variant-numeric:tabular-nums; }
+  .tile .figs .dt { margin-left:auto; font:400 12px var(--m); color:var(--faint); }
+
+  /* ── активность ── */
+  .act { display:grid; grid-template-columns:1.1fr 1fr; gap:22px; align-items:start; }
+  .bars { display:flex; align-items:flex-end; gap:3px; height:104px; margin-top:6px; }
+  .bars i { flex:1; min-height:3px; border-radius:3px 3px 1px 1px; background:rgba(238,125,27,.3); }
+  .bars i.hi { background:var(--solar); }
+  .barcap { display:flex; justify-content:space-between; margin-top:7px; font:400 11px var(--m); color:var(--faint); }
+  .prod { border-top:1px solid var(--line-soft); }
+  .prod .r { display:flex; align-items:baseline; gap:10px; padding:9px 0; border-bottom:1px solid var(--line-soft); font-size:13.5px; }
+  .prod .r .p { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--hushed); }
+  .prod .r .n2 { margin-left:auto; flex:none; font:600 13px var(--m); font-variant-numeric:tabular-nums; }
+  .empty { padding:26px 0; color:var(--faint); font-size:14px; }
+  .tbar { display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; padding:10px 20px;
+          background:rgba(238,125,27,.12); border-bottom:1px solid rgba(238,125,27,.4); }
+  .tbar .tt { font:600 11px var(--m); letter-spacing:.12em; text-transform:uppercase; color:var(--solar-l); white-space:nowrap; }
+  .tbar .td { font-size:13px; color:var(--hushed); flex:1 1 260px; min-width:0; }
+
+  @media (max-width:980px) {
+    .states { grid-template-columns:1fr 1fr; }
+    .act { grid-template-columns:1fr; }
+  }
+  @media (max-width:640px) {
+    .states { grid-template-columns:1fr; }
+    .ag, .tiles { grid-template-columns:1fr; }
+    .chip, .exit, .zt .back { min-height:44px; display:inline-flex; align-items:center; }
+    .agent { min-height:44px; }
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#content">К содержимому</a>
+
+<header>
+<div class="bar-in">
+  <a class="logo" href="index.html">
+    <svg width="19" height="19" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>
+    Rumberg · сводный кабинет
+  </a>
+  <button class="exit" id="exit" type="button" style="display:none">Выйти</button>
+</div>
+</header>
+
+<main>
+<section id="gate">
+  <h1>Сводный кабинет</h1>
+  <p class="lead">Все агенты, их сделки, вознаграждение и активность ссылок — в одном месте.</p>
+  <label class="field" for="key"><span class="k">Ключ</span>
+    <input id="key" type="password" autocomplete="off" spellcheck="false" placeholder="xxxxx-xxxxx-xxxxx-xxxxx"></label>
+  <button class="go" id="go" type="button">Войти</button>
+  <p class="err" id="err" role="alert"></p>
+  <p class="hint">Ключ выдаёт бот по команде <b>/bosskey</b> в личке. Он открывает книгу вознаграждений
+    всех агентов — никому не передавайте.</p>
+</section>
+
+<section id="dash">
+  <div class="wrap" id="content">
+    <h1 class="hi" id="hTitle">Агенты</h1>
+    <div class="hi-sub" id="hSub"></div>
+
+    <div class="states" id="states"></div>
+
+    <div id="list">
+      <div class="zt"><h2>Агенты</h2><span class="n" id="agN"></span></div>
+      <div id="ctrl" aria-label="Сортировка агентов">
+        <span class="cl">сортировка</span>
+        <button class="chip on" type="button" data-s="reward" aria-pressed="true">Вознаграждение</button>
+        <button class="chip" type="button" data-s="volume" aria-pressed="false">Объём</button>
+        <button class="chip" type="button" data-s="count" aria-pressed="false">Сделок</button>
+        <button class="chip" type="button" data-s="date" aria-pressed="false">Последняя сделка</button>
+        <button class="chip" type="button" data-s="opens" aria-pressed="false">Открытия</button>
+      </div>
+      <div class="ag" id="agents"></div>
+    </div>
+
+    <div id="agent">
+      <div class="zt"><h2 id="aName">Агент</h2><span class="n" id="aRef"></span>
+        <button class="back" id="back" type="button">← Ко всем агентам</button></div>
+      <div id="aIds"></div>
+      <div class="states" id="aStates" style="margin-top:16px"></div>
+
+      <div class="zt"><h2>Его выпуски</h2><span class="n" id="aDealN"></span></div>
+      <div class="tiles" id="aTiles"></div>
+
+      <div class="zt"><h2>Активность ссылок</h2><span class="n" id="aHitN"></span></div>
+      <div class="act">
+        <div>
+          <div class="bars" id="aBars"></div>
+          <div class="barcap" id="aBarCap"></div>
+        </div>
+        <div class="prod" id="aProd"></div>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+<p class="sr" id="say" role="status" aria-live="polite"></p>
+
+<script src="data/placements.js?v=pl22"></script>
+<script src="data/instruments.js?v=fx9"></script>
+<script>
+(function () {
+  "use strict";
+  var API = "https://so-leads.ruslan-sabirov.workers.dev/boss";
+  var $ = function (id) { return document.getElementById(id); };
+  var gate = $("gate"), dash = $("dash");
+  var IS_DEMO = /[?&]demo=1/.test(location.search);
+
+  // ---- утилиты -------------------------------------------------------------
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+    });
+  }
+  function plural(n, one, few, many) {
+    var a = Math.abs(n) % 100, b = a % 10;
+    if (a > 10 && a < 20) return many;
+    if (b > 1 && b < 5) return few;
+    if (b === 1) return one;
+    return many;
+  }
+  // Платим только в рублях — валюту нигде не разбираем (правило витрины).
+  function money(n) {
+    return Math.round(Number(n) || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " ₽";
+  }
+  function mln(n) {
+    if (!n) return "0 ₽";
+    if (n < 1e6) return money(n);
+    return (n / 1e6).toFixed(n >= 1e7 ? 0 : 1).replace(".", ",") + " млн ₽";
+  }
+  function dmy(iso) {
+    if (!iso) return "—";
+    var p = String(iso).slice(0, 10).split("-");
+    return p.length === 3 ? p[2] + "." + p[1] + "." + p[0] : String(iso);
+  }
+  function todayIso() {
+    var d = new Date(Date.now() + 3 * 3600 * 1000);
+    return d.toISOString().slice(0, 10);
+  }
+  function ago(ts, now) {
+    if (!ts) return "не открывали";
+    var d = Math.floor((now - ts) / 86400000);
+    if (d <= 0) return "сегодня";
+    if (d === 1) return "вчера";
+    if (d < 30) return d + " " + plural(d, "день", "дня", "дней") + " назад";
+    var m = Math.round(d / 30);
+    return m + " " + plural(m, "месяц", "месяца", "месяцев") + " назад";
+  }
+
+  // ---- данные витрины ------------------------------------------------------
+  var ISSUES = {};
+  (function () {
+    var src = (window.PLACEMENTS_DATA && window.PLACEMENTS_DATA.issues) || [];
+    for (var i = 0; i < src.length; i++) if (src[i].isin) ISSUES[src[i].isin] = src[i];
+  })();
+  var INSTR = {};
+  (function () {
+    var src = (window.SITE_DATA && window.SITE_DATA.instruments) || [];
+    for (var i = 0; i < src.length; i++) INSTR[src[i].id] = src[i];
+  })();
+  var UPDATED = (window.PLACEMENTS_DATA && window.PLACEMENTS_DATA.updated) || "";
+
+  function splitName(product) {
+    var p = String(product || "").split(" · ");
+    return { name: p.shift() || "—", desc: p.join(" · ") };
+  }
+  // Bid — только у обращающихся выпусков (правило витрины), всегда «индикативно».
+  function bidOf(it) {
+    if (!it || it.bid == null) return null;
+    if (it.maturity && it.maturity < todayIso()) return null;
+    return it.bid;
+  }
+  function assetPerf(it) {
+    var b = (it && it.basket) || [];
+    for (var i = 0; i < b.length; i++) if (b[i].perfPct != null) return b[i];
+    return null;
+  }
+  function assetLabel(b) {
+    var n = b && (b.n || b.t) ? String(b.n || b.t) : "";
+    return n.length > 16 ? (b.t || n.slice(0, 16)) : n;
+  }
+  // Название продукта в таблице открытий: ключ — id продукта доски или ISIN.
+  function prodName(key) {
+    if (INSTR[key]) return INSTR[key].name || key;
+    if (ISSUES[key]) return ISSUES[key].serial || ISSUES[key].name || key;
+    return key;
+  }
+
+  // ---- вход ----------------------------------------------------------------
+  var KEY = "";
+  function remember(k) { try { localStorage.setItem("so_boss_key", k); } catch (e) {} }
+  function forget() { try { localStorage.removeItem("so_boss_key"); } catch (e) {} }
+  function fail(t) { $("err").textContent = t || ""; }
+
+  function ask(body) {
+    return fetch(API, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(Object.assign({ key: KEY }, body || {})),
+    }).then(function (r) { return r.json().then(function (d) { return { s: r.status, d: d }; }); });
+  }
+
+  var ERR = {
+    bad_key: "Ключ не подошёл. Выпустите новый командой /bosskey у бота.",
+    no_storage: "Хранилище на сервере не подключено.",
+    bad_ref: "Такого агента нет в реестре.",
+    storage_failed: "Не удалось прочитать статистику. Попробуйте ещё раз.",
+  };
+
+  function login(quiet) {
+    var k = quiet ? KEY : $("key").value.trim();
+    if (!k) { fail("Введите ключ."); return; }
+    KEY = k;
+    var btn = $("go");
+    btn.disabled = true; btn.textContent = "Входим…";
+    fail("");
+    ask({}).then(function (x) {
+      if (!x.d || !x.d.ok) {
+        // Тихий автологин человек не запускал — ошибка должна объяснить, откуда взялась.
+        fail((quiet ? "Не удалось войти автоматически. " : "") + (ERR[x.d && x.d.error] || "Не удалось войти."));
+        if (x.d && x.d.error === "bad_key") forget();
+        return;
+      }
+      remember(k);
+      show(x.d);
+    }).catch(function () {
+      fail(quiet ? "Не удалось войти автоматически. Проверьте интернет." : "Нет связи с сервером.");
+    }).finally(function () { btn.disabled = false; btn.textContent = "Войти"; });
+  }
+
+  $("go").addEventListener("click", function () { login(false); });
+  $("key").addEventListener("keydown", function (e) { if (e.key === "Enter") login(false); });
+  $("exit").addEventListener("click", function () { forget(); location.reload(); });
+
+  // ---- сводка --------------------------------------------------------------
+  var PARTNERS = [], NOW = Date.now(), sortBy = "reward";
+
+  function show(d) {
+    PARTNERS = d.partners || [];
+    NOW = d.now || Date.now();
+    gate.style.display = "none";
+    dash.classList.add("on");
+    $("exit").style.display = "";
+    drawStates();
+    drawAgents();
+  }
+
+  function drawStates() {
+    var vol = 0, rw = 0, deals = 0, opens30 = 0, active = 0;
+    for (var i = 0; i < PARTNERS.length; i++) {
+      var p = PARTNERS[i];
+      vol += p.volume || 0; rw += p.reward || 0; deals += p.count || 0;
+      opens30 += (p.opens && p.opens.d30) || 0;
+      if (p.count) active++;
+    }
+    $("hSub").textContent = "котировки на " + (UPDATED ? dmy(UPDATED) : "—") +
+      " · агентов " + PARTNERS.length + ", из них со сделками " + active;
+    $("states").innerHTML =
+      '<div class="st or"><div class="k">Вознаграждение агентам</div><div class="v">' + mln(rw) +
+        '</div><div class="s">' + money(rw) + "</div></div>" +
+      '<div class="st gr"><div class="k">Объём сделок</div><div class="v">' + mln(vol) +
+        '</div><div class="s">' + deals + " " + plural(deals, "сделка", "сделки", "сделок") + "</div></div>" +
+      '<div class="st bl"><div class="k">Открытий ссылок за 30 дней</div><div class="v">' + opens30 +
+        '</div><div class="s">по всем агентам</div></div>' +
+      '<div class="st pl"><div class="k">Доля вознаграждения</div><div class="v">' +
+        (vol ? (rw / vol * 100).toFixed(2).replace(".", ",") + "%" : "—") +
+        '</div><div class="s">от объёма сделок</div></div>';
+  }
+
+  function sortAgents(list) {
+    var l = list.slice();
+    l.sort(function (a, b) {
+      if (sortBy === "volume") return (b.volume || 0) - (a.volume || 0);
+      if (sortBy === "count") return (b.count || 0) - (a.count || 0);
+      if (sortBy === "opens") return ((b.opens && b.opens.d30) || 0) - ((a.opens && a.opens.d30) || 0);
+      if (sortBy === "date") return (b.lastDeal || "") < (a.lastDeal || "") ? -1 : 1;
+      return (b.reward || 0) - (a.reward || 0);
+    });
+    return l;
+  }
+
+  function keyChip(p) {
+    if (p.keyReady) return '<span class="kch wait">ключ ждёт</span>';
+    if (p.hasKey) return '<span class="kch ok">вход выдан</span>';
+    return '<span class="kch no">без входа</span>';
+  }
+
+  function drawAgents() {
+    var list = sortAgents(PARTNERS);
+    $("agN").textContent = PARTNERS.length + " " + plural(PARTNERS.length, "агент", "агента", "агентов");
+    if (!list.length) {
+      $("agents").innerHTML = '<div class="empty">Агентов пока нет. Их заводят сейлзы через админку.</div>';
+      return;
+    }
+    $("agents").innerHTML = list.map(function (p) {
+      var opens = (p.opens && p.opens.d30) || 0;
+      return '<button class="agent" type="button" data-ref="' + esc(p.ref) + '">' +
+        '<div class="ah"><div class="nm">' + esc(p.name || p.ref) + "</div>" + keyChip(p) + "</div>" +
+        '<div class="meta">' + esc(p.ref) + (p.count ? " · последняя сделка " + dmy(p.lastDeal) : " · сделок нет") + "</div>" +
+        '<div class="mid"><span class="rw">' + mln(p.reward) + '</span><span class="bl2">вознаграждение</span></div>' +
+        '<div class="figs"><span>объём <b>' + mln(p.volume) + "</b></span>" +
+        "<span>сделок <b>" + (p.count || 0) + "</b></span>" +
+        "<span>открытий за 30 дн. <b>" + opens + "</b></span>" +
+        '<span class="dt">' + esc(ago(p.lastHit, NOW)) + "</span></div></button>";
+    }).join("");
+  }
+
+  document.querySelectorAll("#ctrl .chip").forEach(function (c) {
+    c.addEventListener("click", function () {
+      document.querySelectorAll("#ctrl .chip").forEach(function (x) {
+        x.classList.remove("on"); x.setAttribute("aria-pressed", "false");
+      });
+      c.classList.add("on"); c.setAttribute("aria-pressed", "true");
+      sortBy = c.getAttribute("data-s");
+      drawAgents();
+      $("say").textContent = "Отсортировано: " + c.textContent;
+    });
+  });
+
+  $("agents").addEventListener("click", function (e) {
+    var b = e.target.closest ? e.target.closest("[data-ref]") : null;
+    if (b) openAgent(b.getAttribute("data-ref"));
+  });
+  $("back").addEventListener("click", function () {
+    $("agent").classList.remove("on");
+    $("list").style.display = "";
+    $("hTitle").textContent = "Агенты";
+    window.scrollTo(0, 0);
+  });
+
+  // ---- разбор агента -------------------------------------------------------
+  function openAgent(ref) {
+    if (IS_DEMO) { drawAgent(demoAgent(ref)); return; }
+    ask({ ref: ref }).then(function (x) {
+      if (!x.d || !x.d.ok) { alert(ERR[x.d && x.d.error] || "Не удалось открыть агента."); return; }
+      drawAgent(x.d);
+    }).catch(function () { alert("Нет связи с сервером."); });
+  }
+
+  function drawAgent(d) {
+    $("list").style.display = "none";
+    $("agent").classList.add("on");
+    var p = d.profile || {};
+    $("hTitle").textContent = p.name || d.ref;
+    $("aName").textContent = p.name || d.ref;
+    $("aRef").textContent = d.ref;
+    window.scrollTo(0, 0);
+
+    var rows = [];
+    if (p.inn) rows.push(["ИНН", p.inn]);
+    if (p.ogrn) rows.push(["ОГРН", p.ogrn]);
+    if (p.ogrnip) rows.push(["ОГРНИП", p.ogrnip]);
+    if (p.contract) rows.push(["Договор", p.contract]);
+    rows.push(["Вход на стол", d.keyReady ? "ключ выдан, ещё не забрали" : d.hasKey ? "есть" : "не выдан"]);
+    $("aIds").innerHTML = rows.map(function (r) {
+      return '<div class="idr"><span class="k">' + esc(r[0]) + '</span><span class="v">' + esc(r[1]) + "</span></div>";
+    }).join("");
+
+    var t = (d.totals && d.totals.RUB) || { accrued: 0, paid: 0, volume: 0, count: 0 };
+    var rw = (t.accrued || 0) + (t.paid || 0);
+    var op = d.opens || { all: 0, d7: 0, d30: 0 };
+    $("aStates").innerHTML =
+      '<div class="st or"><div class="k">Вознаграждение</div><div class="v">' + mln(rw) +
+        '</div><div class="s">' + money(rw) + "</div></div>" +
+      '<div class="st gr"><div class="k">Объём</div><div class="v">' + mln(t.volume) +
+        '</div><div class="s">' + (t.count || 0) + " " + plural(t.count || 0, "сделка", "сделки", "сделок") + "</div></div>" +
+      '<div class="st bl"><div class="k">Открытий ссылок</div><div class="v">' + op.d30 +
+        '</div><div class="s">за 30 дней · за 7 дней ' + op.d7 + "</div></div>" +
+      '<div class="st pl"><div class="k">Заявки с его ссылок</div><div class="v">' +
+        ((d.leads && d.leads.all) || 0) + '</div><div class="s">за всё время</div></div>';
+
+    drawTiles(d.deals || []);
+    drawActivity(d);
+  }
+
+  // Плитки выпусков — то же, что видит агент у себя на столе.
+  function drawTiles(deals) {
+    $("aDealN").textContent = deals.length + " " + plural(deals.length, "выпуск", "выпуска", "выпусков");
+    if (!deals.length) {
+      $("aTiles").innerHTML = '<div class="empty">Сделок за агентом пока нет.</div>';
+      return;
+    }
+    $("aTiles").innerHTML = deals.map(function (d) {
+      var it = d.isin ? ISSUES[d.isin] : null;
+      var nm = splitName(d.product);
+      var bid = bidOf(it);
+      var matured = it && it.maturity && it.maturity < todayIso();
+      var risk = it && it.payoff && it.payoff.protectionPct != null && assetPerf(it) &&
+                 assetPerf(it).perfPct < -(100 - it.payoff.protectionPct);
+      var chip = risk ? '<span class="kch rk">ниже барьера</span>'
+        : matured ? '<span class="kch off">погашен</span>'
+        : it ? (it.kind === "participation" ? '<span class="kch pt2">участие</span>'
+                                            : '<span class="kch cp">купонный</span>')
+        : '<span class="kch off">нет данных</span>';
+      var bidHtml = bid != null
+        ? '<span class="bid">' + String(bid).replace(".", ",") + '%</span><span class="bl2">bid · индикативно</span>'
+        : '<span class="bid mut">' + (matured ? "выпуск погашен"
+            : it ? "котировки сейчас нет" : "данные по выпуску не подтянулись") + "</span>";
+      var pf = assetPerf(it), pfHtml = "";
+      if (pf) {
+        var v = pf.perfPct;
+        pfHtml = '<span class="perf" style="color:' + (v >= 0 ? "var(--up)" : "var(--down)") + '">' +
+          (v >= 0 ? "+" : "") + String(v).replace(".", ",") + "%" +
+          '<span class="w">' + esc(assetLabel(pf)) + " · с фиксинга</span></span>";
+      }
+      return '<div class="tile' + (risk ? " risk" : "") + '">' +
+        '<div class="th"><div class="nm">' +
+          (d.isin ? '<a href="placements.html#' + esc(d.isin) + '" target="_blank" rel="noopener">' + esc(nm.name) + "</a>"
+                  : esc(nm.name)) + "</div>" + chip + "</div>" +
+        '<div class="meta">' + esc([d.isin, nm.desc].filter(Boolean).join(" · ")) + "</div>" +
+        '<div class="mid">' + bidHtml + pfHtml + "</div>" +
+        '<div class="figs"><span>объём <b>' + mln(d.volume) + "</b></span>" +
+        "<span>вознаграждение <b>" + money(d.reward) + "</b></span>" +
+        '<span class="dt">' + dmy(d.date) + "</span></div></div>";
+    }).join("");
+  }
+
+  function drawActivity(d) {
+    var days = d.days || [], prods = d.products || [];
+    var op = d.opens || { all: 0 };
+    $("aHitN").textContent = op.all + " " + plural(op.all, "открытие", "открытия", "открытий") + " за всё время";
+    if (!days.length && !prods.length) {
+      $("aBars").innerHTML = "";
+      $("aBarCap").textContent = "";
+      $("aProd").innerHTML = '<div class="empty">По ссылкам этого агента переходов пока не было.</div>';
+      return;
+    }
+    // Столбики за 30 дней: пустые дни тоже рисуем, иначе провалы не видны.
+    var map = {};
+    days.forEach(function (x) { map[x.d] = x.n; });
+    var cells = [], max = 1;
+    for (var i = 29; i >= 0; i--) {
+      var dt = new Date(NOW + 3 * 3600 * 1000 - i * 86400000).toISOString().slice(0, 10);
+      var n = map[dt] || 0;
+      if (n > max) max = n;
+      cells.push({ d: dt, n: n });
+    }
+    $("aBars").innerHTML = cells.map(function (c) {
+      var h = Math.round(c.n / max * 100);
+      return '<i class="' + (c.n === max && c.n > 0 ? "hi" : "") + '" style="height:' + Math.max(h, 3) +
+        '%" title="' + dmy(c.d) + ": " + c.n + '"></i>';
+    }).join("");
+    $("aBarCap").innerHTML = "<span>" + dmy(cells[0].d) + "</span><span>сегодня</span>";
+    $("aProd").innerHTML = prods.length
+      ? prods.slice(0, 12).map(function (r) {
+          return '<div class="r"><span class="p">' + esc(prodName(r.p)) + "</span>" +
+            '<span class="n2">' + r.opens + "</span></div>";
+        }).join("")
+      : '<div class="empty">Открытий по конкретным продуктам нет.</div>';
+  }
+
+  // ---- демо ----------------------------------------------------------------
+  function demoAgent(ref) {
+    var p = PARTNERS.filter(function (x) { return x.ref === ref; })[0] || PARTNERS[0];
+    var isins = Object.keys(ISSUES).slice(0, 4);
+    var deals = isins.map(function (isin, i) {
+      var it = ISSUES[isin];
+      return { id: "d" + i, isin: isin, product: (it.serial || it.name) + " · демо-описание",
+               date: "2026-0" + ((i % 6) + 1) + "-1" + (i + 2),
+               volume: (10 + i * 7) * 1e6, reward: (10 + i * 7) * 1e6 * 0.02 };
+    });
+    var t = { RUB: { accrued: 0, paid: 0, volume: 0, count: deals.length } };
+    deals.forEach(function (d) { t.RUB.volume += d.volume; t.RUB.accrued += d.reward; });
+    var days = [];
+    for (var i = 0; i < 30; i++) {
+      if (i % 3 === 0) continue;
+      days.push({ d: new Date(NOW - i * 86400000).toISOString().slice(0, 10), n: (i * 7) % 9 });
+    }
+    return { ok: true, ref: p.ref, profile: p.profile, deals: deals, totals: t,
+             hasKey: p.hasKey, keyReady: p.keyReady,
+             opens: p.opens, views: { all: 40 }, leads: p.leads, last: p.lastHit,
+             days: days, products: Object.keys(INSTR).slice(0, 8).map(function (id, i) {
+               return { p: id, opens: 12 - i, views: 3, leads: i === 0 ? 2 : 0, last: NOW };
+             }) };
+  }
+
+  function demoStart() {
+    document.body.insertAdjacentHTML("afterbegin",
+      '<div class="tbar" role="note"><span class="tt">демо</span>' +
+      '<span class="td">Вымышленные агенты и цифры — так выглядит сводный кабинет с данными.</span></div>');
+    var names = [["alliancecap", "ООО «Альянс Капитал»", 3064537, 138477000, 4],
+                 ["petrbubnov", "ИП Бубнов Пётр Сергеевич", 16632292, 451197000, 7],
+                 ["demoagent", "ООО «Третий партнёр»", 0, 0, 0]];
+    show({
+      ok: true, now: Date.now(),
+      partners: names.map(function (n, i) {
+        return { ref: n[0], name: n[1], profile: { name: n[1], inn: "770123456" + i, contract: "П-1" + i + " от 03.02.2026" },
+                 count: n[4], volume: n[3], reward: n[2], lastDeal: "2026-07-1" + i,
+                 opens: { all: 40 - i * 12, d7: 5 - i, d30: 22 - i * 7 },
+                 leads: { all: 3 - i, d30: 1 }, lastHit: Date.now() - i * 3 * 86400000,
+                 hasKey: i < 2, keyReady: i === 1 };
+      }),
+    });
+  }
+
+  // ---- старт ---------------------------------------------------------------
+  if (IS_DEMO) { demoStart(); }
+  else {
+    var saved = "";
+    try { saved = localStorage.getItem("so_boss_key") || ""; } catch (e) {}
+    if (saved) { KEY = saved; login(true); }
+    else $("key").focus();
+  }
+})();
+</script>
+</body>
+</html>
