@@ -326,7 +326,7 @@ async function takeDeskKey(env, ref, by) {
   try {
     await env.POST_KV.put("pkey:" + ref, JSON.stringify({
       h: rec.h, ts: rec.ts, by: rec.by, show: rec.show, until: until, by_shown: by || rec.by_shown || "?",
-    }), { metadata: { until: until } });
+    }), { metadata: { until: until, taken: true } });   // taken — для сводного кабинета
   } catch (e) { /* пометку не записали — ключ всё равно отдаём */ }
   return { key: rec.show, first: first };
 }
@@ -366,15 +366,23 @@ async function deskLogin(env, id, key) {
 // вознаграждений целиком, её видит только Руслан. Ключ выдаётся командой
 // /bosskey, в KV лежит его хэш (та же схема, что у ключей стола); запасной
 // вариант — переменная BOSS_KEY, если однажды захочется задать ключ руками.
+// Возвращает true / false / "storage": сбой хранилища НЕ должен выглядеть как
+// «ключ не подошёл» — страница по такому ответу стирала сохранённый ключ, и
+// пропажа биндинга KV уводила диагностику ровно в другую сторону.
 async function bossLogin(env, key) {
   const want = String(key || "").trim();
   if (!want) return false;
-  if (env.BOSS_KEY && safeEq(String(env.BOSS_KEY).trim(), want)) return true;
-  if (!env.POST_KV || !KEY_SHAPE.test(want)) return false;
+  // Запасной ключ из переменной: короткое слово защитой не считаем.
+  if (env.BOSS_KEY && String(env.BOSS_KEY).trim().length >= 12 &&
+      safeEq(String(env.BOSS_KEY).trim(), want)) return true;
+  // Без хранилища проверить выданный ключ нельзя — но если задан BOSS_KEY, то
+  // проверка состоялась и просто не совпала: это «не подошёл», а не сбой.
+  if (!env.POST_KV) return env.BOSS_KEY ? false : "storage";
+  if (!KEY_SHAPE.test(want)) return false;
   try {
     const rec = await env.POST_KV.get("bkey:main", "json");
     return !!(rec && rec.h && safeEq(rec.h, await keyHash("boss", want)));
-  } catch (e) { return false; }
+  } catch (e) { return "storage"; }
 }
 
 // События открытий/просмотров/заявок. prefix — "hit:" (все агенты) или
@@ -398,7 +406,9 @@ async function hitEvents(env, prefix) {
 }
 
 // Сводка активности по одной метке из уже прочитанных событий.
-function hitSummary(events, now) {
+// light=true — только счётчики: сводке products и days не нужны, а считать их
+// на каждого агента значит сортировать десятки списков впустую.
+function hitSummary(events, now, light) {
   const D = 86400000, byProd = new Map(), byDay = new Map();
   let opens = 0, opens7 = 0, opens30 = 0, views = 0, leads = 0, leads30 = 0, last = 0;
   for (const e of events) {
@@ -411,6 +421,7 @@ function hitSummary(events, now) {
     const row = byProd.get(id) || { p: id, opens: 0, views: 0, leads: 0, last: 0 };
     if (e.t === "lead") row.leads++; else if (e.t === "view") row.views++; else row.opens++;
     if (e.ts > row.last) row.last = e.ts;
+    if (light) continue;
     byProd.set(id, row);
     if (e.t !== "lead" && e.t !== "view" && age <= 30 * D) {
       const k = mskDay(e.ts);
@@ -420,8 +431,10 @@ function hitSummary(events, now) {
   return {
     opens: { all: opens, d7: opens7, d30: opens30 },
     views: { all: views }, leads: { all: leads, d30: leads30 }, last: last,
+    // Сортируем по ОТКРЫТИЯМ — ровно по тому числу, что печатает страница:
+    // иначе продукт с нулём открытий вставал бы выше продукта с тремя.
     products: [...byProd.values()].sort(function (a, b) {
-      return (b.opens + b.views + b.leads) - (a.opens + a.views + a.leads);
+      return (b.opens - a.opens) || (b.views + b.leads) - (a.views + a.leads);
     }).slice(0, 60),
     days: [...byDay.entries()].map(function (x) { return { d: x[0], n: x[1] }; })
       .sort(function (a, b) { return a.d < b.d ? -1 : 1; }),
@@ -431,20 +444,29 @@ function hitSummary(events, now) {
 async function handleBoss(request, env, cors) {
   let d;
   try { d = await request.json(); } catch (e) { return json({ ok: false, error: "bad_json" }, 400, cors); }
-  if (!(await bossLogin(env, d.key))) return json({ ok: false, error: "bad_key" }, 403, cors);
-  if (!env.POST_KV) return json({ ok: false, error: "no_storage" }, 503, cors);
+  const who = await bossLogin(env, d.key);
+  if (who === "storage") return json({ ok: false, error: "no_storage" }, 503, cors);
+  if (!who) return json({ ok: false, error: "bad_key" }, 403, cors);
   const now = Date.now();
 
   // Состояние входа у каждой метки — одним list по metadata (как в action partners).
+  // Состояние входа: три разных, а не два. «Ключ ждёт» (выдан, не забрали),
+  // «забран» (у партнёра на руках) и «протух» — по последнему нужен перевыпуск,
+  // и зелёное «вход выдан» на нём было бы обманом: войти уже нельзя.
   const hasKey = new Set(keyPairs(env.PARTNER_KEYS).map(function (x) { return x[0]; }));
-  const ready = new Set();
+  const keyState = {};
+  for (const r0 of hasKey) keyState[r0] = "secret";
   try {
-    const k = await env.POST_KV.list({ prefix: "pkey:", limit: 1000 });
-    for (const x of k.keys) {
-      const r2 = x.name.slice(5);
-      hasKey.add(r2);
-      if (x.metadata && x.metadata.until && x.metadata.until > now) ready.add(r2);
-    }
+    let cursor = null;
+    do {
+      const k = await env.POST_KV.list({ prefix: "pkey:", limit: 1000, cursor: cursor || undefined });
+      for (const x of k.keys) {
+        const r2 = x.name.slice(5), md = x.metadata || {};
+        hasKey.add(r2);
+        keyState[r2] = md.taken ? "taken" : (md.until && md.until > now) ? "ready" : "expired";
+      }
+      cursor = k.list_complete ? null : k.cursor;
+    } while (cursor);
   } catch (e) { /* флаги необязательны */ }
 
   const refs = await partnerRefs(env, true);
@@ -462,7 +484,7 @@ async function handleBoss(request, env, cors) {
     return json({
       ok: true, now: now, ref: one, profile: await pinfoGet(env, one),
       deals: deals, totals: dealTotals(deals),
-      hasKey: hasKey.has(one), keyReady: ready.has(one),
+      hasKey: hasKey.has(one), keyState: keyState[one] || null,
       ...hitSummary(ev.events.map(function (x) { return x.m; }), now),
       truncated: ev.truncated,
     }, 200, cors);
@@ -478,20 +500,40 @@ async function handleBoss(request, env, cors) {
     byRef.get(e.ref).push(e.m);
   }
 
+  // Метки СВОИХ сейлзов тоже в списке: recordHit копит открытия и по ним, а по
+  // их ссылкам идёт основная масса трафика — без них плитка «по всем агентам»
+  // недосчитывала бы ровно то, что сейчас есть. Отличаются полем kind.
+  const sales = new Set(keyPairs(env.SALES_KEYS).map(function (x) { return x[0]; }));
+  const everyone = [...new Set(refs.concat([...sales]))];
+
+  // Чтения пачками: последовательный цикл на сотне агентов — это сотни ожиданий
+  // подряд и секунды задержки.
   const partners = [];
-  for (const ref of refs) {
-    const deals = await dealsGet(env, ref);
-    const info = await pinfoGet(env, ref);
-    const t = dealTotals(deals).RUB || { accrued: 0, paid: 0, volume: 0, count: 0 };
-    let lastDeal = "";
-    for (const x of deals) if (x.date > lastDeal) lastDeal = x.date;
-    const h = hitSummary(byRef.get(ref) || [], now);
-    partners.push({
-      ref: ref, name: (info && info.name) || "", profile: info || null,
-      count: deals.length, volume: t.volume, reward: t.accrued + t.paid, lastDeal: lastDeal,
-      opens: h.opens, leads: h.leads, lastHit: h.last,
-      hasKey: hasKey.has(ref), keyReady: ready.has(ref),
-    });
+  for (let i = 0; i < everyone.length; i += 15) {
+    const chunk = everyone.slice(i, i + 15);
+    const got = await Promise.all(chunk.map(async function (ref) {
+      const deals = await dealsGet(env, ref);
+      const info = await pinfoGet(env, ref);
+      return { ref: ref, deals: deals, info: info };
+    }));
+    for (const g of got) {
+      const tt = dealTotals(g.deals);
+      const t = tt.RUB || { accrued: 0, paid: 0, volume: 0, count: 0 };
+      // Валюты не складываем (правило витрины): считаем рублёвые, а о прочих
+      // честно сообщаем флагом, иначе «сделок 3 · объём 0 ₽» выглядело бы сбоем.
+      const other = Object.keys(tt).filter(function (c) { return c !== "RUB"; });
+      let lastDeal = "";
+      for (const x of g.deals) if (x.date > lastDeal) lastDeal = x.date;
+      const h = hitSummary(byRef.get(g.ref) || [], now, true);
+      partners.push({
+        ref: g.ref, name: (g.info && g.info.name) || "", profile: g.info || null,
+        kind: sales.has(g.ref) && !refs.includes(g.ref) ? "sales" : "partner",
+        count: t.count, otherCcy: other.length ? other : null,
+        volume: t.volume, reward: t.accrued + t.paid, lastDeal: lastDeal,
+        opens: h.opens, leads: h.leads, lastHit: h.last,
+        hasKey: hasKey.has(g.ref), keyState: keyState[g.ref] || null,
+      });
+    }
   }
   partners.sort(function (a, b) { return b.reward - a.reward; });
   return json({ ok: true, now: now, partners: partners, truncated: all.truncated }, 200, cors);
@@ -3074,7 +3116,8 @@ async function handleSubmit(request, env, cors, ctx) {
     if (!env.POST_KV) return json({ ok: false, error: "kv_not_configured" }, 503, cors);
     const ref = cleanStr(data.ref, 40).toLowerCase();
     if (!/^[a-z0-9][a-z0-9._-]{0,39}$/.test(ref)) return json({ ok: false, error: "bad_new_ref" }, 422, cors);
-    const taken = new Set((await partnerRefs(env, true)).concat(knownRefs(env)));
+    // «boss» — служебная метка сводного кабинета (соль хэша bkey), партнёру её не отдаём.
+    const taken = new Set((await partnerRefs(env, true)).concat(knownRefs(env), ["boss"]));
     if (taken.has(ref)) return json({ ok: false, error: "ref_taken" }, 422, cors);
     // Ключ под меткой мог остаться от прежнего контрагента (реквизиты сняли, а
     // вход — нет): новый партнёр получил бы метку, на которую у чужого человека

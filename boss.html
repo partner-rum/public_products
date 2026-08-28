@@ -99,6 +99,8 @@
   .agent .kch.ok { background:rgba(85,192,138,.15); color:var(--gr-ink); }
   .agent .kch.wait { background:rgba(238,125,27,.15); color:var(--or-ink); }
   .agent .kch.no { background:var(--pill); color:var(--faint); }
+  .agent .kch.exp { background:rgba(224,112,90,.17); color:var(--rd-ink); }
+  .agent .kch.sl { background:rgba(79,134,230,.17); color:var(--bl-ink); }
   .agent .meta { margin-top:3px; font:400 12px var(--m); color:var(--faint); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .agent .mid { display:flex; align-items:baseline; gap:12px; margin:14px 0 2px; }
   .agent .rw { font:600 23px var(--m); letter-spacing:-.02em; font-variant-numeric:tabular-nums; color:var(--or-ink); }
@@ -159,11 +161,16 @@
     .states { grid-template-columns:1fr 1fr; }
     .act { grid-template-columns:1fr; }
   }
+  /* Тач-цели >=44px там, где палец, а не курсор — правило витрины (<=860px). */
+  @media (max-width:860px) {
+    .chip, .exit, .zt .back { min-height:44px; display:inline-flex; align-items:center; }
+    .agent { min-height:44px; }
+    .tile .nm a { display:inline-flex; align-items:center; min-height:44px; }
+    .field input, .go { min-height:44px; }
+  }
   @media (max-width:640px) {
     .states { grid-template-columns:1fr; }
     .ag, .tiles { grid-template-columns:1fr; }
-    .chip, .exit, .zt .back { min-height:44px; display:inline-flex; align-items:center; }
-    .agent { min-height:44px; }
   }
 </style>
 </head>
@@ -270,7 +277,9 @@
   function dmy(iso) {
     if (!iso) return "—";
     var p = String(iso).slice(0, 10).split("-");
-    return p.length === 3 ? p[2] + "." + p[1] + "." + p[0] : String(iso);
+    // Строка уходит в innerHTML: сегодня в KV лежит строгий ISO, но единственную
+    // неэкранированную вставку на странице лучше закрыть заранее.
+    return p.length === 3 ? p[2] + "." + p[1] + "." + p[0] : esc(String(iso));
   }
   function todayIso() {
     var d = new Date(Date.now() + 3 * 3600 * 1000);
@@ -313,6 +322,24 @@
     var b = (it && it.basket) || [];
     for (var i = 0; i < b.length; i++) if (b[i].perfPct != null) return b[i];
     return null;
+  }
+  function num(v) { return String(v).replace(/\.0$/, "").replace(".", ","); }
+  function pct2(v) { return (Math.round(Number(v) * 100) / 100).toFixed(2).replace(".", ",") + "%"; }
+  // Барьер защиты — ТА ЖЕ формула, что в me.html (riskNote): у купонных барьер
+  // лежит в payoff.protection.barrierPct, у участия — в strikePct при защите
+  // МЕНЬШЕ 100%. Своя formula по protectionPct давала бы на живых данных десяток
+  // ложных тревог (полная защита = любой минус) и пропускала бы настоящие.
+  function riskNote(it) {
+    if (!it || (it.maturity && it.maturity < todayIso())) return "";
+    var a = assetPerf(it);
+    if (!a) return "";
+    var po = it.payoff || {}, bar = null;
+    if (po.protection && typeof po.protection === "object") bar = po.protection.barrierPct;
+    else if (typeof po.protectionPct === "number" && po.protectionPct < 100) bar = po.strikePct;
+    if (bar == null) return "";
+    return (100 + a.perfPct) < bar
+      ? "Актив ниже барьера защиты " + num(bar) + "% — на погашении номинал под риском."
+      : "";
   }
   function assetLabel(b) {
     var n = b && (b.n || b.t) ? String(b.n || b.t) : "";
@@ -376,6 +403,15 @@
   function show(d) {
     PARTNERS = d.partners || [];
     NOW = d.now || Date.now();
+    // Обход событий упёрся в потолок: KV отдаёт ключи по алфавиту, поэтому у
+    // агентов «во второй половине списка» открытий может не хватать. Молчать об
+    // этом нельзя — ноль читался бы как факт.
+    if (d.truncated && !document.querySelector(".tbar")) {
+      document.body.insertAdjacentHTML("afterbegin",
+        '<div class="tbar" role="note"><span class="tt">неполные данные</span>' +
+        '<span class="td">Событий за 90 дней больше, чем помещается в один обход хранилища: ' +
+        "у части агентов открытия ссылок показаны не полностью. Сделки и вознаграждение — точные.</span></div>");
+    }
     gate.style.display = "none";
     dash.classList.add("on");
     $("exit").style.display = "";
@@ -391,7 +427,11 @@
       opens30 += (p.opens && p.opens.d30) || 0;
       if (p.count) active++;
     }
-    $("hSub").textContent = "котировки на " + (UPDATED ? dmy(UPDATED) : "—") +
+    // Дата котировок старше трёх дней — красным: иначе позавчерашний Bid
+    // читается как сегодняшний (то же правило, что на столе партнёра).
+    var old3 = UPDATED && (Date.now() - Date.parse(UPDATED)) > 3 * 86400000;
+    $("hSub").innerHTML = "котировки на " +
+      (UPDATED ? '<b style="color:' + (old3 ? "var(--down)" : "inherit") + '">' + dmy(UPDATED) + "</b>" : "—") +
       " · агентов " + PARTNERS.length + ", из них со сделками " + active;
     $("states").innerHTML =
       '<div class="st or"><div class="k">Вознаграждение агентам</div><div class="v">' + mln(rw) +
@@ -411,16 +451,30 @@
       if (sortBy === "volume") return (b.volume || 0) - (a.volume || 0);
       if (sortBy === "count") return (b.count || 0) - (a.count || 0);
       if (sortBy === "opens") return ((b.opens && b.opens.d30) || 0) - ((a.opens && a.opens.d30) || 0);
-      if (sortBy === "date") return (b.lastDeal || "") < (a.lastDeal || "") ? -1 : 1;
+      if (sortBy === "date") {
+        var x = a.lastDeal || "", y = b.lastDeal || "";
+        return x < y ? 1 : x > y ? -1 : 0;   // равные не должны менять порядок при каждой перерисовке
+      }
       return (b.reward || 0) - (a.reward || 0);
     });
     return l;
   }
 
+  // Четыре состояния входа. «Протух» — отдельно от «выдан»: по такому ключу
+  // войти уже нельзя, нужен перевыпуск, и зелёная пометка тут была бы обманом.
   function keyChip(p) {
-    if (p.keyReady) return '<span class="kch wait">ключ ждёт</span>';
-    if (p.hasKey) return '<span class="kch ok">вход выдан</span>';
+    if (p.keyState === "ready") return '<span class="kch wait">ключ ждёт</span>';
+    if (p.keyState === "expired") return '<span class="kch exp">ключ протух</span>';
+    if (p.keyState === "taken" || p.keyState === "secret" || p.hasKey)
+      return '<span class="kch ok">вход выдан</span>';
     return '<span class="kch no">без входа</span>';
+  }
+  function keyText(d) {
+    if (d.keyState === "ready") return "ключ выдан, ещё не забрали";
+    if (d.keyState === "expired") return "ключ протух — нужен перевыпуск (/partnerkey)";
+    if (d.keyState === "taken") return "ключ забран сейлзом";
+    if (d.keyState === "secret" || d.hasKey) return "есть";
+    return "не выдан";
   }
 
   function drawAgents() {
@@ -432,9 +486,12 @@
     }
     $("agents").innerHTML = list.map(function (p) {
       var opens = (p.opens && p.opens.d30) || 0;
+      var chip = p.kind === "sales" ? '<span class="kch sl">сейлз</span>' : keyChip(p);
+      var ccy = p.otherCcy ? " · есть сделки в " + esc(p.otherCcy.join(", ")) : "";
       return '<button class="agent" type="button" data-ref="' + esc(p.ref) + '">' +
-        '<div class="ah"><div class="nm">' + esc(p.name || p.ref) + "</div>" + keyChip(p) + "</div>" +
-        '<div class="meta">' + esc(p.ref) + (p.count ? " · последняя сделка " + dmy(p.lastDeal) : " · сделок нет") + "</div>" +
+        '<div class="ah"><div class="nm">' + esc(p.name || p.ref) + "</div>" + chip + "</div>" +
+        '<div class="meta">' + esc(p.ref) +
+          (p.count ? " · последняя сделка " + dmy(p.lastDeal) : " · сделок нет") + ccy + "</div>" +
         '<div class="mid"><span class="rw">' + mln(p.reward) + '</span><span class="bl2">вознаграждение</span></div>' +
         '<div class="figs"><span>объём <b>' + mln(p.volume) + "</b></span>" +
         "<span>сделок <b>" + (p.count || 0) + "</b></span>" +
@@ -470,7 +527,13 @@
   function openAgent(ref) {
     if (IS_DEMO) { drawAgent(demoAgent(ref)); return; }
     ask({ ref: ref }).then(function (x) {
-      if (!x.d || !x.d.ok) { alert(ERR[x.d && x.d.error] || "Не удалось открыть агента."); return; }
+      if (!x.d || !x.d.ok) {
+        // Ключ перевыпустили, пока кабинет открыт: не сыпать alert-ами поверх
+        // устаревших цифр, а честно вернуть на вход — как делает login().
+        if (x.d && x.d.error === "bad_key") { forget(); location.reload(); return; }
+        alert(ERR[x.d && x.d.error] || "Не удалось открыть агента.");
+        return;
+      }
       drawAgent(x.d);
     }).catch(function () { alert("Нет связи с сервером."); });
   }
@@ -489,7 +552,7 @@
     if (p.ogrn) rows.push(["ОГРН", p.ogrn]);
     if (p.ogrnip) rows.push(["ОГРНИП", p.ogrnip]);
     if (p.contract) rows.push(["Договор", p.contract]);
-    rows.push(["Вход на стол", d.keyReady ? "ключ выдан, ещё не забрали" : d.hasKey ? "есть" : "не выдан"]);
+    rows.push(["Вход на стол", keyText(d)]);
     $("aIds").innerHTML = rows.map(function (r) {
       return '<div class="idr"><span class="k">' + esc(r[0]) + '</span><span class="v">' + esc(r[1]) + "</span></div>";
     }).join("");
@@ -523,15 +586,14 @@
       var nm = splitName(d.product);
       var bid = bidOf(it);
       var matured = it && it.maturity && it.maturity < todayIso();
-      var risk = it && it.payoff && it.payoff.protectionPct != null && assetPerf(it) &&
-                 assetPerf(it).perfPct < -(100 - it.payoff.protectionPct);
+      var risk = !!riskNote(it);
       var chip = risk ? '<span class="kch rk">ниже барьера</span>'
         : matured ? '<span class="kch off">погашен</span>'
         : it ? (it.kind === "participation" ? '<span class="kch pt2">участие</span>'
                                             : '<span class="kch cp">купонный</span>')
         : '<span class="kch off">нет данных</span>';
       var bidHtml = bid != null
-        ? '<span class="bid">' + String(bid).replace(".", ",") + '%</span><span class="bl2">bid · индикативно</span>'
+        ? '<span class="bid">' + pct2(bid) + '</span><span class="bl2">bid · индикативно</span>'
         : '<span class="bid mut">' + (matured ? "выпуск погашен"
             : it ? "котировки сейчас нет" : "данные по выпуску не подтянулись") + "</span>";
       var pf = assetPerf(it), pfHtml = "";
@@ -549,9 +611,19 @@
         '<div class="mid">' + bidHtml + pfHtml + "</div>" +
         '<div class="figs"><span>объём <b>' + mln(d.volume) + "</b></span>" +
         "<span>вознаграждение <b>" + money(d.reward) + "</b></span>" +
+        (d.currency && d.currency !== "RUB" ? '<span style="color:var(--down)">валюта ' + esc(d.currency) + "</span>" : "") +
         '<span class="dt">' + dmy(d.date) + "</span></div></div>";
     }).join("");
   }
+
+  // Тап по столбику печатает его день в подпись — на телефоне это единственный
+  // способ узнать значение.
+  document.getElementById("aBars").addEventListener("click", function (e) {
+    var b = e.target.closest ? e.target.closest("i[data-d]") : null;
+    if (!b) return;
+    $("aBarCap").innerHTML = "<span>" + dmy(b.getAttribute("data-d")) + "</span><span>" +
+      b.getAttribute("data-n") + " " + plural(+b.getAttribute("data-n"), "открытие", "открытия", "открытий") + "</span>";
+  });
 
   function drawActivity(d) {
     var days = d.days || [], prods = d.products || [];
@@ -576,8 +648,13 @@
     $("aBars").innerHTML = cells.map(function (c) {
       var h = Math.round(c.n / max * 100);
       return '<i class="' + (c.n === max && c.n > 0 ? "hi" : "") + '" style="height:' + Math.max(h, 3) +
-        '%" title="' + dmy(c.d) + ": " + c.n + '"></i>';
+        '%" title="' + dmy(c.d) + ": " + c.n + '" data-d="' + c.d + '" data-n="' + c.n + '"></i>';
     }).join("");
+    // Тултип по наведению недоступен с телефона и скринридеру — значения дублируем
+    // в aria-label, а тап печатает день в подпись (тот же приём, что на столе).
+    $("aBars").setAttribute("aria-label", "Открытия ссылок по дням: " +
+      cells.filter(function (c) { return c.n; })
+           .map(function (c) { return dmy(c.d) + " — " + c.n; }).join(", ") || "открытий не было");
     $("aBarCap").innerHTML = "<span>" + dmy(cells[0].d) + "</span><span>сегодня</span>";
     $("aProd").innerHTML = prods.length
       ? prods.slice(0, 12).map(function (r) {
@@ -605,7 +682,7 @@
       days.push({ d: new Date(NOW - i * 86400000).toISOString().slice(0, 10), n: (i * 7) % 9 });
     }
     return { ok: true, ref: p.ref, profile: p.profile, deals: deals, totals: t,
-             hasKey: p.hasKey, keyReady: p.keyReady,
+             hasKey: p.hasKey, keyState: p.keyState,
              opens: p.opens, views: { all: 40 }, leads: p.leads, last: p.lastHit,
              days: days, products: Object.keys(INSTR).slice(0, 8).map(function (id, i) {
                return { p: id, opens: 12 - i, views: 3, leads: i === 0 ? 2 : 0, last: NOW };
@@ -626,7 +703,8 @@
                  count: n[4], volume: n[3], reward: n[2], lastDeal: "2026-07-1" + i,
                  opens: { all: 40 - i * 12, d7: 5 - i, d30: 22 - i * 7 },
                  leads: { all: 3 - i, d30: 1 }, lastHit: Date.now() - i * 3 * 86400000,
-                 hasKey: i < 2, keyReady: i === 1 };
+                 hasKey: i < 2, keyState: i === 0 ? "taken" : i === 1 ? "ready" : null,
+                 kind: "partner", otherCcy: null };
       }),
     });
   }
