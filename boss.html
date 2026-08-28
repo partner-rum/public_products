@@ -88,27 +88,42 @@
   .chip { border:1px solid var(--line); background:var(--card); border-radius:999px; padding:7px 14px; font:500 13px var(--f); color:var(--hushed); cursor:pointer; }
   .chip.on { border-color:var(--solar); color:var(--ink); background:rgba(238,125,27,.12); }
 
-  /* ── список агентов ── */
-  .ag { display:grid; grid-template-columns:repeat(auto-fill,minmax(360px,1fr)); gap:14px; align-items:start; }
-  .agent { width:100%; text-align:left; background:var(--card); border:1px solid var(--line-soft); border-radius:16px;
-           padding:16px 18px; cursor:pointer; transition:transform .18s var(--e), border-color .18s, background .18s; }
-  @media (hover:hover) { .agent:hover { transform:translateY(-2px); border-color:rgba(255,255,255,.16); background:var(--lift); } }
-  .agent .ah { display:flex; align-items:center; gap:10px; }
-  .agent .nm { font:600 15.5px var(--f); min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .agent .kch { margin-left:auto; flex:none; font:500 11.5px var(--f); border-radius:999px; padding:3px 10px; }
-  .agent .kch.ok { background:rgba(85,192,138,.15); color:var(--gr-ink); }
-  .agent .kch.wait { background:rgba(238,125,27,.15); color:var(--or-ink); }
-  .agent .kch.no { background:var(--pill); color:var(--faint); }
-  .agent .kch.exp { background:rgba(224,112,90,.17); color:var(--rd-ink); }
-  .agent .kch.sl { background:rgba(79,134,230,.17); color:var(--bl-ink); }
-  .agent .meta { margin-top:3px; font:400 12px var(--m); color:var(--faint); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .agent .mid { display:flex; align-items:baseline; gap:12px; margin:14px 0 2px; }
-  .agent .rw { font:600 23px var(--m); letter-spacing:-.02em; font-variant-numeric:tabular-nums; color:var(--or-ink); }
-  .agent .bl2 { font:500 11px var(--m); letter-spacing:.08em; text-transform:uppercase; color:var(--faint); }
-  .agent .figs { margin-top:10px; padding-top:11px; border-top:1px solid var(--line-soft); display:flex; gap:6px 14px;
-                 font-size:13px; color:var(--hushed); flex-wrap:wrap; align-items:baseline; }
-  .agent .figs b { font:600 13px var(--m); color:var(--ink); font-variant-numeric:tabular-nums; }
-  .agent .figs .dt { margin-left:auto; font:400 12px var(--m); color:var(--faint); }
+  /* ── список агентов: таблица ──
+     Карточками их было видно по одному, а сравнивать приходится между собой:
+     кто сколько принёс, у кого давно не было сделок. Поэтому строки, числа
+     моноширинные и выровнены вправо, сортировка — по заголовкам колонок. */
+  .tw { overflow-x:auto; }                     /* широкая таблица скроллится в себе, не в body */
+  table.ag { width:100%; border-collapse:collapse; font-size:14px; }
+  table.ag th, table.ag td { padding:11px 12px; text-align:left; vertical-align:middle; white-space:nowrap; }
+  table.ag thead th { position:sticky; top:0; z-index:1; background:var(--canvas);
+                      border-bottom:1px solid var(--line); padding:0; }
+  table.ag thead th button { width:100%; background:none; border:0; padding:9px 12px; cursor:pointer;
+                             font:500 11px var(--m); letter-spacing:.09em; text-transform:uppercase;
+                             color:var(--faint); text-align:inherit; white-space:nowrap; }
+  table.ag thead th button:hover { color:var(--ink); }
+  table.ag thead th[aria-sort] button { color:var(--solar-l); }
+  table.ag thead th button .ar { opacity:.75; margin-left:5px; font-size:10px; }
+  table.ag th.num, table.ag td.num { text-align:right; }
+  table.ag tbody tr { border-bottom:1px solid var(--line-soft); cursor:pointer; }
+  table.ag tbody tr:hover { background:var(--lift); }
+  table.ag tbody tr:focus-within { background:var(--lift); }
+  table.ag td.nm { max-width:280px; white-space:normal; }
+  table.ag td.nm .who { display:block; border:0; background:none; padding:0; text-align:left;
+                        font:600 14.5px var(--f); color:var(--ink); cursor:pointer; }
+  table.ag td.nm .who:hover { color:var(--solar-l); }
+  table.ag td.nm .rf { display:block; font:400 11.5px var(--m); color:var(--faint); margin-top:2px; }
+  table.ag td.n2 { font:600 14px var(--m); font-variant-numeric:tabular-nums; }
+  table.ag td.rw { font:600 14.5px var(--m); font-variant-numeric:tabular-nums; color:var(--or-ink); }
+  table.ag td.mut { color:var(--hushed); font:400 13px var(--m); }
+  table.ag tfoot td { padding-top:13px; border-top:1px solid var(--line); font-weight:600; color:var(--hushed); }
+  table.ag tfoot td.n2, table.ag tfoot td.rw { font:600 14px var(--m); font-variant-numeric:tabular-nums; }
+  .kch { font:500 11.5px var(--f); border-radius:999px; padding:3px 10px; white-space:nowrap; }
+  .kch.ok { background:rgba(85,192,138,.15); color:var(--gr-ink); }
+  .kch.wait { background:rgba(238,125,27,.15); color:var(--or-ink); }
+  .kch.no { background:var(--pill); color:var(--faint); }
+  .kch.exp { background:rgba(224,112,90,.17); color:var(--rd-ink); }
+  .kch.sl { background:rgba(79,134,230,.17); color:var(--bl-ink); }
+  .warnccy { color:var(--down); font-size:12px; }
 
   /* ── разбор агента ── */
   #agent { display:none; }
@@ -168,9 +183,22 @@
     .tile .nm a { display:inline-flex; align-items:center; min-height:44px; }
     .field input, .go { min-height:44px; }
   }
+  /* На телефоне девять колонок не читаются — разворачиваем строку в карточку,
+     подписи берём из data-l. Горизонтального скролла не остаётся. */
+  @media (max-width:860px) {
+    table.ag thead { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+    table.ag, table.ag tbody, table.ag tr, table.ag td, table.ag tfoot { display:block; width:100%; }
+    table.ag tbody tr { border:1px solid var(--line-soft); border-radius:14px; background:var(--card);
+                        padding:12px 14px; margin-bottom:12px; }
+    table.ag td { padding:4px 0; white-space:normal; text-align:left !important; }
+    table.ag td.nm { max-width:none; padding-bottom:8px; }
+    table.ag td:not(.nm)::before { content:attr(data-l) " "; color:var(--faint); font:400 12.5px var(--f); }
+    table.ag tfoot td { border-top:0; }
+    table.ag tfoot tr { border:0; background:none; padding:0; }
+  }
   @media (max-width:640px) {
     .states { grid-template-columns:1fr; }
-    .ag, .tiles { grid-template-columns:1fr; }
+    .tiles { grid-template-columns:1fr; }
   }
 </style>
 </head>
@@ -208,15 +236,25 @@
 
     <div id="list">
       <div class="zt"><h2>Агенты</h2><span class="n" id="agN"></span></div>
-      <div id="ctrl" aria-label="Сортировка агентов">
-        <span class="cl">сортировка</span>
-        <button class="chip on" type="button" data-s="reward" aria-pressed="true">Вознаграждение</button>
-        <button class="chip" type="button" data-s="volume" aria-pressed="false">Объём</button>
-        <button class="chip" type="button" data-s="count" aria-pressed="false">Сделок</button>
-        <button class="chip" type="button" data-s="date" aria-pressed="false">Последняя сделка</button>
-        <button class="chip" type="button" data-s="opens" aria-pressed="false">Открытия</button>
+      <div class="tw">
+        <table class="ag">
+          <caption class="sr">Агенты: сделки, объём, вознаграждение и активность. Сортировка — по заголовкам колонок.</caption>
+          <thead><tr id="agHead">
+            <th scope="col" data-s="name"><button type="button">Агент</button></th>
+            <th scope="col" class="num" data-s="count"><button type="button">Сделок</button></th>
+            <th scope="col" class="num" data-s="volume"><button type="button">Объём</button></th>
+            <th scope="col" class="num" data-s="reward"><button type="button">Вознаграждение</button></th>
+            <th scope="col" class="num" data-s="share"><button type="button">Доля</button></th>
+            <th scope="col" data-s="date"><button type="button">Последняя сделка</button></th>
+            <th scope="col" class="num" data-s="opens"><button type="button">Открытий 30 дн.</button></th>
+            <th scope="col" class="num" data-s="leads"><button type="button">Заявок</button></th>
+            <th scope="col" data-s="hit"><button type="button">Активность</button></th>
+            <th scope="col" data-s="key"><button type="button">Вход</button></th>
+          </tr></thead>
+          <tbody id="agents"></tbody>
+          <tfoot id="agFoot"></tfoot>
+        </table>
       </div>
-      <div class="ag" id="agents"></div>
     </div>
 
     <div id="agent">
@@ -398,7 +436,7 @@
   $("exit").addEventListener("click", function () { forget(); location.reload(); });
 
   // ---- сводка --------------------------------------------------------------
-  var PARTNERS = [], NOW = Date.now(), sortBy = "reward";
+  var PARTNERS = [], NOW = Date.now(), sortBy = "reward", sortDir = "desc";
 
   function show(d) {
     PARTNERS = d.partners || [];
@@ -445,17 +483,31 @@
         '</div><div class="s">от объёма сделок</div></div>';
   }
 
+  // Значение колонки для сортировки: числа как числа, строки как строки —
+  // одна функция вместо ветки на каждый столбец.
+  function cellVal(p, col) {
+    if (col === "name") return (p.name || p.ref || "").toLowerCase();
+    if (col === "count") return p.count || 0;
+    if (col === "volume") return p.volume || 0;
+    if (col === "reward") return p.reward || 0;
+    if (col === "share") return p.volume ? (p.reward || 0) / p.volume : -1;
+    if (col === "date") return p.lastDeal || "";
+    if (col === "opens") return (p.opens && p.opens.d30) || 0;
+    if (col === "leads") return (p.leads && p.leads.all) || 0;
+    if (col === "hit") return p.lastHit || 0;
+    if (col === "key") return p.kind === "sales" ? "0" : (p.keyState || (p.hasKey ? "secret" : "zzz"));
+    return 0;
+  }
   function sortAgents(list) {
     var l = list.slice();
     l.sort(function (a, b) {
-      if (sortBy === "volume") return (b.volume || 0) - (a.volume || 0);
-      if (sortBy === "count") return (b.count || 0) - (a.count || 0);
-      if (sortBy === "opens") return ((b.opens && b.opens.d30) || 0) - ((a.opens && a.opens.d30) || 0);
-      if (sortBy === "date") {
-        var x = a.lastDeal || "", y = b.lastDeal || "";
-        return x < y ? 1 : x > y ? -1 : 0;   // равные не должны менять порядок при каждой перерисовке
-      }
-      return (b.reward || 0) - (a.reward || 0);
+      var x = cellVal(a, sortBy), y = cellVal(b, sortBy), c;
+      if (typeof x === "number" && typeof y === "number") c = x - y;
+      else c = String(x) < String(y) ? -1 : String(x) > String(y) ? 1 : 0;
+      // Ноль возвращаем честно: иначе равные строки переставлялись бы при каждой
+      // перерисовке. Порядок при равенстве — по метке, он стабилен.
+      if (c === 0) c = a.ref < b.ref ? -1 : a.ref > b.ref ? 1 : 0;
+      return sortDir === "asc" ? c : -c;
     });
     return l;
   }
@@ -480,41 +532,74 @@
   function drawAgents() {
     var list = sortAgents(PARTNERS);
     $("agN").textContent = PARTNERS.length + " " + plural(PARTNERS.length, "агент", "агента", "агентов");
+    // Направление стрелки в заголовке — единственный признак того, куда
+    // отсортировано; aria-sort даёт то же скринридеру.
+    document.querySelectorAll("#agHead th").forEach(function (th) {
+      var on = th.getAttribute("data-s") === sortBy;
+      if (on) th.setAttribute("aria-sort", sortDir === "asc" ? "ascending" : "descending");
+      else th.removeAttribute("aria-sort");
+      var b = th.querySelector("button"), lbl = b.getAttribute("data-lbl") || b.textContent.trim();
+      b.setAttribute("data-lbl", lbl);
+      b.innerHTML = esc(lbl) + (on ? '<span class="ar">' + (sortDir === "asc" ? "▲" : "▼") + "</span>" : "");
+    });
     if (!list.length) {
-      $("agents").innerHTML = '<div class="empty">Агентов пока нет. Их заводят сейлзы через админку.</div>';
+      $("agents").innerHTML = '<tr><td colspan="10"><div class="empty">Агентов пока нет. ' +
+        "Их заводят сейлзы через админку.</div></td></tr>";
+      $("agFoot").innerHTML = "";
       return;
     }
     $("agents").innerHTML = list.map(function (p) {
-      var opens = (p.opens && p.opens.d30) || 0;
       var chip = p.kind === "sales" ? '<span class="kch sl">сейлз</span>' : keyChip(p);
-      var ccy = p.otherCcy ? " · есть сделки в " + esc(p.otherCcy.join(", ")) : "";
-      return '<button class="agent" type="button" data-ref="' + esc(p.ref) + '">' +
-        '<div class="ah"><div class="nm">' + esc(p.name || p.ref) + "</div>" + chip + "</div>" +
-        '<div class="meta">' + esc(p.ref) +
-          (p.count ? " · последняя сделка " + dmy(p.lastDeal) : " · сделок нет") + ccy + "</div>" +
-        '<div class="mid"><span class="rw">' + mln(p.reward) + '</span><span class="bl2">вознаграждение</span></div>' +
-        '<div class="figs"><span>объём <b>' + mln(p.volume) + "</b></span>" +
-        "<span>сделок <b>" + (p.count || 0) + "</b></span>" +
-        "<span>открытий за 30 дн. <b>" + opens + "</b></span>" +
-        '<span class="dt">' + esc(ago(p.lastHit, NOW)) + "</span></div></button>";
+      var share = p.volume ? (p.reward / p.volume * 100).toFixed(2).replace(".", ",") + "%" : "—";
+      return '<tr data-ref="' + esc(p.ref) + '">' +
+        '<td class="nm"><button class="who" type="button">' + esc(p.name || p.ref) + "</button>" +
+          '<span class="rf">' + esc(p.ref) +
+          (p.otherCcy ? ' · <span class="warnccy">сделки в ' + esc(p.otherCcy.join(", ")) + "</span>" : "") +
+          "</span></td>" +
+        '<td class="num n2" data-l="сделок">' + (p.count || 0) + "</td>" +
+        '<td class="num n2" data-l="объём">' + mln(p.volume) + "</td>" +
+        '<td class="num rw" data-l="вознаграждение">' + mln(p.reward) + "</td>" +
+        '<td class="num mut" data-l="доля">' + share + "</td>" +
+        '<td class="mut" data-l="последняя сделка">' + (p.count ? dmy(p.lastDeal) : "—") + "</td>" +
+        '<td class="num n2" data-l="открытий 30 дн.">' + ((p.opens && p.opens.d30) || 0) + "</td>" +
+        '<td class="num n2" data-l="заявок">' + ((p.leads && p.leads.all) || 0) + "</td>" +
+        '<td class="mut" data-l="активность">' + esc(ago(p.lastHit, NOW)) + "</td>" +
+        '<td data-l="вход">' + chip + "</td></tr>";
     }).join("");
+
+    // Итоговая строка: сумма ровно того, что в столбцах выше.
+    var tv = 0, tr = 0, tc = 0, to = 0, tl = 0;
+    list.forEach(function (p) {
+      tv += p.volume || 0; tr += p.reward || 0; tc += p.count || 0;
+      to += (p.opens && p.opens.d30) || 0; tl += (p.leads && p.leads.all) || 0;
+    });
+    $("agFoot").innerHTML = "<tr><td>Итого</td>" +
+      '<td class="num n2">' + tc + "</td>" +
+      '<td class="num n2">' + mln(tv) + "</td>" +
+      '<td class="num rw">' + mln(tr) + "</td>" +
+      '<td class="num">' + (tv ? (tr / tv * 100).toFixed(2).replace(".", ",") + "%" : "—") + "</td>" +
+      "<td></td>" +
+      '<td class="num n2">' + to + "</td>" +
+      '<td class="num n2">' + tl + "</td>" +
+      "<td></td><td></td></tr>";
   }
 
-  document.querySelectorAll("#ctrl .chip").forEach(function (c) {
-    c.addEventListener("click", function () {
-      document.querySelectorAll("#ctrl .chip").forEach(function (x) {
-        x.classList.remove("on"); x.setAttribute("aria-pressed", "false");
-      });
-      c.classList.add("on"); c.setAttribute("aria-pressed", "true");
-      sortBy = c.getAttribute("data-s");
-      drawAgents();
-      $("say").textContent = "Отсортировано: " + c.textContent;
-    });
+  // Клик по заголовку: первый раз — по убыванию (сверху крупнейшие), повтор —
+  // разворот. Для имени и даты естественнее начинать с возрастания.
+  $("agHead").addEventListener("click", function (e) {
+    var th = e.target.closest ? e.target.closest("th[data-s]") : null;
+    if (!th) return;
+    var col = th.getAttribute("data-s");
+    if (col === sortBy) sortDir = sortDir === "asc" ? "desc" : "asc";
+    else { sortBy = col; sortDir = col === "name" ? "asc" : "desc"; }
+    drawAgents();
+    $("say").textContent = "Сортировка: " + th.textContent.replace(/[▲▼]/g, "").trim() +
+      ", " + (sortDir === "asc" ? "по возрастанию" : "по убыванию");
   });
 
   $("agents").addEventListener("click", function (e) {
-    var b = e.target.closest ? e.target.closest("[data-ref]") : null;
-    if (b) openAgent(b.getAttribute("data-ref"));
+    var row = e.target.closest ? e.target.closest("tr[data-ref]") : null;
+    if (row) openAgent(row.getAttribute("data-ref"));
   });
   $("back").addEventListener("click", function () {
     $("agent").classList.remove("on");
