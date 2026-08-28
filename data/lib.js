@@ -133,7 +133,15 @@ window.SITE = (function () {
                        : val + 40;                              // запас на рост прибыли
         return { min: -30, max: Math.max(max, val + 20), val };
       }
-      if (r.type === "protection") { const off = (r.strike || 100) - 100; return { min: -30, max: Math.max(50, off + 40), val: Math.max(20, off + 15) }; }
+      // У защиты капитала С ПОТОЛКОМ (cap) диапазон продлеваем ЗА потолок, как у
+      // колл-спреда: прежний max = 50 обрывал кадр ровно в точке, где выплата в
+      // него упирается, полка не попадала в график — и «Защита капитала · до +50%»
+      // рисовалась безлимитным участием, то есть картинка обещала больше продукта
+      if (r.type === "protection") {
+        const off = (r.strike || 100) - 100;
+        const max = r.cap != null ? Math.ceil(r.cap / 5) * 5 + 15 : Math.max(50, off + 40);
+        return { min: -30, max: Math.max(max, off + 40), val: Math.max(20, off + 15) };
+      }
       if (r.type === "booster") return { min: -30, max: 25, val: (r.strike2 || 110) - 100 };
       // Автоколл: интересна зона вокруг барьера защиты — ползунок уводим глубоко вниз,
       // вверх достаточно барьера автоотзыва (выше выплата тела уже не меняется).
@@ -218,10 +226,17 @@ window.SITE = (function () {
     for (const v of xt) {
       const gx = x(v);
       if (gx < L - 1 || gx > W - R + 1) continue;
+      // Подпись деления центрируется по нему, но у крайних может не поместиться:
+      // у дисконтной облигации деления подписаны словами («покупка», «погашение»),
+      // и на узком экране «погашение» уходило на 21px за правый край кадра.
+      // Прижимаем к границе, когда центрирование не влезает
+      const tl = String(fx(v)), half = tl.length * fs * 0.62 / 2;
+      const anc = gx + half > W - 2 ? "end" : (gx - half < 2 ? "start" : "middle");
+      const tx = anc === "end" ? W - 2 : anc === "start" ? 2 : gx;
       s += '<line x1="' + gx.toFixed(1) + '" y1="' + (H - B) + '" x2="' + gx.toFixed(1) + '" y2="' + (H - B + 5) +
         '" stroke="' + axis + '" stroke-width="1"/>' +
-        '<text x="' + gx.toFixed(1) + '" y="' + (H - B + fs + 8) + '" text-anchor="middle" fill="' + lab +
-        '" font-size="' + fs + '" ' + MONO + '>' + fx(v) + '</text>';
+        '<text x="' + tx.toFixed(1) + '" y="' + (H - B + fs + 8) + '" text-anchor="' + anc + '" fill="' + lab +
+        '" font-size="' + fs + '" ' + MONO + '>' + tl + '</text>';
     }
     s += '<line x1="' + L + '" y1="' + T + '" x2="' + L + '" y2="' + (H - B) + '" stroke="' + axis + '" stroke-width="1"/>' +
       '<line x1="' + L + '" y1="' + (H - B) + '" x2="' + (W - R) + '" y2="' + (H - B) + '" stroke="' + axis + '" stroke-width="1"/>' +
@@ -266,6 +281,27 @@ window.SITE = (function () {
       '" y2="' + (H - f.B) + '" stroke="' + col + '" stroke-width="1" stroke-dasharray="3 4"/>';
     const diamond = (cx, cy, col) => '<rect x="' + (cx - 4).toFixed(1) + '" y="' + (cy - 4).toFixed(1) +
       '" width="8" height="8" transform="rotate(45 ' + cx.toFixed(1) + " " + cy.toFixed(1) + ')" fill="' + col + '"/>';
+    // Подпись по центру над точкой в кадр помещается не всегда: у колл-спреда на
+    // узком экране «K₂ 150 · макс. 50%» уезжала на 6px за правый край (там кегль
+    // крупнее — 13px). Прижимаем к ближней границе вместо центрирования.
+    // Ширина считается по моноширинному кеглю: 0,62em на знак — с запасом
+    const txtFit = (cx, ty, fill, str, size) => {
+      const w = str.length * (size || fs) * 0.62;
+      if (cx + w / 2 > R) return txt(R, ty, fill, "end", str, size);
+      if (cx - w / 2 < f.L) return txt(f.L, ty, fill, null, str, size);
+      return txt(cx, ty, fill, "middle", str, size);
+    };
+    // Подпись НАД наклонной линией. Фиксированный отступ не годится: линия идёт
+    // под углом (а у автоколла ещё и скачком на барьере) и проходит сквозь текст.
+    // Центр смещаем так, чтобы рамка целиком легла на нужный участок [loLvl;hiLvl],
+    // и отступаем от САМОЙ ВЫСОКОЙ точки линии под этой рамкой
+    const labelAbove = (cLvl, loLvl, hiLvl, str, fill, size) => {
+      const half = (str.length * (size || fs) * 0.62 / 2 + 6) / (x(101) - x(100));
+      const c = Math.max(loLvl + half, Math.min(cLvl, hiLvl - half));
+      let top = Infinity;
+      for (let i = 0; i <= 10; i++) top = Math.min(top, y(calc.pct(r, c - half + 2 * half * i / 10 - 100)));
+      return txtFit(x(c), top - 9, fill, str, size);
+    };
 
     // Базовая линия выплаты: 0 у варранта, номинал 100% у бумаг с возвратом тела
     let s = hline(base, C.axis) + txt(R, y(base) - 7, C.lab, "end", base ? "номинал 100%" : "выплата 0");
@@ -277,7 +313,7 @@ window.SITE = (function () {
       if (r.strike2) {
         s += hline(cap, C.grid, "2 4") +
           diamond(x(r.strike2), y(cap), C.line) +
-          txt(x(r.strike2), y(cap) - 10, C.lab2, "middle", "K₂ " + fmtSmart(r.strike2) + " · макс. " + fmtSmart(cap) + "%");
+          txtFit(x(r.strike2), y(cap) - 10, C.lab2, "K₂ " + fmtSmart(r.strike2) + " · макс. " + fmtSmart(cap) + "%");
       }
       // Страйк подписываем НАД осью и левее ромба: у варранта нулевая выплата лежит
       // ровно на нижней оси, и подпись под ромбом налезала на деление шкалы.
@@ -293,13 +329,29 @@ window.SITE = (function () {
       if (floor !== 100) s += hline(floor, C.axis) + txt(f.L + 3, y(floor) + 15, C.lab2, null, "защита " + fmtSmart(floor) + "%");
       s += diamond(x(K), y(calc.pct(r, K - 100)), C.line) +
         txt(x(K), y(calc.pct(r, K - 100)) + 18, C.lab2, "middle", K === 100 ? "S₀" : "K " + fmtSmart(K));
-      const mid = (K + 100 + mHi) / 2;
-      s += txt(x(mid), y(calc.pct(r, mid - 100)) - 11, C.line, "middle", "участие " + Math.round(part * 100) + "%");
+      // Потолок — ТОЛЬКО при заданном cap: у обычной защиты капитала участие не
+      // ограничено, и полка справа превратила бы картинку в колл-спред.
+      // Уровень БА, на котором выплата упирается в потолок, — ровно 100 + cap.
+      // Подпись прижата к правому краю: по центру над ромбом «потолок 150% ·
+      // макс. 160%» вылезает за кадр (164px против 130 свободных)
+      const capLvl = r.cap != null ? 100 + r.cap : null;
+      if (capLvl != null) {
+        const capPay = calc.pct(r, r.cap);
+        s += hline(capPay, C.grid, "2 4") +
+          diamond(x(capLvl), y(capPay), C.line) +
+          txt(R, y(capPay) - 11, C.lab2, "end", "потолок " + fmtSmart(capLvl) + "% · макс. " + fmtSmart(capPay) + "%");
+      }
+      // Подпись участия ставится над САМОЙ ВЫСОКОЙ точкой линии под своей рамкой,
+      // а не над её серединой: линия наклонная, и при фиксированном отступе 11px
+      // она проходила СКВОЗЬ текст (замер: путь пересекал bbox подписи). Ширину
+      // рамки считаем по моноширинному кеглю — 0,6em на знак плюс запас
+      const upTo = capLvl != null ? capLvl : 100 + mHi;
+      s += labelAbove((K + upTo) / 2, K, upTo, "участие " + Math.round(part * 100) + "%", C.line);
     } else if (r.type === "booster") {
       const K2 = r.strike2 || 110, ku = (r.ku || 175) / 100, capPay = K + ku * (K2 - K);
       s += hline(capPay, C.grid, "2 4") + txt(R, y(capPay) - 8, C.gold, "end", "потолок +" + fmt1(capPay - 100) + "%") +
         diamond(x(K), y(K), C.line) + txt(x(K), y(K) + 18, C.lab2, "middle", "S₀") +
-        txt(x(100 + mLo + (K - 100 - mLo) * 0.45), y(calc.pct(r, mLo + (K - 100 - mLo) * 0.45)) - 10, C.lab, "middle", "падение 1:1") +
+        labelAbove(100 + mLo + (K - 100 - mLo) * 0.45, 100 + mLo, K, "падение 1:1", C.lab) +
         txt(x(K2) + 6, y(capPay) + 17, C.gold, null, "рост ×" + Math.round(ku * 100) + "%");
     } else if (r.type === "autocall") {
       const prot = r.protectionPct || 65, cpn = r.couponBarrier || prot, call = r.callBarrier || 120;
@@ -308,8 +360,13 @@ window.SITE = (function () {
       s += vmark(call, C.gold, "автоотзыв " + fmtSmart(call) + "%", "end");
       if (cpn !== prot) s += vmark(cpn, C.lab, "купон " + fmtSmart(cpn) + "%", "end");
       s += '<circle cx="' + x(prot).toFixed(1) + '" cy="' + y(100).toFixed(1) + '" r="3.8" fill="' + C.line + '"/>' +
-        txt(x(prot) - 8, y(100) + 17, C.lab2, "end", "защита " + fmtSmart(prot) + "%") +
-        txt(x((100 + mLo + prot) / 2), y((100 + mLo + prot) / 2) - 11, C.lab, "middle", "по перформансу");
+        txt(x(prot) - 8, y(100) + 17, C.lab2, "end", "защита " + fmtSmart(prot) + "%");
+      // Та же правка, что у защиты капитала: ниже барьера выплата идёт по
+      // перформансу, то есть наклонной линией, и подпись с фиксированным отступом
+      // 11px оказывалась на ней. Отступ считаем от самой высокой точки под рамкой
+      // Верхняя граница участка — БАРЬЕР: правее него выплата скачком уходит на
+      // 100%, и подпись, зайдя за него краем, оказывалась под этой полкой
+      s += labelAbove((100 + mLo + prot) / 2, 100 + mLo, prot, "по перформансу", C.lab);
     }
     const d = pts.map((p, i) => (i ? "L" : "M") + x(p[0]).toFixed(1) + " " + y(p[1]).toFixed(1)).join(" ");
     s += '<path d="' + d + '" fill="none" stroke="' + C.line + '" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>';
@@ -334,7 +391,9 @@ window.SITE = (function () {
       '<path d="M' + f.x(0).toFixed(1) + " " + f.y(q).toFixed(1) + " L" + f.x(100).toFixed(1) + " " + f.y(100).toFixed(1) +
       '" fill="none" stroke="' + C.line + '" stroke-width="2.5" stroke-linecap="round"/>' +
       '<circle cx="' + f.x(0).toFixed(1) + '" cy="' + f.y(q).toFixed(1) + '" r="4.5" fill="' + C.gold + '"/>' +
-      '<text x="' + (f.x(0) + 9).toFixed(1) + '" y="' + (f.y(q) + 4).toFixed(1) + '" fill="' + C.gold +
+      // Подпись НИЖЕ точки входа, а не вровень с ней: линия идёт из этой точки
+      // вверх-вправо, и при отступе +4 она прорезала текст по всей его длине
+      '<text x="' + (f.x(0) + 9).toFixed(1) + '" y="' + (f.y(q) + 17).toFixed(1) + '" fill="' + C.gold +
       '" font-size="11" ' + MONO + '>вход ' + fmt2(q) + '% · доход +' + fmt2(100 - q) + ' п.п.</text>' +
       '</svg>';
   }

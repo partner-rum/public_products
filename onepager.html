@@ -202,7 +202,7 @@
 <div id="deck"></div>
 
 <script src="data/instruments.js?v=fx8"></script>
-<script src="data/lib.js?v=ax2"></script>
+<script src="data/lib.js?v=ax3"></script>
 <script src="data/offerings.js?v=srv19"></script>
 <script src="share.js?v=8"></script>
 <script src="contact.js?v=9"></script>
@@ -350,7 +350,10 @@
     const cfgP = { type: "protection", participation: part, protectionPct: floor, strike: K, cap: cap };
     const pay = up => S.calc.pct(cfgP, up);
     const capPay = cap != null ? pay(cap) : null;
-    const upMin = -30, upMax = 40;
+    // При потолке кадр обязан доходить ЗА него, иначе полка не рисуется: при
+    // cap = 50 и фиксированном upMax = 40 линия обрывалась на +40%, не дойдя до
+    // потолка, и точка перелома в график не попадала вовсе
+    const upMin = -30, upMax = cap != null ? Math.ceil(cap / 5) * 5 + 10 : 40;
     const x = up => PAD + ((up - upMin) / (upMax - upMin)) * (CW - PAD * 2);
     const yLo = Math.min(floor, 100), yHi = Math.max(pay(upMax), 100), span = Math.max(yHi - yLo, 1);
     const yMin = yLo - span * 0.16, yMax = yHi + span * 0.20;
@@ -375,7 +378,14 @@
     svg += '<rect x="' + (x(0) - 4) + '" y="' + (y(pay(0)) - 4) + '" width="8" height="8" transform="rotate(45 ' + x(0) + ' ' + y(pay(0)) + ')" fill="' + C.line + '"/>' +
       '<text x="' + x(0) + '" y="' + (y(pay(0)) + 15) + '" text-anchor="middle" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>S₀</text>';
     if (upKink > upMin && upKink < upMax && upKink !== 0) svg += '<rect x="' + (x(upKink) - 3.5) + '" y="' + (y(floor) - 3.5) + '" width="7" height="7" transform="rotate(45 ' + x(upKink) + ' ' + y(floor) + ')" fill="#C0561A"/>';
-    svg += '<text x="' + x(midUp) + '" y="' + (y(pay(midUp)) - 9) + '" text-anchor="middle" fill="' + C.or + '" font-size="10" ' + MONO + '>участие ' + Math.round(part * 100) + '%</text>';
+    // Отступ подписи считаем от САМОЙ ВЫСОКОЙ точки линии под её рамкой, а не от
+    // середины: линия наклонная, и фиксированные 9px она прорезала насквозь
+    // (та же правка, что в payoffChart для витрины)
+    const upLab = 'участие ' + Math.round(part * 100) + '%';
+    const upHalf = (upLab.length * 10 * 0.62 / 2 + 5) / ((CW - PAD * 2) / (upMax - upMin));
+    let upTop = Infinity;
+    for (let i = 0; i <= 10; i++) upTop = Math.min(upTop, y(pay(midUp - upHalf + 2 * upHalf * i / 10)));
+    svg += '<text x="' + x(midUp) + '" y="' + (upTop - 9) + '" text-anchor="middle" fill="' + C.or + '" font-size="10" ' + MONO + '>' + upLab + '</text>';
     return svg + '</svg>';
   }
 
@@ -425,7 +435,15 @@
       '<path d="' + line + '" fill="none" stroke="' + C.line + '" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>' +
       '<circle cx="' + x(prot) + '" cy="' + y(100) + '" r="3.2" fill="' + C.line + '"/>' +
       '<text x="' + (x(prot) - 7) + '" y="' + (y(100) + 15) + '" text-anchor="end" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>защита ' + S.fmtSmart(prot) + '%</text>' +
-      '<text x="' + x((lo + prot) / 2) + '" y="' + (y((lo + prot) / 2) - 9) + '" text-anchor="middle" fill="' + C.lab + '" font-size="10" ' + MONO + '>по перформансу</text>' +
+      // Отступ от САМОЙ ВЫСОКОЙ точки участка под рамкой подписи: ниже барьера
+      // выплата идёт наклонной 1:1, и фиксированные 9px она прорезала насквозь
+      (function () {
+        const lb = "по перформансу";
+        const half = (lb.length * 10 * 0.62 / 2 + 5) / ((CW - PAD * 2) / (hi - lo));
+        const c0 = Math.max(lo + half, Math.min((lo + prot) / 2, prot - half));
+        return '<text x="' + x(c0) + '" y="' + (y(Math.min(c0 + half, prot)) - 9) +
+          '" text-anchor="middle" fill="' + C.lab + '" font-size="10" ' + MONO + '>' + lb + '</text>';
+      })() +
       '</svg>';
   }
 
