@@ -4,16 +4,20 @@
 <meta charset="utf-8">
 <meta name="viewport" id="vp" content="width=device-width, initial-scale=1">
 <script>
-  /* Слайды жёстко 960px. На узких экранах (телефон/планшет-портрет) CSS zoom в
-     in-app браузерах (Telegram/WKWebView) ненадёжен, поэтому задаём логическую
-     ширину viewport = 972px и даём браузеру самому вписать страницу по ширине
-     экрана (нативный fit — honorится везде). На десктопе (≥972) — как было. */
+  /* ПРИНУДИТЕЛЬНЫЙ VIEWPORT 972 УБРАН 28.08.2026.
+     Он вписывал слайд 960px в экран телефона целиком — масштаб выходил 0,39,
+     и основной текст листа превращался в 4pt, подписи плиток в 3,5pt. Заодно
+     он делал недостижимым собственный @media (max-width:680px) этого же файла:
+     ширина 680 не наступала никогда, и телефону показывали совет «включите
+     фоновую графику в диалоге печати» — при том что автопечать на телефоне
+     намеренно выключена и диалога у него нет.
+     Замер Метрики за квартал: 24 человека из 53 открывают лист с телефона.
+     Теперь на узком экране лист читается как обычная страница в одну колонку;
+     печать на десктопе (@page 10in × 5.625in) не затронута. */
   (function () {
-    var sw = (window.screen && screen.width) || Infinity;
-    var dev = Math.min(sw, window.innerWidth || Infinity);
-    if (dev && dev < 972) {
-      document.getElementById("vp").setAttribute("content", "width=972");
-    }
+    var dev = Math.min((window.screen && screen.width) || Infinity,
+                       window.innerWidth || Infinity);
+    document.documentElement.classList.toggle("narrow", dev < 760);
   })();
 </script>
 <title>One-pager</title>
@@ -69,12 +73,7 @@
   .toolbar .ct-menu, .toolbar .ct-toast { left: auto; right: 0; }
   /* На узком экране тулбар переносится, распорка и совет про печать убираются,
      чтобы ряд кнопок не разъезжался за правый край. */
-  @media screen and (max-width: 680px) {
-    .toolbar { flex-wrap: wrap; gap: 8px 10px; }
-    .toolbar .sp { display: none; }
-    .toolbar .tb-hint { display: none; }
-    body { overflow-x: hidden; }
-  }
+
 
   .brand { display: flex; align-items: center; gap: 9px; font-size: 13px; font-weight: 600; }
   .qual { font-family: var(--m); font-size: 9px; line-height: 1.55; letter-spacing: 0.02em; text-align: right; }
@@ -145,7 +144,11 @@
   .param .k { font-size: 9px; color: var(--faint); margin-top: 2px; }
 
   .chart-box { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 9px 13px 7px; }
-  .chart-box .ct { font-size: 11px; font-weight: 600; color: var(--nav); margin-bottom: 3px; }
+  /* Имя класса НЕ .ct: так называется обёртка кнопки «Обсудить продукт» в
+     contact.js, а он объявляет @media print { .ct { display:none !important } }.
+     Из-за совпадения заголовок «Диаграмма выплат» пропадал с КАЖДОГО печатного
+     листа, а на экране считался как inline-flex вместо блока. */
+  .chart-box .chart-t { display: block; font-size: 11px; font-weight: 600; color: var(--nav); margin-bottom: 3px; }
   .chart-cap { margin-top: 5px; font-size: 9px; line-height: 1.4; color: var(--faint); }
 
   .example .lbl { margin-bottom: 6px; }
@@ -157,9 +160,30 @@
   .scard .st { font-size: 10.5px; font-weight: 600; color: var(--ink); }
   .scard .sd { font-size: 9px; color: var(--faint); margin-top: 1px; }
   .scard .sr { font-family: var(--m); font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+  /* Процент на вложенные в этом сценарии. НЕ «годовых»: правило витрины про
+     доходность-метрику остаётся, здесь — арифметика конкретного примера,
+     добавлена по решению Руслана 29.08.2026 */
+  .srw { text-align: right; flex: none; }
+  .scard .sr-sub { font-family: var(--m); font-size: 9px; color: var(--faint); margin-top: 1px; white-space: nowrap; }
   .fx-inline { margin-top: 8px; padding: 7px 11px; border-left: 3px solid var(--or); background: var(--or-soft); border-radius: 0 6px 6px 0; font-size: 9.5px; line-height: 1.4; font-weight: 500; color: #7A4A12; }
 
   .c-foot { padding: 12px 52px 16px; font-size: 9.5px; line-height: 1.5; color: var(--faint); }
+  /* Слайд с корзиной worst-of: шапка выше на 40px из-за чипов бумаг, и обе
+     колонки наезжали на сноску (у автоколлов — с обрезкой строки про валютный
+     риск). Возвращаем высоту уплотнением, а не удалением содержимого. */
+  .slide.basketed .bk-row { margin-top: 6px; }
+  .slide.basketed .bk-chip { padding: 2px 7px 3px; }
+  .slide.basketed .c-body { padding-top: 8px; }
+  .slide.basketed .scard { padding: 7px 12px; }
+  .slide.basketed .ex-intro { margin-bottom: 6px; }
+  /* Плитки барьеров у автоколла — в два столбца: четыре в столбик не влезали
+     над сноской (−11px даже после всех уплотнений), а значения короткие */
+  .slide.basketed .params { gap: 6px; grid-template-columns: 1fr 1fr; }
+  .slide.basketed .c-foot { padding: 7px 52px 10px; }
+  .slide.basketed .c-body p { line-height: 1.42; margin-bottom: 6px; }
+  .slide.basketed .c-head { padding-top: 10px; }
+  .slide.basketed .c-sub { margin-top: 6px; }
+  .slide.basketed .param { padding: 5px 10px; }
 
   /* ── Слайд 3 — дисклеймер (navy) ── */
   .d-slide { padding: 34px 52px; background: var(--nav); color: #E7E9F4; }
@@ -168,6 +192,20 @@
   .d-body { flex: 1; column-count: 2; column-gap: 34px; }
   .d-body p { margin: 0 0 11px; font-size: 10.2px; line-height: 1.6; break-inside: avoid; color: rgba(231,233,244,0.86); }
   .d-meta { font-family: var(--m); font-size: 9px; color: #9CA1C4; }
+  /* Плашка подмены параметров. На листе, а не в панели: панель в печать не идёт,
+     а подделанный PDF пересылают дальше именно напечатанным. */
+  .c-over { margin-top: 8px; padding: 7px 10px; border-left: 3px solid #B4341C;
+    background: #FDEEEA; color: #8E2A15; font-family: var(--m); font-size: 11px;
+    line-height: 1.45; border-radius: 0 4px 4px 0; }
+  /* Подвал печатного листа: единственное место, где на бумаге есть имя компании
+     и обратный адрес. Кегль 11px — пол, установленный проектом; ниже не опускаем
+     именно здесь, потому что это то, по чему клиент нас найдёт. */
+  .sheet-foot { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+    margin-top: 14px; padding-top: 11px; border-top: 1px solid rgba(255,255,255,0.18); }
+  .sheet-foot .sf-b { font-family: var(--display); font-size: 13px; font-weight: 600;
+    letter-spacing: 0.02em; color: #FFF; }
+  .sheet-foot .sf-s { font-family: var(--m); font-size: 11px; color: #B9BDD8; }
+  .sheet-foot .sf-s b { color: var(--or); font-weight: 400; }
 
   /* Экран «продукта нет»: снят с витрины, битая или устаревшая ссылка */
   .gone-slide { align-items: center; justify-content: center; text-align: center; padding: 0 96px; }
@@ -185,6 +223,49 @@
     .slide { margin: 0; box-shadow: none; page-break-after: always; }
     .slide:last-child { page-break-after: auto; }
   }
+  /* Телефон. Раньше этот блок был мёртвым: инлайн-скрипт в <head> гарантировал
+     ширину 972px, и 680 не наступало никогда. Теперь работает — и делает главное:
+     снимает со слайда жёсткие 960×540, из-за которых лист на телефоне был
+     нечитаемым эскизом. Печать этот блок не трогает: он screen-only. */
+  @media screen and (max-width: 760px) {
+    .toolbar { flex-wrap: wrap; gap: 8px 10px; padding: 10px 14px; }
+    .toolbar .sp { display: none; }
+    .toolbar .tb-hint { display: none; }   /* диалога печати на телефоне нет */
+    .toolbar a, .toolbar button { min-height: 44px; }
+    body { overflow-x: hidden; }
+    #deck { padding: 0 14px 28px; }
+    .slide {
+      width: auto; min-width: 0; max-width: 100%;
+      height: auto; min-height: 0;
+      overflow: visible;            /* иначе низ листа ампутируется, как было */
+      padding: 22px 18px 26px;
+      margin: 0 0 14px;
+    }
+    /* Кегль на телефоне поднимаем до читаемого: печатные 9–10,5px были
+       рассчитаны на лист 960px, а не на экран 375px */
+    .slide { font-size: 15px; line-height: 1.55; }
+    /* .c-head — флекс «заголовок + крупная котировка справа»; на телефоне
+       котировка уезжала за экран на 245px, а корзина bk-row — на 142 */
+    /* Боковые отступы 52px и колонки 44px считались под лист 960px — на 375
+       они съедают экран и выталкивают котировку за край на 245px */
+    .c-head, .c-body, .c-foot, .t-top, .t-blocks, .d-body { padding-left: 0; padding-right: 0; }
+    .c-head { display: block; }
+    .c-quote { margin-top: 14px; text-align: left; }
+    .bk-row { flex-wrap: wrap; }
+    /* .c-row — двухколоночный ряд слайда; без него колонки остаются рядом
+       и ряд уезжает за экран на 53px (замер на 375) */
+    .c-body, .c-row, .col, .col.between { display: block; }
+    .c-row > * { width: auto !important; max-width: 100%; }
+    #deck svg { max-width: 100%; height: auto; }
+    .params { grid-template-columns: 1fr 1fr; }
+    .t-blocks { display: none; }    /* декоративные прямоугольники титула */
+    .d-body { column-count: 1; }
+    .d-body p, .c-foot, .qual, .chart-cap { font-size: 12px; line-height: 1.5; }
+    .param .k, .lbl, .c-badge, .scard .sd, .scard .sr-sub { font-size: 11px; }
+    .t-title { font-size: 26px; } .c-title { font-size: 20px; } .d-title { font-size: 20px; }
+    .sheet-foot .sf-s { font-size: 12px; }
+  }
+
 </style>
 <script src="metrika.js?v=5" defer></script>
 </head>
@@ -208,31 +289,93 @@
 <script src="contact.js?v=9"></script>
 <script>
   const S = window.SITE;
+  // Метка сейлза для подвала листа: её кладёт metrika.js, когда агент входит
+  // по своей ссылке. Формат тот же, что на витрине — [\w.-] до 40 знаков.
+  function refTag() {
+    try {
+      const v = localStorage.getItem("so_ref");
+      return v && /^[\w.-]{1,40}$/.test(v) ? v : "";
+    } catch (e) { return ""; }
+  }
+  // «+130% на вложенные» / «−38% на вложенные» — процент результата сценария
+  // к деньгам, которые реально заплачены (премия у варранта, цена у дисконтной)
+  function roiTxt(net, invested) {
+    if (!invested) return "";
+    const r = Math.round(net / invested * 100);
+    if (!isFinite(r)) return "";
+    return (r >= 0 ? "+" : "−") + Math.abs(r) + "% на вложенные";
+  }
+  function esc(v) {
+    return String(v == null ? "" : v).replace(/[&<>"']/g, (c) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
+
   const qs = new URLSearchParams(location.search);
+
+  // Параметры листа можно переопределить адресом (?part / ?protect / ?cap) —
+  // это удобство деска для расчёта под клиента. Но без пометки получался
+  // официальный лист с настоящим названием продукта и придуманными условиями:
+  // ?id=P-MU-CS-0828&part=300&protect=100&cap=0 печатал «300% этого роста,
+  // без ограничения сверху» под заголовком «Защита капитала · MU · до +50%».
+  // Документ выглядел как обычный и пересылался дальше. Теперь на самом листе
+  // (не в панели — она в печать не идёт) стоит явная плашка.
+  const OVERRIDDEN = [];
 
   // Режим размещения: ?offering=<id> строит one-pager из data/offerings.js (напр. структурная CLN).
   const OFF = window.OFFERINGS;
   const offId = qs.get("offering");
-  const offering = (offId && OFF && OFF.items) ? OFF.items.find(o => o.id === offId) : null;
+  const offRaw = (offId && OFF && OFF.items) ? OFF.items.find(o => o.id === offId) : null;
+
+  // МАРШРУТ РАЗМЕЩЕНИЙ ЗАКРЫТ 28.08.2026 — решение Руслана после разбора.
+  // Шаблон выбирался по полю opTemplate, которого нет НИ У ОДНОГО размещения
+  // в data/offerings.js. Управление уходило в ветку кредитной ноты, и варрант
+  // CALL на юань (sp-1-45-cb-fx-rub, ISIN RU000A10BZ44) печатался так:
+  //   «погашается по 100% номинала», «ГЛАВНЫЙ РИСК · КРЕДИТНОЕ СОБЫТИЕ.
+  //    Кредитный риск на контрольное лицо — CNYRUB», «+842 500 ₽».
+  // Валюта названа лицом, которое может обанкротиться; варранту обещан возврат
+  // номинала, которого у него нет. Тизер на том же листе говорил правду:
+  // «потеря всей суммы вложений». Второе размещение (energy-future) вообще
+  // роняло страницу в белый экран: нет поля price, fmt2(undefined) бросает.
+  // Из интерфейса ссылка недостижима (кнопка на offerings.html тоже завязана на
+  // opTemplate), но адрес живой и пересылается. До появления настоящего шаблона
+  // печатаем честную заглушку, а не неверный лист: напечатанная ложь дороже
+  // отсутствующего документа.
+  const offBroken = offRaw && !offRaw.opTemplate;
+  const offering = offBroken ? null : offRaw;
 
   // Продукта с таким id нет (снят с витрины, битая ссылка, пустой ?id) — печатаем
   // экран-заглушку вместо чужого продукта: findInstrument теперь возвращает null.
   const found = offering ? null : S.findInstrument(qs.get("id"));
   if (!offering && !found) {
-    document.title = "Продукт снят с витрины — Rumberg";
+    document.title = offBroken
+      ? "One-pager для размещения пока не собирается — Rumberg"
+      : "Продукт снят с витрины — Rumberg";
     document.getElementById("deck").innerHTML =
       '<section class="slide gone-slide">' +
-        '<div class="g-k">ссылка устарела</div>' +
-        '<h1>Продукт снят с витрины</h1>' +
-        '<p>Этого продукта больше нет в каталоге: условия могли измениться, а выпуск — уже разместиться. ' +
-        'Актуальные инструменты с котировками собраны на доске.</p>' +
-        '<div class="g-act">' +
-          '<a href="board.html">Открыть доску</a>' +
-          '<a class="alt" href="https://t.me/Rumberb_Sales_Team_bot" target="_blank" rel="noopener">Написать в Telegram</a>' +
-        '</div>' +
+        (offBroken
+          ? '<div class="g-k">лист ещё не готов</div>' +
+            '<h1>Для этого размещения печатного листа пока нет</h1>' +
+            '<p>Параметры выпуска, условия и документы — на странице размещения. ' +
+            'Печатный лист для размещений мы соберём отдельно: показывать его ' +
+            'по чужому шаблону нельзя, цифры вышли бы неверными.</p>' +
+            '<div class="g-act">' +
+              '<a href="offerings.html#' + esc(offId || "") + '">Открыть размещение</a>' +
+              '<a class="alt" href="https://t.me/Rumberb_Sales_Team_bot" target="_blank" rel="noopener">Написать в Telegram</a>' +
+            '</div>'
+          : '<div class="g-k">ссылка устарела</div>' +
+            '<h1>Продукт снят с витрины</h1>' +
+            '<p>Этого продукта больше нет в каталоге: условия могли измениться, а выпуск — уже разместиться. ' +
+            'Актуальные инструменты с котировками собраны на доске.</p>' +
+            '<div class="g-act">' +
+              '<a href="board.html">Открыть доску</a>' +
+              '<a class="alt" href="https://t.me/Rumberb_Sales_Team_bot" target="_blank" rel="noopener">Написать в Telegram</a>' +
+            '</div>') +
       '</section>';
     const bl = document.getElementById("back-link");
-    bl.href = "board.html"; bl.textContent = "← К доске";
+    if (offBroken) { bl.href = "offerings.html"; bl.textContent = "← К размещениям"; }
+    else { bl.href = "board.html"; bl.textContent = "← К доске"; }
+    // Кнопка печати на экране-заглушке напечатала бы саму заглушку
+    const pb = document.querySelector(".btn-print"); if (pb) pb.style.display = "none";
   } else {
   let inst, nom, q, name, backHref, backText, isForeign;
   if (offering) {
@@ -290,7 +433,13 @@
   // ── Диаграммы выплат ──
   const CW = 420, CH = 124, PAD = 16;
   const MONO = 'font-family="JetBrains Mono, monospace"';
-  const C = { line: "#1B2153", or: "#EE7D1B", grid: "#E4E5F0", axis: "#CFD2E4", lab: "#8B90A8", lab2: "#5A6180" };
+  // Подписи графика — ЧИТАЕМЫЙ оранжевый (--or-text, 4,58:1 на белом), а не
+  // фирменный #EE7D1B: он на белом даёт 2,77:1 при кегле 9,4px, и этим цветом
+  // набраны самые важные числа листа — премия, безубыток, участие, потолок.
+  // Всего 161 такая подпись по каталогу. Кнопочный оранжевый остаётся #EE7D1B:
+  // там по нему идёт тёмный текст и контраст в порядке.
+  // lab тоже поднят: #8B90A8 давал 3,16:1 у «падение 1:1» и «по перформансу».
+  const C = { line: "#1B2153", or: "#B15300", grid: "#E4E5F0", axis: "#CFD2E4", lab: "#6B7188", lab2: "#5A6180" };
 
   function chWarrant() {
     const K = inst.strike, K2 = inst.strike2;
@@ -415,11 +564,15 @@
 
   // Автоколл: возврат тела на погашении по worst-of (европейский барьер).
   function chAutocall() {
+    // График автоколла ниже общего CH на 22px: у автоколла в шапке корзина
+    // (+40px), и с полным графиком пример наезжал на сноску (замер: 48px у
+    // AC-BIGTECH). Схема из трёх барьеров при 102px не теряет ничего.
+    const HH = CH - 34;
     const prot = inst.protectionPct || 65, cpn = inst.couponBarrier || prot, call = inst.callBarrier || 120;
     const lo = Math.min(prot - 25, 35), hi = Math.max(call + 12, 132);
     const yMin = Math.max(0, lo - 8), yMax = 118;
     const x = v => PAD + ((v - lo) / (hi - lo)) * (CW - PAD * 2);
-    const y = v => CH - PAD - ((v - yMin) / (yMax - yMin)) * (CH - PAD * 2);
+    const y = v => HH - PAD - ((v - yMin) / (yMax - yMin)) * (HH - PAD * 2);
     const line = "M" + x(lo).toFixed(1) + " " + y(lo).toFixed(1) +
       " L" + x(prot).toFixed(1) + " " + y(prot).toFixed(1) +
       " L" + x(prot).toFixed(1) + " " + y(100).toFixed(1) +
@@ -427,7 +580,7 @@
     const vline = (v, col, label, anchor) =>
       '<line x1="' + x(v) + '" y1="' + (PAD - 3) + '" x2="' + x(v) + '" y2="' + y(yMin) + '" stroke="' + col + '" stroke-width="1" stroke-dasharray="3 4"/>' +
       '<text x="' + (x(v) + (anchor === "end" ? -5 : 5)) + '" y="' + (PAD + 5) + '" text-anchor="' + (anchor || "start") + '" fill="' + col + '" font-size="10" ' + MONO + '>' + label + '</text>';
-    return '<svg viewBox="0 0 ' + CW + ' ' + CH + '" width="100%" style="display:block">' +
+    return '<svg viewBox="0 0 ' + CW + ' ' + HH + '" width="100%" style="display:block">' +
       '<line x1="' + PAD + '" y1="' + y(100) + '" x2="' + (CW - PAD) + '" y2="' + y(100) + '" stroke="' + C.axis + '" stroke-width="1" stroke-dasharray="4 4"/>' +
       '<text x="' + (CW - PAD) + '" y="' + (y(100) + 13) + '" text-anchor="end" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>номинал 100%</text>' +
       vline(call, C.or, "автоотзыв " + S.fmtSmart(call) + "%", "end") +
@@ -492,6 +645,18 @@
       : Math.max(30, Math.round((beUp * 1.5) / 10) * 10);
     const payout1 = nom * S.PAYOFF.pct((inst.spot || 100) * (1 + upPct / 100), K, K2) / 100;
     const net1 = payout1 - premiumRub;
+    // Потолок колл-спреда — В РУБЛЯХ и прямо в примере (правка 28.08.2026).
+    // Раньше сценарий роста останавливался ниже потолка, и максимум продукта не
+    // печатался на листе нигде: плитка говорила «до 50%», а сколько это денег и
+    // что выше выплата НЕ растёт — агент считал в уме. У бустера такая строка
+    // есть («…и выше — потолок»), у колл-спреда не было. Если сценарий роста и
+    // так упёрся в потолок — строка одна, без дубля.
+    const capRub = isCS ? nom * capPct / 100 : 0;
+    const capNet = capRub - premiumRub;
+    const capRow = [uGrew + " на " + S.fmtSmart(capPct) + "% и выше",
+      "выплата " + S.fmtInt(capRub) + " ₽ — потолок",
+      (capNet >= 0 ? "+" : "−") + S.fmtInt(Math.abs(capNet)) + " ₽",
+      capNet >= 0 ? "var(--up)" : "var(--down)"];
     const params = [["Страйк (K)", S.fmtSmart(K) + "% нач. уровня", false]];
     if (isCS) params.push(["Потолок (K₂)", S.fmtSmart(K2) + "% · до " + S.fmtSmart(capPct) + "%", false]);
     else params.push(["Макс. убыток", "премия", false]);
@@ -505,9 +670,17 @@
         ? "Выплата в % от номинала; " + uAxis + " — в % от начального. Выше K₂ не растёт (макс. " + S.fmtSmart(capPct) + "%). Пунктир — премия; б/у — безубыток."
         : "Выплата в % от номинала; " + uAxis + " — в % от начального. Рост выплаты не ограничен потолком. Пунктир — премия; б/у — безубыток.",
       exIntro: "Номинал " + S.fmtInt(nom) + " ₽ · премия " + S.fmt2(q) + "% = " + S.fmtInt(premiumRub) + " ₽",
+      // У колл-спреда сценарий роста — СРАЗУ потолок, одной строкой «…и выше»:
+      // третья строка не помещается в слайд 540px (замер: наезд на сноску 50px,
+      // тот же дефект, что был у автоколлов), а определяющее число CS — именно
+      // максимум. Промежуточные значения читаются с графика (линия + б/у).
+      // Процент на вложенные: у варранта вложены только деньги премии, и именно
+      // к ним агент и клиент относят результат (решение Руслана 29.08.2026)
       scen: [
-        [uGrew + " на " + upPct + "%", "выплата " + S.fmtInt(payout1) + " ₽", (net1 >= 0 ? "+" : "−") + S.fmtInt(Math.abs(net1)) + " ₽", net1 >= 0 ? "var(--up)" : "var(--down)"],
-        [uNo, "выплаты нет — максимум убытка", "−" + S.fmtInt(premiumRub) + " ₽", "var(--down)"]
+        isCS
+          ? capRow.concat([roiTxt(capNet, premiumRub)])
+          : [uGrew + " на " + upPct + "%", "выплата " + S.fmtInt(payout1) + " ₽", (net1 >= 0 ? "+" : "−") + S.fmtInt(Math.abs(net1)) + " ₽", net1 >= 0 ? "var(--up)" : "var(--down)", roiTxt(net1, premiumRub)],
+        [uNo, "выплаты нет — премия потеряна полностью", "−" + S.fmtInt(premiumRub) + " ₽", "var(--down)", "−100% вложенных"]
       ],
       explainer: isCS
         ? "Колл-спред — CALL с потолком выплаты. Страйк фиксируется по уровню актива в день покупки, рост засчитывается до K₂. Инвестор платит только премию (" + S.fmt2(q) + "% номинала) и получает экспозицию на весь номинал. Если " + (isWO ? "худшая бумага корзины не выросла" : "актив не вырос") + " — теряется только премия."
@@ -523,7 +696,7 @@
       params: [["Выплата", "100% номинала", true], ["Осталось", S.daysTo(inst.expiry) + " дн.", false], ["Купоны", "нет", false]],
       exIntro: "Номинал " + S.fmtInt(nom) + " ₽ · покупка по " + S.fmt2(q) + "% = " + S.fmtInt(buyRub) + " ₽",
       scen: [
-        ["Дождались погашения", "выплата 100% номинала", "+" + S.fmtInt(nom - buyRub) + " ₽", "var(--up)"],
+        ["Дождались погашения", "выплата 100% номинала", "+" + S.fmtInt(nom - buyRub) + " ₽", "var(--up)", roiTxt(nom - buyRub, buyRub)],
         ["Продали раньше срока", "по текущей рыночной цене", "по рынку", "var(--nav)"]
       ],
       explainer: "Облигация покупается дешевле номинала — по " + S.fmt2(q) + "% от него. На дату погашения выплачивается полный номинал, 100%. Весь доход — дисконт: разница между ценой покупки и номиналом, известная в день сделки. Купонов нет; основной риск — кредитное качество эмитента."
@@ -579,9 +752,9 @@
     let part = inst.participation != null ? inst.participation : 0.6;   // 0..1
     let floor = inst.protectionPct != null ? inst.protectionPct : 100;  // % защиты капитала
     let cap = inst.cap != null ? inst.cap : null;                       // потолок = макс. рост БА, % (или null)
-    const oPart = numq("part"); if (oPart != null && oPart > 0) part = oPart / 100;
-    const oProt = numq("protect"); if (oProt != null && oProt > 0 && oProt <= 100) floor = oProt;
-    const oCap = numq("cap"); if (oCap != null) cap = oCap > 0 ? oCap : null;
+    const oPart = numq("part"); if (oPart != null && oPart > 0) { part = oPart / 100; OVERRIDDEN.push("участие"); }
+    const oProt = numq("protect"); if (oProt != null && oProt > 0 && oProt <= 100) { floor = oProt; OVERRIDDEN.push("защита"); }
+    const oCap = numq("cap"); if (oCap != null) { cap = oCap > 0 ? oCap : null; OVERRIDDEN.push("потолок"); }
 
     const protK = inst.strike || 100;                       // страйк опциона, % от начального уровня
     const protOff = protK - 100;
@@ -660,11 +833,11 @@
     '<div class="callout"><div class="lbl">Как устроен продукт</div><div class="expl">' + c.explainer + '</div>' +
       '<div class="under"><div class="lbl">' + (c.underLabel || ((isWO ? 'О корзине · ' : 'О базовом активе · ') + inst.underlying)) + '</div>' +
         '<div class="expl">' + (c.underDesc || underDesc()) + '</div></div></div>';
-  const chartHTML = '<div class="chart-box"><div class="ct">Диаграмма выплат</div>' + c.chart() + '<div class="chart-cap">' + c.chartCap + '</div></div>';
+  const chartHTML = '<div class="chart-box"><div class="chart-t">Диаграмма выплат</div>' + c.chart() + '<div class="chart-cap">' + c.chartCap + '</div></div>';
   const paramsHTML = cols => '<div class="params c' + cols + '">' + c.params.map(p =>
     '<div class="param"><div class="v' + (p[2] ? " or" : "") + '">' + p[1] + '</div><div class="k">' + p[0] + '</div></div>').join("") + '</div>';
   const exampleHTML = scenCols => '<div class="example"><div class="lbl">Пример расчёта</div><div class="ex-intro">' + c.exIntro + '</div>' +
-    '<div class="scen c' + scenCols + '">' + c.scen.map(s => '<div class="scard"><div><div class="st">' + s[0] + '</div><div class="sd">' + s[1] + '</div></div><div class="sr" style="color:' + s[3] + '">' + s[2] + '</div></div>').join("") + '</div>' +
+    '<div class="scen c' + scenCols + '">' + c.scen.map(s => '<div class="scard"><div><div class="st">' + s[0] + '</div><div class="sd">' + s[1] + '</div></div><div class="srw"><div class="sr" style="color:' + s[3] + '">' + s[2] + '</div>' + (s[4] ? '<div class="sr-sub">' + s[4] + '</div>' : '') + '</div></div>').join("") + '</div>' +
     (isForeign ? '<div class="fx-inline">' + fxShort + '</div>' : '') + '</div>';
 
   // Двухколоночная парадигма: слева описание + компактные параметры, справа диаграмма + пример
@@ -684,12 +857,17 @@
     '<div class="t-meta">' + dateS + '</div>' +
     '</section>';
 
-  // Слайд 2 — описание
-  html += '<section class="slide">' +
+  // Слайд 2 — описание. При корзине в шапке (+40px высоты) слайд помечается
+  // basketed: уплотнения ниже возвращают примеру и плиткам место над сноской
+  html += '<section class="slide' + (basketHTML ? " basketed" : "") + '">' +
     '<div class="c-head"><div><div class="c-title">' + name + '</div><span class="c-badge">' + c.badge + '</span>' +
       '<div class="c-sub">' + c.subtitle + '</div>' + basketHTML + '</div>' +
       '<div class="c-quote"><div class="v">' + S.quoteBig(q) + '</div><div class="k">' + (c.quoteK || "котировка · индикативно · % от номинала") + '</div></div></div>' +
     '<div class="c-body">' + bodyHTML + '</div>' +
+    (OVERRIDDEN.length
+      ? '<div class="c-over">Параметры изменены вручную через адрес страницы (' +
+        esc(OVERRIDDEN.join(", ")) + '). Это не котировка витрины.</div>'
+      : '') +
     '<div class="c-foot">Пример иллюстративный, без учёта комиссий и налогов.</div>' +
     '</section>';
 
@@ -699,6 +877,20 @@
     '<div class="d-body">' + (isForeign ? [S.LEGAL.fx].concat(S.LEGAL.onepager) : S.LEGAL.onepager).map(p => "<p>" + p + "</p>").join("") + '</div>' +
     '<div class="d-meta">' + dateS + ' · Структурные продукты</div>' +
     '</section>';
+
+  // ПОДВАЛ ЛИСТА. До 28.08.2026 на трёх печатных страницах не было ни слова
+  // «Rumberg», ни адреса сайта, ни контакта — всё это жило в панели, которую
+  // печать скрывает. Клиент сохранял PDF, пересылал дальше, и документ был
+  // анонимным. Метка сейлза сюда же: весь остальной проект построен вокруг
+  // ref-атрибуции, а в единственном документе, остающемся у клиента, её не было.
+  { const ref = refTag();
+    const site = "invest.rumberg.ru" + (ref ? "/?ref=" + ref : "");
+    html = html.replace(/<\/section>$/,
+      '<div class="sheet-foot">' +
+        '<span class="sf-b">Rumberg</span>' +
+        '<span class="sf-s">структурные продукты · <b>' + esc(site) + '</b></span>' +
+      '</div></section>');
+  }
 
   document.getElementById("deck").innerHTML = html;
 
