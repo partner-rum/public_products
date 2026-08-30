@@ -852,7 +852,7 @@
   // Слайд 1 — титул
   html += '<section class="slide t-slide">' +
     '<div class="t-blocks"><i style="top:150px;right:0;width:56px;height:104px"></i><i style="top:264px;right:0;width:28px;height:28px;opacity:.5"></i></div>' +
-    '<div class="t-top"><div class="brand">' + starSvg(20, "#EE7D1B") + ' Структурные продукты</div><div class="qual">' + QUAL + '</div></div>' +
+    '<div class="t-top"><div class="brand">' + starSvg(20, "#EE7D1B") + ' Инвестиционные решения</div><div class="qual">' + QUAL + '</div></div>' +
     '<div><div class="t-badge">' + c.badge + '</div><div class="t-title">' + name + '</div><div class="t-bar"></div>' + basketHTML + '</div>' +
     '<div class="t-meta">' + dateS + '</div>' +
     '</section>';
@@ -875,7 +875,7 @@
   html += '<section class="slide d-slide">' +
     '<div><div class="d-title">Ограничение ответственности</div><div class="d-bar"></div></div>' +
     '<div class="d-body">' + (isForeign ? [S.LEGAL.fx].concat(S.LEGAL.onepager) : S.LEGAL.onepager).map(p => "<p>" + p + "</p>").join("") + '</div>' +
-    '<div class="d-meta">' + dateS + ' · Структурные продукты</div>' +
+    '<div class="d-meta">' + dateS + ' · Инвестиционные решения</div>' +
     '</section>';
 
   // ПОДВАЛ ЛИСТА. До 28.08.2026 на трёх печатных страницах не было ни слова
@@ -888,7 +888,7 @@
     html = html.replace(/<\/section>$/,
       '<div class="sheet-foot">' +
         '<span class="sf-b">Rumberg</span>' +
-        '<span class="sf-s">структурные продукты · <b>' + esc(site) + '</b></span>' +
+        '<span class="sf-s">инвестиционные решения · <b>' + esc(site) + '</b></span>' +
       '</div></section>');
   }
 
