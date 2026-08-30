@@ -494,6 +494,20 @@ async function handleBoss(request, env, cors) {
   // списку на каждого — иначе десяток агентов стоил бы десятка обходов хранилища.
   let all = { events: [], truncated: false };
   try { all = await hitEvents(env, "hit:"); } catch (e) { /* активность необязательна */ }
+  // Заходы на рабочий стол — отдельный префикс (см. recordDeskVisit): Метрику
+  // на me.html подключать нельзя из-за вебвизора, и до сих пор про стол не было
+  // известно ничего. Ошибку глотаем: сводка по сделкам важнее этой колонки.
+  let deskAll = { events: [] };
+  try { deskAll = await hitEvents(env, "deskhit:"); } catch (e) {}
+  const deskByRef = new Map();
+  for (const e of deskAll.events) {
+    deskByRef.set(e.ref, (deskByRef.get(e.ref) || 0) + 1);
+  }
+  const deskD30 = new Map();
+  for (const e of deskAll.events) {
+    const ts = (e.m && e.m.ts) || 0;
+    if (ts && now - ts <= 30 * 24 * 3600 * 1000) deskD30.set(e.ref, (deskD30.get(e.ref) || 0) + 1);
+  }
   const byRef = new Map();
   for (const e of all.events) {
     if (!byRef.has(e.ref)) byRef.set(e.ref, []);
@@ -531,6 +545,7 @@ async function handleBoss(request, env, cors) {
         count: t.count, otherCcy: other.length ? other : null,
         volume: t.volume, reward: t.accrued + t.paid, lastDeal: lastDeal,
         opens: h.opens, leads: h.leads, lastHit: h.last,
+        deskVisits: deskByRef.get(g.ref) || 0, deskD30: deskD30.get(g.ref) || 0,
         hasKey: hasKey.has(g.ref), keyState: keyState[g.ref] || null,
       });
     }
@@ -747,6 +762,21 @@ async function recordHit(env, ref, product, kind) {
       expirationTtl: HIT_TTL,
       metadata: { p: String(product || "").slice(0, 80), t: HIT_KINDS.has(kind) ? kind : "open", ts },
     });
+    return true;
+  } catch (e) { return false; }
+}
+
+// Заход на рабочий стол. ОТДЕЛЬНЫЙ префикс, не "hit:", намеренно: классификатор
+// в handleStats устроен как `else { opens++ }`, и любой незнакомый тип события
+// молча попал бы агенту в «открытия ссылок», накрутив ему собственную статистику.
+// Метрику сюда подключать нельзя: у metrika.js включён webvisor, он пишет DOM,
+// а на столе видны реквизиты партнёра и вознаграждение по каждой сделке.
+async function recordDeskVisit(env, ref) {
+  if (!env.POST_KV || !ref) return false;
+  const ts = Date.now();
+  const key = "deskhit:" + ref + ":" + ts + "-" + Math.random().toString(36).slice(2, 8);
+  try {
+    await env.POST_KV.put(key, "", { expirationTtl: HIT_TTL, metadata: { ts } });
     return true;
   } catch (e) { return false; }
 }
@@ -991,6 +1021,10 @@ async function handleStats(request, env, cors) {
   if (!who) return json({ ok: false, error: "bad_key" }, 403, cors);
   const ref = who.ref;
   if (!env.POST_KV) return json({ ok: false, error: "no_storage" }, 503, cors);
+  // Стол дёргает /stats при каждом открытии — значит воркер и так знает о каждом
+  // заходе, просто до сих пор его не записывал. Ошибку глотаем: не смогли
+  // посчитать — не повод не показать агенту его данные.
+  try { await recordDeskVisit(env, ref); } catch (e) {}
 
   const events = [];
   let cursor = null, pages = 0, truncated = false;
@@ -1733,6 +1767,29 @@ function morningLint(p, catLines, article) {
   return probs;
 }
 
+// Метка канала в ссылках поста. Без неё переход из Telegram неотличим от прямого
+// захода: в Метрике за квартал мессенджеры дали 11 человек против 297 прямых,
+// то есть эффект канала не измерялся вовсе.
+//
+// Ставим utm_source, а НЕ ref: metrika.js с 28.08.2026 разводит их права —
+// ?ref= это человек и он перезаписывает метку всегда, utm_source это канал и он
+// проставляется только когда своей метки ещё нет. Иначе агент, кликнувший ссылку
+// из утреннего поста, терял бы собственную метку и дальше рассылал ссылки с чужой.
+//
+// Две формы адреса, и обе надо собрать правильно: у карточки продукта в адресе
+// уже есть ?id=, метка дописывается через &; у размещения адрес заканчивается
+// ЯКОРЕМ, и запрос обязан встать ПЕРЕД ним — иначе он уедет внутрь якоря и
+// пропадёт (та же грабля, что чинили в make_product_pages.py 19.08.2026).
+function withUtm(url, campaign) {
+  if (!url || !campaign) return url;
+  const h = url.indexOf("#");
+  const hash = h >= 0 ? url.slice(h) : "";
+  let head = h >= 0 ? url.slice(0, h) : url;
+  const q = "utm_source=tg-" + campaign + "&utm_medium=channel&utm_campaign=" + campaign;
+  head += (head.indexOf("?") >= 0 ? "&" : "?") + q;
+  return head + hash;
+}
+
 async function generateMorning(env, article) {
   let cat = { text: "", instr: [], offers: [], ideas: [] };
   try { cat = await buildCatalog(env); } catch (e) { /* без каталога продукты не подобрать */ }
@@ -1850,8 +1907,8 @@ async function generateMorning(env, article) {
     const ins = (cat.instr || []).find((p) => p.id === pr.id);
     const head = typeof pr.headline === "string" ? pr.headline.trim() : "";
     const it = { id: pr.id, head, body: pr.hook.trim() };
-    if (off) ideas.push({ ...it, prodUrl: base + "offerings.html#" + off.id, prodName: off.name });
-    else if (ins) ideas.push({ ...it, prodUrl: base + "instrument.html?id=" + ins.id, prodName: ins.name });
+    if (off) ideas.push({ ...it, prodUrl: withUtm(base + "offerings.html#" + off.id, "morning"), prodName: off.name });
+    else if (ins) ideas.push({ ...it, prodUrl: withUtm(base + "instrument.html?id=" + ins.id, "morning"), prodName: ins.name });
   }
   if (ideas.length < 2) throw new Error("модель не подобрала продукты из каталога");
 
@@ -1861,9 +1918,9 @@ async function generateMorning(env, article) {
   const filled = [];
   if (ideas.length < 5) {
     const pool = (cat.instr || []).filter((p) => p && p.id)
-      .map((p) => ({ id: p.id, name: p.name || p.id, url: base + "instrument.html?id=" + p.id }))
+      .map((p) => ({ id: p.id, name: p.name || p.id, url: withUtm(base + "instrument.html?id=" + p.id, "morning") }))
       .concat((cat.offers || []).filter((o) => o && o.id)
-        .map((o) => ({ id: o.id, name: o.name || o.id, url: base + "offerings.html#" + o.id })));
+        .map((o) => ({ id: o.id, name: o.name || o.id, url: withUtm(base + "offerings.html#" + o.id, "morning") })));
     for (const r of pool) {
       if (ideas.length >= 5) break;
       if (!idSet.has(r.id) || ideas.some((x) => x.id === r.id)) continue;
@@ -2114,8 +2171,8 @@ async function generatePost(env, theme) {
     let prodUrl = "", prodName = "";
     const off = (cat.offers || []).find((o) => o.id === id);
     const ins = (cat.instr || []).find((p) => p.id === id);
-    if (off) { prodUrl = base + "offerings.html#" + off.id; prodName = off.name; }
-    else if (ins) { prodUrl = base + "instrument.html?id=" + ins.id; prodName = ins.name; }
+    if (off) { prodUrl = withUtm(base + "offerings.html#" + off.id, "fi"); prodName = off.name; }
+    else if (ins) { prodUrl = withUtm(base + "instrument.html?id=" + ins.id, "fi"); prodName = ins.name; }
     ideas.push({ id, body, prodUrl, prodName });
   }
   // Фолбэк: модель не разметила [id] — отдаём весь текст одной идеей без ссылки.

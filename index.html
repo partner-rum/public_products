@@ -479,7 +479,7 @@
     .bench { gap:8px; }
   }
 </style>
-<script src="metrika.js?v=4" defer></script>
+<script src="metrika.js?v=5" defer></script>
 </head>
 <body>
 
@@ -584,10 +584,21 @@
   // который пишет бот. Дата там в ISO, свежесть считается ниже в коде.
 </script>
 <script>
-  // ── Интро при входе на сайт: полноэкранный «финансовый» ролик один раз за сессию ──
+  // ── Интро при входе на сайт: полноэкранный «финансовый» ролик ОДИН РАЗ НА БРАУЗЕР ──
+  // Было «раз за сессию» — и агент, открывающий витрину по десять раз в день, каждый
+  // раз ждал 4,4 секунды с заблокированным скроллом, прежде чем добраться до работы
+  // (замер 28.08.2026: три прогона, 4366/4387/4389 мс). Для клиента, пришедшего
+  // впервые, ролик уместен; для постоянного это налог на вход в рабочий инструмент.
+  // localStorage с откатом на sessionStorage: в приватном режиме Safari первый кидает.
   (function () {
     var reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    try { if (sessionStorage.getItem("nsp_intro") === "1") return; sessionStorage.setItem("nsp_intro", "1"); } catch (e) {}
+    var KEY = "nsp_intro";
+    try {
+      if (localStorage.getItem(KEY) === "1") return;
+      localStorage.setItem(KEY, "1");
+    } catch (e) {
+      try { if (sessionStorage.getItem(KEY) === "1") return; sessionStorage.setItem(KEY, "1"); } catch (e2) {}
+    }
     var NS = "http://www.w3.org/2000/svg", BLUE = "#4F86E6", OR = "#EE7D1B";
     var PTS = [[0,700],[60,672],[120,690],[180,640],[240,610],[300,632],[360,576],[420,548],[480,568],
       [540,520],[600,470],[660,492],[720,430],[780,398],[840,418],[900,362],[960,332],[1020,352],
@@ -922,7 +933,12 @@
     if (!bench.length) document.getElementById("bench").style.display = "none";
 
     var rows = [];
-    var sav = best(deps.filter(function (d) { return d.kind === "savingAccount" && !d.promo; }));
+    // fetch_rates.py пишет kind: "saving" (так же читает screener.html), а здесь
+    // стояло "savingAccount" — ноль совпадений из десяти записей, и строка
+    // накопительного счёта не показывалась на главной НИКОГДА. Молча: пустой
+    // фильтр неотличим от «данных нет». Оба написания принимаем, чтобы правка
+    // пережила смену формата в коллекторе
+    var sav = best(deps.filter(function (d) { return (d.kind === "saving" || d.kind === "savingAccount") && !d.promo; }));
     if (sav) rows.push({ kind: "накопительный счёт", n: sav.bank, em: "любой день", v: sav.rate, href: sav.url });
     var dep = best(deps.filter(function (d) { return d.kind === "deposit" && !d.promo; }));
     if (dep) rows.push({ kind: "вклад", n: dep.bank, em: dep.termMonths + " " + plural(dep.termMonths, "месяц", "месяца", "месяцев"), v: dep.rate, href: dep.url });
@@ -1155,9 +1171,10 @@
     });
   })();
 </script>
-<script src="intro.js?v=5"></script>
+<script src="intro.js?v=6"></script>
 <script src="chat.js?v=17"></script>
+<script src="search.js?v=1"></script>
 <script src="nav-about.js?v=6"></script>
-<script src="qualgate.js?v=4"></script>
+<script src="qualgate.js?v=5"></script>
 </body>
 </html>

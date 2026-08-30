@@ -1,12 +1,13 @@
 /* Гейт квалифицированного инвестора.
-   Один раз за сессию поверх витрины: подтверждение статуса до доступа к материалам.
+   Один раз на браузер (180 дней) поверх витрины: подтверждение статуса до доступа к материалам.
    Подключение: <script src="qualgate.js?v=1"></script> перед </body>. Без зависимостей.
    На главной ждёт завершения интро-ролика (.intro / body.intro-lock), затем показывает гейт —
-   ровно «после загрузки витрины». Демо: ?qual=1 — принудительно показать (без записи в sessionStorage). */
+   ровно «после загрузки витрины». Демо: ?qual=1 — принудительно показать (без записи в хранилище). */
 (function () {
   "use strict";
 
-  var KEY  = "so_qual_v1";                       // подтверждение статуса за сессию
+  var KEY  = "so_qual_v1";                       // подтверждение статуса, помнится 180 дней
+  var DAYS = 180;
   var demo = /[?&]qual=1(?:&|$)/.test(location.search);
 
   // Цели Метрики. Без них после платной кампании нельзя отличить слабый креатив
@@ -15,17 +16,33 @@
     try { if (typeof window.ym === "function") window.ym(110759242, "reachGoal", name); } catch (e) {}
   }
 
+  // Подтверждение помнится 180 дней, а не до конца сессии.
+  //
+  // Почему поменяли (замер Метрики за 31.05–28.08.2026): гейт показан 298 раз,
+  // подтвердили 166, отказались 7 — то есть 125 показов, 42%, не закончились
+  // ничем. Агент, заходящий ежедневно, подтверждал квалификацию ежедневно:
+  // ключ жил в sessionStorage, и каждая новая вкладка спрашивала заново.
+  //
+  // Юридическая суть не меняется: подтверждение по-прежнему запрашивается,
+  // получается и фиксируется до доступа к материалам — просто у того же
+  // браузера его не требуют повторно. NN/g называет проверку статуса перед
+  // контентом единственным оправданным случаем модалки на входе; повторный
+  // показ тому же человеку в это исключение не входит.
+  //
+  // localStorage с двумя откатами: в приватном Safari он кидает, тогда работает
+  // cookie на тот же срок, а если и её нет — сессионное хранилище, как раньше.
   function seen() {
     if (demo) return false;
+    try { if (localStorage.getItem(KEY) === "1") return true; } catch (e) {}
+    if (document.cookie.indexOf(KEY + "=1") !== -1) return true;
     try { if (sessionStorage.getItem(KEY) === "1") return true; } catch (e) {}
-    // Фолбэк для приватного Safari, где sessionStorage кидает: сессионная cookie
-    // (иначе гейт спрашивал бы на каждом переходе между страницами).
-    return document.cookie.indexOf(KEY + "=1") !== -1;
+    return false;
   }
   function mark() {
     if (demo) return;
+    try { localStorage.setItem(KEY, "1"); } catch (e) {}
+    try { document.cookie = KEY + "=1;path=/;max-age=" + (DAYS * 86400) + ";samesite=lax"; } catch (e) {}
     try { sessionStorage.setItem(KEY, "1"); } catch (e) {}
-    try { document.cookie = KEY + "=1;path=/;max-age=43200;samesite=lax"; } catch (e) {}
   }
 
   var css = "" +
@@ -182,6 +199,10 @@
 
   window.QualGate = {
     show: function () { whenClear(show); },
-    reset: function () { try { sessionStorage.removeItem(KEY); } catch (e) {} }
+    reset: function () {                       // ручной сброс для проверки гейта
+      try { localStorage.removeItem(KEY); } catch (e) {}
+      try { sessionStorage.removeItem(KEY); } catch (e) {}
+      try { document.cookie = KEY + "=;path=/;max-age=0"; } catch (e) {}
+    }
   };
 })();

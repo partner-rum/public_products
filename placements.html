@@ -183,7 +183,7 @@
     .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
 </style>
-<script src="metrika.js?v=4" defer></script>
+<script src="metrika.js?v=5" defer></script>
 </head>
 <body>
 
@@ -600,6 +600,16 @@
   document.getElementById("kinds").setAttribute("role", "group");
   document.getElementById("kinds").setAttribute("aria-label", "Тип выплаты");
   document.getElementById("search").addEventListener("input", e => { q = e.target.value; render(); });
+
+  // Запрос из адреса: поиск в шапке (search.js) шлёт сюда ?q=, когда совпадений
+  // по выпускам больше, чем помещается в подсказку. Без этого ссылка «ещё N
+  // в размещённых» приводила бы на неотфильтрованный список и врала бы счётом.
+  const qsQ = new URLSearchParams(location.search).get("q");
+  if (qsQ) {
+    q = qsQ;
+    const se = document.getElementById("search");
+    if (se) se.value = qsQ;
+  }
   renderFacts();
   document.getElementById("panel-close").addEventListener("click", closeOverlay);
   // Полноэкранный паспорт закрывался только кнопкой: Escape — то, что нажимают
@@ -630,7 +640,8 @@
   if (selected) select(selected, !!hash);
 </script>
 <script src="chat.js?v=17"></script>
+<script src="search.js?v=1"></script>
 <script src="nav-about.js?v=6"></script>
-<script src="qualgate.js?v=4"></script>
+<script src="qualgate.js?v=5"></script>
 </body>
 </html>

@@ -8,10 +8,23 @@
   k = e.createElement(t), a = e.getElementsByTagName(t)[0], k.async = 1, k.src = r, a.parentNode.insertBefore(k, a);
 })(window, document, "script", "https://mc.yandex.ru/metrika/tag.js?id=110759242", "ym");
 
+// СТРАНИЦЫ БЕЗ ЗАПИСИ ЭКРАНА.
+// Вебвизор пишет DOM страницы и отправляет его в Яндекс. На рабочем столе агента
+// видны название партнёра, ИНН, ОГРН, номер договора и вознаграждение по каждой
+// сделке; в админке и сводном кабинете — то же самое по всем сразу. Отправлять
+// коммерческие условия контрагентов на сторону нельзя, поэтому на этих страницах
+// счётчик работает БЕЗ вебвизора и кликмапа: посещаемость и цели считаются,
+// запись экрана не ведётся.
+// Список по адресу, а не по флагу на странице: флаг у новой закрытой страницы
+// однажды забудут поставить, и утечка случится молча. Флаг оставлен вторым
+// путём — для страниц, которые не подпадают под шаблон имени.
+var MET_PRIVATE = /\/(me|me-test|admin|boss)\.html$/.test(location.pathname) ||
+                  window.METRIKA_NO_RECORD === true;
+
 ym(110759242, "init", {
   ssr: true,
-  webvisor: true,
-  clickmap: true,
+  webvisor: !MET_PRIVATE,
+  clickmap: !MET_PRIVATE,
   ecommerce: "dataLayer",
   accurateTrackBounce: true,
   trackLinks: true
@@ -25,9 +38,18 @@ ym(110759242, "init", {
     // Метка канала: свой ?ref= в приоритете, иначе utm_source. Без фолбэка заявка
     // уезжала в Telegram без источника: Метрика UTM разбирает сама, а форма /lead
     // читает только so_ref, и сейлз в чате не видел, из какого канала человек.
-    var m = location.search.match(/[?&]ref=([\w.-]{1,40})/) ||
-            location.search.match(/[?&]utm_source=([\w.-]{1,40})/);
-    if (m) localStorage.setItem("so_ref", m[1].toLowerCase());
+    //
+    // РАЗНЫЕ ПРАВА У ДВУХ ИСТОЧНИКОВ (правка 28.08.2026):
+    // ?ref= — это ЧЕЛОВЕК (сейлз, партнёр), он перезаписывает метку всегда.
+    // utm_source — это КАНАЛ, и он проставляется, только если метки ещё нет.
+    // Раньше перезаписывали оба, и любой переход по ссылке с utm затирал агенту
+    // его собственную метку: дальше он копировал персональные ссылки с чужой,
+    // а в его кабинете открытия переставали считаться. Похоже, так и появились
+    // 9 человек с меткой chatgpt.com в отчётах за квартал.
+    var byRef = location.search.match(/[?&]ref=([\w.-]{1,40})/);
+    var byUtm = location.search.match(/[?&]utm_source=([\w.-]{1,40})/);
+    if (byRef) localStorage.setItem("so_ref", byRef[1].toLowerCase());
+    else if (byUtm && !localStorage.getItem("so_ref")) localStorage.setItem("so_ref", byUtm[1].toLowerCase());
     var ref = localStorage.getItem("so_ref");
     if (ref) ym(110759242, "params", { ref: ref });
   } catch (e) {}
