@@ -295,7 +295,7 @@
 <div id="deck"></div>
 
 <script src="data/instruments.js?v=fx8"></script>
-<script src="data/lib.js?v=ax4"></script>
+<script src="data/lib.js?v=ax5"></script>
 <script src="data/offerings.js?v=srv19"></script>
 <script src="share.js?v=8"></script>
 <script src="contact.js?v=9"></script>
@@ -574,42 +574,59 @@
     return svg + '</svg>';
   }
 
-  // Реверс-конвертибл: возврат ТЕЛА на погашении. Перелом ровно на страйке —
-  // правее тело целое, левее считается по перформансу ОТ СТРАЙКА (S/K), поэтому
-  // левый конец линии выше, чем у автоколла с тем же уровнем актива.
+  // Реверс-конвертибл: ПОЛНАЯ выплата за срок — тело плюс купоны. Тело отдельной
+  // пунктирной линией, зазор между линиями и есть купон. Рисовать одно тело
+  // нельзя: правая полка упиралась в номинал, и лист обещал ровно 100% там, где
+  // клиент получает номинал и купон (замечание Руслана 31.08.2026).
   function chRevconv() {
     const HH = CH - 22;
     const K = inst.strike || 100;
+    const cpn = S.revconvCoupons(inst);
     const be = S.revconvBreakeven(inst);
-    // Кадр обязан вмещать точку покрытия купоном: это главный ориентир разговора.
     const lo = Math.max(5, Math.min(K - 35, be != null && be > 0 ? be - 10 : 999, 60));
     const hi = Math.max(K + 25, 125);
-    const pay = v => Math.min(100, v / K * 100);
-    const yMin = Math.max(0, pay(lo) - 10), yMax = 116;
+    const body = v => Math.min(100, v / K * 100);
+    const pay = v => body(v) + cpn;
+    const yMin = Math.max(0, body(lo) - 10), yMax = Math.max(116, 100 + cpn + 10);
     const x = v => PAD + ((v - lo) / (hi - lo)) * (CW - PAD * 2);
     const y = v => HH - PAD - ((v - yMin) / (yMax - yMin)) * (HH - PAD * 2);
-    const line = "M" + x(lo).toFixed(1) + " " + y(pay(lo)).toFixed(1) +
-      " L" + x(K).toFixed(1) + " " + y(100).toFixed(1) +
-      " L" + x(hi).toFixed(1) + " " + y(100).toFixed(1);
-    const cushion = (be != null && be > lo && be < K - 1)
-      ? '<line x1="' + x(be) + '" y1="' + (PAD - 3) + '" x2="' + x(be) + '" y2="' + y(yMin) + '" stroke="' + C.or +
-        '" stroke-width="1" stroke-dasharray="3 4"/>' +
-        '<text x="' + (x(be) + 5) + '" y="' + (y(yMin) - 4) + '" fill="' + C.or + '" font-size="10" ' + MONO +
-        '>купон покрывает до ' + S.fmtSmart(be) + '%</text>'
+    const line = fn => "M" + x(lo).toFixed(1) + " " + y(fn(lo)).toFixed(1) +
+      " L" + x(K).toFixed(1) + " " + y(fn(K)).toFixed(1) +
+      " L" + x(hi).toFixed(1) + " " + y(fn(hi)).toFixed(1);
+    // Полоса между телом и итогом — купон. Заливкой, как на витрине: третья
+    // подпись с цифрой в полоске 102px не читается, а сама цифра стоит рядом
+    // плиткой параметров.
+    const band = "M" + x(lo).toFixed(1) + " " + y(pay(lo)).toFixed(1) +
+      " L" + x(K).toFixed(1) + " " + y(pay(K)).toFixed(1) +
+      " L" + x(hi).toFixed(1) + " " + y(pay(hi)).toFixed(1) +
+      " L" + x(hi).toFixed(1) + " " + y(body(hi)).toFixed(1) +
+      " L" + x(K).toFixed(1) + " " + y(body(K)).toFixed(1) +
+      " L" + x(lo).toFixed(1) + " " + y(body(lo)).toFixed(1) + " Z";
+    const gapPx = Math.abs(y(100) - y(100 + cpn));
+    const withCoupon = cpn > 0
+      ? '<path d="' + band + '" fill="' + C.or + '" fill-opacity="0.13"/>' +
+        '<path d="' + line(body) + '" fill="none" stroke="' + C.lab + '" stroke-width="1.2" stroke-dasharray="4 4"/>' +
+        '<text x="' + (CW - PAD) + '" y="' + (y(100 + cpn) - 5) + '" text-anchor="end" fill="' + C.or +
+        '" font-size="10" ' + MONO + '>с купоном ' + S.fmtSmart(100 + cpn) + '%</text>' +
+        (gapPx >= 13 ? '<text x="' + x(K + (hi - K) * 0.45) + '" y="' + ((y(100) + y(100 + cpn)) / 2 + 4) +
+          '" text-anchor="middle" fill="' + C.or + '" font-size="10" ' + MONO + '>купон</text>' : "")
+      : "";
+    // Точка выхода в ноль — там, где полная выплата пересекает номинал.
+    const zero = (cpn > 0 && be != null && be > lo && be < K - 1)
+      ? '<circle cx="' + x(be) + '" cy="' + y(100) + '" r="3.4" fill="' + C.or + '"/>' +
+        '<text x="' + (x(be) + 6) + '" y="' + (y(100) + 14) + '" fill="' + C.or + '" font-size="10" ' + MONO +
+        '>б/у ' + S.fmtSmart(be) + '%</text>'
       : "";
     return '<svg viewBox="0 0 ' + CW + ' ' + HH + '" width="100%" style="display:block">' +
       '<line x1="' + PAD + '" y1="' + y(100) + '" x2="' + (CW - PAD) + '" y2="' + y(100) + '" stroke="' + C.axis + '" stroke-width="1" stroke-dasharray="4 4"/>' +
-      '<text x="' + (CW - PAD) + '" y="' + (y(100) - 5) + '" text-anchor="end" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>номинал 100%</text>' +
-      cushion +
-      '<path d="' + line + '" fill="none" stroke="' + C.line + '" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>' +
-      '<rect x="' + (x(K) - 4) + '" y="' + (y(100) - 4) + '" width="8" height="8" transform="rotate(45 ' + x(K) + ' ' + y(100) + ')" fill="' + C.line + '"/>' +
-      '<text x="' + (x(K) + 7) + '" y="' + (y(100) + 15) + '" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>страйк ' + S.fmtSmart(K) + '%</text>' +
-      // Отступ подписи от САМОЙ ВЫСОКОЙ точки участка под её рамкой: ниже страйка
-      // линия наклонная, и фиксированные 9px она прорезала бы насквозь.
-      // При живой вертикали купона подпись не печатаем вовсе: в полоске 102px
-      // их рамки пересекались (замер на SBER 90%), а смысл наклона уже сказан
-      // подписью под графиком.
-      (cushion ? "" : (function () {
+      '<text x="' + (CW - PAD) + '" y="' + (y(100) + 13) + '" text-anchor="end" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>номинал 100%</text>' +
+      withCoupon + zero +
+      '<path d="' + line(pay) + '" fill="none" stroke="' + C.line + '" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>' +
+      '<rect x="' + (x(K) - 4) + '" y="' + (y(pay(K)) - 4) + '" width="8" height="8" transform="rotate(45 ' + x(K) + ' ' + y(pay(K)) + ')" fill="' + C.line + '"/>' +
+      '<text x="' + (x(K) - 7) + '" y="' + (y(pay(K)) - 8) + '" text-anchor="end" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>страйк ' + S.fmtSmart(K) + '%</text>' +
+      // Подпись наклонного участка — над САМОЙ ВЫСОКОЙ точкой под её рамкой:
+      // линия идёт под углом и фиксированный отступ она бы прорезала
+      (cpn > 0 ? "" : (function () {
         const lb = "перформанс от страйка";
         const half = (lb.length * 10 * 0.62 / 2 + 5) / ((CW - PAD * 2) / (hi - lo));
         const c0 = Math.max(lo + half, Math.min((lo + K) / 2, K - half));
@@ -805,8 +822,8 @@
         " — платится при любом сценарии · страйк " + S.fmtSmart(K) + "% · срок " + inst.tenor + " · " + S.ccyLabel(inst) + ".",
       quoteK: "купон · % годовых · индикативно",
       chart: chRevconv,
-      chartCap: "Возврат тела на погашении в % от номинала; по горизонтали — уровень " +
-        (isWOrc ? "худшей бумаги корзины" : "базового актива") + ". Купоны на графике не показаны — они не зависят от уровня актива.",
+      chartCap: "Полная выплата за срок в % от номинала — тело плюс купоны; по горизонтали — уровень " +
+        (isWOrc ? "худшей бумаги корзины" : "базового актива") + ". Пунктир — тело без купонов: зазор между линиями и есть купон.",
       params: [["Купон", S.fmt2(cpnPa) + "% годовых", true], ["Выплаты", obsTxt, false], ["Страйк", S.fmtSmart(K) + "%", false],
         be != null && be > 0 ? ["Купон покрывает до", S.fmtSmart(be) + "%", false] : ["Участие в росте", "нет", false]],
       exIntro: "Вход по номиналу " + S.fmtInt(nom) + " ₽ (100%) · купон " + S.fmt2(cpnPer) + "% за период = " + S.fmtInt(cpnRub) + " ₽",
@@ -1005,7 +1022,7 @@
       for (var c = 0; c < cols.length; c++) {
         var bottom = cols[c].getBoundingClientRect().bottom, kids = cols[c].children;
         for (var k = 0; k < kids.length; k++) {
-          if (kids[k].getBoundingClientRect().bottom > bottom + 1) return true;
+          if (kids[k].getBoundingClientRect().bottom > bottom + 2) return true;
         }
       }
       return false;

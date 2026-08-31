@@ -199,7 +199,7 @@ window.SITE = (function () {
       }
       if (r.type === "booster") return PAYOFF.booster(100 + move, r.strike || 100, r.strike2 || 110, (r.ku || 175) / 100);
       if (r.type === "autocall") return PAYOFF.autocall(100 + move, r.protectionPct || 65);
-      if (r.type === "revconv") return PAYOFF.revconv(100 + move, r.strike || 100);
+      if (r.type === "revconv") return PAYOFF.revconv(100 + move, r.strike || 100) + revconvCoupons(r);
       return 100;
     }
   };
@@ -334,7 +334,9 @@ window.SITE = (function () {
     };
 
     // Базовая линия выплаты: 0 у варранта, номинал 100% у бумаг с возвратом тела
-    let s = hline(base, C.axis) + txt(R, y(base) - 7, C.lab, "end", base ? "номинал 100%" : "выплата 0");
+    const baseBelow = r.type === "revconv";
+    let s = hline(base, C.axis) +
+      txt(R, y(base) + (baseBelow ? 14 : -7), C.lab, "end", base ? "номинал 100%" : "выплата 0");
     const K = r.strike || 100;
 
     if (r.type === "warrant") {
@@ -398,30 +400,63 @@ window.SITE = (function () {
       // 100%, и подпись, зайдя за него краем, оказывалась под этой полкой
       s += labelAbove((100 + mLo + prot) / 2, 100 + mLo, prot, "по перформансу", C.lab);
     } else if (r.type === "revconv") {
-      const K = r.strike || 100;
-      // Страйк — единственный перелом кривой: правее тело целое, левее оно тает.
-      s += diamond(x(K), y(100), C.line) +
-        txt(x(K) + 9, y(100) + 17, C.lab2, null, K === 100 ? "страйк S₀" : "страйк " + fmtSmart(K) + "%");
-      // Уровень, ниже которого купоны за срок перестают покрывать просадку тела —
-      // тот же смысл, что «б/у» у варранта. Не рисуем, если срок или купон не
-      // распознаны: выдуманная граница риска хуже отсутствующей.
-      // Подпись вертикали идёт ВНИЗУ, у оси, а не под верхней кромкой, как у
-      // автоколла: наверху уже стоит «перформанс от страйка», и при глубоком
-      // страйке их рамки пересекались (замер на корзине со страйком 80% и
-      // купоном за три года). Внизу под вертикалью пусто при любом страйке —
-      // линия выплаты в этой точке заведомо выше.
-      const cush = revconvBreakeven(r);
-      if (cush != null && cush > 100 + mLo && cush < K - 1) {
-        // Сторона подписи зависит от места: при страйке 100% и коротком сроке
-        // точка покрытия стоит у самого правого края, и подпись вправо уезжала
-        // за кадр (замер на телефоне: Газпром, б/у 91,25%). Слева от вертикали
-        // место есть всегда — там наклонный участок, а не текст.
-        const cl = "б/у с купоном " + fmtSmart(cush) + "%";
-        const fits = x(cush) + 6 + cl.length * fs * 0.62 <= R;
-        s += vline(cush, C.gold) +
-          txt(x(cush) + (fits ? 6 : -6), H - f.B - 6, C.gold, fits ? null : "end", cl);
+      const K = r.strike || 100, cpn = revconvCoupons(r);
+      // Линия — ПОЛНАЯ выплата за срок: тело плюс купоны. Раньше рисовалось одно
+      // тело, и правая полка упиралась ровно в номинал — продукт выглядел так,
+      // будто больше 100% он не платит (замечание Руслана 31.08.2026). Купон
+      // здесь безусловный, в отличие от автоколла, поэтому его место на графике.
+      if (cpn > 0) {
+        const bLo = 100 + mLo, bHi = 100 + mHi;
+        const bodyLo = PAYOFF.revconv(bLo, K);
+        // Полоса между телом и итогом — это купон. Заливкой, а не третьей
+        // подписью с цифрой: при страйке 100% верхний правый угол и без того
+        // держит четыре надписи, и цифра там читалась хуже, чем видно глазом.
+        s += '<path d="M' + x(bLo).toFixed(1) + " " + y(bodyLo + cpn).toFixed(1) +
+          " L" + x(K).toFixed(1) + " " + y(100 + cpn).toFixed(1) +
+          " L" + x(bHi).toFixed(1) + " " + y(100 + cpn).toFixed(1) +
+          " L" + x(bHi).toFixed(1) + " " + y(100).toFixed(1) +
+          " L" + x(K).toFixed(1) + " " + y(100).toFixed(1) +
+          " L" + x(bLo).toFixed(1) + " " + y(bodyLo).toFixed(1) +
+          ' Z" fill="' + C.gold + '" fill-opacity="0.13"/>' +
+          // Тело отдельной тонкой линией: видно, из чего складывается результат.
+          '<path d="M' + x(bLo).toFixed(1) + " " + y(bodyLo).toFixed(1) +
+          " L" + x(K).toFixed(1) + " " + y(100).toFixed(1) +
+          " L" + x(bHi).toFixed(1) + " " + y(100).toFixed(1) +
+          '" fill="none" stroke="' + C.lab + '" stroke-width="1.2" stroke-dasharray="4 4"/>' +
+          txt(R, y(100 + cpn) - 7, C.gold, "end", "с купоном " + fmtSmart(100 + cpn) + "%");
+        // Зазор между телом и итогом — это и есть купон, и он одинаков на всём
+        // протяжении. Подписываем его ЛЕВЕЕ страйка: справа у той же высоты уже
+        // стоит «номинал 100%», и рамки накладывались (замер на Газпроме).
+        // Узкий зазор не подписываем вовсе — текст лёг бы на обе линии.
+        // Ставим её ПРАВЕЕ страйка, где обе линии горизонтальны: слева они идут
+        // под углом, и на ширине надписи линия успевает пересечь её рамку
+        // (замер: наклон 0,38 съедает зазор целиком). Ближе к страйку, чем к
+        // краю, — у правого края на той же высоте стоит «номинал 100%».
+        // Узкий зазор не подписываем вовсе: текст лёг бы на обе линии.
+        // Слово внутри полосы — только если она достаточно широкая; цифра купона
+        // стоит в шапке продукта и в параметрах, дублировать её здесь незачем.
+        const gapPx = Math.abs(y(100) - y(100 + cpn));
+        const gapAt = K + (100 + mHi - K) * 0.78;
+        if (W >= 500 && gapPx >= 15 && gapAt > K + 1) {
+          s += txt(x(gapAt), (y(100) + y(100 + cpn)) / 2 + 4, C.gold, "middle", "купон");
+        }
       }
-      s += labelAbove((100 + mLo + K) / 2, 100 + mLo, K, "перформанс от страйка", C.lab);
+      // Страйк — единственный перелом кривой: правее тело целое, левее оно тает.
+      const kLab = K === 100 ? "страйк S₀" : "страйк " + fmtSmart(K) + "%";
+      const kFits = x(K) + 8 + kLab.length * fs * 0.62 <= R;
+      s += diamond(x(K), y(100 + cpn), C.line);
+      // На узком кадре подпись страйка опускаем: ромб на переломе виден и так,
+      // а страйк написан в параметрах выпуска. Место отдаём итогу и безубытку.
+      if (W >= 500) s += txt(x(K) + (kFits ? 8 : -8), y(100 + cpn) + 17, C.lab2, kFits ? null : "end", kLab);
+      // Точка выхода в ноль: там, где полная выплата пересекает номинал. Раньше
+      // она рисовалась вертикалью с длинной подписью; кружок на самой линии
+      // читается быстрее и не спорит с подписью наклонного участка.
+      const cush = revconvBreakeven(r);
+      if (cpn > 0 && cush != null && cush > 100 + mLo && cush < K - 1) {
+        s += '<circle cx="' + x(cush).toFixed(1) + '" cy="' + y(100).toFixed(1) + '" r="4.5" fill="' + C.gold + '"/>' +
+          labelAbove(cush, 100 + mLo, cush, "б/у " + fmtSmart(cush) + "%", C.gold);
+      }
+      if (!cpn) s += labelAbove((100 + mLo + K) / 2, 100 + mLo, K, "перформанс от страйка", C.lab);
     }
     const d = pts.map((p, i) => (i ? "L" : "M") + x(p[0]).toFixed(1) + " " + y(p[1]).toFixed(1)).join(" ");
     s += '<path d="' + d + '" fill="none" stroke="' + C.line + '" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>';
@@ -469,6 +504,15 @@ window.SITE = (function () {
   // S/K·100 + купоны = 100 даёт S = K·(100 − купоны)/100.
   // null — если срока или купона нет; 0 — если купоны покрывают любое падение
   // (сумма купонов ≥ 100% номинала).
+  // Купоны за весь срок в % номинала. Ноль означает «неизвестно» — срок или
+  // купон не распознаны; в этом случае поверхности рисуют одно тело, а не
+  // придумывают недостающее.
+  function revconvCoupons(r) {
+    const yrs = tenorYears(r);
+    const cpn = (r && (r.couponPa != null ? r.couponPa : r.quote)) || 0;
+    return (yrs > 0 && cpn > 0) ? cpn * yrs : 0;
+  }
+
   function revconvBreakeven(r) {
     const K = (r && r.strike) || 100, yrs = tenorYears(r);
     const cpn = (r && (r.couponPa != null ? r.couponPa : r.quote)) || 0;
@@ -567,6 +611,6 @@ window.SITE = (function () {
     return /S&P|NASDAQ|NVDA|NVIDIA|NBIS|Nebius|BTC|IBIT|GLD|SPY|COPX|CSI|URA|Uranium|Bitcoin|Gold|USD|\$/i.test(n);
   }
 
-  return { TYPES, INSTRUMENTS, PAYOFF, LEGAL, calc, displayName, tenorYears, revconvBreakeven, findInstrument, instrumentsOfType, underlyingInfo, underlyingLong, isFxSensitive, ccyLabel, nonCallText, history, fmtInt, fmt2, fmt1, fmtSmart, quoteBig, daysTo, chartFrame, niceTicks, payoffChart, discountChart, AXIS_X, AXIS_Y };
+  return { TYPES, INSTRUMENTS, PAYOFF, LEGAL, calc, displayName, tenorYears, revconvBreakeven, revconvCoupons, findInstrument, instrumentsOfType, underlyingInfo, underlyingLong, isFxSensitive, ccyLabel, nonCallText, history, fmtInt, fmt2, fmt1, fmtSmart, quoteBig, daysTo, chartFrame, niceTicks, payoffChart, discountChart, AXIS_X, AXIS_Y };
 
 })();

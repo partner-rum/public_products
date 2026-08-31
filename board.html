@@ -358,7 +358,7 @@
 </div>
 
 <script src="data/instruments.js?v=fx8"></script>
-<script src="data/lib.js?v=ax4"></script>
+<script src="data/lib.js?v=ax5"></script>
 <script src="share.js?v=8"></script>
 <script src="contact.js?v=9"></script>
 <script>
@@ -604,9 +604,9 @@
         subtitle: "Купон " + S.fmt2(cpnPa) + "% годовых платится при любом сценарии; тело на погашении зависит от " + uGen +
           (K === 100 ? "" : " — со страйком " + S.fmtSmart(K) + "%"),
         payoff: () => chartPayoff(inst),
-        payoffCaption: "Возврат ТЕЛА на погашении в % от номинала; по горизонтали — " + uAxis + " в % от начального. " +
-          "Купоны на графике не показаны — они выплачиваются независимо от уровня актива" +
-          (be != null && be > 0 ? "; вертикаль показывает уровень, ниже которого купоны за срок перестают покрывать просадку тела." : "."),
+        payoffCaption: "Полная выплата за срок в % от номинала: тело плюс купоны; по горизонтали — " + uAxis + " в % от начального. " +
+          "Пунктир — тело без купонов, зазор между линиями и есть купон" +
+          (be != null && be > 0 ? "; точка б/у — уровень, ниже которого купоны перестают покрывать просадку тела." : "."),
         metrics: [
           [S.fmt2(cpnPa) + "% г.", "купон · индикативно"],
           [S.fmtSmart(K) + "%", "страйк"],
@@ -753,7 +753,7 @@
       if (inst.type === "warrant") noteEl.textContent = clampNote + "Экспозиция на номинал " + S.fmtInt(Math.round(nominal)) + " ₽ за премию = сумму вложения. Безубыток — при росте " + inst.underlying + " примерно на +" + S.fmtSmart(be) + "%; ниже — выплата не покрывает премию.";
       else if (inst.type === "protection") noteEl.textContent = clampNote + "Номинал " + S.fmtInt(Math.round(nominal)) + " ₽. Защита " + prot + "%: при падении возвращается " + prot + "% номинала.";
       else if (inst.type === "booster") noteEl.textContent = clampNote + "Вложение = номинал " + S.fmtInt(Math.round(nominal)) + " ₽. Рост ×КУ внутри диапазона до потолка; при падении — участие 1:1, как в самом активе.";
-      else if (inst.type === "revconv") noteEl.textContent = clampNote + "Вложение = номинал " + S.fmtInt(Math.round(nominal)) + " ₽. Показан возврат ТЕЛА на погашении — БЕЗ купонов: они выплачиваются отдельно и не зависят от уровня актива. На страйке " + S.fmtSmart(inst.strike || 100) + "% и выше возвращается весь номинал, ниже — по перформансу от страйка.";
+      else if (inst.type === "revconv") noteEl.textContent = clampNote + "Вложение = номинал " + S.fmtInt(Math.round(nominal)) + " ₽. Показана полная выплата за срок — тело плюс купоны, они начисляются независимо от уровня актива. На страйке " + S.fmtSmart(inst.strike || 100) + "% и выше тело возвращается целиком, ниже — по перформансу от страйка.";
       else if (inst.type === "autocall") noteEl.textContent = clampNote + "Вложение = номинал " + S.fmtInt(Math.round(nominal)) + " ₽. Показан возврат ТЕЛА на погашении по худшей бумаге корзины — БЕЗ купонов: они начисляются отдельно на датах наблюдения. Выше " + S.fmtSmart(inst.protectionPct || 65) + "% возвращается весь номинал.";
       else noteEl.textContent = clampNote + "Номинал " + S.fmtInt(Math.round(nominal)) + " ₽. При погашении — 100% номинала (если нет кредитного события). Доход зафиксирован дисконтом.";
     }
