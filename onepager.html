@@ -562,6 +562,51 @@
     return svg + '</svg>';
   }
 
+  // Реверс-конвертибл: возврат ТЕЛА на погашении. Перелом ровно на страйке —
+  // правее тело целое, левее считается по перформансу ОТ СТРАЙКА (S/K), поэтому
+  // левый конец линии выше, чем у автоколла с тем же уровнем актива.
+  function chRevconv() {
+    const HH = CH - 22;
+    const K = inst.strike || 100;
+    const be = S.revconvBreakeven(inst);
+    // Кадр обязан вмещать точку покрытия купоном: это главный ориентир разговора.
+    const lo = Math.max(5, Math.min(K - 35, be != null && be > 0 ? be - 10 : 999, 60));
+    const hi = Math.max(K + 25, 125);
+    const pay = v => Math.min(100, v / K * 100);
+    const yMin = Math.max(0, pay(lo) - 10), yMax = 116;
+    const x = v => PAD + ((v - lo) / (hi - lo)) * (CW - PAD * 2);
+    const y = v => HH - PAD - ((v - yMin) / (yMax - yMin)) * (HH - PAD * 2);
+    const line = "M" + x(lo).toFixed(1) + " " + y(pay(lo)).toFixed(1) +
+      " L" + x(K).toFixed(1) + " " + y(100).toFixed(1) +
+      " L" + x(hi).toFixed(1) + " " + y(100).toFixed(1);
+    const cushion = (be != null && be > lo && be < K - 1)
+      ? '<line x1="' + x(be) + '" y1="' + (PAD - 3) + '" x2="' + x(be) + '" y2="' + y(yMin) + '" stroke="' + C.or +
+        '" stroke-width="1" stroke-dasharray="3 4"/>' +
+        '<text x="' + (x(be) + 5) + '" y="' + (PAD + 5) + '" fill="' + C.or + '" font-size="10" ' + MONO +
+        '>купон покрывает до ' + S.fmtSmart(be) + '%</text>'
+      : "";
+    return '<svg viewBox="0 0 ' + CW + ' ' + HH + '" width="100%" style="display:block">' +
+      '<line x1="' + PAD + '" y1="' + y(100) + '" x2="' + (CW - PAD) + '" y2="' + y(100) + '" stroke="' + C.axis + '" stroke-width="1" stroke-dasharray="4 4"/>' +
+      '<text x="' + (CW - PAD) + '" y="' + (y(100) - 5) + '" text-anchor="end" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>номинал 100%</text>' +
+      cushion +
+      '<path d="' + line + '" fill="none" stroke="' + C.line + '" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>' +
+      '<rect x="' + (x(K) - 4) + '" y="' + (y(100) - 4) + '" width="8" height="8" transform="rotate(45 ' + x(K) + ' ' + y(100) + ')" fill="' + C.line + '"/>' +
+      '<text x="' + (x(K) + 7) + '" y="' + (y(100) + 15) + '" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>страйк ' + S.fmtSmart(K) + '%</text>' +
+      // Отступ подписи от САМОЙ ВЫСОКОЙ точки участка под её рамкой: ниже страйка
+      // линия наклонная, и фиксированные 9px она прорезала бы насквозь.
+      // При живой вертикали купона подпись не печатаем вовсе: в полоске 102px
+      // их рамки пересекались (замер на SBER 90%), а смысл наклона уже сказан
+      // подписью под графиком.
+      (cushion ? "" : (function () {
+        const lb = "перформанс от страйка";
+        const half = (lb.length * 10 * 0.62 / 2 + 5) / ((CW - PAD * 2) / (hi - lo));
+        const c0 = Math.max(lo + half, Math.min((lo + K) / 2, K - half));
+        return '<text x="' + x(c0) + '" y="' + (y(pay(Math.min(c0 + half, K))) - 9) +
+          '" text-anchor="middle" fill="' + C.lab + '" font-size="10" ' + MONO + '>' + lb + '</text>';
+      })()) +
+      '</svg>';
+  }
+
   // Автоколл: возврат тела на погашении по worst-of (европейский барьер).
   function chAutocall() {
     // График автоколла ниже общего CH на 22px: у автоколла в шапке корзина
@@ -725,6 +770,50 @@
       explainer: "Условия считаются по <b>худшей бумаге</b> корзины (worst-of), наблюдения — " + obsTxt + ". Выше " + S.fmtSmart(cpnB) + "% начисляется купон " + S.fmt2(cpnPer) + "% номинала за период; выше " + S.fmtSmart(call) + "% выпуск гасится досрочно." + (nonCall ? " " + S.nonCallText(nonCall) + " отзыв невозможен." : "") + " На погашении номинал возвращается целиком, пока worst-of не ниже " + S.fmtSmart(prot) + "%.",
       underLabel: "Главный риск · падение корзины",
       underDesc: "Если на дату погашения худшая бумага корзины опустится ниже " + S.fmtSmart(prot) + "% начального уровня, выплата считается по её перформансу — возможна потеря части или всей суммы вложения. Отдельно действует кредитный риск эмитента облигации."
+    };
+  } else if (inst.type === "revconv") {
+    const cpnPa = inst.couponPa != null ? inst.couponPa : q;
+    const K = inst.strike || 100, per = inst.obsPerYear || 4;
+    const cpnPer = cpnPa / per, cpnRub = nom * cpnPer / 100;
+    const yrs = S.tenorYears(inst) || 1;
+    const cpnAll = nom * cpnPa / 100 * yrs;
+    const holdRub = nom + cpnAll;
+    const be = S.revconvBreakeven(inst);
+    const downLvl = Math.max(10, Math.round((be != null && be > 0 ? be : K - 30) - 15));
+    const bodyPct = S.PAYOFF.revconv(downLvl, K);
+    const downRub = nom * bodyPct / 100 + cpnAll;
+    const obsTxt = per === 12 ? "ежемесячно" : per === 4 ? "ежеквартально" : per === 2 ? "раз в полгода" : per + " раза в год";
+    const isWOrc = Array.isArray(inst.basket) && inst.basket.length > 1;
+    const uName = isWOrc ? "худшая бумага корзины" : inst.underlying;
+    const uGrewRc = isWOrc ? "Худшая бумага корзины выросла" : inst.underlying + " вырос";
+    c = {
+      badge: "Реверс-конвертибл · структурная облигация",
+      subtitle: "Повышенный купон " + S.fmt2(cpnPa) + "% годовых на " +
+        (isWOrc ? "корзину " + inst.underlying + " по принципу worst-of" : inst.underlying) +
+        " — платится при любом сценарии · страйк " + S.fmtSmart(K) + "% · срок " + inst.tenor + " · " + S.ccyLabel(inst) + ".",
+      quoteK: "купон · % годовых · индикативно",
+      chart: chRevconv,
+      chartCap: "Возврат тела на погашении в % от номинала; по горизонтали — уровень " +
+        (isWOrc ? "худшей бумаги корзины" : "базового актива") + ". Купоны на графике не показаны — они не зависят от уровня актива.",
+      params: [["Купон", S.fmt2(cpnPa) + "% годовых", true], ["Выплаты", obsTxt, false], ["Страйк", S.fmtSmart(K) + "%", false],
+        be != null && be > 0 ? ["Купон покрывает падение до", S.fmtSmart(be) + "%", false] : ["Участие в росте", "нет", false]],
+      exIntro: "Вход по номиналу " + S.fmtInt(nom) + " ₽ (100%) · купон " + S.fmt2(cpnPer) + "% за период = " + S.fmtInt(cpnRub) + " ₽",
+      scen: [
+        [uName + " на " + S.fmtSmart(K) + "% и выше", "номинал и купоны за " + inst.tenor,
+          "+" + S.fmtInt(cpnAll) + " ₽", "var(--up)", roiTxt(cpnAll, nom)],
+        [uGrewRc + " на 40%", "тело те же 100% — рост не участвует",
+          "+" + S.fmtInt(cpnAll) + " ₽", "var(--up)", roiTxt(cpnAll, nom)],
+        ["На погашении " + uName + " на " + downLvl + "%", "тело " + S.fmt1(bodyPct) + "% плюс купоны: " + S.fmtInt(downRub) + " ₽",
+          (downRub >= nom ? "+" : "−") + S.fmtInt(Math.abs(downRub - nom)) + " ₽", downRub >= nom ? "var(--up)" : "var(--down)",
+          roiTxt(downRub - nom, nom)]
+      ],
+      explainer: "Купон " + S.fmt2(cpnPa) + "% годовых выплачивается " + obsTxt + " <b>независимо</b> от уровня актива — это плата за принятый по нему риск. " +
+        "На погашении тело возвращается полностью, пока актив не ниже страйка " + S.fmtSmart(K) + "%; в росте выше страйка выпуск не участвует. " +
+        "Ниже страйка тело считается по перформансу <b>от страйка</b>: падение до " + S.fmtSmart(K / 2) + "% даёт половину номинала. " +
+        "Расчёт денежный — бумаги не поставляются." +
+        (be != null && be > 0 ? " Купоны за срок покрывают просадку тела примерно до уровня " + S.fmtSmart(be) + "%." : ""),
+      underLabel: "Главный риск · падение актива",
+      underDesc: "Если на дату погашения " + uName + " опустится ниже страйка " + S.fmtSmart(K) + "% начального уровня, тело считается по перформансу от страйка — возможна потеря значительной части вложения; купоны при этом остаются у инвестора. Отдельно действует кредитный риск эмитента облигации."
     };
   } else if (inst.type === "booster") {
     const K = inst.strike || 100, K2 = inst.strike2 || 110, ku = (inst.ku || 175) / 100;

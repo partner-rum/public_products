@@ -249,6 +249,7 @@
           <option value="protection">Защита капитала</option>
           <option value="warrant">Варрант (CALL / колл-спред)</option>
           <option value="autocall">Автоколл</option>
+          <option value="revconv">Реверс-конвертибл</option>
           <option value="booster">Бустер</option>
         </select>
       </label>
@@ -311,6 +312,20 @@
           <label><span class="k">Периодов без отзыва</span><input name="nonCall" type="number" step="1" placeholder="3"></label>
           <label><span class="k">Наблюдений в году</span><input name="obsPerYear" type="number" step="1" placeholder="4"></label>
           <label><span class="k">Валюта расчётов</span><input name="settle" placeholder="RUB" maxlength="8"></label>
+        </div>
+      </div>
+      <div id="b-revconv" style="display:none">
+        <div class="hint-box">Покупка по номиналу, купон БЕЗУСЛОВНЫЙ — платится при любом уровне актива.
+          Страйк — в % ОТ СТАРТА базового актива: на нём и выше на погашении возвращается 100% номинала,
+          ниже тело считается по перформансу ОТ СТРАЙКА. Корзина нужна только для worst-of; для одной бумаги оставьте пустой.</div>
+        <div class="row3">
+          <label><span class="k">Купон, % годовых <b>*</b></span><input name="rcCouponPa" type="number" step="0.5" placeholder="22"></label>
+          <label><span class="k">Страйк, % <b>*</b></span><input name="rcStrike" type="number" step="1" value="100" placeholder="100"></label>
+          <label><span class="k">Выплат в году</span><input name="rcObsPerYear" type="number" step="1" placeholder="4"></label>
+        </div>
+        <div class="row">
+          <label><span class="k">Корзина worst-of (тикеры через запятую)</span><input name="rcBasket" placeholder="оставьте пустым для одной бумаги" maxlength="80"></label>
+          <label><span class="k">Валюта расчётов</span><input name="rcSettle" placeholder="RUB" maxlength="8"></label>
         </div>
       </div>
       <div id="b-booster" style="display:none">
@@ -1066,10 +1081,11 @@
     document.getElementById("b-protection").style.display = isProt ? "" : "none";
     document.getElementById("b-warrant").style.display = t === "warrant" ? "" : "none";
     document.getElementById("b-autocall").style.display = t === "autocall" ? "" : "none";
+    document.getElementById("b-revconv").style.display = t === "revconv" ? "" : "none";
     document.getElementById("b-booster").style.display = t === "booster" ? "" : "none";
     // Вход по номиналу зашит: показывать сейлзу поле котировки — приглашать к ошибке.
     // У автоколла котировка = купон, у бустера = КУ; оба считаются из своих полей.
-    document.getElementById("l-quote").style.display = (isProt || t === "autocall" || t === "booster") ? "none" : "";
+    document.getElementById("l-quote").style.display = (isProt || t === "autocall" || t === "booster" || t === "revconv") ? "none" : "";
   });
   var fPlacement = document.getElementById("f-placement");
   fPlacement.kind.addEventListener("change", function () {
@@ -1764,6 +1780,18 @@
       var el = fBoard[k];
       if (el && x[k] != null) el.value = x[k];
     });
+    // Поля реверс-конвертибла названы иначе, чем ключи записи (rcCouponPa vs
+    // couponPa) — заполняем по карте. Это ПОКАЗ: правка купона и страйка формой
+    // не отправляется, как и у автоколла с бустером (их имена тоже вне BD_KEYS).
+    var RC_MAP = { rcCouponPa: "couponPa", rcStrike: "strike", rcObsPerYear: "obsPerYear", rcSettle: "settle" };
+    if (x.type === "revconv") {
+      Object.keys(RC_MAP).forEach(function (k) {
+        var el = fBoard[k];
+        if (el && x[RC_MAP[k]] != null) el.value = x[RC_MAP[k]];
+      });
+      var el = fBoard.rcBasket;
+      if (el) el.value = Array.isArray(x.basket) ? x.basket.join(", ") : "";
+    }
     fBoard.type.dispatchEvent(new Event("change"));
     bdSnap = bdSnapshot();
   }
@@ -1797,7 +1825,7 @@
       var type = val(fBoard, "type");
       // Вход по номиналу — у защиты, автоколла и бустера: поле котировки скрыто,
       // требовать его значит требовать невидимое поле.
-      var byNominal = type === "protection" || type === "autocall" || type === "booster";
+      var byNominal = type === "protection" || type === "autocall" || type === "booster" || type === "revconv";
       req(fBoard, ["name", "underlying", "expiry", "tenor"].concat(byNominal ? [] : ["quote"]));
       // Проверки существовали, но подключены были только к правке: создание
       // принимало «дек 2027» и −500 и отвечало зелёным «Отправлено». Дата ещё и
@@ -1827,6 +1855,7 @@
       // купон, у бустера — коэффициент участия (доска подписывает его «КУ»).
       put(item, "quote", type === "protection" ? 100
         : type === "autocall" ? num(fBoard, "couponPa")
+        : type === "revconv" ? num(fBoard, "rcCouponPa")
         : type === "booster" ? num(fBoard, "ku")
         : num(fBoard, "quote"));
       item.chg = 0;
@@ -1864,6 +1893,20 @@
         put(item, "obsPerYear", num(fBoard, "obsPerYear"));
         put(item, "settle", val(fBoard, "settle"));
       }
+      if (type === "revconv") {
+        req(fBoard, ["rcCouponPa", "rcStrike"]);
+        needRange(fBoard, "rcCouponPa", 0.1, 200, "% годовых");
+        needRange(fBoard, "rcStrike", 1, 300, "%");
+        needRange(fBoard, "rcObsPerYear", 1, 12, "");
+        // Корзина не обязательна: реверс-конвертибл чаще на одну бумагу, и пустое
+        // поле не должно превращаться в массив с пустой строкой.
+        var rcBk = val(fBoard, "rcBasket").split(",").map(function (s) { return s.trim().toUpperCase(); }).filter(Boolean);
+        if (rcBk.length > 1) item.basket = rcBk;
+        put(item, "couponPa", num(fBoard, "rcCouponPa"));
+        put(item, "strike", num(fBoard, "rcStrike"));
+        put(item, "obsPerYear", num(fBoard, "rcObsPerYear"));
+        put(item, "settle", val(fBoard, "rcSettle"));
+      }
       if (type === "booster") {
         req(fBoard, ["bStrike2", "ku"]);
         item.strike = num(fBoard, "bStrike") || 100;
@@ -1874,7 +1917,7 @@
         }
       }
       var pfx = type === "discount" ? "d" : type === "protection" ? "p"
-        : type === "autocall" ? "ac" : type === "booster" ? "b" : "w";
+        : type === "autocall" ? "ac" : type === "revconv" ? "rc" : type === "booster" ? "b" : "w";
       item.id = pfx + "-" + slug(item.underlying) + "-" + slug(item.expiry).replace(/\./g, "") + "-s";
       return item;
     });

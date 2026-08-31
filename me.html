@@ -747,7 +747,8 @@
       warrant: "Недорогой вход в рост актива без покупки самой бумаги",
       autocall: "Купонный поток на случай бокового рынка",
       booster: "Ускоренное участие в росте на коротком сроке",
-      discount: "Кредитный риск вместо рыночного"
+      discount: "Кредитный риск вместо рыночного",
+      revconv: "Повышенный купон в обмен на риск по бумаге"
     };
     return liveFallback(ins, 4).map(function (it) {
       var r = byId(it.id);
@@ -771,7 +772,7 @@
     }
     if (r.quote == null) return { v: "—", n: "" };
     if (r.type === "booster") return { v: Math.round(r.ku || r.quote) + "%", n: "коэффициент" };
-    if (r.type === "autocall") return { v: fmtQ(r.couponPa != null ? r.couponPa : r.quote) + "% г.", n: "купон" };
+    if (r.type === "autocall" || r.type === "revconv") return { v: fmtQ(r.couponPa != null ? r.couponPa : r.quote) + "% г.", n: "купон" };
     if (r.type === "discount") return { v: fmtQ(r.quote) + "%", n: "цена" };
     return { v: fmtQ(r.quote) + "%", n: "премия" };
   }

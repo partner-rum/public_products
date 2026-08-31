@@ -476,6 +476,59 @@
         ["Мин. номинал", S.fmtInt(nom) + " ₽"]
       ]
     };
+  } else if (inst.type === "revconv") {
+    const cpnPa = inst.couponPa != null ? inst.couponPa : inst.quote;
+    const K = inst.strike || 100, per = inst.obsPerYear || 4;
+    const cpnPer = cpnPa / per, cpnRub = nom * cpnPer / 100;
+    const yrs = S.tenorYears(inst) || 1;
+    const cpnAll = nom * cpnPa / 100 * yrs;
+    const holdRub = nom + cpnAll;
+    const be = S.revconvBreakeven(inst);
+    // Сценарий просадки — ниже точки, где купон её перекрывает: иначе таблица
+    // показывала бы одни плюсы и прятала настоящий риск продукта.
+    const downLvl = Math.max(10, Math.round((be != null && be > 0 ? be : K - 30) - 15));
+    const bodyPct = S.PAYOFF.revconv(downLvl, K);
+    const downRub = nom * bodyPct / 100 + cpnAll;
+    const obsTxt = per === 12 ? "ежемесячно" : per === 4 ? "ежеквартально" : per === 2 ? "раз в полгода" : per + " раза в год";
+    content = {
+      badge: "реверс-конвертибл" + woBadge,
+      subtitle: "Реверс-конвертибл · " + inst.underlying + " · купон " + S.fmt2(cpnPa) + "% годовых · страйк " + S.fmtSmart(K) + "%",
+      explainer: "Купон " + S.fmt2(cpnPa) + "% годовых выплачивается " + obsTxt + " и не зависит от того, где стоит " + uNom +
+        " — это плата за принятый по нему риск. На погашении, если " + uNom + " не ниже страйка " + S.fmtSmart(K) +
+        "% начального уровня, возвращается 100% номинала; в росте выше страйка выпуск не участвует. Ниже страйка тело считается по перформансу ОТ СТРАЙКА: " +
+        "падение до " + S.fmtSmart(K / 2) + "% даст половину номинала." +
+        (K < 100 ? " Страйк ниже старта даёт запас " + S.fmtSmart(100 - K) + " п.п.: пока актив не потерял столько, тело не трогается." : "") +
+        " Расчёт денежный — бумаги не поставляются, но экономически это то же самое, как если бы актив был куплен по страйку и остался в портфеле." +
+        (be != null && be > 0 ? " Купоны за весь срок покрывают просадку тела примерно до уровня " + S.fmtSmart(be) + "%." : ""),
+      payoff: chartPayoff,
+      payoffCaption: "Возврат ТЕЛА на погашении в % от номинала; по горизонтали — " + uAxis + " в % от начального. " +
+        "Купоны на графике не показаны — они выплачиваются независимо от уровня актива" +
+        (be != null && be > 0 ? "; вертикаль — уровень, ниже которого купоны за срок перестают покрывать просадку тела." : "."),
+      metrics: [
+        ["Купон", S.fmt2(cpnPa) + "% годовых · индикативно"],
+        ["Выплаты купона", obsTxt.charAt(0).toUpperCase() + obsTxt.slice(1)],
+        ["Страйк", S.fmtSmart(K) + "% начального уровня"],
+        ["Тело на погашении", "100% при активе не ниже страйка"],
+        ["Срок", inst.tenor],
+        ["Мин. номинал", S.fmtInt(nom) + " ₽"]
+      ],
+      exampleIntro: "Вход по номиналу " + S.fmtInt(nom) + " ₽ (100%) · купон " + S.fmt2(cpnPer) + "% за период = " + S.fmtInt(cpnRub) + " ₽",
+      scenarios: [
+        [(isWO ? "Худшая бумага корзины" : inst.underlying) + " на " + S.fmtSmart(K) + "% и выше",
+          "Номинал и купоны за " + inst.tenor + ": " + S.fmtInt(holdRub) + " ₽", "+" + S.fmtInt(cpnAll) + " ₽", "var(--up)"],
+        [uGrew + " на 40%", "Тело всё равно 100% — рост не участвует: " + S.fmtInt(holdRub) + " ₽", "+" + S.fmtInt(cpnAll) + " ₽", "var(--up)"],
+        ["На погашении " + (isWO ? "худшая бумага" : "актив") + " на " + downLvl + "%",
+          "Тело " + S.fmt1(bodyPct) + "% плюс купоны: " + S.fmtInt(downRub) + " ₽",
+          (downRub >= nom ? "+" : "−") + S.fmtInt(Math.abs(downRub - nom)) + " ₽", downRub >= nom ? "var(--up)" : "var(--loss)"]
+      ],
+      facts: (isWO ? [woFact] : []).concat([
+        ["Купон", "Безусловный: " + S.fmt2(cpnPa) + "% годовых при любом уровне актива"],
+        ["Участие в росте", "Нет — выше страйка выплата тела не растёт"],
+        ["Риск", "Ниже страйка " + S.fmtSmart(K) + "% — тело по перформансу от страйка"],
+        ["Расчёт", "Денежный — бумаги не поставляются"],
+        ["Мин. номинал", S.fmtInt(nom) + " ₽"]
+      ])
+    };
   } else if (inst.type === "booster") {
     const K = inst.strike || 100, K2 = inst.strike2 || 110, ku = (inst.ku || 175) / 100;
     const capPay = K + ku * (K2 - K), maxUp = capPay - 100, kuS = Math.round(ku * 100) + "%";
@@ -573,7 +626,7 @@
   document.getElementById("subtitle").textContent = content.subtitle;
   document.getElementById("quote").innerHTML = S.quoteBig(inst.quote);
   document.getElementById("quote-sub").textContent = inst.type === "booster" ? "коэффициент участия · индикативно"
-    : inst.type === "autocall" ? "купон · % годовых · индикативно"
+    : (inst.type === "autocall" || inst.type === "revconv") ? "купон · % годовых · индикативно"
     : "котировка · индикативно · % от номинала · " + (inst.currency || "RUB");
   // «Изменение за день» дублируется в шапке (quote-chg) и в метриках. У всех
   // инструментов chg===0 (рынок в котировках не отражаем), а на дисконтных 2-я
@@ -608,7 +661,7 @@
   // --- Калькулятор выплаты (математика — в data/lib.js S.calc, общая с доской) ---
   function calcInner(inst) {
     const nom0 = inst.minNom || 1000000;
-    const atPar = inst.type === "booster" || inst.type === "autocall";   // вход по номиналу, не по премии
+    const atPar = inst.type === "booster" || inst.type === "autocall" || inst.type === "revconv";   // вход по номиналу, не по премии
     const price0 = atPar ? nom0 : Math.round(nom0 * inst.quote / 100), cfg = S.calc.move(inst);
     const slider = cfg ? '<div class="calc-row"><label class="calc-l">' + inst.underlying + ': <b id="calc-mv"></b></label>' +
       '<input class="calc-range" id="calc-move" type="range" min="' + cfg.min + '" max="' + cfg.max + '" value="' + cfg.val + '" step="1" aria-label="Сценарий по базовому активу"></div>' : '';
@@ -631,7 +684,7 @@
       let amount = raw, clampNote = "";
       if (!isFinite(amount) || amount < 0) { amount = 0; if (raw < 0) clampNote = "Сумма не может быть отрицательной. "; }
       else if (amount > MAX_AMT) { amount = MAX_AMT; clampNote = "Максимум для расчёта — 1 млрд ₽. "; }
-      const nominal = (inst.type === "booster" || inst.type === "autocall") ? amount : (inst.quote ? amount * 100 / inst.quote : 0);
+      const nominal = (inst.type === "booster" || inst.type === "autocall" || inst.type === "revconv") ? amount : (inst.quote ? amount * 100 / inst.quote : 0);
       const m = move ? +move.value : 0;
       if (mvOut) mvOut.textContent = (m >= 0 ? "+" : "") + m + "%";
       const payout = nominal * S.calc.pct(inst, m) / 100, net = payout - amount;
@@ -642,6 +695,7 @@
       if (inst.type === "warrant") noteEl.textContent = clampNote + "Экспозиция на номинал " + S.fmtInt(Math.round(nominal)) + " ₽ за премию = сумму вложения. Безубыток — при росте " + inst.underlying + " примерно на +" + S.fmtSmart(be) + "%; ниже — выплата не покрывает премию.";
       else if (inst.type === "protection") noteEl.textContent = clampNote + "Номинал " + S.fmtInt(Math.round(nominal)) + " ₽. Защита " + prot + "%: при падении возвращается " + prot + "% номинала.";
       else if (inst.type === "booster") noteEl.textContent = clampNote + "Вложение = номинал " + S.fmtInt(Math.round(nominal)) + " ₽. Рост ×КУ внутри диапазона до потолка; при падении — участие 1:1, как в самом активе.";
+      else if (inst.type === "revconv") noteEl.textContent = clampNote + "Вложение = номинал " + S.fmtInt(Math.round(nominal)) + " ₽. Показан возврат ТЕЛА на погашении — БЕЗ купонов: они выплачиваются отдельно и от уровня актива не зависят. На страйке " + S.fmtSmart(inst.strike || 100) + "% и выше возвращается весь номинал, ниже — по перформансу от страйка.";
       else if (inst.type === "autocall") noteEl.textContent = clampNote + "Вложение = номинал " + S.fmtInt(Math.round(nominal)) + " ₽. Показан возврат ТЕЛА на погашении по худшей бумаге корзины — БЕЗ купонов: они начисляются отдельно на датах наблюдения. Выше " + S.fmtSmart(inst.protectionPct || 65) + "% возвращается весь номинал.";
       else noteEl.textContent = clampNote + "Номинал " + S.fmtInt(Math.round(nominal)) + " ₽. При погашении — 100% номинала (если нет кредитного события). Доход зафиксирован дисконтом.";
     }

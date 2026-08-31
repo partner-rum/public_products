@@ -22,6 +22,7 @@ TYPE_LABEL = {
     "warrant": "Варрант",
     "booster": "Бустер",
     "autocall": "Автоколл",
+    "revconv": "Реверс-конвертибл",
 }
 
 
@@ -41,11 +42,13 @@ def describe(inst):
     q = inst.get("quote")
     parts = [tl + (" на " + ua if ua else "")]
     t = inst.get("type")
-    if t == "autocall":
-        # у автоколла quote = КУПОН годовых, не цена входа (вход по номиналу)
+    if t in ("autocall", "revconv"):
+        # quote у обоих = КУПОН годовых, не цена входа (вход по номиналу)
         cpn = inst.get("couponPa", q)
         if cpn is not None:
             parts.append("купон " + num(cpn) + "% годовых")
+        if t == "revconv":
+            parts.append("страйк " + num(inst.get("strike", 100)) + "%")
     elif t == "protection":
         # вход по номиналу; для превью полезнее участие, чем «котировка 100%»
         pt = inst.get("participation")

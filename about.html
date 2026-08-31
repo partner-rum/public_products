@@ -347,10 +347,7 @@
     warrant:    { label: "Активный", color: "#E0A24A", text: "#E0A24A", board: "board.html?type=warrant" },
     preipo:     { label: "Альтернативный", color: "#8E7CC3" },
     autocall:   { label: "Купонный", color: "#46A9A0", board: "board.html?type=autocall" },
-    // board НЕ задан намеренно: реверс-конвертиблов на доске пока нет, и блок
-    // «Сейчас на доске» со ссылкой в пустой фильтр только обманывал бы. Появятся
-    // продукты с type=revconv — дописать board и код типа в update_site.py
-    revconv:    { label: "Доходный", color: "#C77FA1" },
+    revconv:    { label: "Доходный", color: "#C77FA1", board: "board.html?type=revconv" },
     booster:    { label: "Агрессивный", color: "#E0705A", board: "board.html?type=booster" }
   };
   var WTYPES = ["call", "callspread", "callko", "put", "putspread", "putko"];

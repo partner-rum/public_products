@@ -46,6 +46,14 @@ window.SITE = (function () {
       chipFg: "#2C6E68", chipBg: "#D9EBE9",
       desc: "Облигация с условным купоном на корзину акций по принципу worst-of: купон начисляется, пока худшая бумага корзины держится выше купонного барьера. Если на дату наблюдения все бумаги выше барьера автоотзыва — выпуск гасится досрочно с выплатой номинала и купона. На погашении номинал возвращается полностью, пока worst-of выше барьера защиты.",
       paramLabel: "Купон, % г."
+    },
+    revconv: {
+      slug: "revconv",
+      title: "Реверс-конвертибл",
+      chip: "Доходный",
+      chipFg: "#8A3A60", chipBg: "#F3DDE8",
+      desc: "Облигация с повышенным купоном: купон платится при любом сценарии, за это инвестор принимает риск по базовому активу. На страйке и выше на погашении возвращается 100% номинала, ниже — выплата считается по перформансу ОТ СТРАЙКА. Расчёт денежный, бумаги не поставляются.",
+      paramLabel: "Купон, % г."
     }
   };
 
@@ -104,6 +112,14 @@ window.SITE = (function () {
     // S и barrier — в % от начального уровня worst-of.
     autocall(S, barrier) {
       return S >= barrier ? 100 : S;
+    },
+    // Реверс-конвертибл: ТЕЛО на погашении (купон безусловный и в эту функцию
+    // не входит). S и K — в % от начального уровня БА.
+    // S ≥ K → 100% номинала; ниже — S/K от номинала, то есть падение считается
+    // ОТ СТРАЙКА, а не от начального уровня: при K = 90 бумага на 90% ещё даёт
+    // полный номинал, а на 45% — 50% номинала, а не 45%.
+    revconv(S, K) {
+      return Math.min(100, S / (K || 100) * 100);
     }
   };
 
@@ -143,6 +159,19 @@ window.SITE = (function () {
         return { min: -30, max: Math.max(max, off + 40), val: Math.max(20, off + 15) };
       }
       if (r.type === "booster") return { min: -30, max: 25, val: (r.strike2 || 110) - 100 };
+      // Реверс-конвертибл: весь смысл — вокруг страйка, левее него тело начинает
+      // таять. Вправо кадр не растягиваем: выше страйка выплата тела не меняется,
+      // и половина графика ушла бы под прямую линию.
+      if (r.type === "revconv") {
+        const K = r.strike || 100;
+        // Кадр обязан вмещать точку, где купоны перестают покрывать просадку тела:
+        // это главный ориентир разговора с клиентом, и обрезать его границей кадра
+        // значило бы показать продукт опаснее, чем он есть.
+        const be = revconvBreakeven(r);
+        let lo = Math.min(-55, K - 100 - 30);
+        if (be != null && be > 0) lo = Math.min(lo, be - 100 - 8);
+        return { min: lo, max: Math.max(20, K - 100 + 20), val: 0 };
+      }
       // Автоколл: интересна зона вокруг барьера защиты — ползунок уводим глубоко вниз,
       // вверх достаточно барьера автоотзыва (выше выплата тела уже не меняется).
       if (r.type === "autocall") {
@@ -170,6 +199,7 @@ window.SITE = (function () {
       }
       if (r.type === "booster") return PAYOFF.booster(100 + move, r.strike || 100, r.strike2 || 110, (r.ku || 175) / 100);
       if (r.type === "autocall") return PAYOFF.autocall(100 + move, r.protectionPct || 65);
+      if (r.type === "revconv") return PAYOFF.revconv(100 + move, r.strike || 100);
       return 100;
     }
   };
@@ -367,6 +397,25 @@ window.SITE = (function () {
       // Верхняя граница участка — БАРЬЕР: правее него выплата скачком уходит на
       // 100%, и подпись, зайдя за него краем, оказывалась под этой полкой
       s += labelAbove((100 + mLo + prot) / 2, 100 + mLo, prot, "по перформансу", C.lab);
+    } else if (r.type === "revconv") {
+      const K = r.strike || 100;
+      // Страйк — единственный перелом кривой: правее тело целое, левее оно тает.
+      s += diamond(x(K), y(100), C.line) +
+        txt(x(K) + 9, y(100) + 17, C.lab2, null, K === 100 ? "страйк S₀" : "страйк " + fmtSmart(K) + "%");
+      // Уровень, ниже которого купоны за срок перестают покрывать просадку тела —
+      // тот же смысл, что «б/у» у варранта. Не рисуем, если срок или купон не
+      // распознаны: выдуманная граница риска хуже отсутствующей.
+      // Подпись вертикали идёт ВНИЗУ, у оси, а не под верхней кромкой, как у
+      // автоколла: наверху уже стоит «перформанс от страйка», и при глубоком
+      // страйке их рамки пересекались (замер на корзине со страйком 80% и
+      // купоном за три года). Внизу под вертикалью пусто при любом страйке —
+      // линия выплаты в этой точке заведомо выше.
+      const cush = revconvBreakeven(r);
+      if (cush != null && cush > 100 + mLo && cush < K - 1) {
+        s += vline(cush, C.gold) +
+          txt(x(cush) + 6, H - f.B - 6, C.gold, null, "б/у с купоном " + fmtSmart(cush) + "%");
+      }
+      s += labelAbove((100 + mLo + K) / 2, 100 + mLo, K, "перформанс от страйка", C.lab);
     }
     const d = pts.map((p, i) => (i ? "L" : "M") + x(p[0]).toFixed(1) + " " + y(p[1]).toFixed(1)).join(" ");
     s += '<path d="' + d + '" fill="none" stroke="' + C.line + '" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>';
@@ -396,6 +445,30 @@ window.SITE = (function () {
       '<text x="' + (f.x(0) + 9).toFixed(1) + '" y="' + (f.y(q) + 17).toFixed(1) + '" fill="' + C.gold +
       '" font-size="11" ' + MONO + '>вход ' + fmt2(q) + '% · доход +' + fmt2(100 - q) + ' п.п.</text>' +
       '</svg>';
+  }
+
+  // Срок в годах из подписи tenor: «9 месяцев» → 0.75, «2 года» → 2.
+  // Ноль означает «не распознан» — вызывающий обязан это проверить: цифра,
+  // посчитанная из выдуманного срока, на витрине выглядит так же уверенно.
+  function tenorYears(r) {
+    const t = String((r && r.tenor) || "");
+    const m = /(\d+(?:[.,]\d+)?)\s*мес/i.exec(t);
+    if (m) return parseFloat(m[1].replace(",", ".")) / 12;
+    const y = /(\d+(?:[.,]\d+)?)/.exec(t);
+    return y ? parseFloat(y[1].replace(",", ".")) : 0;
+  }
+
+  // Реверс-конвертибл: уровень базового актива, на котором купоны за весь срок
+  // ровно покрывают просадку тела. Тело(S) = S/K·100, купоны = купон×срок, и
+  // S/K·100 + купоны = 100 даёт S = K·(100 − купоны)/100.
+  // null — если срока или купона нет; 0 — если купоны покрывают любое падение
+  // (сумма купонов ≥ 100% номинала).
+  function revconvBreakeven(r) {
+    const K = (r && r.strike) || 100, yrs = tenorYears(r);
+    const cpn = (r && (r.couponPa != null ? r.couponPa : r.quote)) || 0;
+    if (!(yrs > 0) || !(cpn > 0)) return null;
+    const total = cpn * yrs;
+    return total >= 100 ? 0 : K * (100 - total) / 100;
   }
 
   function displayName(r) { return r.name; }
@@ -488,6 +561,6 @@ window.SITE = (function () {
     return /S&P|NASDAQ|NVDA|NVIDIA|NBIS|Nebius|BTC|IBIT|GLD|SPY|COPX|CSI|URA|Uranium|Bitcoin|Gold|USD|\$/i.test(n);
   }
 
-  return { TYPES, INSTRUMENTS, PAYOFF, LEGAL, calc, displayName, findInstrument, instrumentsOfType, underlyingInfo, underlyingLong, isFxSensitive, ccyLabel, nonCallText, history, fmtInt, fmt2, fmt1, fmtSmart, quoteBig, daysTo, chartFrame, niceTicks, payoffChart, discountChart, AXIS_X, AXIS_Y };
+  return { TYPES, INSTRUMENTS, PAYOFF, LEGAL, calc, displayName, tenorYears, revconvBreakeven, findInstrument, instrumentsOfType, underlyingInfo, underlyingLong, isFxSensitive, ccyLabel, nonCallText, history, fmtInt, fmt2, fmt1, fmtSmart, quoteBig, daysTo, chartFrame, niceTicks, payoffChart, discountChart, AXIS_X, AXIS_Y };
 
 })();

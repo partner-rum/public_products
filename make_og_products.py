@@ -131,7 +131,7 @@ TEMPLATE = r"""<!DOCTYPE html>
 </div>
 <script>
 var TYPE_KICK = { discount:"Дисконтная облигация", protection:"Облигация с защитой капитала",
-                  warrant:"Варрант", booster:"Бустер", autocall:"Автоколл" };
+                  warrant:"Варрант", booster:"Бустер", autocall:"Автоколл", revconv:"Реверс-конвертибл" };
 var qs = new URLSearchParams(location.search);
 var id = qs.get("id") || "";
 var instr = ((window.SITE_DATA||{}).instruments)||[];
@@ -176,6 +176,15 @@ function curve(it, isOffer){
     return { pts:[[prot-25,prot-25],[prot,prot],[prot,100],[call+12,100]],
              marks:[["защита "+num(prot)+"%",prot,100],["номинал 100%",call+12,100]],
              cap:true, xlab:"худшая бумага корзины", ylab:"возврат тела, % ном." };
+  }
+  if (fam === "revconv"){
+    // Тело: 100% на страйке и выше, ниже — по перформансу ОТ СТРАЙКА (S/K),
+    // поэтому левый конец выше, чем у автоколла с тем же уровнем актива.
+    var Krc = it.strike != null ? it.strike : 100;
+    var loRc = Math.max(20, Krc - 45);
+    return { pts:[[loRc, loRc/Krc*100],[Krc,100],[Krc+35,100]],
+             marks:[["страйк "+num(Krc)+"%",Krc,100],["номинал 100%",Krc+35,100]],
+             cap:true, xlab:"уровень базового актива", ylab:"возврат тела, % ном." };
   }
   if (fam === "booster"){
     var ku = it.ku || q || 100, top = ((K2||110) - K) * ku / 100;
@@ -258,7 +267,7 @@ function chip(cap, val, sub){
   var chips = [];
   var q = item.quote != null ? item.quote : item.price;
   if (fam === "booster") chips.push(chip("участие", num(item.ku||q)+"%", ""));
-  else if (fam === "autocall") chips.push(chip("купон", num(item.couponPa != null ? item.couponPa : q)+"%", "годовых · индикативно"));
+  else if (fam === "autocall" || fam === "revconv") chips.push(chip("купон", num(item.couponPa != null ? item.couponPa : q)+"%", "годовых · индикативно"));
   else if (fam === "discount") chips.push(chip("цена входа", num(q)+"%", "ном. · индикативно"));
   else if (q != null) chips.push(chip(isOffer?"цена":"котировка", num(q)+"%", "ном. · индикативно"));
   if (item.tenor) chips.push(chip("срок", item.tenor, ""));

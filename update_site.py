@@ -27,6 +27,10 @@ import sys
 #   discount   — id, type, name, underlying, cls, expiry, quote, chg, minNom
 #   protection — + spot, strike (нач. уровень S0), participation (0..1), protectionPct,
 #                опц. cap (потолок = макс. учитываемый рост БА, %; нет поля = без потолка)
+#   revconv    — id, type, name, underlying, cls, strike (страйк, % от старта),
+#                couponPa (купон % годовых, БЕЗУСЛОВНЫЙ), obsPerYear, tenor, expiry,
+#                quote (= couponPa, вход по номиналу), опц. basket (worst-of), settle.
+#                Заводится админкой (src: "sales") — сеткой здесь не собирается.
 #   warrant    — собирается сеткой ниже: структура (call / call105 / cs) × БА × срок.
 #                Страйки варрантов — в % от начального уровня БА:
 #                100 = уровень в день покупки, 105 = +5%, 150 = потолок колл-спреда.
