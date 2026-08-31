@@ -770,7 +770,7 @@
     try {
       var qs = new URLSearchParams(location.search);
       qs.set("i", iss.id);
-      history.replaceState(null, "", location.pathname + "?" + qs.toString());
+      history.replaceState(null, "", location.pathname + "?" + qs.toString() + location.hash);
     } catch (e0) { /* адресная строка не критична для отрисовки */ }
     if (!iss) { box.innerHTML = '<div class="wrap"><p class="sec-p">Разборов пока нет.</p></div>'; return; }
     var items = iss.items || [];
@@ -933,13 +933,68 @@
   // открывался бы самый свежий (после нового выпуска августовская встреча
   // уводила на чужую тему).
   var want = new URLSearchParams(location.search).get("i");
+  // Прямая ссылка на разбор ОДНОЙ компании: /ideas.html#GAZP. Сейлз отправляет
+  // клиента на нужную компанию, а не на страницу в 23 000 px. Тикер может лежать
+  // в другом выпуске — тогда открываем ТОТ выпуск, иначе ссылка ведёт в пустоту.
+  var anchor = "";
+  try { anchor = decodeURIComponent(location.hash.slice(1)).replace(/^p-/, ""); }
+  catch (eh) { anchor = location.hash.slice(1).replace(/^p-/, ""); }
   var start = 0;
   if (want) {
     for (var wi = 0; wi < IDEAS.issues.length; wi++) {
       if (IDEAS.issues[wi].id === want) { start = wi; break; }
     }
+  } else if (anchor) {
+    for (var ai = 0; ai < IDEAS.issues.length; ai++) {
+      var owns = (IDEAS.issues[ai].items || []).some(function (d) { return d.ticker === anchor; });
+      if (owns) { start = ai; break; }
+    }
   }
   render(start);
+  // Переход по якорю — ПОСЛЕ отрисовки: когда браузер обрабатывал #GAZP сам,
+  // карточек в DOM ещё не было, и родной переход молча не срабатывал.
+  if (location.hash) {
+    var lastSet = -1;
+    var goAnchor = function (force) {
+      var el = document.getElementById(location.hash.slice(1));
+      if (!el) return;
+      // Повтор — только если человек сам никуда не уехал: догрузка шрифта не должна
+      // выдёргивать из-под него страницу, которую он уже начал читать.
+      if (!force && lastSet >= 0 && Math.abs(window.scrollY - lastSet) > 4) return;
+      // instant, а не плавно: у страницы scroll-behavior:smooth, и переход по
+      // ссылке превращался в двадцатитысячепиксельный полёт мимо десяти чужих
+      // разборов. Клиент по присланной ссылке должен оказаться на карточке сразу.
+      try { el.scrollIntoView({ behavior: "instant", block: "start" }); }
+      catch (es) { el.scrollIntoView(); }
+      lastSet = window.scrollY;
+    };
+    goAnchor(true);
+    // Шрифты и картинки догружаются ПОСЛЕ первого перехода и сдвигают карточку вниз:
+    // на телефоне без повтора клиент оказывался на 1400 px выше нужного разбора.
+    if (document.readyState !== "complete") {
+      window.addEventListener("load", function () { goAnchor(); }, { once: true });
+    }
+    try {
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(function () { goAnchor(); });
+      }
+    } catch (ef) { /* без Font Loading API хватает перехода по load */ }
+    // И ЕЩЁ РАЗ — когда снят гейт квалинвестора. qualgate.js подключается отдельным
+    // файлом ПОСЛЕ этого кода и на время показа модалки вешает overflow:hidden,
+    // который сбрасывает прокрутку в ноль. Без повтора ссылка на компанию приводила
+    // клиента на верх страницы в 23 000 px — то есть ровно туда, откуда её и дают.
+    try {
+      var docEl = document.documentElement, wasLocked = docEl.classList.contains("qg-lock");
+      var mo = new MutationObserver(function () {
+        if (docEl.classList.contains("qg-lock")) { wasLocked = true; return; }
+        if (wasLocked) { goAnchor(true); mo.disconnect(); }
+      });
+      mo.observe(docEl, { attributes: true, attributeFilter: ["class"] });
+      // Гейт мог и не появиться (подтверждён ранее в этой сессии) — тогда наблюдатель
+      // просто отключается, ничего не сделав.
+      setTimeout(function () { mo.disconnect(); }, 120000);
+    } catch (em) { /* без MutationObserver переход всё равно сделан выше */ }
+  }
 })();
 </script>
 <script src="chat.js?v=17"></script>
