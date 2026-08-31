@@ -1,8 +1,8 @@
 // Файл сгенерирован update_site.py — руками не править (перезапишется при следующем запуске).
 // Продукты с "src": "sales" добавлены через админку и сохраняются при перегенерации.
-// Обновлено: 2026-08-19
+// Обновлено: 2026-08-31
 window.SITE_DATA = {
-  "updated": "2026-08-19",
+  "updated": "2026-08-31",
   "instruments": [
     {
       "id": "W-OFZ238-C100-0728",
@@ -17,7 +17,7 @@ window.SITE_DATA = {
       "spot": 100,
       "tenor": "2 года",
       "expiry": "21.07.2028",
-      "quote": 15.0,
+      "quote": 15,
       "chg": 0,
       "minNom": 1000000
     },
@@ -34,7 +34,7 @@ window.SITE_DATA = {
       "spot": 100,
       "tenor": "3 года",
       "expiry": "20.07.2029",
-      "quote": 16.0,
+      "quote": 16,
       "chg": 0,
       "minNom": 1000000
     },
@@ -51,7 +51,7 @@ window.SITE_DATA = {
       "spot": 100,
       "tenor": "2 года",
       "expiry": "21.07.2028",
-      "quote": 10.0,
+      "quote": 10,
       "chg": 0,
       "minNom": 1000000
     },
@@ -68,7 +68,7 @@ window.SITE_DATA = {
       "spot": 100,
       "tenor": "3 года",
       "expiry": "20.07.2029",
-      "quote": 12.0,
+      "quote": 12,
       "chg": 0,
       "minNom": 1000000
     },
@@ -172,7 +172,7 @@ window.SITE_DATA = {
       "spot": 100,
       "tenor": "3 года",
       "expiry": "20.07.2029",
-      "quote": 44.0,
+      "quote": 44,
       "chg": 0,
       "minNom": 1000000
     },
@@ -259,7 +259,7 @@ window.SITE_DATA = {
       "spot": 100,
       "tenor": "2 года",
       "expiry": "21.07.2028",
-      "quote": 21.0,
+      "quote": 21,
       "chg": 0,
       "minNom": 1000000
     },
@@ -293,7 +293,7 @@ window.SITE_DATA = {
       "spot": 100,
       "tenor": "2 года",
       "expiry": "21.07.2028",
-      "quote": 40.0,
+      "quote": 40,
       "chg": 0,
       "minNom": 1000000
     },
@@ -310,7 +310,7 @@ window.SITE_DATA = {
       "spot": 100,
       "tenor": "3 года",
       "expiry": "20.07.2029",
-      "quote": 57.0,
+      "quote": 57,
       "chg": 0,
       "minNom": 1000000
     },
@@ -328,7 +328,7 @@ window.SITE_DATA = {
       "spot": 100,
       "tenor": "2 года",
       "expiry": "21.07.2028",
-      "quote": 20.0,
+      "quote": 20,
       "chg": 0,
       "minNom": 1000000
     },
@@ -380,7 +380,7 @@ window.SITE_DATA = {
       "spot": 100,
       "tenor": "3 года",
       "expiry": "20.07.2029",
-      "quote": 13.0,
+      "quote": 13,
       "chg": 0,
       "minNom": 1000000
     },
@@ -397,7 +397,7 @@ window.SITE_DATA = {
       "spot": 100,
       "tenor": "2 года",
       "expiry": "21.07.2028",
-      "quote": 17.0,
+      "quote": 17,
       "chg": 0,
       "minNom": 1000000
     },
@@ -571,7 +571,7 @@ window.SITE_DATA = {
       "spot": 100,
       "tenor": "2 года",
       "expiry": "19.08.2028",
-      "quote": 52.0,
+      "quote": 52,
       "chg": 0,
       "minNom": 1000000
     },
@@ -624,7 +624,7 @@ window.SITE_DATA = {
       "spot": 100,
       "tenor": "3 года",
       "expiry": "20.08.2029",
-      "quote": 22.0,
+      "quote": 22,
       "chg": 0,
       "minNom": 1000000
     },
@@ -641,7 +641,7 @@ window.SITE_DATA = {
       "spot": 100,
       "tenor": "3 года",
       "expiry": "20.08.2029",
-      "quote": 44.0,
+      "quote": 44,
       "chg": 0,
       "minNom": 1000000
     },
@@ -711,7 +711,7 @@ window.SITE_DATA = {
       "spot": 100,
       "tenor": "3 года",
       "expiry": "20.08.2029",
-      "quote": 84.0,
+      "quote": 84,
       "chg": 0,
       "minNom": 1000000
     },
@@ -746,7 +746,7 @@ window.SITE_DATA = {
       "spot": 100,
       "tenor": "3 года",
       "expiry": "20.08.2029",
-      "quote": 64.0,
+      "quote": 64,
       "chg": 0,
       "minNom": 1000000
     },
@@ -1128,7 +1128,7 @@ window.SITE_DATA = {
       "currency": "USD",
       "strike": 100,
       "spot": 100,
-      "participation": 1.0,
+      "participation": 1,
       "protectionPct": 100,
       "cap": 50,
       "uRef": "$147",
@@ -1830,6 +1830,24 @@ window.SITE_DATA = {
       "spot": 100,
       "strike": 100,
       "participation": 2.2,
+      "protectionPct": 100,
+      "quote": 100,
+      "chg": 0,
+      "minNom": 30000000,
+      "src": "sales"
+    },
+    {
+      "id": "p-ofz-26248-04092028-s",
+      "type": "protection",
+      "name": "Защита капитала · ОФЗ 26248 · 2 года",
+      "underlying": "ОФЗ 26248",
+      "cls": "Облигации",
+      "tenor": "2 года",
+      "expiry": "04.09.2028",
+      "currency": "RUB",
+      "spot": 100,
+      "strike": 100,
+      "participation": 1.9,
       "protectionPct": 100,
       "quote": 100,
       "chg": 0,
