@@ -3,7 +3,7 @@
 // Источники: ЦБ (ключевая, RUONIA), MOEX ISS (RUSFAR, БПИФы, ОФЗ),
 // Финуслуги (вклады и накопительные счета — витрина МосБиржи).
 window.RATES = {
-  "updated": "2026-08-28 19:30",
+  "updated": "2026-08-31 10:30",
   "cbr": {
     "key": {
       "rate": 14.0,
@@ -50,42 +50,42 @@ window.RATES = {
     {
       "id": "BCSD",
       "name": "БКС Денежный рынок",
-      "price": 14.283,
+      "price": 14.289,
       "ter": 0.2,
       "rate": 13.34
     },
     {
       "id": "MONY",
       "name": "АК БАРС Денежный рынок",
-      "price": 132.04,
+      "price": 132.43,
       "ter": 0.2,
       "rate": 13.34
     },
     {
       "id": "LQDT",
       "name": "Ликвидность (ВИМ)",
-      "price": 2.0733,
+      "price": 2.0741,
       "ter": 0.29,
       "rate": 13.25
     },
     {
       "id": "SBMM",
       "name": "Первая Сберегательный",
-      "price": 19.2805,
+      "price": 19.288,
       "ter": 0.3,
       "rate": 13.24
     },
     {
       "id": "AMNR",
       "name": "АТОН Накопительный",
-      "price": 155.835,
+      "price": 155.899,
       "ter": 0.3,
       "rate": 13.24
     },
     {
       "id": "AKMM",
       "name": "Альфа Денежный рынок",
-      "price": 176.47,
+      "price": 176.55,
       "ter": 0.69,
       "rate": 12.85
     },
@@ -102,28 +102,28 @@ window.RATES = {
       "id": "SU26219RMFS4",
       "name": "ОФЗ 26219",
       "maturity": "2026-09-16",
-      "years": 0.05,
-      "rate": 10.83
+      "years": 0.04,
+      "rate": 11.59
     },
     {
       "id": "SU26226RMFS9",
       "name": "ОФЗ 26226",
       "maturity": "2026-10-07",
-      "years": 0.11,
-      "rate": 11.99
+      "years": 0.1,
+      "rate": 12.46
     },
     {
       "id": "SU26207RMFS9",
       "name": "ОФЗ 26207",
       "maturity": "2027-02-03",
-      "years": 0.44,
-      "rate": 12.77
+      "years": 0.43,
+      "rate": 12.67
     },
     {
       "id": "SU26232RMFS7",
       "name": "ОФЗ 26232",
       "maturity": "2027-10-06",
-      "years": 1.11,
+      "years": 1.1,
       "rate": 13.03
     },
     {
@@ -131,7 +131,7 @@ window.RATES = {
       "name": "ОФЗ 26212",
       "maturity": "2028-01-19",
       "years": 1.39,
-      "rate": 13.64
+      "rate": 13.58
     }
   ],
   "deposits": [
@@ -201,6 +201,22 @@ window.RATES = {
     },
     {
       "bank": "Банк ПСБ",
+      "name": "Ярослав Мудрый",
+      "rate": 23.0,
+      "kind": "deposit",
+      "termMonths": 3,
+      "daysFrom": 32,
+      "daysTo": 122,
+      "minAmount": 10000,
+      "url": "https://finuslugi.ru/vklady/promsvyazbank_yaroslav_mudryj",
+      "promo": true,
+      "floating": false,
+      "refill": false,
+      "capitalization": false,
+      "feature": null
+    },
+    {
+      "bank": "Банк ПСБ",
       "name": "Александр Невский",
       "rate": 21.0,
       "kind": "deposit",
@@ -245,22 +261,6 @@ window.RATES = {
       "floating": false,
       "refill": false,
       "capitalization": false,
-      "feature": null
-    },
-    {
-      "bank": "Альфа-Банк",
-      "name": "Альфа-Вклад Акционный",
-      "rate": 19.83,
-      "kind": "deposit",
-      "termMonths": 2,
-      "daysFrom": 62,
-      "daysTo": 62,
-      "minAmount": 10000,
-      "url": "https://finuslugi.ru/vklady/alfabank_alfa_vklad_akcionnyj",
-      "promo": true,
-      "floating": false,
-      "refill": false,
-      "capitalization": true,
       "feature": null
     },
     {
