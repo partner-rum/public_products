@@ -185,6 +185,18 @@
   .slide.basketed .c-sub { margin-top: 6px; }
   .slide.basketed .param { padding: 5px 10px; }
 
+  /* Вторая ступень ужимания переполненного листа — см. fitSlides(). Включается
+     только когда набора basketed не хватило (лист с корзиной в шапке и длинным
+     разбором). Режем интерлиньяж и отступы; кегль прозы НЕ трогаем — 10,5px на
+     печати уже нижняя граница читаемости. */
+  .slide.tighter .callout { padding: 10px 13px; }
+  .slide.tighter .expl { line-height: 1.4; }
+  .slide.tighter .params { gap: 5px; }
+  .slide.tighter .param { padding: 4px 9px; }
+  .slide.tighter .scard { padding: 5px 10px; }
+  .slide.tighter .chart-box { padding: 6px 11px 5px; }
+  .slide.tighter .ex-intro { margin-bottom: 4px; }
+
   /* ── Слайд 3 — дисклеймер (navy) ── */
   .d-slide { padding: 34px 52px; background: var(--nav); color: #E7E9F4; }
   .d-title { font-family: var(--display); font-size: 25px; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 4px; }
@@ -796,22 +808,18 @@
       chartCap: "Возврат тела на погашении в % от номинала; по горизонтали — уровень " +
         (isWOrc ? "худшей бумаги корзины" : "базового актива") + ". Купоны на графике не показаны — они не зависят от уровня актива.",
       params: [["Купон", S.fmt2(cpnPa) + "% годовых", true], ["Выплаты", obsTxt, false], ["Страйк", S.fmtSmart(K) + "%", false],
-        be != null && be > 0 ? ["Купон покрывает падение до", S.fmtSmart(be) + "%", false] : ["Участие в росте", "нет", false]],
+        be != null && be > 0 ? ["Купон покрывает до", S.fmtSmart(be) + "%", false] : ["Участие в росте", "нет", false]],
       exIntro: "Вход по номиналу " + S.fmtInt(nom) + " ₽ (100%) · купон " + S.fmt2(cpnPer) + "% за период = " + S.fmtInt(cpnRub) + " ₽",
       scen: [
         [uName + " на " + S.fmtSmart(K) + "% и выше", "номинал и купоны за " + inst.tenor,
-          "+" + S.fmtInt(cpnAll) + " ₽", "var(--up)", roiTxt(cpnAll, nom)],
-        [uGrewRc + " на 40%", "тело те же 100% — рост не участвует",
           "+" + S.fmtInt(cpnAll) + " ₽", "var(--up)", roiTxt(cpnAll, nom)],
         ["На погашении " + uName + " на " + downLvl + "%", "тело " + S.fmt1(bodyPct) + "% плюс купоны: " + S.fmtInt(downRub) + " ₽",
           (downRub >= nom ? "+" : "−") + S.fmtInt(Math.abs(downRub - nom)) + " ₽", downRub >= nom ? "var(--up)" : "var(--down)",
           roiTxt(downRub - nom, nom)]
       ],
-      explainer: "Купон " + S.fmt2(cpnPa) + "% годовых выплачивается " + obsTxt + " <b>независимо</b> от уровня актива — это плата за принятый по нему риск. " +
-        "На погашении тело возвращается полностью, пока актив не ниже страйка " + S.fmtSmart(K) + "%; в росте выше страйка выпуск не участвует. " +
-        "Ниже страйка тело считается по перформансу <b>от страйка</b>: падение до " + S.fmtSmart(K / 2) + "% даёт половину номинала. " +
-        "Расчёт денежный — бумаги не поставляются." +
-        (be != null && be > 0 ? " Купоны за срок покрывают просадку тела примерно до уровня " + S.fmtSmart(be) + "%." : ""),
+      explainer: "Купон " + S.fmt2(cpnPa) + "% годовых платится " + obsTxt + " <b>независимо</b> от уровня актива — это плата за принятый риск. " +
+        "Тело на погашении возвращается полностью, пока актив не ниже страйка " + S.fmtSmart(K) + "%; в росте выше страйка выпуск не участвует. " +
+        "Ниже страйка тело идёт по перформансу <b>от страйка</b>. Расчёт денежный, бумаги не поставляются.",
       underLabel: "Главный риск · падение актива",
       underDesc: "Если на дату погашения " + uName + " опустится ниже страйка " + S.fmtSmart(K) + "% начального уровня, тело считается по перформансу от страйка — возможна потеря значительной части вложения; купоны при этом остаются у инвестора. Отдельно действует кредитный риск эмитента облигации."
     };
@@ -982,6 +990,38 @@
   }
 
   document.getElementById("deck").innerHTML = html;
+
+  // Лист — фиксированной высоты, и колонка не резиновая: если разбор у продукта
+  // длиннее обычного, блок параметров вылезает за низ колонки и наезжает на
+  // строку «Пример иллюстративный…» (поймано на реверс-конвертибле, −35px).
+  // Раньше от этого спасал только класс basketed, и включался он по признаку
+  // корзины — то есть по типу продукта, а не по факту переполнения. Теперь
+  // замеряем готовый лист и ужимаем ТОЛЬКО тот, где переполнение действительно
+  // есть: сначала набором basketed (он проверен на печати), затем второй
+  // ступенью tighter. Кегль прозы при этом не трогаем — 10,5px и так предел.
+  (function fitSlides() {
+    function overflows(sl) {
+      var cols = sl.querySelectorAll(".col.between");
+      for (var c = 0; c < cols.length; c++) {
+        var bottom = cols[c].getBoundingClientRect().bottom, kids = cols[c].children;
+        for (var k = 0; k < kids.length; k++) {
+          if (kids[k].getBoundingClientRect().bottom > bottom + 1) return true;
+        }
+      }
+      return false;
+    }
+    var slides = document.querySelectorAll("#deck .slide");
+    for (var i = 0; i < slides.length; i++) {
+      var sl = slides[i];
+      if (!overflows(sl)) continue;
+      sl.classList.add("basketed");
+      if (!overflows(sl)) continue;
+      sl.classList.add("tighter");
+      // Молча обрезанный лист хуже некрасивого: если и второй ступени не хватило,
+      // это видно в консоли, а не только глазами на распечатке.
+      if (overflows(sl)) console.warn("one-pager: содержимое не помещается в лист даже после уплотнения");
+    }
+  })();
 
   { const shHost = document.getElementById("sh-host");
     if (shHost && window.Share) {
