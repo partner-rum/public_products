@@ -302,7 +302,10 @@
 
   /* Пустое состояние колонки: объясняет, что данных нет, и даёт выход */
   .mnone { padding:16px 0 4px; font-size:12px; line-height:1.6; color:var(--dim); }
-  .mnone a { display:inline-flex; align-items:center; gap:6px; margin-top:8px; color:var(--solar-l); }
+  .mnone-h { display:block; font-family:var(--display); font-size:14px; font-weight:600;
+    color:var(--ink); letter-spacing:-0.01em; margin-bottom:5px; }
+  .mnone-a { display:flex; flex-wrap:wrap; gap:6px 18px; }
+  .mnone a { display:inline-flex; align-items:center; gap:6px; margin-top:8px; color:var(--solar-l); white-space:nowrap; }
   .mnone a:hover { color:var(--solar); }
 
   /* Продукт, id которого ушёл при перегенерации доски */
@@ -965,7 +968,17 @@
     document.getElementById("offers").innerHTML = !offerItems.length
       ? (!window.OFFERINGS
           ? failBox("размещения")
-          : '<div class="mnone">Сейчас размещений нет.<a href="board.html">Смотреть текущие продукты' + AR + '</a></div>')
+          // Пустое состояние делает предложение, а не констатирует пустоту:
+          // «продукты собираются под клиента» — то самое отличие из PRODUCT.md,
+          // и отсутствие размещений его как раз подтверждает. Тон — как у
+          // «собираем под запрос» в библиотеке. Два выхода: доска и Telegram.
+          : '<div class="mnone"><b class="mnone-h">Деск скучает.</b>' +
+            'Открытых размещений сейчас нет, но продукт собирается под клиента: ' +
+            'назовите бумагу, срок и защиту — посчитаем.' +
+            '<span class="mnone-a">' +
+              '<a href="board.html">Смотреть текущие продукты' + AR + '</a>' +
+              '<a href="https://t.me/+NHbVOoUI5IBkN2Uy" target="_blank" rel="noopener">Написать в Telegram' + AR + '</a>' +
+            '</span></div>')
       : offerItems.map(function (o) {
       var ps = [["срок", o.tenor], ["защита", o.protection], ["участие", o.participation]]
         .filter(function (p) { return p[1]; })
