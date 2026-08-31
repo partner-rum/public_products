@@ -1869,6 +1869,22 @@ window.SITE_DATA = {
       "chg": 0,
       "minNom": 1000000,
       "src": "sales"
+    },
+    {
+      "id": "W-GAZP-C100-1Y",
+      "type": "warrant",
+      "structure": "call",
+      "name": "CALL 100 · Газпром · 1 год",
+      "underlying": "Газпром (GAZP)",
+      "cls": "Акции РФ",
+      "currency": "RUB",
+      "strike": 100,
+      "spot": 100,
+      "tenor": "1 год",
+      "quote": 25,
+      "chg": 0,
+      "minNom": 1000000,
+      "src": "sales"
     }
   ],
   "underlyings": {}

@@ -365,7 +365,9 @@
       ["Страйк (K)", S.fmtSmart(K) + "% нач. уровня"]
     ];
     if (isCS) wMetrics.push(["Потолок (K₂)", S.fmtSmart(K2) + "% · выплата ≤ " + S.fmtSmart(capPct) + "%"]);
-    wMetrics.push(["Срок", inst.tenor], ["Экспирация", inst.expiry], ["Валюта", inst.currency || "RUB"]);
+    wMetrics.push(["Срок", inst.tenor]);
+    if (inst.expiry) wMetrics.push(["Экспирация", inst.expiry]);
+    wMetrics.push(["Валюта", inst.currency || "RUB"]);
     if (isWO) wMetrics.push(["Корзина", inst.underlying + " · выплата по худшей"]);
     if (inst.uRef) wMetrics.push([inst.underlying + " сегодня", inst.uRef]);
     wMetrics.push(["Мин. номинал", S.fmtInt(nom) + " ₽"]);
