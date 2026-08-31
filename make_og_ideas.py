@@ -35,7 +35,7 @@ import sys
 import threading
 
 ROOT = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(ROOT, "og-ideas-2.jpg")
+OUT = os.path.join(ROOT, "og-ideas-3.jpg")
 # Chrome умеет снимать только PNG — снимаем во временный файл и сжимаем.
 RAW = os.path.join(ROOT, "_og_ideas_raw.png")
 TPL_NAME = "_og_ideas_tmp.html"
