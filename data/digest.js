@@ -194,7 +194,7 @@ window.DIGEST_ARCHIVE = {
     "id": "zaschita-kapitala-csi-300-3-goda",
     "family": "protection",
     "kind": "Структурная облигация · защита капитала",
-    "name": "Защита капитала · CSI 300 · 3 года",
+    "name": "Защита капитала · Участие 200% в CSI 300 · 3 года",
     "underlying": "CSI 300",
     "teaser": "В июне Goldman Sachs повысил 12-месячный таргет по CSI 300 до 5 500 пунктов, это +18% к текущему уровню",
     "tenor": "3 года",
