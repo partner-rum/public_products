@@ -3,7 +3,7 @@
 // Источники: ЦБ (ключевая, RUONIA), MOEX ISS (RUSFAR, БПИФы, ОФЗ),
 // Финуслуги (вклады и накопительные счета — витрина МосБиржи).
 window.RATES = {
-  "updated": "2026-08-31 10:30",
+  "updated": "2026-08-31 13:30",
   "cbr": {
     "key": {
       "rate": 14.0,
@@ -19,82 +19,82 @@ window.RATES = {
       "id": "RUSFAR",
       "term": "овернайт",
       "days": 1,
-      "rate": 13.54
+      "rate": 13.68
     },
     {
       "id": "RUSFAR1W",
       "term": "1 неделя",
       "days": 7,
-      "rate": 13.67
+      "rate": 13.74
     },
     {
       "id": "RUSFAR2W",
       "term": "2 недели",
       "days": 14,
-      "rate": 13.75
+      "rate": 13.79
     },
     {
       "id": "RUSFAR1M",
       "term": "1 месяц",
       "days": 30,
-      "rate": 13.82
+      "rate": 13.88
     },
     {
       "id": "RUSFAR3M",
       "term": "3 месяца",
       "days": 90,
-      "rate": 13.97
+      "rate": 14.0
     }
   ],
   "funds": [
     {
       "id": "BCSD",
       "name": "БКС Денежный рынок",
-      "price": 14.289,
+      "price": 14.287,
       "ter": 0.2,
-      "rate": 13.34
+      "rate": 13.48
     },
     {
       "id": "MONY",
       "name": "АК БАРС Денежный рынок",
-      "price": 132.43,
+      "price": 131.9,
       "ter": 0.2,
-      "rate": 13.34
+      "rate": 13.48
     },
     {
       "id": "LQDT",
       "name": "Ликвидность (ВИМ)",
       "price": 2.0741,
       "ter": 0.29,
-      "rate": 13.25
+      "rate": 13.39
     },
     {
       "id": "SBMM",
       "name": "Первая Сберегательный",
       "price": 19.288,
       "ter": 0.3,
-      "rate": 13.24
+      "rate": 13.38
     },
     {
       "id": "AMNR",
       "name": "АТОН Накопительный",
-      "price": 155.899,
+      "price": 155.894,
       "ter": 0.3,
-      "rate": 13.24
+      "rate": 13.38
     },
     {
       "id": "AKMM",
       "name": "Альфа Денежный рынок",
       "price": 176.55,
       "ter": 0.69,
-      "rate": 12.85
+      "rate": 12.99
     },
     {
       "id": "TMON",
       "name": "Т-Капитал Денежный рынок",
-      "price": 163.44,
+      "price": 163.46,
       "ter": 1.15,
-      "rate": 12.39
+      "rate": 12.53
     }
   ],
   "ofz": [
@@ -103,35 +103,35 @@ window.RATES = {
       "name": "ОФЗ 26219",
       "maturity": "2026-09-16",
       "years": 0.04,
-      "rate": 11.59
+      "rate": 11.61
     },
     {
       "id": "SU26226RMFS9",
       "name": "ОФЗ 26226",
       "maturity": "2026-10-07",
       "years": 0.1,
-      "rate": 12.46
+      "rate": 12.44
     },
     {
       "id": "SU26207RMFS9",
       "name": "ОФЗ 26207",
       "maturity": "2027-02-03",
       "years": 0.43,
-      "rate": 12.67
+      "rate": 12.93
     },
     {
       "id": "SU26232RMFS7",
       "name": "ОФЗ 26232",
       "maturity": "2027-10-06",
       "years": 1.1,
-      "rate": 13.03
+      "rate": 12.96
     },
     {
       "id": "SU26212RMFS9",
       "name": "ОФЗ 26212",
       "maturity": "2028-01-19",
       "years": 1.39,
-      "rate": 13.58
+      "rate": 13.63
     }
   ],
   "deposits": [
@@ -180,6 +180,22 @@ window.RATES = {
       "promo": true,
       "floating": false,
       "refill": false,
+      "capitalization": false,
+      "feature": null
+    },
+    {
+      "bank": "Банк ДОМ.РФ",
+      "name": "Социальный",
+      "rate": 25.0,
+      "kind": "deposit",
+      "termMonths": 12,
+      "daysFrom": 365,
+      "daysTo": 365,
+      "minAmount": 1,
+      "url": "https://finuslugi.ru/vklady/domrf_socialnyj",
+      "promo": true,
+      "floating": false,
+      "refill": true,
       "capitalization": false,
       "feature": null
     },
@@ -630,6 +646,22 @@ window.RATES = {
       "refill": false,
       "capitalization": false,
       "feature": "3000 ₽ в фонд «Подари Себе Будущее»"
+    },
+    {
+      "bank": "Банк ДОМ.РФ",
+      "name": "Мой дом (% в конце срока)",
+      "rate": 13.9,
+      "kind": "deposit",
+      "termMonths": 5,
+      "daysFrom": 61,
+      "daysTo": 1100,
+      "minAmount": 1500000,
+      "url": "https://finuslugi.ru/vklady/domrf_moj_dom_procenty_v_konce_sroka",
+      "promo": false,
+      "floating": false,
+      "refill": false,
+      "capitalization": false,
+      "feature": null
     },
     {
       "bank": "Банк ПСБ",
