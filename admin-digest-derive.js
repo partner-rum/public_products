@@ -27,11 +27,12 @@
         var cap = strike2 - strike;
         base.metric = { v: "+" + comma(cap) + "%", k: "потолок роста" };
         base.p.upside = "рост актива до +" + comma(cap) + "%";
-        base.payoff = { type: "callcap", premiumPct: quote, capPct: cap };
+        base.payoff = { type: "callcap", premiumPct: quote, capPct: cap, strikePct: strike };
       } else {
         base.metric = { v: comma(quote) + "%", k: "премия от номинала" };
         base.p.upside = "рост актива, без потолка";
         base.payoff = { type: "call", premiumPct: quote };
+        if (strike != null) base.payoff.strikePct = strike;
       }
       return base;
     }
@@ -66,12 +67,20 @@
       // participation в instruments.js — доля (1.2), на витрине показывается процентами
       var partPct = Math.round(part * 100);
       var K = strike != null ? strike : 100;
+      // cap — потолок РОСТА БАЗОВОГО АКТИВА в п.п. от старта (так же читает его витрина,
+      // calc.pct в data/lib.js). Максимальная выплата из него считается, а не равна ему:
+      // при участии 90% и потолке +50% клиент получает не более +45%.
+      var pcap = num(p.cap);
+      if (pcap != null && 100 + pcap <= K) pcap = null;      // потолок ниже страйка — данные битые
+      var maxGain = pcap != null ? Math.round(partPct / 100 * (100 + pcap - K) * 100) / 100 : null;
       base.family = "protection"; base.kind = "Структурная облигация · защита капитала";
       base.metric = { v: floor + "%", k: "защита капитала" };
       base.p.price = "100% номинала";
-      base.p.upside = partPct + "% роста базового актива" + (K > 100 ? " выше +" + comma(K - 100) + "%" : "");
+      base.p.upside = partPct + "% роста базового актива" + (K > 100 ? " выше +" + comma(K - 100) + "%" : "") +
+                      (pcap != null ? " до +" + comma(pcap) + "%, максимум +" + comma(maxGain) + "%" : "");
       base.p.protection = floor + "%";
       base.payoff = { type: "protected", floorPct: floor, partPct: partPct, strikePct: K };
+      if (pcap != null) base.payoff.capPct = pcap;
       return base;
     }
 
@@ -118,12 +127,17 @@
     } else if (r.family === "protection") {
       // участие и страйк знаем не всегда (у первички в данных может не быть) — текст
       // подстраиваем, а не подставляем «100%» по умолчанию: это была бы выдуманная цифра
-      var part = pf.partPct, K = pf.strikePct;
+      var part = pf.partPct, K = pf.strikePct, pcap = pf.capPct;
       var above = K != null && K > 100 ? " выше +" + comma(K - 100) + "%" : "";
       var grow = (part != null ? part + "% роста базового актива" : "участие в росте базового актива") + above;
+      // потолок называем максимальной ВЫПЛАТОЙ: клиенту важен его результат, а не уровень актива
+      var maxGain = pcap != null && part != null
+        ? Math.round(part / 100 * (100 + pcap - (K != null ? K : 100)) * 100) / 100 : null;
+      var capTxt = maxGain != null ? " (максимум +" + comma(maxGain) + "%)"
+                 : pcap != null ? " (рост актива засчитывается до +" + comma(pcap) + "%)" : "";
       r.how = "Защита капитала " + floor + "%: при погашении возвращается не менее " + floor +
-              "% номинала плюс " + grow + ".";
-      r.payout = "Выплата = " + floor + "% номинала плюс " + grow +
+              "% номинала плюс " + grow + capTxt + ".";
+      r.payout = "Выплата = " + floor + "% номинала плюс " + grow + capTxt +
                  ". Если актив не вырос — возврат " + floor + "% номинала.";
     } else {
       r.how = "Диверсифицированная облигационная стратегия."; r.payout = "Выплата равна стоимости портфеля на дату погашения.";

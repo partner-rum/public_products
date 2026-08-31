@@ -15,6 +15,12 @@
 import re, json, os, sys, io
 from string import Template
 
+# Консоль Windows по умолчанию cp1251: «₽» в предупреждении об обрезанных текстах роняло
+# скрипт UnicodeEncodeError — уже ПОСЛЕ записи страницы, но ДО пересборки архива (--all),
+# то есть архивные листы молча оставались старыми.
+try: sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+except Exception: pass
+
 try:
     import segno
 except ImportError:
@@ -310,6 +316,7 @@ def esc(s):
 
 # ── профиль выплаты по типу payoff (светлая палитра для печати) ───────────────
 CURVE, AX, LAB, INK = "#EE7D1B", "#C3C6D6", "#5B6080", "#101231"
+GHOST = "#8E93B0"   # линия «актив 1:1» — опора для чтения участия, тише кривой продукта
 _W, _H, _PAD = 300.0, 130.0, 16.0
 def _x(t): return _PAD + t * (_W - 2 * _PAD)
 def _y(t): return _PAD + t * (_H - 2 * _PAD)
@@ -377,10 +384,82 @@ def _warrant_svg(p, cap=None):
     if q and X(sBe) < _W - PADR - 6:                                          # точка безубытка
         end = X(sBe) > _W * 0.7
         out += '<circle cx="%.1f" cy="%.1f" r="3.2" fill="%s"/>' % (X(sBe), Y(q), CURVE)
-        out += _txt(X(sBe) + (-6 if end else 6), Y(q) + 14, "б/у %s" % _gnum(round(sBe, 2)),
-                    "end" if end else "start", INK)
+        # Слева от безубытка кривая идёт НИЖЕ уровня премии — подпись под уровнем
+        # легла бы прямо на неё (премия 86,5% на листе NBIS). Поэтому у правого края
+        # уводим подпись НАД уровень: там пусто до самой верхней строки.
+        out += _txt(X(sBe) + (-6 if end else 6), Y(q) + (-5 if end else 14),
+                    "б/у %s" % _gnum(round(sBe, 2)), "end" if end else "start", INK)
     out += _txt(_W - PADR, PADT - 4,
                 ("макс. +%s%% ном." % _gnum(cap)) if K2 else "рост без потолка", "end")
+    return out
+
+
+# Защита капитала — как на витрине (chartProtection в data/lib.js): ось X — уровень
+# базового актива в % от старта, ось Y — выплата в % номинала. НАКЛОН ЛИНИИ И ЕСТЬ
+# КОЭФФИЦИЕНТ УЧАСТИЯ: до 31.08.2026 геометрия была фиксированной, и участие 40% и 200%
+# давали пиксель в пиксель одну картинку — цифра жила подписью, а не рисунком.
+# Бледная линия «актив» (рост один к одному) — опора: без неё «круче» не с чем сравнивать,
+# а на ней же читается и защита (слева актив уходит вниз, выплата держит полку).
+# Потолок рисуем ТОЛЬКО при заданном capPct — у обычной защиты участие в росте ничем не
+# ограничено, и полка справа изображала бы call-spread, то есть врала бы про продукт.
+# capPct — потолок РОСТА АКТИВА в п.п. от старта (поле cap на доске), НЕ максимальная
+# выплата: при участии 90% и потолке +50% клиент получает не более +45%.
+def _protected_svg(p):
+    floor = float(p.get("floorPct") or 100)
+    K = float(p.get("strikePct") or 100)
+    part = float(p["partPct"]) / 100 if p.get("partPct") is not None else 1.0
+    capLvl = 100 + float(p["capPct"]) if p.get("capPct") is not None else None
+    if capLvl is not None and capLvl <= K:       # потолок ниже страйка — данные битые
+        capLvl = None
+
+    def pay(s):
+        return floor + part * max((min(s, capLvl) if capLvl is not None else s) - K, 0.0)
+
+    # Окно начинаем ниже САМОГО НИЖНЕГО из уровней: при защите 80% линия актива
+    # выходила из нижнего угла вплотную к полке и ложилась на подпись «защита 80%».
+    s0 = min(K, 100.0, floor) - 25
+    s1 = capLvl + (capLvl - s0) * 0.14 if capLvl is not None else max(K, 100.0) + 40
+    ymin = min(floor, s0)
+    ymax = pay(s1) + (pay(s1) - ymin) * 0.14 + 2
+
+    PADL, PADR, PADT, PADB = 8.0, 8.0, 15.0, 22.0
+    def X(s): return PADL + (s - s0) / (s1 - s0) * (_W - PADL - PADR)
+    def Y(v): return _H - PADB - (v - ymin) / (ymax - ymin) * (_H - PADT - PADB)
+
+    d = "M%.1f %.1f L%.1f %.1f" % (X(s0), Y(floor), X(K), Y(floor))
+    if capLvl is not None:
+        d += " L%.1f %.1f L%.1f %.1f" % (X(capLvl), Y(pay(capLvl)), X(s1), Y(pay(s1)))
+    else:
+        d += " L%.1f %.1f" % (X(s1), Y(pay(s1)))
+
+    # Подпись защиты — НАД полкой: под ней теперь проходит линия актива (снизу слева она
+    # уходит вниз — это и есть картинка защиты), и подпись легла бы прямо на неё.
+    out = ('<line x1="%.1f" y1="%.1f" x2="%.1f" y2="%.1f" stroke="%s" stroke-width="1" '
+           'stroke-dasharray="2 4"/>' % (PADL, Y(floor), _W - PADR, Y(floor), AX))
+    out += _txt(PADL, Y(floor) - 5, "защита %s%%" % _gnum(p.get("floorPct", 100)))
+    sG = min(s1, ymax)                                    # линия актива уходит за верх кадра
+    if sG > s0 + 1:
+        out += ('<path d="M%.1f %.1f L%.1f %.1f" fill="none" stroke="%s" stroke-width="1.2" '
+                'stroke-dasharray="4 3"/>' % (X(s0), Y(s0), X(sG), Y(sG), GHOST))
+        # Подпись — у НАЧАЛА линии, в нижнем поле кадра: вдоль наклонной любая подпись
+        # ложится на саму линию (за ширину подписи линия успевает уйти на её высоту).
+        out += _txt(X(s0) + 2, min(Y(s0) + 12, _H - 5), "актив")
+    out += _line(d)
+    if capLvl is not None:
+        out += _diamond(X(capLvl), Y(pay(capLvl)))
+    if abs(K - 100) > 0.01:                               # страйк выше старта — отметить и назвать
+        out += _diamond(X(K), Y(floor))
+        out += _txt(X(K), Y(floor) + 13, "K %s" % _gnum(K), "middle")
+    # Максимальную выплату называем ТОЛЬКО когда участие есть в данных: без него оно
+    # принято за 100% ради геометрии, и «макс. +50%» было бы выводом из допущения.
+    # Потолок роста актива при этом известен точно — его и печатаем.
+    if capLvl is not None:
+        lab = ("участие %s%% · макс. +%s%%" % (_gnum(p["partPct"]), _gnum(round(pay(s1) - floor, 2)))
+               if p.get("partPct") is not None else "потолок +%s%% роста" % _gnum(p["capPct"]))
+    else:
+        lab = ("участие %s%% · без потолка" % _gnum(p["partPct"])
+               if p.get("partPct") is not None else "участие в росте")
+    out += _txt(_W - PADR, PADT - 4, lab, "end")
     return out
 
 
@@ -400,26 +479,18 @@ def payoff_svg(p):
              _txt(_W - _PAD, up - 8, ("барьер +%s%% → " % _gnum(p["barrierPct"]) if p.get("barrierPct") else "") +
                   "купон %s%%" % _gnum(p.get("couponPct", "")), "end"))
     elif t == "protected":
-        floor, up, bx = _y(.6), _y(.18), _x(.5)
-        # Полку сверху рисуем ТОЛЬКО при реальном потолке (capPct). Без него участие
-        # в росте ничем не ограничено, и горизонтальный хвост справа изображал бы
-        # call-spread вместо обычного колла — то есть врал бы про сам продукт.
-        if p.get("capPct"):
-            path = "M%.1f %.1f L%.1f %.1f L%.1f %.1f L%.1f %.1f" % (
-                _PAD, floor, bx, floor, _x(.86), up, _W - _PAD, up)
-            label = "участие до +%s%%" % _gnum(p["capPct"])
-        else:
-            path = "M%.1f %.1f L%.1f %.1f L%.1f %.1f" % (_PAD, floor, bx, floor, _W - _PAD, up)
-            label = "участие в росте"
-        e = (_base(floor, "защита %s%%" % _gnum(p.get("floorPct", 100))) +
-             _line(path) + _txt(_W - _PAD, up - 8, label, "end"))
+        e = _protected_svg(p)
     elif t == "booster":
         zero, cap, x0, xc = _y(.58), _y(.16), _x(.42), _x(.7)
-        e = (_base(zero, "номинал 100%") +
+        # «номинал 100%» уводим ВПРАВО, а коэффициент — правее излома: слева обе подписи
+        # лежали прямо на ломаной (участок падения проходил сквозь «номинал 100%»).
+        e = ('<line x1="%.1f" y1="%.1f" x2="%.1f" y2="%.1f" stroke="%s" stroke-width="1" stroke-dasharray="2 4"/>'
+             % (_PAD, zero, _W - _PAD, zero, AX) +
+             _txt(_W - _PAD, zero + 14, "номинал 100%", "end") +
              _line("M%.1f %.1f L%.1f %.1f L%.1f %.1f L%.1f %.1f" % (_PAD, _y(.95), x0, zero, xc, cap, _W - _PAD, cap)) +
              _diamond(xc, cap) +
              _txt(_W - _PAD, cap - 8, "макс. +%s%%" % _gnum(p.get("capPct", "")), "end") +
-             (_txt(_x(.55), _y(.44), "×%s%%" % _gnum(p["kuPct"]), "start") if p.get("kuPct") else "") +
+             (_txt(_x(.66), _y(.52), "×%s%%" % _gnum(p["kuPct"]), "start") if p.get("kuPct") else "") +
              _txt(_PAD, _y(.95) + 13, "падение 1:1"))
     elif t == "fixed":
         inY, outY, mid = _y(.72), _y(.2), _x(.52)
