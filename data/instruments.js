@@ -1853,6 +1853,22 @@ window.SITE_DATA = {
       "chg": 0,
       "minNom": 30000000,
       "src": "sales"
+    },
+    {
+      "id": "RC-GAZP-6M",
+      "type": "revconv",
+      "name": "Реверс-конвертибл на Газпром · 6 месяцев",
+      "underlying": "Газпром (GAZP)",
+      "cls": "Акции РФ",
+      "currency": "RUB",
+      "strike": 100,
+      "couponPa": 17.5,
+      "obsPerYear": 2,
+      "tenor": "6 месяцев",
+      "quote": 17.5,
+      "chg": 0,
+      "minNom": 1000000,
+      "src": "sales"
     }
   ],
   "underlyings": {}

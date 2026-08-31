@@ -412,8 +412,14 @@ window.SITE = (function () {
       // линия выплаты в этой точке заведомо выше.
       const cush = revconvBreakeven(r);
       if (cush != null && cush > 100 + mLo && cush < K - 1) {
+        // Сторона подписи зависит от места: при страйке 100% и коротком сроке
+        // точка покрытия стоит у самого правого края, и подпись вправо уезжала
+        // за кадр (замер на телефоне: Газпром, б/у 91,25%). Слева от вертикали
+        // место есть всегда — там наклонный участок, а не текст.
+        const cl = "б/у с купоном " + fmtSmart(cush) + "%";
+        const fits = x(cush) + 6 + cl.length * fs * 0.62 <= R;
         s += vline(cush, C.gold) +
-          txt(x(cush) + 6, H - f.B - 6, C.gold, null, "б/у с купоном " + fmtSmart(cush) + "%");
+          txt(x(cush) + (fits ? 6 : -6), H - f.B - 6, C.gold, fits ? null : "end", cl);
       }
       s += labelAbove((100 + mLo + K) / 2, 100 + mLo, K, "перформанс от страйка", C.lab);
     }

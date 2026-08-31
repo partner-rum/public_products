@@ -295,7 +295,7 @@
 <div id="deck"></div>
 
 <script src="data/instruments.js?v=fx8"></script>
-<script src="data/lib.js?v=ax3"></script>
+<script src="data/lib.js?v=ax4"></script>
 <script src="data/offerings.js?v=srv19"></script>
 <script src="share.js?v=8"></script>
 <script src="contact.js?v=9"></script>
@@ -594,7 +594,7 @@
     const cushion = (be != null && be > lo && be < K - 1)
       ? '<line x1="' + x(be) + '" y1="' + (PAD - 3) + '" x2="' + x(be) + '" y2="' + y(yMin) + '" stroke="' + C.or +
         '" stroke-width="1" stroke-dasharray="3 4"/>' +
-        '<text x="' + (x(be) + 5) + '" y="' + (PAD + 5) + '" fill="' + C.or + '" font-size="10" ' + MONO +
+        '<text x="' + (x(be) + 5) + '" y="' + (y(yMin) - 4) + '" fill="' + C.or + '" font-size="10" ' + MONO +
         '>купон покрывает до ' + S.fmtSmart(be) + '%</text>'
       : "";
     return '<svg viewBox="0 0 ' + CW + ' ' + HH + '" width="100%" style="display:block">' +
