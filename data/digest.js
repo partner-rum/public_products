@@ -157,7 +157,7 @@ window.DIGEST_ARCHIVE = {
     "id": "cs-100-150-ibit-2-goda",
     "family": "warrant",
     "kind": "Варрант",
-    "name": "CS 100–150 · IBIT · 2 года",
+    "name": "Варрант· IBIT · до 50% · 2 года",
     "underlying": "Bitcoin (IBIT)",
     "teaser": "Идея продукта — не просто купить Bitcoin, а получить участие в сценарии его сильного роста через конструкцию Call Spread 100–150",
     "tenor": "2 года",
