@@ -3,7 +3,7 @@
 // Источники: ЦБ (ключевая, RUONIA), MOEX ISS (RUSFAR, БПИФы, ОФЗ),
 // Финуслуги (вклады и накопительные счета — витрина МосБиржи).
 window.RATES = {
-  "updated": "2026-08-31 16:30",
+  "updated": "2026-09-01 10:30",
   "cbr": {
     "key": {
       "rate": 14.0,
@@ -50,49 +50,49 @@ window.RATES = {
     {
       "id": "BCSD",
       "name": "БКС Денежный рынок",
-      "price": 14.285,
+      "price": 14.294,
       "ter": 0.2,
       "rate": 13.48
     },
     {
       "id": "MONY",
       "name": "АК БАРС Денежный рынок",
-      "price": 132.09,
+      "price": 132.44,
       "ter": 0.2,
       "rate": 13.48
     },
     {
       "id": "LQDT",
       "name": "Ликвидность (ВИМ)",
-      "price": 2.0741,
+      "price": 2.0749,
       "ter": 0.29,
       "rate": 13.39
     },
     {
       "id": "SBMM",
       "name": "Первая Сберегательный",
-      "price": 19.288,
+      "price": 19.295,
       "ter": 0.3,
       "rate": 13.38
     },
     {
       "id": "AMNR",
       "name": "АТОН Накопительный",
-      "price": 155.893,
+      "price": 155.951,
       "ter": 0.3,
       "rate": 13.38
     },
     {
       "id": "AKMM",
       "name": "Альфа Денежный рынок",
-      "price": 176.56,
+      "price": 176.62,
       "ter": 0.69,
       "rate": 12.99
     },
     {
       "id": "TMON",
       "name": "Т-Капитал Денежный рынок",
-      "price": 163.48,
+      "price": 163.54,
       "ter": 1.15,
       "rate": 12.53
     }
@@ -103,21 +103,21 @@ window.RATES = {
       "name": "ОФЗ 26219",
       "maturity": "2026-09-16",
       "years": 0.04,
-      "rate": 11.77
+      "rate": 11.91
     },
     {
       "id": "SU26226RMFS9",
       "name": "ОФЗ 26226",
       "maturity": "2026-10-07",
       "years": 0.1,
-      "rate": 12.53
+      "rate": 12.26
     },
     {
       "id": "SU26207RMFS9",
       "name": "ОФЗ 26207",
       "maturity": "2027-02-03",
-      "years": 0.43,
-      "rate": 12.91
+      "years": 0.42,
+      "rate": 12.98
     },
     {
       "id": "SU26232RMFS7",
@@ -130,8 +130,8 @@ window.RATES = {
       "id": "SU26212RMFS9",
       "name": "ОФЗ 26212",
       "maturity": "2028-01-19",
-      "years": 1.39,
-      "rate": 13.66
+      "years": 1.38,
+      "rate": 13.74
     }
   ],
   "deposits": [
@@ -424,20 +424,20 @@ window.RATES = {
       "feature": null
     },
     {
-      "bank": "Московский Кредитный Банк",
-      "name": "МКБ. Перспектива (% в конце срока)",
+      "bank": "Банк ДОМ.РФ",
+      "name": "Мой дом (% в конце срока)",
       "rate": 14.5,
       "kind": "deposit",
       "termMonths": 3,
-      "daysFrom": 95,
+      "daysFrom": 61,
       "daysTo": 1100,
-      "minAmount": 10000,
-      "url": "https://finuslugi.ru/vklady/mkb_mkb_perspektiva_procenty_v_konce_sroka",
+      "minAmount": 1500000,
+      "url": "https://finuslugi.ru/vklady/domrf_moj_dom_procenty_v_konce_sroka",
       "promo": false,
       "floating": false,
       "refill": false,
       "capitalization": false,
-      "feature": "Повышенный процент за покупки"
+      "feature": null
     },
     {
       "bank": "Банк ФИНАМ",
@@ -488,38 +488,6 @@ window.RATES = {
       "feature": "Повышенная ставка для новых денег"
     },
     {
-      "bank": "Московский Кредитный Банк",
-      "name": "МКБ. Перспектива (% в конце срока)",
-      "rate": 14.2,
-      "kind": "deposit",
-      "termMonths": 6,
-      "daysFrom": 95,
-      "daysTo": 1100,
-      "minAmount": 10000,
-      "url": "https://finuslugi.ru/vklady/mkb_mkb_perspektiva_procenty_v_konce_sroka",
-      "promo": false,
-      "floating": false,
-      "refill": false,
-      "capitalization": false,
-      "feature": "Повышенный процент за покупки"
-    },
-    {
-      "bank": "Реалист Банк",
-      "name": "На ежедневный остаток",
-      "rate": 14.1,
-      "kind": "saving",
-      "termMonths": 0,
-      "daysFrom": 1,
-      "daysTo": 0,
-      "minAmount": 1000,
-      "url": "https://finuslugi.ru/vklady/realist_bank_na_ezhednevnyj_ostatok",
-      "promo": false,
-      "floating": false,
-      "refill": true,
-      "capitalization": true,
-      "feature": null
-    },
-    {
       "bank": "Газпромбанк",
       "name": "Доходный (на минимальный остаток)",
       "rate": 14.0,
@@ -549,22 +517,6 @@ window.RATES = {
       "floating": false,
       "refill": false,
       "capitalization": false,
-      "feature": null
-    },
-    {
-      "bank": "ЛОКО-Банк",
-      "name": "«Локо-Счет» на ежедневный остаток (онлайн)",
-      "rate": 14.0,
-      "kind": "saving",
-      "termMonths": 0,
-      "daysFrom": 1,
-      "daysTo": 0,
-      "minAmount": 100001,
-      "url": "https://finuslugi.ru/vklady/loko_bank_loko_schet_na_ezhednevnyj_ostatok_onlajn",
-      "promo": false,
-      "floating": false,
-      "refill": true,
-      "capitalization": true,
       "feature": null
     },
     {
@@ -630,6 +582,38 @@ window.RATES = {
       "refill": false,
       "capitalization": false,
       "feature": "3000 ₽ в фонд «Подари Себе Будущее»"
+    },
+    {
+      "bank": "Банк ДОМ.РФ",
+      "name": "Мой дом (% в конце срока)",
+      "rate": 13.9,
+      "kind": "deposit",
+      "termMonths": 5,
+      "daysFrom": 61,
+      "daysTo": 1100,
+      "minAmount": 1500000,
+      "url": "https://finuslugi.ru/vklady/domrf_moj_dom_procenty_v_konce_sroka",
+      "promo": false,
+      "floating": false,
+      "refill": false,
+      "capitalization": false,
+      "feature": null
+    },
+    {
+      "bank": "Банк ДОМ.РФ",
+      "name": "Мой дом (% в конце срока)",
+      "rate": 13.9,
+      "kind": "deposit",
+      "termMonths": 6,
+      "daysFrom": 61,
+      "daysTo": 1100,
+      "minAmount": 1500000,
+      "url": "https://finuslugi.ru/vklady/domrf_moj_dom_procenty_v_konce_sroka",
+      "promo": false,
+      "floating": false,
+      "refill": false,
+      "capitalization": false,
+      "feature": null
     },
     {
       "bank": "Банк ПСБ",
@@ -705,6 +689,22 @@ window.RATES = {
       "daysTo": 1095,
       "minAmount": 100000,
       "url": "https://finuslugi.ru/vklady/primore_podarok_novye_dengi_ezhemesyachno",
+      "promo": false,
+      "floating": false,
+      "refill": false,
+      "capitalization": false,
+      "feature": null
+    },
+    {
+      "bank": "Банк ДОМ.РФ",
+      "name": "Мой дом (% в конце срока)",
+      "rate": 13.7,
+      "kind": "deposit",
+      "termMonths": 2,
+      "daysFrom": 61,
+      "daysTo": 1100,
+      "minAmount": 1500000,
+      "url": "https://finuslugi.ru/vklady/domrf_moj_dom_procenty_v_konce_sroka",
       "promo": false,
       "floating": false,
       "refill": false,
@@ -806,22 +806,6 @@ window.RATES = {
       "refill": true,
       "capitalization": true,
       "feature": null
-    },
-    {
-      "bank": "Московский Кредитный Банк",
-      "name": "МКБ. Перспектива (% в конце срока)",
-      "rate": 13.5,
-      "kind": "deposit",
-      "termMonths": 12,
-      "daysFrom": 95,
-      "daysTo": 1100,
-      "minAmount": 10000,
-      "url": "https://finuslugi.ru/vklady/mkb_mkb_perspektiva_procenty_v_konce_sroka",
-      "promo": false,
-      "floating": false,
-      "refill": false,
-      "capitalization": false,
-      "feature": "Повышенный процент за покупки"
     },
     {
       "bank": "Газпромбанк",
@@ -966,6 +950,22 @@ window.RATES = {
       "refill": false,
       "capitalization": false,
       "feature": "Для новых накоплений"
+    },
+    {
+      "bank": "Банк ДОМ.РФ",
+      "name": "Мой дом (% в конце срока)",
+      "rate": 12.7,
+      "kind": "deposit",
+      "termMonths": 12,
+      "daysFrom": 61,
+      "daysTo": 1100,
+      "minAmount": 1500000,
+      "url": "https://finuslugi.ru/vklady/domrf_moj_dom_procenty_v_konce_sroka",
+      "promo": false,
+      "floating": false,
+      "refill": false,
+      "capitalization": false,
+      "feature": null
     },
     {
       "bank": "Газпромбанк",
