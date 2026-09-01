@@ -3,7 +3,7 @@
 // Источники: ЦБ (ключевая, RUONIA), MOEX ISS (RUSFAR, БПИФы, ОФЗ),
 // Финуслуги (вклады и накопительные счета — витрина МосБиржи).
 window.RATES = {
-  "updated": "2026-09-01 10:30",
+  "updated": "2026-09-01 13:30",
   "cbr": {
     "key": {
       "rate": 14.0,
@@ -19,31 +19,31 @@ window.RATES = {
       "id": "RUSFAR",
       "term": "овернайт",
       "days": 1,
-      "rate": 13.68
+      "rate": 13.99
     },
     {
       "id": "RUSFAR1W",
       "term": "1 неделя",
       "days": 7,
-      "rate": 13.74
+      "rate": 13.89
     },
     {
       "id": "RUSFAR2W",
       "term": "2 недели",
       "days": 14,
-      "rate": 13.79
+      "rate": 13.89
     },
     {
       "id": "RUSFAR1M",
       "term": "1 месяц",
       "days": 30,
-      "rate": 13.88
+      "rate": 13.93
     },
     {
       "id": "RUSFAR3M",
       "term": "3 месяца",
       "days": 90,
-      "rate": 14.0
+      "rate": 13.98
     }
   ],
   "funds": [
@@ -52,49 +52,49 @@ window.RATES = {
       "name": "БКС Денежный рынок",
       "price": 14.294,
       "ter": 0.2,
-      "rate": 13.48
+      "rate": 13.79
     },
     {
       "id": "MONY",
       "name": "АК БАРС Денежный рынок",
-      "price": 132.44,
+      "price": 132.05,
       "ter": 0.2,
-      "rate": 13.48
+      "rate": 13.79
     },
     {
       "id": "LQDT",
       "name": "Ликвидность (ВИМ)",
       "price": 2.0749,
       "ter": 0.29,
-      "rate": 13.39
+      "rate": 13.7
     },
     {
       "id": "SBMM",
       "name": "Первая Сберегательный",
-      "price": 19.295,
+      "price": 19.2955,
       "ter": 0.3,
-      "rate": 13.38
+      "rate": 13.69
     },
     {
       "id": "AMNR",
       "name": "АТОН Накопительный",
-      "price": 155.951,
+      "price": 155.95,
       "ter": 0.3,
-      "rate": 13.38
+      "rate": 13.69
     },
     {
       "id": "AKMM",
       "name": "Альфа Денежный рынок",
-      "price": 176.62,
+      "price": 176.63,
       "ter": 0.69,
-      "rate": 12.99
+      "rate": 13.3
     },
     {
       "id": "TMON",
       "name": "Т-Капитал Денежный рынок",
-      "price": 163.54,
+      "price": 163.52,
       "ter": 1.15,
-      "rate": 12.53
+      "rate": 12.84
     }
   ],
   "ofz": [
@@ -103,35 +103,35 @@ window.RATES = {
       "name": "ОФЗ 26219",
       "maturity": "2026-09-16",
       "years": 0.04,
-      "rate": 11.91
+      "rate": 12.34
     },
     {
       "id": "SU26226RMFS9",
       "name": "ОФЗ 26226",
       "maturity": "2026-10-07",
       "years": 0.1,
-      "rate": 12.26
+      "rate": 12.46
     },
     {
       "id": "SU26207RMFS9",
       "name": "ОФЗ 26207",
       "maturity": "2027-02-03",
       "years": 0.42,
-      "rate": 12.98
+      "rate": 12.85
     },
     {
       "id": "SU26232RMFS7",
       "name": "ОФЗ 26232",
       "maturity": "2027-10-06",
       "years": 1.1,
-      "rate": 12.96
+      "rate": 12.88
     },
     {
       "id": "SU26212RMFS9",
       "name": "ОФЗ 26212",
       "maturity": "2028-01-19",
       "years": 1.38,
-      "rate": 13.74
+      "rate": 13.71
     }
   ],
   "deposits": [
@@ -392,22 +392,6 @@ window.RATES = {
       "feature": null
     },
     {
-      "bank": "Вайлдберриз Банк",
-      "name": "Оптимальный",
-      "rate": 14.7,
-      "kind": "deposit",
-      "termMonths": 4,
-      "daysFrom": 60,
-      "daysTo": 365,
-      "minAmount": 50000,
-      "url": "https://finuslugi.ru/vklady/wbbank_optimalnyy",
-      "promo": false,
-      "floating": false,
-      "refill": false,
-      "capitalization": false,
-      "feature": null
-    },
-    {
       "bank": "Реалист Банк",
       "name": "На минимальный остаток",
       "rate": 14.6,
@@ -582,6 +566,22 @@ window.RATES = {
       "refill": false,
       "capitalization": false,
       "feature": "3000 ₽ в фонд «Подари Себе Будущее»"
+    },
+    {
+      "bank": "Банк ДОМ.РФ",
+      "name": "Мой дом (% в конце срока)",
+      "rate": 13.9,
+      "kind": "deposit",
+      "termMonths": 4,
+      "daysFrom": 61,
+      "daysTo": 1100,
+      "minAmount": 1500000,
+      "url": "https://finuslugi.ru/vklady/domrf_moj_dom_procenty_v_konce_sroka",
+      "promo": false,
+      "floating": false,
+      "refill": false,
+      "capitalization": false,
+      "feature": null
     },
     {
       "bank": "Банк ДОМ.РФ",
@@ -792,22 +792,6 @@ window.RATES = {
       "feature": null
     },
     {
-      "bank": "РосДорБанк",
-      "name": "ONLINE-Ключевая минус 0,5%",
-      "rate": 13.5,
-      "kind": "deposit",
-      "termMonths": 9,
-      "daysFrom": 62,
-      "daysTo": 546,
-      "minAmount": 100000,
-      "url": "https://finuslugi.ru/vklady/rosdorbank_online_klyuchevaya_minus_0_5",
-      "promo": false,
-      "floating": false,
-      "refill": true,
-      "capitalization": true,
-      "feature": null
-    },
-    {
       "bank": "Газпромбанк",
       "name": "Новые деньги",
       "rate": 13.45,
@@ -950,6 +934,22 @@ window.RATES = {
       "refill": false,
       "capitalization": false,
       "feature": "Для новых накоплений"
+    },
+    {
+      "bank": "Банк ДОМ.РФ",
+      "name": "Мой дом (% в конце срока)",
+      "rate": 12.7,
+      "kind": "deposit",
+      "termMonths": 9,
+      "daysFrom": 61,
+      "daysTo": 1100,
+      "minAmount": 1500000,
+      "url": "https://finuslugi.ru/vklady/domrf_moj_dom_procenty_v_konce_sroka",
+      "promo": false,
+      "floating": false,
+      "refill": false,
+      "capitalization": false,
+      "feature": null
     },
     {
       "bank": "Банк ДОМ.РФ",
