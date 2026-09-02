@@ -782,6 +782,7 @@
         <li>Выберите <b>встречу</b> — список берётся со страницы «События».</li>
         <li>Впишите, кого позвали: <b>по одному в строке</b>. Пишите обозначение, по которому
           узнаёте человека сами — «Иванов, УК Альфа» или «клиент 7».</li>
+        <li>Нажмите <b>«Добавить в список»</b> — или сразу «Сохранить учёт»: вписанное подхватится само.</li>
         <li>После встречи отметьте галочкой <b>«пришёл»</b> и сохраните.</li>
         <li>Учёт <b>сохраняется сразу</b>, одобрение не нужно. Руслану уходит уведомление,
           только когда цифры изменились.</li>
@@ -937,7 +938,14 @@
     next.focus(); next.click();
   });
 
-  function esc(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+  // Кавычку экранируем тоже: esc() подставляется и ВНУТРЬ атрибутов (aria-label,
+  // data-*), а обозначение приглашённого или название продукта сплошь содержит
+  // кавычки — «УК "Альфа"» ломало бы разметку и могло дописать чужой атрибут.
+  // В текстовом узле &quot; отображается как обычная кавычка, так что вреда нет.
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
 
   // ── МОИ ЗАЯВКИ ───────────────────────────────────────────────────────────
   // Судьба отправленного была невидима: сейлз отправлял и шёл спрашивать Руслана.
@@ -2539,7 +2547,7 @@
     var msgEl = document.getElementById("m-webinar"), mineBox = document.getElementById("wb-mine");
     var saveBtn = document.getElementById("wb-save");
     if (!evSel) return;
-    var people = [], loaded = false, titles = {};
+    var people = [], loaded = false, titles = {}, armedClear = false;
 
     function msg(t, bad) { msgEl.className = "msg" + (bad ? " err" : ""); msgEl.textContent = t; }
     function count() {
@@ -2550,7 +2558,9 @@
       if (!evSel.value) { listBox.innerHTML = "<div class=\"rm-empty\">Сначала выберите встречу.</div>"; cntEl.textContent = "—"; return; }
       if (!loaded) { listBox.innerHTML = "<div class=\"rm-empty\">Загрузка списка…</div>"; cntEl.textContent = "—"; return; }
       if (!people.length) {
-        listBox.innerHTML = "<div class=\"rm-empty\">Список пуст: впишите приглашённых выше и нажмите «Добавить в список».</div>";
+        listBox.innerHTML = "<div class=\"rm-empty\">" + ((addBox.value || "").trim()
+          ? "Вписанное в поле выше пока не в списке — нажмите «Добавить в список» или сразу «Сохранить учёт»: подхватится само."
+          : "Список пуст: впишите приглашённых в поле выше, по одному в строке.") + "</div>";
         count(); return;
       }
       listBox.innerHTML = people.map(function (p, i) {
@@ -2565,19 +2575,23 @@
       var i = e.target && e.target.getAttribute && e.target.getAttribute("data-i");
       if (i == null) return;
       people[+i].c = e.target.checked ? 1 : 0;
+      armedClear = false;
       count();
     });
     listBox.addEventListener("click", function (e) {
       var i = e.target && e.target.getAttribute && e.target.getAttribute("data-x");
       if (i == null) return;
       people.splice(+i, 1);
+      armedClear = false;
       render();
     });
 
     // Разбор вставленного списка. Дубли — и внутри вставки, и с уже набранным —
     // склеиваем без учёта регистра: сейлз вставляет тот же список повторно, и без
     // этого приглашённые множились бы на каждой вставке.
-    addBtn.addEventListener("click", function () {
+    // ВЫНЕСЕНО В ФУНКЦИЮ: тем же разбором пользуется сохранение, чтобы вписанное
+    // в поле не терялось, если сейлз нажал «Сохранить учёт» сразу.
+    function absorb() {
       var lines = (addBox.value || "").split(/[\r\n;]+/), added = 0, bad = [], have = {};
       people.forEach(function (p) { have[p.n.toLowerCase()] = 1; });
       lines.forEach(function (raw) {
@@ -2598,7 +2612,13 @@
           ". Пишите обозначение без контактов — контакты остаются у вас.";
       } else { rejEl.style.display = "none"; rejEl.innerHTML = ""; }
       render();
-      if (added) msg("Добавлено в список: " + added + ". Не забудьте нажать «Сохранить учёт».");
+      if (added) armedClear = false;
+      return { added: added, bad: bad.length };
+    }
+    addBtn.addEventListener("click", function () {
+      var r = absorb();
+      if (r.added) msg("Добавлено в список: " + r.added + ". Осталось нажать «Сохранить учёт».");
+      else if (!r.bad) msg("В поле выше пусто — впишите приглашённых по одному в строке.", true);
     });
 
     function loadOne() {
@@ -2613,7 +2633,10 @@
         listBox.innerHTML = "<div class=\"rm-empty\">" + esc(e.message) + "</div>";
       });
     }
-    evSel.addEventListener("change", function () { rejEl.style.display = "none"; msg(""); loadOne(); });
+    evSel.addEventListener("change", function () { rejEl.style.display = "none"; msg(""); armedClear = false; loadOne(); });
+    // Пока список пуст, подсказка под ним зависит от того, есть ли текст в поле —
+    // значит её надо обновлять по ходу набора, а не только при выборе встречи.
+    addBox.addEventListener("input", function () { if (loaded && !people.length) render(); });
 
     function loadMine() {
       var key = keyEl.value.trim();
@@ -2635,13 +2658,23 @@
       if (!key) { msg("Впишите свой персональный ключ в самом верху страницы.", true); keyEl.focus(); return; }
       if (!evSel.value) { msg("Выберите встречу.", true); return; }
       if (!loaded) { msg("Список ещё загружается — подождите секунду.", true); return; }
-      saveBtn.disabled = true; msg("Сохраняю…");
+      // Вписанное в поле, но не добавленное кнопкой, подхватываем здесь: иначе
+      // сохранение молча уносило бы пустой список при заполненном поле на экране.
+      var pending = (addBox.value || "").trim() ? absorb().added : 0;
+      if (!people.length && !armedClear) {
+        armedClear = true;
+        msg("Список пуст. Если учёт по этой встрече надо СНЯТЬ — нажмите «Сохранить учёт» ещё раз. Иначе впишите приглашённых в поле выше.", true);
+        return;
+      }
+      saveBtn.disabled = true;
+      msg(pending ? "Подхватил из поля: " + pending + ". Сохраняю…" : "Сохраняю…");
       postAsk({ key: key, action: "webinar_save", ev: evSel.value, people: people, clear: people.length === 0 })
         .then(function (d) {
           var extra = (d.rejected && d.rejected.length)
             ? " Сервер не принял: " + d.rejected.map(function (r) { return r.v + " (" + r.why + ")"; }).join(", ") + "."
             : "";
-          msg("Сохранено: позвано " + d.inv + ", пришло " + d.came + "." +
+          armedClear = false;
+          msg((d.inv === 0 ? "Учёт по встрече снят." : "Сохранено: позвано " + d.inv + ", пришло " + d.came + ".") +
             (d.notified === false ? " Уведомление Руслану не ушло — Telegram не ответил, но учёт записан." : "") + extra);
           loadMine();
         })
