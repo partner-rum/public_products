@@ -1885,6 +1885,22 @@ window.SITE_DATA = {
       "chg": 0,
       "minNom": 1000000,
       "src": "sales"
+    },
+    {
+      "id": "W-DOMRF-C100-1Y",
+      "type": "warrant",
+      "structure": "call",
+      "name": "CALL 100 · ДОМ.РФ · 1 год",
+      "underlying": "ДОМ.РФ (DOMRF)",
+      "cls": "Акции РФ",
+      "currency": "RUB",
+      "strike": 100,
+      "spot": 100,
+      "tenor": "1 год",
+      "quote": 25,
+      "chg": 0,
+      "minNom": 1000000,
+      "src": "sales"
     }
   ],
   "underlyings": {}
