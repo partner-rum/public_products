@@ -330,6 +330,22 @@
   }
   // Демо-режим не трогает ни сеть, ни данные настоящего партнёра в localStorage.
   var IS_DEMO = /[?&]demo=[012]/.test(location.search);
+  var ACT_API = "https://so-leads.ruslan-sabirov.workers.dev/act";
+  // Что агент делал на столе — в журнал владельца. Ответа не ждём и ошибок не
+  // показываем: это учёт, а не работа страницы. Пара ID+ключ обязательна, иначе
+  // воркер событие не примет (и подделать чужую активность нельзя).
+  function act(kind, what) {
+    if (IS_DEMO) return;
+    var id = "", key = "";
+    try { id = localStorage.getItem("so_me") || ""; key = localStorage.getItem("so_me_key") || ""; } catch (e) {}
+    if (!id || !key) return;
+    try {
+      fetch(ACT_API, {
+        method: "POST", headers: { "Content-Type": "application/json" }, keepalive: true,
+        body: JSON.stringify({ id: id, key: key, t: kind, p: String(what || "").slice(0, 80) }),
+      }).catch(function () {});
+    } catch (e) {}
+  }
   // Демо-стол не подмешивает ассистенту книгу НАСТОЯЩЕГО партнёра из localStorage:
   // на странице вымышленные цифры, а в чате были бы настоящие. chat.js читает
   // поле partner при каждой отправке, а greeting — при открытии панели, поэтому
@@ -673,7 +689,8 @@
     if (d.isin) meta.push(esc(d.isin));
     if (sp.desc) meta.push(esc(sp.desc));
 
-    return '<article class="tile' + (risk ? " risk" : "") + '" data-i="' + idx + '">' +
+    return '<article class="tile' + (risk ? " risk" : "") + '" data-i="' + idx +
+      '" data-isin="' + esc(d.isin || "") + '">' +
       '<div class="th"><div class="nm">' + name + "</div>" + kch + "</div>" +
       (meta.length ? '<div class="meta">' + meta.join(" · ") + "</div>" : "") +
       '<div class="mid">' + bidCell + perfCell + "</div>" +
@@ -720,16 +737,21 @@
 
   // раскрытие параметров + чипсы сортировки
   $("tiles").addEventListener("click", function (e) {
+    var pass = e.target.closest ? e.target.closest('a[href^="placements.html#"]') : null;
+    if (pass) act("passport", (pass.getAttribute("href") || "").split("#")[1] || "");
     var b = e.target.closest ? e.target.closest(".more") : null;
     if (!b) return;
     var tile = b.closest(".tile");
     var open = tile.classList.toggle("open");
     b.setAttribute("aria-expanded", open ? "true" : "false");
+    // Пишем только раскрытие: закрытие ничего не говорит о работе агента.
+    if (open) act("params", tile.getAttribute("data-isin") || "");
   });
   $("ctrl").addEventListener("click", function (e) {
     var c = e.target.closest ? e.target.closest(".chip") : null;
     if (!c) return;
     view.sort = c.getAttribute("data-s");
+    act("sort", view.sort);
     try { localStorage.setItem("so_me_sort", view.sort); } catch (e2) {}
     syncSortChips();
     renderTiles();
@@ -770,7 +792,8 @@
       warrant: "Недорогой вход в рост актива без покупки самой бумаги",
       autocall: "Купонный поток на случай бокового рынка",
       booster: "Ускоренное участие в росте на коротком сроке",
-      discount: "Кредитный риск вместо рыночного"
+      discount: "Кредитный риск вместо рыночного",
+      revconv: "Повышенный купон в обмен на риск по бумаге"
     };
     return liveFallback(ins, 4).map(function (it) {
       var r = byId(it.id);
@@ -794,7 +817,7 @@
     }
     if (r.quote == null) return { v: "—", n: "" };
     if (r.type === "booster") return { v: Math.round(r.ku || r.quote) + "%", n: "коэффициент" };
-    if (r.type === "autocall") return { v: fmtQ(r.couponPa != null ? r.couponPa : r.quote) + "% г.", n: "купон" };
+    if (r.type === "autocall" || r.type === "revconv") return { v: fmtQ(r.couponPa != null ? r.couponPa : r.quote) + "% г.", n: "купон" };
     if (r.type === "discount") return { v: fmtQ(r.quote) + "%", n: "цена" };
     return { v: fmtQ(r.quote) + "%", n: "премия" };
   }
@@ -914,6 +937,14 @@
       }
       remember(id, key);
       render(d);
+      // Цель Метрики: агент открыл свой стол. Именно её и не хватало — стол
+      // строился ради привычки, а измерить её было нечем. Метка партнёра НЕ
+      // передаётся: параметр визита ушёл бы в отчёты Яндекса, а это контрагент
+      try {
+        if (typeof window.ym === "function") {
+          window.ym(110759242, "reachGoal", quiet ? "desk_return" : "desk_login");
+        }
+      } catch (e) {}
       return true;
     } catch (e) {
       // При тихом автологине человек ничего не нажимал — ошибка должна объяснить,
@@ -1007,5 +1038,9 @@
   }
 })();
 </script>
+<!-- Счётчик БЕЗ записи экрана: metrika.js сам выключает вебвизор и кликмап
+     на me/admin/boss — на этих страницах видны реквизиты партнёра и
+     вознаграждение по сделкам, отправлять их в Яндекс нельзя -->
+<script src="metrika.js?v=5" defer></script>
 </body>
 </html>

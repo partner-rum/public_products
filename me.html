@@ -307,6 +307,22 @@
   var gate = $("gate"), dash = $("dash");
   // Демо-режим не трогает ни сеть, ни данные настоящего партнёра в localStorage.
   var IS_DEMO = /[?&]demo=[012]/.test(location.search);
+  var ACT_API = "https://so-leads.ruslan-sabirov.workers.dev/act";
+  // Что агент делал на столе — в журнал владельца. Ответа не ждём и ошибок не
+  // показываем: это учёт, а не работа страницы. Пара ID+ключ обязательна, иначе
+  // воркер событие не примет (и подделать чужую активность нельзя).
+  function act(kind, what) {
+    if (IS_DEMO) return;
+    var id = "", key = "";
+    try { id = localStorage.getItem("so_me") || ""; key = localStorage.getItem("so_me_key") || ""; } catch (e) {}
+    if (!id || !key) return;
+    try {
+      fetch(ACT_API, {
+        method: "POST", headers: { "Content-Type": "application/json" }, keepalive: true,
+        body: JSON.stringify({ id: id, key: key, t: kind, p: String(what || "").slice(0, 80) }),
+      }).catch(function () {});
+    } catch (e) {}
+  }
   // Демо-стол не подмешивает ассистенту книгу НАСТОЯЩЕГО партнёра из localStorage:
   // на странице вымышленные цифры, а в чате были бы настоящие. chat.js читает
   // поле partner при каждой отправке, а greeting — при открытии панели, поэтому
@@ -650,7 +666,8 @@
     if (d.isin) meta.push(esc(d.isin));
     if (sp.desc) meta.push(esc(sp.desc));
 
-    return '<article class="tile' + (risk ? " risk" : "") + '" data-i="' + idx + '">' +
+    return '<article class="tile' + (risk ? " risk" : "") + '" data-i="' + idx +
+      '" data-isin="' + esc(d.isin || "") + '">' +
       '<div class="th"><div class="nm">' + name + "</div>" + kch + "</div>" +
       (meta.length ? '<div class="meta">' + meta.join(" · ") + "</div>" : "") +
       '<div class="mid">' + bidCell + perfCell + "</div>" +
@@ -697,16 +714,21 @@
 
   // раскрытие параметров + чипсы сортировки
   $("tiles").addEventListener("click", function (e) {
+    var pass = e.target.closest ? e.target.closest('a[href^="placements.html#"]') : null;
+    if (pass) act("passport", (pass.getAttribute("href") || "").split("#")[1] || "");
     var b = e.target.closest ? e.target.closest(".more") : null;
     if (!b) return;
     var tile = b.closest(".tile");
     var open = tile.classList.toggle("open");
     b.setAttribute("aria-expanded", open ? "true" : "false");
+    // Пишем только раскрытие: закрытие ничего не говорит о работе агента.
+    if (open) act("params", tile.getAttribute("data-isin") || "");
   });
   $("ctrl").addEventListener("click", function (e) {
     var c = e.target.closest ? e.target.closest(".chip") : null;
     if (!c) return;
     view.sort = c.getAttribute("data-s");
+    act("sort", view.sort);
     try { localStorage.setItem("so_me_sort", view.sort); } catch (e2) {}
     syncSortChips();
     renderTiles();

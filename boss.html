@@ -167,6 +167,17 @@
   .prod .r .p { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--hushed); }
   .prod .r .n2 { margin-left:auto; flex:none; font:600 13px var(--m); font-variant-numeric:tabular-nums; }
   .empty { padding:26px 0; color:var(--faint); font-size:14px; }
+  /* Журнал действий агента: время моно, вход выделен — по нему взгляд отбивает
+     визиты друг от друга. */
+  .feed { border-top:1px solid var(--line-soft); max-height:420px; overflow-y:auto; }
+  .feed .fr { display:flex; align-items:baseline; gap:12px; padding:8px 0;
+              border-bottom:1px solid var(--line-soft); font-size:13.5px; }
+  .feed .ft { flex:none; width:88px; font:400 12.5px var(--m); color:var(--faint); }
+  .feed .fw { color:var(--hushed); }
+  .feed .fw.in { color:var(--or-ink); font-weight:600; }
+  .feed .fp { margin-left:auto; font:400 12px var(--m); color:var(--faint);
+              white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:40%; }
+  table.ag td.zero { color:var(--faint); }
   .tbar { display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; padding:10px 20px;
           background:rgba(238,125,27,.12); border-bottom:1px solid rgba(238,125,27,.4); }
   .tbar .tt { font:600 11px var(--m); letter-spacing:.12em; text-transform:uppercase; color:var(--solar-l); white-space:nowrap; }
@@ -246,9 +257,10 @@
             <th scope="col" class="num" data-s="reward"><button type="button">Вознаграждение</button></th>
             <th scope="col" class="num" data-s="share"><button type="button">Доля</button></th>
             <th scope="col" data-s="date"><button type="button">Последняя сделка</button></th>
-            <th scope="col" class="num" data-s="opens"><button type="button">Открытий 30 дн.</button></th>
+            <th scope="col" class="num" data-s="visits"><button type="button">Заходов 30 дн.</button></th>
+            <th scope="col" data-s="lastvisit"><button type="button">Был на столе</button></th>
+            <th scope="col" class="num" data-s="opens"><button type="button">Клиентских открытий 30 дн.</button></th>
             <th scope="col" class="num" data-s="leads"><button type="button">Заявок</button></th>
-            <th scope="col" data-s="hit"><button type="button">Активность</button></th>
             <th scope="col" data-s="key"><button type="button">Вход</button></th>
           </tr></thead>
           <tbody id="agents"></tbody>
@@ -266,7 +278,10 @@
       <div class="zt"><h2>Его выпуски</h2><span class="n" id="aDealN"></span></div>
       <div class="tiles" id="aTiles"></div>
 
-      <div class="zt"><h2>Активность ссылок</h2><span class="n" id="aHitN"></span></div>
+      <div class="zt"><h2>Что делал на столе</h2><span class="n" id="aFeedN"></span></div>
+      <div id="aFeed"></div>
+
+      <div class="zt"><h2>Переходы клиентов по его ссылкам</h2><span class="n" id="aHitN"></span></div>
       <div class="act">
         <div>
           <div class="bars" id="aBars"></div>
@@ -323,8 +338,8 @@
     var d = new Date(Date.now() + 3 * 3600 * 1000);
     return d.toISOString().slice(0, 10);
   }
-  function ago(ts, now) {
-    if (!ts) return "не открывали";
+  function ago(ts, now, none) {
+    if (!ts) return none || "не открывали";
     var d = Math.floor((now - ts) / 86400000);
     if (d <= 0) return "сегодня";
     if (d === 1) return "вчера";
@@ -458,11 +473,13 @@
   }
 
   function drawStates() {
-    var vol = 0, rw = 0, deals = 0, opens30 = 0, active = 0;
+    var vol = 0, rw = 0, deals = 0, opens30 = 0, active = 0, visits30 = 0, activeAgents = 0;
     for (var i = 0; i < PARTNERS.length; i++) {
       var p = PARTNERS[i];
       vol += p.volume || 0; rw += p.reward || 0; deals += p.count || 0;
       opens30 += (p.opens && p.opens.d30) || 0;
+      visits30 += p.deskD30 || 0;
+      if (p.deskD30) activeAgents++;
       if (p.count) active++;
     }
     // Дата котировок старше трёх дней — красным: иначе позавчерашний Bid
@@ -476,8 +493,9 @@
         '</div><div class="s">' + money(rw) + "</div></div>" +
       '<div class="st gr"><div class="k">Объём сделок</div><div class="v">' + mln(vol) +
         '</div><div class="s">' + deals + " " + plural(deals, "сделка", "сделки", "сделок") + "</div></div>" +
-      '<div class="st bl"><div class="k">Открытий ссылок за 30 дней</div><div class="v">' + opens30 +
-        '</div><div class="s">по всем агентам</div></div>' +
+      '<div class="st bl"><div class="k">Заходов агентов за 30 дней</div><div class="v">' + visits30 +
+        '</div><div class="s">' + activeAgents + " из " + PARTNERS.length + " заходили" +
+        (opens30 ? " · клиентских открытий " + opens30 : "") + "</div></div>" +
       '<div class="st pl"><div class="k">Доля вознаграждения</div><div class="v">' +
         (vol ? (rw / vol * 100).toFixed(2).replace(".", ",") + "%" : "—") +
         '</div><div class="s">от объёма сделок</div></div>';
@@ -494,7 +512,8 @@
     if (col === "date") return p.lastDeal || "";
     if (col === "opens") return (p.opens && p.opens.d30) || 0;
     if (col === "leads") return (p.leads && p.leads.all) || 0;
-    if (col === "hit") return p.lastHit || 0;
+    if (col === "visits") return p.deskD30 || 0;
+    if (col === "lastvisit") return p.lastVisit || p.lastAct || 0;
     if (col === "key") return p.kind === "sales" ? "0" : (p.keyState || (p.hasKey ? "secret" : "zzz"));
     return 0;
   }
@@ -561,17 +580,23 @@
         '<td class="num rw" data-l="вознаграждение">' + mln(p.reward) + "</td>" +
         '<td class="num mut" data-l="доля">' + share + "</td>" +
         '<td class="mut" data-l="последняя сделка">' + (p.count ? dmy(p.lastDeal) : "—") + "</td>" +
-        '<td class="num n2" data-l="открытий 30 дн.">' + ((p.opens && p.opens.d30) || 0) + "</td>" +
+        // Заходы САМОГО агента — главный ответ на «кто вообще работает»,
+        // поэтому идут раньше клиентских открытий.
+        '<td class="num n2' + (p.deskD30 ? "" : " zero") + '" data-l="заходов 30 дн.">' +
+          (p.deskD30 || 0) + "</td>" +
+        '<td class="mut" data-l="был на столе">' +
+          esc(ago(p.lastVisit || p.lastAct, NOW, "не заходил")) + "</td>" +
+        '<td class="num n2" data-l="клиентских открытий 30 дн.">' + ((p.opens && p.opens.d30) || 0) + "</td>" +
         '<td class="num n2" data-l="заявок">' + ((p.leads && p.leads.all) || 0) + "</td>" +
-        '<td class="mut" data-l="активность">' + esc(ago(p.lastHit, NOW)) + "</td>" +
         '<td data-l="вход">' + chip + "</td></tr>";
     }).join("");
 
     // Итоговая строка: сумма ровно того, что в столбцах выше.
-    var tv = 0, tr = 0, tc = 0, to = 0, tl = 0;
+    var tv = 0, tr = 0, tc = 0, to = 0, tl = 0, tvis = 0;
     list.forEach(function (p) {
       tv += p.volume || 0; tr += p.reward || 0; tc += p.count || 0;
       to += (p.opens && p.opens.d30) || 0; tl += (p.leads && p.leads.all) || 0;
+      tvis += p.deskD30 || 0;
     });
     $("agFoot").innerHTML = "<tr><td>Итого</td>" +
       '<td class="num n2">' + tc + "</td>" +
@@ -579,9 +604,11 @@
       '<td class="num rw">' + mln(tr) + "</td>" +
       '<td class="num">' + (tv ? (tr / tv * 100).toFixed(2).replace(".", ",") + "%" : "—") + "</td>" +
       "<td></td>" +
+      '<td class="num n2">' + tvis + "</td>" +
+      "<td></td>" +
       '<td class="num n2">' + to + "</td>" +
       '<td class="num n2">' + tl + "</td>" +
-      "<td></td><td></td></tr>";
+      "<td></td></tr>";
   }
 
   // Клик по заголовку: первый раз — по убыванию (сверху крупнейшие), повтор —
@@ -650,12 +677,14 @@
         '</div><div class="s">' + money(rw) + "</div></div>" +
       '<div class="st gr"><div class="k">Объём</div><div class="v">' + mln(t.volume) +
         '</div><div class="s">' + (t.count || 0) + " " + plural(t.count || 0, "сделка", "сделки", "сделок") + "</div></div>" +
-      '<div class="st bl"><div class="k">Открытий ссылок</div><div class="v">' + op.d30 +
-        '</div><div class="s">за 30 дней · за 7 дней ' + op.d7 + "</div></div>" +
-      '<div class="st pl"><div class="k">Заявки с его ссылок</div><div class="v">' +
-        ((d.leads && d.leads.all) || 0) + '</div><div class="s">за всё время</div></div>';
+      '<div class="st bl"><div class="k">Заходов на стол</div><div class="v">' +
+        ((d.visits && d.visits.d30) || 0) + '</div><div class="s">за 30 дней · всего ' +
+        ((d.visits && d.visits.all) || 0) + "</div></div>" +
+      '<div class="st pl"><div class="k">Клиентские открытия</div><div class="v">' + op.d30 +
+        '</div><div class="s">за 30 дней · заявок ' + ((d.leads && d.leads.all) || 0) + "</div></div>";
 
     drawTiles(d.deals || []);
+    drawFeed(d);
     drawActivity(d);
   }
 
@@ -709,6 +738,34 @@
     $("aBarCap").innerHTML = "<span>" + dmy(b.getAttribute("data-d")) + "</span><span>" +
       b.getAttribute("data-n") + " " + plural(+b.getAttribute("data-n"), "открытие", "открытия", "открытий") + "</span>";
   });
+
+  // Журнал: заходы и действия одной лентой по времени. Пусто — так и пишем:
+  // «не заходил» и «заходил, но ничего не делал» это разные вещи.
+  function drawFeed(d) {
+    var feed = d.feed || [], lbl = d.actLabels || {};
+    $("aFeedN").textContent = feed.length ? "последние " + feed.length : "событий нет";
+    if (!feed.length) {
+      $("aFeed").innerHTML = '<div class="empty">' +
+        ((d.visits && d.visits.all) ? "Заходил на стол, но действий пока не записано."
+                                    : "На рабочий стол ещё не заходил.") + "</div>";
+      return;
+    }
+    $("aFeed").innerHTML = '<div class="feed">' + feed.map(function (e) {
+      var what = e.t === "login" ? "вход в кабинет" : (lbl[e.t] || e.t);
+      return '<div class="fr"><span class="ft">' + esc(dt(e.ts)) + "</span>" +
+        '<span class="fw' + (e.t === "login" ? " in" : "") + '">' + esc(what) + "</span>" +
+        (e.p ? '<span class="fp">' + esc(e.p) + "</span>" : "") + "</div>";
+    }).join("") + "</div>";
+  }
+
+  // Дата-время события по Москве: журнал читают по часам, не по датам.
+  function dt(ts) {
+    if (!ts) return "—";
+    var d2 = new Date(ts + 3 * 3600 * 1000);
+    var p2 = function (n) { return String(n).padStart(2, "0"); };
+    return p2(d2.getUTCDate()) + "." + p2(d2.getUTCMonth() + 1) + " " +
+           p2(d2.getUTCHours()) + ":" + p2(d2.getUTCMinutes());
+  }
 
   function drawActivity(d) {
     var days = d.days || [], prods = d.products || [];
@@ -766,8 +823,18 @@
       if (i % 3 === 0) continue;
       days.push({ d: new Date(NOW - i * 86400000).toISOString().slice(0, 10), n: (i * 7) % 9 });
     }
+    var FEED = [["login", ""], ["params", "RU000A10CVD4"], ["ask", ""],
+                ["passport", "RU000A10CVD4"], ["picks", ""], ["sort", "reward"], ["login", ""]];
     return { ok: true, ref: p.ref, profile: p.profile, deals: deals, totals: t,
              hasKey: p.hasKey, keyState: p.keyState,
+             visits: { all: p.deskVisits || 0, d30: p.deskD30 || 0 },
+             feed: p.deskVisits ? FEED.map(function (f, i) {
+               return { ts: Date.now() - i * 3600000 * 5, t: f[0], p: f[1] };
+             }) : [],
+             actLabels: { picks: "подборка под него", ask: "вопрос ассистенту",
+                          params: "смотрел параметры выпуска", passport: "открыл паспорт выпуска",
+                          product: "открыл продукт с доски", board: "перешёл на доску",
+                          sort: "менял сортировку" },
              opens: p.opens, views: { all: 40 }, leads: p.leads, last: p.lastHit,
              days: days, products: Object.keys(INSTR).slice(0, 8).map(function (id, i) {
                return { p: id, opens: 12 - i, views: 3, leads: i === 0 ? 2 : 0, last: NOW };
@@ -789,7 +856,10 @@
                  opens: { all: 40 - i * 12, d7: 5 - i, d30: 22 - i * 7 },
                  leads: { all: 3 - i, d30: 1 }, lastHit: Date.now() - i * 3 * 86400000,
                  hasKey: i < 2, keyState: i === 0 ? "taken" : i === 1 ? "ready" : null,
-                 kind: "partner", otherCcy: null };
+                 kind: "partner", otherCcy: null,
+                 deskVisits: [14, 3, 0][i], deskD30: [9, 2, 0][i],
+                 lastVisit: i === 2 ? 0 : Date.now() - i * 2 * 86400000,
+                 acts: [22, 4, 0][i], lastAct: i === 2 ? 0 : Date.now() - i * 2 * 86400000 };
       }),
     });
   }

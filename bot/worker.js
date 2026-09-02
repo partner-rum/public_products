@@ -60,6 +60,7 @@ export default {
     if (url.pathname === "/stats" && request.method === "POST") return handleStats(request, env, cors);
     if (url.pathname === "/picks" && request.method === "POST") return handlePicks(request, env, cors);
     if (url.pathname === "/boss" && request.method === "POST") return handleBoss(request, env, cors);
+    if (url.pathname === "/act" && request.method === "POST") return handleAct(request, env, cors);
     if (url.pathname === "/chat" && request.method === "POST") return handleChat(request, env, cors, ctx);
     if (url.pathname === "/submit" && request.method === "POST") return handleSubmit(request, env, cors, ctx);
     if (url.pathname === "/tg" && request.method === "POST") return handleTelegram(request, env, ctx);
@@ -201,6 +202,16 @@ const HIT_PAGES = 12;             // потолок страниц list() за �
 // человек посмотрел в том же визите: считать его вторым открытием было бы враньём,
 // а выбрасывать жалко — именно он говорит, чем клиент заинтересовался.
 const HIT_KINDS = new Set(["open", "view", "lead"]);
+// ЧТО агент делал на столе. Сам факт захода пишет recordDeskVisit (deskhit:) —
+// здесь только действия внутри. Список закрытый: из него собирается журнал у
+// владельца, и произвольные строки со страницы были бы мусором в отчёте.
+const ACT_KINDS = new Set(["picks", "ask", "params", "passport", "product", "board", "sort"]);
+const ACT_LABEL = {
+  picks: "подборка под него", ask: "вопрос ассистенту",
+  params: "смотрел параметры выпуска", passport: "открыл паспорт выпуска",
+  product: "открыл продукт с доски", board: "перешёл на доску",
+  sort: "менял сортировку",
+};
 
 // ДВА РАЗНЫХ СЕКРЕТА, и это важно:
 //   SALES_KEYS   — свои сейлзы. Открывает АДМИНКУ (подача продуктов на модерацию).
@@ -394,8 +405,10 @@ async function hitEvents(env, prefix) {
     const r = await env.POST_KV.list({ prefix: prefix, limit: 1000, cursor: cursor || undefined });
     for (const k of r.keys) {
       if (!k.metadata || !k.metadata.ts) continue;
-      // Метка события — между "hit:" и меткой времени: hit:<ref>:<ts>-<rnd>
-      const rest = k.name.slice(4);
+      // Метка события — сразу после базового префикса: <база>:<ref>:<ts>-<rnd>.
+      // Резать фиксированные 4 символа нельзя: префиксы разной длины ("hit:",
+      // "act:", "deskhit:"), и заходы на стол уезжали под метку "hit".
+      const rest = k.name.slice(prefix.length);
       const i = rest.indexOf(":");
       out.push({ ref: i > 0 ? rest.slice(0, i) : "", m: k.metadata });
     }
@@ -471,6 +484,21 @@ async function handleBoss(request, env, cors) {
 
   const refs = await partnerRefs(env, true);
 
+  // Заходы на стол нужны обеим веткам — и разбору одного агента, и сводке.
+  let deskAll0 = { events: [] };
+  try { deskAll0 = await hitEvents(env, "deskhit:"); } catch (e) {}
+  const deskByRef = new Map(), deskD30 = new Map(), deskLast = new Map();
+  for (const e of deskAll0.events) {
+    deskByRef.set(e.ref, (deskByRef.get(e.ref) || 0) + 1);
+    const ts = e.m && e.m.ts;
+    if (!ts) continue;
+    if (now - ts <= 30 * 24 * 3600 * 1000) deskD30.set(e.ref, (deskD30.get(e.ref) || 0) + 1);
+    // «Был на столе» — когда заходил в последний раз; без этого колонка в
+    // кабинете владельца показывала бы время последнего ДЕЙСТВИЯ, а заход без
+    // действий выглядел бы как «не заходил».
+    if (ts > (deskLast.get(e.ref) || 0)) deskLast.set(e.ref, ts);
+  }
+
   // Разбор одного агента: то же, что видит он сам на столе, плюс активность.
   const one = cleanStr(d.ref, 40).toLowerCase();
   if (one) {
@@ -481,11 +509,23 @@ async function handleBoss(request, env, cors) {
     const deals = (await dealsGet(env, one)).slice().sort(function (a, b) {
       return a.date < b.date ? 1 : a.date > b.date ? -1 : (b.ts || 0) - (a.ts || 0);
     });
+    // Журнал: заходы (deskhit) и действия (act) в одной ленте по времени —
+    // владельцу нужна картина «пришёл, посмотрел то-то», а не два списка.
+    let feed = [];
+    try {
+      const dv = await hitEvents(env, "deskhit:" + one + ":");
+      const ac = await hitEvents(env, "act:" + one + ":");
+      feed = dv.events.map(function (x) { return { ts: x.m.ts, t: "login", p: "" }; })
+        .concat(ac.events.map(function (x) { return { ts: x.m.ts, t: x.m.t, p: x.m.p || "" }; }))
+        .sort(function (x, y) { return y.ts - x.ts; }).slice(0, 80);
+    } catch (e) { /* журнал необязателен */ }
     return json({
       ok: true, now: now, ref: one, profile: await pinfoGet(env, one),
       deals: deals, totals: dealTotals(deals),
       hasKey: hasKey.has(one), keyState: keyState[one] || null,
       ...hitSummary(ev.events.map(function (x) { return x.m; }), now),
+      feed: feed, actLabels: ACT_LABEL,
+      visits: { all: deskByRef.get(one) || 0, d30: deskD30.get(one) || 0 },
       truncated: ev.truncated,
     }, 200, cors);
   }
@@ -494,19 +534,15 @@ async function handleBoss(request, env, cors) {
   // списку на каждого — иначе десяток агентов стоил бы десятка обходов хранилища.
   let all = { events: [], truncated: false };
   try { all = await hitEvents(env, "hit:"); } catch (e) { /* активность необязательна */ }
-  // Заходы на рабочий стол — отдельный префикс (см. recordDeskVisit): Метрику
-  // на me.html подключать нельзя из-за вебвизора, и до сих пор про стол не было
-  // известно ничего. Ошибку глотаем: сводка по сделкам важнее этой колонки.
-  let deskAll = { events: [] };
-  try { deskAll = await hitEvents(env, "deskhit:"); } catch (e) {}
-  const deskByRef = new Map();
-  for (const e of deskAll.events) {
-    deskByRef.set(e.ref, (deskByRef.get(e.ref) || 0) + 1);
-  }
-  const deskD30 = new Map();
-  for (const e of deskAll.events) {
-    const ts = (e.m && e.m.ts) || 0;
-    if (ts && now - ts <= 30 * 24 * 3600 * 1000) deskD30.set(e.ref, (deskD30.get(e.ref) || 0) + 1);
+  // Заходы на стол (deskhit:) уже прочитаны выше — здесь только журнал действий,
+  // тем же одним проходом по префиксу.
+  let allActs = { events: [] };
+  try { allActs = await hitEvents(env, "act:"); } catch (e) {}
+  const actByRef = new Map(), actLast = new Map();
+  for (const e of allActs.events) {
+    actByRef.set(e.ref, (actByRef.get(e.ref) || 0) + 1);
+    const ts = e.m && e.m.ts;
+    if (ts && ts > (actLast.get(e.ref) || 0)) actLast.set(e.ref, ts);
   }
   const byRef = new Map();
   for (const e of all.events) {
@@ -546,6 +582,8 @@ async function handleBoss(request, env, cors) {
         volume: t.volume, reward: t.accrued + t.paid, lastDeal: lastDeal,
         opens: h.opens, leads: h.leads, lastHit: h.last,
         deskVisits: deskByRef.get(g.ref) || 0, deskD30: deskD30.get(g.ref) || 0,
+        lastVisit: deskLast.get(g.ref) || 0,
+        acts: actByRef.get(g.ref) || 0, lastAct: actLast.get(g.ref) || 0,
         hasKey: hasKey.has(g.ref), keyState: keyState[g.ref] || null,
       });
     }
@@ -771,6 +809,21 @@ async function recordHit(env, ref, product, kind) {
 // молча попал бы агенту в «открытия ссылок», накрутив ему собственную статистику.
 // Метрику сюда подключать нельзя: у metrika.js включён webvisor, он пишет DOM,
 // а на столе видны реквизиты партнёра и вознаграждение по каждой сделке.
+// Действие агента. Ключ на событие, полезная нагрузка в metadata — как у
+// recordHit: весь журнал читается одним list(), без get на каждую запись.
+async function recordAct(env, ref, kind, what) {
+  if (!env.POST_KV || !ref || !ACT_KINDS.has(kind)) return false;
+  const ts = Date.now();
+  const key = "act:" + ref + ":" + ts + "-" + Math.random().toString(36).slice(2, 8);
+  try {
+    await env.POST_KV.put(key, "", {
+      expirationTtl: HIT_TTL,
+      metadata: { ts, t: kind, p: String(what || "").slice(0, 80) },
+    });
+    return true;
+  } catch (e) { return false; }
+}
+
 async function recordDeskVisit(env, ref) {
   if (!env.POST_KV || !ref) return false;
   const ts = Date.now();
@@ -779,6 +832,22 @@ async function recordDeskVisit(env, ref) {
     await env.POST_KV.put(key, "", { expirationTtl: HIT_TTL, metadata: { ts } });
     return true;
   } catch (e) { return false; }
+}
+
+// --- Действие агента на столе (маячок со стола) ---
+// Пара ID+ключ обязательна: иначе кто угодно дописал бы агенту «активность».
+// Отвечаем ok всегда — страница ответа не ждёт, а по коду ошибки нельзя было бы
+// выяснять, какие метки у нас заведены.
+async function handleAct(request, env, cors) {
+  const origin = request.headers.get("Origin");
+  if (env.ALLOW_ORIGIN && env.ALLOW_ORIGIN !== "*" && origin && origin !== env.ALLOW_ORIGIN) {
+    return json({ ok: true }, 200, cors);
+  }
+  let d;
+  try { d = await request.json(); } catch (e) { return json({ ok: true }, 200, cors); }
+  const who = await deskLogin(env, d.id, d.key);
+  if (who) await recordAct(env, who.ref, cleanStr(d.t, 20), cleanStr(d.p, 80));
+  return json({ ok: true }, 200, cors);
 }
 
 // --- Открытие персональной ссылки (маячок с сайта) ---
@@ -992,6 +1061,7 @@ async function handlePicks(request, env, cors) {
   const who = await deskLogin(env, d.id, d.key);
   if (!who) return json({ ok: false, error: "bad_key" }, 403, cors);
   const ref = who.ref, day = mskDate().key, key = "picks:" + ref + ":" + day;
+  await recordAct(env, ref, "picks", "");
 
   if (env.POST_KV) {
     try {
@@ -1315,6 +1385,7 @@ async function handleChat(request, env, cors, ctx) {
     const pwho = await deskLogin(env, data.partner.id, data.partner.key);
     if (pwho) {
       partnerMode = true;
+      await recordAct(env, pwho.ref, "ask", "");
       try {
         const pdeals = await dealsGet(env, pwho.ref);
         partnerHasDeals = pdeals.length > 0;
