@@ -267,10 +267,29 @@
           <tfoot id="agFoot"></tfoot>
         </table>
       </div>
+
+      <!-- Вебинары: кого позвали сейлзы и кто пришёл. Обозначений приглашённых
+           здесь НЕТ намеренно — владельцу нужны цифры и кто их завёл, а не
+           список чужих клиентов на экране. -->
+      <div class="zt"><h2>Вебинары</h2><span class="n" id="wbN"></span></div>
+      <div class="tw">
+        <table class="ag">
+          <caption class="sr">Учёт посещения вебинаров: сколько позвано и сколько пришло, по встречам и сейлзам.</caption>
+          <thead><tr>
+            <th scope="col">Встреча</th>
+            <th scope="col" class="num">Позвано</th>
+            <th scope="col" class="num">Пришло</th>
+            <th scope="col" class="num">Доля</th>
+            <th scope="col">Кто вёл учёт</th>
+            <th scope="col">Обновлено</th>
+          </tr></thead>
+          <tbody id="wbBody"></tbody>
+        </table>
+      </div>
     </div>
 
     <div id="agent">
-      <div class="zt"><h2 id="aName">Агент</h2><span class="n" id="aRef"></span>
+      <div class="zt"><h2>Реквизиты</h2>
         <button class="back" id="back" type="button">← Ко всем агентам</button></div>
       <div id="aIds"></div>
       <div class="states" id="aStates" style="margin-top:16px"></div>
@@ -458,10 +477,15 @@
 
   // ---- сводка --------------------------------------------------------------
   var PARTNERS = [], NOW = Date.now(), sortBy = "reward", sortDir = "desc";
+  var WEBINARS = [], WEBINARS_OK = true;
 
   function show(d) {
     PARTNERS = d.partners || [];
     NOW = d.now || Date.now();
+    WEBINARS = d.webinars || [];
+    // Отличаем СБОЙ чтения от «учёта нет»: без флага пустая таблица выглядела бы
+    // как факт, хотя это могла быть недоступность хранилища.
+    WEBINARS_OK = d.webinarsOk !== false;
     // Обход событий упёрся в потолок: KV отдаёт ключи по алфавиту, поэтому у
     // агентов «во второй половине списка» открытий может не хватать. Молчать об
     // этом нельзя — ноль читался бы как факт.
@@ -476,7 +500,45 @@
     $("exit").style.display = "";
     drawStates();
     drawAgents();
+    drawWebinars();
   }
+  // ---- вебинары ------------------------------------------------------------
+  // Считает воркер из metadata ключей wb: — сюда приходят только цифры.
+  function drawWebinars() {
+    var body = $("wbBody"), n = $("wbN");
+    if (!WEBINARS_OK) {
+      n.textContent = "";
+      body.innerHTML = '<tr><td colspan="6" class="mut">Не удалось прочитать учёт из хранилища. ' +
+        "Это сбой чтения, а не «учёта нет» — попробуйте обновить страницу.</td></tr>";
+      return;
+    }
+    if (!WEBINARS.length) {
+      n.textContent = "";
+      body.innerHTML = '<tr><td colspan="6" class="mut">Учёт по вебинарам пока никто не заводил. ' +
+        "Сейлзы вносят его в админке, вкладка «Вебинар».</td></tr>";
+      return;
+    }
+    var inv = 0, came = 0;
+    WEBINARS.forEach(function (w) { inv += w.inv; came += w.came; });
+    n.textContent = WEBINARS.length + " встреч · позвано " + inv + " · пришло " + came +
+      (inv ? " · " + Math.round(came / inv * 100) + "%" : "");
+    body.innerHTML = WEBINARS.map(function (w) {
+      var share = w.inv ? Math.round(w.came / w.inv * 100) : 0;
+      var by = (w.by || []).map(function (b) {
+        return esc(b.ref || "—") + " " + b.inv + "/" + b.came;
+      }).join(" · ");
+      return '<tr><td class="nm">' + esc(w.title || w.ev) + "</td>" +
+        '<td class="num">' + w.inv + "</td>" +
+        '<td class="num">' + w.came + "</td>" +
+        '<td class="num">' + share + "%</td>" +
+        '<td class="mut">' + by + "</td>" +
+        "<td>" + (w.updated ? ago(w.updated, NOW, "—") : "—") + "</td></tr>";
+    }).join("");
+  }
+
+  // Подпись под h1 в двух видах: для списка — сколько агентов, для разбора —
+  // метка агента. Дата котировок нужна в обоих (от неё зависит Bid на плитках).
+  var subAll = "", subQuote = "";
 
   function drawStates() {
     var vol = 0, rw = 0, deals = 0, opens30 = 0, active = 0, visits30 = 0, activeAgents = 0;
@@ -491,9 +553,10 @@
     // Дата котировок старше трёх дней — красным: иначе позавчерашний Bid
     // читается как сегодняшний (то же правило, что на столе партнёра).
     var old3 = UPDATED && (Date.now() - Date.parse(UPDATED)) > 3 * 86400000;
-    $("hSub").innerHTML = "котировки на " +
-      (UPDATED ? '<b style="color:' + (old3 ? "var(--down)" : "inherit") + '">' + dmy(UPDATED) + "</b>" : "—") +
-      " · агентов " + PARTNERS.length + ", из них со сделками " + active;
+    subQuote = "котировки на " +
+      (UPDATED ? '<b style="color:' + (old3 ? "var(--down)" : "inherit") + '">' + dmy(UPDATED) + "</b>" : "—");
+    subAll = subQuote + " · агентов " + PARTNERS.length + ", из них со сделками " + active;
+    $("hSub").innerHTML = subAll;
     $("states").innerHTML =
       '<div class="st or"><div class="k">Вознаграждение агентам</div><div class="v">' + mln(rw) +
         '</div><div class="s">' + money(rw) + "</div></div>" +
@@ -637,7 +700,9 @@
   $("back").addEventListener("click", function () {
     $("agent").classList.remove("on");
     $("list").style.display = "";
+    $("states").style.display = "";
     $("hTitle").textContent = "Агенты";
+    $("hSub").innerHTML = subAll;
     window.scrollTo(0, 0);
   });
 
@@ -660,9 +725,11 @@
     $("list").style.display = "none";
     $("agent").classList.add("on");
     var p = d.profile || {};
+    // Сводка по всем агентам в разборе прячется: она стояла под именем одного
+    // агента и выглядела его итогами (у Дульцева — 360 млн вместо 1,6 млн).
+    $("states").style.display = "none";
     $("hTitle").textContent = p.name || d.ref;
-    $("aName").textContent = p.name || d.ref;
-    $("aRef").textContent = d.ref;
+    $("hSub").innerHTML = '<b>' + esc(d.ref) + "</b> · " + subQuote;
     window.scrollTo(0, 0);
 
     var rows = [];
