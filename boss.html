@@ -520,7 +520,8 @@
     }
     var inv = 0, came = 0;
     WEBINARS.forEach(function (w) { inv += w.inv; came += w.came; });
-    n.textContent = WEBINARS.length + " встреч · позвано " + inv + " · пришло " + came +
+    n.textContent = WEBINARS.length + " " + plural(WEBINARS.length, "встреча", "встречи", "встреч") +
+      " · позвано " + inv + " · пришло " + came +
       (inv ? " · " + Math.round(came / inv * 100) + "%" : "");
     body.innerHTML = WEBINARS.map(function (w) {
       var share = w.inv ? Math.round(w.came / w.inv * 100) : 0;

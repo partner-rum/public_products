@@ -589,7 +589,38 @@ async function handleBoss(request, env, cors) {
     }
   }
   partners.sort(function (a, b) { return b.reward - a.reward; });
-  return json({ ok: true, now: now, partners: partners, truncated: all.truncated }, 200, cors);
+
+  // Учёт вебинаров: встреча × сейлз. Считается ИЗ METADATA одним проходом по
+  // префиксу — значения (сами списки приглашённых) при этом не читаются вовсе,
+  // поэтому сводка стоит один обход независимо от числа сейлзов и людей в списках.
+  // Обозначения приглашённых сюда НЕ попадают: владельцу нужны цифры и кто их
+  // завёл, а не список чужих клиентов на экране.
+  const wbMap = {};
+  let wbOk = true;
+  try {
+    let wcur = null;
+    do {
+      const k = await env.POST_KV.list({ prefix: "wb:", limit: 1000, cursor: wcur || undefined });
+      for (const x of k.keys) {
+        const md = x.metadata || {};
+        const ev = md.ev || x.name.split(":")[1] || "";
+        if (!ev) continue;
+        const row = wbMap[ev] || (wbMap[ev] = { ev: ev, title: md.title || "", inv: 0, came: 0, updated: 0, by: [] });
+        if (md.title && !row.title) row.title = md.title;
+        row.inv += md.inv || 0;
+        row.came += md.came || 0;
+        row.updated = Math.max(row.updated, md.updated || 0);
+        row.by.push({ ref: md.by || "", inv: md.inv || 0, came: md.came || 0, updated: md.updated || 0 });
+      }
+      wcur = k.list_complete ? null : k.cursor;
+    } while (wcur);
+  } catch (e) { wbOk = false; }
+  const webinars = Object.keys(wbMap).map(function (k) { return wbMap[k]; });
+  for (const w of webinars) w.by.sort(function (a, b) { return b.inv - a.inv; });
+  webinars.sort(function (a, b) { return b.updated - a.updated; });
+
+  return json({ ok: true, now: now, partners: partners, truncated: all.truncated,
+                webinars: webinars, webinarsOk: wbOk }, 200, cors);
 }
 
 // ---------- СДЕЛКИ ПАРТНЁРА ----------
@@ -1177,12 +1208,21 @@ const SYSTEM_PROMPT = `Ты — AI-ассистент-консьерж на са
 // Кэшируем и сырые массивы — по ним строится контекст конкретного продукта (см. productContext).
 let CATALOG = { text: "", at: 0, instr: [], offers: [] };
 
-async function fetchDataObj(url) {
+async function fetchDataObj(url, globalName) {
   const r = await fetch(url);
   if (!r.ok) return null;
   const t = await r.text();
-  const s = t.indexOf("{"), e = t.lastIndexOf("}");
-  if (s < 0 || e < 0) return null;
+  // Якорь — «window.<ИМЯ> =», а не первая «{» в файле: в шапке data/events.js
+  // стоит комментарий с «{url, label}», и разбор по первой скобке ломался об него.
+  // Остальные data-файлы разбирались правильно СЛУЧАЙНО — в их комментариях
+  // фигурных скобок нет, и одна правка комментария увела бы каталог в null.
+  let from = 0;
+  if (globalName) {
+    const m = t.indexOf("window." + globalName);
+    if (m >= 0) from = m;
+  }
+  const s = t.indexOf("{", from), e = t.lastIndexOf("}");
+  if (s < 0 || e < 0 || e < s) return null;
   try { return JSON.parse(t.slice(s, e + 1)); } catch { return null; }
 }
 
@@ -1191,10 +1231,10 @@ async function buildCatalog(env) {
   if (CATALOG.text && now - CATALOG.at < 5 * 60 * 1000) return CATALOG;
   const base = (env.SITE_BASE || "https://invest.rumberg.ru/").replace(/\/?$/, "/");
   const [site, plc, off, dig] = await Promise.all([
-    fetchDataObj(base + "data/instruments.js"),
-    fetchDataObj(base + "data/placements.js"),
-    fetchDataObj(base + "data/offerings.js"),
-    fetchDataObj(base + "data/digest.js"),
+    fetchDataObj(base + "data/instruments.js", "SITE_DATA"),
+    fetchDataObj(base + "data/placements.js", "PLACEMENTS_DATA"),
+    fetchDataObj(base + "data/offerings.js", "OFFERINGS"),
+    fetchDataObj(base + "data/digest.js", "DIGEST_ARCHIVE"),
   ]);
   const lines = [];
   const instr = (site && site.instruments) || [];
@@ -2860,6 +2900,74 @@ async function reqStatus(env, mid, st) {
   } catch (e) { /* статус необязателен */ }
 }
 
+// ── Учёт посещения вебинаров ─────────────────────────────────────────────────
+// Сейлз загружает, кого позвал, и после встречи отмечает, кто пришёл. Аудитория
+// интерфейса — СВОИ сейлзы (ключ из SALES_KEYS), поэтому маршрут живёт в /submit,
+// как сделки партнёров, и пишется БЕЗ модерации: решать тут нечего, а гонять
+// список приглашённых через ✅ Руслана бессмысленно.
+//
+// ЧЕЛОВЕК ЗАПИСЫВАЕТСЯ ОБОЗНАЧЕНИЕМ, БЕЗ КОНТАКТОВ (решение Руслана 02.09.2026):
+// «Иванов, УК Альфа» или «клиент 7». Адрес почты и телефон отбиваются на входе —
+// иначе у нас незаметно образуется клиентская база контрагентов, которой мы
+// держать не хотим. В репозиторий эти данные не попадают НИКОГДА: он публичный,
+// поэтому хранилище здесь KV, а не коммит через GitHub API, как у продуктов.
+//
+// ПРИСУТСТВИЕ ОТМЕЧАЕТ СЕЙЛЗ РУКАМИ — это самоотчёт, и так и подписано в
+// интерфейсе. Сайт мог бы считать переход по персональной ссылке, но переход
+// не равен присутствию, и выдавать одно за другое нельзя.
+const WB_MAX_PEOPLE = 200;      // потолок на список одной встречи у одного сейлза
+const WB_MAX_LABEL = 80;
+const WB_EVENTS = { at: 0, items: null };
+
+// Ключ на ПАРУ (встреча, сейлз): списки маленькие, два сейлза за один ключ не
+// состязаются (KV разрешает ~одну запись в секунду), а вся сводка читается ОДНИМ
+// list по префиксу — счётчики лежат в metadata, поэтому обходу не нужен get на
+// каждую запись. Тот же приём, что у hit:.
+function wbKey(ev, by) { return "wb:" + ev + ":" + by; }
+
+// Обозначение приглашённого. Отбиваем ровно две вещи: адрес почты и длинную
+// цепочку цифр (телефон). Цифры сами по себе законны — «клиент 7», «Альфа-2».
+function wbLabel(v) {
+  const n = cleanStr(v, WB_MAX_LABEL);
+  if (!n) return { skip: true };
+  if (/[^\s@]+@[^\s@]+\.[^\s@]/.test(n)) return { bad: "почта" };
+  if (n.replace(/\D+/g, "").length >= 10) return { bad: "телефон" };
+  return { n: n };
+}
+
+// Список встреч с витрины. Отдельный разбор, а не общий fetchDataObj: у него
+// якорем служит первая «{» в файле, а в шапке data/events.js стоит комментарий
+// с «{url, label}» — общий помощник спотыкнулся бы об него.
+async function wbEvents(env) {
+  const now = Date.now();
+  if (WB_EVENTS.items && now - WB_EVENTS.at < 5 * 60 * 1000) return WB_EVENTS.items;
+  const base = (env.SITE_BASE || "https://invest.rumberg.ru/").replace(/\/?$/, "/");
+  const o = await fetchDataObj(base + "data/events.js", "EVENTS");
+  const items = (o && Array.isArray(o.items)) ? o.items : null;
+  if (items) { WB_EVENTS.items = items; WB_EVENTS.at = now; }
+  return items;
+}
+
+// Разбор списка из заявки. Возвращает и людей, и причины отказа — сейлз должен
+// увидеть, ЧТО именно не приняли, а не «ошибка».
+function wbPeople(raw) {
+  const seen = new Set(), people = [], rejected = [];
+  for (const row of (Array.isArray(raw) ? raw : []).slice(0, WB_MAX_PEOPLE * 2)) {
+    const src = (row && typeof row === "object") ? row.n : row;
+    const r = wbLabel(src);
+    if (r.skip) continue;
+    if (r.bad) { if (rejected.length < 10) rejected.push({ v: cleanStr(src, 40), why: r.bad }); continue; }
+    const dedup = r.n.toLowerCase();
+    if (seen.has(dedup)) continue;                       // одна метка дважды — склеиваем
+    seen.add(dedup);
+    people.push({ n: r.n, c: (row && typeof row === "object" && (row.c === 1 || row.c === true)) ? 1 : 0 });
+    if (people.length >= WB_MAX_PEOPLE) break;
+  }
+  return { people: people, rejected: rejected };
+}
+
+const wbCame = (people) => people.reduce((n, p) => n + (p.c ? 1 : 0), 0);
+
 async function handleSubmit(request, env, cors, ctx) {
   if (!env.SALES_KEYS || !env.ADMIN_CHAT_ID) return json({ ok: false, error: "not_configured" }, 503, cors);
   let data;
@@ -2873,6 +2981,92 @@ async function handleSubmit(request, env, cors, ctx) {
     if (i > 0 && pair.slice(i + 1).trim() === key && key) { author = pair.slice(0, i).trim(); break; }
   }
   if (!author) return json({ ok: false, error: "bad_key" }, 403, cors);
+
+  // ── Вебинары: список приглашённых и отметки о приходе ──
+  // Читает СВОЙ список: сейлз видит только то, что завёл сам (ключ включает его
+  // метку), чужие списки ему недоступны — сводка по всем живёт в boss.html.
+  if (data.action === "webinar_get") {
+    if (!env.POST_KV) return json({ ok: false, error: "kv_not_configured" }, 503, cors);
+    const evs = await wbEvents(env);
+    const ev = cleanStr(data.ev, 60);
+    if (ev) {
+      let rec = null;
+      try { rec = await env.POST_KV.get(wbKey(ev, author), "json"); }
+      catch (e) { return json({ ok: false, error: "kv_read_failed" }, 502, cors); }
+      return json({ ok: true, ev: ev, people: (rec && rec.people) || [] }, 200, cors);
+    }
+    // Без ev — сводка по своим встречам, одним list по metadata (без get на запись).
+    const mine = [];
+    try {
+      let cursor = null;
+      do {
+        const k = await env.POST_KV.list({ prefix: "wb:", limit: 1000, cursor: cursor || undefined });
+        for (const x of k.keys) {
+          const md = x.metadata || {};
+          if (md.by !== author) continue;
+          mine.push({ ev: md.ev || "", inv: md.inv || 0, came: md.came || 0, updated: md.updated || 0 });
+        }
+        cursor = k.list_complete ? null : k.cursor;
+      } while (cursor);
+    } catch (e) { return json({ ok: false, error: "kv_read_failed" }, 502, cors); }
+    mine.sort((a, b) => (b.updated || 0) - (a.updated || 0));
+    return json({ ok: true, mine: mine, events: (evs || []).map((e) => ({ id: e.id, title: e.title, date: e.date })) }, 200, cors);
+  }
+
+  // Сохранение списка. Форма всегда присылает ПОЛНОЕ состояние (она его и
+  // показывает), поэтому запись целиком, без слияния на сервере: ключ у каждого
+  // сейлза свой, состязаться за него некому.
+  if (data.action === "webinar_save") {
+    if (!env.POST_KV) return json({ ok: false, error: "kv_not_configured" }, 503, cors);
+    const ev = cleanStr(data.ev, 60);
+    if (!ev) return json({ ok: false, error: "no_event" }, 422, cors);
+    // Встречу сверяем с витриной: с опечаткой в id список лёг бы под метку,
+    // которой нет ни на одной странице, и не нашёлся бы уже никогда.
+    const evs = await wbEvents(env);
+    if (!evs) return json({ ok: false, error: "events_unavailable" }, 502, cors);
+    const meet = evs.find((e) => e && e.id === ev);
+    if (!meet) return json({ ok: false, error: "bad_event" }, 422, cors);
+
+    const parsed = wbPeople(data.people);
+    // Пустой список — это СНЯТИЕ учёта, а не ошибка: сейлз мог завести список по
+    // ошибке. Но требуем явный флаг, иначе сбойная форма стёрла бы работу молча.
+    if (!parsed.people.length && data.clear !== true) {
+      return json({ ok: false, error: "empty_list", rejected: parsed.rejected }, 422, cors);
+    }
+
+    let before = null;
+    try { before = await env.POST_KV.get(wbKey(ev, author), "json"); }
+    catch (e) { return json({ ok: false, error: "kv_read_failed" }, 502, cors); }
+
+    const inv = parsed.people.length, came = wbCame(parsed.people), ts = Date.now();
+    if (!inv) {
+      try { await env.POST_KV.delete(wbKey(ev, author)); } catch (e) { /* уже нет — не беда */ }
+    } else {
+      const md = { ev: ev, by: author, inv: inv, came: came, updated: ts, title: cleanStr(meet.title, 120) };
+      await env.POST_KV.put(wbKey(ev, author),
+        JSON.stringify({ ev: ev, by: author, updated: ts, people: parsed.people }), { metadata: md });
+    }
+
+    // Отбивка Руслану — только когда цифры ИЗМЕНИЛИСЬ: сейлз сохраняет список по
+    // ходу правки, и уведомление на каждое нажатие превратилось бы в шум.
+    let notified = false;
+    const wasInv = before ? (before.people || []).length : 0;
+    const wasCame = before ? wbCame(before.people || []) : 0;
+    if (inv !== wasInv || came !== wasCame) {
+      try {
+        const nr = await tg(env, "sendMessage", {
+          chat_id: env.ADMIN_CHAT_ID, parse_mode: "HTML", disable_web_page_preview: true,
+          text: "🎧 <b>Вебинар: учёт обновлён</b> · от <b>" + esc(author) + "</b>\n" +
+            esc(cleanStr(meet.title, 120)) + " · " + esc(cleanStr(meet.date, 20)) + "\n" +
+            "Позвано: <b>" + inv + "</b> · пришло: <b>" + came + "</b>" +
+            (wasInv ? " (было " + wasInv + " / " + wasCame + ")" : ""),
+        });
+        notified = !!(nr && nr.ok);
+      } catch (e) { /* отбивка не критична, учёт уже записан */ }
+    }
+    return json({ ok: true, direct: true, inv: inv, came: came, rejected: parsed.rejected, notified: notified }, 200, cors);
+  }
+
 
   // Новый PDF-дайджест: файл через Worker не гоняем — сейлз шлёт его Руслану в Telegram,
   // а отсюда уходит только отбивка-уведомление (без кнопок и модерации).

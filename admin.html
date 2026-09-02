@@ -96,6 +96,25 @@
   .rm-row button:hover { background:rgba(224,112,90,.12); }
   .rm-row button:disabled { opacity:.5; cursor:default; }
   .rm-empty { font-size:13px; color:var(--faint); padding:8px 2px; line-height:1.5; }
+  /* Вебинарный учёт: список приглашённых с отметкой прихода */
+  .wb-b { border:1px solid var(--border); background:none; color:var(--ink); border-radius:9px;
+          padding:9px 15px; font-family:var(--f); font-size:12.5px; font-weight:500; cursor:pointer; }
+  .wb-b:hover { border-color:rgba(238,125,27,.6); }
+  .wb-row { display:flex; align-items:center; gap:11px; padding:4px 0; border-bottom:1px solid var(--border-soft); }
+  .wb-row:last-child { border-bottom:0; }
+  .wb-row .nm { flex:1; font-size:13.5px; line-height:1.35; word-break:break-word; }
+  /* Тач-цель — на ЛАБЕЛИ, а не на самом чекбоксе: общее правило задаёт полям
+     min-height 44px, у флажка это растянуло бы квадрат, а без него цель мельче нормы. */
+  .wb-ck { display:flex; align-items:center; gap:7px; flex:none; min-height:44px; padding:0 2px;
+           font-family:var(--m); font-size:11px; letter-spacing:.06em; color:var(--faint); cursor:pointer; }
+  .wb-ck input { width:19px; height:19px; min-height:0; padding:0; margin:0; flex:none; accent-color:var(--solar); cursor:pointer; }
+  .wb-ck input:checked + span { color:var(--up); }
+  .wb-row .x { flex:none; border:1px solid rgba(224,112,90,.5); background:none; color:var(--down);
+               border-radius:8px; padding:6px 12px; font-family:var(--f); font-size:12px; cursor:pointer; min-height:36px; }
+  .wb-row .x:hover { background:rgba(224,112,90,.12); }
+  .wb-cnt { font-family:var(--m); font-size:12px; color:var(--faint); }
+  .wb-cnt b { color:var(--ink); font-weight:500; }
+  .hint-box.after { margin:10px 0 0; }
 
   .send { width:100%; margin-top:6px; background:var(--solar); color:#0C0A08; border:0; border-radius:12px;
           padding:13px; font-family:var(--f); font-size:14.5px; font-weight:600; cursor:pointer; }
@@ -203,6 +222,7 @@
     <button class="tab" data-f="f-digest" type="button">Идея в дайджест</button>
     <button class="tab" data-f="f-dpdf" type="button">Выпуск недели</button>
     <button class="tab" data-f="f-deal" type="button">Сделка партнёра</button>
+    <button class="tab" data-f="f-webinar" type="button">Вебинар</button>
     <button class="tab" data-f="f-remove" type="button">Снять с сайта</button>
   </div>
 
@@ -751,6 +771,52 @@
     </div>
   </form>
 
+  <!-- ── Вебинары: кого позвали и кто пришёл ──────────────────────────────────
+       Аудитория — свои сейлзы. Пишется сразу, без модерации: решать тут нечего.
+       Человек записывается ОБОЗНАЧЕНИЕМ, без контактов (решение Руслана
+       02.09.2026) — статистика нам нужна, клиентская база нет.
+       Присутствие отмечает сейлз руками, и в интерфейсе это названо честно. -->
+  <form id="f-webinar" onsubmit="return false">
+    <details class="help"><summary>Как это работает<span class="cv">▾</span></summary>
+      <div class="hbody"><ol>
+        <li>Выберите <b>встречу</b> — список берётся со страницы «События».</li>
+        <li>Впишите, кого позвали: <b>по одному в строке</b>. Пишите обозначение, по которому
+          узнаёте человека сами — «Иванов, УК Альфа» или «клиент 7».</li>
+        <li>После встречи отметьте галочкой <b>«пришёл»</b> и сохраните.</li>
+        <li>Учёт <b>сохраняется сразу</b>, одобрение не нужно. Руслану уходит уведомление,
+          только когда цифры изменились.</li>
+      </ol>
+      <p class="note">Телефоны и адреса почты форма не примет. Нам нужна статистика, а не
+        клиентская база — контакты остаются у вас.</p></div>
+    </details>
+
+    <div class="grp"><div class="gt">Встреча</div>
+      <label><span class="k">Вебинар <b>*</b></span>
+        <select name="ev" id="wb-ev"><option value="">Загрузка…</option></select>
+      </label>
+    </div>
+
+    <div class="grp"><div class="gt">Кого позвали</div>
+      <label><span class="k">По одному в строке</span>
+        <textarea id="wb-add" rows="4" placeholder="Иванов, УК Альфа
+Петров, Сбер АМ
+клиент 7"></textarea></label>
+      <div class="keyrow">
+        <button class="wb-b" type="button" id="wb-addbtn">Добавить в список</button>
+        <span class="wb-cnt" id="wb-count">—</span>
+      </div>
+      <div id="wb-rej" class="hint-box after" style="display:none"></div>
+      <div id="wb-list"><div class="rm-empty">Сначала выберите встречу.</div></div>
+    </div>
+
+    <button class="send" type="button" id="wb-save">Сохранить учёт</button>
+    <div id="m-webinar" class="msg"></div>
+
+    <div class="grp"><div class="gt">Мои встречи</div>
+      <div id="wb-mine"><div class="rm-empty">Загрузка…</div></div>
+    </div>
+  </form>
+
   <form id="f-remove" onsubmit="return false">
     <details class="help"><summary>Как это работает<span class="cv">▾</span></summary>
       <div class="hbody"><ol>
@@ -849,6 +915,7 @@
       if (target === "f-remove") loadRemovable();
       if (target === "f-dpdf") loadDraft();
       if (target === "f-placement") loadPlacementRefs();
+      if (target === "f-webinar" && window.wbEnter) window.wbEnter();
     });
   });
 
@@ -998,7 +1065,15 @@
 
   var qRf = document.getElementById("q-refresh");
   if (qRf) qRf.addEventListener("click", renderQueue);
-  function dataObj(text) { try { return JSON.parse(text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1)); } catch (e) { return null; } }
+  // Якорь — «window.<ИМЯ>», а не первая «{» в файле: в шапке data/events.js стоит
+  // комментарий с «{url, label}», и разбор по первой скобке ломался об него.
+  function dataObj(text, globalName) {
+    try {
+      var from = 0;
+      if (globalName) { var m = text.indexOf("window." + globalName); if (m >= 0) from = m; }
+      return JSON.parse(text.slice(text.indexOf("{", from), text.lastIndexOf("}") + 1));
+    } catch (e) { return null; }
+  }
 
   // Файлы данных тянулись заново на КАЖДЫЙ заход на вкладку с ?cb=, то есть мимо
   // кэша: «Снять с сайта» стоил 202 КБ за визит, за сессию набегало больше 4 МБ.
@@ -2453,6 +2528,148 @@
   // Старт — в самом конце: объявления функций поднимаются наверх, а присваивания
   // переменных (dataCache, bdItems, bdPick) нет. Ранний вызов падал на undefined.
   renderQueue();
+  // ── Вебинарный учёт ────────────────────────────────────────────────────────
+  // Форма присылает на сервер ПОЛНОЕ состояние списка, поэтому при выборе встречи
+  // её содержимое обязательно подгружается: сохранение без загрузки стёрло бы уже
+  // отмеченный приход. Пока список не загружен, сохранение не даётся.
+  (function () {
+    var evSel = document.getElementById("wb-ev"), addBox = document.getElementById("wb-add");
+    var addBtn = document.getElementById("wb-addbtn"), listBox = document.getElementById("wb-list");
+    var cntEl = document.getElementById("wb-count"), rejEl = document.getElementById("wb-rej");
+    var msgEl = document.getElementById("m-webinar"), mineBox = document.getElementById("wb-mine");
+    var saveBtn = document.getElementById("wb-save");
+    if (!evSel) return;
+    var people = [], loaded = false, titles = {};
+
+    function msg(t, bad) { msgEl.className = "msg" + (bad ? " err" : ""); msgEl.textContent = t; }
+    function count() {
+      var came = people.filter(function (p) { return p.c; }).length;
+      cntEl.innerHTML = "позвано <b>" + people.length + "</b> · пришло <b>" + came + "</b>";
+    }
+    function render() {
+      if (!evSel.value) { listBox.innerHTML = "<div class=\"rm-empty\">Сначала выберите встречу.</div>"; cntEl.textContent = "—"; return; }
+      if (!loaded) { listBox.innerHTML = "<div class=\"rm-empty\">Загрузка списка…</div>"; cntEl.textContent = "—"; return; }
+      if (!people.length) {
+        listBox.innerHTML = "<div class=\"rm-empty\">Список пуст: впишите приглашённых выше и нажмите «Добавить в список».</div>";
+        count(); return;
+      }
+      listBox.innerHTML = people.map(function (p, i) {
+        return "<div class=\"wb-row\"><span class=\"nm\">" + esc(p.n) + "</span>" +
+          "<label class=\"wb-ck\"><input type=\"checkbox\" data-i=\"" + i + "\"" + (p.c ? " checked" : "") +
+          " aria-label=\"Пришёл: " + esc(p.n) + "\"><span>пришёл</span></label>" +
+          "<button class=\"x\" type=\"button\" data-x=\"" + i + "\" aria-label=\"Убрать из списка: " + esc(p.n) + "\">Убрать</button></div>";
+      }).join("");
+      count();
+    }
+    listBox.addEventListener("change", function (e) {
+      var i = e.target && e.target.getAttribute && e.target.getAttribute("data-i");
+      if (i == null) return;
+      people[+i].c = e.target.checked ? 1 : 0;
+      count();
+    });
+    listBox.addEventListener("click", function (e) {
+      var i = e.target && e.target.getAttribute && e.target.getAttribute("data-x");
+      if (i == null) return;
+      people.splice(+i, 1);
+      render();
+    });
+
+    // Разбор вставленного списка. Дубли — и внутри вставки, и с уже набранным —
+    // склеиваем без учёта регистра: сейлз вставляет тот же список повторно, и без
+    // этого приглашённые множились бы на каждой вставке.
+    addBtn.addEventListener("click", function () {
+      var lines = (addBox.value || "").split(/[\r\n;]+/), added = 0, bad = [], have = {};
+      people.forEach(function (p) { have[p.n.toLowerCase()] = 1; });
+      lines.forEach(function (raw) {
+        var n = String(raw || "").trim().slice(0, 80);
+        if (!n) return;
+        if (/[^\s@]+@[^\s@]+\.[^\s@]/.test(n)) { bad.push(n + " — почта"); return; }
+        if (n.replace(/\D+/g, "").length >= 10) { bad.push(n + " — телефон"); return; }
+        if (have[n.toLowerCase()]) return;
+        if (people.length >= 200) { bad.push(n + " — список полон (200)"); return; }
+        have[n.toLowerCase()] = 1;
+        people.push({ n: n, c: 0 });
+        added++;
+      });
+      addBox.value = "";
+      if (bad.length) {
+        rejEl.style.display = "";
+        rejEl.innerHTML = "Не приняты: " + bad.map(esc).join("; ") +
+          ". Пишите обозначение без контактов — контакты остаются у вас.";
+      } else { rejEl.style.display = "none"; rejEl.innerHTML = ""; }
+      render();
+      if (added) msg("Добавлено в список: " + added + ". Не забудьте нажать «Сохранить учёт».");
+    });
+
+    function loadOne() {
+      loaded = false; people = []; render();
+      var key = keyEl.value.trim();
+      if (!evSel.value) return;
+      if (!key) { listBox.innerHTML = "<div class=\"rm-empty\">Впишите свой ключ в самом верху страницы.</div>"; return; }
+      postAsk({ key: key, action: "webinar_get", ev: evSel.value }).then(function (d) {
+        people = (d.people || []).map(function (p) { return { n: p.n, c: p.c ? 1 : 0 }; });
+        loaded = true; render();
+      }).catch(function (e) {
+        listBox.innerHTML = "<div class=\"rm-empty\">" + esc(e.message) + "</div>";
+      });
+    }
+    evSel.addEventListener("change", function () { rejEl.style.display = "none"; msg(""); loadOne(); });
+
+    function loadMine() {
+      var key = keyEl.value.trim();
+      if (!key) { mineBox.innerHTML = "<div class=\"rm-empty\">Впишите ключ, чтобы увидеть свои встречи.</div>"; return; }
+      mineBox.innerHTML = "<div class=\"rm-empty\">Загрузка…</div>";
+      postAsk({ key: key, action: "webinar_get" }).then(function (d) {
+        (d.events || []).forEach(function (e) { titles[e.id] = e.title; });
+        if (!(d.mine || []).length) { mineBox.innerHTML = "<div class=\"rm-empty\">Учёт пока не заведён ни по одной встрече.</div>"; return; }
+        mineBox.innerHTML = d.mine.map(function (m) {
+          var share = m.inv ? Math.round(m.came / m.inv * 100) : 0;
+          return "<div class=\"wb-row\"><span class=\"nm\"><b>" + esc(titles[m.ev] || m.ev) + "</b>" +
+            "<span class=\"sec\">позвано " + m.inv + " · пришло " + m.came + " · " + share + "%</span></span></div>";
+        }).join("");
+      }).catch(function (e) { mineBox.innerHTML = "<div class=\"rm-empty\">" + esc(e.message) + "</div>"; });
+    }
+
+    saveBtn.addEventListener("click", function () {
+      var key = keyEl.value.trim();
+      if (!key) { msg("Впишите свой персональный ключ в самом верху страницы.", true); keyEl.focus(); return; }
+      if (!evSel.value) { msg("Выберите встречу.", true); return; }
+      if (!loaded) { msg("Список ещё загружается — подождите секунду.", true); return; }
+      saveBtn.disabled = true; msg("Сохраняю…");
+      postAsk({ key: key, action: "webinar_save", ev: evSel.value, people: people, clear: people.length === 0 })
+        .then(function (d) {
+          var extra = (d.rejected && d.rejected.length)
+            ? " Сервер не принял: " + d.rejected.map(function (r) { return r.v + " (" + r.why + ")"; }).join(", ") + "."
+            : "";
+          msg("Сохранено: позвано " + d.inv + ", пришло " + d.came + "." +
+            (d.notified === false ? " Уведомление Руслану не ушло — Telegram не ответил, но учёт записан." : "") + extra);
+          loadMine();
+        })
+        .catch(function (e) { msg(e.message, true); })
+        .then(function () { saveBtn.disabled = false; });
+    });
+
+    // Список встреч — с витрины, свежие сверху: учёт заводят по ближайшей.
+    var wbInit = false;
+    window.wbEnter = function () {
+      if (wbInit) { loadMine(); return; }
+      wbInit = true;
+      fetchData("data/events.js").then(function (t) {
+        var o = dataObj(t, "EVENTS"), items = (o && o.items) || [];
+        if (!items.length) { evSel.innerHTML = "<option value=\"\">Встреч не найдено</option>"; return; }
+        var today = new Date().toISOString().slice(0, 10);
+        items = items.slice().sort(function (a, b) { return String(b.date || "").localeCompare(String(a.date || "")); });
+        evSel.innerHTML = "<option value=\"\">— выберите встречу —</option>" + items.map(function (e) {
+          titles[e.id] = e.title;
+          var when = String(e.date || "").split("-").reverse().join(".");
+          var mark = String(e.date || "") >= today ? "предстоит" : "прошла";
+          return "<option value=\"" + esc(e.id) + "\">" + esc(e.title) + " · " + when + " · " + mark + "</option>";
+        }).join("");
+      }).catch(function () { evSel.innerHTML = "<option value=\"\">Не удалось загрузить список встреч</option>"; });
+      loadMine();
+    };
+  })();
+
   bdLoad();
 
 })();
