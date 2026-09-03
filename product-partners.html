@@ -72,6 +72,12 @@
   .o-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
   .o-actions .ct-menu { left: auto; right: 0; }
   .o-actions .ct-btn { min-height: 44px; }
+  /* Документ кнопкой в шапке карточки — главный материал продукта под рукой.
+     Строку в «Материалах» она НЕ заменяет: у кнопки нет ни типа, ни размера файла,
+     и качать вслепую не должно быть единственным вариантом. */
+  .o-doc-btn { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font-size: 13px; color: var(--ink); background: transparent; transition: border-color .2s, background .2s; }
+  .o-doc-btn:hover { border-color: rgba(255,255,255,0.28); background: rgba(255,255,255,0.05); }
+  .o-doc-btn svg { display: block; flex: none; }
   .o-name { margin: 7px 0 4px; font-family: var(--display); font-size: 25px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.15; }
   .o-ref { font-size: 13.5px; color: var(--hushed); } .o-ref b { color: var(--ink); font-weight: 600; }
   .o-partner { color: var(--steel); font-weight: 500; }
@@ -189,7 +195,7 @@
     .topnav { margin-left: 0; width: 100%; gap: 16px; font-size: 13.5px; }
     .chip { min-height: 44px; display: inline-flex; align-items: center; }
     .crumbs a { display: inline-flex; align-items: center; min-height: 44px; }
-    .o-actions .sh-btn { min-height: 44px; }
+    .o-actions .sh-btn, .o-doc-btn { min-height: 44px; }
     h1 { font-size: 27px; }
   }
 </style>
@@ -240,7 +246,7 @@
   </div>
 </footer>
 
-<script src="data/partners.js?v=2"></script>
+<script src="data/partners.js?v=3"></script>
 <script src="share.js?v=8"></script>
 <script src="contact.js?v=9"></script>
 <script>
@@ -318,6 +324,11 @@
       ? '<div class="blk"><h3 class="k">Комиссии</h3>' +
         o.fees.map(f => '<div class="fee"><span class="k2">' + esc(f.k) + '</span><span class="v2">' + esc(f.v) + '</span></div>').join("") +
         (o.feesNote ? '<div class="cap">' + esc(o.feesNote) + '</div>' : "") + '</div>' : "";
+    // Документ с "short" получает ещё и кнопку в шапке карточки — короткий путь
+    // к главному материалу. Из списка «Материалы» он при этом НЕ исчезает.
+    var topDocBtns = (o.docs || []).filter(d => d.short).map(d =>
+      '<a class="o-doc-btn" href="' + esc(d.file) + '" target="_blank" rel="noopener" download>' +
+      docIcon + '<span>' + esc(d.short) + '</span></a>').join("");
     var docs = (o.docs || []).map(d => '<a class="doc" href="' + esc(d.file) + '" target="_blank" rel="noopener" download>' + docIcon +
       '<span><span class="nm">' + esc(d.name) + '</span><span class="mt">' + esc(d.ext) + ' · ' + esc(d.size) + '</span></span></a>').join("");
     var docsBlk = (docs || o.docsNote)
@@ -327,7 +338,7 @@
       '<div class="o-top"><div><h2 class="o-name">' + esc(o.name) + '</h2>' + partnerLine + '</div>' +
         '<div class="o-top-right"><span class="badge"><span class="dot"></span>' + esc(o.statusLabel || "Партнёрский продукт") + '</span>' +
         (o.asOf ? '<div class="o-asof">по материалам УК от ' + esc(o.asOf) + '</div>' : "") +
-        '<div class="o-actions"><span id="p-ct-host"></span><span id="p-sh-host"></span></div></div></div>' +
+        '<div class="o-actions"><span id="p-ct-host"></span>' + topDocBtns + '<span id="p-sh-host"></span></div></div></div>' +
       '<div class="pnote">' + pIcon + '<span>Продукт партнёра: выпускает его и управляет им ' + esc((o.partner && o.partner.short) || "партнёр") +
         ', Румберг отбирает предложение и ведёт сделку. Это не наш выпуск и не наше обязательство.</span></div>' +
       '<div class="o-lead' + (target ? "" : " solo") + '"><div class="o-teaser">' + esc(o.teaser) + '</div>' + target + '</div>' +
