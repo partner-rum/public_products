@@ -106,7 +106,7 @@
   .sec-h h2 { margin: 0; font-family: var(--display); font-size: 19px; font-weight: 500; }
   .sec-h .n { font-family: var(--f-mono); font-size: 12px; color: var(--faint); }
   .tbl { border: 1px solid var(--border-soft); border-radius: 12px; overflow: hidden; }
-  .th, .tr { display: grid; grid-template-columns: 96px minmax(0,1fr) 128px 168px; gap: 16px; }
+  .th, .tr { display: grid; grid-template-columns: 96px minmax(0,1fr) 128px 240px; gap: 16px; }
   .th { padding: 11px 20px; background: var(--panel-2); border-bottom: 1px solid var(--border-soft); font-family: var(--f-mono);
         font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); }
   .tr { align-items: center; padding: 15px 20px; border-bottom: 1px solid var(--border-soft); background: var(--card); transition: background .18s; }
@@ -118,7 +118,8 @@
   .tr .ts { font-size: 12.5px; color: var(--faint); margin-top: 4px;
             display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; overflow: hidden; }
   .tr .mut { font-size: 13px; color: var(--faint); line-height: 1.45; }
-  .tr .ac { display: flex; justify-content: flex-end; }
+  .tr .ac { display: flex; align-items: center; justify-content: flex-end;
+            flex-wrap: wrap; gap: 8px 12px; min-width: 0; }
   .lnk { font-size: 13.5px; color: var(--solar); cursor: pointer; background: none; border: none; font-family: var(--f-body); padding: 6px 0; }
   .lnk:hover { color: var(--solar-l); text-decoration: underline; }
   .empty { margin-top: 26px; background: var(--card); border: 1px solid var(--border-soft); border-radius: 14px;
@@ -334,7 +335,7 @@
     else if (s.recordingUrl) act = '<a class="lnk" href="' + esc(s.recordingUrl) + '" target="_blank" rel="noopener" data-goal="event_recording">Смотреть запись →</a>';
     else act = '<span class="chip past">Запись готовится</span>';
     materialsOf(s).forEach(function (m) {
-      act += '<a class="lnk" style="margin-left:12px" href="' + esc(m.url) + '" data-goal="event_material">' +
+      act += '<a class="lnk" href="' + esc(m.url) + '" data-goal="event_material">' +
         esc(m.label) + ' →</a>';
     });
     return '<div class="tr" id="' + esc(s.id) + '">' +
