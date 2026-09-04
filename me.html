@@ -1004,6 +1004,15 @@
   if (demo) {
     render(demo[1] === "0" ? demoEmpty() : demo[1] === "2" ? demoNoProfile()
       : demo[1] === "3" ? demoShow() : demoFull());
+    // Открытие витринного демо — цель Метрики: по ней видно, сколько человек
+    // пришло по ссылке из канала, а метка ?ref= уже уходит параметром визита.
+    // Ждём load: metrika.js подключён с defer, до него window.ym не существует.
+    // Считаем ТОЛЬКО витрину: demo=1 — стенд для сейлзов, там это шум.
+    if (IS_SHOW) {
+      window.addEventListener("load", function () {
+        try { window.ym(110759242, "reachGoal", "demo_open"); } catch (e) {}
+      });
+    }
   } else {
     var c = creds();
     if (c.id && c.key) {
