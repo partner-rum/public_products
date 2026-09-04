@@ -28,9 +28,18 @@ SLOT = '<div class="list" id="list">'
 
 
 def load(name):
+    """Читает data/<name>.js как JSON.
+
+    Тело ищется от «window.», а НЕ от первой «{» в файле: в шапочных
+    комментариях встречаются фигурные скобки (в talks.js — «[{label, url}]»,
+    в events.js — «[{url, label}]»), и разбор от первой скобки ломался.
+    Ровно на этом уже обжигался fetchDataObj в bot/worker.js.
+    """
     p = os.path.join(ROOT, "data", name)
     s = io.open(p, encoding="utf-8").read()
-    return json.loads(s[s.index("{"):s.rindex("}") + 1])
+    at = s.find("window.")
+    start = s.index("{", at if at >= 0 else 0)
+    return json.loads(s[start:s.rindex("}") + 1])
 
 
 def esc(s):
@@ -174,7 +183,8 @@ def index_blocks():
     out["rail"] = (
         "<p>Разделы витрины: дайджест инвестиционных идей; разборы тем и компаний; "
         "текущие продукты — доска прайсинга, %s; "
-        "размещённые выпуски, %s; библиотека типов продуктов; события; о компании.</p>"
+        "размещённые выпуски, %s; библиотека типов продуктов; события; о компании; "
+        "выступления — интервью и эфиры на внешних площадках.</p>"
         % (plural(len(inst["instruments"]), "инструмент", "инструмента", "инструментов"),
            plural(len(plc["issues"]), "выпуск", "выпуска", "выпусков")))
 
@@ -221,6 +231,24 @@ def index_blocks():
         rows.append(esc(", ".join(bits)) + ".")
     if rows:
         out["offers"] = "<p>Текущие размещения.</p><ul>%s</ul>" % "".join("<li>%s</li>" % r for r in rows)
+
+    # Выступления. Перечисляем ВСЕ записи, а не две: полоса выбирает пару
+    # случайно при каждом заходе, и фиксированные две расходились бы с тем,
+    # что отрисовано. Все перечисленные на странице есть — полоса показывает
+    # их по очереди, плюс ссылка в «О компании».
+    try:
+        tk = load("talks.js")
+        rows = []
+        for t in tk.get("items", []):
+            bits = [b for b in (t.get("org"), t.get("note"), t.get("title")) if b]
+            rows.append(esc(". ".join(bits)) + ".")
+        if rows:
+            out["talks"] = ("<p>Выступления: записи, где нас позвали говорить о рынке.</p>"
+                            "<ul>%s</ul>" % "".join("<li>%s</li>" % r for r in rows))
+    except FileNotFoundError:
+        pass  # раздела может не быть — полоса тогда и не показывается
+    except Exception as e:
+        print("  ВНИМАНИЕ: data/talks.js не разобран (%s) — слот выступлений пуст" % e)
 
     return out
 
@@ -321,6 +349,7 @@ INDEX_SLOTS = {
     "mprod": '<div id="mprod">',
     "rates": '<div id="rates">',
     "offers": '<div id="offers">',
+    "talks": '<div class="tk" id="talklist">',
 }
 
 PAGES = [("board.html", board_block), ("placements.html", placements_block),

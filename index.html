@@ -374,7 +374,44 @@
   /* Страница заканчивалась юридическим отрицанием и больше ничем: последнее,
      что человек читал, — «не является рекомендацией». Перед ним — тихая строка
      с двумя реальными следующими шагами, теми же, что в шапке. */
-  .endcta { display:flex; align-items:baseline; gap:18px; flex-wrap:wrap; padding:20px 0 4px; }
+  /* ── Выступления: записи, где нас позвали говорить о рынке ──────────────
+     Полоса стоит после рабочих колонок: человек уже получил данные, ради
+     которых пришёл, и только теперь уместен довод «кто мы такие». */
+  .talks { padding:26px 0 4px; border-top:1px solid var(--rule-soft); margin-top:30px; }
+  /* Скрытие не должно зависеть от того, задан ли у .talks display: стоит
+     кому-то дописать display:grid — и пустая полоса тихо вылезет на страницу */
+  .talks[hidden] { display:none; }
+  /* Шапка — общий .ch: заголовок-ссылка со стрелкой, та же линия подчёркивания,
+     что у колонок выше. Отдельной «Все записи» нет: записей две, обе здесь */
+  .talks .ch { margin-bottom:16px; }
+  .tk { display:grid; grid-template-columns:repeat(2,1fr); gap:20px; }
+  .tk .card { display:grid; grid-template-columns:190px 1fr; gap:16px; align-items:start; }
+  .tk .ph { position:relative; display:block; border-radius:7px; overflow:hidden; background:#14161C; border:1px solid var(--line); aspect-ratio:16/9; }
+  .tk .ph img { width:100%; height:100%; object-fit:cover; display:block; opacity:.9; transition:transform .5s var(--ease), opacity .3s; }
+  .tk .card:hover .ph img { transform:scale(1.035); opacity:1; }
+  .tk .play { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
+  .tk .play i { width:34px; height:34px; border-radius:50%; background:rgba(11,12,16,.62); border:1px solid rgba(255,255,255,.22); display:flex; align-items:center; justify-content:center; transition:background .2s, border-color .2s; }
+  .tk .card:hover .play i { background:rgba(238,125,27,.9); border-color:transparent; }
+  .tk .bd { min-width:0; padding-top:1px; }
+  .tk .org { font-family:var(--m); font-size:11px; letter-spacing:.06em; color:var(--dim); display:flex; align-items:center; gap:7px; margin-bottom:7px; }
+  .tk .org .d { width:3px; height:3px; border-radius:50%; background:rgba(255,255,255,.24); }
+  .tk .nm { font-family:var(--display); font-size:15px; font-weight:500; line-height:1.35; letter-spacing:-0.012em; margin:0 0 11px; display:block; }
+  .tk .card:hover .nm { color:var(--solar-l); }
+  .tk .ln { display:flex; gap:8px; }
+  .tk .ln a { font-family:var(--m); font-size:11px; letter-spacing:.04em; color:var(--mut); border:1px solid var(--line); border-radius:5px; padding:5px 9px; transition:border-color .2s, color .2s; }
+  .tk .ln a:hover { color:var(--tx); border-color:rgba(255,255,255,.26); }
+  @media (max-width:860px) {
+    .talks { padding-top:22px; margin-top:24px; }
+    .tk { grid-template-columns:1fr; gap:16px; }
+    .tk .card { grid-template-columns:132px 1fr; gap:13px; }
+    /* тач-цели ≥44px: чипы были 34px, название 41px; заголовок добирает .ch .chl */
+    .tk .ln a { min-height:44px; display:inline-flex; align-items:center; padding:0 13px; }
+    .tk .nm { padding:3px 0; margin-bottom:8px; }
+  }
+
+  /* Своя линейка сверху: полоса выступлений входит с волосяной линией, и без
+     такой же линии на выходе вопрос про продукт читался подписью под видео */
+  .endcta { display:flex; align-items:baseline; gap:18px; flex-wrap:wrap; padding:24px 0 4px; margin-top:26px; border-top:1px solid var(--rule-soft); }
   .endcta .q { font-family:var(--display); font-size:16.5px; font-weight:600; letter-spacing:-0.016em; }
   .endcta a { display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:500; color:var(--solar-l); }
   .endcta a:hover { color:var(--solar); }
@@ -532,7 +569,7 @@
              читались бы как её метаданные -->
         <div class="nvbox">
           <div class="ch"><h2>Разделы</h2></div>
-          <nav id="rail-list" aria-label="Разделы"><!-- seo:rail:start --><p>Разделы витрины: дайджест инвестиционных идей; разборы тем и компаний; текущие продукты — доска прайсинга, 108 инструментов; размещённые выпуски, 58 выпусков; библиотека типов продуктов; события; о компании.</p><!-- seo:rail:end --></nav>
+          <nav id="rail-list" aria-label="Разделы"><!-- seo:rail:start --><p>Разделы витрины: дайджест инвестиционных идей; разборы тем и компаний; текущие продукты — доска прайсинга, 108 инструментов; размещённые выпуски, 58 выпусков; библиотека типов продуктов; события; о компании; выступления — интервью и эфиры на внешних площадках.</p><!-- seo:rail:end --></nav>
         </div>
         <div class="stamp" id="stamp"></div>
       </section>
@@ -560,6 +597,11 @@
     </div>
   </div>
 
+  <section class="talks" id="talks" hidden>
+    <div class="ch"><h2><a class="chl" href="company.html#talks">Выступления</a></h2><span class="cap" id="talkcap">нас зовут говорить о рынке</span></div>
+    <div class="tk" id="talklist"><!-- seo:talks:start --><p>Выступления: записи, где нас позвали говорить о рынке.</p><ul><li>Smart-Lab. Румберг — Фабрика варрантов.</li><li>Газпромбанк Инвестиции. «Инвестор не должен становиться заложником продукта».</li><li>Газпромбанк Инвестиции. подкаст · 59 мин. Объясняем всё про структурные продукты.</li></ul><!-- seo:talks:end --></div>
+  </section>
+
   <div class="endcta">
     <span class="q">Нужен продукт под конкретного клиента?</span>
     <a href="board.html">Собрать на доске<svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
@@ -582,6 +624,7 @@
 <script src="data/morning.js?v=1"></script>
 <script src="data/ideas.js?v=1"></script>
 <script src="data/events.js?v=7"></script>
+<script src="data/talks.js?v=1"></script>
 <script>
   // Утренний обзор больше НЕ зашит в страницу — он приезжает из data/morning.js,
   // который пишет бот. Дата там в ISO, свежесть считается ниже в коде.
@@ -784,6 +827,7 @@
     // «Лучшие ставки» и «На размещении» из разделов убраны намеренно: они дословно
     // дублируют третью и четвёртую колонки, где те же данные показаны, а не названы.
     // Переход туда остаётся — заголовок каждой колонки сам является ссылкой.
+    var nt = (window.TALKS && TALKS.items) ? TALKS.items.length : 0;
     var rail = [
       { href: "digest.html", t: "Дайджест", m: window.DIGEST ? window.DIGEST.date.slice(0, 5) : "идеи" },
       // Разбор темы раз в две недели под вебинар: метка — дата выпуска из data/ideas.js
@@ -797,11 +841,83 @@
       { href: "about.html", t: "Библиотека", m: "базовые бумаги и продукты" },
       // Метка встречи — конкретная дата из data/events.js, а не общее слово
       { href: "events.html", t: "События", m: upcoming ? dmy(upcoming.date).slice(0, 5) : "записи" },
-      { href: "company.html", t: "О компании", m: "юрлица и контакты" }
+      { href: "company.html", t: "О компании", m: "юрлица и контакты" },
+      // Счётчик записей живой: полоса ниже показывает две свежих, а этот пункт
+      // говорит, сколько их всего — иначе «Выступления» дважды обещают одно и то же
+      { href: "company.html#talks", t: "Выступления", m: nt ? nt + " " + plural(nt, "запись", "записи", "записей") : "интервью и эфиры" }
     ];
     document.getElementById("rail-list").innerHTML = rail.map(function (s) {
       return '<a class="rl" href="' + s.href + '"><span class="rt">' + s.t + '</span><span class="rm">' + s.m + '</span></a>';
     }).join("");
+
+    // ── Выступления ──
+    // Полоса скрыта в разметке (hidden) и открывается только при непустых
+    // данных: незаполненный раздел на главной хуже отсутствующего. Пререндер
+    // внутри контейнера затирается тем же innerHTML, что и в остальных колонках.
+    (function () {
+      var T = (window.TALKS && TALKS.items) || [];
+      var box = document.getElementById("talklist"), sec = document.getElementById("talks");
+      if (!box || !sec || !T.length) return;
+      var MON = ["январь","февраль","март","апрель","май","июнь",
+                 "июль","август","сентябрь","октябрь","ноябрь","декабрь"];
+      function when(d) {
+        var p = String(d || "").split("-");
+        return (p.length === 3 && MON[+p[1] - 1]) ? MON[+p[1] - 1] + " " + p[0] : "";
+      }
+      // Свой экранировщик, БЕЗ обращения к SITE: на этой странице алиаса S нет,
+      // а data/harden.js сюда не подключён. Первая версия звала S.esc и валила
+      // ReferenceError-ом всё, что рисуется ниже «Разделов», — утро, продукты,
+      // ставки и размещения переставали отрисовываться целиком.
+      var ESC = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+      function esc(v) { return v == null ? "" : String(v).replace(/[&<>"']/g, function (c) { return ESC[c]; }); }
+      // На главной ДВЕ записи: третья карточка ломает сетку из двух колонок,
+      // а весь список живёт на company.html#talks. Пара выбирается СЛУЧАЙНО
+      // при каждом заходе — иначе самая старая запись не показывалась бы
+      // никогда, и порядок в файле решал бы, что клиент увидит.
+      var PAIR = 2;
+      // Фишер—Йетс по копии массива. `sort(() => Math.random() - .5)` здесь не
+      // годится: распределение зависит от алгоритма сортировки и получается
+      // смещённым — на коротком списке часть пар выпадает заметно чаще.
+      var pool = T.slice();
+      for (var i = pool.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var sw = pool[i]; pool[i] = pool[j]; pool[j] = sw;
+      }
+      // Показанную пару возвращаем в хронологию: перемешивание решает, КТО
+      // попал на экран, а не в каком порядке читать. Иначе рядом стоящие
+      // карточки прыгали бы датами без причины.
+      var shown = pool.slice(0, PAIR).sort(function (a, b) {
+        return String(b.date || "").localeCompare(String(a.date || ""));
+      });
+      if (T.length > PAIR) {
+        var cap = document.getElementById("talkcap");
+        if (cap) cap.textContent = "показаны " + PAIR + " из " + T.length;
+      }
+      box.innerHTML = shown.map(function (t) {
+        var main = (t.links && t.links[0]) ? t.links[0].url : "#";   // первым стоит Rutube
+        var chips = (t.links || []).map(function (l) {
+          return '<a href="' + esc(l.url) + '" target="_blank" rel="noopener">' + esc(l.label) + '</a>';
+        }).join("");
+        var date = when(t.date);
+        return '<div class="card">' +
+          // Обложка ведёт туда же, куда название и чип RUTUBE: для мыши она
+          // кликабельна, а из табуляции и дерева доступности выпадает — иначе
+          // скринридер объявлял один адрес трижды на каждую карточку
+          '<a class="ph" href="' + esc(main) + '" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true">' +
+            '<img src="' + esc(t.cover) + '" alt="" loading="lazy" width="640" height="360">' +
+            '<span class="play"><i><svg width="11" height="12" viewBox="0 0 11 12" aria-hidden="true"><path d="M10 5.13a1 1 0 010 1.74l-8 4.6a1 1 0 01-1.5-.87V1.4A1 1 0 012 .53l8 4.6z" fill="#F2F3F7"/></svg></i></span>' +
+          '</a>' +
+          '<div class="bd">' +
+            '<div class="org">' + esc(t.org) +
+              (t.note ? '<span class="d"></span>' + esc(t.note) : '') +
+              (date ? '<span class="d"></span>' + date : '') + '</div>' +
+            '<a class="nm" href="' + esc(main) + '" target="_blank" rel="noopener">' + esc(t.title) + '</a>' +
+            '<div class="ln">' + chips + '</div>' +
+          '</div>' +
+        '</div>';
+      }).join("");
+      sec.hidden = false;
+    })();
 
     // ── Утро на рынках: данные из data/morning.js, свежесть считается сама ──
     (function () {

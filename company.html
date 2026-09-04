@@ -62,6 +62,32 @@
   .entity .d { margin-top: 5px; font-size: 13.5px; line-height: 1.55; color: var(--hushed); }
   .entity .ogrn { font-family: var(--f-mono); font-size: 12.5px; color: var(--faint); margin-top: 4px; }
 
+  /* Выступления: тот же ритм, что у .entity — строка с волосяной линейкой.
+     Обложка слева фиксированной ширины, чтобы низкие кадры не разъезжались. */
+  .talk { display: grid; grid-template-columns: 208px 1fr; gap: 18px; align-items: start; padding: 18px 0; border-bottom: 1px solid var(--border-soft); }
+  .talk:first-of-type { border-top: 1px solid var(--border-soft); }
+  .talk .ph { position: relative; display: block; border-radius: 8px; overflow: hidden; background: var(--card); border: 1px solid var(--border); aspect-ratio: 16/9; }
+  .talk .ph img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: .9; transition: transform .5s var(--ease), opacity .3s; }
+  .talk:hover .ph img { transform: scale(1.035); opacity: 1; }
+  .talk .play { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
+  .talk .play i { width: 36px; height: 36px; border-radius: 50%; background: rgba(11,12,16,.62); border: 1px solid rgba(255,255,255,.22); display: flex; align-items: center; justify-content: center; transition: background .2s, border-color .2s; }
+  .talk:hover .play i { background: rgba(238,125,27,.9); border-color: transparent; }
+  .talk .bd { min-width: 0; }
+  .talk .org { font-family: var(--f-mono); font-size: 11px; letter-spacing: .06em; color: var(--faint); display: flex; align-items: center; gap: 7px; margin-bottom: 6px; }
+  .talk .org .d { width: 3px; height: 3px; border-radius: 50%; background: rgba(255,255,255,.24); }
+  .talk .n { font-family: var(--display); font-size: 16px; font-weight: 600; line-height: 1.35; }
+  .talk:hover .n { color: var(--solar-l); }
+  .talk .ln { display: flex; gap: 8px; margin-top: 11px; }
+  .talk .ln a { font-family: var(--f-mono); font-size: 11px; letter-spacing: .04em; color: var(--hushed); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; transition: border-color .15s, color .15s; }
+  .talk .ln a:hover { color: var(--ink); border-color: rgba(255,255,255,0.32); }
+  @media (max-width: 560px) {
+    .talk { grid-template-columns: 1fr; gap: 12px; }
+    .talk .ph { max-width: 320px; }
+    /* тач-цели ≥44px: чипы были 28px, название записи 19 и 41px */
+    .talk .ln a { min-height: 44px; display: inline-flex; align-items: center; padding: 0 14px; }
+    .talk .n { display: block; padding: 11px 0; }
+  }
+
   .kv { display: flex; gap: 14px; padding: 10px 0; border-bottom: 1px solid var(--border-soft); font-size: 14px; }
   .kv:first-of-type { border-top: 1px solid var(--border-soft); }
   .kv .k { flex: none; width: 110px; color: var(--faint); }
@@ -387,6 +413,10 @@
     })();
   </script>
 
+  <div class="cap" id="talks">Выступления</div>
+  <p class="ci-sub" style="margin:0 0 4px">Записи, где нас позвали говорить о рынке. Rutube и YouTube — одна и та же запись, выбирайте, что открывается.</p>
+  <div id="talklist"></div>
+
   <div class="cap">Юридические лица</div>
   <div class="entity">
     <div class="n">ООО «Румберг Капитал»</div>
@@ -411,6 +441,59 @@
   <p class="note">Информация предназначена для квалифицированных инвесторов и не является индивидуальной инвестиционной рекомендацией, офертой или гарантией доходности. Инвестиции в структурные продукты связаны с риском, включая риск частичной или полной потери вложенных средств.</p>
 </div>
 
+<script src="data/talks.js?v=1"></script>
+<script>
+  // Выступления. Данные — data/talks.js, один источник с полосой на главной.
+  // Нет файла или он пуст — блок вместе с заголовком убирается целиком:
+  // пустая рубрика «Выступления» хуже её отсутствия.
+  (function () {
+    var T = (window.TALKS && TALKS.items) || [];
+    var box = document.getElementById("talklist");
+    if (!box) return;
+    if (!T.length) {
+      var cap = document.getElementById("talks");
+      if (cap) { cap.remove(); }
+      if (box.previousElementSibling) { box.previousElementSibling.remove(); }
+      box.remove();
+      return;
+    }
+    var MON = ["январь","февраль","март","апрель","май","июнь",
+               "июль","август","сентябрь","октябрь","ноябрь","декабрь"];
+    function when(d) {
+      var p = String(d || "").split("-");
+      if (p.length !== 3) return "";
+      var m = MON[+p[1] - 1];
+      return m ? m + " " + p[0] : "";
+    }
+    // Свой экранировщик: data/lib.js на этой странице не подключён, а данные
+    // идут в innerHTML. Правило то же, что в data/harden.js.
+    var ESC = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+    function esc(v) { return v == null ? "" : String(v).replace(/[&<>"']/g, function (c) { return ESC[c]; }); }
+    box.innerHTML = T.map(function (t) {
+      // Первая ссылка — главная: в data/talks.js первым стоит Rutube
+      var main = (t.links && t.links[0]) ? t.links[0].url : "#";
+      var chips = (t.links || []).map(function (l) {
+        return '<a href="' + esc(l.url) + '" target="_blank" rel="noopener">' + esc(l.label) + '</a>';
+      }).join("");
+      var date = when(t.date);
+      return '<div class="talk">' +
+        // Обложка дублирует ссылку названия — из табуляции и дерева доступности
+        // она выпадает, чтобы один адрес не объявлялся трижды
+        '<a class="ph" href="' + esc(main) + '" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true">' +
+          '<img src="' + esc(t.cover) + '" alt="" loading="lazy" width="640" height="360">' +
+          '<span class="play"><i><svg width="12" height="13" viewBox="0 0 11 12" aria-hidden="true"><path d="M10 5.13a1 1 0 010 1.74l-8 4.6a1 1 0 01-1.5-.87V1.4A1 1 0 012 .53l8 4.6z" fill="#F2F3F7"/></svg></i></span>' +
+        '</a>' +
+        '<div class="bd">' +
+          '<div class="org">' + esc(t.org) +
+            (t.note ? '<span class="d"></span>' + esc(t.note) : '') +
+            (date ? '<span class="d"></span>' + date : '') + '</div>' +
+          '<a class="n" href="' + esc(main) + '" target="_blank" rel="noopener">' + esc(t.title) + '</a>' +
+          '<div class="ln">' + chips + '</div>' +
+        '</div>' +
+      '</div>';
+    }).join("");
+  })();
+</script>
 <script src="chat.js?v=17"></script>
 <script src="qualgate.js?v=5"></script>
 <script src="search.js?v=1"></script>

@@ -45,7 +45,7 @@
   // пропускаются; забытое имя, наоборот, оставило бы страницу без защиты.
   var GLOBALS = ["SITE_DATA", "PLACEMENTS_DATA", "PLACEMENT_DOCS", "OFFERINGS",
                  "DIGEST_ARCHIVE", "DIGEST", "RESEARCH", "MORNING", "EVENTS",
-                 "IDEAS", "RATES"];
+                 "IDEAS", "RATES", "TALKS"];
   for (var g = 0; g < GLOBALS.length; g++) {
     var name = GLOBALS[g];
     try { if (window[name]) window[name] = harden(window[name], 0); } catch (e) {}
