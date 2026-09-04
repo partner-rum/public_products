@@ -354,6 +354,8 @@
   }
   // Демо-режим не трогает ни сеть, ни данные настоящего партнёра в localStorage.
   var IS_DEMO = /[?&]demo=[0-3]/.test(location.search);
+  // Витрина для скриншотов: сортировка по Bid и без служебной метки.
+  var IS_SHOW = /[?&]demo=3/.test(location.search);
   var ACT_API = "https://so-leads.ruslan-sabirov.workers.dev/act";
   // Что агент делал на столе — в журнал владельца. Ответа не ждём и ошибок не
   // показываем: это учёт, а не работа страницы. Пара ID+ключ обязательна, иначе
@@ -450,7 +452,9 @@
       ? hi + ", " + p.name.replace(/^ООО\s+/, "")
       : hi + " — Партнёр " + d.ref;
     var fields = [
-      { k: "метка", v: d.ref },
+      // В витрине (?demo=3) метки нет: служебное «andrey» ничего не говорит
+      // тому, кто открыл демо по ссылке, и в кадре читается как чужой логин.
+      { k: "метка", v: IS_SHOW ? null : d.ref },
       { k: "ИНН", v: p.inn },
       { k: p.ogrnip ? "ОГРНИП" : "ОГРН", v: p.ogrnip || p.ogrn },
       { k: "договор", v: p.contract },
@@ -607,7 +611,6 @@
   try { savedSort = localStorage.getItem("so_me_sort"); } catch (e) {}
   // Витрина (?demo=3) всегда открывается по Bid: котировки выстраиваются
   // лесенкой сверху вниз, и запомненная сортировка не портит кадр.
-  var IS_SHOW = /[?&]demo=3/.test(location.search);
   var ALL = [], view = { sort: IS_SHOW ? "bid"
     : SORT_KEYS.indexOf(savedSort) >= 0 ? savedSort : "date" };
 
