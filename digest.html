@@ -184,9 +184,10 @@
   </div>
 </div>
 
-<script src="data/lib.js?v=ax5"></script>
+<script src="data/lib.js?v=ax6"></script>
 <script src="data/digest.js?v=srv6"></script>
 <script src="data/digest-lib.js?v=6"></script>
+<script src="data/harden.js?v=1"></script>
 <script src="share.js?v=8"></script>
 <script src="contact.js?v=9"></script>
 <script>
@@ -212,10 +213,10 @@
     document.getElementById("toc").innerHTML = A.sections.map(s => {
       const items = issue.ideas.filter(i => i.family === s.key);
       if (!items.length) return "";
-      return '<div class="toc-sec" style="color:' + s.color + '">' + s.label + '</div>' +
-        items.map(i => '<button class="toc-i" data-id="' + i.id + '" style="--fc:' + DF.colorOf(i.family) + '">' +
+      return '<div class="toc-sec" style="color:' + s.color + '">' + S.esc(s.label) + '</div>' +
+        items.map(i => '<button class="toc-i" data-id="' + i.id + '" style="--fc:' + DF.colorOf(S.esc(i.family)) + '">' +
           '<span class="num">' + num(i.id) + '</span>' +
-          '<span class="tx"><span class="nm">' + i.name + '</span><br><span class="mv">' + i.metric.v + ' · ' + i.metric.k + '</span></span>' +
+          '<span class="tx"><span class="nm">' + S.esc(i.name) + '</span><br><span class="mv">' + i.metric.v + ' · ' + i.metric.k + '</span></span>' +
         '</button>').join("");
     }).join("");
     document.querySelectorAll(".toc-i").forEach(el => el.addEventListener("click", () => { show(el.getAttribute("data-id")); afterSelectScroll(); }));
@@ -245,9 +246,9 @@
     const art = document.getElementById("article");
     art.style.setProperty("--fc", c);
     art.innerHTML =
-      '<div class="art-head"><div class="art-meta"><span class="art-num">' + num(i.id) + '</span><span class="art-kind">' + i.kind + '</span></div><span class="art-tools" id="art-tools"></span></div>' +
-      '<h2 class="art-title">' + i.name + '</h2>' +
-      '<div class="art-un">' + i.underlying + '</div>' +
+      '<div class="art-head"><div class="art-meta"><span class="art-num">' + num(i.id) + '</span><span class="art-kind">' + S.esc(i.kind) + '</span></div><span class="art-tools" id="art-tools"></span></div>' +
+      '<h2 class="art-title">' + S.esc(i.name) + '</h2>' +
+      '<div class="art-un">' + S.esc(i.underlying) + '</div>' +
       '<div class="art-cta"><span class="ct-host" id="art-ct"></span></div>' +
       '<div class="art-bar"></div>' + DF.detailBody(i);
     const shHost = document.getElementById("art-tools");

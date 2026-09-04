@@ -358,7 +358,8 @@
 </div>
 
 <script src="data/instruments.js?v=fx8"></script>
-<script src="data/lib.js?v=ax5"></script>
+<script src="data/lib.js?v=ax6"></script>
+<script src="data/harden.js?v=1"></script>
 <script src="share.js?v=8"></script>
 <script src="contact.js?v=9"></script>
 <script>
@@ -717,7 +718,7 @@
     // Бустер покупается по номиналу (100%), а не по quote (там хранится КУ) — вход = minNom.
     const atPar = inst.type === "booster" || inst.type === "autocall" || inst.type === "revconv";   // покупка по номиналу, не по премии
     const price0 = atPar ? inst.minNom : Math.round(inst.minNom * inst.quote / 100), cfg = S.calc.move(inst);
-    const slider = cfg ? '<div class="calc-row"><label class="calc-l">' + inst.underlying + ': <b id="calc-mv"></b></label>' +
+    const slider = cfg ? '<div class="calc-row"><label class="calc-l">' + S.esc(inst.underlying) + ': <b id="calc-mv"></b></label>' +
       '<input class="calc-range" id="calc-move" type="range" min="' + cfg.min + '" max="' + cfg.max + '" value="' + cfg.val + '" step="1" aria-label="Сценарий по базовому активу"></div>' : '';
     return '<div class="sec"><h2 class="h">Калькулятор выплаты</h2>' +
       '<div class="calc">' +
@@ -903,7 +904,7 @@
     const cols = items.map((r, i) => {
       const sn = shortName(r);
       // у дисконтных короткое имя уже содержит актив — подзаголовок был бы дублем
-      const sub = r.underlying && sn.indexOf(r.underlying) < 0 ? '<span class="tp">' + r.underlying + '</span>' : "";
+      const sub = S.esc(r.underlying) && sn.indexOf(S.esc(r.underlying)) < 0 ? '<span class="tp">' + S.esc(r.underlying) + '</span>' : "";
       return '<th scope="col"><span style="color:' + CMP_COLORS[i % CMP_COLORS.length] + '">' + sn + '</span>' + sub + '</th>';
     }).join("");
     const rows = CMP_ROWS.map(([label, fn]) => {
@@ -1060,7 +1061,7 @@
         '<div class="quote-big">' + S.quoteBig(inst.quote) + '</div>' +
         '<div class="quote-sub">' + (inst.type === "booster" ? "коэффициент участия · индикативно"
           : (inst.type === "autocall" || inst.type === "revconv") ? "купон · % годовых · индикативно"
-          : "котировка · индикативно · % от номинала · " + (inst.currency || "RUB")) + '</div>' +
+          : "котировка · индикативно · % от номинала · " + (S.esc(inst.currency) || "RUB")) + '</div>' +
       '</div></div>' +
       '<div class="chart-box">' +
         '<div class="chart-head"><span class="chart-title" id="chart-title"></span>' +
@@ -1071,7 +1072,7 @@
       calcHTML(inst) +
       '<div class="sec"><h2 class="h">Пример расчёта</h2><div class="intro">' + c.exampleIntro + '</div>' +
         c.scenarios.map(s => '<div class="scenario"><div class="l">' + s[0] + '</div><div class="d">' + s[1] + '</div><div class="r" style="color:' + s[3] + '">' + s[2] + '</div></div>').join("") +
-        (S.isFxSensitive(inst.underlying) ? '<div style="margin-top:12px;padding:9px 13px;border-left:1px solid #EE7D1B;background:rgba(238,125,27,0.12);border-radius:0 7px 7px 0;font-size:12.5px;line-height:1.5;color:#E7B98D">' + S.LEGAL.fx + '</div>' : '') + '</div>' +
+        (S.isFxSensitive(S.esc(inst.underlying)) ? '<div style="margin-top:12px;padding:9px 13px;border-left:1px solid #EE7D1B;background:rgba(238,125,27,0.12);border-radius:0 7px 7px 0;font-size:12.5px;line-height:1.5;color:#E7B98D">' + S.LEGAL.fx + '</div>' : '') + '</div>' +
       '<div class="sec"><h2 class="h">Как устроен продукт</h2><div class="explainer">' + c.explainer + '</div>' +
         '<div class="facts">' + c.facts.map(f => '<div class="fact"><div class="k">' + f[0] + '</div><div class="v">' + f[1] + '</div></div>').join("") + '</div></div>';
   }
@@ -1334,7 +1335,7 @@
   function subChips(host, map, get, set) {
     host.innerHTML = Object.keys(map).map(k => {
       const n = k === "all" ? "" : '<span class="n">' +
-        S.INSTRUMENTS.filter(r => map === TENOR_LABEL ? TENOR_TEST[k](r) : (r.currency || "RUB") === k).length + "</span>";
+        S.INSTRUMENTS.filter(r => map === TENOR_LABEL ? TENOR_TEST[k](r) : (S.esc(r.currency) || "RUB") === k).length + "</span>";
       return '<button class="kf sub' + (k === get() ? " active" : "") + '" data-v="' + k + '" aria-pressed="' +
         (k === get()) + '">' + map[k] + n + "</button>";
     }).join("");

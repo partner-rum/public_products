@@ -6,6 +6,19 @@
 
 window.SITE = (function () {
 
+  // Экранирование для вставки данных в HTML. До 03.09.2026 витринные страницы
+  // собирали разметку из данных БЕЗ него: имя, базовый актив и срок продукта
+  // уходили в innerHTML как есть. Поле «Срок» со значением вида
+  // <img src=... onerror=...> исполнялось у каждого посетителя доски — проверено.
+  // Путь эксплуатации: заявка сейлза → одобрение в Telegram → коммит в data/ →
+  // выполнение у клиента. CSP на сайте нет, второго рубежа не было.
+  // Кавычку экранируем обязательно: значения подставляются и ВНУТРЬ атрибутов.
+  const ESC = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+  function esc(v) {
+    return v == null ? "" : String(v).replace(/[&<>"']/g, function (c) { return ESC[c]; });
+  }
+
+
   const TYPES = {
     discount: {
       slug: "discount",
@@ -611,6 +624,6 @@ window.SITE = (function () {
     return /S&P|NASDAQ|NVDA|NVIDIA|NBIS|Nebius|BTC|IBIT|GLD|SPY|COPX|CSI|URA|Uranium|Bitcoin|Gold|USD|\$/i.test(n);
   }
 
-  return { TYPES, INSTRUMENTS, PAYOFF, LEGAL, calc, displayName, tenorYears, revconvBreakeven, revconvCoupons, findInstrument, instrumentsOfType, underlyingInfo, underlyingLong, isFxSensitive, ccyLabel, nonCallText, history, fmtInt, fmt2, fmt1, fmtSmart, quoteBig, daysTo, chartFrame, niceTicks, payoffChart, discountChart, AXIS_X, AXIS_Y };
+  return { esc, TYPES, INSTRUMENTS, PAYOFF, LEGAL, calc, displayName, tenorYears, revconvBreakeven, revconvCoupons, findInstrument, instrumentsOfType, underlyingInfo, underlyingLong, isFxSensitive, ccyLabel, nonCallText, history, fmtInt, fmt2, fmt1, fmtSmart, quoteBig, daysTo, chartFrame, niceTicks, payoffChart, discountChart, AXIS_X, AXIS_Y };
 
 })();

@@ -244,7 +244,8 @@
 </div>
 
 <script src="data/instruments.js?v=fx8"></script>
-<script src="data/lib.js?v=ax5"></script>
+<script src="data/lib.js?v=ax6"></script>
+<script src="data/harden.js?v=1"></script>
 <script src="contact.js?v=9"></script>
 <script src="share.js?v=8"></script>
 <script src="intro.js?v=6"></script>
@@ -649,7 +650,7 @@
   document.getElementById("example-intro").textContent = content.exampleIntro;
   document.getElementById("scenarios").innerHTML = content.scenarios.map(s =>
     '<div class="scenario"><div class="l">' + s[0] + '</div><div class="d">' + s[1] + '</div><div class="r" style="color:' + s[3] + '">' + s[2] + '</div></div>').join("") +
-    (S.isFxSensitive(inst.underlying) ? '<div style="margin-top:12px;padding:9px 13px;border-left:3px solid #EE7D1B;background:rgba(238,125,27,0.12);border-radius:0 7px 7px 0;font-size:12.5px;line-height:1.5;color:#E7B98D">' + S.LEGAL.fx + '</div>' : '');
+    (S.isFxSensitive(S.esc(inst.underlying)) ? '<div style="margin-top:12px;padding:9px 13px;border-left:3px solid #EE7D1B;background:rgba(238,125,27,0.12);border-radius:0 7px 7px 0;font-size:12.5px;line-height:1.5;color:#E7B98D">' + S.LEGAL.fx + '</div>' : '');
 
   document.getElementById("explainer").textContent = content.explainer;
   document.getElementById("facts").innerHTML = content.facts.map(f =>
@@ -665,7 +666,7 @@
     const nom0 = inst.minNom || 1000000;
     const atPar = inst.type === "booster" || inst.type === "autocall" || inst.type === "revconv";   // вход по номиналу, не по премии
     const price0 = atPar ? nom0 : Math.round(nom0 * inst.quote / 100), cfg = S.calc.move(inst);
-    const slider = cfg ? '<div class="calc-row"><label class="calc-l">' + inst.underlying + ': <b id="calc-mv"></b></label>' +
+    const slider = cfg ? '<div class="calc-row"><label class="calc-l">' + S.esc(inst.underlying) + ': <b id="calc-mv"></b></label>' +
       '<input class="calc-range" id="calc-move" type="range" min="' + cfg.min + '" max="' + cfg.max + '" value="' + cfg.val + '" step="1" aria-label="Сценарий по базовому активу"></div>' : '';
     return '<div class="calc-row"><label class="calc-l" for="calc-amt">Сумма вложения, ₽</label>' +
         '<input class="calc-input" id="calc-amt" type="number" inputmode="numeric" min="0" max="1000000000" step="1000" value="' + price0 + '"></div>' +

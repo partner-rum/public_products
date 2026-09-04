@@ -240,6 +240,7 @@
 </footer>
 
 <script src="data/offerings.js?v=srv19"></script>
+<script src="data/harden.js?v=1"></script>
 <script src="share.js?v=8"></script>
 <script src="contact.js?v=9"></script>
 <script>
@@ -298,9 +299,9 @@
   function itemHTML(o) {
     var c = famCol(o), st = o.status === "live" ? "live" : "up";
     return '<button class="item' + (o.id === selected ? " active" : "") + '"' + (o.id === selected ? ' aria-current="true"' : '') + ' data-id="' + o.id + '" style="--fc:' + c + '">' +
-      '<div class="r1"><span class="nm">' + o.name + '</span><span class="pr">' + (o.price != null ? fmt2(o.price) + '%' : '') + '</span></div>' +
-      '<div class="r2"><span class="sub">' + [o.reference, o.tenor].filter(Boolean).join(" · ") + '</span>' +
-        '<span class="st ' + st + '"><span class="dot"></span>' + (o.statusLabel || (o.status === "live" ? "идёт" : "")) + '</span></div>' +
+      '<div class="r1"><span class="nm">' + S.esc(o.name) + '</span><span class="pr">' + (o.price != null ? fmt2(o.price) + '%' : '') + '</span></div>' +
+      '<div class="r2"><span class="sub">' + [S.esc(o.reference), S.esc(o.tenor)].filter(Boolean).join(" · ") + '</span>' +
+        '<span class="st ' + st + '"><span class="dot"></span>' + (S.esc(o.statusLabel) || (o.status === "live" ? "идёт" : "")) + '</span></div>' +
     '</button>';
   }
   function renderList() {
@@ -322,8 +323,8 @@
   function detailHTML(o) {
     var c = famCol(o);
     var badge = o.status === "live"
-      ? '<span class="badge live"><span class="dot"></span>' + (o.statusLabel || "Идёт размещение") + '</span>'
-      : '<span class="badge up"><span class="dot"></span>' + o.statusLabel + '</span>';
+      ? '<span class="badge live"><span class="dot"></span>' + (S.esc(o.statusLabel) || "Идёт размещение") + '</span>'
+      : '<span class="badge up"><span class="dot"></span>' + S.esc(o.statusLabel) + '</span>';
     var tiles = "";
     if (o.protection) tiles += tile(o.protection, "защита капитала", true);
     if (o.participation) tiles += tile(o.participation, "участие в росте", true);
@@ -338,26 +339,26 @@
     // Базовый актив в форме админки не обязателен, и без охраны в паспорт уезжало
     // «Базовый актив: undefined» — ровно это и показал варрант на CNYRUB 24.08.2026.
     var refLine = [
-      o.reference ? (o.family === "discount" ? "Контрольное лицо: " : "Базовый актив: ") + "<b>" + o.reference + "</b>" : "",
+      S.esc(o.reference) ? (o.family === "discount" ? "Контрольное лицо: " : "Базовый актив: ") + "<b>" + S.esc(o.reference) + "</b>" : "",
       o.serial || "",
     ].filter(Boolean).join(" · ");
-    var issuerLine = o.issuer ? '<div class="o-ref">Эмитент: <b>' + o.issuer + '</b></div>' : "";
-    var aboutBlk = o.about ? '<div class="blk"><h3 class="k">О компании</h3><p>' + o.about + '</p></div>' : "";
+    var issuerLine = S.esc(o.issuer) ? '<div class="o-ref">Эмитент: <b>' + S.esc(o.issuer) + '</b></div>' : "";
+    var aboutBlk = S.esc(o.about) ? '<div class="blk"><h3 class="k">О компании</h3><p>' + S.esc(o.about) + '</p></div>' : "";
     var dealersBlk = (o.dealers && o.dealers.length)
       ? '<div class="blk"><h3 class="k">Дилеры-ориентиры</h3><div class="dealers">' + o.dealers.map(x => '<span>' + x + '</span>').join("") + '</div></div>' : "";
     // Документы: помеченные "top" — компактными кнопками в шапке (рядом с «Поделиться»),
     // остальные — блоком «Материалы по выпуску» ниже.
     var topDocs = (o.docs || []).filter(d => d.top);
     var restDocs = (o.docs || []).filter(d => !d.top);
-    var topDocBtns = topDocs.map(d => '<a class="o-doc-btn" href="' + d.file + '" target="_blank" rel="noopener" download>' +
+    var topDocBtns = topDocs.map(d => '<a class="o-doc-btn" href="' + S.esc(d.file) + '" target="_blank" rel="noopener" download>' +
       docIcon + '<span>' + (d.short || "Материалы") + '</span></a>').join("");
     // Стандартный (генерируемый) one-pager — для размещений с opTemplate (напр. offering-варрант).
     var opBtn = o.opTemplate
       ? '<a class="o-doc-btn" href="onepager.html?offering=' + encodeURIComponent(o.id) + '&print=1" target="_blank" rel="noopener">' + docIcon + '<span>One-pager (PDF)</span></a>'
       : "";
     var docsBlk = restDocs.length
-      ? '<div class="docs"><h3 class="k">Материалы по выпуску</h3>' + restDocs.map(d => '<a class="doc" href="' + d.file + '" target="_blank" rel="noopener" download><span class="ic">' + docIcon + '</span>' +
-        '<span><span class="nm">' + d.name + '</span><span class="mt">' + d.ext + ' · ' + d.size + '</span></span><span class="dl">' + dlIcon + '</span></a>').join("") + '</div>' : "";
+      ? '<div class="docs"><h3 class="k">Материалы по выпуску</h3>' + restDocs.map(d => '<a class="doc" href="' + S.esc(d.file) + '" target="_blank" rel="noopener" download><span class="ic">' + docIcon + '</span>' +
+        '<span><span class="nm">' + S.esc(d.name) + '</span><span class="mt">' + S.esc(d.ext) + ' · ' + d.size + '</span></span><span class="dl">' + dlIcon + '</span></a>').join("") + '</div>' : "";
     // Видео о продукте (self-host mp4). preload=metadata — 38 МБ не тянутся, пока не нажмут play.
     // Доступность (WCAG 1.2.2): у <video> есть aria-label (имя для скринридера); если в данных
     // задан video.captions (файл .vtt) — подключаем дорожку субтитров; если video.transcript —
@@ -403,24 +404,24 @@
           ? '<a class="o-partner" href="' + o.partner.url + '" target="_blank" rel="noopener">' + o.partner.name + ' ↗</a>'
           : o.partner.name) + '</div>'
       : "";
-    return '<div class="o-kind">' + o.kind + '</div>' +
-      '<div class="o-top"><div><h2 class="o-name">' + o.name + '</h2>' +
+    return '<div class="o-kind">' + S.esc(o.kind) + '</div>' +
+      '<div class="o-top"><div><h2 class="o-name">' + S.esc(o.name) + '</h2>' +
         (refLine ? '<div class="o-ref">' + refLine + '</div>' : "") + issuerLine + partnerLine + '</div>' +
         '<div class="o-top-right">' + badge + '<div class="o-actions"><span id="o-ct-host"></span>' + topDocBtns + opBtn + '<span id="o-sh-host"></span></div></div></div>' +
-      '<div class="o-teaser">' + o.teaser + '</div>' +
+      '<div class="o-teaser">' + S.esc(o.teaser) + '</div>' +
       '<div class="tiles">' + tiles + '</div>' +
       '<div class="o-grid"><div>' +
         aboutBlk +
-        '<div class="blk"><h3 class="k">Как работает</h3><p>' + o.how + '</p></div>' +
+        '<div class="blk"><h3 class="k">Как работает</h3><p>' + S.esc(o.how) + '</p></div>' +
         basketBlk +
-        '<div class="blk"><h3 class="k">Главный риск</h3><div class="plaque">' + o.risk + '</div></div>' +
+        '<div class="blk"><h3 class="k">Главный риск</h3><div class="plaque">' + S.esc(o.risk) + '</div></div>' +
         dealersBlk +
       '</div><div>' +
         videoBlk +
         (o.chart && o.chart.floor != null
           ? '<div class="blk"><h3 class="k">Профиль выплаты</h3><div class="pf">' + chartProt(o.chart, c) +
             (o.chart.note ? '<div class="pf-cap">' + o.chart.note + '</div>' : '') + '</div></div>' : "") +
-        (o.family === "discount" && o.price != null ? '<div class="pf">' + payoff(o.price, c) + '<div class="pf-cap">Покупка по ' + fmt2(o.price) + '% номинала, погашение по 100% при отсутствии кредитного события по ' + o.reference + '.</div></div>' : "") +
+        (o.family === "discount" && o.price != null ? '<div class="pf">' + payoff(o.price, c) + '<div class="pf-cap">Покупка по ' + fmt2(o.price) + '% номинала, погашение по 100% при отсутствии кредитного события по ' + S.esc(o.reference) + '.</div></div>' : "") +
         exampleBlk +
         docsBlk +
       '</div></div>';

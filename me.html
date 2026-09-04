@@ -11,6 +11,18 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
+<script>
+// Защита от кликджекинга для страниц с вводом ключа. Заголовка X-Frame-Options
+// на сервере нет (проверено 03.09.2026), поэтому админку и кабинеты можно было
+// встроить во фрейм на чужом сайте и выманить ключ поверх невидимой страницы.
+// Правильное место для этого — заголовок ответа nginx; здесь запасной рубеж,
+// который работает уже сейчас и останется безвредным после правки конфига.
+(function () {
+  if (window.top === window.self) return;
+  try { document.documentElement.style.display = "none"; } catch (e) {}
+  try { window.top.location = window.location.href; } catch (e) { /* чужой origin — остаёмся скрытыми */ }
+})();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>Рабочий стол — Rumberg</title>

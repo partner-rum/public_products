@@ -241,9 +241,10 @@
   </div>
 </main>
 
-<script src="data/lib.js?v=ax5"></script>
+<script src="data/lib.js?v=ax6"></script>
 <script src="data/placements.js?v=1"></script>
 <script src="data/placement_docs.js?v=1"></script>
+<script src="data/harden.js?v=1"></script>
 <script src="contact.js?v=9"></script>
 <script>
   const S = window.SITE;
@@ -373,15 +374,15 @@
     const docs = (window.PLACEMENT_DOCS || {})[i.isin] || [];
     const docsHTML = docs.length
       ? '<div class="sec"><div class="h">Документы</div>' + docs.map(d =>
-          '<a class="doc-link" href="' + d.file + '" target="_blank" rel="noopener">' +
+          '<a class="doc-link" href="' + S.esc(d.file) + '" target="_blank" rel="noopener">' +
           '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#EE7D1B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>' +
-          '<span>' + d.name + '</span></a>').join("") + '</div>'
+          '<span>' + S.esc(d.name) + '</span></a>').join("") + '</div>'
       : '';
 
     return '<div class="pp-top"><div>' +
-        '<div class="pp-title-row"><div class="pp-title">' + i.serial + '</div>' +
+        '<div class="pp-title-row"><div class="pp-title">' + S.esc(i.serial) + '</div>' +
           '<span class="ct-host" id="ct-host"></span></div>' +
-        '<div class="pp-sub"><span>' + i.isin + '</span><span class="status ' + (i.matured ? "matured" : "live") + '">' + (i.matured ? "погашен" : "в обращении") + '</span></div>' +
+        '<div class="pp-sub"><span>' + S.esc(i.isin) + '</span><span class="status ' + (i.matured ? "matured" : "live") + '">' + (i.matured ? "погашен" : "в обращении") + '</span></div>' +
         (!i.matured && i.bid != null ? '<div class="pp-bid"><span class="lbl">Bid</span><span class="val">' + fmtN(i.bid) + '%</span><span class="u">индикативно · от номинала</span></div>' : '') +
       '</div>' +
       '<span class="kind-chip" style="color:' + k.fg + ';background:' + k.bg + '">' + k.label + '</span></div>' +
@@ -393,7 +394,7 @@
           ? '<div class="tile"><div class="v">' + keyParam(i).replace(/^(купон|участие) /, "") + '</div><div class="k">' + (i.kind === "coupon" ? "купон годовых" : "участие в росте") + '</div></div>'
           : '') +
         '<div class="tile"><div class="v" style="color:' + (i.perfPct != null ? perfColor(i.perfPct) : "var(--faint)") + '">' + (fmtPerf(i.perfPct) || "—") + '</div><div class="k">динамика БА</div></div>' +
-        '<div class="tile"><div class="v">' + fmtD(i.maturity) + '</div><div class="k">погашение</div></div>' +
+        '<div class="tile"><div class="v">' + fmtD(S.esc(i.maturity)) + '</div><div class="k">погашение</div></div>' +
       '</div>' +
       '<div class="sec"><div class="h">Базовый актив</div>' + assets + '</div>' +
       '<div class="sec"><div class="h">Параметры выплаты</div>' + kv(pay) +
@@ -511,8 +512,8 @@
     return '<button class="item' + (i.matured ? " matured" : "") + (i.isin === selected ? " active" : "") +
       '" data-isin="' + i.isin + '" aria-label="' + i.serial + ", " + keyParam(i) + ", ISIN " + i.isin +
       (perfTxt ? ", базовый актив " + perfTxt : "") + '">' +
-      '<div class="r1"><span class="serial">' + i.serial + '</span><span class="param">' + keyParam(i) + '</span></div>' +
-      '<div class="r2"><span class="isin">' + i.isin + '</span>' + protBadge(i) +
+      '<div class="r1"><span class="serial">' + S.esc(i.serial) + '</span><span class="param">' + keyParam(i) + '</span></div>' +
+      '<div class="r2"><span class="isin">' + S.esc(i.isin) + '</span>' + protBadge(i) +
       // Подпись обязательна: голое «−13,6%» ничего не сообщает о том, ЧЬЯ это динамика
       '<span class="perf" style="color:' + (i.perfPct != null ? perfColor(i.perfPct) : "var(--faint)") + '">' +
         (perfTxt ? '<span class="perf-k">БА</span>' + perfTxt : "—") + '</span></div>' +
