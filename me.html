@@ -76,6 +76,13 @@
   .msg { margin-top:12px; font-size:13.5px; min-height:20px; }
   .msg.err { color:var(--down); }
   #gate .note { margin-top:16px; font-size:12.5px; color:var(--faint); line-height:1.55; }
+  /* Вход в демо — рядом с формой, чтобы посмотреть стол можно было без ключа. */
+  .demo-in { margin-top:18px; padding-top:16px; border-top:1px solid var(--line-soft); }
+  .demo-in a { display:block; text-align:center; border:1px solid var(--line); border-radius:10px;
+               padding:12px; color:var(--ink); text-decoration:none; font:600 14.5px var(--f);
+               transition:border-color .2s, background .2s; }
+  .demo-in a:hover { border-color:var(--solar); background:rgba(238,125,27,.08); }
+  .demo-in p { margin:8px 0 0; font-size:12.5px; color:var(--faint); line-height:1.55; text-align:center; }
 
   /* ── стол ── */
   #dash { display:none; }
@@ -226,6 +233,11 @@
   <button class="go" id="go" type="button">Войти</button>
   <div class="msg" id="err" role="alert"></div>
   <p class="note">Ключ сохраняется в этом браузере, чтобы не вводить его каждый раз. На общем компьютере после работы нажмите «Выйти».</p>
+  <div class="demo-in">
+    <a href="me.html?demo=3">Посмотреть демо-кабинет →</a>
+    <p>Без ключа и регистрации. Партнёр, объёмы и вознаграждение вымышлены;
+      выпуски и котировки — настоящие.</p>
+  </div>
 </div>
 
 <!-- СТОЛ -->
@@ -1025,7 +1037,7 @@
   }
   function demoFull() {
     return { ok: true, ref: "andrey", kind: "partner", now: Date.now(), deals: demoDeals(),
-             profile: { name: "ООО «Аркада Капитал»", inn: "7701234567", ogrn: "1157746123456",
+             profile: { name: "ООО «Альпака Капитал»", inn: "7701234567", ogrn: "1157746123456",
                         contract: "П-14 от 03.02.2026" } };
   }
   function demoNoProfile() {
@@ -1057,7 +1069,7 @@
   }
   function demoShow() {
     return { ok: true, ref: "andrey", kind: "partner", now: Date.now(), deals: demoShowDeals(),
-             profile: { name: "ООО «Аркада Капитал»", inn: "7701234567", ogrn: "1157746123456",
+             profile: { name: "ООО «Альпака Капитал»", inn: "7701234567", ogrn: "1157746123456",
                         contract: "П-14 от 03.02.2026" } };
   }
 })();
