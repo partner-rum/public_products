@@ -37,8 +37,13 @@ def load(name):
     """
     p = os.path.join(ROOT, "data", name)
     s = io.open(p, encoding="utf-8").read()
-    at = s.find("window.")
-    start = s.index("{", at if at >= 0 else 0)
+    # Якорь — ПРИСВАИВАНИЕ В НАЧАЛЕ СТРОКИ, а не первое вхождение «window.»:
+    # в шапке data/offerings.js сама строка «window.OFFERINGS» стоит в
+    # комментарии, и поиск подстроки цеплялся за неё. Здесь это работало по
+    # случайности (за комментарием шёл нужный «{»), но на файле с фигурной
+    # скобкой в шапке разбор молча уехал бы не туда.
+    m = re.search(r"^window\.\w+\s*=\s*", s, re.M)
+    start = s.index("{", m.end() if m else 0)
     return json.loads(s[start:s.rindex("}") + 1])
 
 
