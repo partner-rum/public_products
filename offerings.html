@@ -116,6 +116,37 @@
   .o-grid h3.k { margin: 0 0 8px; font-weight: 500; } /* секции — семантические заголовки без UA-отступов */
   .blk p { margin: 0; font-size: 14.5px; line-height: 1.62; color: var(--hushed); text-wrap: pretty; }
   .plaque { padding: 12px 14px; border: 1px solid rgba(238,125,27,0.28); background: rgba(238,125,27,0.12); border-radius: 8px; font-size: 13px; line-height: 1.5; color: #E7B98D; }
+  /* ── ДВА ИСХОДА (диджитал) ──────────────────────────────────────────────
+     Развилка продукта двумя плитками из чисел, которые уже стоят в паспорте.
+     Заменяет прозу «как работает» и оранжевую плашку риска: та была самым
+     громким элементом карточки, и предложение читалось как предупреждение. */
+  .oc { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px; }
+  .oc .out { border: 1px solid var(--border-soft); border-radius: 12px; padding: 16px 18px 15px; background: var(--tile); }
+  .oc .out.yes { border-color: rgba(224,162,74,0.42); background: rgba(224,162,74,0.07); }
+  .oc .cond { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hushed); margin-bottom: 10px; }
+  .oc .yes .cond { color: #E0A24A; }
+  .oc .get { font-family: var(--f-mono); font-size: 26px; font-weight: 500; letter-spacing: -0.01em; line-height: 1.1; }
+  .oc .yes .get { color: #E0A24A; }
+  .oc .no .get { color: var(--hushed); }
+  .oc .exp { margin-top: 6px; font-size: 13px; line-height: 1.5; color: var(--hushed); }
+  .oc .exp b { color: var(--ink); font-weight: 600; }
+  /* шаги механики — вместо абзаца */
+  .steps { margin: 0; padding: 0; list-style: none; counter-reset: st; }
+  .steps li { counter-increment: st; position: relative; padding: 0 0 10px 30px; font-size: 14px; line-height: 1.55; color: var(--hushed); text-wrap: pretty; }
+  .steps li:last-child { padding-bottom: 0; }
+  .steps li::before { content: counter(st); position: absolute; left: 0; top: 1px; width: 20px; height: 20px; border-radius: 50%; background: var(--tile); border: 1px solid var(--border); font-family: var(--f-mono); font-size: 11px; color: var(--hushed); display: flex; align-items: center; justify-content: center; }
+  .steps b { color: var(--ink); font-weight: 600; }
+  /* риск — назван прямо, но спокойно: маркер и строка, без тревожной плашки */
+  .risk-line { display: flex; gap: 10px; align-items: flex-start; padding: 12px 0 0; margin-top: 4px; border-top: 1px solid var(--border-soft); font-size: 13.5px; line-height: 1.55; color: var(--hushed); }
+  .risk-line i { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--loss); margin-top: 6px; }
+  .risk-line b { color: var(--ink); font-weight: 600; }
+  /* исходные тексты из админки — под «Подробнее», не выброшены */
+  details.more { margin-top: 12px; }
+  details.more summary { cursor: pointer; font-size: 13px; color: var(--hushed); list-style: none; display: inline-flex; align-items: center; gap: 6px; }
+  details.more summary::-webkit-details-marker { display: none; }
+  details.more summary::before { content: "+"; font-family: var(--f-mono); width: 16px; height: 16px; border: 1px solid var(--border); border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; }
+  details.more[open] summary::before { content: "–"; }
+  details.more p { margin: 10px 0 0; font-size: 13.5px; line-height: 1.6; color: var(--hushed); }
   .dealers { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 8px; }
   .dealers span { font-family: var(--f-mono); font-size: 11.5px; color: var(--hushed); background: var(--tile); border-radius: 6px; padding: 4px 9px; }
   .pf { background: var(--tile); border-radius: 10px; padding: 14px 16px 10px; }
@@ -188,6 +219,9 @@
     .list { max-height: 50vh; }
     .tiles { grid-template-columns: 1fr 1fr; }
     .o-grid { grid-template-columns: 1fr; gap: 20px; }
+    .oc { grid-template-columns: 1fr; }
+    .oc .get { font-size: 23px; }
+    details.more summary { min-height: 44px; }
     .panel { display: none; }
     .panel.open { display: block; position: fixed; inset: 0; z-index: 40; border-radius: 0; overflow-y: auto; }
     .panel-close { display: inline-flex; align-items: center; gap: 7px; margin-bottom: 14px; background: none; border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font-family: var(--f-body); font-size: 13px; cursor: pointer; }
@@ -271,7 +305,9 @@
   var D = window.OFFERINGS || { items: [] };
   var FAMCOL = { discount: "#5E9B82", protection: "#4F86E6", warrant: "#E0A24A" };
   var fmt2 = v => (Math.round(v * 100) / 100).toString().replace(".", ",");
-  var famCol = o => o.accent || FAMCOL[o.family] || FAMCOL.discount;
+  // family=participation нет в карте — диджитал падал в зелёный дисконта.
+  // Диджитал это варрант, и цвет у него варранта.
+  var famCol = o => o.accent || (isDigital(o) ? FAMCOL.warrant : null) || FAMCOL[o.family] || FAMCOL.discount;
 
   function payoff(price, color) {
     var W = 300, H = 128, base = H - 22, top = 16, bw = 70;
@@ -328,6 +364,33 @@
   }
   function isDigital(o) {
     return /диджитал|digital/i.test(String(o.kind || "") + " " + String(o.name || ""));
+  }
+
+  // Два исхода диджитала — из тех же чисел, что стоят в плитках выше. Никаких
+  // производных вроде «в 1,9 раза»: это была бы доходность в обход правила.
+  function digitalOutcomes(o) {
+    var k = digitalStrike(o), pay = Number(o.redeem), prem = Number(o.price);
+    if (k == null || !isFinite(pay) || !isFinite(prem)) return "";
+    var asset = S.esc(o.reference) || "базовый актив";
+    return '<div class="oc">' +
+      '<div class="out yes"><div class="cond">' + asset + ' ≥ ' + fmt2(k) + '%</div>' +
+        '<div class="get">' + fmt2(pay) + '% номинала</div>' +
+        '<div class="exp">Выплата фиксированная — <b>одна и та же</b> при любом росте выше порога.</div></div>' +
+      '<div class="out no"><div class="cond">' + asset + ' ниже ' + fmt2(k) + '%</div>' +
+        '<div class="get">0</div>' +
+        '<div class="exp">Выплаты нет. Уплаченная премия <b>' + fmt2(prem) + '%</b> не возвращается.</div></div>' +
+    '</div>' +
+    '<div class="blk"><h3 class="k">Как это работает</h3><ol class="steps">' +
+      '<li>Вы платите <b>премию ' + fmt2(prem) + '% номинала</b> — это вся сумма вложения. Доплат и маржин-коллов не бывает.</li>' +
+      '<li>На дату экспирации уровень <b>' + asset + '</b> сравнивается с порогом ' + fmt2(k) + '% от значения в день покупки.</li>' +
+      '<li>Порог достигнут — вы получаете <b>' + fmt2(pay) + '% номинала</b>. Не достигнут — ничего.</li>' +
+    '</ol></div>' +
+    '<div class="risk-line"><i></i><span><b>Риск — вся премия.</b> Ниже порога на экспирацию выплаты нет и ' +
+      fmt2(prem) + '% теряются полностью, частичного возврата у выпуска нет. Дополнительно — кредитный риск эмитента структурной облигации.</span></div>' +
+    ((S.esc(o.how) || S.esc(o.risk))
+      ? '<details class="more"><summary>Подробнее из условий выпуска</summary>' +
+        (S.esc(o.how) ? '<p>' + S.esc(o.how) + '</p>' : '') + (S.esc(o.risk) ? '<p>' + S.esc(o.risk) + '</p>' : '') + '</details>'
+      : '');
   }
 
   function chartProt(ch, color) {
@@ -500,9 +563,13 @@
       '<div class="tiles">' + tiles + '</div>' +
       '<div class="o-grid"><div>' +
         aboutBlk +
-        '<div class="blk"><h3 class="k">Как работает</h3><p>' + S.esc(o.how) + '</p></div>' +
-        basketBlk +
-        '<div class="blk"><h3 class="k">Главный риск</h3><div class="plaque">' + S.esc(o.risk) + '</div></div>' +
+        // Диджитал: развилка двумя плитками, шаги и спокойная строка риска;
+        // проза how/risk уходит под «Подробнее». Остальные семейства — прежний вид.
+        (isDigital(o) && digitalOutcomes(o)
+          ? digitalOutcomes(o) + basketBlk
+          : '<div class="blk"><h3 class="k">Как работает</h3><p>' + S.esc(o.how) + '</p></div>' +
+            basketBlk +
+            '<div class="blk"><h3 class="k">Главный риск</h3><div class="plaque">' + S.esc(o.risk) + '</div></div>') +
         dealersBlk +
       '</div><div>' +
         videoBlk +
