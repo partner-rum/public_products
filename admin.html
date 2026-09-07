@@ -280,6 +280,7 @@
           <option value="discount">Дисконтная облигация</option>
           <option value="protection">Защита капитала</option>
           <option value="warrant">Варрант (CALL / колл-спред)</option>
+          <option value="digital">Диджитал-варрант (Digital Call)</option>
           <option value="autocall">Автоколл</option>
           <option value="revconv">Реверс-конвертибл</option>
           <option value="booster">Бустер</option>
@@ -324,6 +325,20 @@
             <select name="structure"><option value="call">CALL 100 (рост без потолка)</option><option value="cs">Колл-спред 100–150</option></select>
           </label>
           <label><span class="k">Текущий уровень БА (текстом)</span><input name="uRef" placeholder="$54,80 или 6 320 пт" maxlength="30"></label>
+        </div>
+      </div>
+      <!-- Диджитал-варрант: вход по премии, выплата фиксированная. Свои поля с
+           префиксом dg — общее поле страйка делить нельзя, скрытый блок подставлял
+           бы чужое значение (та же грабля, что с acProtectionPct у автоколла). -->
+      <div id="b-digital" style="display:none">
+        <div class="hint-box">Вход по ПРЕМИИ (поле «Котировка» выше). Порог — в % ОТ СТАРТА базового
+          актива: на нём и выше платится фиксированная выплата, ниже — ноль, премия теряется целиком.
+          Насколько именно актив выше порога, на выплату не влияет. Выплата должна быть больше премии,
+          иначе продукт не может выйти в плюс.</div>
+        <div class="row3">
+          <label><span class="k">Порог (страйк), % <b>*</b></span><input name="dgStrike" type="number" step="1" placeholder="105"></label>
+          <label><span class="k">Выплата, % ном. <b>*</b></span><input name="dgPct" type="number" step="0.5" placeholder="29"></label>
+          <label><span class="k">Текущий уровень БА (текстом)</span><input name="dgURef" placeholder="52% ном." maxlength="30"></label>
         </div>
       </div>
       <!-- Автоколл и бустер есть на доске (2 и 4 позиции), но завести их через
@@ -1175,6 +1190,7 @@
     var isProt = t === "protection";
     document.getElementById("b-protection").style.display = isProt ? "" : "none";
     document.getElementById("b-warrant").style.display = t === "warrant" ? "" : "none";
+    document.getElementById("b-digital").style.display = t === "digital" ? "" : "none";
     document.getElementById("b-autocall").style.display = t === "autocall" ? "" : "none";
     document.getElementById("b-revconv").style.display = t === "revconv" ? "" : "none";
     document.getElementById("b-booster").style.display = t === "booster" ? "" : "none";
@@ -1972,6 +1988,23 @@
         item.spot = 100; item.strike = 100;
         if (item.structure === "cs") item.strike2 = 150;
       }
+      if (type === "digital") {
+        req(fBoard, ["dgStrike", "dgPct"]);
+        needRange(fBoard, "dgStrike", 1, 300, "%");
+        needRange(fBoard, "dgPct", 0.1, 500, "% номинала");
+        item.spot = 100;
+        put(item, "strike", num(fBoard, "dgStrike"));
+        put(item, "digitalPct", num(fBoard, "dgPct"));
+        item.floorPct = 0;                       // варрантная форма: ниже порога ноль
+        item.structure = "call";
+        put(item, "uRef", val(fBoard, "dgURef"));
+        // Выплата ≤ премии — почти всегда опечатка в разряде: такой продукт не
+        // может выйти в плюс ни при каком сценарии, и на витрине это выглядело бы
+        // как рабочее предложение.
+        if (item.digitalPct != null && item.quote != null && item.digitalPct <= item.quote) {
+          throw new Error("Выплата (" + item.digitalPct + "%) должна быть больше премии (" + item.quote + "%) — иначе продукт не может выйти в плюс.");
+        }
+      }
       if (type === "autocall") {
         req(fBoard, ["basket", "couponPa", "couponBarrier", "callBarrier"]);
         var bk = val(fBoard, "basket").split(",").map(function (s) { return s.trim().toUpperCase(); }).filter(Boolean);
@@ -2012,7 +2045,8 @@
         }
       }
       var pfx = type === "discount" ? "d" : type === "protection" ? "p"
-        : type === "autocall" ? "ac" : type === "revconv" ? "rc" : type === "booster" ? "b" : "w";
+        : type === "autocall" ? "ac" : type === "revconv" ? "rc" : type === "booster" ? "b"
+        : type === "digital" ? "dg" : "w";
       item.id = pfx + "-" + slug(item.underlying) + "-" + slug(item.expiry).replace(/\./g, "") + "-s";
       return item;
     });

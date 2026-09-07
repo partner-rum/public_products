@@ -2775,7 +2775,10 @@ const SUBMIT_SECTIONS = {
     // nonCall/obsPerYear — автоколл. Без них белый список молча выбрасывал
     // параметры, и продукт уезжал на доску пустой оболочкой.
     num: ["spot", "strike", "strike2", "participation", "protectionPct", "cap", "quote", "chg", "minNom",
-          "ku", "couponPa", "couponBarrier", "callBarrier", "nonCall", "obsPerYear"],
+          "ku", "couponPa", "couponBarrier", "callBarrier", "nonCall", "obsPerYear",
+          // digitalPct/floorPct — диджитал-варрант. Без них выплата обнулялась,
+          // и на доску уезжала карточка, обещающая ноль при взятом пороге.
+          "digitalPct", "floorPct"],
     arr: ["basket"],
     required: ["id", "type", "name", "underlying", "cls", "expiry", "quote"],
   },
@@ -3689,7 +3692,9 @@ async function handleSubmit(request, env, cors, ctx) {
 
   const cfg = SUBMIT_SECTIONS[section];
   const brief = [item.name, item.underlying, item.isin, item.price != null ? "цена " + item.price : null,
-    item.quote != null ? "котировка " + item.quote : null].filter(Boolean).join(" · ");
+    item.quote != null ? "котировка " + item.quote : null,
+    item.digitalPct != null ? "выплата " + item.digitalPct + "% при пороге " +
+      (item.strike != null ? item.strike : 100) + "%" : null].filter(Boolean).join(" · ");
   const text =
     "🆕 <b>Заявка на публикацию</b>\n" +
     "Раздел: <b>" + esc(cfg.label) + "</b> · от <b>" + esc(author) + "</b>\n" +
