@@ -77,7 +77,33 @@
   .msg.err { color:var(--down); }
   #gate .note { margin-top:16px; font-size:12.5px; color:var(--faint); line-height:1.55; }
   /* Вход в демо — рядом с формой, чтобы посмотреть стол можно было без ключа. */
-  .demo-in { margin-top:18px; padding-top:16px; border-top:1px solid var(--line-soft); }
+  /* ── Ещё не партнёр? ────────────────────────────────────────────────────
+     Раздел для человека без ключа: заявка сейлзам и демо-кабинет. Заявка
+     свёрнута — иначе на экране входа два набора полей сразу. */
+  .join { margin-top:22px; padding-top:18px; border-top:1px solid var(--line); }
+  .join h2 { margin:0 0 6px; font:600 15px var(--d); letter-spacing:-.012em; }
+  .join .how { margin:0 0 14px; font-size:12.5px; color:var(--faint); line-height:1.6; }
+  .join .how b { color:var(--hushed); font-weight:500; }
+  .join .ask { width:100%; background:transparent; color:var(--ink); border:1px solid var(--line);
+    border-radius:10px; padding:12px; font:500 14px var(--f); cursor:pointer;
+    transition:border-color .2s, background .2s; }
+  .join .ask:hover { border-color:var(--solar); background:rgba(238,125,27,.08); }
+  /* Раскрытая форма сама сообщает состояние, поэтому переключатель гасим: две
+     акцентные кнопки подряд («Оставить заявку» и «Отправить сейлзам») спорили
+     за то, какая из них главная. */
+  .join .ask[aria-expanded="true"] { border-color:var(--line-soft); color:var(--faint); font-weight:400; }
+  .join .ask[aria-expanded="true"]:hover { border-color:var(--line); background:transparent; color:var(--hushed); }
+  .join form { margin-top:14px; }
+  .join .req { color:var(--solar); }
+  .join .send { width:100%; margin-top:4px; background:var(--solar); color:#0C0A08; border:none;
+    border-radius:10px; padding:13px; font:600 15px var(--f); cursor:pointer; transition:background .2s; }
+  .join .send:hover { background:var(--solar-l); }
+  .join .send:disabled { opacity:.6; cursor:default; }
+  .join .out { margin-top:11px; font-size:13.5px; line-height:1.5; }
+  .join .out.bad { color:var(--down); }
+  .join .out.good { color:var(--up); }
+  .join .hint { margin:12px 0 0; font-size:12px; color:var(--faint); line-height:1.55; }
+  .demo-in { margin-top:16px; padding-top:14px; border-top:1px solid var(--line-soft); }
   .demo-in a { display:block; text-align:center; border:1px solid var(--line); border-radius:10px;
                padding:12px; color:var(--ink); text-decoration:none; font:600 14.5px var(--f);
                transition:border-color .2s, background .2s; }
@@ -209,6 +235,7 @@
     .logo { min-height:44px; align-items:center; }
     .chip, .tile .more { min-height:44px; }
     .go { min-height:48px; }
+    .join .ask, .join .send { min-height:48px; }
     .tile .nm a { padding:12px 0; margin:-12px 0; }
   }
 </style>
@@ -233,11 +260,33 @@
   <button class="go" id="go" type="button">Войти</button>
   <div class="msg" id="err" role="alert"></div>
   <p class="note">Ключ сохраняется в этом браузере, чтобы не вводить его каждый раз. На общем компьютере после работы нажмите «Выйти».</p>
-  <div class="demo-in">
-    <a href="me.html?demo=3">Посмотреть демо-кабинет →</a>
-    <p>Без ключа и регистрации. Партнёр, объёмы и вознаграждение вымышлены;
-      выпуски и котировки — настоящие.</p>
-  </div>
+  <section class="join">
+    <h2>Ещё не партнёр?</h2>
+    <p class="how">Как это происходит: <b>заявка</b> → разговор с менеджером →
+      <b>стандартный договор</b> → ID и ключ от этого кабинета.</p>
+
+    <button class="ask" id="jnAsk" type="button" aria-expanded="false" aria-controls="jnForm">
+      Оставить заявку</button>
+
+    <form id="jnForm" hidden>
+      <label class="field" for="jn-name"><span class="k">Имя</span>
+        <input id="jn-name" autocomplete="name" placeholder="как к вам обращаться"></label>
+      <label class="field" for="jn-contact"><span class="k">Контакт <span class="req">*</span></span>
+        <input id="jn-contact" placeholder="Telegram, телефон или почта" spellcheck="false"></label>
+      <label class="field" for="jn-about"><span class="k">Чем занимаетесь</span>
+        <input id="jn-about" maxlength="80" placeholder="например, инвестиционный советник"></label>
+      <button class="send" id="jnSend" type="submit">Отправить сейлзам</button>
+      <div class="out" id="jnOut" role="status" aria-live="polite"></div>
+      <p class="hint">Заявка уходит в отдел продаж Rumberg — свяжутся в течение рабочего дня.
+        Если вы уже партнёр и потеряли ключ, напишите здесь же: его перевыпустят.</p>
+    </form>
+
+    <div class="demo-in">
+      <a href="me.html?demo=3">Посмотреть демо-кабинет →</a>
+      <p>Без ключа и регистрации. Партнёр, объёмы и вознаграждение вымышлены;
+        выпуски и котировки — настоящие.</p>
+    </div>
+  </section>
 </div>
 
 <!-- СТОЛ -->
@@ -320,6 +369,91 @@
     ]
   };
 })();
+</script>
+<script>
+  // ── Заявка в партнёры ──
+  // Уходит существующим маршрутом /lead: он принимает name/contact/segment/url/ref,
+  // обязателен только контакт. Своего маршрута не заводим — воркер деплоит
+  // только Руслан, а ничего нового этой форме от бэкенда не нужно.
+  (function () {
+    var LEAD_API = "https://so-leads.ruslan-sabirov.workers.dev/lead";
+    var ask = document.getElementById("jnAsk"),
+        form = document.getElementById("jnForm"),
+        out = document.getElementById("jnOut"),
+        send = document.getElementById("jnSend");
+    if (!ask || !form) return;
+
+    ask.addEventListener("click", function () {
+      var open = form.hidden;
+      form.hidden = !open;
+      ask.setAttribute("aria-expanded", open ? "true" : "false");
+      if (open) document.getElementById("jn-contact").focus();
+    });
+
+    function say(text, cls) {
+      out.className = "out" + (cls ? " " + cls : "");
+      out.textContent = text;                 // textContent, а не innerHTML: тут текст от человека
+    }
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var contact = document.getElementById("jn-contact").value.trim();
+      if (!contact) {
+        say("Оставьте контакт — иначе мы не сможем ответить.", "bad");
+        document.getElementById("jn-contact").focus();
+        return;
+      }
+      var about = document.getElementById("jn-about").value.trim();
+      // «Чем занимаетесь» кладём в segment, а не в product: в карточке Telegram
+      // product печатается как «Продукт», и профессия читалась бы товаром.
+      // Поле segment у воркера обрезается на 100 знаках — держимся внутри.
+      var segment = "Заявка в партнёры" + (about ? " · " + about.slice(0, 78) : "");
+      var ref = "";
+      try { ref = localStorage.getItem("so_ref") || ""; } catch (err) {}
+
+      send.disabled = true;
+      var label = send.textContent;
+      send.textContent = "Отправляем…";
+      say("");
+
+      fetch(LEAD_API, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          segment: segment,
+          name: document.getElementById("jn-name").value.trim(),
+          contact: contact,
+          url: location.href,
+          ref: ref
+        })
+      }).then(function (r) { return r.ok; }).catch(function () { return false; })
+        .then(function (ok) {
+          try {
+          if (ok) {
+            // Форму убираем целиком: повторная отправка той же заявки никому не нужна
+            form.innerHTML = "";
+            form.hidden = false;
+            say("Заявка отправлена. Менеджер свяжется с вами в течение рабочего дня.", "good");
+            form.appendChild(out);
+            ask.disabled = true;
+            ask.textContent = "Заявка отправлена";
+            if (typeof window.ym === "function") {
+              try { window.ym(110759242, "reachGoal", "partner_join"); } catch (err) {}
+            }
+          } else {
+            send.disabled = false;
+            send.textContent = label;
+            say("Не удалось отправить. Проверьте связь и попробуйте ещё раз.", "bad");
+          }
+          } catch (err) {
+            // Кнопка не должна оставаться мёртвой ни при какой поломке отрисовки
+            send.disabled = false;
+            send.textContent = label;
+            say("Не удалось отправить. Проверьте связь и попробуйте ещё раз.", "bad");
+          }
+        });
+    });
+  })();
 </script>
 <script src="chat.js?v=17"></script>
 <script>
