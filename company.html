@@ -62,6 +62,25 @@
   .entity .d { margin-top: 5px; font-size: 13.5px; line-height: 1.55; color: var(--hushed); }
   .entity .ogrn { font-family: var(--f-mono); font-size: 12.5px; color: var(--faint); margin-top: 4px; }
 
+  /* Награды. Строка с волосяной линейкой, как у .entity, но заголовок крупнее:
+     премия — самое весомое доказательство на странице. Логотипов премий у нас
+     нет, и рисовать их подобия нельзя, поэтому блок текстовый. */
+  .award { padding: 18px 0; border-bottom: 1px solid var(--border-soft); }
+  .award:first-of-type { border-top: 1px solid var(--border-soft); }
+  .award .org { font-family: var(--display); font-size: 17px; font-weight: 600; letter-spacing: -.014em; }
+  .award .nom { margin-top: 5px; font-size: 14px; color: var(--ink); }
+  .award .nom .y { font-family: var(--f-mono); font-size: 12.5px; color: var(--faint); }
+  .award .note { margin-top: 5px; font-size: 13px; line-height: 1.5; color: var(--hushed); }
+  .award .ln { display: flex; gap: 8px; margin-top: 11px; flex-wrap: wrap; }
+  .award .ln a { font-family: var(--f-mono); font-size: 11px; letter-spacing: .04em; color: var(--hushed);
+    border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px;
+    display: inline-flex; align-items: center; gap: 6px; transition: border-color .15s, color .15s; }
+  .award .ln a:hover { color: var(--ink); border-color: rgba(255,255,255,0.32); }
+  @media (max-width: 560px) {
+    /* тач-цель ≥44px */
+    .award .ln a { min-height: 44px; padding: 0 14px; }
+  }
+
   /* Выступления: тот же ритм, что у .entity — строка с волосяной линейкой.
      Обложка слева фиксированной ширины, чтобы низкие кадры не разъезжались. */
   .talk { display: grid; grid-template-columns: 208px 1fr; gap: 18px; align-items: start; padding: 18px 0; border-bottom: 1px solid var(--border-soft); }
@@ -413,6 +432,9 @@
     })();
   </script>
 
+  <div class="cap" id="awards">Награды</div>
+  <div id="awardlist"></div>
+
   <div class="cap" id="talks">Выступления</div>
   <p class="ci-sub" style="margin:0 0 4px">Записи, где нас позвали говорить о рынке. Rutube и YouTube — одна и та же запись, выбирайте, что открывается.</p>
   <div id="talklist"></div>
@@ -441,7 +463,48 @@
   <p class="note">Информация предназначена для квалифицированных инвесторов и не является индивидуальной инвестиционной рекомендацией, офертой или гарантией доходности. Инвестиции в структурные продукты связаны с риском, включая риск частичной или полной потери вложенных средств.</p>
 </div>
 
+<script src="data/awards.js?v=1"></script>
 <script src="data/talks.js?v=1"></script>
+<script>
+  // Награды. Данные — data/awards.js. Нет файла или он пуст — заголовок и
+  // контейнер убираются целиком: пустая рубрика хуже отсутствующей.
+  (function () {
+    var A = (window.AWARDS && AWARDS.items) || [];
+    var box = document.getElementById("awardlist"), cap = document.getElementById("awards");
+    if (!box) return;
+    if (!A.length) { if (cap) cap.remove(); box.remove(); return; }
+
+    var MON = ["январе","феврале","марте","апреле","мае","июне",
+               "июле","августе","сентябре","октябре","ноябре","декабре"];
+    // Дата необязательна: «2025-12» -> «декабрь 2025», «2025» -> «2025»,
+    // пусто -> строки с годом просто нет. Выдуманный год хуже отсутствующего.
+    function when(v) {
+      var p = String(v || "").split("-");
+      if (!p[0]) return "";
+      if (p.length < 2 || !MON[+p[1] - 1]) return p[0];
+      return MON[+p[1] - 1].replace(/е$/, "ь").replace(/(т|й)$/, "$1") + " " + p[0];
+    }
+    var ESC = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+    function esc(v) { return v == null ? "" : String(v).replace(/[&<>"']/g, function (c) { return ESC[c]; }); }
+
+    box.innerHTML = A.map(function (a) {
+      var when_ = when(a.date);
+      var links = (a.links || []).map(function (l) {
+        return '<a href="' + esc(l.url) + '" target="_blank" rel="noopener">' + esc(l.label) +
+          '<svg width="9" height="9" viewBox="0 0 12 12" fill="none" aria-hidden="true">' +
+          '<path d="M3 9L9 3M9 3H4.5M9 3v4.5" stroke="currentColor" stroke-width="1.4" ' +
+          'stroke-linecap="round" stroke-linejoin="round"/></svg></a>';
+      }).join("");
+      return '<div class="award">' +
+        '<div class="org">' + esc(a.org) + '</div>' +
+        '<div class="nom">Номинация «' + esc(a.nomination) + '»' +
+          (when_ ? ' <span class="y">· ' + esc(when_) + '</span>' : '') + '</div>' +
+        (a.note ? '<div class="note">' + esc(a.note) + '</div>' : '') +
+        (links ? '<div class="ln">' + links + '</div>' : '') +
+      '</div>';
+    }).join("");
+  })();
+</script>
 <script>
   // Выступления. Данные — data/talks.js, один источник с полосой на главной.
   // Нет файла или он пуст — блок вместе с заголовком убирается целиком:
