@@ -1250,6 +1250,10 @@ async function buildCatalog(env) {
         : p.type === "revconv"
         ? "купон " + (p.couponPa != null ? p.couponPa : p.quote) + "% годовых · вход по номиналу · безусловный купон · страйк " +
           (p.strike != null ? p.strike : 100) + "% · ниже страйка тело по перформансу от страйка · расчёт денежный"
+        : p.type === "digital"
+        ? "премия " + p.quote + "% номинала · ФИКСИРОВАННАЯ выплата " + (p.digitalPct || 0) +
+          "% номинала, если базовый актив на экспирацию не ниже страйка " + (p.strike != null ? p.strike : 100) +
+          "% · выше страйка выплата НЕ растёт вместе с активом · ниже страйка выплаты нет, теряется премия"
         : p.type === "protection"
         ? "вход по номиналу · защита " + (p.protectionPct != null ? p.protectionPct : 100) +
           "% · участие в росте " + Math.round((p.participation || 1) * 100) + "%" +
@@ -2350,6 +2354,7 @@ async function sendPostDraft(env, theme) {
 const FI_TYPE_LABEL = {
   warrant: "варрант", discount: "дисконтная облигация", protection: "защита капитала",
   autocall: "автоколл", revconv: "реверс-конвертибл", booster: "бустер", primary: "биржевой выпуск",
+  digital: "диджитал-варрант",
 };
 
 // «12.5» → «12,5»: в посте по-русски, и заодно срезает хвосты float-арифметики
@@ -2365,6 +2370,7 @@ const FI_WHY_FALLBACK = {
   protection: "Защита капитала с участием в росте базового актива.",
   autocall: "Регулярный купон при умеренных просадках корзины; автоотзыв закрывает позицию досрочно.",
   revconv: "Повышенный безусловный купон в обмен на риск по базовому активу ниже страйка.",
+  digital: "Фиксированная выплата при уровне базового актива не ниже страйка; риск ограничен премией.",
   booster: "Ускоренное участие в росте в заданном диапазоне; при снижении — динамика самой бумаги.",
   primary: "Биржевой выпуск: покупается в стакане, как обычная облигация.",
 };
@@ -2405,6 +2411,11 @@ function fiSpec(p) {
     s.push("тело 100% при активе не ниже страйка");
     s.push("ниже страйка — по перформансу от страйка");
     if (Array.isArray(p.basket) && p.basket.length > 1) s.push("worst-of " + p.basket.length);
+  } else if (p.type === "digital") {
+    if (p.quote != null) s.push("премия " + fiNum(p.quote) + "% номинала");
+    if (p.digitalPct != null) s.push("выплата " + fiNum(p.digitalPct) + "% номинала, фиксированная");
+    s.push("порог " + fiNum(K != null ? K : 100) + "%");
+    s.push("ниже порога выплаты нет");
   } else if (p.type === "booster") {
     s.push("вход 100% номинала");
     if (p.ku != null && K != null && K2 != null) {
@@ -2823,12 +2834,24 @@ function sanitizeItem(section, raw) {
       if (!src || typeof src !== "object") continue;
       if (k === "payoff") {
         const t = cleanStr(src.type, 20);
-        if (["call", "callcap", "digital", "protected", "booster", "fixed", "portfolio"].includes(t)) {
+        if (["call", "callcap", "digital", "protected", "booster", "fixed", "portfolio",
+             "autocall"].includes(t)) {
           const p = { type: t };
-          // partPct/strikePct — защита капитала с доски: участие в росте и страйк опциона
+          // partPct/strikePct — защита капитала с доски: участие в росте и страйк опциона.
+          // couponPa/couponBarrier/callBarrier/nonCall/obsTotal/obsPerYear — автоколл:
+          // без них объект уезжал в файл пустым, а тип «autocall» вообще не был в
+          // списке разрешённых, из-за чего payoff срезался ЦЕЛИКОМ и график
+          // сваливался в ветку-заглушку. Та же грабля описана у раздела board.
           for (const nk of ["capPct", "premiumPct", "couponPct", "barrierPct", "kuPct",
-                            "entryPct", "gainPct", "floorPct", "partPct", "strikePct"]) {
+                            "entryPct", "gainPct", "floorPct", "partPct", "strikePct",
+                            "couponPa", "couponBarrier", "callBarrier", "nonCall",
+                            "obsTotal", "obsPerYear"]) {
             const v = cleanNum(src[nk]); if (v != null) p[nk] = v;
+          }
+          // Корзина worst-of: строки, не числа — общая обработка их не собрала бы.
+          if (Array.isArray(src.basket)) {
+            const b = src.basket.map(x => cleanStr(x, 20)).filter(Boolean).slice(0, 8);
+            if (b.length) p.basket = b;
           }
           out.payoff = p;
         }
@@ -3789,7 +3812,7 @@ async function commitResearchIssue(env, issue) {
 // Скрапер превью (Telegram) не исполняет JS, поэтому нужна статичная страница на продукт.
 // Шаблон 1:1 с make_product_pages.py — чтобы массовая регенерация не давала лишних диффов.
 const SHELL_BASE = "https://invest.rumberg.ru";
-const SHELL_TYPE_LABEL = { discount: "Дисконтная облигация", protection: "Облигация с защитой капитала", warrant: "Варрант", booster: "Бустер", autocall: "Автоколл", revconv: "Реверс-конвертибл" };
+const SHELL_TYPE_LABEL = { discount: "Дисконтная облигация", protection: "Облигация с защитой капитала", warrant: "Варрант", digital: "Диджитал-варрант", booster: "Бустер", autocall: "Автоколл", revconv: "Реверс-конвертибл" };
 function shellEsc(s) { return String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 function shellDesc(item) {
   const tl = SHELL_TYPE_LABEL[item.type] || "Структурный продукт";
@@ -3801,6 +3824,13 @@ function shellDesc(item) {
     const cpn = item.couponPa != null ? item.couponPa : item.quote;
     if (cpn != null) parts.push("купон " + shellNum(cpn) + "% годовых");
     if (item.type === "revconv") parts.push("страйк " + shellNum(item.strike != null ? item.strike : 100) + "%");
+  } else if (item.type === "digital") {
+    // у диджитала в превью важнее смысл: фиксированная выплата и её порог
+    if (item.digitalPct != null) {
+      parts.push("выплата " + shellNum(item.digitalPct) + "% номинала при уровне от " +
+        shellNum(item.strike != null ? item.strike : 100) + "%");
+    }
+    if (item.quote != null) parts.push("премия " + shellNum(item.quote) + "%");
   } else if (item.type === "protection") {
     // вход по номиналу; для превью полезнее участие, чем «котировка 100%»
     parts.push("вход по номиналу" + (item.participation
