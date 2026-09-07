@@ -463,6 +463,33 @@ def _protected_svg(p):
     return out
 
 
+# Автоколл: ось X — НАБЛЮДЕНИЯ, а не уровень актива (см. autocallSvg в
+# data/digest-lib.js — геометрия дословно та же). Выплата зависит от времени:
+# купоны копятся, выпуск может погаситься досрочно.
+_AC_BASE, _AC_TOP, _AC_X0, _AC_X1 = 0.80, 0.20, 0.06, 0.94
+
+
+def _autocall_svg(p):
+    n = max(2, min(16, int(float(p.get("obsTotal") or 8))))
+    yb, yt = _y(_AC_BASE), _y(_AC_TOP)
+    d = "M%.1f %.1f" % (_x(_AC_X0), yb)
+    for i in range(1, n + 1):
+        xi = _x(_AC_X0 + (_AC_X1 - _AC_X0) * i / n)
+        xp = _x(_AC_X0 + (_AC_X1 - _AC_X0) * (i - 1) / n)
+        yi = yb - (yb - yt) * i / n
+        d += " L%.1f %.1f L%.1f %.1f" % (xp, yi, xi, yi)
+    e = (_base(yb, "номинал 100%") + _line(d) +
+         _txt(_W - _PAD, yt - 8, "купон %s%% годовых" % _gnum(p.get("couponPa", "")), "end"))
+    nc = p.get("nonCall")
+    if nc and 0 < float(nc) < n:
+        xc = _x(_AC_X0 + (_AC_X1 - _AC_X0) * float(nc) / n)
+        e += ('<line x1="%.1f" y1="%.1f" x2="%.1f" y2="%.1f" stroke="%s" stroke-width="1.4" '
+              'stroke-dasharray="3 3" opacity="0.75"/>' % (xc, yt - 2, xc, yb + 4, CURVE) +
+              _txt(xc, yb + 29, "возможен отзыв", "middle"))
+    e += _txt(_W - _PAD, yb + 14, "наблюдения →", "end", AX)
+    return e
+
+
 def payoff_svg(p):
     p = p or {}
     t = p.get("type", "")
@@ -471,6 +498,8 @@ def payoff_svg(p):
         e = _warrant_svg(p, cap=float(p.get("capPct") or 0) or None)
     elif t == "call":
         e = _warrant_svg(p)
+    elif t == "autocall":
+        e = _autocall_svg(p)
     elif t == "digital":
         base, up, bx = _y(.62), _y(.18), _x(.56)
         e = (_base(base, "номинал 100%") +

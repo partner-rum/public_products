@@ -7,6 +7,12 @@
   function comma(v) { return String(v).replace(".", ","); }
   function rub(pct) { return Math.round(pct * 10).toLocaleString("ru-RU").replace(/ /g, " ") + " ₽ · " + comma(pct) + "% ном."; }
   function isFx(cur) { return /usd|eur|\$|€/i.test(String(cur || "")); }
+  // Склонение: «1 наблюдение», «3 наблюдения», «5 наблюдений» — иначе в тексте
+  // получалось «Первые 1 наблюдения».
+  function plu(n, one, few, many) {
+    var a = n % 10, b = n % 100;
+    return (a === 1 && b !== 11) ? one : (a >= 2 && a <= 4 && (b < 12 || b > 14)) ? few : many;
+  }
 
   // Продукт доски (instruments.js) → идея. Возвращает {supported:false,reason} для неподдержанных.
   function fromBoard(p) {
@@ -84,6 +90,37 @@
       return base;
     }
 
+    if (t === "autocall") {
+      // Купон и барьеры — обязательные параметры: без них продукт не описать,
+      // а выдумывать их нельзя. Остальное (nonCall, наблюдения) необязательно.
+      var cpn = num(p.couponPa), cb = num(p.couponBarrier), callB = num(p.callBarrier);
+      var floorAC = num(p.protectionPct);
+      if (cpn == null) return { supported: false, reason: "У автоколла не задан купон (couponPa)." };
+      if (cb == null) return { supported: false, reason: "У автоколла не задан барьер купона (couponBarrier)." };
+      var obsY = num(p.obsPerYear), nc = num(p.nonCall);
+      // Число наблюдений за срок: из срока в годах и частоты. Срок в данных —
+      // строка («3 года»), поэтому вытаскиваем первое число.
+      var yrs = num((String(p.tenor || "").match(/[\d.,]+/) || [""])[0].replace(",", "."));
+      var obsTotal = (obsY != null && yrs != null) ? Math.round(obsY * yrs) : null;
+      var basket = Array.isArray(p.basket) ? p.basket : null;
+
+      base.family = "coupon"; base.kind = "Автоколл";
+      base.metric = { v: comma(cpn) + "% годовых", k: "условный купон" };
+      base.p.price = "100% номинала";
+      base.p.upside = "условный купон " + comma(cpn) + "% годовых, пока" +
+                      (basket ? " худшая бумага корзины" : " базовый актив") +
+                      " держится выше " + comma(cb) + "%";
+      base.p.protection = floorAC != null ? "барьер " + comma(floorAC) + "% на погашении" : "барьерная";
+      base.payoff = { type: "autocall", couponPa: cpn, couponBarrier: cb };
+      if (callB != null) base.payoff.callBarrier = callB;
+      if (floorAC != null) base.payoff.floorPct = floorAC;
+      if (nc != null) base.payoff.nonCall = nc;
+      if (obsTotal != null) base.payoff.obsTotal = obsTotal;
+      if (obsY != null) base.payoff.obsPerYear = obsY;
+      if (basket) base.payoff.basket = basket;
+      return base;
+    }
+
     return { supported: false, reason: "Тип продукта «" + t + "» не поддержан в дайджесте." };
   }
 
@@ -124,6 +161,34 @@
     } else if (r.family === "discount") {
       r.how = "Дисконтная облигация: покупка ниже номинала (" + entry + "%), погашение по 100%. Доход +" + gain + "% зафиксирован в день сделки и не требует роста рынка.";
       r.payout = "В дату погашения выплачивается 100% номинала. Промежуточных купонов нет.";
+    } else if (pf.type === "autocall") {
+      // Механика автоколла: наблюдения, память купона, досрочный отзыв, worst-of.
+      // Тексты обычного купона здесь были бы неверны — там одна выплата и один барьер.
+      var wo = pf.basket && pf.basket.length ? "худшая бумага корзины (" + pf.basket.join(", ") + ")" : "базовый актив";
+      var per = pf.obsPerYear ? (pf.obsPerYear === 4 ? "ежеквартально" : pf.obsPerYear === 12 ? "ежемесячно" :
+                pf.obsPerYear === 2 ? "раз в полгода" : pf.obsPerYear + " раза в год") : "на каждом наблюдении";
+      var ncTxt = pf.nonCall
+        ? (pf.nonCall === 1
+            ? " На первом наблюдении выпуск не отзывается."
+            : " Первые " + pf.nonCall + " " + plu(pf.nonCall, "наблюдение", "наблюдения", "наблюдений") +
+              " выпуск не отзывается.")
+        : "";
+      // Полный состав корзины называем ОДИН раз, дальше короткая форма: иначе
+      // список бумаг повторялся трижды в двух абзацах и забивал текст.
+      var woShort = pf.basket && pf.basket.length ? "худшая бумага корзины" : "базовый актив";
+      var callTxt = pf.callBarrier != null
+        ? " Если на дату наблюдения " + woShort + " выше " + comma(pf.callBarrier) +
+          "%, выпуск гасится досрочно с номиналом и купоном." : "";
+      r.how = "Автоколл: условный купон " + comma(pf.couponPa) + "% годовых начисляется " + per +
+              ", пока " + wo + " держится выше " + comma(pf.couponBarrier) +
+              "%. Пропущенные купоны копятся и выплачиваются позже — это память купона." +
+              ncTxt + callTxt;
+      r.payout = "Купон выплачивается, когда " + woShort + " на дату наблюдения выше " +
+                 comma(pf.couponBarrier) + "%; иначе купон не теряется, а переносится." +
+                 (pf.floorPct != null
+                   ? " На погашении номинал возвращается полностью, пока " + woShort + " выше " +
+                     comma(pf.floorPct) + "%; ниже — выплата уменьшается пропорционально падению."
+                   : " Условия погашения — в спецификации выпуска.");
     } else if (r.family === "protection") {
       // участие и страйк знаем не всегда (у первички в данных может не быть) — текст
       // подстраиваем, а не подставляем «100%» по умолчанию: это была бы выдуманная цифра

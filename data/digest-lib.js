@@ -126,6 +126,42 @@ window.DF = (function () {
     return o + sTxt(CW - PADR, PADT - 4, lab, "end");
   }
 
+  // Автоколл: ось X — НАБЛЮДЕНИЯ (не уровень актива, как у остальных графиков),
+  // потому что выплата зависит от времени. Подпись оси поэтому обязательна.
+  // Геометрия дословно совпадает с _autocall_svg в make_digest.py.
+  function autocallSvg(p, color) {
+    const W = 300, H = 130, PAD = 16;
+    const x = t => PAD + t * (W - PAD * 2), y = t => PAD + t * (H - PAD * 2);
+    const BASE = 0.80, TOP = 0.20, X0 = 0.06, X1 = 0.94;
+    const n = Math.max(2, Math.min(16, Number(p.obsTotal) || 8));
+    const yb = y(BASE), yt = y(TOP);
+    // лестница: на каждом наблюдении накопленный купон подрастает на равный шаг
+    let d = "M" + x(X0) + " " + yb;
+    for (let i = 1; i <= n; i++) {
+      const xi = x(X0 + (X1 - X0) * i / n), yi = yb - (yb - yt) * i / n;
+      d += " L" + x(X0 + (X1 - X0) * (i - 1) / n) + " " + yi + " L" + xi + " " + yi;
+    }
+    let el =
+      '<line x1="' + PAD + '" y1="' + yb + '" x2="' + (W - PAD) + '" y2="' + yb +
+        '" stroke="rgba(255,255,255,0.17)" stroke-width="1" stroke-dasharray="2 4"/>' +
+      '<text x="' + PAD + '" y="' + (yb + 14) + '" fill="rgba(255,255,255,0.46)" font-size="10.5" ' + MONO + '>номинал 100%</text>' +
+      '<path d="' + d + '" fill="none" stroke="' + color + '" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>' +
+      '<text x="' + (W - PAD) + '" y="' + (yt - 8) + '" text-anchor="end" fill="rgba(255,255,255,0.60)" font-size="10.5" ' + MONO +
+        '>купон ' + gnum(p.couponPa) + '% годовых</text>';
+    // Наблюдение, с которого возможен автоотзыв — условие выпуска, не сценарий.
+    // Подпись уводим ПОД линию номинала: лестница проходит через эту зону.
+    const nc = Number(p.nonCall);
+    if (nc > 0 && nc < n) {
+      const xc = x(X0 + (X1 - X0) * nc / n);
+      el += '<line x1="' + xc + '" y1="' + (yt - 2) + '" x2="' + xc + '" y2="' + (yb + 4) +
+              '" stroke="' + color + '" stroke-width="1.4" stroke-dasharray="3 3" opacity="0.75"/>' +
+            '<text x="' + xc + '" y="' + (yb + 29) + '" text-anchor="middle" fill="rgba(255,255,255,0.46)" font-size="10.5" ' + MONO +
+              '>возможен отзыв</text>';
+    }
+    el += '<text x="' + (W - PAD) + '" y="' + (yb + 14) + '" text-anchor="end" fill="rgba(255,255,255,0.32)" font-size="10.5" ' + MONO + '>наблюдения →</text>';
+    return el;
+  }
+
   function payoffSvg(p, color) {
     const W = 300, H = 130, PAD = 16;
     const x = t => PAD + t * (W - PAD * 2), y = t => PAD + t * (H - PAD * 2);
@@ -136,6 +172,8 @@ window.DF = (function () {
       el = warrantSvg(p, color, null);
     } else if (p.type === "protected") {
       el = protectedSvg(p, color);
+    } else if (p.type === "autocall") {
+      el = autocallSvg(p, color);
     } else if (p.type === "digital") {
       const base = y(0.62), up = y(0.18), bx = x(0.56);
       el = '<line x1="' + PAD + '" y1="' + base + '" x2="' + (W - PAD) + '" y2="' + base + '" stroke="rgba(255,255,255,0.17)" stroke-width="1" stroke-dasharray="2 4"/>' +
@@ -189,6 +227,14 @@ window.DF = (function () {
     const a = (idea.p && idea.p.asset) || idea.underlying;
     const prot = idea.p && /100/.test(idea.p.protection || "");
     if (idea.family === "warrant") return "Подходит, если вы ждёте рост «" + a + "» и хотите усиленную экспозицию при ограниченном риске: оплачивается только премия, без маржин-коллов.";
+    if ((idea.payoff || {}).type === "autocall") {
+      const pf = idea.payoff;
+      const many = pf.basket && pf.basket.length > 1;
+      return "Подходит, если вы допускаете умеренное снижение " +
+        (many ? "бумаг корзины" : "«" + a + "»") + " и хотите условный купон" +
+        (pf.couponBarrier != null ? " при цене выше " + numTxt(pf.couponBarrier) + "%" : "") +
+        ". Учитывайте, что выпуск может закрыться досрочно — и деньги придётся размещать заново.";
+    }
     if (idea.family === "coupon") return prot
       ? "Подходит, если вы хотите заранее известный купон по «" + a + "» с полной защитой капитала."
       : "Подходит, если вы хотите заранее известный купон по «" + a + "» и готовы к снижению номинала, если актив упадёт.";
@@ -205,6 +251,17 @@ window.DF = (function () {
     if (idea.risk) return idea.risk;
     const prot = idea.p && /100/.test(idea.p.protection || "");
     if (idea.family === "warrant") return "Риск ограничен премией: если базовый актив не вырос к погашению, премия теряется полностью, вложенные средства не возвращаются.";
+    if ((idea.payoff || {}).type === "autocall") {
+      const pf = idea.payoff;
+      const wo = pf.basket && pf.basket.length > 1 ? "худшая бумага корзины" : "базовый актив";
+      return "Риск считается по ХУДШЕЙ бумаге: одной просевшей достаточно, чтобы купон не начислился" +
+        (pf.couponBarrier != null ? " (ниже " + numTxt(pf.couponBarrier) + "%)" : "") + "." +
+        (pf.floorPct != null
+          ? " Если на погашении " + wo + " ниже " + numTxt(pf.floorPct) +
+            "%, выплата уменьшается пропорционально её падению — возможен убыток." : "") +
+        " Досрочное погашение сокращает срок сделки, и купоны дальше не начисляются." +
+        " Дополнительно — кредитный риск эмитента облигации.";
+    }
     if (idea.family === "coupon") return prot
       ? "Капитал защищён на 100% — при любом сценарии возвращается номинал. Основной риск — кредитное качество эмитента облигации."
       : "Если базовый актив снизится, выплата номинала уменьшается пропорционально падению. Дополнительно — кредитный риск эмитента облигации.";
