@@ -192,6 +192,18 @@
 <script src="contact.js?v=9"></script>
 <script>
   const A = window.DIGEST_ARCHIVE;
+  // ── ЭКРАНИРОВАНИЕ ──
+  // Данные идут в innerHTML, поэтому вставки обёрнуты в S.esc(). На этой
+  // странице алиаса S не было, и обёртки роняли отрисовку ReferenceError-ом.
+  // Берём библиотеку, если она подключена, иначе свой экранировщик с тем же
+  // правилом — так правка не зависит от наличия data/lib.js и порядка загрузки.
+  var S = (window.SITE && typeof window.SITE.esc === "function") ? window.SITE : {
+    esc: function (v) {
+      var M = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+      return v == null ? "" : String(v).replace(/[&<>"']/g, function (c) { return M[c]; });
+    }
+  };
+
   if (new URLSearchParams(location.search).get("view") === "client") document.body.classList.add("client");
   let issue = null, order = [];
 

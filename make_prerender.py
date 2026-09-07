@@ -229,8 +229,8 @@ def index_blocks():
             if x.get(k):
                 bits.append(x[k])
         rows.append(esc(", ".join(bits)) + ".")
-    if rows:
-        out["offers"] = "<p>Текущие размещения.</p><ul>%s</ul>" % "".join("<li>%s</li>" % r for r in rows)
+    out["offers"] = ("<p>Текущие размещения.</p><ul>%s</ul>" % "".join("<li>%s</li>" % r for r in rows)
+                     if rows else "<p>Сейчас размещений нет.</p>")
 
     # Выступления. Перечисляем ВСЕ записи, а не две: полоса выбирает пару
     # случайно при каждом заходе, и фиксированные две расходились бы с тем,
@@ -242,9 +242,8 @@ def index_blocks():
         for t in tk.get("items", []):
             bits = [b for b in (t.get("org"), t.get("note"), t.get("title")) if b]
             rows.append(esc(". ".join(bits)) + ".")
-        if rows:
-            out["talks"] = ("<p>Выступления: записи, где нас позвали говорить о рынке.</p>"
-                            "<ul>%s</ul>" % "".join("<li>%s</li>" % r for r in rows))
+        out["talks"] = ("<p>Выступления: записи, где нас позвали говорить о рынке.</p>"
+                        "<ul>%s</ul>" % "".join("<li>%s</li>" % r for r in rows)) if rows else ""
     except FileNotFoundError:
         pass  # раздела может не быть — полоса тогда и не показывается
     except Exception as e:
