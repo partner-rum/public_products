@@ -5,6 +5,47 @@ window.PLACEMENTS_DATA = {
  "updated": "2026-09-07",
  "issues": [
   {
+   "isin": "RU000A10BZ10",
+   "name": "СП-1-42-ЦБ-FX-RUB",
+   "serial": "СП-1-42-ЦБ-FX-RUB",
+   "kind": "participation",
+   "currency": "RUB",
+   "issueStart": "2026-08-10",
+   "maturity": "2029-10-23",
+   "regNumber": "6- 42-00761-R-001P",
+   "notional": 1000,
+   "fx": true,
+   "basket": [
+    {
+     "n": "Cameco Corp.",
+     "w": 1,
+     "t": "CA13321L1085"
+    },
+    {
+     "n": "Ge Vernova Inc.",
+     "w": 1,
+     "t": "US36828A1016"
+    },
+    {
+     "n": "EQT Corp.",
+     "w": 1,
+     "t": "US26884L1098"
+    },
+    {
+     "n": "Constellation Energy",
+     "w": 1,
+     "t": "US21037T1097"
+    }
+   ],
+   "payoff": {
+    "participationPct": 100,
+    "protectionPct": 80,
+    "optType": "CALL",
+    "style": "EUROPEAN"
+   },
+   "src": "sales"
+  },
+  {
    "isin": "RU000A10CV96",
    "name": "РСП СП-2-70",
    "serial": "РСП СП-2-70",
