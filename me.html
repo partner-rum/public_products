@@ -94,6 +94,24 @@
   .join .ask[aria-expanded="true"] { border-color:var(--line-soft); color:var(--faint); font-weight:400; }
   .join .ask[aria-expanded="true"]:hover { border-color:var(--line); background:transparent; color:var(--hushed); }
   .join form { margin-top:14px; }
+  /* Форма партнёра: radio под видом .chip со стола. Сам input не display:none —
+     иначе он выпадает из порядка табуляции; убираем его с глаз обрезкой. */
+  .join .ent { margin-bottom:13px; }
+  /* Подпись группы — тем же мелким моно-капсом, что у полей: стиль висит на
+     «.field .k», а этот span лежит в .ent, и без своей строки «Форма» набиралась
+     обычным текстом рядом с «ИМЯ» и «КОНТАКТ». */
+  .join .ent .k { display:block; font:500 11px var(--m); letter-spacing:.1em;
+    text-transform:uppercase; color:var(--faint); margin-bottom:6px; }
+  .join .ents { display:flex; gap:8px; flex-wrap:wrap; }
+  .join .ents input { position:absolute; width:1px; height:1px; overflow:hidden;
+    clip:rect(0 0 0 0); clip-path:inset(50%); white-space:nowrap; }
+  .join .ents label { border:1px solid var(--line); background:none; color:var(--hushed);
+    border-radius:999px; padding:8px 15px; font:500 12.5px var(--f); cursor:pointer;
+    display:inline-flex; align-items:center; transition:border-color .15s, color .15s, background .15s; }
+  .join .ents label:hover { border-color:rgba(255,255,255,.22); color:var(--ink); }
+  .join .ents input:checked + label { background:var(--pill); border-color:rgba(255,255,255,.22); color:var(--ink); }
+  .join .ents input:focus-visible + label { outline:2px solid var(--solar); outline-offset:2px; }
+  .join .entnote { margin:9px 0 0; font-size:12px; line-height:1.55; color:var(--or-mut); }
   .join .req { color:var(--solar); }
   .join .send { width:100%; margin-top:4px; background:var(--solar); color:#0C0A08; border:none;
     border-radius:10px; padding:13px; font:600 15px var(--f); cursor:pointer; transition:background .2s; }
@@ -236,6 +254,7 @@
     .chip, .tile .more { min-height:44px; }
     .go { min-height:48px; }
     .join .ask, .join .send { min-height:48px; }
+    .join .ents label { min-height:44px; }
     .tile .nm a { padding:12px 0; margin:-12px 0; }
   }
 </style>
@@ -263,7 +282,8 @@
   <section class="join">
     <h2>Ещё не партнёр?</h2>
     <p class="how">Как это происходит: <b>заявка</b> → разговор с менеджером →
-      <b>стандартный договор</b> → ID и ключ от этого кабинета.</p>
+      <b>стандартный договор</b> → ID и ключ от этого кабинета.
+      Договор подписываем с <b>ИП или юридическим лицом</b>.</p>
 
     <button class="ask" id="jnAsk" type="button" aria-expanded="false" aria-controls="jnForm">
       Оставить заявку</button>
@@ -273,11 +293,23 @@
         <input id="jn-name" autocomplete="name" placeholder="как к вам обращаться"></label>
       <label class="field" for="jn-contact"><span class="k">Контакт <span class="req">*</span></span>
         <input id="jn-contact" placeholder="Telegram, телефон или почта" spellcheck="false"></label>
+      <div class="ent" role="group" aria-labelledby="jn-entk">
+        <span class="k" id="jn-entk">Форма <span class="req">*</span></span>
+        <div class="ents">
+          <input type="radio" name="jn-ent" id="jn-ent-ip" value="ИП"><label class="chip" for="jn-ent-ip">ИП</label>
+          <input type="radio" name="jn-ent" id="jn-ent-ul" value="Юрлицо"><label class="chip" for="jn-ent-ul">Юрлицо</label>
+          <input type="radio" name="jn-ent" id="jn-ent-no" value="Пока нет"><label class="chip" for="jn-ent-no">Пока нет</label>
+        </div>
+        <p class="entnote" id="jn-entnote" hidden>Договор подписываем только с ИП или юрлицом.
+          Заявку всё равно отправим — напишите, если оформляете статус или уже работаете с нами.</p>
+      </div>
+
       <label class="field" for="jn-about"><span class="k">Чем занимаетесь</span>
-        <input id="jn-about" maxlength="80" placeholder="например, инвестиционный советник"></label>
+        <input id="jn-about" maxlength="60" placeholder="например, инвестиционный советник"></label>
       <button class="send" id="jnSend" type="submit">Отправить сейлзам</button>
       <div class="out" id="jnOut" role="status" aria-live="polite"></div>
       <p class="hint">Заявка уходит в отдел продаж Rumberg — свяжутся в течение рабочего дня.
+        Реквизиты и документы попросят при подписании, здесь они не нужны.
         Если вы уже партнёр и потеряли ключ, напишите здесь же: его перевыпустят.</p>
     </form>
 
@@ -383,6 +415,14 @@
         send = document.getElementById("jnSend");
     if (!ask || !form) return;
 
+    // Пояснение показываем только у «Пока нет»: у остальных вариантов оно
+    // было бы шумом, а тут человеку надо сразу понять, что его ждёт.
+    var note = document.getElementById("jn-entnote");
+    form.addEventListener("change", function (e) {
+      if (!e.target || e.target.name !== "jn-ent") return;
+      note.hidden = e.target.value !== "Пока нет";
+    });
+
     ask.addEventListener("click", function () {
       var open = form.hidden;
       form.hidden = !open;
@@ -403,11 +443,20 @@
         document.getElementById("jn-contact").focus();
         return;
       }
+      var ent = form.querySelector('input[name="jn-ent"]:checked');
+      if (!ent) {
+        say("Выберите форму: ИП, юрлицо или «пока нет».", "bad");
+        var first = document.getElementById("jn-ent-ip");
+        if (first) first.focus();
+        return;
+      }
       var about = document.getElementById("jn-about").value.trim();
       // «Чем занимаетесь» кладём в segment, а не в product: в карточке Telegram
       // product печатается как «Продукт», и профессия читалась бы товаром.
-      // Поле segment у воркера обрезается на 100 знаках — держимся внутри.
-      var segment = "Заявка в партнёры" + (about ? " · " + about.slice(0, 78) : "");
+      // Поле segment у воркера обрезается на 100 знаках, поэтому профессию
+      // ограничиваем: «Заявка в партнёры» + форма + 60 знаков укладываются.
+      var segment = "Заявка в партнёры · " + ent.value +
+                    (about ? " · " + about.slice(0, 60) : "");
       var ref = "";
       try { ref = localStorage.getItem("so_ref") || ""; } catch (err) {}
 
