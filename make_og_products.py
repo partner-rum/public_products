@@ -131,7 +131,8 @@ TEMPLATE = r"""<!DOCTYPE html>
 </div>
 <script>
 var TYPE_KICK = { discount:"Дисконтная облигация", protection:"Облигация с защитой капитала",
-                  warrant:"Варрант", booster:"Бустер", autocall:"Автоколл", revconv:"Реверс-конвертибл" };
+                  warrant:"Варрант", digital:"Диджитал-варрант", booster:"Бустер",
+                  autocall:"Автоколл", revconv:"Реверс-конвертибл" };
 var qs = new URLSearchParams(location.search);
 var id = qs.get("id") || "";
 var instr = ((window.SITE_DATA||{}).instruments)||[];
@@ -185,6 +186,15 @@ function curve(it, isOffer){
     return { pts:[[loRc, loRc/Krc*100],[Krc,100],[Krc+35,100]],
              marks:[["страйк "+num(Krc)+"%",Krc,100],["номинал 100%",Krc+35,100]],
              cap:true, xlab:"уровень базового актива", ylab:"возврат тела, % ном." };
+  }
+  if (fam === "digital"){
+    /* Ступенька: ноль до страйка, полка выплаты после. Ровно та же картинка, что
+       на доске; без этой ветки диджитал уходил в ванильный CALL и og-превью
+       рисовало РАСТУЩУЮ выплату — обещание, которого в продукте нет. */
+    var payD = it.digitalPct || 0;
+    return { pts:[[K-16,0],[K,0],[K,payD],[K+24,payD]],
+             marks:[["K "+num(K),K,0],["выплата "+num(payD)+"%",K+24,payD]],
+             cap:true, xlab:"уровень базового актива", ylab:"выплата, % ном." };
   }
   if (fam === "booster"){
     var ku = it.ku || q || 100, top = ((K2||110) - K) * ku / 100;
@@ -269,6 +279,7 @@ function chip(cap, val, sub){
   if (fam === "booster") chips.push(chip("участие", num(item.ku||q)+"%", ""));
   else if (fam === "autocall" || fam === "revconv") chips.push(chip("купон", num(item.couponPa != null ? item.couponPa : q)+"%", "годовых · индикативно"));
   else if (fam === "discount") chips.push(chip("цена входа", num(q)+"%", "ном. · индикативно"));
+  else if (fam === "digital") chips.push(chip("премия", num(q)+"%", "ном. · индикативно"));
   else if (q != null) chips.push(chip(isOffer?"цена":"котировка", num(q)+"%", "ном. · индикативно"));
   if (item.tenor) chips.push(chip("срок", item.tenor, ""));
   if (isOffer && item.statusLabel) chips.push(chip("статус", item.statusLabel, ""));

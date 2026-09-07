@@ -20,6 +20,7 @@ TYPE_LABEL = {
     "discount": "Дисконтная облигация",
     "protection": "Облигация с защитой капитала",
     "warrant": "Варрант",
+    "digital": "Диджитал-варрант",
     "booster": "Бустер",
     "autocall": "Автоколл",
     "revconv": "Реверс-конвертибл",
@@ -49,6 +50,14 @@ def describe(inst):
             parts.append("купон " + num(cpn) + "% годовых")
         if t == "revconv":
             parts.append("страйк " + num(inst.get("strike", 100)) + "%")
+    elif t == "digital":
+        # У диджитала цена входа — премия, но в превью важнее СМЫСЛ продукта:
+        # фиксированная выплата и порог, при котором она платится
+        pay, k = inst.get("digitalPct"), inst.get("strike", 100)
+        if pay is not None:
+            parts.append("выплата " + num(pay) + "% номинала при уровне от " + num(k) + "%")
+        if q is not None:
+            parts.append("премия " + num(q) + "%")
     elif t == "protection":
         # вход по номиналу; для превью полезнее участие, чем «котировка 100%»
         pt = inst.get("participation")

@@ -244,7 +244,7 @@
 </div>
 
 <script src="data/instruments.js?v=fx8"></script>
-<script src="data/lib.js?v=ax6"></script>
+<script src="data/lib.js?v=ax7"></script>
 <script src="data/harden.js?v=1"></script>
 <script src="contact.js?v=9"></script>
 <script src="share.js?v=8"></script>
@@ -403,6 +403,54 @@
       exampleIntro: "Номинал " + S.fmtInt(nom) + " ₽ · премия " + S.fmt2(inst.quote) + "% = " + S.fmtInt(premiumRub) + " ₽",
       scenarios: wScen,
       facts: wFacts
+    };
+  } else if (inst.type === "digital") {
+    const K = inst.strike || 100, pay = inst.digitalPct || 0;
+    const premiumRub = nom * inst.quote / 100;
+    const payoutRub = nom * pay / 100;
+    const net = payoutRub - premiumRub;
+    const mult = inst.quote ? pay / inst.quote : 0;
+    const chgSign = inst.chg > 0 ? "+" : inst.chg < 0 ? "−" : "";
+    const strikeTxt = S.fmtSmart(K) + "% — уровень базового актива в день покупки" + (K > 100 ? " (на " + S.fmtSmart(K - 100) + "% выше)" : "");
+    const dMetrics = [
+      ["Котировка (премия)", S.fmt2(inst.quote) + "%"],
+      ["Изм. за день", chgSign + S.fmt1(Math.abs(inst.chg)) + " п.п."],
+      ["Страйк (K)", S.fmtSmart(K) + "% нач. уровня"],
+      ["Выплата при срабатывании", S.fmtSmart(pay) + "% номинала — фиксированная"],
+      ["Срок", inst.tenor]
+    ];
+    if (inst.expiry) dMetrics.push(["Экспирация", inst.expiry]);
+    dMetrics.push(["Валюта", inst.currency || "RUB"]);
+    if (isWO) dMetrics.push(["Корзина", inst.underlying + " · условие по худшей"]);
+    if (inst.uRef) dMetrics.push([inst.underlying + " сегодня", inst.uRef]);
+    dMetrics.push(["Мин. номинал", S.fmtInt(nom) + " ₽"]);
+    content = {
+      badge: "ДИДЖИТАЛ · CALL" + woBadge,
+      subtitle: "Фиксированная выплата " + S.fmtSmart(pay) + "% номинала при уровне " + inst.underlying +
+        " не ниже " + S.fmtSmart(K) + "% · Срок " + inst.tenor,
+      explainer: "Диджитал-варрант (бинарный CALL) — право на ФИКСИРОВАННУЮ выплату, если базовый актив на экспирацию оказался на страйке или выше. Страйк: " + strikeTxt + ". " +
+        "Выплата " + S.fmtSmart(pay) + "% номинала не зависит от того, насколько актив вырос: и на уровне " + S.fmtSmart(K) + "%, и на 150% от старта платится одно и то же — этим диджитал и отличается от обычного CALL, где выплата растёт вместе с активом. " +
+        "Промежуточных значений у продукта нет: порог либо взят, либо не взят. Ниже страйка выплаты нет, потеря ограничена премией" +
+        (mult > 1 ? "; при срабатывании выплата больше премии в " + S.fmt1(mult) + " раза." : "."),
+      payoff: chartPayoff,
+      payoffCaption: "Выплата на экспирацию в % от номинала; " + uAxis + " — в % от начального. Линия плоская по обе стороны страйка: между нулём и " +
+        S.fmtSmart(pay) + "% продукт ничего не платит. Пунктир — уплаченная премия.",
+      metrics: dMetrics,
+      exampleIntro: "Номинал " + S.fmtInt(nom) + " ₽ · премия " + S.fmt2(inst.quote) + "% = " + S.fmtInt(premiumRub) + " ₽",
+      scenarios: [
+        [uGrew + " на " + S.fmtSmart(K - 100 + 10) + "% — выше страйка", "Выплата " + S.fmtInt(payoutRub) + " ₽", "+" + S.fmtInt(net) + " ₽", "var(--up)"],
+        [uNom + " на уровне " + S.fmtSmart(K) + "% — ровно страйк", "Выплата " + S.fmtInt(payoutRub) + " ₽ — порог взят", "+" + S.fmtInt(net) + " ₽", "var(--up)"],
+        [uNom + " на уровне " + S.fmtSmart(K - 0.5) + "% — чуть ниже страйка", "Выплаты нет", "−" + S.fmtInt(premiumRub) + " ₽", "var(--loss)"]
+      ],
+      facts: (isWO ? [woFact] : []).concat([
+        ["Страйк", strikeTxt],
+        ["Выплата", S.fmtSmart(pay) + "% номинала — одна и та же на страйке и выше"],
+        ["Зона частичной выплаты", "Нет — либо " + S.fmtSmart(pay) + "%, либо ноль"],
+        ["Котировка", "Премия в процентах от номинала"],
+        ["Стиль", "Европейский — уровень смотрят только на дату экспирации"],
+        ["Максимальный убыток", "Уплаченная премия"],
+        ["Мин. номинал", S.fmtInt(nom) + " ₽"]
+      ])
     };
   } else if (inst.type === "discount") {
     const buyRub = nom * inst.quote / 100;
@@ -664,7 +712,7 @@
   // --- Калькулятор выплаты (математика — в data/lib.js S.calc, общая с доской) ---
   function calcInner(inst) {
     const nom0 = inst.minNom || 1000000;
-    const atPar = inst.type === "booster" || inst.type === "autocall" || inst.type === "revconv";   // вход по номиналу, не по премии
+    const atPar = S.isAtPar(inst);   // вход по номиналу, не по премии (общий предикат в lib.js)
     const price0 = atPar ? nom0 : Math.round(nom0 * inst.quote / 100), cfg = S.calc.move(inst);
     const slider = cfg ? '<div class="calc-row"><label class="calc-l">' + S.esc(inst.underlying) + ': <b id="calc-mv"></b></label>' +
       '<input class="calc-range" id="calc-move" type="range" min="' + cfg.min + '" max="' + cfg.max + '" value="' + cfg.val + '" step="1" aria-label="Сценарий по базовому активу"></div>' : '';
@@ -687,7 +735,7 @@
       let amount = raw, clampNote = "";
       if (!isFinite(amount) || amount < 0) { amount = 0; if (raw < 0) clampNote = "Сумма не может быть отрицательной. "; }
       else if (amount > MAX_AMT) { amount = MAX_AMT; clampNote = "Максимум для расчёта — 1 млрд ₽. "; }
-      const nominal = (inst.type === "booster" || inst.type === "autocall" || inst.type === "revconv") ? amount : (inst.quote ? amount * 100 / inst.quote : 0);
+      const nominal = S.isAtPar(inst) ? amount : (inst.quote ? amount * 100 / inst.quote : 0);
       const m = move ? +move.value : 0;
       if (mvOut) mvOut.textContent = (m >= 0 ? "+" : "") + m + "%";
       const payout = nominal * S.calc.pct(inst, m) / 100, net = payout - amount;
@@ -699,6 +747,7 @@
       else if (inst.type === "protection") noteEl.textContent = clampNote + "Номинал " + S.fmtInt(Math.round(nominal)) + " ₽. Защита " + prot + "%: при падении возвращается " + prot + "% номинала.";
       else if (inst.type === "booster") noteEl.textContent = clampNote + "Вложение = номинал " + S.fmtInt(Math.round(nominal)) + " ₽. Рост ×КУ внутри диапазона до потолка; при падении — участие 1:1, как в самом активе.";
       else if (inst.type === "revconv") noteEl.textContent = clampNote + "Вложение = номинал " + S.fmtInt(Math.round(nominal)) + " ₽. Показана полная выплата за срок — тело плюс купоны, они начисляются независимо от уровня актива. На страйке " + S.fmtSmart(inst.strike || 100) + "% и выше тело возвращается целиком, ниже — по перформансу от страйка.";
+      else if (inst.type === "digital") noteEl.textContent = clampNote + "Экспозиция на номинал " + S.fmtInt(Math.round(nominal)) + " ₽ за премию = сумму вложения. Выплата фиксированная: " + S.fmtSmart(inst.digitalPct || 0) + "% номинала, если " + inst.underlying + " на экспирацию не ниже " + S.fmtSmart(inst.strike || 100) + "% начального уровня. Насколько именно актив выше — на выплату не влияет; ниже страйка выплаты нет, премия теряется целиком.";
       else if (inst.type === "autocall") noteEl.textContent = clampNote + "Вложение = номинал " + S.fmtInt(Math.round(nominal)) + " ₽. Показан возврат ТЕЛА на погашении по худшей бумаге корзины — БЕЗ купонов: они начисляются отдельно на датах наблюдения. Выше " + S.fmtSmart(inst.protectionPct || 65) + "% возвращается весь номинал.";
       else noteEl.textContent = clampNote + "Номинал " + S.fmtInt(Math.round(nominal)) + " ₽. При погашении — 100% номинала (если нет кредитного события). Доход зафиксирован дисконтом.";
     }

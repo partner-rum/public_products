@@ -295,7 +295,7 @@
 <div id="deck"></div>
 
 <script src="data/instruments.js?v=fx8"></script>
-<script src="data/lib.js?v=ax6"></script>
+<script src="data/lib.js?v=ax7"></script>
 <script src="data/offerings.js?v=srv19"></script>
 <script src="share.js?v=8"></script>
 <script src="contact.js?v=9"></script>
@@ -485,6 +485,30 @@
       '<text x="' + x(K) + '" y="' + (y(0) + 15) + '" text-anchor="middle" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>K ' + S.fmtSmart(K) + '</text>' +
       '<circle cx="' + x(sBe) + '" cy="' + y(q) + '" r="4" fill="' + C.or + '"/>' +
       '<text x="' + (x(sBe) + (beEnd ? -7 : 7)) + '" y="' + (y(q) + 14) + '"' + (beEnd ? ' text-anchor="end"' : '') + ' fill="' + C.or + '" font-size="10" ' + MONO + '>б/у ' + S.fmtSmart(sBe) + '</text>' +
+      '</svg>';
+  }
+  function chDigital() {
+    const K = inst.strike || 100, pay = inst.digitalPct || 0;
+    const s0 = K * 0.86, s1 = K * 1.22;
+    const yMax = pay * 1.42;
+    const x = s => PAD + ((s - s0) / (s1 - s0)) * (CW - PAD * 2);
+    const y = v => CH - PAD - (v / yMax) * (CH - PAD * 2);
+    // Ступенька строится ТРЕМЯ точками на страйке: ноль слева, вертикаль, полка
+    // справа. Промежуточного наклона у продукта нет, и рисовать его нельзя.
+    const line = "M" + x(s0).toFixed(1) + " " + y(0).toFixed(1) +
+      " L" + x(K).toFixed(1) + " " + y(0).toFixed(1) +
+      " L" + x(K).toFixed(1) + " " + y(pay).toFixed(1) +
+      " L" + x(s1).toFixed(1) + " " + y(pay).toFixed(1);
+    return '<svg viewBox="0 0 ' + CW + ' ' + CH + '" width="100%" style="display:block">' +
+      '<line x1="' + PAD + '" y1="' + y(0) + '" x2="' + (CW - PAD) + '" y2="' + y(0) + '" stroke="' + C.grid + '" stroke-width="1"/>' +
+      '<line x1="' + PAD + '" y1="' + y(pay) + '" x2="' + (CW - PAD) + '" y2="' + y(pay) + '" stroke="' + C.grid + '" stroke-width="1" stroke-dasharray="2 4"/>' +
+      '<text x="' + (CW - PAD) + '" y="' + (y(pay) - 6) + '" text-anchor="end" fill="' + C.line + '" font-size="10" ' + MONO + '>выплата ' + S.fmtSmart(pay) + '%</text>' +
+      (q ? '<line x1="' + PAD + '" y1="' + y(q) + '" x2="' + (CW - PAD) + '" y2="' + y(q) + '" stroke="' + C.or + '" stroke-width="1" stroke-dasharray="4 4"/>' +
+           '<text x="' + (PAD + 2) + '" y="' + (y(q) - 5) + '" fill="' + C.or + '" font-size="10" ' + MONO + '>премия ' + S.fmt1(q) + '%</text>' : '') +
+      '<path d="' + line + '" fill="none" stroke="' + C.line + '" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>' +
+      '<rect x="' + (x(K) - 4) + '" y="' + (y(pay) - 4) + '" width="8" height="8" transform="rotate(45 ' + x(K) + ' ' + y(pay) + ')" fill="' + C.line + '"/>' +
+      '<text x="' + x(K) + '" y="' + (y(0) + 15) + '" text-anchor="middle" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>K ' + S.fmtSmart(K) + '</text>' +
+      '<text x="' + (PAD + 2) + '" y="' + (y(0) - 5) + '" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>выплаты нет</text>' +
       '</svg>';
   }
   function chDiscount() {
@@ -759,6 +783,41 @@
       explainer: isCS
         ? "Колл-спред — CALL с потолком выплаты. Страйк фиксируется по уровню актива в день покупки, рост засчитывается до K₂. Инвестор платит только премию (" + S.fmt2(q) + "% номинала) и получает экспозицию на весь номинал. Если " + (isWO ? "худшая бумага корзины не выросла" : "актив не вырос") + " — теряется только премия."
         : "CALL-варрант — право на выплату, равную росту " + uGenAsset + " сверх страйка. Инвестор платит только премию (" + S.fmt2(q) + "% номинала) и получает экспозицию на весь номинал без маржин-коллов. Если " + (isWO ? "худшая бумага корзины не выросла" : "актив не вырос") + " — теряется только премия."
+    };
+  } else if (inst.type === "digital") {
+    const K = inst.strike || 100, pay = inst.digitalPct || 0;
+    const premiumRub = nom * q / 100;
+    const payoutRub = nom * pay / 100;
+    const net = payoutRub - premiumRub;
+    const mult = q ? pay / q : 0;
+    c = {
+      badge: "Диджитал · структурная облигация",
+      subtitle: "Фиксированная выплата " + S.fmtSmart(pay) + "% номинала, если " + uName +
+        " на экспирацию не ниже " + S.fmtSmart(K) + "% начального уровня · срок " + inst.tenor + " · " + S.ccyLabel(inst) + ".",
+      underLabel: woLabel, underDesc: woDesc,
+      chart: chDigital,
+      chartCap: "Выплата в % от номинала; " + uAxis + " — в % от начального. Линия плоская по обе стороны страйка: " +
+        "продукт платит " + S.fmtSmart(pay) + "% или ноль. Пунктир — премия.",
+      params: [["Страйк (K)", S.fmtSmart(K) + "% нач. уровня", false],
+        ["Выплата", S.fmtSmart(pay) + "% номинала", true],
+        ["Срок", inst.tenor, false],
+        ["Макс. убыток", "премия", false]],
+      exIntro: "Номинал " + S.fmtInt(nom) + " ₽ · премия " + S.fmt2(q) + "% = " + S.fmtInt(premiumRub) + " ₽",
+      // Две строки, как у колл-спреда: третья не помещается в слайд 540px.
+      // Берём крайние случаи — порог взят и порог не взят: между ними у продукта
+      // ничего нет, и промежуточный сценарий нечем заполнить.
+      scen: [
+        [uName + " на " + S.fmtSmart(K) + "% и выше", "выплата " + S.fmtInt(payoutRub) + " ₽ — фиксированная",
+          "+" + S.fmtInt(net) + " ₽", "var(--up)", roiTxt(net, premiumRub)],
+        [uName + " ниже " + S.fmtSmart(K) + "%", "выплаты нет — премия потеряна полностью",
+          "−" + S.fmtInt(premiumRub) + " ₽", "var(--down)", "−100% вложенных"]
+      ],
+      explainer: "Диджитал-варрант — право на ФИКСИРОВАННУЮ выплату " + S.fmtSmart(pay) +
+        "% номинала, если на экспирацию " + uGenAsset + " не ниже страйка " + S.fmtSmart(K) +
+        "%. Насколько именно актив выше страйка — на выплату не влияет: этим диджитал отличается от обычного CALL. " +
+        "Инвестор платит только премию (" + S.fmt2(q) + "% номинала)" +
+        (mult > 1 ? " и при срабатывании получает в " + S.fmt1(mult) + " раза больше" : "") +
+        "; если порог не взят — теряется премия."
     };
   } else if (inst.type === "discount") {
     const buyRub = nom * q / 100;

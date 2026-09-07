@@ -5,6 +5,25 @@ window.SITE_DATA = {
   "updated": "2026-08-31",
   "instruments": [
     {
+      "id": "DG-OFZ248-C105-0328",
+      "type": "digital",
+      "structure": "call",
+      "name": "Диджитал CALL 105 · ОФЗ 26248 · 1,5 года",
+      "underlying": "ОФЗ 26248",
+      "cls": "Облигации",
+      "currency": "RUB",
+      "strike": 105,
+      "digitalPct": 29,
+      "floorPct": 0,
+      "spot": 100,
+      "tenor": "1,5 года",
+      "expiry": "03.03.2028",
+      "quote": 15,
+      "chg": 0,
+      "minNom": 1000000,
+      "src": "sales"
+    },
+    {
       "id": "W-OFZ238-C100-0728",
       "type": "warrant",
       "structure": "call",

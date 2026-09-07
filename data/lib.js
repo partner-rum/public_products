@@ -44,6 +44,14 @@ window.SITE = (function () {
       desc: "CALL и колл-спреды (CS) на акции, индексы, золото и биткоин со сроками 2–3 года. Страйк — 100% или выше уровня базового актива в день покупки. Котировка — премия в процентах от номинала, она же максимальный риск покупателя.",
       paramLabel: "Страйк, %"
     },
+    digital: {
+      slug: "digital",
+      title: "Диджитал-варранты",
+      chip: "Бинарный",
+      chipFg: "#584C9E", chipBg: "#E1DCF3",
+      desc: "Фиксированная выплата, если базовый актив на экспирацию оказался на страйке или выше: насколько именно он вырос — не важно. Ниже страйка выплаты нет вовсе. Котировка — премия в процентах от номинала, она же максимальный риск покупателя.",
+      paramLabel: "Выплата, %"
+    },
     booster: {
       slug: "booster",
       title: "Бустеры",
@@ -104,6 +112,15 @@ window.SITE = (function () {
   const PAYOFF = {
     // Текст формулы выплаты для инструмента (CALL или колл-спред).
     formula(r) {
+      // Диджитал: выплата не зависит от того, НАСКОЛЬКО актив выше страйка, —
+      // это и отличает его от CALL, поэтому в формуле нет ни S − K, ни участия.
+      if (r && r.type === "digital") {
+        const pay = fmtSmart(r.digitalPct != null ? r.digitalPct : 0);
+        const floor = r.floorPct || 0;
+        return floor
+          ? "Ном × (" + fmtSmart(floor) + "% + " + pay + "% при S ≥ K)"
+          : "Ном × " + pay + "% при S ≥ K; иначе 0";
+      }
       return r && r.structure === "cs" ? "Ном × min(max(S − K; 0); K₂ − K)" : "Ном × max(S − K; 0)";
     },
     // Выплата в % от номинала. S, K, K2 — в % от начального уровня БА.
@@ -112,6 +129,16 @@ window.SITE = (function () {
       let v = Math.max(S - K, 0);
       if (K2) v = Math.min(v, K2 - K);
       return v;
+    },
+    // Диджитал (бинарная выплата): S ≥ K → floor + pay, ниже → floor.
+    // floor — что платится ниже страйка: 0 у варрантной формы (клиент платит
+    // премию и при недоходе теряет её целиком), 100 у облигации с диджитал-купоном
+    // (номинал возвращается, купон не начисляется). S, K — в % от начального уровня.
+    // Ступенька НЕ сглаживается: у продукта нет зоны частичной выплаты, и любая
+    // наклонная линия на графике обещала бы то, чего в условиях нет.
+    digital(S, K, pay, floor) {
+      const f = floor || 0;
+      return S >= K ? f + (pay || 0) : f;
     },
     // Бустер: вниз участие в падении 1:1 (выплата = S при S<K); вверх — КУ×рост внутри
     // диапазона [K;K2], выше K2 — потолок. S,K,K2 — в % от начального; ku — доля (напр. 1.75).
@@ -147,6 +174,16 @@ window.SITE = (function () {
     // то есть move = K + quote − 100. Для остальных типов не считаем.
     breakeven(r) {
       if (r.type === "warrant") return (r.strike || 100) + (r.quote || 0) - 100;
+      // Диджитал варрантной формы: результат меняется СКАЧКОМ ровно на страйке —
+      // премия окупается сразу, как только актив дошёл до K (пока выплата больше
+      // премии). Ниже страйка безубытка нет ни при каком росте, поэтому «б/у» —
+      // это сам страйк, а не точка на наклонной линии.
+      // У облигационной формы (floorPct 100) номинал возвращается всегда, и
+      // говорить о безубытке в терминах хода актива нельзя — возвращаем null.
+      if (r.type === "digital" && !r.floorPct) {
+        const pay = r.digitalPct || 0;
+        return pay > (r.quote || 0) ? (r.strike || 100) - 100 : null;
+      }
       return null;
     },
     // Границы ползунка {min,max,val}. val (дефолт) — ближайшая круглая точка
@@ -170,6 +207,14 @@ window.SITE = (function () {
         const off = (r.strike || 100) - 100;
         const max = r.cap != null ? Math.ceil(r.cap / 5) * 5 + 15 : Math.max(50, off + 40);
         return { min: -30, max: Math.max(max, off + 40), val: Math.max(20, off + 15) };
+      }
+      // Диджитал: кадр обязан показать обе полки — и нулевую слева от страйка, и
+      // выплату справа, — иначе не видно, что выплата плоская. Вправо запас 25 п.п.
+      // от страйка: дальше линия всё равно не меняется. Дефолт ползунка — чуть выше
+      // страйка, чтобы карточка открывалась на сработавшем сценарии.
+      if (r.type === "digital") {
+        const off = (r.strike || 100) - 100;
+        return { min: Math.min(-25, off - 25), max: Math.max(20, off + 25), val: off + 5 };
       }
       if (r.type === "booster") return { min: -30, max: 25, val: (r.strike2 || 110) - 100 };
       // Реверс-конвертибл: весь смысл — вокруг страйка, левее него тело начинает
@@ -210,6 +255,7 @@ window.SITE = (function () {
         if (r.cap != null) v = Math.min(v, floor + p * Math.max(100 + r.cap - K, 0));
         return v;
       }
+      if (r.type === "digital") return PAYOFF.digital(100 + move, r.strike || 100, r.digitalPct || 0, r.floorPct || 0);
       if (r.type === "booster") return PAYOFF.booster(100 + move, r.strike || 100, r.strike2 || 110, (r.ku || 175) / 100);
       if (r.type === "autocall") return PAYOFF.autocall(100 + move, r.protectionPct || 65);
       if (r.type === "revconv") return PAYOFF.revconv(100 + move, r.strike || 100) + revconvCoupons(r);
@@ -300,7 +346,9 @@ window.SITE = (function () {
     const fs = o.font || 11;
     const rg = calc.move(r) || { min: -30, max: 30 };
     const mLo = rg.min, mHi = rg.max;
-    const base = r.type === "warrant" ? 0 : 100;      // «ноль» выплаты для этого типа
+    // «Ноль» выплаты для типа: у варранта и диджитал-варранта выплата считается от
+    // нуля (вход по премии, тело не возвращается), у облигационных форм — от номинала.
+    const base = r.type === "warrant" ? 0 : r.type === "digital" ? (r.floorPct || 0) : 100;
     const pts = [];
     for (let i = 0; i <= 240; i++) {
       const m = mLo + (mHi - mLo) * i / 240;
@@ -348,8 +396,13 @@ window.SITE = (function () {
 
     // Базовая линия выплаты: 0 у варранта, номинал 100% у бумаг с возвратом тела
     const baseBelow = r.type === "revconv";
+    // У диджитала правую половину кадра занимает полка выплаты, и подпись базовой
+    // линии в правом углу читалась бы как «справа платят ноль». Уводим её влево —
+    // туда, где нулевая полка и находится.
+    const baseLeft = r.type === "digital";
     let s = hline(base, C.axis) +
-      txt(R, y(base) + (baseBelow ? 14 : -7), C.lab, "end", base ? "номинал 100%" : "выплата 0");
+      (baseLeft ? txt(f.L + 3, y(base) - 7, C.lab, null, base ? "номинал 100%" : "выплаты нет")
+                : txt(R, y(base) + (baseBelow ? 14 : -7), C.lab, "end", base ? "номинал 100%" : "выплата 0"));
     const K = r.strike || 100;
 
     if (r.type === "warrant") {
@@ -369,6 +422,19 @@ window.SITE = (function () {
         s += '<circle cx="' + x(be).toFixed(1) + '" cy="' + y(q).toFixed(1) + '" r="4.5" fill="' + C.gold + '"/>' +
           txt(x(be) + (end ? -8 : 8), y(q) + 16, C.gold, end ? "end" : null, "б/у " + fmtSmart(be));
       }
+    } else if (r.type === "digital") {
+      const q = r.quote || 0, floor = r.floorPct || 0, top = floor + (r.digitalPct || 0);
+      // Полка выплаты — главная линия кадра: выше страйка платят ровно её и не
+      // больше, сколько бы актив ни вырос. Подпись у правого края, над линией.
+      s += hline(top, C.grid, "2 4") +
+        txt(R, y(top) - 8, C.gold, "end", "выплата " + fmtSmart(r.digitalPct || 0) + "%");
+      // Премия — только у варрантной формы: у облигационной вход по номиналу, её
+      // линия совпала бы с базовой и задвоила бы её.
+      if (!floor) s += hline(q, C.gold) + txt(f.L + 3, y(q) - 7, C.gold, null, "премия " + fmt1(q) + "%");
+      // Страйк — единственная точка, где что-то меняется, поэтому он и вертикаль,
+      // и ромб на верхней полке. Подпись прижата к кадру, чтобы не сесть на ступень.
+      s += vline(K, C.line) + diamond(x(K), y(top), C.line) +
+        txtFit(x(K), y(top) - 24, C.lab2, "K " + fmtSmart(K) + "% — порог");
     } else if (r.type === "protection") {
       const floor = r.protectionPct != null ? r.protectionPct : 100, part = r.participation || 1;
       if (floor !== 100) s += hline(floor, C.axis) + txt(f.L + 3, y(floor) + 15, C.lab2, null, "защита " + fmtSmart(floor) + "%");
@@ -536,6 +602,17 @@ window.SITE = (function () {
 
   function displayName(r) { return r.name; }
 
+  // Вход по НОМИНАЛУ, а не по премии: бустеры, автоколлы, реверс-конвертиблы и
+  // облигационная форма диджитала. Один источник на все поверхности: выражение
+  // «type === booster || autocall || revconv» лежало копиями в доске, карточке и
+  // one-pager — новый тип пришлось бы дописывать в каждую, и рано или поздно
+  // одну бы забыли (принцип «никакой ручной синхронизации»).
+  function isAtPar(r) {
+    if (!r) return false;
+    if (r.type === "digital") return r.floorPct === 100;
+    return r.type === "booster" || r.type === "autocall" || r.type === "revconv";
+  }
+
   // Возвращает null, если продукта с таким id нет (снят с витрины, битая ссылка,
   // пустой ?id). Подставлять вместо него первый инструмент каталога НЕЛЬЗЯ:
   // клиент видел бы чужой продукт с настоящей котировкой, считая, что смотрит
@@ -624,6 +701,6 @@ window.SITE = (function () {
     return /S&P|NASDAQ|NVDA|NVIDIA|NBIS|Nebius|BTC|IBIT|GLD|SPY|COPX|CSI|URA|Uranium|Bitcoin|Gold|USD|\$/i.test(n);
   }
 
-  return { esc, TYPES, INSTRUMENTS, PAYOFF, LEGAL, calc, displayName, tenorYears, revconvBreakeven, revconvCoupons, findInstrument, instrumentsOfType, underlyingInfo, underlyingLong, isFxSensitive, ccyLabel, nonCallText, history, fmtInt, fmt2, fmt1, fmtSmart, quoteBig, daysTo, chartFrame, niceTicks, payoffChart, discountChart, AXIS_X, AXIS_Y };
+  return { esc, TYPES, INSTRUMENTS, PAYOFF, LEGAL, calc, displayName, isAtPar, tenorYears, revconvBreakeven, revconvCoupons, findInstrument, instrumentsOfType, underlyingInfo, underlyingLong, isFxSensitive, ccyLabel, nonCallText, history, fmtInt, fmt2, fmt1, fmtSmart, quoteBig, daysTo, chartFrame, niceTicks, payoffChart, discountChart, AXIS_X, AXIS_Y };
 
 })();
