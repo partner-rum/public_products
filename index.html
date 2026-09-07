@@ -599,7 +599,7 @@
 
   <section class="talks" id="talks" hidden>
     <div class="ch"><h2><a class="chl" href="company.html#talks">Выступления</a></h2><span class="cap" id="talkcap">нас зовут говорить о рынке</span></div>
-    <div class="tk" id="talklist"><!-- seo:talks:start --><p>Выступления: записи, где нас позвали говорить о рынке.</p><ul><li>Smart-Lab. Румберг — Фабрика варрантов.</li><li>Газпромбанк Инвестиции. «Инвестор не должен становиться заложником продукта».</li><li>Газпромбанк Инвестиции. подкаст · 59 мин. Объясняем всё про структурные продукты.</li></ul><!-- seo:talks:end --></div>
+    <div class="tk" id="talklist"><!-- seo:talks:start --><p>Выступления: записи, где нас позвали говорить о рынке.</p><ul><li>Smart-Lab. Румберг — Фабрика варрантов.</li><li>Газпромбанк Инвестиции. «Инвестор не должен становиться заложником продукта».</li><li>Московская биржа. презентация на IR-платформе. Варрант «Ультрадоходный» — как заработать на структурных облигациях.</li><li>Газпромбанк Инвестиции. подкаст · 59 мин. Объясняем всё про структурные продукты.</li></ul><!-- seo:talks:end --></div>
   </section>
 
   <div class="endcta">
@@ -624,7 +624,7 @@
 <script src="data/morning.js?v=1"></script>
 <script src="data/ideas.js?v=1"></script>
 <script src="data/events.js?v=7"></script>
-<script src="data/talks.js?v=1"></script>
+<script src="data/talks.js?v=2"></script>
 <script>
   // Утренний обзор больше НЕ зашит в страницу — он приезжает из data/morning.js,
   // который пишет бот. Дата там в ISO, свежесть считается ниже в коде.
@@ -883,10 +883,25 @@
         var j = Math.floor(Math.random() * (i + 1));
         var sw = pool[i]; pool[i] = pool[j]; pool[j] = sw;
       }
+      // Пару разводим ПО ОРГАНИЗАТОРАМ: у одной площадки бывает несколько
+      // записей (у «Газпромбанк Инвестиции» их две), и без этого примерно в
+      // одном заходе из шести полоса показывала бы два одинаковых заголовка
+      // рядом — читалось бы дублем и убивало смысл ротации. Не хватает разных
+      // организаторов — доливаем чем есть, полоса не должна пустовать.
+      var shown = [], orgs = {};
+      pool.forEach(function (t) {
+        if (shown.length >= PAIR) return;
+        var key = String(t.org || "").toLowerCase();
+        if (orgs[key]) return;
+        orgs[key] = 1; shown.push(t);
+      });
+      for (var k = 0; k < pool.length && shown.length < PAIR; k++) {
+        if (shown.indexOf(pool[k]) < 0) shown.push(pool[k]);
+      }
       // Показанную пару возвращаем в хронологию: перемешивание решает, КТО
       // попал на экран, а не в каком порядке читать. Иначе рядом стоящие
       // карточки прыгали бы датами без причины.
-      var shown = pool.slice(0, PAIR).sort(function (a, b) {
+      shown.sort(function (a, b) {
         return String(b.date || "").localeCompare(String(a.date || ""));
       });
       if (T.length > PAIR) {

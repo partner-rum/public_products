@@ -31,6 +31,14 @@
 //
 // Порядок в файле = порядок на странице (как в events.js). Новую запись
 // ставить туда, где она должна показаться, обычно первой.
+// Про запись Московской биржи: заголовок приведён ДОСЛОВНО как у биржи и в
+// записи на их канале — это цитата чужого материала. Но «как заработать» —
+// обещание дохода, которого витрина себе нигде не позволяет; если формулировка
+// не устроит, сокращать до «Варрант „Ультрадоходный“».
+//
+// ВНИМАНИЕ: тело window.TALKS — СТРОГИЙ JSON. Комментарии внутри items нельзя:
+// node --check их пропустит (в JS они валидны), а make_prerender.py читает файл
+// через json.loads и молча оставит пререндер устаревшим. Все пояснения — здесь.
 window.TALKS = {
   "updated": "2026-09-04",
   "items": [
@@ -54,6 +62,18 @@ window.TALKS = {
       "links": [
         { "label": "RUTUBE", "url": "https://rutube.ru/video/cb86cd0316561d2d7a59cf973b3e9a5f/" },
         { "label": "YOUTUBE", "url": "https://www.youtube.com/watch?v=3e-8jOXITx4" }
+      ]
+    },
+    {
+      "id": "moex-ir-2025-03",
+      "org": "Московская биржа",
+      "note": "презентация на IR-платформе",
+      "title": "Варрант «Ультрадоходный» — как заработать на структурных облигациях",
+      "date": "2025-03-25",
+      "cover": "media/talk-moex.jpg",
+      "links": [
+        { "label": "RUTUBE", "url": "https://rutube.ru/video/4eab954b3d953ec8f4eb835a9a32ae83/" },
+        { "label": "MOEX", "url": "https://www.moex.com/ru/events/rumberg-kepital-novyj-instrument-na-birzhe-kak-zarabotat-na-ultradohodnyh-obligatsiyah-0" }
       ]
     },
     {
