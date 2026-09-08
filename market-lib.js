@@ -8,20 +8,30 @@
   "use strict";
   var D = window.MARKET_STATS || null;
   // Цвета групп: у банков близкие к фирменным (Сбер зелёный, ВТБ синий, Т-Банк
-  // жёлтый), Румберг — акцентный оранжевый витрины; иностранные площадки и
-  // «прочие» — нейтральные, чтобы не спорить с брендами
+  // жёлтый), Румберг — акцентный оранжевый витрины; «прочие» и оценка ВПФИ —
+  // нейтральные, чтобы не спорить с брендами
   var COLORS = { sber: "#5E9B82", vtb: "#4F86E6", alfa: "#E0705A", aton: "#46A9A0", tbank: "#E0A24A",
-    bcs: "#8E7CC3", rum: "#EE7D1B", offsh: "#8A93A6", other: "rgba(255,255,255,0.22)" };
+    rum: "#EE7D1B", other: "rgba(255,255,255,0.22)", vpfi: "rgba(255,255,255,0.35)" };
   // Срочность: один тон, шесть ступеней прозрачности — короткие светлее
   var TERM_ALPHA = [0.95, 0.78, 0.6, 0.44, 0.3, 0.18];
   var MONTHS = ["янв", "фев", "мар", "апр", "май", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"];
+  var MONTHS_FULL = ["январь", "февраль", "март", "апрель", "май", "июнь", "июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь"];
+  var MONTHS_IN = ["январе", "феврале", "марте", "апреле", "мае", "июне", "июле", "августе", "сентябре", "октябре", "ноябре", "декабре"];
+  var MONTHS_GEN = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"];
+  // Срез данных — из D.as_of: год со звёздочкой, число месяцев с данными и дата
+  // словами. Раньше «2026», «9» и «по 8 сентября» были зашиты в семи местах и
+  // разошлись бы с данными при следующем прогоне генератора
+  var AS = (function () {
+    var q = ((D && D.as_of) || "2026-09-08").split("-").map(Number);
+    return { y: q[0], m: q[1], d: q[2], human: q[2] + " " + MONTHS_GEN[q[1] - 1], months: q[1] - 1 };
+  })();
   // Тексты статьи — здесь, а не в about.html: их читают и Библиотека, и market.html
-  var TEXT = {
-    name: "Рынок структурных облигаций",
-    tagline: "Сколько таких бумаг выпускается в России, кто их выпускает и как это менялось с 2020 года. По данным Cbonds, в рублях по курсу на дату размещения.",
-    whenToUse: "Клиент спрашивает: «а это вообще большой рынок — и кто ещё так делает?» Здесь ответ цифрами: объём по годам, доли эмитентов и где среди них мы.",
-    how: "В выгрузку Cbonds входят все российские выпуски с признаком «структурный продукт» — облигации банков и специализированных финансовых обществ (СФО), а до 2022 года ещё и еврооблигации иностранных площадок, продававшиеся российским клиентам. Год выпуска — по дате окончания размещения, объём — фактически размещённый номинал. Валютные выпуски переведены в рубли по курсу ЦБ на дату размещения. Рынок разделён на две части: <b>рыночные</b> выпуски — то, что продаётся клиентам через банки и брокеров, и <b>нерыночные</b> — единичные сделки СФО на десятки и сотни миллиардов, которые размещаются одному держателю и на рынок не выходят. Критерий формальный и наш: эмитент без узнаваемого бренда, один-два выпуска в год либо средний размер выпуска от 3 млрд ₽.",
-    risk: "Три оговорки. Данные за 2026 год — по 8 сентября, и в них есть выпуски, размещение которых ещё идёт: они учтены нулём. Объём внебиржевых производных (ВПФИ), в которых те же продукты оформляются вместо облигаций, никто не публикует — на графике это оценка, пунктиром, от 3–5% рынка в 2024–2026 до 8–12% в 2020–2021, когда такие сделки шли через иностранные банки. Разделение на рыночные и нерыночные — наша классификация, а не разметка Cbonds."
+  var TEXT = {
+    name: "Рынок структурных облигаций",
+    tagline: "Сколько таких бумаг выпускается в России, кто их выпускает и как это менялось с 2020 года. Российское право, рубли по курсу ЦБ на дату размещения, открытые источники.",
+    whenToUse: "Клиент спрашивает: «а это вообще большой рынок — и кто ещё так делает?» Здесь ответ цифрами: объём по годам, доли эмитентов и где среди них мы.",
+    how: "В основе — открытые и доступные данные о российских выпусках с признаком структурного продукта: облигации банков и специализированных финансовых обществ (СФО) в российском праве. Год выпуска — по дате окончания размещения, объём — фактически размещённый номинал; валютные выпуски переведены в рубли по курсу ЦБ на дату размещения. Рынок разделён на две части: <b>рыночные</b> выпуски — то, что продаётся клиентам через банки и брокеров (эмитент с узнаваемым брендом либо фабрика структурных продуктов), и <b>нерыночные</b> — остаток до общего объёма рынка; в основном это единичные сделки СФО на десятки и сотни миллиардов, размещённые одному держателю. Общий объём рынка за 2022–2025 взят из сводной оценки, за остальные годы посчитан по выпускам.",
+    risk: "Три оговорки. Данные за " + AS.y + " год — по " + AS.human + ", и в них есть выпуски, размещение которых ещё идёт: они учтены нулём. Объём внебиржевых производных (ВПФИ), в которых те же продукты оформляются вместо облигаций, никто не публикует — на графиках это оценка: пунктиром на объёмах, штриховкой в долях, от 3–5% рынка в 2024–2026 до 8–12% в 2020–2021. Разделение на рыночные и нерыночные — наша классификация."
   };
 
   var S = { mode: "market", vp: "mid", year: D ? D.years[D.years.length - 1].y : 2026, hl: null };
@@ -57,6 +67,8 @@
 .mch-share .bs{background:var(--gc)}\
 .mch-share[data-hl] .bs{opacity:.18}\
 .mch-share[data-hl] .bs.hl{opacity:1}\
+.mch-share .bs.est{background:repeating-linear-gradient(135deg,rgba(255,255,255,.55) 0 2px,transparent 2px 6px);box-shadow:inset 0 0 0 1px rgba(255,255,255,.3)}\
+.lgi .sw.est{background:repeating-linear-gradient(135deg,rgba(255,255,255,.6) 0 2px,transparent 2px 5px);box-shadow:inset 0 0 0 1px rgba(255,255,255,.35)}\
 .lgnd.mk{display:grid;grid-template-columns:repeat(3,1fr);gap:6px 18px;margin-top:14px}\
 .lgnd.mk .lgi{cursor:default;padding:3px 6px;margin:0 -6px;border-radius:6px;transition:background .15s}\
 .lgnd.mk .lgi:hover,.lgnd.mk .lgi.on{background:rgba(255,255,255,.06)}\
@@ -141,7 +153,7 @@
     if (days < 365) return Math.round(days / 30.4) + " мес";
     return dec(days / 365.25, 1) + " г.";
   }
-  function yl(y) { return y === 2026 ? "<b>" + y + "</b>*" : String(y); }
+  function yl(y) { return y === AS.y ? "<b>" + y + "</b>*" : String(y); }
   function last() { return D.years[D.years.length - 1]; }
   function yearOf(y) { for (var i = 0; i < D.years.length; i++) if (D.years[i].y === y) return D.years[i]; return last(); }
   function vpOf(r) { return S.vp === "none" ? 0 : S.vp === "low" ? r.vpfi[0] : S.vp === "high" ? r.vpfi[1] : (r.vpfi[0] + r.vpfi[1]) / 2; }
@@ -155,14 +167,18 @@
   function numsHTML() {
     var ys = D.years, n = 0, tot = 0, mk = 0;
     ys.forEach(function (r) { n += r.n; tot += r.total; mk += r.market; });
-    var L = last(), sum = 0; D.groups.forEach(function (g) { sum += L.groups[g.key] || 0; });
-    var rum = L.groups.rum || 0;
-    var rank = D.groups.filter(function (g) { return g.key !== "other" && (L.groups[g.key] || 0) > rum; }).length + 1;
-    var top3 = ["sber", "vtb", "alfa"].reduce(function (a, k) { return a + (L.groups[k] || 0); }, 0);
+    var L = last(), P = ys[ys.length - 2], sum = 0;
+    D.groups.forEach(function (g) { sum += L.groups[g.key] || 0; });
+    // именованные группы по убыванию — тройка и место Румберга считаются, не зашиты
+    var named = D.groups.filter(function (g) { return g.key !== "other" && g.key !== "vpfi"; })
+      .map(function (g) { return { g: g, v: L.groups[g.key] || 0 }; })
+      .sort(function (a, b) { return b.v - a.v; });
+    var top3 = named.slice(0, 3), top3v = top3.reduce(function (a, x) { return a + x.v; }, 0);
+    var rum = L.groups.rum || 0, rank = named.filter(function (x) { return x.v > rum; }).length + 1;
     return '<div class="mk-nums">' +
       '<div><div class="k">Выпусков за ' + ys[0].y + '–' + L.y + '</div><div class="v">' + grp(n) + '</div><div class="d">' + fmtB(tot) + ' ₽ номинала, из них рыночных ' + fmtB(mk) + ' ₽</div></div>' +
-      '<div><div class="k">Рыночных в ' + L.y + '</div><div class="v">' + fmtB(L.market) + '<small>₽</small></div><div class="d">' + grp(L.n_market) + ' выпусков за восемь месяцев — больше, чем за любой полный год до 2025</div></div>' +
-      '<div><div class="k">Три крупнейших</div><div class="v">' + Math.round(top3 / sum * 100) + '<small>%</small></div><div class="d">Сбер, ВТБ и Альфа-Банк в рыночном сегменте ' + L.y + ' года</div></div>' +
+      '<div><div class="k">Рыночных в ' + L.y + '</div><div class="v">' + fmtB(L.market) + '<small>₽</small></div><div class="d">' + grp(L.n_market) + ' выпусков за ' + AS.months + ' месяцев — ' + Math.round(L.n_market / P.n_market * 100) + '% от числа выпусков за весь ' + P.y + ' год</div></div>' +
+      '<div><div class="k">Три крупнейших</div><div class="v">' + Math.round(top3v / sum * 100) + '<small>%</small></div><div class="d">' + top3.map(function (x) { return x.g.label; }).join(", ") + ' — доля в рыночном сегменте ' + L.y + ' года вместе с оценкой ВПФИ</div></div>' +
       '<div><div class="k">Румберг в ' + L.y + '</div><div class="v">' + fmtB(rum) + '<small>₽</small></div><div class="d">' + dec(rum / sum * 100, 1) + '% рыночного сегмента, ' + rank + '-е место среди эмитентов</div></div>' +
     '</div>';
   }
@@ -188,18 +204,17 @@
   function volCap() {
     var ys = D.years, L = last();
     var low = ys.reduce(function (a, r) { return r.market < a.market ? r : a; }, ys[0]);
-    var hi = ys.filter(function (r) { return r.y < 2026; }).reduce(function (a, r) { return r.market > a.market ? r : a; }, ys[0]);
+    var hi = ys.filter(function (r) { return r.y < L.y; }).reduce(function (a, r) { return r.market > a.market ? r : a; }, ys[0]);
     var vpTxt = S.vp === "none" ? "" : " Пунктиром сверху — оценка того же продукта в форме внебиржевых производных (ВПФИ, " +
-      (S.vp === "low" ? "нижняя" : S.vp === "high" ? "верхняя" : "средняя") + " граница вилки): статистики по ним нет, доля взята " +
+      (S.vp === "low" ? "нижняя граница вилки" : S.vp === "high" ? "верхняя граница вилки" : "середина вилки") + "): статистики по ним нет, доля взята " +
       L.vpfi_share[0] + "–" + L.vpfi_share[1] + "% для последних лет и до " + ys[0].vpfi_share[1] + "% для 2020–2021, когда такие сделки шли через иностранные банки.";
     if (S.mode === "all") {
-      var big = ys.reduce(function (a, r) { return r.nonmarket > a.nonmarket ? r : a; }, ys[0]);
-      var top = D.nonmarket_all[0];
-      return "Светлое — рыночные выпуски, тёмное — нерыночные: единичные сделки СФО, размещённые одному держателю. В " + top.y + " году один такой выпуск дал " +
-        fmtB(top.vol) + " ₽ — больше, чем весь рыночный сегмент за любой год. Динамику рынка читают по светлой части, а не по общей высоте." + vpTxt;
+      var big = ys.reduce(function (a, r) { return (r.nonmarket / r.total) > (a.nonmarket / a.total) ? r : a; }, ys[0]);
+      return "Светлое — рыночные выпуски, тёмное — нерыночные: остаток до общего объёма рынка, в основном единичные сделки СФО, размещённые одному держателю. С рыночными выпусками они не конкурируют, зато по объёму несопоставимы: в " +
+        big.y + " году на них пришлось " + fmtPc(big.nonmarket / big.total * 100) + " всего рынка. Динамику розницы читают по светлой части. Общий объём за 2022–2025 — по сводной оценке рынка, за остальные годы — по выпускам." + vpTxt;
     }
-    return "Только то, что продаётся клиентам через банки и брокеров. Дно — " + low.y + " год, " + fmtB(low.market) + " ₽; к " + hi.y + " году объём вырос в " +
-      dec(hi.market / low.market, 1) + " раза. За неполный " + L.y + " год (по 8 сентября) уже " + fmtB(L.market) + " ₽." + vpTxt;
+    return "Только то, что продаётся клиентам через банки и брокеров, в российском праве. Дно — " + low.y + " год, " + fmtB(low.market) + " ₽; к " + hi.y + " году объём вырос в " +
+      dec(hi.market / low.market, 1) + " раза. За неполный " + L.y + " год (по " + AS.human + ") уже " + fmtB(L.market) + " ₽." + vpTxt;
   }
   function volHTML(fc) {
     return '<div class="viz mk-wide" style="--fc:' + fc + '">' +
@@ -215,11 +230,11 @@
   // ── C. год крупным планом ──
   function chipsHTML() {
     return '<div class="mk-chips" id="mk-chips" role="tablist" aria-label="Год">' + D.years.map(function (r) {
-      return '<button role="tab" data-y="' + r.y + '" aria-selected="' + (r.y === S.year) + '"' + (r.y === S.year ? ' class="on"' : '') + '>' + r.y + (r.y === 2026 ? "*" : "") + '</button>';
+      return '<button role="tab" data-y="' + r.y + '" aria-selected="' + (r.y === S.year) + '"' + (r.y === S.year ? ' class="on"' : '') + '>' + r.y + (r.y === AS.y ? "*" : "") + '</button>';
     }).join("") + '</div>';
   }
   function monthsHTML(r) {
-    var max = Math.max.apply(null, r.months) || 1, lastM = r.y === 2026 ? 9 : 12;
+    var max = Math.max.apply(null, r.months) || 1, lastM = r.y === AS.y ? AS.m : 12;
     return '<div class="mch mch-m"><div class="mch-cols">' + r.months.map(function (v, i) {
       var na = i >= lastM;
       return '<div class="mch-col" title="' + MONTHS[i] + " " + r.y + ": " + (na ? "нет данных" : fmtB(v) + " ₽, " + r.months_n[i] + " вып.") + '">' +
@@ -238,7 +253,7 @@
       kp("Доля топ-3", fmtPc(r.top3)) +
       kp("Для неквалов", fmtPc(r.n_market ? r.unqual_n / r.n_market * 100 : 0), "выпусков") +
       kp("Дисконтных", fmtPc(r.n_market ? r.zero_n / r.n_market * 100 : 0), "выпусков") +
-      kp("Еврооблигаций", r.euro_n ? grp(r.euro_n) : "0", r.euro_n ? fmtB(r.euro_vol) + " ₽" : "") +
+      kp("С листингом", fmtPc(r.n_market ? r.listed_n / r.n_market * 100 : 0), "выпусков") +
     '</div>';
   }
   function rankHTML(r) {
@@ -247,7 +262,7 @@
       var ours = x.group === "rum";
       return '<div class="hb-row" title="' + esc(x.name) + ": " + fmtB(x.vol) + " ₽, " + x.n + " вып." + '">' +
         '<span class="nm' + (ours ? ' ours' : '') + '">' + esc(x.name) + '</span>' +
-        '<span class="tr"><i style="--gc:' + COLORS[x.group] + ';width:' + (x.vol / max * 100).toFixed(1) + '%"></i></span>' +
+        '<span class="tr"><i style="--gc:' + (COLORS[x.group] || COLORS.other) + ';width:' + (x.vol / max * 100).toFixed(1) + '%"></i></span>' +
         '<span class="vl">' + (x.vol >= 10 ? Math.round(x.vol) : dec(x.vol, 1)) + '<small> · ' + x.n + '</small></span></div>';
     }).join("") + '</div>';
   }
@@ -264,7 +279,7 @@
     var terms = D.term_buckets.map(function (b, i) { return { label: b, v: r.terms[b] || 0, color: "rgba(231,233,240," + TERM_ALPHA[i] + ")" }; });
     var curs = r.currencies.map(function (c) { return { label: c.cur + " · " + c.n + " вып.", v: c.vol, color: CUR_COLORS[c.cur] || "#8A93A6" }; });
     return '<div class="mk-year">' +
-      '<div><div class="mk-h">По месяцам <b>' + fmtB(r.market) + ' ₽ рыночных' + (r.y === 2026 ? ' · по 8 сентября' : '') + '</b></div>' +
+      '<div><div class="mk-h">По месяцам <b>' + fmtB(r.market) + ' ₽ рыночных' + (r.y === AS.y ? ' · по ' + AS.human : '') + '</b></div>' +
         '<div class="pf">' + monthsHTML(r) + '</div>' + kpiHTML(r) + '</div>' +
       '<div><div class="mk-h">Эмитенты рыночного сегмента <b>млрд ₽ · выпусков</b></div>' +
         '<div class="pf">' + rankHTML(r) + '</div>' +
@@ -282,14 +297,14 @@
 
   // ── D. доли эмитентов ──
   function shareBarsHTML() {
-    var keys = D.groups.map(function (g) { return g.key; }), label = {};
-    D.groups.forEach(function (g) { label[g.key] = g.label; });
+    var keys = D.groups.map(function (g) { return g.key; }), label = {}, est = {};
+    D.groups.forEach(function (g) { label[g.key] = g.label; est[g.key] = !!g.estimate; });
     return '<div class="mch mch-share" id="mk-share"><div class="mch-cols">' + D.years.map(function (r) {
       var sum = 0; keys.forEach(function (k) { sum += r.groups[k] || 0; });
       var segs = keys.slice().reverse().map(function (k) {
         var v = r.groups[k] || 0; if (v <= 0) return "";
         var pc = v / sum * 100;
-        return '<i class="bs g-' + k + '" style="--gc:' + COLORS[k] + ';height:' + pc.toFixed(2) + '%" title="' + esc(label[k]) + " · " + r.y + ": " + fmtB(v) + " ₽ · " + fmtPc(pc) + '"></i>';
+        return '<i class="bs g-' + k + (est[k] ? ' est' : '') + '" style="--gc:' + COLORS[k] + ';height:' + pc.toFixed(2) + '%" title="' + esc(label[k]) + " · " + r.y + ": " + fmtB(v) + " ₽ · " + fmtPc(pc) + '"></i>';
       }).join("");
       return '<div class="mch-col"><div class="mch-val" data-y="' + r.y + '">&nbsp;</div><div class="mch-stack">' + segs + '</div><div class="mch-x">' + yl(r.y) + '</div></div>';
     }).join("") + '</div></div>';
@@ -299,15 +314,15 @@
     D.groups.forEach(function (g) { sum += L.groups[g.key] || 0; });
     return '<div class="lgnd mk" id="mk-lg">' + D.groups.map(function (g) {
       var v = L.groups[g.key] || 0;
-      return '<div class="lgi" data-g="' + g.key + '" style="--lc:' + COLORS[g.key] + '" tabindex="0"><i class="sw" aria-hidden="true"></i><span><b>' + esc(g.label) + '</b></span>' +
+      return '<div class="lgi" data-g="' + g.key + '" style="--lc:' + COLORS[g.key] + '" tabindex="0"><i class="sw' + (g.estimate ? ' est' : '') + '" aria-hidden="true"></i><span><b>' + esc(g.label) + '</b></span>' +
         '<span class="pc">' + (v > 0 ? fmtPc(v / sum * 100) : "—") + '</span></div>';
     }).join("") + '</div>';
   }
   function shareHTML(fc) {
     return '<div class="viz mk-wide" style="--fc:' + fc + '">' +
-      '<div class="mk-h">Доли эмитентов в рыночном сегменте <b>каждый столбик — 100% года</b></div>' +
+      '<div class="mk-h">Доли эмитентов в рыночном сегменте <b>каждый столбик — 100% года, включая оценку ВПФИ</b></div>' +
       '<div class="pf">' + shareBarsHTML() + '</div>' + shareLegendHTML() +
-      '<div class="pf-cap">В легенде — доля за ' + last().y + ' год. Наведите на группу, чтобы увидеть её долю в каждом году. Иностранные SPV — площадки, через которые до 2022 года структурные выпуски продавались российским клиентам. Румберг учтён вместе с выпусками СФО Теллуриум.</div>' +
+      '<div class="pf-cap">В легенде — доля за ' + last().y + ' год. Наведите на группу, чтобы увидеть её долю в каждом году. Штриховкой — оценка ВПФИ: она входит в знаменатель каждого года. Румберг учтён вместе с выпусками СФО Теллуриум.</div>' +
     '</div>';
   }
 
@@ -318,17 +333,17 @@
     var peak = null;
     D.years.forEach(function (r) { r.months.forEach(function (v, i) { if (!peak || v > peak.v) peak = { v: v, y: r.y, i: i }; }); });
     var zero = [];
-    D.years.forEach(function (r) { r.months.forEach(function (v, i) { if (v < 1 && !(r.y === 2026 && i >= 9)) zero.push(MONTHS[i] + " " + r.y); }); });
+    D.years.forEach(function (r) { r.months.forEach(function (v, i) { if (v < 1 && !(r.y === AS.y && i >= AS.m)) zero.push(MONTHS[i] + " " + r.y); }); });
     return '<div class="viz mk-wide" style="--fc:' + fc + '">' +
       '<div class="mk-h">Месяц за месяцем <b>рыночные выпуски, млрд ₽</b></div>' +
       '<div class="pf"><div class="tl">' + D.years.map(function (r) {
         return '<div class="tl-y"><div class="tl-bars">' + r.months.map(function (v, i) {
-          var na = r.y === 2026 && i >= 9;
+          var na = r.y === AS.y && i >= AS.m;
           return '<i' + (na ? ' class="na"' : '') + ' style="height:' + (na ? 0 : Math.max(v / max * 100, v > 0 ? 1 : 0)).toFixed(2) + '%" title="' + MONTHS[i] + " " + r.y + ": " + (na ? "нет данных" : fmtB(v) + " ₽, " + r.months_n[i] + " вып.") + '"></i>';
         }).join("") + '</div><div class="tl-x">' + yl(r.y) + '</div></div>';
       }).join("") + '</div></div>' +
-      '<div class="pf-cap">Восемьдесят месяцев подряд, одна шкала. Пик — ' + MONTHS[peak.i] + ' ' + peak.y + ', ' + fmtB(peak.v) + ' ₽.' +
-        (zero.length ? ' Месяцы почти без выпусков: ' + zero.join(", ") + ' — так выглядит остановка рынка весной 2022 года.' : '') +
+      '<div class="pf-cap">Все месяцы с января ' + D.years[0].y + ' года на одной шкале. Пик — ' + MONTHS[peak.i] + ' ' + peak.y + ', ' + fmtB(peak.v) + ' ₽.' +
+        (zero.length ? ' Месяцы почти без выпусков: ' + zero.join(", ") + '.' : '') +
         ' Пунктир — месяцы, по которым данных ещё нет.</div>' +
     '</div>';
   }
@@ -343,7 +358,7 @@
         var segs = B.map(function (b, i) {
           var v = r.terms[b] || 0; if (v <= 0 || !sum) return "";
           return '<i class="bs" style="--gc:rgba(231,233,240,' + TERM_ALPHA[i] + ');height:' + (v / sum * 100).toFixed(2) + '%" title="' + b + " · " + r.y + ": " + fmtPc(v / sum * 100) + '"></i>';
-        }).join("");
+        }).reverse().join("");   // первый элемент flex-колонки оказывается сверху — разворачиваем, чтобы короткие были внизу
         return '<div class="mch-col"><div class="mch-val">' + fmtTerm(r.median_term) + '</div><div class="mch-stack">' + segs + '</div><div class="mch-x">' + yl(r.y) + '</div></div>';
       }).join("") + '</div></div></div>' +
       '<div class="sb-lg" style="margin-top:12px">' + B.map(function (b, i) { return '<span><i style="--gc:rgba(231,233,240,' + TERM_ALPHA[i] + ')"></i>' + b + '</span>'; }).join("") + '</div>' +
@@ -351,20 +366,11 @@
     '</div>';
   }
 
-  // ── G. мега-сделки + погашения 2026 ──
-  function bigHTML() {
-    var rows = D.nonmarket_all, max = rows.length ? rows[0].vol : 1;
-    return '<div class="mk-h">Крупнейшие нерыночные сделки <b>' + D.years[0].y + '–' + last().y + '</b></div>' +
-      '<table class="mk-tbl"><tbody>' + rows.map(function (x) {
-        return '<tr><td class="y">' + x.y + '</td><td>' + esc(x.name) + '<span class="rb"><i style="width:' + (x.vol / max * 100).toFixed(1) + '%"></i></span></td>' +
-          '<td class="v">' + (x.vol >= 100 ? grp(Math.round(x.vol)) : dec(x.vol, 1)) + '<small> млрд</small></td></tr>';
-      }).join("") + '</tbody></table>' +
-      '<div class="pf-cap">Каждая строка — один выпуск одного СФО, размещённый одному держателю. Эти сделки не конкурируют с рыночными продуктами и в остальных графиках не участвуют.</div>';
-  }
+  // ── G. погашения 2026 ──
   function redeemHTML() {
     var r = D.redeem2026; if (!r) return "";
     var L = last();
-    return '<div class="mk-h" style="margin-top:26px">Размещено в ' + L.y + ' — уже погашено <b>по ' + D.as_of.split("-").reverse().join(".") + '</b></div>' +
+    return '<div class="mk-h">Размещено в ' + L.y + ' — уже погашено <b>по ' + AS.human + '</b></div>' +
       '<div class="mk-red">' +
         '<div><div class="v">' + fmtB(r.redeemed) + '</div><div class="k">' + r.redeemed_n + ' выпусков, ' + fmtPc(r.redeemed / L.market * 100) + ' размещённого</div></div>' +
         '<div><div class="v">' + fmtB(r.early) + '</div><div class="k">из них досрочно — автоколл или оферта, ' + r.early_n + ' выпусков</div></div>' +
@@ -381,27 +387,34 @@
       '<div class="kv"><div class="k">Как считали</div><div class="v">' + lib.how + '</div></div>' +
       '<div class="plaque"><div class="k">Оговорки</div>' + lib.risk + '</div>';
     return numsHTML() + volHTML(fc) + yearHTML(fc) + shareHTML(fc) + timelineHTML(fc) + termsHTML(fc) +
-      '<div class="art-grid"><div>' + left + '</div><div class="viz pf" style="--fc:' + fc + '">' + bigHTML() + redeemHTML() + '</div></div>' +
-      '<div class="pf-cap" style="margin-top:14px">* ' + last().y + ' год — по ' + D.as_of.split("-").reverse().join(".") + ', выпуски, размещение которых ещё идёт, учтены нулём. Источник: Cbonds, расчёты Rumberg.</div>';
+      '<div class="art-grid"><div>' + left + '</div><div class="viz pf" style="--fc:' + fc + '">' + redeemHTML() + '</div></div>' +
+      '<div class="pf-cap" style="margin-top:14px">* ' + last().y + ' год — по ' + AS.human + ', выпуски, размещение которых ещё идёт, учтены нулём. Расчёты Rumberg по открытым и доступным источникам; общий объём рынка за 2022–2025 — сводная оценка.</div>';
   }
   function trio() {
-    var r = D.redeem2026, L = last(), y21 = yearOf(2021), sum21 = 0;
-    D.groups.forEach(function (g) { sum21 += y21.groups[g.key] || 0; });
+    var r = D.redeem2026, L = last(), y20 = yearOf(2020), y22 = yearOf(2022), y23 = yearOf(2023), z = -1;
+    for (var i = 0; i < y22.months.length; i++) if (y22.months[i] < 0.5) { z = i; break; }
+    // ИОС Сбербанка в рейтинге 2020 и 2022 — на них приходится почти всё падение
+    var ios = function (yr) { var x = (yr.ranking || []).filter(function (q) { return /ИОС/.test(q.name); })[0]; return x ? x.vol : 0; };
+    var i20 = ios(y20), i22 = ios(y22);
     return [
-      { t: "2022: иностранные площадки исчезли", en: "еврооблигации → российские ISIN", d: "До 2022 года заметная часть рынка — выпуски иностранных SPV для российских клиентов: в 2021 году это " + fmtPc((y21.groups.offsh || 0) / sum21 * 100) + " рыночного сегмента и " + y21.euro_n + " еврооблигаций. После февраля 2022 таких выпусков нет ни одного, и рынок пересобрался на российских эмитентах — сначала на трёх банках, потом шире." },
-      { t: "2024–2026: СФО как конвейер", en: "от банков к платформам", d: "Специализированное финансовое общество раньше означало единичную сделку. С 2024 года это способ выпускать десятки бумаг в год для брокерских клиентов — так работают Атон, Т-Банк, БКС и Румберг. Эмитентов в рыночном сегменте стало " + L.issuers + " против " + yearOf(2023).issuers + " в 2023 году." },
-      { t: "Продукты стали короткими", en: "медиана срока " + fmtTerm(D.years[0].median_term) + " → " + fmtTerm(L.median_term), d: r ? "Из размещённого в " + L.y + " году к 8 сентября погашено " + fmtB(r.redeemed) + " ₽ (" + r.redeemed_n + " выпусков), из них " + fmtB(r.early) + " ₽ досрочно. Медианный срок жизни погашенных — " + r.median_life_days + " дней: продукт живёт месяцы, а не годы." : "Заметная часть выпусков гасится в год размещения: срок продукта — месяцы, а не годы." }
+      { t: "2022: рынок остановился и пересобрался", en: z >= 0 ? MONTHS_FULL[z] + " 2022 — ноль выпусков" : "падение в " + dec(y20.market / y22.market, 1) + " раза",
+        d: "Весной 2022 года выпуски почти остановились" + (z >= 0 ? " — в " + MONTHS_IN[z] + " ни одного" : "") + ". За год рыночный сегмент дал " + fmtB(y22.market) + " ₽ против " + fmtB(y20.market) + " ₽ в 2020 году" +
+           (i20 && i22 ? "; ИОС Сбербанка, главный продукт 2020 года, сжались с " + fmtB(i20) + " до " + fmtB(i22) + " ₽" : "") + ". Восстановление началось с трёх банков, к " + yearOf(2025).y + " году эмитентов в рыночном сегменте стало " + yearOf(2025).issuers + "." },
+      { t: "2024–2026: СФО как конвейер", en: "от банков к платформам",
+        d: "Специализированное финансовое общество раньше означало единичную сделку. С 2024 года это способ выпускать десятки бумаг в год для брокерских клиентов — так работают Атон и Румберг; через своё СФО вышел на рынок и Т-Банк. Эмитентов в рыночном сегменте стало " + L.issuers + " против " + y23.issuers + " в 2023 году." },
+      { t: "Короткие выпуски гасятся в год размещения", en: "медиана срока " + fmtTerm(D.years[0].median_term) + " → " + fmtTerm(L.median_term),
+        d: r ? "Из размещённого в " + L.y + " году к " + AS.human + " погашено " + fmtB(r.redeemed) + " ₽ (" + r.redeemed_n + " выпусков), из них " + fmtB(r.early) + " ₽ досрочно. Медианный срок жизни уже погашенных — " + r.median_life_days + " дней при медиане срока по всему году " + fmtTerm(L.median_term) + ": короткие бумаги успевают погаситься в год выпуска." : "Заметная часть выпусков гасится в год размещения." }
     ];
   }
   var GLOSS = [
-    { t: "Структурная облигация", en: "СО", d: "Облигация, у которой выплата зависит от формулы на базовый актив, а не от фиксированного купона. Юридически — облигация: с ISIN, номиналом и датой погашения; экономически — тот продукт, что описан в остальных разделах библиотеки." },
-    { t: "СФО", en: "специализированное финансовое общество", d: "Компания, созданная только для выпуска облигаций под конкретные активы или деривативы. Не банк: у неё нет других операций и другого баланса. Так выпускают и единичные крупные сделки, и конвейерные выпуски для брокерских клиентов." },
-    { t: "ИОС", en: "инвестиционные облигации Сбербанка", d: "Структурные выпуски Сбербанка для широкой аудитории, торгуются на бирже. В 2020 году это была половина всего рыночного сегмента; с 2023 года основной объём Сбера идёт через Sber CIB." },
-    { t: "Нерыночный выпуск", d: "Облигация, размещённая одному или нескольким заранее известным держателям без предложения рынку. В данных выделяется по признакам: эмитент без бренда, один-два выпуска, размер от миллиардов до сотен миллиардов рублей." },
-    { t: "ВПФИ", en: "внебиржевой производный финансовый инструмент", d: "Тот же структурный продукт, оформленный не облигацией, а двусторонним контрактом с банком: опцион, форвард, своп. Доступен только квалифицированным инвесторам, статистики по объёмам нет — на графике это оценка." },
-    { t: "Для неквалов", d: "Выпуск без ограничения «только для квалифицированных инвесторов». После 2022 года таких мало: сложные продукты неквалифицированным инвесторам продавать нельзя, и почти весь рынок помечен как квальный." },
-    { t: "Объём размещения", d: "Сколько номинала реально купили, а не сколько было заявлено. У выпуска может быть анонсировано 10 млрд ₽, а размещено 66 млн ₽ — считаем второе." },
-    { t: "Окончание размещения", d: "Дата, с которой выпуск считается выпущенным. По ней бумага относится к году: выпуск, начатый в декабре и закрытый в январе, попадает в следующий год." }
+    { t: "Структурная облигация", en: "СО", d: "Облигация, у которой выплата зависит от формулы на базовый актив, а не от фиксированного купона. По форме это облигация с ISIN, номиналом и датой погашения, по сути — продукты из остальных разделов библиотеки." },
+    { t: "СФО", en: "специализированное финансовое общество", d: "Компания, созданная только для выпуска облигаций под конкретные активы или деривативы. Это не банк: других операций у неё нет. Так выпускают и единичные крупные сделки, и конвейерные выпуски для брокерских клиентов." },
+    { t: "ИОС", en: "инвестиционные облигации Сбербанка", d: "Структурные выпуски Сбербанка для широкой аудитории, торгуются на бирже. В 2020 году это было почти три четверти рыночного сегмента; с 2022 года основной объём Сбера идёт через Sber CIB." },
+    { t: "Нерыночный выпуск", d: "Облигация, размещённая одному или нескольким заранее известным держателям без предложения рынку. Здесь это остаток: общий объём рынка минус рыночные выпуски — сотни миллиардов рублей в единичных сделках СФО." },
+    { t: "ВПФИ", en: "внебиржевой производный финансовый инструмент", d: "Тот же структурный продукт, оформленный двусторонним контрактом с банком — опционом, форвардом, свопом — а не облигацией. Доступен только квалифицированным инвесторам, статистики по объёмам нет — на графиках это оценка." },
+    { t: "Для неквалов", d: "Выпуск без ограничения «только для квалифицированных инвесторов». С 2021 года таких мало: сложные продукты неквалифицированным инвесторам продавать нельзя, и почти весь рынок помечен как квальный." },
+    { t: "Объём размещения", d: "Сколько номинала реально купили; заявленный объём не учитывается — у выпуска может быть заявлено в разы больше, чем куплено." },
+    { t: "Окончание размещения", d: "Дата, по которой выпуск относят к году: бумага, размещение которой началось в декабре и закончилось в январе, попадает в следующий год." }
   ];
 
   // ── обработчики ──
