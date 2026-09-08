@@ -5,6 +5,22 @@ window.SITE_DATA = {
   "updated": "2026-08-31",
   "instruments": [
     {
+      "id": "RCD-OFZ248-K100-1Y",
+      "type": "rcdigital",
+      "name": "Условный купон 28,5% · ОФЗ 26248 · 1 год",
+      "underlying": "ОФЗ 26248",
+      "cls": "Облигации",
+      "currency": "RUB",
+      "strike": 100,
+      "couponPct": 28.5,
+      "spot": 100,
+      "tenor": "1 год",
+      "quote": 28.5,
+      "chg": 0,
+      "minNom": 1000000,
+      "src": "sales"
+    },
+    {
       "id": "DG-OFZ248-C105-0328",
       "type": "digital",
       "structure": "call",
