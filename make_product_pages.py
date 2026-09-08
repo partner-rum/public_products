@@ -24,6 +24,7 @@ TYPE_LABEL = {
     "booster": "Бустер",
     "autocall": "Автоколл",
     "revconv": "Реверс-конвертибл",
+    "rcdigital": "Реверс-конвертибл с условным купоном",
 }
 
 
@@ -50,6 +51,14 @@ def describe(inst):
             parts.append("купон " + num(cpn) + "% годовых")
         if t == "revconv":
             parts.append("страйк " + num(inst.get("strike", 100)) + "%")
+    elif t == "rcdigital":
+        # Купон ЗА СРОК (одна выплата на дату оценки), а не годовой — «% годовых»
+        # рядом с ним завысил бы его во столько раз, сколько лет живёт выпуск.
+        cpn = inst.get("couponPct", q)
+        if cpn is not None:
+            parts.append("купон " + num(cpn) + "% номинала при уровне от "
+                         + num(inst.get("strike", 100)) + "%")
+        parts.append("ниже страйка купона нет")
     elif t == "digital":
         # У диджитала цена входа — премия, но в превью важнее СМЫСЛ продукта:
         # фиксированная выплата и порог, при котором она платится
@@ -130,6 +139,23 @@ def load_offerings():
     return obj.get("items", [])
 
 
+def tenor_txt(t):
+    """«1.5» -> «1,5 года». Со словом внутри — оставляем как есть."""
+    raw = str(t or "").strip()
+    if not raw or any("а" <= c.lower() <= "я" for c in raw):
+        return raw
+    try:
+        n = float(raw.replace(",", "."))
+    except ValueError:
+        return raw
+    if abs(n - round(n)) < 1e-9:
+        w = int(round(n)); a, b = w % 10, w % 100
+        word = "год" if (a == 1 and b != 11) else ("года" if 2 <= a <= 4 and not 12 <= b <= 14 else "лет")
+    else:
+        word = "года"
+    return ("%g" % n).replace(".", ",") + " " + word
+
+
 def describe_offering(o):
     kind = o.get("kind") or "Выпуск на размещении"
     parts = [kind]
@@ -141,7 +167,7 @@ def describe_offering(o):
         # цена входа — ключевая цифра в превью; на витрине всегда с пометкой «индикативно»
         parts.append("цена " + num(o["price"]) + "% номинала · индикативно")
     if o.get("tenor"):
-        parts.append(o["tenor"])
+        parts.append(tenor_txt(o["tenor"]))
     parts.append("Rumberg — структурные продукты для квалифицированных инвесторов")
     return " · ".join(parts)
 

@@ -318,6 +318,7 @@
       // идёт по номиналу; назвать это «премией» или просто «индикативно» — обмануть
       if (r.type === "booster") return { v: Math.round(r.ku || r.quote) + "%", n: "коэффициент участия · индикативно" };
       if (r.type === "autocall" || r.type === "revconv") return { v: fmtQ(r.couponPa != null ? r.couponPa : r.quote) + "% г.", n: "купон · индикативно" };
+      if (r.type === "rcdigital") return { v: fmtQ(r.couponPct != null ? r.couponPct : r.quote) + "%", n: "купон за срок · индикативно" };
       if (r.type === "discount") return { v: fmtQ(r.quote) + "%", n: "цена · индикативно" };
       if (r.type === "warrant") return { v: fmtQ(r.quote) + "%", n: "премия · индикативно" };
       return { v: fmtQ(r.quote) + "%", n: "индикативно" };

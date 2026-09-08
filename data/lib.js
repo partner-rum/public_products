@@ -75,6 +75,18 @@ window.SITE = (function () {
       chipFg: "#8A3A60", chipBg: "#F3DDE8",
       desc: "Облигация с повышенным купоном: купон платится при любом сценарии, за это инвестор принимает риск по базовому активу. На страйке и выше на погашении возвращается 100% номинала, ниже — выплата считается по перформансу ОТ СТРАЙКА. Расчёт денежный, бумаги не поставляются.",
       paramLabel: "Купон, % г."
+    },
+    // RC + условный (диджитал) купон. Отдельный тип, а не флаг у реверс-конвертибла:
+    // у обычного RC купон БЕЗУСЛОВНЫЙ и он смягчает просадку, здесь он исчезает
+    // вместе с ней — риск-профиль другой, и на доске это должно быть видно
+    // отдельной строкой, а не сноской.
+    rcdigital: {
+      slug: "rcdigital",
+      title: "Реверс-конвертибл с условным купоном",
+      chip: "Условный",
+      chipFg: "#455063", chipBg: "#E4E7ED",
+      desc: "Облигация с повышенным купоном, который платится ТОЛЬКО если базовый актив на дату оценки оказался на страйке или выше; насколько именно выше — не важно. Если ниже, купона нет вовсе, а номинал возвращается по перформансу ОТ СТРАЙКА. Вход по номиналу, одно наблюдение, досрочного отзыва нет. Расчёт денежный, бумаги не поставляются.",
+      paramLabel: "Купон, %"
     }
   };
 
@@ -160,6 +172,14 @@ window.SITE = (function () {
     // полный номинал, а на 45% — 50% номинала, а не 45%.
     revconv(S, K) {
       return Math.min(100, S / (K || 100) * 100);
+    },
+    // RC + условный купон: ПОЛНАЯ выплата за срок. На страйке и выше — номинал
+    // плюс купон целиком; ниже — купона нет ВОВСЕ, а тело считается по
+    // перформансу от страйка. Отличие от обычного реверс-конвертибла
+    // принципиальное: там купон безусловный и смягчает просадку, здесь он
+    // исчезает вместе с ней, поэтому безубыток — сам страйк.
+    rcdigital(S, K, coupon) {
+      return PAYOFF.revconv(S, K) + (S >= K ? (coupon || 0) : 0);
     }
   };
 
@@ -230,6 +250,15 @@ window.SITE = (function () {
         if (be != null && be > 0) lo = Math.min(lo, be - 100 - 8);
         return { min: lo, max: Math.max(20, K - 100 + 20), val: 0 };
       }
+      // RC + условный купон: кадр обязан держать страйк с обеих сторон — слева
+      // наклон тела, справа полка «номинал + купон». Вправо запас небольшой:
+      // выше страйка выплата не меняется. Дефолт ползунка — чуть выше страйка,
+      // чтобы карточка открывалась на сценарии, где купон сработал (как у диджитала).
+      if (r.type === "rcdigital") {
+        const K = r.strike || 100;
+        return { min: Math.min(-45, K - 100 - 35), max: Math.max(15, K - 100 + 20),
+                 val: Math.round(K - 100 + 5) };
+      }
       // Автоколл: интересна зона вокруг барьера защиты — ползунок уводим глубоко вниз,
       // вверх достаточно барьера автоотзыва (выше выплата тела уже не меняется).
       if (r.type === "autocall") {
@@ -259,6 +288,7 @@ window.SITE = (function () {
       if (r.type === "booster") return PAYOFF.booster(100 + move, r.strike || 100, r.strike2 || 110, (r.ku || 175) / 100);
       if (r.type === "autocall") return PAYOFF.autocall(100 + move, r.protectionPct || 65);
       if (r.type === "revconv") return PAYOFF.revconv(100 + move, r.strike || 100) + revconvCoupons(r);
+      if (r.type === "rcdigital") return PAYOFF.rcdigital(100 + move, r.strike || 100, rcdCoupon(r));
       return 100;
     }
   };
@@ -395,7 +425,7 @@ window.SITE = (function () {
     };
 
     // Базовая линия выплаты: 0 у варранта, номинал 100% у бумаг с возвратом тела
-    const baseBelow = r.type === "revconv";
+    const baseBelow = r.type === "revconv" || r.type === "rcdigital";
     // У диджитала правую половину кадра занимает полка выплаты, и подпись базовой
     // линии в правом углу читалась бы как «справа платят ноль». Уводим её влево —
     // туда, где нулевая полка и находится.
@@ -536,6 +566,33 @@ window.SITE = (function () {
           labelAbove(cush, 100 + mLo, cush, "б/у " + fmtSmart(cush) + "%", C.gold);
       }
       if (!cpn) s += labelAbove((100 + mLo + K) / 2, 100 + mLo, K, "перформанс от страйка", C.lab);
+    } else if (r.type === "rcdigital") {
+      const cpn = rcdCoupon(r);
+      // Весь продукт — это СТУПЕНЬКА на страйке: правее платится номинал плюс
+      // купон целиком, левее купона нет вовсе и тело тает по перформансу.
+      // Пунктирную полку через весь кадр не рисуем (в отличие от обычного
+      // реверс-конвертибла, где купон безусловный и линия через всю ширину
+      // честна): здесь она читалась бы как «купон платят всегда». Уровень
+      // «с купоном» подписан у правого края, где сплошная линия и так стоит.
+      if (cpn > 0) {
+        s += txt(R, y(100 + cpn) - 7, C.gold, "end", "с купоном " + fmtSmart(100 + cpn) + "%");
+        // Цифру купона ставим В РАЗРЫВ, правее страйка: там пусто, и она
+        // объясняет ступеньку без легенды. Узкий разрыв не подписываем — текст
+        // лёг бы на обе линии.
+        const gapPx = Math.abs(y(100) - y(100 + cpn));
+        if (W >= 500 && gapPx >= 15) {
+          s += txt(x(K) + 7, (y(100) + y(100 + cpn)) / 2 + 4, C.gold, null, "купон " + fmtSmart(cpn) + "%");
+        }
+      }
+      // Ромб — на ВЕРХНЕМ углу ступеньки: там продукт платит. Подпись страйка
+      // уводим влево от него, чтобы не столкнуться с цифрой купона справа.
+      s += diamond(x(K), y(100 + cpn), C.line);
+      const kLab = K === 100 ? "страйк S₀" : "страйк " + fmtSmart(K) + "%";
+      if (W >= 500) s += txt(x(K) - 8, y(100 + cpn) + 17, C.lab2, "end", kLab);
+      // Главное отличие от обычного реверс-конвертибла: купон просадку НЕ
+      // смягчает. Без этой подписи график читался бы как «то же, но чуть иначе»,
+      // а безубыток здесь — сам страйк, а не уровень ниже него.
+      s += labelAbove((100 + mLo + K) / 2, 100 + mLo, K, "купона нет", C.lab);
     }
     const d = pts.map((p, i) => (i ? "L" : "M") + x(p[0]).toFixed(1) + " " + y(p[1]).toFixed(1)).join(" ");
     s += '<path d="' + d + '" fill="none" stroke="' + C.line + '" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>';
@@ -592,6 +649,19 @@ window.SITE = (function () {
     return (yrs > 0 && cpn > 0) ? cpn * yrs : 0;
   }
 
+  // Купон RC+условный за весь срок, % номинала. Купон здесь ОДИН и платится
+  // единожды на дату оценки, поэтому основное поле — couponPct (за срок).
+  // couponPa (% годовых) понимается как запас совместимости: умножается на срок;
+  // quote — последний рубеж, у этого типа котировка на витрине и есть купон.
+  // Ноль означает «неизвестно»: поверхности тогда рисуют одно тело и не
+  // придумывают недостающее.
+  function rcdCoupon(r) {
+    if (!r) return 0;
+    if (r.couponPct != null) return r.couponPct;
+    if (r.couponPa != null) { const y = tenorYears(r); return y > 0 ? r.couponPa * y : 0; }
+    return r.quote || 0;
+  }
+
   function revconvBreakeven(r) {
     const K = (r && r.strike) || 100, yrs = tenorYears(r);
     const cpn = (r && (r.couponPa != null ? r.couponPa : r.quote)) || 0;
@@ -610,7 +680,8 @@ window.SITE = (function () {
   function isAtPar(r) {
     if (!r) return false;
     if (r.type === "digital") return r.floorPct === 100;
-    return r.type === "booster" || r.type === "autocall" || r.type === "revconv";
+    return r.type === "booster" || r.type === "autocall" || r.type === "revconv" ||
+           r.type === "rcdigital";
   }
 
   // Возвращает null, если продукта с таким id нет (снят с витрины, битая ссылка,
@@ -701,6 +772,6 @@ window.SITE = (function () {
     return /S&P|NASDAQ|NVDA|NVIDIA|NBIS|Nebius|BTC|IBIT|GLD|SPY|COPX|CSI|URA|Uranium|Bitcoin|Gold|USD|\$/i.test(n);
   }
 
-  return { esc, TYPES, INSTRUMENTS, PAYOFF, LEGAL, calc, displayName, isAtPar, tenorYears, revconvBreakeven, revconvCoupons, findInstrument, instrumentsOfType, underlyingInfo, underlyingLong, isFxSensitive, ccyLabel, nonCallText, history, fmtInt, fmt2, fmt1, fmtSmart, quoteBig, daysTo, chartFrame, niceTicks, payoffChart, discountChart, AXIS_X, AXIS_Y };
+  return { esc, TYPES, INSTRUMENTS, PAYOFF, LEGAL, calc, displayName, isAtPar, tenorYears, revconvBreakeven, revconvCoupons, rcdCoupon, findInstrument, instrumentsOfType, underlyingInfo, underlyingLong, isFxSensitive, ccyLabel, nonCallText, history, fmtInt, fmt2, fmt1, fmtSmart, quoteBig, daysTo, chartFrame, niceTicks, payoffChart, discountChart, AXIS_X, AXIS_Y };
 
 })();

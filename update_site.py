@@ -27,6 +27,9 @@ import sys
 #   discount   — id, type, name, underlying, cls, expiry, quote, chg, minNom
 #   protection — + spot, strike (нач. уровень S0), participation (0..1), protectionPct,
 #                опц. cap (потолок = макс. учитываемый рост БА, %; нет поля = без потолка)
+#   rcdigital  — id, type, name, underlying, cls, strike, couponPct (купон ЗА СРОК,
+#                % номинала, одна выплата на дату оценки), quote = couponPct,
+#                tenor, expiry, minNom; вход по номиналу
 #   revconv    — id, type, name, underlying, cls, strike (страйк, % от старта),
 #                couponPa (купон % годовых, БЕЗУСЛОВНЫЙ), obsPerYear, tenor, expiry,
 #                quote (= couponPa, вход по номиналу), опц. basket (worst-of), settle.

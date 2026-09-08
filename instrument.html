@@ -580,6 +580,60 @@
         ["Мин. номинал", S.fmtInt(nom) + " ₽"]
       ])
     };
+  } else if (inst.type === "rcdigital") {
+    const K = inst.strike || 100, cpn = S.rcdCoupon(inst);
+    const cpnRub = nom * cpn / 100, holdRub = nom + cpnRub;
+    // Сценарий просадки берём заведомо НИЖЕ страйка: в нём купона нет вовсе, и
+    // именно этим тип отличается от обычного реверс-конвертибла.
+    const downLvl = Math.max(10, Math.round(K - 20));
+    const bodyPct = S.PAYOFF.rcdigital(downLvl, K, cpn);
+    const downRub = nom * bodyPct / 100;
+    const nearRub = nom * (K - 1) / K;
+    content = {
+      badge: "условный купон" + woBadge,
+      subtitle: "Реверс-конвертибл с условным купоном · " + inst.underlying + " · купон " +
+        S.fmtSmart(cpn) + "% за срок · страйк " + S.fmtSmart(K) + "%",
+      explainer: "Купон " + S.fmtSmart(cpn) + "% номинала выплачивается ОДИН раз, на дату оценки, и только если " +
+        uNom + " не ниже страйка " + S.fmtSmart(K) + "% начального уровня. Насколько именно актив выше — не важно: " +
+        "выплата одна и та же на страйке и вдвое выше него, в росте выпуск не участвует. " +
+        "Если актив оказался ниже страйка, купона нет вовсе, а номинал возвращается по перформансу ОТ СТРАЙКА: " +
+        "падение до " + S.fmtSmart(K / 2) + "% даст половину номинала." +
+        (K < 100 ? " Страйк ниже старта даёт запас " + S.fmtSmart(100 - K) + " п.п.: пока актив не потерял столько, условие купона выполняется." : "") +
+        " В обычном реверс-конвертибле купон безусловный и смягчает просадку — здесь он исчезает вместе с ней, " +
+        "поэтому безубыток равен самому страйку. Расчёт денежный, бумаги не поставляются.",
+      payoff: chartPayoff,
+      payoffCaption: "Выплата за срок в % от номинала; по горизонтали — " + uAxis + " в % от начального. " +
+        "Ступенька на страйке и есть купон: он либо платится целиком, либо не платится вовсе.",
+      metrics: [
+        ["Купон", S.fmtSmart(cpn) + "% номинала за срок · индикативно"],
+        ["Условие купона", uNom.charAt(0).toUpperCase() + uNom.slice(1) + " не ниже " + S.fmtSmart(K) + "% на дату оценки"],
+        ["Страйк", S.fmtSmart(K) + "% начального уровня"],
+        ["Выплаты", "Одна, на дату оценки. Досрочного отзыва нет"],
+        ["Срок", inst.tenor],
+        ["Мин. номинал", S.fmtInt(nom) + " ₽"]
+      ],
+      exampleIntro: "Вход по номиналу " + S.fmtInt(nom) + " ₽ (100%) · купон " + S.fmtSmart(cpn) +
+        "% = " + S.fmtInt(cpnRub) + " ₽ одной выплатой",
+      scenarios: [
+        [(isWO ? "Худшая бумага корзины" : inst.underlying) + " на " + S.fmtSmart(K) + "% и выше",
+          "Номинал и купон: " + S.fmtInt(holdRub) + " ₽", "+" + S.fmtInt(cpnRub) + " ₽", "var(--up)"],
+        [uGrew + " на 40%", "Выплата та же — рост не участвует: " + S.fmtInt(holdRub) + " ₽",
+          "+" + S.fmtInt(cpnRub) + " ₽", "var(--up)"],
+        [(isWO ? "Худшая бумага" : "Актив") + " на " + S.fmtSmart(K - 1) + "% — чуть ниже страйка",
+          "Купона нет вовсе, номинал по перформансу: " + S.fmtInt(nearRub) + " ₽",
+          "−" + S.fmtInt(nom - nearRub) + " ₽ и купон потерян", "var(--loss)"],
+        ["На дату оценки " + (isWO ? "худшая бумага" : "актив") + " на " + downLvl + "%",
+          "Выплата " + S.fmt1(bodyPct) + "% номинала: " + S.fmtInt(downRub) + " ₽",
+          "−" + S.fmtInt(nom - downRub) + " ₽", "var(--loss)"]
+      ],
+      facts: (isWO ? [woFact] : []).concat([
+        ["Купон", "Условный: " + S.fmtSmart(cpn) + "% номинала при активе не ниже страйка"],
+        ["Участие в росте", "Нет — выше страйка выплата не растёт"],
+        ["Безубыток", "Страйк " + S.fmtSmart(K) + "%: ниже него купона нет и номинал уменьшается"],
+        ["Расчёт", "Денежный — бумаги не поставляются"],
+        ["Мин. номинал", S.fmtInt(nom) + " ₽"]
+      ])
+    };
   } else if (inst.type === "booster") {
     const K = inst.strike || 100, K2 = inst.strike2 || 110, ku = (inst.ku || 175) / 100;
     const capPay = K + ku * (K2 - K), maxUp = capPay - 100, kuS = Math.round(ku * 100) + "%";
@@ -678,6 +732,7 @@
   document.getElementById("quote").innerHTML = S.quoteBig(inst.quote);
   document.getElementById("quote-sub").textContent = inst.type === "booster" ? "коэффициент участия · индикативно"
     : (inst.type === "autocall" || inst.type === "revconv") ? "купон · % годовых · индикативно"
+    : inst.type === "rcdigital" ? "купон за срок · % номинала · индикативно"
     : "котировка · индикативно · % от номинала · " + (inst.currency || "RUB");
   // «Изменение за день» дублируется в шапке (quote-chg) и в метриках. У всех
   // инструментов chg===0 (рынок в котировках не отражаем), а на дисконтных 2-я
@@ -746,6 +801,7 @@
       if (inst.type === "warrant") noteEl.textContent = clampNote + "Экспозиция на номинал " + S.fmtInt(Math.round(nominal)) + " ₽ за премию = сумму вложения. Безубыток — при росте " + inst.underlying + " примерно на +" + S.fmtSmart(be) + "%; ниже — выплата не покрывает премию.";
       else if (inst.type === "protection") noteEl.textContent = clampNote + "Номинал " + S.fmtInt(Math.round(nominal)) + " ₽. Защита " + prot + "%: при падении возвращается " + prot + "% номинала.";
       else if (inst.type === "booster") noteEl.textContent = clampNote + "Вложение = номинал " + S.fmtInt(Math.round(nominal)) + " ₽. Рост ×КУ внутри диапазона до потолка; при падении — участие 1:1, как в самом активе.";
+      else if (inst.type === "rcdigital") noteEl.textContent = clampNote + "Вложение = номинал " + S.fmtInt(Math.round(nominal)) + " ₽. Показана выплата за срок. На страйке " + S.fmtSmart(inst.strike || 100) + "% и выше — номинал плюс купон " + S.fmtSmart(S.rcdCoupon(inst)) + "%; ниже страйка купона нет вовсе, а номинал считается по перформансу от страйка.";
       else if (inst.type === "revconv") noteEl.textContent = clampNote + "Вложение = номинал " + S.fmtInt(Math.round(nominal)) + " ₽. Показана полная выплата за срок — тело плюс купоны, они начисляются независимо от уровня актива. На страйке " + S.fmtSmart(inst.strike || 100) + "% и выше тело возвращается целиком, ниже — по перформансу от страйка.";
       else if (inst.type === "digital") noteEl.textContent = clampNote + "Экспозиция на номинал " + S.fmtInt(Math.round(nominal)) + " ₽ за премию = сумму вложения. Выплата фиксированная: " + S.fmtSmart(inst.digitalPct || 0) + "% номинала, если " + inst.underlying + " на экспирацию не ниже " + S.fmtSmart(inst.strike || 100) + "% начального уровня. Насколько именно актив выше — на выплату не влияет; ниже страйка выплаты нет, премия теряется целиком.";
       else if (inst.type === "autocall") noteEl.textContent = clampNote + "Вложение = номинал " + S.fmtInt(Math.round(nominal)) + " ₽. Показан возврат ТЕЛА на погашении по худшей бумаге корзины — БЕЗ купонов: они начисляются отдельно на датах наблюдения. Выше " + S.fmtSmart(inst.protectionPct || 65) + "% возвращается весь номинал.";

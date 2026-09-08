@@ -571,6 +571,8 @@
     if (r.quote == null) return { v: "—", n: "" };
     if (r.type === "booster")  return { v: Math.round(r.ku || r.quote) + "%", n: "коэффициент" };
     if (r.type === "autocall" || r.type === "revconv") return { v: fmtQ(r.couponPa != null ? r.couponPa : r.quote) + "% г.", n: "купон" };
+    // Купон за срок, а не годовой: «% г.» завысил бы его в разы
+    if (r.type === "rcdigital") return { v: fmtQ(r.couponPct != null ? r.couponPct : r.quote) + "%", n: "купон за срок" };
     if (r.type === "discount") return { v: fmtQ(r.quote) + "%", n: "цена" };
     return { v: fmtQ(r.quote) + "%", n: "премия" };
   }

@@ -661,6 +661,53 @@
   }
 
   // Автоколл: возврат тела на погашении по worst-of (европейский барьер).
+  // RC + условный купон: тело по перформансу слева от страйка и СТУПЕНЬКА на нём.
+  // Полосы-заливки «купон», как у обычного реверс-конвертибла, здесь быть не
+  // может: там купон безусловный и полоса идёт через весь кадр, а здесь купон
+  // существует только справа от страйка. Рисуем ступеньку — она и есть продукт.
+  function chRcdigital() {
+    const HH = CH - 22;
+    const K = inst.strike || 100;
+    const cpn = S.rcdCoupon(inst);
+    const lo = Math.max(5, Math.min(K - 35, 60));
+    const hi = Math.max(K + 25, 125);
+    const body = v => Math.min(100, v / K * 100);
+    const pay = v => body(v) + (v >= K ? cpn : 0);
+    const yMin = Math.max(0, body(lo) - 10), yMax = Math.max(116, 100 + cpn + 10);
+    const x = v => PAD + ((v - lo) / (hi - lo)) * (CW - PAD * 2);
+    const y = v => HH - PAD - ((v - yMin) / (yMax - yMin)) * (HH - PAD * 2);
+    // Ступенька строится ЯВНО двумя точками на страйке: если пройти его одной
+    // линией, наклон съест разрыв и купон превратится в плавный рост.
+    const line = "M" + x(lo).toFixed(1) + " " + y(body(lo)).toFixed(1) +
+      " L" + x(K).toFixed(1) + " " + y(100).toFixed(1) +
+      " L" + x(K).toFixed(1) + " " + y(100 + cpn).toFixed(1) +
+      " L" + x(hi).toFixed(1) + " " + y(100 + cpn).toFixed(1);
+    const gapPx = Math.abs(y(100) - y(100 + cpn));
+    const withCoupon = cpn > 0
+      ? '<text x="' + (CW - PAD) + '" y="' + (y(100 + cpn) - 5) + '" text-anchor="end" fill="' + C.or +
+        '" font-size="10" ' + MONO + '>с купоном ' + S.fmtSmart(100 + cpn) + '%</text>' +
+        (gapPx >= 13 ? '<text x="' + (x(K) + 6) + '" y="' + ((y(100) + y(100 + cpn)) / 2 + 4) +
+          '" fill="' + C.or + '" font-size="10" ' + MONO + '>купон ' + S.fmtSmart(cpn) + '%</text>' : "")
+      : "";
+    // Подпись наклонного участка — над самой высокой точкой под её рамкой:
+    // линия идёт под углом, фиксированный отступ она бы прорезала.
+    const noCpn = (function () {
+      const lb = "купона нет";
+      const half = (lb.length * 10 * 0.62 / 2 + 5) / ((CW - PAD * 2) / (hi - lo));
+      const c0 = Math.max(lo + half, Math.min((lo + K) / 2, K - half));
+      return '<text x="' + x(c0) + '" y="' + (y(body(Math.min(c0 + half, K))) - 9) +
+        '" text-anchor="middle" fill="' + C.lab + '" font-size="10" ' + MONO + '>' + lb + '</text>';
+    })();
+    return '<svg viewBox="0 0 ' + CW + ' ' + HH + '" width="100%" style="display:block">' +
+      '<line x1="' + PAD + '" y1="' + y(100) + '" x2="' + (CW - PAD) + '" y2="' + y(100) + '" stroke="' + C.axis + '" stroke-width="1" stroke-dasharray="4 4"/>' +
+      '<text x="' + (CW - PAD) + '" y="' + (y(100) + 13) + '" text-anchor="end" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>номинал 100%</text>' +
+      withCoupon + noCpn +
+      '<path d="' + line + '" fill="none" stroke="' + C.line + '" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>' +
+      '<rect x="' + (x(K) - 4) + '" y="' + (y(100 + cpn) - 4) + '" width="8" height="8" transform="rotate(45 ' + x(K) + ' ' + y(100 + cpn) + ')" fill="' + C.line + '"/>' +
+      '<text x="' + (x(K) - 7) + '" y="' + (y(100 + cpn) - 8) + '" text-anchor="end" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>страйк ' + S.fmtSmart(K) + '%</text>' +
+      '</svg>';
+  }
+
   function chAutocall() {
     // График автоколла ниже общего CH на 22px: у автоколла в шапке корзина
     // (+40px), и с полным графиком пример наезжал на сноску (замер: 48px у
@@ -898,6 +945,50 @@
         "Ниже страйка тело идёт по перформансу <b>от страйка</b>. Расчёт денежный, бумаги не поставляются.",
       underLabel: "Главный риск · падение актива",
       underDesc: "Если на дату погашения " + uName + " опустится ниже страйка " + S.fmtSmart(K) + "% начального уровня, тело считается по перформансу от страйка — возможна потеря значительной части вложения; купоны при этом остаются у инвестора. Отдельно действует кредитный риск эмитента облигации."
+    };
+  } else if (inst.type === "rcdigital") {
+    const K = inst.strike || 100, cpn = S.rcdCoupon(inst);
+    const cpnRub = nom * cpn / 100, holdRub = nom + cpnRub;
+    const downLvl = Math.max(10, Math.round(K - 20));
+    const bodyPct = S.PAYOFF.rcdigital(downLvl, K, cpn);
+    const downRub = nom * bodyPct / 100;
+    const nearRub = nom * (K - 1) / K;
+    const isWOrc = Array.isArray(inst.basket) && inst.basket.length > 1;
+    const uName = isWOrc ? "худшая бумага корзины" : inst.underlying;
+    c = {
+      badge: "Реверс-конвертибл с условным купоном · структурная облигация",
+      subtitle: "Купон " + S.fmtSmart(cpn) + "% номинала на " +
+        (isWOrc ? "корзину " + inst.underlying + " по принципу worst-of" : inst.underlying) +
+        " — платится, только если актив на дату оценки не ниже страйка " + S.fmtSmart(K) +
+        "% · срок " + inst.tenor + " · " + S.ccyLabel(inst) + ".",
+      quoteK: "купон за срок · % номинала · индикативно",
+      chart: chRcdigital,
+      chartCap: "Выплата за срок в % от номинала; по горизонтали — уровень " +
+        (isWOrc ? "худшей бумаги корзины" : "базового актива") +
+        ". Ступенька на страйке и есть купон: он либо платится целиком, либо не платится вовсе.",
+      params: [["Купон", S.fmtSmart(cpn) + "% за срок", true],
+        ["Условие", "актив ≥ " + S.fmtSmart(K) + "%", false],
+        ["Страйк", S.fmtSmart(K) + "%", false],
+        ["Участие в росте", "нет", false]],
+      exIntro: "Вход по номиналу " + S.fmtInt(nom) + " ₽ (100%) · купон " + S.fmtSmart(cpn) +
+        "% = " + S.fmtInt(cpnRub) + " ₽ одной выплатой на дату оценки",
+      scen: [
+        [uName + " на " + S.fmtSmart(K) + "% и выше", "номинал и купон: " + S.fmtInt(holdRub) + " ₽",
+          "+" + S.fmtInt(cpnRub) + " ₽", "var(--up)", roiTxt(cpnRub, nom)],
+        [uName + " на " + S.fmtSmart(K - 1) + "% — чуть ниже страйка", "купона нет, номинал по перформансу: " + S.fmtInt(nearRub) + " ₽",
+          "−" + S.fmtInt(nom - nearRub) + " ₽", "var(--down)", roiTxt(nearRub - nom, nom)],
+        ["На дату оценки " + uName + " на " + downLvl + "%", "выплата " + S.fmt1(bodyPct) + "% номинала: " + S.fmtInt(downRub) + " ₽",
+          "−" + S.fmtInt(nom - downRub) + " ₽", "var(--down)", roiTxt(downRub - nom, nom)]
+      ],
+      explainer: "Купон " + S.fmtSmart(cpn) + "% номинала платится ОДИН раз, на дату оценки, и <b>только если</b> " +
+        uName + " не ниже страйка " + S.fmtSmart(K) + "% начального уровня; насколько именно выше — не важно. " +
+        "Если актив ниже страйка, купона <b>нет вовсе</b>, а номинал идёт по перформансу от страйка. " +
+        "В обычном реверс-конвертибле купон безусловный и смягчает просадку — здесь он исчезает вместе с ней, " +
+        "поэтому безубыток равен самому страйку. Расчёт денежный, бумаги не поставляются.",
+      underLabel: "Главный риск · падение актива ниже страйка",
+      underDesc: "Если на дату оценки " + uName + " опустится ниже страйка " + S.fmtSmart(K) +
+        "% начального уровня, купон не выплачивается и номинал считается по перформансу от страйка — " +
+        "возможна потеря значительной части вложения. Отдельно действует кредитный риск эмитента облигации."
     };
   } else if (inst.type === "booster") {
     const K = inst.strike || 100, K2 = inst.strike2 || 110, ku = (inst.ku || 175) / 100;

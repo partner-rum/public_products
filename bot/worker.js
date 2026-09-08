@@ -2822,7 +2822,10 @@ const SUBMIT_SECTIONS = {
           "ku", "couponPa", "couponBarrier", "callBarrier", "nonCall", "obsPerYear",
           // digitalPct/floorPct — диджитал-варрант. Без них выплата обнулялась,
           // и на доску уезжала карточка, обещающая ноль при взятом пороге.
-          "digitalPct", "floorPct"],
+          "digitalPct", "floorPct",
+          // couponPct — купон реверс-конвертибла с УСЛОВНЫМ купоном (rcdigital):
+          // за срок, одной выплатой на дату оценки. Не couponPa: тот годовой.
+          "couponPct"],
     arr: ["basket"],
     required: ["id", "type", "name", "underlying", "cls", "expiry", "quote"],
   },

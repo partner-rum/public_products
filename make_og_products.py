@@ -132,7 +132,8 @@ TEMPLATE = r"""<!DOCTYPE html>
 <script>
 var TYPE_KICK = { discount:"Дисконтная облигация", protection:"Облигация с защитой капитала",
                   warrant:"Варрант", digital:"Диджитал-варрант", booster:"Бустер",
-                  autocall:"Автоколл", revconv:"Реверс-конвертибл" };
+                  autocall:"Автоколл", revconv:"Реверс-конвертибл",
+                  rcdigital:"Реверс-конвертибл с условным купоном" };
 var qs = new URLSearchParams(location.search);
 var id = qs.get("id") || "";
 var instr = ((window.SITE_DATA||{}).instruments)||[];
@@ -186,6 +187,19 @@ function curve(it, isOffer){
     return { pts:[[loRc, loRc/Krc*100],[Krc,100],[Krc+35,100]],
              marks:[["страйк "+num(Krc)+"%",Krc,100],["номинал 100%",Krc+35,100]],
              cap:true, xlab:"уровень базового актива", ylab:"возврат тела, % ном." };
+  }
+  if (fam === "rcdigital"){
+    /* Тело по перформансу от страйка ПЛЮС ступенька купона на самом страйке.
+       Без своей ветки тип свалился бы в ванильный CALL, а рисовать его как
+       обычный реверс-конвертибл нельзя: там полка ровно на номинале, здесь она
+       на номинале ПЛЮС купон, и именно эта разница и есть продукт. */
+    var Krd = it.strike != null ? it.strike : 100;
+    var cpnRd = it.couponPct != null ? it.couponPct : (it.quote || 0);
+    var loRd = Math.max(20, Krd - 45);
+    return { pts:[[loRd, loRd/Krd*100],[Krd,100],[Krd,100+cpnRd],[Krd+35,100+cpnRd]],
+             marks:[["страйк "+num(Krd)+"%",Krd,100],
+                    ["с купоном "+num(100+cpnRd)+"%",Krd+35,100+cpnRd]],
+             cap:true, xlab:"уровень базового актива", ylab:"выплата, % ном." };
   }
   if (fam === "digital"){
     /* Ступенька: ноль до страйка, полка выплаты после. Ровно та же картинка, что
@@ -278,6 +292,8 @@ function chip(cap, val, sub){
   var q = item.quote != null ? item.quote : item.price;
   if (fam === "booster") chips.push(chip("участие", num(item.ku||q)+"%", ""));
   else if (fam === "autocall" || fam === "revconv") chips.push(chip("купон", num(item.couponPa != null ? item.couponPa : q)+"%", "годовых · индикативно"));
+  // Купон за срок, не годовой: подпись «годовых» завысила бы его в разы
+  else if (fam === "rcdigital") chips.push(chip("купон", num(item.couponPct != null ? item.couponPct : q)+"%", "за срок · индикативно"));
   else if (fam === "discount") chips.push(chip("цена входа", num(q)+"%", "ном. · индикативно"));
   else if (fam === "digital") chips.push(chip("премия", num(q)+"%", "ном. · индикативно"));
   else if (q != null) chips.push(chip(isOffer?"цена":"котировка", num(q)+"%", "ном. · индикативно"));

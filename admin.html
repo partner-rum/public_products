@@ -260,6 +260,9 @@
           изменённые поля, <b>адрес и разосланные ссылки останутся прежними</b>.</li>
         <li>Править можно продукты, заведённые через админку. Сгенерированные прайсингом
           в списке не появятся — их параметры приходят из расчёта.</li>
+        <li><b>RC+DC (реверс-конвертибл с условным купоном)</b> — купон вводится ЗА СРОК,
+          а не в процентах годовых: у выпуска одна дата оценки и одна выплата. Ниже страйка
+          купона нет вовсе, и это главное отличие от обычного реверс-конвертибла.</li>
         <li><b>Выпуск уже заведён на странице «На размещении»?</b> Возьмите его во втором поле —
           форма подставит название, актив, срок, цену и параметры выплаты. Останется дописать то,
           чего у размещения нет: класс актива, дату оценки и минимальный номинал.</li>
@@ -292,6 +295,7 @@
           <option value="digital">Диджитал-варрант (Digital Call)</option>
           <option value="autocall">Автоколл</option>
           <option value="revconv">Реверс-конвертибл</option>
+          <option value="rcdigital">Реверс-конвертибл с условным купоном (RC+DC)</option>
           <option value="booster">Бустер</option>
         </select>
       </label>
@@ -382,6 +386,24 @@
         <div class="row">
           <label><span class="k">Корзина worst-of (тикеры через запятую)</span><input name="rcBasket" placeholder="оставьте пустым для одной бумаги" maxlength="80"></label>
           <label><span class="k">Валюта расчётов</span><input name="rcSettle" placeholder="RUB" maxlength="8"></label>
+        </div>
+      </div>
+      <!-- RC + условный (диджитал) купон. Поля названы РОВНО как ключи записи
+           (strike, couponPct), а не с префиксом, как у revconv/booster: правка
+           продукта отправляет только те поля, чьё имя совпадает с ключом
+           данных, и с префиксом купон стал бы неисправимым через форму. -->
+      <div id="b-rcdigital" style="display:none">
+        <div class="hint-box">Покупка по номиналу. Купон платится ОДИН раз, на дату оценки, и только
+          если базовый актив не ниже страйка; насколько выше — не важно. Ниже страйка купона нет вовсе,
+          а номинал возвращается по перформансу ОТ СТРАЙКА (страйк 100% = падение считается от старта).
+          Купон вводите ЗА СРОК, а не в процентах годовых.</div>
+        <div class="row">
+          <label><span class="k">Страйк, % от старта <b>*</b></span><input name="strike" type="number" step="0.5" value="100" placeholder="100"></label>
+          <label><span class="k">Купон за срок, % номинала <b>*</b></span><input name="couponPct" type="number" step="0.1" placeholder="28.5"></label>
+        </div>
+        <div class="row">
+          <label><span class="k">Корзина worst-of (тикеры через запятую)</span><input name="rcdBasket" placeholder="оставьте пустым для одной бумаги" maxlength="80"></label>
+          <label><span class="k">Валюта расчётов</span><input name="rcdSettle" placeholder="RUB" maxlength="8"></label>
         </div>
       </div>
       <div id="b-booster" style="display:none">
@@ -1205,10 +1227,13 @@
     document.getElementById("b-digital").style.display = t === "digital" ? "" : "none";
     document.getElementById("b-autocall").style.display = t === "autocall" ? "" : "none";
     document.getElementById("b-revconv").style.display = t === "revconv" ? "" : "none";
+    document.getElementById("b-rcdigital").style.display = t === "rcdigital" ? "" : "none";
     document.getElementById("b-booster").style.display = t === "booster" ? "" : "none";
     // Вход по номиналу зашит: показывать сейлзу поле котировки — приглашать к ошибке.
     // У автоколла котировка = купон, у бустера = КУ; оба считаются из своих полей.
-    document.getElementById("l-quote").style.display = (isProt || t === "autocall" || t === "booster" || t === "revconv") ? "none" : "";
+    document.getElementById("l-quote").style.display = (isProt || t === "autocall" || t === "booster" || t === "revconv" || t === "rcdigital") ? "none" : "";
+    // Переключились на этот тип — сразу подставляем купон в скрытую котировку
+    if (t === "rcdigital" && fBoard.couponPct && fBoard.couponPct.value) fBoard.quote.value = fBoard.couponPct.value;
   });
   var fPlacement = document.getElementById("f-placement");
   fPlacement.kind.addEventListener("change", function () {
@@ -1302,7 +1327,7 @@
     if (!key) { msgEl.className = "msg err"; msgEl.textContent = "Введите ваш персональный ключ (в самом верху страницы)."; keyEl.focus(); return; }
 
     var patch = { id: bdOrig.id }, changed = [];
-    var NUM = { quote: 1, minNom: 1, strike: 1, strike2: 1, participation: 1, protectionPct: 1, cap: 1, startFrom: 1 };
+    var NUM = { quote: 1, minNom: 1, strike: 1, strike2: 1, participation: 1, protectionPct: 1, cap: 1, startFrom: 1, couponPct: 1 };
     var snap = bdSnap || {};
     BD_KEYS.forEach(function (k) {
       var el = fBoard[k];
@@ -1844,6 +1869,15 @@
   }
 
   // ── ТЕКУЩИЙ ПРОДУКТ ──
+  // Котировка на витрине у RC+условного купона — это САМ купон, и живёт она в
+  // скрытом поле quote. Зеркалим, чтобы большая цифра на доске и параметр выплаты
+  // не разошлись ни при заведении, ни при правке.
+  if (fBoard.couponPct) {
+    fBoard.couponPct.addEventListener("input", function () {
+      if (fBoard.type.value === "rcdigital") fBoard.quote.value = fBoard.couponPct.value;
+    });
+  }
+
   // ── ПРАВКА ПРОДУКТА ДОСКИ ───────────────────────────────────────────────
   // Сервер применяет правку, дополняя запись по непустым полям и НЕ трогая id.
   // Форма поэтому отправляет только изменённые поля, а не всю карточку.
@@ -1852,7 +1886,10 @@
   var bdOrig = null;           // запись, которую сейчас правим
   var bdSnap = null;           // снимок ФОРМЫ сразу после предзаполнения
   var BD_KEYS = ["type", "name", "underlying", "cls", "tenor", "expiry", "currency", "about",
-     "quote", "minNom", "strike", "strike2", "participation", "protectionPct", "cap", "startFrom"];
+     "quote", "minNom", "strike", "strike2", "participation", "protectionPct", "cap", "startFrom",
+     // couponPct — купон RC+условного: единственный параметр этого типа, и без
+     // него правка формой не могла бы изменить главное число продукта
+     "couponPct"];
   // Сравнивать надо со снимком формы, а не с записью: у формы есть умолчания
   // (участие с 0, защита 100), которых в записи варранта нет вовсе — и они
   // попадали в правку как «изменённые», хотя сейлз их не трогал.
@@ -1900,7 +1937,7 @@
     bdSetSel("cls", x.cls);
     bdSetSel("currency", x.currency || "RUB");
     ["name", "underlying", "tenor", "expiry", "quote", "minNom", "strike", "strike2",
-     "participation", "protectionPct", "cap", "startFrom", "about"].forEach(function (k) {
+     "participation", "protectionPct", "cap", "startFrom", "about", "couponPct"].forEach(function (k) {
       var el = fBoard[k];
       if (el && x[k] != null) el.value = x[k];
     });
@@ -1980,6 +2017,10 @@
     var s = (String(o.kind || "") + " " + String(o.name || "")).toLowerCase();
     if (/диджитал|digital/.test(s)) return "digital";
     if (/автоколл|autocall/.test(s)) return "autocall";
+    // RC+DC проверяется ДО обычного реверс-конвертибла: в подписи выпуска стоит
+    // и «реверс-конвертибл», и «условный купон», и по первому совпадению форма
+    // увела бы продукт в тип с БЕЗУСЛОВНЫМ купоном — то есть соврала бы про риск.
+    if (/условн|rc\s*\+\s*dc|rc\+cs|rcdc/.test(s)) return "rcdigital";
     if (/реверс|reverse|revconv/.test(s)) return "revconv";
     if (/бустер|booster/.test(s)) return "booster";
     if (/варрант|warrant|спред|spread|call\s+\d/.test(s)) return "warrant";
@@ -2069,6 +2110,10 @@
       if (part != null) setTxt("participation", part); else check.push("участие в росте, %");
       var prot = bdFirstNum(o.protection);
       if (prot != null && prot > 0 && prot <= 100) setTxt("protectionPct", prot);
+    } else if (type === "rcdigital") {
+      var kRcd = bdOffStrike(o);
+      if (kRcd != null) setTxt("strike", kRcd);
+      check.push("страйк и купон за срок — у размещения они отдельными полями не хранятся");
     } else if (type === "autocall" || type === "booster" || type === "revconv") {
       warn.push("Параметры выплаты (купоны, барьеры, коэффициент участия) у размещения не хранятся — " +
         "заполните блок ниже руками.");
@@ -2128,7 +2173,8 @@
       var type = val(fBoard, "type");
       // Вход по номиналу — у защиты, автоколла и бустера: поле котировки скрыто,
       // требовать его значит требовать невидимое поле.
-      var byNominal = type === "protection" || type === "autocall" || type === "booster" || type === "revconv";
+      var byNominal = type === "protection" || type === "autocall" || type === "booster" ||
+                      type === "revconv" || type === "rcdigital";
       req(fBoard, ["name", "underlying", "expiry", "tenor"].concat(byNominal ? [] : ["quote"]));
       // Проверки существовали, но подключены были только к правке: создание
       // принимало «дек 2027» и −500 и отвечало зелёным «Отправлено». Дата ещё и
@@ -2158,6 +2204,8 @@
       // купон, у бустера — коэффициент участия (доска подписывает его «КУ»).
       put(item, "quote", type === "protection" ? 100
         : type === "autocall" ? num(fBoard, "couponPa")
+        // Котировка = купон за срок: на доске в большой цифре стоит он
+        : type === "rcdigital" ? num(fBoard, "couponPct")
         : type === "revconv" ? num(fBoard, "rcCouponPa")
         : type === "booster" ? num(fBoard, "ku")
         : num(fBoard, "quote"));
@@ -2196,6 +2244,19 @@
         if (item.digitalPct != null && item.quote != null && item.digitalPct <= item.quote) {
           throw new Error("Выплата (" + item.digitalPct + "%) должна быть больше премии (" + item.quote + "%) — иначе продукт не может выйти в плюс.");
         }
+      }
+      if (type === "rcdigital") {
+        req(fBoard, ["strike", "couponPct"]);
+        needRange(fBoard, "strike", 1, 300, "%");
+        needRange(fBoard, "couponPct", 0.1, 500, "% номинала");
+        item.spot = 100;
+        put(item, "strike", num(fBoard, "strike"));
+        put(item, "couponPct", num(fBoard, "couponPct"));
+        // Корзина не обязательна: чаще одна бумага, и пустое поле не должно
+        // превращаться в массив с пустой строкой (как у реверс-конвертибла).
+        var rcdBk = val(fBoard, "rcdBasket").split(",").map(function (s) { return s.trim().toUpperCase(); }).filter(Boolean);
+        if (rcdBk.length > 1) item.basket = rcdBk;
+        put(item, "settle", val(fBoard, "rcdSettle"));
       }
       if (type === "autocall") {
         req(fBoard, ["basket", "couponPa", "couponBarrier", "callBarrier"]);
@@ -2238,7 +2299,7 @@
       }
       var pfx = type === "discount" ? "d" : type === "protection" ? "p"
         : type === "autocall" ? "ac" : type === "revconv" ? "rc" : type === "booster" ? "b"
-        : type === "digital" ? "dg" : "w";
+        : type === "digital" ? "dg" : type === "rcdigital" ? "rcd" : "w";
       item.id = pfx + "-" + slug(item.underlying) + "-" + slug(item.expiry).replace(/\./g, "") + "-s";
       return item;
     });
