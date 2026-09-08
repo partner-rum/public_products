@@ -1,0 +1,466 @@
+/* Рынок структурных облигаций — дашборд для статьи «Рынок» в библиотеке (about.html).
+   Данные — data/market.js (window.MARKET_STATS), генерируются make_market_stats.py.
+   Модуль самодостаточный: сам внедряет стили, отдаёт HTML статьи и вешает обработчики.
+   Графики — HTML/CSS столбики, не SVG: на 375px подписи остаются 11px, а не ужимаются
+   вместе с viewBox. Анимация роста — через класс .grown на обёртке .pf, его ставит
+   animate() страницы (тот же механизм, что у графиков выплат). */
+(function () {
+  "use strict";
+  var D = window.MARKET_STATS || null;
+  // Цвета групп: у банков близкие к фирменным (Сбер зелёный, ВТБ синий, Т-Банк
+  // жёлтый), Румберг — акцентный оранжевый витрины; иностранные площадки и
+  // «прочие» — нейтральные, чтобы не спорить с брендами
+  var COLORS = { sber: "#5E9B82", vtb: "#4F86E6", alfa: "#E0705A", aton: "#46A9A0", tbank: "#E0A24A",
+    bcs: "#8E7CC3", rum: "#EE7D1B", offsh: "#8A93A6", other: "rgba(255,255,255,0.22)" };
+  // Срочность: один тон, шесть ступеней прозрачности — короткие светлее
+  var TERM_ALPHA = [0.95, 0.78, 0.6, 0.44, 0.3, 0.18];
+  var MONTHS = ["янв", "фев", "мар", "апр", "май", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"];
+  // Тексты статьи — здесь, а не в about.html: их читают и Библиотека, и market.html
+  var TEXT = {
+    name: "Рынок структурных облигаций",
+    tagline: "Сколько таких бумаг выпускается в России, кто их выпускает и как это менялось с 2020 года. По данным Cbonds, в рублях по курсу на дату размещения.",
+    whenToUse: "Клиент спрашивает: «а это вообще большой рынок — и кто ещё так делает?» Здесь ответ цифрами: объём по годам, доли эмитентов и где среди них мы.",
+    how: "В выгрузку Cbonds входят все российские выпуски с признаком «структурный продукт» — облигации банков и специализированных финансовых обществ (СФО), а до 2022 года ещё и еврооблигации иностранных площадок, продававшиеся российским клиентам. Год выпуска — по дате окончания размещения, объём — фактически размещённый номинал. Валютные выпуски переведены в рубли по курсу ЦБ на дату размещения. Рынок разделён на две части: <b>рыночные</b> выпуски — то, что продаётся клиентам через банки и брокеров, и <b>нерыночные</b> — единичные сделки СФО на десятки и сотни миллиардов, которые размещаются одному держателю и на рынок не выходят. Критерий формальный и наш: эмитент без узнаваемого бренда, один-два выпуска в год либо средний размер выпуска от 3 млрд ₽.",
+    risk: "Три оговорки. Данные за 2026 год — по 8 сентября, и в них есть выпуски, размещение которых ещё идёт: они учтены нулём. Объём внебиржевых производных (ВПФИ), в которых те же продукты оформляются вместо облигаций, никто не публикует — на графике это оценка, пунктиром, от 3–5% рынка в 2024–2026 до 8–12% в 2020–2021, когда такие сделки шли через иностранные банки. Разделение на рыночные и нерыночные — наша классификация, а не разметка Cbonds."
+  };
+
+  var S = { mode: "market", vp: "mid", year: D ? D.years[D.years.length - 1].y : 2026, hl: null };
+
+  var CSS = "\
+.mk-nums{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin:4px 0 26px;border-top:1px solid var(--border-soft);padding-top:16px}\
+.mk-nums .k{font-family:var(--f-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint)}\
+.mk-nums .v{font-family:var(--display);font-size:27px;font-weight:500;letter-spacing:-.02em;margin-top:6px;line-height:1.1}\
+.mk-nums .v small{font-family:var(--f-mono);font-size:12px;font-weight:400;color:var(--faint);letter-spacing:0;margin-left:4px}\
+.mk-nums .d{font-size:12.5px;line-height:1.5;color:var(--hushed);margin-top:6px;text-wrap:pretty}\
+.mk-wide{margin-bottom:22px}\
+.mk-wide .prot-ctrls{margin-bottom:10px;justify-content:space-between;align-items:flex-end}\
+.mk-h{font-family:var(--f-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-bottom:10px}\
+.mk-h b{color:var(--ink);font-weight:500;letter-spacing:0;text-transform:none;font-family:var(--f-body);font-size:14px;margin-left:8px}\
+.mch{margin-top:6px}\
+.mch-cols{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px;align-items:end}\
+.mch-col{display:flex;flex-direction:column;min-width:0;border-radius:8px;padding:4px 3px 6px;transition:background .18s}\
+.mch-col.pick{cursor:pointer}\
+.mch-col.pick:hover{background:rgba(255,255,255,.04)}\
+.mch-col.on{background:rgba(238,125,27,.1);box-shadow:inset 0 0 0 1px rgba(238,125,27,.35)}\
+.mch-val{font-family:var(--f-mono);font-size:11px;color:var(--ink);text-align:center;white-space:nowrap;margin-bottom:5px}\
+.mch-val small{color:var(--faint);font-size:11px}\
+.mch-stack{height:176px;display:flex;flex-direction:column;justify-content:flex-end;gap:1px}\
+.mch-stack .bs{display:block;width:100%;border-radius:3px;transform-origin:bottom;transform:scaleY(0);transition:transform .8s var(--ease),opacity .2s}\
+.pf.grown .mch-stack .bs{transform:scaleY(1)}\
+.mch-stack .mk{background:#E7E9F0}\
+.mch-stack .nm{background:rgba(255,255,255,.22)}\
+.mch-stack .vp{border:1px dashed rgba(255,255,255,.5);box-sizing:border-box}\
+.mch-x{font-family:var(--f-mono);font-size:11px;color:var(--faint);text-align:center;margin-top:7px;white-space:nowrap}\
+.mch-x b{color:var(--hushed);font-weight:500}\
+.mch-col.on .mch-x{color:var(--solar)}\
+.mch-share .mch-stack{height:196px;gap:2px}\
+.mch-share .bs{background:var(--gc)}\
+.mch-share[data-hl] .bs{opacity:.18}\
+.mch-share[data-hl] .bs.hl{opacity:1}\
+.lgnd.mk{display:grid;grid-template-columns:repeat(3,1fr);gap:6px 18px;margin-top:14px}\
+.lgnd.mk .lgi{cursor:default;padding:3px 6px;margin:0 -6px;border-radius:6px;transition:background .15s}\
+.lgnd.mk .lgi:hover,.lgnd.mk .lgi.on{background:rgba(255,255,255,.06)}\
+.lgi .sw{flex:none;width:10px;height:10px;border-radius:3px;background:var(--lc);position:relative;top:1px}\
+.lgi .pc{font-family:var(--f-mono);font-size:11px;color:var(--faint);margin-left:auto;white-space:nowrap}\
+.mk-year{display:grid;grid-template-columns:1.1fr 1fr;gap:28px;align-items:start;margin-top:14px}\
+.mk-chips{display:flex;flex-wrap:wrap;gap:6px}\
+.mk-chips button{font-family:var(--f-mono);font-size:12.5px;color:var(--hushed);background:rgba(255,255,255,.06);border:1px solid transparent;border-radius:8px;padding:6px 11px;cursor:pointer;transition:background .15s,color .15s}\
+.mk-chips button:hover{background:rgba(255,255,255,.1);color:var(--ink)}\
+.mk-chips button.on{background:rgba(238,125,27,.16);color:var(--solar);border-color:rgba(238,125,27,.4);font-weight:600}\
+.mk-kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:12px 14px;margin:16px 0 4px}\
+.mk-kpi .k{font-family:var(--f-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}\
+.mk-kpi .v{font-family:var(--f-mono);font-size:17px;color:var(--ink);margin-top:3px}\
+.mk-kpi .v small{font-size:11px;color:var(--faint);margin-left:3px}\
+.mch-m .mch-cols{grid-template-columns:repeat(12,minmax(0,1fr));gap:4px}\
+.mch-m .mch-stack{height:120px}\
+.mch-m .mch-val{font-size:11px;color:var(--hushed)}\
+.mch-m .mch-x{font-size:11px;margin-top:5px;letter-spacing:-.02em}\
+.hb{display:grid;gap:7px}\
+.hb-row{display:grid;grid-template-columns:minmax(0,150px) 1fr 62px;gap:10px;align-items:center;font-size:12.5px;color:var(--hushed)}\
+.hb-row .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}\
+.hb-row .nm.ours{color:var(--solar);font-weight:600}\
+.hb-row .tr{height:12px;background:rgba(255,255,255,.05);border-radius:3px;overflow:hidden}\
+.hb-row .tr i{display:block;height:100%;border-radius:3px;background:var(--gc);transform-origin:left;transform:scaleX(0);transition:transform .8s var(--ease)}\
+.pf.grown .hb-row .tr i{transform:scaleX(1)}\
+.hb-row .vl{font-family:var(--f-mono);font-size:11.5px;color:var(--ink);text-align:right;white-space:nowrap}\
+.hb-row .vl small{color:var(--faint);font-size:11px}\
+.sb{margin-top:18px}\
+.sb .k{font-family:var(--f-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-bottom:7px;display:flex;justify-content:space-between}\
+.sb .k span{letter-spacing:0;text-transform:none;font-family:var(--f-body);font-size:12px}\
+.sb-bar{display:flex;height:14px;border-radius:4px;overflow:hidden;background:rgba(255,255,255,.05);gap:1px}\
+.sb-bar i{display:block;height:100%;background:var(--gc)}\
+.sb-lg{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:7px;font-size:12px;color:var(--hushed)}\
+.sb-lg span{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}\
+.sb-lg i{width:9px;height:9px;border-radius:2px;background:var(--gc)}\
+.sb-lg b{font-family:var(--f-mono);font-weight:400;color:var(--faint);font-size:11px}\
+.tl{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-top:6px}\
+.tl-y{min-width:0}\
+.tl-bars{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:1px;height:130px;align-items:end;border-bottom:1px solid var(--border);padding:0 1px}\
+.tl-bars i{display:block;background:#E7E9F0;border-radius:1px 1px 0 0;min-height:1px;transform-origin:bottom;transform:scaleY(0);transition:transform .8s var(--ease)}\
+.tl-bars i.na{background:transparent;border:1px dashed rgba(255,255,255,.16);border-bottom:none;min-height:0;height:30%!important}\
+.tl-bars i:hover{background:var(--solar)}\
+.pf.grown .tl-bars i{transform:scaleY(1)}\
+.tl-x{font-family:var(--f-mono);font-size:11px;color:var(--faint);text-align:center;margin-top:6px}\
+.tl-x b{color:var(--hushed);font-weight:500}\
+.mk-tbl{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px}\
+.mk-tbl td{padding:8px 0;border-bottom:1px solid var(--border-soft);color:var(--hushed);vertical-align:top;line-height:1.4}\
+.mk-tbl td.y{font-family:var(--f-mono);font-size:11.5px;color:var(--faint);width:44px;padding-top:10px}\
+.mk-tbl td.v{font-family:var(--f-mono);color:var(--ink);text-align:right;white-space:nowrap;width:86px}\
+.mk-tbl td.v small{color:var(--faint);font-size:11px}\
+.mk-tbl .rb{display:block;height:3px;background:rgba(255,255,255,.14);border-radius:2px;margin-top:6px}\
+.mk-tbl .rb i{display:block;height:100%;background:rgba(255,255,255,.55);border-radius:2px;transform-origin:left;transform:scaleX(0);transition:transform .8s var(--ease)}\
+.pf.grown .mk-tbl .rb i{transform:scaleX(1)}\
+.mk-red{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:6px}\
+.mk-red .v{font-family:var(--f-mono);font-size:17px;color:var(--ink)}\
+.mk-red .k{font-size:12px;color:var(--hushed);line-height:1.45;margin-top:3px}\
+.mk-vp{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-end}\
+@media (max-width:960px){.mk-nums{grid-template-columns:1fr 1fr}.mk-year{grid-template-columns:1fr}.lgnd.mk{grid-template-columns:1fr 1fr}.mk-kpi{grid-template-columns:1fr 1fr}.tl{grid-template-columns:repeat(4,minmax(0,1fr))}.tl-bars{height:90px}.hb-row{grid-template-columns:minmax(0,120px) 1fr 62px}}\
+@media (max-width:520px){.mch-cols{gap:5px}#mk-vol .mch-val small{display:none}.mch-val{font-size:11px}.mk-nums .v{font-size:23px}.lgnd.mk{grid-template-columns:1fr}.tl{grid-template-columns:repeat(2,minmax(0,1fr))}.mch-m .mch-val{display:none}.mk-red{grid-template-columns:1fr}}\
+";
+  function injectCSS() {
+    if (document.getElementById("mk-css")) return;
+    var st = document.createElement("style"); st.id = "mk-css"; st.textContent = CSS;
+    document.head.appendChild(st);
+  }
+
+  // ── форматирование ──
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function grp(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " "); }
+  function dec(v, d) { return v.toFixed(d).replace(".", ","); }
+  // млрд ₽ с разрядным пробелом; от тысячи — триллионы
+  function fmtB(v) {
+    if (v >= 1000) return dec(v / 1000, 1) + " трлн";
+    if (v >= 100) return grp(Math.round(v)) + " млрд";
+    if (v >= 10) return dec(v, 1) + " млрд";
+    if (v >= 1) return dec(v, 2) + " млрд";
+    return grp(Math.round(v * 1000)) + " млн";
+  }
+  function fmtPc(p) { return (p < 10 ? dec(p, 1) : Math.round(p)) + "%"; }
+  function fmtTerm(days) {
+    if (days == null) return "—";
+    if (days < 365) return Math.round(days / 30.4) + " мес";
+    return dec(days / 365.25, 1) + " г.";
+  }
+  function yl(y) { return y === 2026 ? "<b>" + y + "</b>*" : String(y); }
+  function last() { return D.years[D.years.length - 1]; }
+  function yearOf(y) { for (var i = 0; i < D.years.length; i++) if (D.years[i].y === y) return D.years[i]; return last(); }
+  function vpOf(r) { return S.vp === "none" ? 0 : S.vp === "low" ? r.vpfi[0] : S.vp === "high" ? r.vpfi[1] : (r.vpfi[0] + r.vpfi[1]) / 2; }
+  function segBtns(id, opts, cur, label) {
+    return '<div class="ctrl"><div class="k">' + label + '</div><div class="seg" id="' + id + '" role="group" aria-label="' + label + '">' +
+      opts.map(function (o) { var on = o[0] === cur; return '<button data-v="' + o[0] + '" aria-pressed="' + on + '"' + (on ? ' class="on"' : '') + '>' + o[1] + '</button>'; }).join("") +
+    '</div></div>';
+  }
+
+  // ── A. четыре числа ──
+  function numsHTML() {
+    var ys = D.years, n = 0, tot = 0, mk = 0;
+    ys.forEach(function (r) { n += r.n; tot += r.total; mk += r.market; });
+    var L = last(), sum = 0; D.groups.forEach(function (g) { sum += L.groups[g.key] || 0; });
+    var rum = L.groups.rum || 0;
+    var rank = D.groups.filter(function (g) { return g.key !== "other" && (L.groups[g.key] || 0) > rum; }).length + 1;
+    var top3 = ["sber", "vtb", "alfa"].reduce(function (a, k) { return a + (L.groups[k] || 0); }, 0);
+    return '<div class="mk-nums">' +
+      '<div><div class="k">Выпусков за ' + ys[0].y + '–' + L.y + '</div><div class="v">' + grp(n) + '</div><div class="d">' + fmtB(tot) + ' ₽ номинала, из них рыночных ' + fmtB(mk) + ' ₽</div></div>' +
+      '<div><div class="k">Рыночных в ' + L.y + '</div><div class="v">' + fmtB(L.market) + '<small>₽</small></div><div class="d">' + grp(L.n_market) + ' выпусков за восемь месяцев — больше, чем за любой полный год до 2025</div></div>' +
+      '<div><div class="k">Три крупнейших</div><div class="v">' + Math.round(top3 / sum * 100) + '<small>%</small></div><div class="d">Сбер, ВТБ и Альфа-Банк в рыночном сегменте ' + L.y + ' года</div></div>' +
+      '<div><div class="k">Румберг в ' + L.y + '</div><div class="v">' + fmtB(rum) + '<small>₽</small></div><div class="d">' + dec(rum / sum * 100, 1) + '% рыночного сегмента, ' + rank + '-е место среди эмитентов</div></div>' +
+    '</div>';
+  }
+
+  // ── B. объём по годам ──
+  function volBarsHTML() {
+    var ys = D.years, all = S.mode === "all";
+    var max = Math.max.apply(null, ys.map(function (r) { return (all ? r.total : r.market) + vpOf(r); })) || 1;
+    return '<div class="mch"><div class="mch-cols">' + ys.map(function (r) {
+      var vp = vpOf(r), mk = r.market / max * 100, nm = all ? r.nonmarket / max * 100 : 0, vh = vp / max * 100;
+      var head = all ? r.total : r.market;
+      var title = r.y + ": рыночные " + fmtB(r.market) + " ₽" + (all ? ", нерыночные " + fmtB(r.nonmarket) + " ₽" : "") +
+        "; ВПФИ (оценка) " + fmtB(r.vpfi[0]) + "–" + fmtB(r.vpfi[1]) + " ₽. Нажмите — год крупным планом";
+      return '<div class="mch-col pick' + (r.y === S.year ? ' on' : '') + '" data-y="' + r.y + '" role="button" tabindex="0" title="' + esc(title) + '">' +
+        '<div class="mch-val">' + grp(Math.round(head)) + (vp ? '<small> +' + Math.round(vp) + '</small>' : '') + '</div>' +
+        '<div class="mch-stack">' +
+          (vh > 0 ? '<i class="bs vp" style="height:' + vh.toFixed(2) + '%"></i>' : '') +
+          (nm > 0 ? '<i class="bs nm" style="height:' + nm.toFixed(2) + '%"></i>' : '') +
+          '<i class="bs mk" style="height:' + mk.toFixed(2) + '%"></i>' +
+        '</div><div class="mch-x">' + yl(r.y) + '</div></div>';
+    }).join("") + '</div></div>';
+  }
+  function volCap() {
+    var ys = D.years, L = last();
+    var low = ys.reduce(function (a, r) { return r.market < a.market ? r : a; }, ys[0]);
+    var hi = ys.filter(function (r) { return r.y < 2026; }).reduce(function (a, r) { return r.market > a.market ? r : a; }, ys[0]);
+    var vpTxt = S.vp === "none" ? "" : " Пунктиром сверху — оценка того же продукта в форме внебиржевых производных (ВПФИ, " +
+      (S.vp === "low" ? "нижняя" : S.vp === "high" ? "верхняя" : "средняя") + " граница вилки): статистики по ним нет, доля взята " +
+      L.vpfi_share[0] + "–" + L.vpfi_share[1] + "% для последних лет и до " + ys[0].vpfi_share[1] + "% для 2020–2021, когда такие сделки шли через иностранные банки.";
+    if (S.mode === "all") {
+      var big = ys.reduce(function (a, r) { return r.nonmarket > a.nonmarket ? r : a; }, ys[0]);
+      var top = D.nonmarket_all[0];
+      return "Светлое — рыночные выпуски, тёмное — нерыночные: единичные сделки СФО, размещённые одному держателю. В " + top.y + " году один такой выпуск дал " +
+        fmtB(top.vol) + " ₽ — больше, чем весь рыночный сегмент за любой год. Динамику рынка читают по светлой части, а не по общей высоте." + vpTxt;
+    }
+    return "Только то, что продаётся клиентам через банки и брокеров. Дно — " + low.y + " год, " + fmtB(low.market) + " ₽; к " + hi.y + " году объём вырос в " +
+      dec(hi.market / low.market, 1) + " раза. За неполный " + L.y + " год (по 8 сентября) уже " + fmtB(L.market) + " ₽." + vpTxt;
+  }
+  function volHTML(fc) {
+    return '<div class="viz mk-wide" style="--fc:' + fc + '">' +
+      '<div class="prot-ctrls">' +
+        segBtns("seg-mkt", [["market", "рыночные"], ["all", "весь рынок"]], S.mode, "Объём выпусков, млрд ₽") +
+        segBtns("seg-vp", [["none", "скрыть"], ["low", "ниже"], ["mid", "база"], ["high", "выше"]], S.vp, "Оценка ВПФИ") +
+      '</div>' +
+      '<div class="pf" id="mk-vol">' + volBarsHTML() + '</div>' +
+      '<div class="pf-cap" id="mk-volcap">' + volCap() + '</div>' +
+    '</div>';
+  }
+
+  // ── C. год крупным планом ──
+  function chipsHTML() {
+    return '<div class="mk-chips" id="mk-chips" role="tablist" aria-label="Год">' + D.years.map(function (r) {
+      return '<button role="tab" data-y="' + r.y + '" aria-selected="' + (r.y === S.year) + '"' + (r.y === S.year ? ' class="on"' : '') + '>' + r.y + (r.y === 2026 ? "*" : "") + '</button>';
+    }).join("") + '</div>';
+  }
+  function monthsHTML(r) {
+    var max = Math.max.apply(null, r.months) || 1, lastM = r.y === 2026 ? 9 : 12;
+    return '<div class="mch mch-m"><div class="mch-cols">' + r.months.map(function (v, i) {
+      var na = i >= lastM;
+      return '<div class="mch-col" title="' + MONTHS[i] + " " + r.y + ": " + (na ? "нет данных" : fmtB(v) + " ₽, " + r.months_n[i] + " вып.") + '">' +
+        '<div class="mch-val">' + (na ? "" : v >= 1 ? Math.round(v) : dec(v, 1)) + '</div>' +
+        '<div class="mch-stack"><i class="bs mk" style="height:' + (na ? 0 : Math.max(v / max * 100, v > 0 ? 1.5 : 0)).toFixed(2) + '%"></i></div>' +
+        '<div class="mch-x">' + MONTHS[i] + '</div></div>';
+    }).join("") + '</div></div>';
+  }
+  function kpiHTML(r) {
+    var kp = function (k, v, s) { return '<div><div class="k">' + k + '</div><div class="v">' + v + (s ? '<small> ' + s + '</small>' : '') + '</div></div>'; };
+    return '<div class="mk-kpi">' +
+      kp("Выпусков", grp(r.n_market)) +
+      kp("Эмитентов", r.issuers) +
+      kp("Медиана срока", fmtTerm(r.median_term)) +
+      kp("Средний выпуск", grp(r.avg_size), "млн ₽") +
+      kp("Доля топ-3", fmtPc(r.top3)) +
+      kp("Для неквалов", fmtPc(r.n_market ? r.unqual_n / r.n_market * 100 : 0), "выпусков") +
+      kp("Дисконтных", fmtPc(r.n_market ? r.zero_n / r.n_market * 100 : 0), "выпусков") +
+      kp("Еврооблигаций", r.euro_n ? grp(r.euro_n) : "0", r.euro_n ? fmtB(r.euro_vol) + " ₽" : "") +
+    '</div>';
+  }
+  function rankHTML(r) {
+    var rows = r.ranking.slice(0, 10), max = rows.length ? rows[0].vol : 1;
+    return '<div class="hb">' + rows.map(function (x) {
+      var ours = x.group === "rum";
+      return '<div class="hb-row" title="' + esc(x.name) + ": " + fmtB(x.vol) + " ₽, " + x.n + " вып." + '">' +
+        '<span class="nm' + (ours ? ' ours' : '') + '">' + esc(x.name) + '</span>' +
+        '<span class="tr"><i style="--gc:' + COLORS[x.group] + ';width:' + (x.vol / max * 100).toFixed(1) + '%"></i></span>' +
+        '<span class="vl">' + (x.vol >= 10 ? Math.round(x.vol) : dec(x.vol, 1)) + '<small> · ' + x.n + '</small></span></div>';
+    }).join("") + '</div>';
+  }
+  function stackHTML(title, note, parts) {
+    // parts: [{label, v, color}] → полоса долей + легенда
+    var sum = parts.reduce(function (a, p) { return a + p.v; }, 0) || 1;
+    var vis = parts.filter(function (p) { return p.v > 0; });
+    return '<div class="sb"><div class="k">' + title + (note ? '<span>' + note + '</span>' : '') + '</div>' +
+      '<div class="sb-bar">' + vis.map(function (p) { return '<i style="--gc:' + p.color + ';width:' + (p.v / sum * 100).toFixed(2) + '%" title="' + esc(p.label) + ": " + fmtPc(p.v / sum * 100) + '"></i>'; }).join("") + '</div>' +
+      '<div class="sb-lg">' + vis.map(function (p) { return '<span><i style="--gc:' + p.color + '"></i>' + esc(p.label) + ' <b>' + fmtPc(p.v / sum * 100) + '</b></span>'; }).join("") + '</div></div>';
+  }
+  var CUR_COLORS = { RUB: "#E7E9F0", CNY: "#E0705A", USD: "#5E9B82", EUR: "#4F86E6", GBP: "#8E7CC3" };
+  function yearPanelHTML(r) {
+    var terms = D.term_buckets.map(function (b, i) { return { label: b, v: r.terms[b] || 0, color: "rgba(231,233,240," + TERM_ALPHA[i] + ")" }; });
+    var curs = r.currencies.map(function (c) { return { label: c.cur + " · " + c.n + " вып.", v: c.vol, color: CUR_COLORS[c.cur] || "#8A93A6" }; });
+    return '<div class="mk-year">' +
+      '<div><div class="mk-h">По месяцам <b>' + fmtB(r.market) + ' ₽ рыночных' + (r.y === 2026 ? ' · по 8 сентября' : '') + '</b></div>' +
+        '<div class="pf">' + monthsHTML(r) + '</div>' + kpiHTML(r) + '</div>' +
+      '<div><div class="mk-h">Эмитенты рыночного сегмента <b>млрд ₽ · выпусков</b></div>' +
+        '<div class="pf">' + rankHTML(r) + '</div>' +
+        stackHTML("Валюта номинала", "по объёму", curs) +
+        stackHTML("Срок до погашения", "по объёму", terms) +
+      '</div>' +
+    '</div>';
+  }
+  function yearHTML(fc) {
+    return '<div class="viz mk-wide" style="--fc:' + fc + '">' +
+      '<div class="prot-ctrls"><div class="ctrl"><div class="k">Год крупным планом</div>' + chipsHTML() + '</div></div>' +
+      '<div id="mk-year">' + yearPanelHTML(yearOf(S.year)) + '</div>' +
+    '</div>';
+  }
+
+  // ── D. доли эмитентов ──
+  function shareBarsHTML() {
+    var keys = D.groups.map(function (g) { return g.key; }), label = {};
+    D.groups.forEach(function (g) { label[g.key] = g.label; });
+    return '<div class="mch mch-share" id="mk-share"><div class="mch-cols">' + D.years.map(function (r) {
+      var sum = 0; keys.forEach(function (k) { sum += r.groups[k] || 0; });
+      var segs = keys.slice().reverse().map(function (k) {
+        var v = r.groups[k] || 0; if (v <= 0) return "";
+        var pc = v / sum * 100;
+        return '<i class="bs g-' + k + '" style="--gc:' + COLORS[k] + ';height:' + pc.toFixed(2) + '%" title="' + esc(label[k]) + " · " + r.y + ": " + fmtB(v) + " ₽ · " + fmtPc(pc) + '"></i>';
+      }).join("");
+      return '<div class="mch-col"><div class="mch-val" data-y="' + r.y + '">&nbsp;</div><div class="mch-stack">' + segs + '</div><div class="mch-x">' + yl(r.y) + '</div></div>';
+    }).join("") + '</div></div>';
+  }
+  function shareLegendHTML() {
+    var L = last(), sum = 0;
+    D.groups.forEach(function (g) { sum += L.groups[g.key] || 0; });
+    return '<div class="lgnd mk" id="mk-lg">' + D.groups.map(function (g) {
+      var v = L.groups[g.key] || 0;
+      return '<div class="lgi" data-g="' + g.key + '" style="--lc:' + COLORS[g.key] + '" tabindex="0"><i class="sw" aria-hidden="true"></i><span><b>' + esc(g.label) + '</b></span>' +
+        '<span class="pc">' + (v > 0 ? fmtPc(v / sum * 100) : "—") + '</span></div>';
+    }).join("") + '</div>';
+  }
+  function shareHTML(fc) {
+    return '<div class="viz mk-wide" style="--fc:' + fc + '">' +
+      '<div class="mk-h">Доли эмитентов в рыночном сегменте <b>каждый столбик — 100% года</b></div>' +
+      '<div class="pf">' + shareBarsHTML() + '</div>' + shareLegendHTML() +
+      '<div class="pf-cap">В легенде — доля за ' + last().y + ' год. Наведите на группу, чтобы увидеть её долю в каждом году. Иностранные SPV — площадки, через которые до 2022 года структурные выпуски продавались российским клиентам. Румберг учтён вместе с выпусками СФО Теллуриум.</div>' +
+    '</div>';
+  }
+
+  // ── E. месяц за месяцем ──
+  function timelineHTML(fc) {
+    var max = 0;
+    D.years.forEach(function (r) { r.months.forEach(function (v) { if (v > max) max = v; }); });
+    var peak = null;
+    D.years.forEach(function (r) { r.months.forEach(function (v, i) { if (!peak || v > peak.v) peak = { v: v, y: r.y, i: i }; }); });
+    var zero = [];
+    D.years.forEach(function (r) { r.months.forEach(function (v, i) { if (v < 1 && !(r.y === 2026 && i >= 9)) zero.push(MONTHS[i] + " " + r.y); }); });
+    return '<div class="viz mk-wide" style="--fc:' + fc + '">' +
+      '<div class="mk-h">Месяц за месяцем <b>рыночные выпуски, млрд ₽</b></div>' +
+      '<div class="pf"><div class="tl">' + D.years.map(function (r) {
+        return '<div class="tl-y"><div class="tl-bars">' + r.months.map(function (v, i) {
+          var na = r.y === 2026 && i >= 9;
+          return '<i' + (na ? ' class="na"' : '') + ' style="height:' + (na ? 0 : Math.max(v / max * 100, v > 0 ? 1 : 0)).toFixed(2) + '%" title="' + MONTHS[i] + " " + r.y + ": " + (na ? "нет данных" : fmtB(v) + " ₽, " + r.months_n[i] + " вып.") + '"></i>';
+        }).join("") + '</div><div class="tl-x">' + yl(r.y) + '</div></div>';
+      }).join("") + '</div></div>' +
+      '<div class="pf-cap">Восемьдесят месяцев подряд, одна шкала. Пик — ' + MONTHS[peak.i] + ' ' + peak.y + ', ' + fmtB(peak.v) + ' ₽.' +
+        (zero.length ? ' Месяцы почти без выпусков: ' + zero.join(", ") + ' — так выглядит остановка рынка весной 2022 года.' : '') +
+        ' Пунктир — месяцы, по которым данных ещё нет.</div>' +
+    '</div>';
+  }
+
+  // ── F. срочность по годам ──
+  function termsHTML(fc) {
+    var B = D.term_buckets;
+    return '<div class="viz mk-wide" style="--fc:' + fc + '">' +
+      '<div class="mk-h">Срок до погашения <b>доля объёма по срокам, медиана под столбиком</b></div>' +
+      '<div class="pf"><div class="mch mch-share"><div class="mch-cols">' + D.years.map(function (r) {
+        var sum = 0; B.forEach(function (b) { sum += r.terms[b] || 0; });
+        var segs = B.map(function (b, i) {
+          var v = r.terms[b] || 0; if (v <= 0 || !sum) return "";
+          return '<i class="bs" style="--gc:rgba(231,233,240,' + TERM_ALPHA[i] + ');height:' + (v / sum * 100).toFixed(2) + '%" title="' + b + " · " + r.y + ": " + fmtPc(v / sum * 100) + '"></i>';
+        }).join("");
+        return '<div class="mch-col"><div class="mch-val">' + fmtTerm(r.median_term) + '</div><div class="mch-stack">' + segs + '</div><div class="mch-x">' + yl(r.y) + '</div></div>';
+      }).join("") + '</div></div></div>' +
+      '<div class="sb-lg" style="margin-top:12px">' + B.map(function (b, i) { return '<span><i style="--gc:rgba(231,233,240,' + TERM_ALPHA[i] + ')"></i>' + b + '</span>'; }).join("") + '</div>' +
+      '<div class="pf-cap">Светлое снизу — короткие выпуски. Медиана срока сжалась с ' + fmtTerm(D.years[0].median_term) + ' в ' + D.years[0].y + ' году до ' + fmtTerm(last().median_term) + ' в ' + last().y + ': рынок перешёл от пятилетних бумаг к продуктам на год-два, а заметная часть гасится в год выпуска.</div>' +
+    '</div>';
+  }
+
+  // ── G. мега-сделки + погашения 2026 ──
+  function bigHTML() {
+    var rows = D.nonmarket_all, max = rows.length ? rows[0].vol : 1;
+    return '<div class="mk-h">Крупнейшие нерыночные сделки <b>' + D.years[0].y + '–' + last().y + '</b></div>' +
+      '<table class="mk-tbl"><tbody>' + rows.map(function (x) {
+        return '<tr><td class="y">' + x.y + '</td><td>' + esc(x.name) + '<span class="rb"><i style="width:' + (x.vol / max * 100).toFixed(1) + '%"></i></span></td>' +
+          '<td class="v">' + (x.vol >= 100 ? grp(Math.round(x.vol)) : dec(x.vol, 1)) + '<small> млрд</small></td></tr>';
+      }).join("") + '</tbody></table>' +
+      '<div class="pf-cap">Каждая строка — один выпуск одного СФО, размещённый одному держателю. Эти сделки не конкурируют с рыночными продуктами и в остальных графиках не участвуют.</div>';
+  }
+  function redeemHTML() {
+    var r = D.redeem2026; if (!r) return "";
+    var L = last();
+    return '<div class="mk-h" style="margin-top:26px">Размещено в ' + L.y + ' — уже погашено <b>по ' + D.as_of.split("-").reverse().join(".") + '</b></div>' +
+      '<div class="mk-red">' +
+        '<div><div class="v">' + fmtB(r.redeemed) + '</div><div class="k">' + r.redeemed_n + ' выпусков, ' + fmtPc(r.redeemed / L.market * 100) + ' размещённого</div></div>' +
+        '<div><div class="v">' + fmtB(r.early) + '</div><div class="k">из них досрочно — автоколл или оферта, ' + r.early_n + ' выпусков</div></div>' +
+        '<div><div class="v">' + r.median_life_days + ' дн.</div><div class="k">медианный срок жизни погашенных выпусков</div></div>' +
+      '</div>' +
+      '<div class="pf-cap">До конца года срок наступит ещё у бумаг на ' + fmtB(Math.max(0, r.due_in_year - (r.redeemed - r.early))) + ' ₽ — не считая новых досрочных погашений.</div>';
+  }
+
+  // ── сборка ──
+  function html(fam, lib, usecaseHTML) {
+    injectCSS();
+    var fc = fam.color;
+    var left = usecaseHTML(lib, "Зачем это знать") +
+      '<div class="kv"><div class="k">Как считали</div><div class="v">' + lib.how + '</div></div>' +
+      '<div class="plaque"><div class="k">Оговорки</div>' + lib.risk + '</div>';
+    return numsHTML() + volHTML(fc) + yearHTML(fc) + shareHTML(fc) + timelineHTML(fc) + termsHTML(fc) +
+      '<div class="art-grid"><div>' + left + '</div><div class="viz pf" style="--fc:' + fc + '">' + bigHTML() + redeemHTML() + '</div></div>' +
+      '<div class="pf-cap" style="margin-top:14px">* ' + last().y + ' год — по ' + D.as_of.split("-").reverse().join(".") + ', выпуски, размещение которых ещё идёт, учтены нулём. Источник: Cbonds, расчёты Rumberg.</div>';
+  }
+  function trio() {
+    var r = D.redeem2026, L = last(), y21 = yearOf(2021), sum21 = 0;
+    D.groups.forEach(function (g) { sum21 += y21.groups[g.key] || 0; });
+    return [
+      { t: "2022: иностранные площадки исчезли", en: "еврооблигации → российские ISIN", d: "До 2022 года заметная часть рынка — выпуски иностранных SPV для российских клиентов: в 2021 году это " + fmtPc((y21.groups.offsh || 0) / sum21 * 100) + " рыночного сегмента и " + y21.euro_n + " еврооблигаций. После февраля 2022 таких выпусков нет ни одного, и рынок пересобрался на российских эмитентах — сначала на трёх банках, потом шире." },
+      { t: "2024–2026: СФО как конвейер", en: "от банков к платформам", d: "Специализированное финансовое общество раньше означало единичную сделку. С 2024 года это способ выпускать десятки бумаг в год для брокерских клиентов — так работают Атон, Т-Банк, БКС и Румберг. Эмитентов в рыночном сегменте стало " + L.issuers + " против " + yearOf(2023).issuers + " в 2023 году." },
+      { t: "Продукты стали короткими", en: "медиана срока " + fmtTerm(D.years[0].median_term) + " → " + fmtTerm(L.median_term), d: r ? "Из размещённого в " + L.y + " году к 8 сентября погашено " + fmtB(r.redeemed) + " ₽ (" + r.redeemed_n + " выпусков), из них " + fmtB(r.early) + " ₽ досрочно. Медианный срок жизни погашенных — " + r.median_life_days + " дней: продукт живёт месяцы, а не годы." : "Заметная часть выпусков гасится в год размещения: срок продукта — месяцы, а не годы." }
+    ];
+  }
+  var GLOSS = [
+    { t: "Структурная облигация", en: "СО", d: "Облигация, у которой выплата зависит от формулы на базовый актив, а не от фиксированного купона. Юридически — облигация: с ISIN, номиналом и датой погашения; экономически — тот продукт, что описан в остальных разделах библиотеки." },
+    { t: "СФО", en: "специализированное финансовое общество", d: "Компания, созданная только для выпуска облигаций под конкретные активы или деривативы. Не банк: у неё нет других операций и другого баланса. Так выпускают и единичные крупные сделки, и конвейерные выпуски для брокерских клиентов." },
+    { t: "ИОС", en: "инвестиционные облигации Сбербанка", d: "Структурные выпуски Сбербанка для широкой аудитории, торгуются на бирже. В 2020 году это была половина всего рыночного сегмента; с 2023 года основной объём Сбера идёт через Sber CIB." },
+    { t: "Нерыночный выпуск", d: "Облигация, размещённая одному или нескольким заранее известным держателям без предложения рынку. В данных выделяется по признакам: эмитент без бренда, один-два выпуска, размер от миллиардов до сотен миллиардов рублей." },
+    { t: "ВПФИ", en: "внебиржевой производный финансовый инструмент", d: "Тот же структурный продукт, оформленный не облигацией, а двусторонним контрактом с банком: опцион, форвард, своп. Доступен только квалифицированным инвесторам, статистики по объёмам нет — на графике это оценка." },
+    { t: "Для неквалов", d: "Выпуск без ограничения «только для квалифицированных инвесторов». После 2022 года таких мало: сложные продукты неквалифицированным инвесторам продавать нельзя, и почти весь рынок помечен как квальный." },
+    { t: "Объём размещения", d: "Сколько номинала реально купили, а не сколько было заявлено. У выпуска может быть анонсировано 10 млрд ₽, а размещено 66 млн ₽ — считаем второе." },
+    { t: "Окончание размещения", d: "Дата, с которой выпуск считается выпущенным. По ней бумага относится к году: выпуск, начатый в декабре и закрытый в январе, попадает в следующий год." }
+  ];
+
+  // ── обработчики ──
+  function setYear(root, y, animate) {
+    S.year = y;
+    root.querySelectorAll("#mk-vol .mch-col").forEach(function (c) { c.classList.toggle("on", +c.getAttribute("data-y") === y); });
+    root.querySelectorAll("#mk-chips button").forEach(function (b) { var on = +b.getAttribute("data-y") === y; b.classList.toggle("on", on); b.setAttribute("aria-selected", on ? "true" : "false"); });
+    var box = root.querySelector("#mk-year");
+    box.innerHTML = yearPanelHTML(yearOf(y));
+    animate(box);
+    var ann = document.getElementById("announce");
+    if (ann) ann.textContent = "Год крупным планом: " + y;
+  }
+  function bind(root, animate) {
+    var seg = function (id, fn) {
+      var el = root.querySelector("#" + id); if (!el) return;
+      el.addEventListener("click", function (e) {
+        var b = e.target.closest("button"); if (!b) return;
+        fn(b.getAttribute("data-v"));
+        el.querySelectorAll("button").forEach(function (x) { var on = x === b; x.classList.toggle("on", on); x.setAttribute("aria-pressed", on ? "true" : "false"); });
+        var pf = root.querySelector("#mk-vol"); pf.innerHTML = volBarsHTML();
+        root.querySelector("#mk-volcap").textContent = volCap();
+        animate(pf.parentNode);
+      });
+    };
+    seg("seg-mkt", function (v) { S.mode = v; });
+    seg("seg-vp", function (v) { S.vp = v; });
+    // клик по столбику года и по чипу — одно и то же действие
+    root.querySelector("#mk-vol").addEventListener("click", function (e) {
+      var c = e.target.closest(".mch-col"); if (c) setYear(root, +c.getAttribute("data-y"), animate);
+    });
+    root.querySelector("#mk-vol").addEventListener("keydown", function (e) {
+      var c = e.target.closest(".mch-col");
+      if (c && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); setYear(root, +c.getAttribute("data-y"), animate); }
+    });
+    root.querySelector("#mk-chips").addEventListener("click", function (e) {
+      var b = e.target.closest("button"); if (b) setYear(root, +b.getAttribute("data-y"), animate);
+    });
+    // подсветка группы в долях: наведение или фокус на пункт легенды
+    var share = root.querySelector("#mk-share"), lg = root.querySelector("#mk-lg");
+    function hl(key) {
+      if (key) share.setAttribute("data-hl", key); else share.removeAttribute("data-hl");
+      share.querySelectorAll(".bs").forEach(function (b) { b.classList.toggle("hl", !!key && b.classList.contains("g-" + key)); });
+      lg.querySelectorAll(".lgi").forEach(function (l) { l.classList.toggle("on", l.getAttribute("data-g") === key); });
+      // над столбиками — доля группы в каждом году
+      share.querySelectorAll(".mch-val").forEach(function (v) {
+        if (!key) { v.innerHTML = "&nbsp;"; return; }
+        var r = yearOf(+v.getAttribute("data-y")), sum = 0;
+        D.groups.forEach(function (g) { sum += r.groups[g.key] || 0; });
+        var x = r.groups[key] || 0;
+        v.textContent = x > 0 ? fmtPc(x / sum * 100) : "—";
+      });
+    }
+    lg.addEventListener("mouseover", function (e) { var l = e.target.closest(".lgi"); if (l) hl(l.getAttribute("data-g")); });
+    lg.addEventListener("mouseleave", function () { hl(null); });
+    lg.addEventListener("focusin", function (e) { var l = e.target.closest(".lgi"); if (l) hl(l.getAttribute("data-g")); });
+    lg.addEventListener("focusout", function () { hl(null); });
+    lg.addEventListener("click", function (e) { var l = e.target.closest(".lgi"); if (!l) return; var k = l.getAttribute("data-g"); hl(share.getAttribute("data-hl") === k ? null : k); });
+  }
+
+  window.MARKET_LIB = { ready: !!D, text: TEXT, html: html, bind: bind, trio: trio, gloss: GLOSS };
+})();

@@ -308,6 +308,8 @@
 </footer>
 
 <script src="data/instruments.js"></script>
+<script src="data/market.js"></script>
+<script src="market-lib.js?v=2"></script>
 <script>
 (function () {
   "use strict";
@@ -355,10 +357,18 @@
   // Материал, из которого собраны продукты. «futures» тоже здесь — не потому,
   // что это наш базовый актив (его нет на доске вовсе), а потому, что клиент
   // сравнивает с ним; в содержании он стоит отдельной группой «Для сравнения»
-  var BASICS = ["bond", "equity", "index", "commodity", "futures"];
+  var BASICS = ["bond", "equity", "index", "commodity", "futures", "market"];
   var ORDER = ["bond", "equity", "index", "commodity"]
     .concat(["discount", "protection", "autocall", "revconv", "warrants"]).concat(WTYPES)
-    .concat(["booster", "preipo", "futures"]);
+    .concat(["booster", "preipo", "futures", "market"]);
+  // Статья о рынке — не продукт и не материал, поэтому семейство «basic» (серый):
+  // цвет на этой странице означает тип продукта, а у статистики типа нет
+  // Тексты статьи живут в market-lib.js (их же использует market.html). Фолбэк —
+  // на случай, если модуль не доехал: содержание слева всё равно должно отрисоваться
+  LIB.market = (window.MARKET_LIB && window.MARKET_LIB.text) || {
+    name: "Рынок структурных облигаций",
+    tagline: "Сколько таких бумаг выпускается в России, кто их выпускает и как это менялось с 2020 года."
+  };
   var TITLE = { warrants: "Варранты" };
   function nameOf(id) { return id === "warrants" ? "Варранты — обзор" : LIB[id].name; }
   function famOf(id) { return BASICS.indexOf(id) >= 0 ? "basic" : id === "discount" ? "discount" : id === "protection" ? "protection" : id === "preipo" ? "preipo" : id === "booster" ? "booster" : id === "autocall" ? "autocall" : id === "revconv" ? "revconv" : "warrant"; }
@@ -675,6 +685,7 @@
       id === "index" ? "корзина по правилу" :
       id === "commodity" ? "золото · металлы · энергия" :
       id === "futures" ? "срочный контракт · чужой" :
+      id === "market" ? "2020–2026 · объёмы · эмитенты" :
       id === "discount" ? "кредитный риск · дисконт" :
       id === "protection" ? "защита 50–100% · участие" :
       id === "warrants" ? "6 типов · направление × структура" :
@@ -698,7 +709,9 @@
     // Отдельная группа, а не пятый пункт «Базовых бумаг»: фьючерса нет ни на
     // доске, ни в качестве базового актива, и записывать его в наш материал
     // было бы неправдой. Группа из одного пункта — это приложение, чем он и является
-    '<div class="toc-sec">Для сравнения</div>' + tocItem("futures");
+    '<div class="toc-sec">Для сравнения</div>' + tocItem("futures") +
+    // Статистика рынка — отдельная группа: это не продукт и не материал, а контекст
+    '<div class="toc-sec">Рынок</div>' + tocItem("market");
 
   // ── Статьи ──
   function usecaseHTML(d, label) {
@@ -994,8 +1007,22 @@
       trioHTML(cfg.trioK, cfg.rows) + glossHTML(cfg.glossT, cfg.gloss);
   }
 
+  // ── Рынок структурных облигаций: графики и обработчики живут в market-lib.js,
+  // данные — в data/market.js. Здесь только шапка статьи, тройка и глоссарий ──
+  function marketHTML(fam) {
+    var lib = LIB.market, M = window.MARKET_LIB;
+    if (!M || !M.ready) {
+      return headHTML("Рынок · 2020–2026", lib.name, lib.tagline) +
+        '<div class="plaque"><div class="k">Данные</div>Статистика рынка сейчас недоступна — не загрузился файл данных. Обновите страницу.</div>';
+    }
+    var ys = window.MARKET_STATS.years;
+    return headHTML("Рынок · " + ys[0].y + "–" + ys[ys.length - 1].y, lib.name, lib.tagline) +
+      M.html(fam, lib, usecaseHTML) + trioHTML("Три сдвига за семь лет", M.trio()) + glossHTML("Термины", M.gloss);
+  }
+
   function articleHTML(id) {
     var famKey = famOf(id), fam = FAM[famKey];
+    if (id === "market") return marketHTML(fam);
     if (famKey === "basic") return basicHTML(id, fam);
     if (id === "preipo") {
       var dp = LIB.preipo;
@@ -1086,6 +1113,7 @@
     el.innerHTML = "При защите <b>" + pLevel + "%</b> и участии в <b>" + dirTxt + "</b>: в неблагоприятном сценарии возвращается не менее " + pLevel + "% номинала" + (pLevel < 100 ? " (риск до " + (100 - pLevel) + "% рыночного убытка)" : " (полная защита)") + ", а выгодное движение приносит долю " + (pDir === "up" ? "роста" : "снижения") + " базового актива. Ниже защита — выше коэффициент участия.";
   }
   function bindArticle(id) {
+    if (id === "market" && window.MARKET_LIB && window.MARKET_LIB.ready) window.MARKET_LIB.bind(art, animate);
     if (id === "warrants") {
       art.querySelectorAll("[data-cell]").forEach(function (c) {
         c.addEventListener("click", function () { select(c.getAttribute("data-cell"), true); });
