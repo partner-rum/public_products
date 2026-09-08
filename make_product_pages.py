@@ -139,6 +139,25 @@ def load_offerings():
     return obj.get("items", [])
 
 
+def write_if_changed(path, text):
+    """Пишет файл, только если содержимое изменилось. True — если записали.
+
+    Сравнение с нормализацией переводов строк: в рабочем дереве файл лежит с
+    CRLF, а генератор пишет LF — без нормализации каждый прогон «менял» все
+    страницы, и авто-пуш ставок и Bid отменялся из-за них.
+    """
+    norm = text.replace("\r\n", "\n")
+    try:
+        with open(path, encoding="utf-8") as f:
+            if f.read().replace("\r\n", "\n") == norm:
+                return False
+    except OSError:
+        pass
+    with open(path, "w", encoding="utf-8", newline="\n") as f:
+        f.write(norm)
+    return True
+
+
 def tenor_txt(t):
     """«1.5» -> «1,5 года». Со словом внутри — оставляем как есть."""
     raw = str(t or "").strip()
@@ -184,6 +203,7 @@ def main():
     instruments = load_instruments()
     wanted = set()
     personal = 0
+    written = 0
     for inst in instruments:
         pid = inst["id"]
         wanted.add(pid)
@@ -192,8 +212,7 @@ def main():
         redir, target = redirect_parts(pid)
         html = TEMPLATE.format(title=esc(inst.get("name", pid)), desc=esc(describe(inst)),
                                base=BASE, id=pid, ogimg=img, redir=redir, target=target)
-        with open(os.path.join(OUTDIR, pid + ".html"), "w", encoding="utf-8", newline="\n") as f:
-            f.write(html)
+        written += write_if_changed(os.path.join(OUTDIR, pid + ".html"), html)
     for o in load_offerings():
         pid = o["id"]
         wanted.add(pid)
@@ -202,8 +221,7 @@ def main():
         redir, target = redirect_parts(pid, offering=True)
         html = TEMPLATE.format(title=esc(o.get("name", pid)), desc=esc(describe_offering(o)),
                                base=BASE, id=pid, ogimg=img, redir=redir, target=target)
-        with open(os.path.join(OUTDIR, pid + ".html"), "w", encoding="utf-8", newline="\n") as f:
-            f.write(html)
+        written += write_if_changed(os.path.join(OUTDIR, pid + ".html"), html)
     # чистим шеллы снятых продуктов
     removed = 0
     for path in glob.glob(os.path.join(OUTDIR, "*.html")):
@@ -211,7 +229,7 @@ def main():
         if pid not in wanted:
             os.remove(path); removed += 1
     print("страниц продуктов:", len(wanted), "| с персональной og-картинкой:", personal,
-          "| удалено устаревших:", removed)
+          "| перезаписано:", written, "| удалено устаревших:", removed)
     if personal < len(wanted):
         print("у остальных — общая обложка; сделать персональные: python make_og_products.py")
 
