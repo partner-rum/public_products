@@ -94,6 +94,29 @@ function json(obj, status, cors) {
 
 // --- Заявка с сайта ---
 async function handleLead(request, env, cors) {
+  // Заявки в группу продаж мог отправлять КТО УГОДНО: у /lead, в отличие от
+  // /click, /chat и /submit, не было ни проверки origin, ни лимита. Адрес
+  // воркера лежит в публичном репозитории, так что группу можно было залить
+  // мусором одним скриптом (проверено 08.09.2026: запрос с origin
+  // https://example.org дошёл до Telegram и ответил ok).
+  //
+  // Про честность защиты: проверка origin отсекает только чужие САЙТЫ — их
+  // браузерный JS отбивается ещё на preflight. Скрипт подставит любой заголовок,
+  // поэтому от потока спасает не она, а лимит по IP. Держим и то и другое.
+  const origin = request.headers.get("Origin") || "";
+  if (env.ALLOW_ORIGIN && env.ALLOW_ORIGIN !== "*" && origin && origin !== env.ALLOW_ORIGIN) {
+    return json({ ok: false, error: "forbidden_origin" }, 403, cors);
+  }
+  // Лимит — на том же биндинге, что у чата (новых заводить не нужно), но со
+  // СВОИМ ключом: иначе разговор с ассистентом съедал бы квоту заявки, а именно
+  // заявка — то, что терять нельзя. Биндинга нет — шаг пропускается, как в /chat.
+  if (env.CHAT_RATE_LIMIT) {
+    const ip = request.headers.get("CF-Connecting-IP") || "anon";
+    try {
+      const rl = await env.CHAT_RATE_LIMIT.limit({ key: "lead:" + ip });
+      if (rl && rl.success === false) return json({ ok: false, error: "rate_limited" }, 429, cors);
+    } catch (e) { /* биндинг недоступен — не блокируем: заявка важнее защиты */ }
+  }
   let data;
   try { data = await request.json(); } catch { return json({ ok: false, error: "bad_json" }, 400, cors); }
 
