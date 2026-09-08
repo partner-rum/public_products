@@ -260,17 +260,26 @@
           изменённые поля, <b>адрес и разосланные ссылки останутся прежними</b>.</li>
         <li>Править можно продукты, заведённые через админку. Сгенерированные прайсингом
           в списке не появятся — их параметры приходят из расчёта.</li>
+        <li><b>Выпуск уже заведён на странице «На размещении»?</b> Возьмите его во втором поле —
+          форма подставит название, актив, срок, цену и параметры выплаты. Останется дописать то,
+          чего у размещения нет: класс актива, дату оценки и минимальный номинал.</li>
         <li>Судьбу заявки видно в блоке <b>«Мои заявки»</b> вверху: ждёт, на сайте или отклонено.
           Пока Руслан не решил, заявку можно отозвать.</li>
       </ol>
       <p class="note">Сломать нельзя: ничего не публикуется без подтверждения Руслана.</p></div>
     </details>
 
-    <div class="grp"><div class="gt">Новый или правка</div>
+    <div class="grp"><div class="gt">Новый, правка или из размещения</div>
       <label><span class="k">Что делаем</span>
         <select id="bd-pick"><option value="">— новый продукт —</option></select>
         <span class="hint" id="bd-hint">Правятся только продукты, заведённые через админку. При правке адрес продукта
           и разосланные клиентам ссылки остаются прежними.</span>
+      </label>
+      <label style="margin-bottom:0"><span class="k">Взять параметры из размещения</span>
+        <select id="bd-off"><option value="">— заполняю вручную —</option></select>
+        <span class="hint" id="bd-off-hint">Выпуск со страницы «На размещении» подставит в форму то,
+          что у него уже есть — набирать заново не нужно. Доске нужны поля, которых у размещения нет
+          (класс актива, дата оценки, уровень БА): что именно дописать, форма скажет после выбора.</span>
       </label>
     </div>
 
@@ -399,8 +408,10 @@
           изменённые поля. Корзина, график выплаты, пример расчёта, видео и партнёр
           <b>сохранятся</b> — форма их не знает и не затирает.</li>
         <li>Пустое поле ничего не стирает. Чтобы убрать значение — напишите Руслану.</li>
-        <li><b>Документы</b> (КУВ, КИД, презентация) прикладываются здесь же, каждый уходит
-          отдельной карточкой на одобрение.</li>
+        <li><b>Документы</b> (КУВ, КИД, презентация) прикладываются здесь же — и к новому
+          выпуску, и к уже опубликованному. Каждый файл уходит <b>отдельной карточкой</b>
+          на одобрение, карточка выпуска — первой: пока сам выпуск не одобрен, документу
+          некуда встать.</li>
         <li>Погашение <b>0</b> — законное значение: у варранта возврата номинала нет.
           Пустое поле = плитки «погашение» на карточке не будет вовсе.</li>
       </ol></div>
@@ -458,11 +469,12 @@
       <label><span class="k">Как работает <b>*</b></span><textarea name="how" maxlength="600" placeholder="Покупается с дисконтом — по 58,82% номинала — и при отсутствии кредитного события…"></textarea></label>
       <label><span class="k">Риски <b>*</b></span><textarea name="risk" maxlength="500" placeholder="Кредитный риск на контрольное лицо…"></textarea></label>
     </div>
-    <div class="grp" id="off-docs" style="display:none"><div class="gt">эмиссионные документы и презентация</div>
+    <div class="grp" id="off-docs"><div class="gt">эмиссионные документы и презентация</div>
       <div class="hint-box">Руслану уходит заявка с параметрами, сами файлы ждут одобрения на сервере
         и в Telegram не пересылаются. После ✅ документы появляются в карточке выпуска на странице
         «На размещении». Повторная загрузка того же типа заменяет прежний файл.
-        Заявка живёт неделю — если за это время её не одобрят, файл придётся загрузить заново.</div>
+        Заявка живёт неделю — если за это время её не одобрят, файл придётся загрузить заново.
+        Можно оставить пустым и приложить позже.</div>
       <div class="row">
         <label><span class="k">Ключевые условия выпуска (КУВ)</span>
           <input name="offKuv" type="file" accept="application/pdf,.pdf"></label>
@@ -1851,6 +1863,7 @@
   }
 
   function bdLoad() {
+    bdOffLoad();                 // свой флаг: ранний выход ниже его бы пропустил
     if (Object.keys(bdItems).length) return;
     // Элемент ищем ЗДЕСЬ, а не через переменную: функция поднимается наверх и
     // может вызваться раньше, чем присвоится var bdPick (тогда список молча пуст).
@@ -1922,11 +1935,190 @@
     }
     bdOrig = bdItems[id];
     bdFill(bdOrig);
+    // Иначе в поле висел бы выпуск размещения, из которого форму уже перезаписали.
+    if (bdOff) { bdOff.value = ""; bdOffHint.textContent = BD_OFF_HINT; }
     btn.textContent = "Отправить правку";
     document.getElementById("bd-hint").innerHTML =
       "Правим <b>" + esc(bdOrig.name) + "</b> · id <code>" + esc(id) + "</code> не изменится, ссылка " +
       "<code>/p/" + esc(id) + ".html</code> продолжит работать. Уйдут только изменённые поля.";
   });
+
+  // ── ВЗЯТЬ ПАРАМЕТРЫ ИЗ РАЗМЕЩЕНИЯ ───────────────────────────────────────
+  // Выпуск «На размещении» и продукт доски — одна и та же бумага в двух разделах,
+  // и сейлз набирал её дважды. Расхождение уже случилось: у диджитала СП-2-79 на
+  // доске стояла экспирация 03.03.2028, а в его же КУВ дата оценки — 14.03.2028.
+  // Здесь форма заполняется из записи размещения, а поля, которых у размещения
+  // НЕТ (класс актива, экспирация, уровень БА, мин. номинал), названы прямым
+  // текстом: подставить их наугад значило бы соврать увереннее, чем мы знаем.
+  var bdOff = document.getElementById("bd-off");
+  var bdOffHint = document.getElementById("bd-off-hint");
+  var bdOffAll = {};
+  var bdOffReady = false;
+  var bdFilling = false;
+  var BD_OFF_HINT = bdOffHint ? bdOffHint.textContent : "";
+  var BD_CUR = { "₽": "RUB", "$": "USD", "€": "EUR", "¥": "CNY", "CNY": "CNY" };
+
+  // Срок у размещения бывает голым числом («1.5»): на доске он печатается как есть,
+  // и «1.5» без единиц там выглядело бы обрывком.
+  function bdTenor(t) {
+    var raw = String(t == null ? "" : t).trim();
+    if (!raw || /[а-яА-Я]/.test(raw)) return raw;
+    var n = Number(raw.replace(",", "."));
+    if (!isFinite(n)) return raw;
+    var word = "года";
+    if (Math.abs(n - Math.round(n)) < 1e-9) {
+      var w = Math.round(n), a = w % 10, b = w % 100;
+      word = (a === 1 && b !== 11) ? "год" : (a >= 2 && a <= 4 && (b < 12 || b > 14)) ? "года" : "лет";
+    }
+    return String(n).replace(".", ",") + " " + word;
+  }
+
+  // Тип доски — по подписи и названию, не по family: у диджитала СП-2-79
+  // family = participation, то есть по одному family он ушёл бы в защиту капитала.
+  // Диджитал проверяется ДО варранта: в его названии стоит «CALL 105».
+  function bdOffType(o) {
+    var s = (String(o.kind || "") + " " + String(o.name || "")).toLowerCase();
+    if (/диджитал|digital/.test(s)) return "digital";
+    if (/автоколл|autocall/.test(s)) return "autocall";
+    if (/реверс|reverse|revconv/.test(s)) return "revconv";
+    if (/бустер|booster/.test(s)) return "booster";
+    if (/варрант|warrant|спред|spread|call\s+\d/.test(s)) return "warrant";
+    if (/защит|protection/.test(s) || o.family === "protection") return "protection";
+    if (/дисконт|discount|cln/.test(s) || o.family === "discount") return "discount";
+    return "";
+  }
+
+  // Порог диджитала отдельным полем у размещения не хранится — читаем из названия
+  // строгим шаблоном. Не прочитался — поле остаётся пустым, а сейлз получает
+  // прямое указание вписать порог: выдуманный порог хуже пустого поля.
+  function bdOffStrike(o) {
+    var m = String(o.name || "").match(/CALL\s+(\d{2,3})(?:[.,](\d+))?/i);
+    if (!m) return null;
+    var v = Number(m[1] + (m[2] ? "." + m[2] : ""));
+    return isFinite(v) && v >= 50 && v <= 300 ? v : null;
+  }
+
+  function bdNorm(v) { return String(v == null ? "" : v).toLowerCase().replace(/[\s.]+/g, ""); }
+  function bdFirstNum(v) {
+    var m = String(v == null ? "" : v).match(/-?\d+(?:[.,]\d+)?/);
+    return m ? Number(m[0].replace(",", ".")) : null;
+  }
+
+  function bdFromOffering(id) {
+    var o = bdOffAll[id];
+    var btn = fBoard.querySelector(".send");
+    document.getElementById("m-board").className = "msg";
+    if (!o) { bdOffHint.textContent = BD_OFF_HINT; return; }
+    bdFilling = true;
+    fBoard.reset();
+    bdOff.value = id;                       // reset() снял выбор — возвращаем
+    bdOrig = null; bdPick.value = "";
+    btn.textContent = "Отправить на одобрение";
+    document.getElementById("bd-hint").textContent =
+      "Заводим новый продукт доски. Карточка на странице «На размещении» этой заявкой не меняется.";
+
+    var check = [], warn = [];
+    var setTxt = function (name, v) {
+      var el = fBoard[name];
+      if (el && v != null && v !== "") el.value = String(v);
+    };
+
+    var type = bdOffType(o);
+    if (type) bdSetSel("type", type);
+    else check.push("тип продукта — по записи размещения он не определяется");
+    fBoard.type.dispatchEvent(new Event("change"));
+
+    setTxt("name", String(o.name || "").slice(0, 80));
+    setTxt("underlying", o.reference);
+    if (!o.reference) check.push("базовый актив — у размещения он не заполнен");
+    // Класс актива угадываем только для облигаций: остальное определяет человек.
+    if (/офз|облигац|cln|бонд|bond/i.test(String(o.reference || "") + " " + String(o.kind || ""))) {
+      bdSetSel("cls", "Облигации");
+    } else {
+      check.push("класс актива");
+    }
+    setTxt("tenor", bdTenor(o.tenor));
+    bdSetSel("currency", BD_CUR[String(o.currency || "").trim()] || "RUB");
+    check.push("мин. номинал");
+
+    // Экспирация ≠ погашение. У размещения хранится дата погашения, а доске нужна
+    // дата оценки — у СП-2-79 они разошлись на девять дней (14.03 против 23.03).
+    if (o.maturity) {
+      setTxt("expiry", o.maturity);
+      warn.push("<b>Экспирация подставлена из даты погашения (" + esc(o.maturity) + ").</b> " +
+        "Доске нужна дата оценки базового актива — она обычно раньше, сверьте с КУВ.");
+    } else {
+      check.push("экспирация");
+    }
+
+    if (type === "digital") {
+      setTxt("quote", o.price);
+      var k = bdOffStrike(o);
+      if (k != null) setTxt("dgStrike", k);
+      else check.push("порог (страйк) — в названии выпуска его не видно");
+      if (o.redeem != null) setTxt("dgPct", o.redeem); else check.push("выплата, % номинала");
+      check.push("уровень БА текстом");
+    } else if (type === "warrant") {
+      setTxt("quote", o.price);
+      bdSetSel("structure", /спред|spread/i.test(String(o.name || "") + " " + String(o.kind || "")) ? "cs" : "call");
+      check.push("уровень БА текстом");
+    } else if (type === "discount") {
+      setTxt("quote", o.price);
+    } else if (type === "protection") {
+      var part = bdFirstNum(o.participation);
+      if (part != null) setTxt("participation", part); else check.push("участие в росте, %");
+      var prot = bdFirstNum(o.protection);
+      if (prot != null && prot > 0 && prot <= 100) setTxt("protectionPct", prot);
+    } else if (type === "autocall" || type === "booster" || type === "revconv") {
+      warn.push("Параметры выплаты (купоны, барьеры, коэффициент участия) у размещения не хранятся — " +
+        "заполните блок ниже руками.");
+    }
+
+    // Тот же выпуск уже мог уехать на доску руками — второй карточки быть не должно.
+    var dup = Object.keys(bdItems).map(function (x) { return bdItems[x]; }).filter(function (x) {
+      return x && o.reference && bdNorm(x.underlying) === bdNorm(o.reference) && (!type || x.type === type);
+    });
+    if (dup.length) {
+      warn.push("На доске уже есть <b>" + esc(dup[0].name || dup[0].id) + "</b> (<code>" + esc(dup[0].id) +
+        "</code>). Если это тот же выпуск — выберите его в поле «Что делаем» и правьте, а не заводите второй.");
+    }
+
+    var msg = "Заполнено из «" + esc(o.name || id) + "». Проверьте и допишите остальное.";
+    if (check.length) msg += " <b>Нужно ваше участие:</b> " + check.join(", ") + ".";
+    warn.forEach(function (w) { msg += " " + w; });
+    bdOffHint.innerHTML = msg;
+    bdSnap = null;
+    bdFilling = false;
+  }
+
+  if (bdOff) bdOff.addEventListener("change", function () { bdFromOffering(bdOff.value); });
+  // form.reset() снимает выбор в #bd-off сам (это select внутри формы), но подпись
+  // осталась бы от прошлого выпуска и обещала бы заполненные поля.
+  fBoard.addEventListener("reset", function () {
+    if (bdFilling || !bdOff) return;
+    bdOff.value = "";
+    bdOffHint.textContent = BD_OFF_HINT;
+  });
+
+  function bdOffLoad() {
+    if (bdOffReady || !bdOff) return;
+    bdOffReady = true;
+    fetchData("data/offerings.js").then(function (t) {
+      var d = dataObj(t) || {};
+      var arr = (d.items || []).filter(function (x) { return x && x.id; });
+      arr.forEach(function (x) { bdOffAll[x.id] = x; });
+      bdOff.innerHTML = '<option value="">— заполняю вручную —</option>' + arr.map(function (x) {
+        return '<option value="' + esc(x.id) + '">' + esc(x.name || x.id) + "</option>";
+      }).join("");
+      if (!arr.length) {
+        bdOff.disabled = true;
+        bdOffHint.textContent = "На размещении сейчас ничего нет — брать нечего.";
+      }
+    }).catch(function () {
+      bdOffReady = false;                   // сеть отвалилась — попробуем ещё раз
+      bdOffHint.textContent = "Список размещений не загрузился — заполните форму вручную.";
+    });
+  }
 
   fBoard.addEventListener("submit", function (e) {
     e.preventDefault();
@@ -2061,7 +2253,6 @@
   // форма про них не знает и знать не должна.
   var offAll = {};                 // id -> запись размещения
   var offPick = document.getElementById("off-pick");
-  var offDocs = document.getElementById("off-docs");
   var offMode = document.getElementById("off-mode");
   var offHave = document.getElementById("off-docs-have");
   var offBtn = fOff.querySelector(".send");
@@ -2101,11 +2292,13 @@
   function offSyncMode() {
     var id = offPick.value;
     var o = id ? offAll[id] : null;
-    offDocs.style.display = o ? "block" : "none";
     offBtn.textContent = o ? "Отправить правку" : "Отправить на одобрение";
     if (!o) {
       offMode.textContent = "Заполните форму — уйдёт заявка на публикацию нового выпуска.";
-      offHave.textContent = "";
+      // Файлы к новому выпуску уходят той же цепочкой, но встать они смогут только
+      // после одобрения самого выпуска — сейлз должен знать об этом до отправки.
+      offHave.textContent = " К новому выпуску документы можно приложить сразу: карточка выпуска" +
+        " уйдёт Руслану первой, файлы — следом. Одобрить их он должен в том же порядке.";
       return;
     }
     offMode.textContent = "Правка выпуска «" + (o.name || id) + "». Меняйте только то, что нужно: " +
@@ -2168,7 +2361,7 @@
     var editId = offPick.value;
     var item, docs;
     try {
-      docs = editId ? offPickedDocs() : [];
+      docs = offPickedDocs();
       if (editId) {
         // Отправляем ТОЛЬКО реально изменённые поля; пустое поле сервер пропускает,
         // то есть «стереть значение» через форму нельзя — это защита от случайной
@@ -2266,10 +2459,13 @@
     docs.forEach(function (d) {
       chain = chain.then(function () {
         return readPdf(d.file).then(function (b64) {
-          return postJson({ key: key, action: "offeringdoc", id: editId,
+          // id известен в обоих режимах: у правки это выбранный выпуск, у нового —
+          // slug(серия||название), собранный выше. Раньше сюда уходил editId, то есть
+          // у нового выпуска пустая строка, и сервер отвечал no_id.
+          return postJson({ key: key, action: "offeringdoc", id: item.id,
                             docKind: d.kind, docName: d.name, fileB64: b64 })
             .then(function (r) {
-              if (r && r.mid) qAdd("doc", (d.name || d.kind) + " · " + (editId || ""), "", r.mid, "");
+              if (r && r.mid) qAdd("doc", (d.name || d.kind) + " · " + (item.id || ""), "", r.mid, "");
               return r;
             })
             .catch(function (err) {
@@ -2285,6 +2481,10 @@
       if (docs.length) parts.push(docs.length === 1 ? "документ" : "документов: " + docs.length);
       msgEl.className = "msg ok";
       msgEl.textContent = "Отправлено на одобрение ✅ (" + parts.join(", ") + "). " +
+        (!editId && docs.length
+          ? "Карточек у Руслана: " + (docs.length + 1) + " — выпуск и файлы отдельно. " +
+            "Выпуск должен быть одобрен первым, иначе документу некуда встать. "
+          : "") +
         "После ✅ Руслана изменения появятся на сайте через пару минут.";
       fOff.reset();
       offPick.value = "";

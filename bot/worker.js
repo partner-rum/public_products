@@ -4143,7 +4143,20 @@ async function attachOfferingDoc(env, payload) {
     // docs у части размещений лежит как null — массив может понадобиться создать
     if (!Array.isArray(off.docs)) off.docs = [];
     const entry = { name: payload.label, file: payload.file, ext: "PDF", size: payload.size };
-    const same = off.docs.findIndex((d) => d && d.file === payload.file);
+    // Дедуп по ТИПУ документа, а не по имени файла. Админка называет файлы по id
+    // выпуска (kuv-sp-2-79-cb-rub.pdf), а приложенные руками лежат под именем по
+    // ISIN (kuv-RU000A10CVJ1.pdf) — при загрузке через админку в карточке
+    // появлялся бы ВТОРОЙ КУВ рядом с первым. КУВ, КИД и презентация бывают у
+    // выпуска в одном экземпляре, поэтому свежая загрузка заменяет прежнюю
+    // запись целиком. Тип «другой документ» дедупим по-прежнему по имени файла:
+    // таких у выпуска бывает сколько угодно.
+    const base = String(payload.file).split("/").pop() || "";
+    const kindPfx = (base.match(/^(kuv|kid|preso)-/) || [])[1] || null;
+    let same = off.docs.findIndex((d) => d && d.file === payload.file);
+    if (same < 0 && kindPfx) {
+      const re = new RegExp("(^|/)" + kindPfx + "-", "i");
+      same = off.docs.findIndex((d) => d && typeof d.file === "string" && re.test(d.file));
+    }
     if (same >= 0) off.docs[same] = Object.assign({}, off.docs[same], entry);
     else off.docs.push(entry);
 

@@ -17,7 +17,7 @@ window.SITE_DATA = {
       "floorPct": 0,
       "spot": 100,
       "tenor": "1,5 года",
-      "expiry": "03.03.2028",
+      "expiry": "14.03.2028",
       "quote": 15,
       "chg": 0,
       "minNom": 1000000,
