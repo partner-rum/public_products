@@ -24,7 +24,7 @@ window.SITE_DATA = {
       "id": "DG-OFZ248-C105-0328",
       "type": "digital",
       "structure": "call",
-      "name": "Диджитал CALL 105 · ОФЗ 26248 · 1,5 года",
+      "name": "Купонный варрант CALL 105 · ОФЗ 26248 · 1,5 года",
       "underlying": "ОФЗ 26248",
       "cls": "Облигации",
       "currency": "RUB",

@@ -2398,7 +2398,7 @@ async function sendPostDraft(env, theme) {
 const FI_TYPE_LABEL = {
   warrant: "варрант", discount: "дисконтная облигация", protection: "защита капитала",
   autocall: "автоколл", revconv: "реверс-конвертибл", booster: "бустер", primary: "биржевой выпуск",
-  digital: "диджитал-варрант",
+  digital: "купонный варрант",
 };
 
 // «12.5» → «12,5»: в посте по-русски, и заодно срезает хвосты float-арифметики
@@ -2820,7 +2820,7 @@ const SUBMIT_SECTIONS = {
     // параметры, и продукт уезжал на доску пустой оболочкой.
     num: ["spot", "strike", "strike2", "participation", "protectionPct", "cap", "quote", "chg", "minNom",
           "ku", "couponPa", "couponBarrier", "callBarrier", "nonCall", "obsPerYear",
-          // digitalPct/floorPct — диджитал-варрант. Без них выплата обнулялась,
+          // digitalPct/floorPct — купонный варрант. Без них выплата обнулялась,
           // и на доску уезжала карточка, обещающая ноль при взятом пороге.
           "digitalPct", "floorPct",
           // couponPct — купон реверс-конвертибла с УСЛОВНЫМ купоном (rcdigital):
@@ -3864,7 +3864,7 @@ async function commitResearchIssue(env, issue) {
 // Скрапер превью (Telegram) не исполняет JS, поэтому нужна статичная страница на продукт.
 // Шаблон 1:1 с make_product_pages.py — чтобы массовая регенерация не давала лишних диффов.
 const SHELL_BASE = "https://invest.rumberg.ru";
-const SHELL_TYPE_LABEL = { discount: "Дисконтная облигация", protection: "Облигация с защитой капитала", warrant: "Варрант", digital: "Диджитал-варрант", booster: "Бустер", autocall: "Автоколл", revconv: "Реверс-конвертибл" };
+const SHELL_TYPE_LABEL = { discount: "Дисконтная облигация", protection: "Облигация с защитой капитала", warrant: "Варрант", digital: "Купонный варрант", booster: "Бустер", autocall: "Автоколл", revconv: "Реверс-конвертибл" };
 function shellEsc(s) { return String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 function shellDesc(item) {
   const tl = SHELL_TYPE_LABEL[item.type] || "Структурный продукт";
@@ -3877,7 +3877,7 @@ function shellDesc(item) {
     if (cpn != null) parts.push("купон " + shellNum(cpn) + "% годовых");
     if (item.type === "revconv") parts.push("страйк " + shellNum(item.strike != null ? item.strike : 100) + "%");
   } else if (item.type === "digital") {
-    // у диджитала в превью важнее смысл: фиксированная выплата и её порог
+    // у купонного варранта в превью важнее смысл: фиксированная выплата и её порог
     if (item.digitalPct != null) {
       parts.push("выплата " + shellNum(item.digitalPct) + "% номинала при уровне от " +
         shellNum(item.strike != null ? item.strike : 100) + "%");

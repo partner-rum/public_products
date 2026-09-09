@@ -106,7 +106,7 @@ def board_block():
         ("autocall", "Автоколлы"),
         ("revconv", "Реверс-конвертиблы"),
         ("rcdigital", "Реверс-конвертиблы с условным купоном"),
-        ("digital", "Диджитал-варранты"),
+        ("digital", "Купонные варранты"),
     ]
     groups = []
     for key, title in TYPES:

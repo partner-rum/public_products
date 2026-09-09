@@ -129,7 +129,7 @@ TEMPLATE = r"""<!DOCTYPE html>
 </div>
 <script>
 var TYPE_KICK = { discount:"Дисконтная облигация", protection:"Облигация с защитой капитала",
-                  warrant:"Варрант", digital:"Диджитал-варрант", booster:"Бустер",
+                  warrant:"Варрант", digital:"Купонный варрант", booster:"Бустер",
                   autocall:"Автоколл", revconv:"Реверс-конвертибл",
                   rcdigital:"Реверс-конвертибл с условным купоном" };
 var qs = new URLSearchParams(location.search);
@@ -201,7 +201,7 @@ function curve(it, isOffer){
   }
   if (fam === "digital"){
     /* Ступенька: ноль до страйка, полка выплаты после. Ровно та же картинка, что
-       на доске; без этой ветки диджитал уходил в ванильный CALL и og-превью
+       на доске; без этой ветки купонный варрант уходил в ванильный CALL и og-превью
        рисовало РАСТУЩУЮ выплату — обещание, которого в продукте нет. */
     var payD = it.digitalPct || 0;
     return { pts:[[K-16,0],[K,0],[K,payD],[K+24,payD]],

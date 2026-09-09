@@ -293,7 +293,7 @@
 <div id="deck"></div>
 
 <script src="data/instruments.js?v=fx8"></script>
-<script src="data/lib.js?v=ax7"></script>
+<script src="data/lib.js?v=ax8"></script>
 <script src="data/offerings.js?v=srv19"></script>
 <script src="share.js?v=8"></script>
 <script src="contact.js?v=10"></script>
@@ -836,7 +836,7 @@
     const net = payoutRub - premiumRub;
     const mult = q ? pay / q : 0;
     c = {
-      badge: "Диджитал · структурная облигация",
+      badge: "Купонный варрант · структурная облигация",
       subtitle: "Фиксированная выплата " + S.fmtSmart(pay) + "% номинала, если " + uName +
         " на экспирацию не ниже " + S.fmtSmart(K) + "% начального уровня · срок " + inst.tenor + " · " + S.ccyLabel(inst) + ".",
       underLabel: woLabel, underDesc: woDesc,
@@ -857,9 +857,9 @@
         [uName + " ниже " + S.fmtSmart(K) + "%", "выплаты нет — премия потеряна полностью",
           "−" + S.fmtInt(premiumRub) + " ₽", "var(--down)", "−100% вложенных"]
       ],
-      explainer: "Диджитал-варрант — право на ФИКСИРОВАННУЮ выплату " + S.fmtSmart(pay) +
+      explainer: "Купонный варрант — право на ФИКСИРОВАННУЮ выплату " + S.fmtSmart(pay) +
         "% номинала, если на экспирацию " + uGenAsset + " не ниже страйка " + S.fmtSmart(K) +
-        "%. Насколько именно актив выше страйка — на выплату не влияет: этим диджитал отличается от обычного CALL. " +
+        "%. Насколько именно актив выше страйка — на выплату не влияет: этим купонный варрант отличается от обычного CALL. " +
         "Инвестор платит только премию (" + S.fmt2(q) + "% номинала)" +
         (mult > 1 ? " и при срабатывании получает в " + S.fmt1(mult) + " раза больше" : "") +
         "; если порог не взят — теряется премия."

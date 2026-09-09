@@ -34,7 +34,7 @@ import sys
 #                couponPa (купон % годовых, БЕЗУСЛОВНЫЙ), obsPerYear, tenor, expiry,
 #                quote (= couponPa, вход по номиналу), опц. basket (worst-of), settle.
 #                Заводится админкой (src: "sales") — сеткой здесь не собирается.
-#   digital    — id, type, structure ("call"), name, underlying, cls, strike (порог,
+#   digital    — купонный варрант: id, type, structure ("call"), name, underlying, cls, strike (порог,
 #                % от старта), digitalPct (ФИКСИРОВАННАЯ выплата, % номинала),
 #                floorPct (что платится ниже порога: 0 — варрантная форма, 100 —
 #                облигация с диджитал-купоном), spot, tenor, expiry, quote (премия,
