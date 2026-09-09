@@ -273,6 +273,8 @@ def ideas_block():
     """
     d = load("ideas.js")
     iss = (d.get("issues") or [{}])[0]
+    if iss.get("kind") == "theme":
+        return {"ideas": theme_block(iss)}
     items = iss.get("items") or []
 
     # Названия слоёв повторяют ideas.html: в данных лежит только ключ слоя.
@@ -329,6 +331,78 @@ def ideas_block():
                 plural(ngroups, "группа", "группы", "групп"),
                 ru_date(iss.get("spotDate") or iss.get("date"))))
     return {"ideas": block_body(intro, groups)}
+
+
+def theme_block(iss):
+    """Тематический выпуск (материал вебинара): у него нет цен, целевых и
+    потенциала, поэтому вводная другая — без «посчитан от цен закрытия».
+    Разделы идут текстом: заголовок и пункты «название — описание»; карта
+    компаний — по группам с ориентиром по году IPO и его основанием."""
+    intro = ("Разборы Rumberg: %s — материал вебинара. %s Материал носит "
+             "информационный характер и не является индивидуальной "
+             "инвестиционной рекомендацией."
+             % (iss.get("title", ""), iss.get("sub", "")))
+    items = iss.get("items") or []
+    groups = []
+    for sec in iss.get("sections") or []:
+        t = sec.get("type")
+        rows = []
+        if t == "cta":
+            continue
+        if t == "map":
+            for g in iss.get("groups") or []:
+                cos = [x for x in items if x.get("layer") == g.get("k")]
+                if cos:
+                    rows.append("%s: %s." % (g.get("n", ""), "; ".join(
+                        "%s — ожидается в %s%s" % (x.get("company", ""), x.get("when", ""),
+                                                   (" (%s)" % x["note"]) if x.get("note") else "")
+                        for x in cos)))
+            if sec.get("big"):
+                rows.append("%s — %s." % (sec["big"].get("v", ""), sec["big"].get("k", "")))
+            if sec.get("quote"):
+                rows.append(sec["quote"])
+        elif t == "stages":
+            rows.append(" → ".join("%s (%s)" % (x.get("n", ""), x.get("d", ""))
+                                   for x in sec.get("items") or []) + ".")
+            rows += list(sec.get("notes") or [])
+        elif t == "bignum":
+            rows.append("%s %s, %s. %s" % (sec.get("v", ""), sec.get("kk", ""), sec.get("sub", ""),
+                                           sec.get("text", "")))
+        elif t == "columns":
+            for c in sec.get("cols") or []:
+                rows.append("%s: %s." % (c.get("t", ""), "; ".join(
+                    x if isinstance(x, str) else x.get("t", "") for x in c.get("items") or [])))
+        elif t == "chain":
+            rows += ["%s — %s.%s" % (n.get("t", ""), n.get("d", ""),
+                                     (" " + n["step"] + ".") if n.get("step") else "")
+                     for n in sec.get("nodes") or []]
+        elif t == "faq":
+            rows += ["%s %s" % (x.get("q", ""), x.get("a", "")) for x in sec.get("items") or []]
+        elif t == "profiles":
+            # Обзоры компаний: суть, первый абзац и статус IPO. Полный текст не идёт —
+            # как и у разборов компаний, это десятки килобайт, которые скрипт затирает
+            # при первой отрисовке; роботу хватает уникального абзаца на компанию
+            for x in items:
+                if not x.get("body"):
+                    continue
+                row = "%s — %s. %s" % (x.get("company", ""), (x.get("what") or "").rstrip("."),
+                                       " ".join((x.get("body") or [])[:1]))
+                if x.get("ipo"):
+                    row += " IPO: " + x["ipo"]
+                if x.get("watch"):
+                    row += " На что смотреть: " + "; ".join(x["watch"]) + "."
+                rows.append(row)
+        else:  # cards, steps, tiles, glossary
+            rows += ["%s — %s" % (x.get("t", ""), x.get("d", "")) for x in sec.get("items") or []]
+        if sec.get("note"):
+            rows.append(sec["note"])
+        if sec.get("foot"):
+            rows.append(sec["foot"])
+        if sec.get("src"):
+            rows.append("Источник: " + sec["src"])
+        if rows:
+            groups.append((sec.get("h", ""), rows))
+    return block_body(intro, groups)
 
 
 def block_body(intro, groups):

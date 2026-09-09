@@ -17,6 +17,7 @@
 тянутся с МосБиржи автоматически, у долларовых лежат в конфиге руками.
 
 Запуск:  python make_ideas.py [id-темы]     (по умолчанию — ru-market)
+         python make_ideas.py pre-ipo        (тематический выпуск из JSON)
 """
 import glob
 import html
@@ -123,6 +124,18 @@ CONFIGS = {
         },
     },
 }
+
+# Тематический выпуск (kind:"theme") — материал вебинара БЕЗ компаний с целевыми
+# ценами: разделы (стадии, карточки, шаги, плитки, цепочка, словарь, вопросы) и
+# карта компаний с ориентиром по сроку IPO. Содержание лежит готовым JSON в папке
+# ресерча; скрипт проверяет обязательные поля, ставит дату по файлу и вклеивает
+# выпуск в архив на общих правилах. Типы разделов должны совпадать с TH в ideas.html.
+CONFIGS["pre-ipo"] = {
+    "kind": "theme",
+    "src": _res("pre-ipo-2026-09", "issue.json"),
+}
+THEME_BLOCKS = ("stages", "cards", "steps", "tiles", "bignum", "columns", "chain",
+                "glossary", "faq", "map", "profiles", "cta")
 
 CUR_SIGN = {"RUB": "₽", "USD": "$"}
 
@@ -266,11 +279,82 @@ def parse(path, cfg, spot_map):
     }
 
 
+def theme_issue(key, cfg):
+    """Читает готовый JSON тематического выпуска и проверяет то, без чего
+    страница его не нарисует: заголовок, лид, разделы известных типов, а у
+    карты компаний — группа из объявленных."""
+    src = os.environ.get("RESEARCH_DIR") or cfg["src"]
+    if not os.path.exists(src):
+        raise SystemExit("Нет файла выпуска %s" % src)
+    issue = json.load(io.open(src, encoding="utf-8"))
+    for k in ("title", "sub", "sections"):
+        if not issue.get(k):
+            raise SystemExit("В %s нет обязательного поля %r" % (src, k))
+    issue["id"] = key
+    issue["kind"] = "theme"
+    bad = [str(x.get("type")) for x in issue["sections"] if x.get("type") not in THEME_BLOCKS]
+    if bad:
+        raise SystemExit("Неизвестные типы разделов: %s. Страница умеет: %s"
+                         % (", ".join(bad), ", ".join(THEME_BLOCKS)))
+    groups = {g["k"] for g in issue.get("groups") or []}
+    for it in issue.get("items") or []:
+        for k in ("id", "company", "layer"):
+            if not it.get(k):
+                raise SystemExit("У компании %r нет поля %r" % (it.get("company"), k))
+        if it["layer"] not in groups:
+            raise SystemExit("У компании %s группа %r не объявлена в groups" % (it["company"], it["layer"]))
+    ids = [it["id"] for it in issue.get("items") or []]
+    if len(ids) != len(set(ids)):
+        raise SystemExit("Повторяются id компаний")
+    issue["date"] = datetime.fromtimestamp(os.path.getmtime(src)).strftime("%Y-%m-%d")
+    return issue, issue["date"]
+
+
+def save(issue, updated):
+    """Вклеивает выпуск в data/ideas.js: текущий — первым, остальные темы целы."""
+    data = {"updated": updated, "issues": [issue]}
+
+    # Существующие выпуски за другие даты сохраняем: скрипт пересобирает ТОЛЬКО
+    # текущую тему, архив прошлых разборов не трогаем.
+    if os.path.exists(OUT):
+        old = io.open(OUT, encoding="utf-8").read()
+        m = re.search(r"window\.IDEAS\s*=\s*(\{.*\})\s*;\s*\Z", old, re.S)
+        if m:
+            try:
+                prev = json.loads(m.group(1)).get("issues", [])
+                keep = [x for x in prev if x.get("id") != issue["id"]]
+                data["issues"] = [issue] + keep
+            except ValueError:
+                print("Прошлый data/ideas.js не разобрался как JSON — перезаписываю целиком.")
+
+    head = (
+        "// РАЗБОРЫ — тема под вебинар (страница ideas.html).\n"
+        "// ФАЙЛ СОБИРАЕТСЯ СКРИПТОМ `make_ideas.py` из ресерча (.docx/.md),\n"
+        "// руками не править: следующий прогон перезапишет текущий выпуск.\n"
+        "// Выпуски за другие темы скрипт сохраняет — архив копится сам.\n"
+        "// Тикеры, названия компаний и слой проставлены в CONFIGS внутри скрипта:\n"
+        "// в текстах ресерча их нет.\n"
+        "// Выпуск с kind:\"theme\" — материал вебинара: разделы и карта компаний\n"
+        "// без цен и целевых, читается из готового JSON (см. CONFIGS[\"pre-ipo\"]).\n"
+    )
+    body = "window.IDEAS = " + json.dumps(data, ensure_ascii=False, indent=1) + ";\n"
+    io.open(OUT, "w", encoding="utf-8", newline="\n").write(head + body)
+    return data
+
+
 def main():
     key = next((a for a in sys.argv[1:] if not a.startswith("-")), "ru-market")
     if key not in CONFIGS:
         raise SystemExit("Неизвестная тема %r. Есть: %s" % (key, ", ".join(CONFIGS)))
     cfg = CONFIGS[key]
+    if cfg.get("kind") == "theme":
+        issue, updated = theme_issue(key, cfg)
+        data = save(issue, updated)
+        print("готово:", OUT)
+        print("выпусков:", len(data["issues"]), "| тема:", key, "— материал вебинара, дата", updated)
+        print("разделов:", len(issue["sections"]), "| компаний в карте:", len(issue.get("items") or []),
+              "| групп:", len(issue.get("groups") or []))
+        return
     src = os.environ.get("RESEARCH_DIR") or cfg["src"]
 
     files = [f for f in sorted(glob.glob(os.path.join(src, "*.docx")) +
@@ -304,31 +388,7 @@ def main():
               "— потенциал у них не посчитается")
     issue["items"] = items
 
-    data = {"updated": updated, "issues": [issue]}
-
-    # Существующие выпуски за другие даты сохраняем: скрипт пересобирает ТОЛЬКО
-    # текущую тему, архив прошлых разборов не трогаем.
-    if os.path.exists(OUT):
-        old = io.open(OUT, encoding="utf-8").read()
-        m = re.search(r"window\.IDEAS\s*=\s*(\{.*\})\s*;\s*\Z", old, re.S)
-        if m:
-            try:
-                prev = json.loads(m.group(1)).get("issues", [])
-                keep = [x for x in prev if x.get("id") != issue["id"]]
-                data["issues"] = [issue] + keep
-            except ValueError:
-                print("Прошлый data/ideas.js не разобрался как JSON — перезаписываю целиком.")
-
-    head = (
-        "// РАЗБОРЫ — тема под вебинар (страница ideas.html).\n"
-        "// ФАЙЛ СОБИРАЕТСЯ СКРИПТОМ `make_ideas.py` из ресерча (.docx/.md),\n"
-        "// руками не править: следующий прогон перезапишет текущий выпуск.\n"
-        "// Выпуски за другие темы скрипт сохраняет — архив копится сам.\n"
-        "// Тикеры, названия компаний и слой проставлены в CONFIGS внутри скрипта:\n"
-        "// в текстах ресерча их нет.\n"
-    )
-    body = "window.IDEAS = " + json.dumps(data, ensure_ascii=False, indent=1) + ";\n"
-    io.open(OUT, "w", encoding="utf-8", newline="\n").write(head + body)
+    data = save(issue, updated)
 
     print("готово:", OUT)
     print("выпусков:", len(data["issues"]), "| компаний в текущем:", len(items))

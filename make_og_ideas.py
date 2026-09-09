@@ -34,8 +34,16 @@ import subprocess
 import sys
 import threading
 
-ROOT = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(ROOT, "og-ideas-3.jpg")
+_argv = sys.argv[1:]
+# --out <файл>: снять обложку в другое место — посмотреть, не трогая боевую
+if "--out" in _argv:
+    _i = _argv.index("--out")
+    OUT_ARG = _argv[_i + 1]
+    _argv = _argv[:_i] + _argv[_i + 2:]
+else:
+    OUT_ARG = None
+ROOT = _argv[0] if _argv else os.path.dirname(os.path.abspath(__file__))
+OUT = OUT_ARG or os.path.join(ROOT, "og-ideas-3.jpg")
 # Chrome умеет снимать только PNG — снимаем во временный файл и сжимаем.
 RAW = os.path.join(ROOT, "_og_ideas_raw.png")
 TPL_NAME = "_og_ideas_tmp.html"
@@ -124,20 +132,33 @@ def build_html(iss):
     items = iss.get("items") or []
     title = iss.get("title") or "Разборы"
 
-    tickers = "".join(
-        '<span class="tk" style="--c:%s">%s</span>'
-        % (LAYER_COLOR.get(x.get("layer"), "#EE7D1B"), esc(x.get("ticker", "")))
-        for x in items)
+    theme = iss.get("kind") == "theme"
+    if theme:
+        # Материал вебинара: тикеров нет — имена компаний из карты «кто следующий»,
+        # цвет по группе из самого выпуска; ни цен, ни целей на обложке не обещаем
+        gcol = {g.get("k"): g.get("c", "#EE7D1B") for g in iss.get("groups") or []}
+        tickers = "".join(
+            '<span class="tk co" style="--c:%s">%s</span>'
+            % (gcol.get(x.get("layer"), "#EE7D1B"), esc(x.get("company", "")))
+            for x in items)
+        chips = [plural(len(items), "компания", "компании", "компаний"),
+                 plural(len(gcol), "направление", "направления", "направлений"),
+                 "материал вебинара"]
+    else:
+        tickers = "".join(
+            '<span class="tk" style="--c:%s">%s</span>'
+            % (LAYER_COLOR.get(x.get("layer"), "#EE7D1B"), esc(x.get("ticker", "")))
+            for x in items)
 
-    layers = len({x.get("layer") for x in items if x.get("layer")})
-    chips = [plural(len(items), "компания", "компании", "компаний"),
-             plural(layers, "группа", "группы", "групп"),
-             "целевые цены на 12 месяцев"]
+        layers = len({x.get("layer") for x in items if x.get("layer")})
+        chips = [plural(len(items), "компания", "компании", "компаний"),
+                 plural(layers, "группа", "группы", "групп"),
+                 "целевые цены на 12 месяцев"]
     chip_html = "".join(
         '<span class="chip%s">%s</span>' % (" hot" if i == 0 else "", esc(c))
         for i, c in enumerate(chips))
 
-    kicker = "разбор темы"
+    kicker = "материал вебинара" if theme else "разбор темы"
     when = human(iss.get("date"))
     if when:
         kicker += " · " + when
@@ -193,6 +214,7 @@ TEMPLATE = """<!DOCTYPE html>
       padding:9px 13px 9px 15px;font-family:var(--m);font-weight:700;font-size:18px;
       letter-spacing:.02em;overflow:hidden}
   .tk::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--c)}
+  .tk.co{font-family:var(--d);font-weight:700;letter-spacing:0;font-size:17px}
   .bot{position:relative;z-index:2;display:flex;align-items:center;gap:11px}
   .chip{background:var(--card);border:1px solid var(--bd);border-radius:10px;
         padding:10px 18px;font-size:18px;color:var(--ink);white-space:nowrap}
