@@ -6,7 +6,8 @@ window.Contact = (function () {
   var CFG = {
     botUser: "Rumberb_Sales_Team_bot",                             // t.me/Rumberb_Sales_Team_bot
     waPhone: "",                                                   // WhatsApp менеджера (пусто → кнопка скрыта)
-    endpoint: "https://so-leads.ruslan-sabirov.workers.dev/lead"   // Cloudflare Worker (приём заявок)
+    endpoint: (location.hostname === "invest.rumberg.ru" ? "/api" : "https://so-leads.ruslan-sabirov.workers.dev") + "/lead"   // на бою — через свой nginx (/api/ проксирует на Worker),
+                // локально — напрямую: превью-сервер ничего не проксирует
   };
 
   var IC = {

@@ -65,7 +65,7 @@ ym(110759242, "init", {
 // при каждом заходе на витрину. Открытием считается визит, НАЧАВШИЙСЯ по ссылке
 // с ?ref= в адресе; дальнейшие страницы того же визита — просмотры.
 (function () {
-  var ENDPOINT = "https://so-leads.ruslan-sabirov.workers.dev/hit";
+  var ENDPOINT = (location.hostname === "invest.rumberg.ru" ? "/api" : "https://so-leads.ruslan-sabirov.workers.dev") + "/hit";
 
   // Ключ продукта. ТО ЖЕ правило, что productFromUrl() в bot/worker.js — иначе
   // открытия и заявки лягут под разными ключами и в кабинете не сойдутся в строку.
@@ -117,7 +117,7 @@ ym(110759242, "init", {
 // sendBeacon переживает переход по ссылке; шлём максимум один раз за сессию, чтобы
 // повторные клики одного посетителя не спамили. Ошибки глушим — на навигацию не влияем.
 (function () {
-  var ENDPOINT = "https://so-leads.ruslan-sabirov.workers.dev/click";
+  var ENDPOINT = (location.hostname === "invest.rumberg.ru" ? "/api" : "https://so-leads.ruslan-sabirov.workers.dev") + "/click";
   function wire() {
     var btn = document.querySelector("a.btn-tg");
     if (!btn) return;

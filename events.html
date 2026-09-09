@@ -21,7 +21,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#0B0C10">
 <link href="fonts/fonts.css?v=1" rel="stylesheet">
-<script src="metrika.js?v=5" defer></script>
+<script src="metrika.js?v=6" defer></script>
 <style>
   :root {
     --canvas: #0B0C10; --card: #14161C; --panel-2: #191B22; --tile: rgba(255,255,255,0.045);
@@ -238,7 +238,7 @@
 <script>
 (function () {
   "use strict";
-  var ENDPOINT = "https://so-leads.ruslan-sabirov.workers.dev/lead";
+  var ENDPOINT = (location.hostname === "invest.rumberg.ru" ? "/api" : "https://so-leads.ruslan-sabirov.workers.dev") + "/lead";
   var MON = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"];
   var WD = ["Воскресенье", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"];
   function goal(name) { try { ym(110759242, "reachGoal", name); } catch (e) {} }

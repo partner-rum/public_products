@@ -7,7 +7,7 @@
   "use strict";
 
   var CFG = {
-    endpoint: "https://so-leads.ruslan-sabirov.workers.dev/chat",
+    endpoint: (location.hostname === "invest.rumberg.ru" ? "/api" : "https://so-leads.ruslan-sabirov.workers.dev") + "/chat",
     botUser: "Rumberb_Sales_Team_bot",
     metrikaId: 110759242,
     msgLimit: 10,   // максимум вопросов за сессию, дальше — кнопка «Написать в Telegram»

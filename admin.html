@@ -902,7 +902,7 @@
 <script>
 (function () {
   "use strict";
-  var ENDPOINT = "https://so-leads.ruslan-sabirov.workers.dev/submit";
+  var ENDPOINT = (location.hostname === "invest.rumberg.ru" ? "/api" : "https://so-leads.ruslan-sabirov.workers.dev") + "/submit";
 
   // ── счётчик символов у длинных полей ──
   // maxlength обрезает ввод молча: вставленный текст длиннее лимита теряет хвост,

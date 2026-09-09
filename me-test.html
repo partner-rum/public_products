@@ -336,11 +336,11 @@
   };
 })();
 </script>
-<script src="chat.js?v=17"></script>
+<script src="chat.js?v=18"></script>
 <script>
 (function () {
   "use strict";
-  var API = "https://so-leads.ruslan-sabirov.workers.dev/stats";
+  var API = (location.hostname === "invest.rumberg.ru" ? "/api" : "https://so-leads.ruslan-sabirov.workers.dev") + "/stats";
 
   var $ = function (id) { return document.getElementById(id); };
   var gate = $("gate"), dash = $("dash");
@@ -354,7 +354,7 @@
   var IS_DEMO = /[?&]demo=[0-3]/.test(location.search);
   // Витрина для скриншотов: сортировка по Bid и без служебной метки.
   var IS_SHOW = /[?&]demo=3/.test(location.search);
-  var ACT_API = "https://so-leads.ruslan-sabirov.workers.dev/act";
+  var ACT_API = (location.hostname === "invest.rumberg.ru" ? "/api" : "https://so-leads.ruslan-sabirov.workers.dev") + "/act";
   // Что агент делал на столе — в журнал владельца. Ответа не ждём и ошибок не
   // показываем: это учёт, а не работа страницы. Пара ID+ключ обязательна, иначе
   // воркер событие не примет (и подделать чужую активность нельзя).
@@ -798,7 +798,7 @@
 
   // ---- АКТУАЛЬНЫЕ ПРОДУКТЫ -------------------------------------------------
   var LIVE_LIMIT = 6;
-  var PICKS_API = "https://so-leads.ruslan-sabirov.workers.dev/picks";
+  var PICKS_API = (location.hostname === "invest.rumberg.ru" ? "/api" : "https://so-leads.ruslan-sabirov.workers.dev") + "/picks";
   // Маркировка ИИ — В ЗАГОЛОВКЕ блока, а не сноской: мелкую строку внизу
   // Руслан на скриншоте просто не увидел (25.08.2026).
   function setLiveTitle(personal) {
@@ -1110,6 +1110,6 @@
 <!-- Счётчик БЕЗ записи экрана: metrika.js сам выключает вебвизор и кликмап
      на me/admin/boss — на этих страницах видны реквизиты партнёра и
      вознаграждение по сделкам, отправлять их в Яндекс нельзя -->
-<script src="metrika.js?v=5" defer></script>
+<script src="metrika.js?v=6" defer></script>
 </body>
 </html>

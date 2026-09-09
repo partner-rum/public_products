@@ -329,7 +329,7 @@
 <script>
 (function () {
   "use strict";
-  var API = "https://so-leads.ruslan-sabirov.workers.dev/boss";
+  var API = (location.hostname === "invest.rumberg.ru" ? "/api" : "https://so-leads.ruslan-sabirov.workers.dev") + "/boss";
   var $ = function (id) { return document.getElementById(id); };
   var gate = $("gate"), dash = $("dash");
   var IS_DEMO = /[?&]demo=1/.test(location.search);
