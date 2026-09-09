@@ -1,0 +1,9 @@
+[Unit]
+Description=Rumberg API — запуск cron воркера (worker.scheduled)
+After=rumberg-api.service
+Requires=rumberg-api.service
+
+[Service]
+Type=oneshot
+# Путь локальный, снаружи недостижим (nginx проксирует только /api/).
+ExecStart=/usr/bin/curl -fsS -m 300 -X POST http://127.0.0.1:8080/__cron

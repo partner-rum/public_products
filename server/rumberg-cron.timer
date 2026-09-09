@@ -1,0 +1,12 @@
+[Unit]
+Description=Rumberg API — расписание cron воркера
+
+[Timer]
+# ВНИМАНИЕ: сверить с расписанием, которое стоит у воркера в Cloudflare
+# (Workers -> so-leads -> Settings -> Triggers -> Cron Triggers) и с часовым
+# поясом сервера (timedatectl). Здесь — будни, 09:00 по Москве.
+OnCalendar=Mon..Fri 09:00 Europe/Moscow
+Persistent=true
+
+[Install]
+WantedBy=timers.target

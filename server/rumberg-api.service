@@ -1,0 +1,35 @@
+[Unit]
+Description=Rumberg API — бэкенд витрины invest.rumberg.ru
+Documentation=file:///srv/site/server/README.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/srv/site/server
+ExecStart=/usr/bin/node /srv/site/server/server.mjs
+# Секреты живут ТОЛЬКО здесь (права 0600) и в репозиторий не попадают.
+EnvironmentFile=/etc/rumberg-api.env
+Environment=HOST=127.0.0.1
+Environment=PORT=8080
+Environment=KV_DB=/var/lib/rumberg/kv.db
+User=rumberg
+Group=rumberg
+Restart=always
+RestartSec=2
+
+# Служба смотрит в интернет только через nginx, поэтому прав ей нужно минимум.
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+RestrictSUIDSGID=yes
+ReadWritePaths=/var/lib/rumberg
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=rumberg-api
+
+[Install]
+WantedBy=multi-user.target

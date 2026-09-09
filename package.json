@@ -1,0 +1,6 @@
+{
+  "name": "rumberg-invest",
+  "private": true,
+  "type": "module",
+  "description": "Витрина invest.rumberg.ru. type=module нужен, чтобы Node мог импортировать bot/worker.js (он ES-модуль) — иначе .js в корне трактуется как CommonJS и импорт падает на export default. Сборки у проекта нет и не появляется: зависимостей ноль, npm install не требуется."
+}
