@@ -14,7 +14,7 @@
 <link rel="canonical" href="https://invest.rumberg.ru/events.html">
 <!-- Без ?v= : скрейпер Telegram картинку с query-строкой не забирает.
      Перерисовал обложку — переименуй файл, а не добавляй параметр. -->
-<meta property="og:image" content="https://invest.rumberg.ru/og-events-3.png">
+<meta property="og:image" content="https://invest.rumberg.ru/og-events-4.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Rumberg — онлайн-встречи для агентов и партнёров">
@@ -236,7 +236,7 @@
   </div>
 </div>
 
-<script src="data/events.js?v=7"></script>
+<script src="data/events.js?v=8"></script>
 <script>
 (function () {
   "use strict";
@@ -298,7 +298,10 @@
       actions += '<a class="btn ghost" href="' + esc(m.url) + '" data-goal="event_material">' +
         esc(m.label) + ' ' + ARROW + '</a>';
     });
-    return '<section class="poster">' +
+    // id на постере — тот же якорь, что у строк списка: ближайшая встреча в
+    // список не попадает, и ссылка вида events.html#<id> (её ставит разбор на
+    // ideas.html) вела в пустоту, пока встреча оставалась ближайшей.
+    return '<section class="poster" id="' + esc(s.id) + '">' +
       '<div class="p-l">' +
         (live ? '<span class="chip onair"><i></i>Идёт сейчас</span>'
               : '<span class="chip live">Ближайшая · ' + e.dateShort + '</span>') +

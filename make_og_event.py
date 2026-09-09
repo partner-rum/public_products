@@ -20,7 +20,7 @@ og:image в events.html — Telegram кэширует превью по URL ка
 import os, sys, re, json, socket, subprocess, threading, functools, http.server, shutil, datetime
 
 ROOT = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(ROOT, "og-events-3.png")
+OUT = os.path.join(ROOT, "og-events-4.png")
 TPL_NAME = "_og_event_tmp.html"
 
 CHROME_CANDIDATES = [
@@ -63,7 +63,13 @@ def nearest_event():
     """Ближайшая встреча, которая ещё не прошла. Нет таких — None."""
     with open(os.path.join(ROOT, "data", "events.js"), encoding="utf-8") as f:
         s = f.read()
-    data = json.loads(s[s.index("{"):s.rindex("}") + 1])
+    # Тело ищем ОТ `window.EVENTS =`, а не по первой «{» в файле: в шапке
+    # events.js есть комментарий с примером `[{url, label}, …]`, и поиск по
+    # первой скобке ломался на нём (JSONDecodeError на первом же символе).
+    m = re.search(r"window\.EVENTS\s*=\s*", s)
+    if not m:
+        raise SystemExit("в data/events.js не найдено `window.EVENTS =`")
+    data = json.loads(s[m.end():].strip().rstrip(";"))
     today = datetime.date.today().isoformat()
     future = [e for e in data.get("items", []) if (e.get("date") or "") >= today]
     return min(future, key=lambda e: (e["date"], e.get("timeMsk") or "")) if future else None
