@@ -307,7 +307,7 @@
 
 <script src="data/instruments.js"></script>
 <script src="data/market.js"></script>
-<script src="market-lib.js?v=4"></script>
+<script src="market-lib.js?v=5"></script>
 <script>
 (function () {
   "use strict";
@@ -1015,7 +1015,7 @@
     }
     var ys = window.MARKET_STATS.years;
     return headHTML("Рынок · " + ys[0].y + "–" + ys[ys.length - 1].y, lib.name, lib.tagline) +
-      M.html(fam, lib, usecaseHTML) + trioHTML("Три сдвига за семь лет", M.trio()) + glossHTML("Термины", M.gloss);
+      M.html(fam, lib, usecaseHTML) + glossHTML("Термины", M.gloss);
   }
 
   function articleHTML(id) {

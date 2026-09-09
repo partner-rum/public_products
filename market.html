@@ -54,7 +54,10 @@
   .btn-solar { background: var(--solar); color: #0C0A08 !important; border-radius: 6px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 7px; transition: background .3s ease-in-out; }
   .btn-solar:hover { background: var(--solar-l); }
 
-  .page-head { padding: 44px 0 0; }
+  /* padding-top, а НЕ сокращённая запись: .page-head стоит ниже .wrap с той же
+     специфичностью, и `padding: 44px 0 0` обнуляла её боковые отступы — шапка
+     страницы съезжала на 44px левее всего остального содержимого */
+  .page-head { padding-top: 44px; }
   .eyebrow { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .eyebrow .tag { border: 1px solid var(--border); border-radius: 999px; padding: 4px 10px; }
   .page-head h1 { margin: 12px 0 14px; font-family: var(--display); font-size: clamp(30px, 4vw, 42px); font-weight: 500; line-height: 1.08; letter-spacing: -0.02em; text-wrap: balance; max-width: 780px; }
@@ -80,13 +83,6 @@
   .seg { display: inline-flex; background: rgba(255,255,255,0.06); border-radius: 9px; padding: 3px; gap: 2px; }
   .seg button { border: none; background: none; cursor: pointer; font-family: var(--f-mono); font-size: 12.5px; color: var(--hushed); padding: 6px 12px; border-radius: 7px; transition: background .18s, color .18s; }
   .seg button.on { background: #262A33; color: #6796EC; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.35); }
-  .rows-k { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.11em; text-transform: uppercase; color: var(--faint); margin: 30px 0 0; }
-  .trio { display: grid; grid-template-columns: repeat(3, 1fr); margin: 10px 0 4px; border-top: 1px solid var(--border); }
-  .trio > div { padding: 14px 26px 6px 0; }
-  .trio > div + div { border-left: 1px solid var(--border-soft); padding-left: 26px; }
-  .trio .t { font-size: 15px; font-weight: 600; line-height: 1.3; }
-  .trio .en { display: block; font-family: var(--f-mono); font-size: 11px; font-weight: 400; color: var(--faint); margin-top: 4px; }
-  .trio .d { font-size: 13.5px; line-height: 1.6; color: var(--hushed); margin-top: 9px; text-wrap: pretty; }
   .gloss { margin-top: 26px; border-top: 1px solid var(--border-soft); padding-top: 16px; }
   .gloss summary { cursor: pointer; font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); list-style: none; display: flex; align-items: center; gap: 8px; }
   .gloss summary::-webkit-details-marker { display: none; }
@@ -120,9 +116,6 @@
   @media (max-width: 960px) {
     .wrap { padding: 0 20px; } .nav-in { padding: 0 20px; }
     .art-grid { grid-template-columns: 1fr; }
-    .trio { grid-template-columns: 1fr; }
-    .trio > div { padding: 14px 0 4px; }
-    .trio > div + div { border-left: none; border-top: 1px solid var(--border-soft); padding-left: 0; }
   }
   @media (max-width: 860px) {
     .nav-in { height: auto; flex-wrap: wrap; padding: 12px 20px; row-gap: 10px; }
@@ -193,7 +186,7 @@
 <p class="vh" id="announce" aria-live="polite"></p>
 
 <script src="data/market.js"></script>
-<script src="market-lib.js?v=4"></script>
+<script src="market-lib.js?v=5"></script>
 <script>
 (function () {
   "use strict";
@@ -207,11 +200,6 @@
   function usecaseHTML(d, label) {
     return '<div class="usecase"><span class="ic" aria-hidden="true"><svg width="17" height="17" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="6.4" stroke="#EE7D1B" stroke-width="1.5"/><circle cx="9" cy="9" r="1.9" fill="#EE7D1B"/></svg></span>' +
       '<div><div class="k">' + label + '</div><div class="v">' + d.whenToUse + '</div></div></div>';
-  }
-  function trioHTML(label, rows) {
-    return '<div class="rows-k">' + label + '</div><div class="trio">' + rows.map(function (r) {
-      return '<div><div class="t">' + r.t + (r.en ? '<span class="en">' + r.en + '</span>' : '') + '</div><div class="d">' + r.d + '</div></div>';
-    }).join("") + '</div>';
   }
   function glossHTML(title, items) {
     return '<details class="gloss"><summary>' + title + '</summary><dl>' + items.map(function (g) {
@@ -234,8 +222,7 @@
     art.innerHTML = '<div class="plaque"><div class="k">Данные</div>Статистика рынка сейчас недоступна — не загрузился файл данных. Обновите страницу.</div>';
     return;
   }
-  art.innerHTML = M.html(FAM, M.text, usecaseHTML) +
-    trioHTML("Три сдвига за семь лет", M.trio()) + glossHTML("Термины", M.gloss);
+  art.innerHTML = M.html(FAM, M.text, usecaseHTML) + glossHTML("Термины", M.gloss);
   M.bind(art, animate);
   animate(art);
 

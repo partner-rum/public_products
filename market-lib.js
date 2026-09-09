@@ -128,6 +128,20 @@
 .mk-vp{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-end}\
 @media (max-width:960px){.mk-nums{grid-template-columns:1fr 1fr}.mk-year{grid-template-columns:1fr}.lgnd.mk{grid-template-columns:1fr 1fr}.mk-kpi{grid-template-columns:1fr 1fr}.tl{grid-template-columns:repeat(4,minmax(0,1fr))}.tl-bars{height:90px}.hb-row{grid-template-columns:minmax(0,120px) 1fr 62px}}\
 @media (max-width:520px){.mch-cols{gap:5px}#mk-vol .mch-val small{display:none}.mch-val{font-size:11px}.mk-nums .v{font-size:23px}.lgnd.mk{grid-template-columns:1fr}.tl{grid-template-columns:repeat(2,minmax(0,1fr))}.mch-m .mch-val{display:none}.mk-red{grid-template-columns:1fr}}\
+.mk-shifts{margin:2px 0 24px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:18px 0 8px}\
+.mk-shifts .sh-head{display:flex;align-items:baseline;flex-wrap:wrap;gap:2px 16px;margin:0}\
+.mk-shifts .sh-title{margin:0;font-family:var(--display);font-size:22px;font-weight:500;letter-spacing:-.024em;line-height:1.14;color:var(--ink)}\
+.mk-shifts .sh-note{margin:0;font-family:var(--f-mono);font-size:11.5px;line-height:1.45;color:var(--faint)}\
+.mk-shifts .sh-list{list-style:none;counter-reset:sh;margin:12px 0 0;padding:0}\
+.mk-shifts .sh-row{counter-increment:sh;display:grid;grid-template-columns:64px minmax(0,.72fr) minmax(0,1.68fr);gap:0 26px;padding:18px 0 20px}\
+.mk-shifts .sh-row+.sh-row{border-top:1px solid var(--border-soft)}\
+.mk-shifts .sh-row::before{content:counter(sh,decimal-leading-zero);grid-column:1;grid-row:1;align-self:start;margin-top:1px;width:42px;padding-bottom:8px;border-bottom:2px solid var(--fc);font-family:var(--f-mono);font-size:30px;font-weight:500;line-height:1;letter-spacing:-.03em;color:var(--ink);font-variant-numeric:tabular-nums}\
+.mk-shifts .sh-say{grid-column:2;grid-row:1;min-width:0}\
+.mk-shifts .sh-t{margin:0;font-family:var(--display);font-size:17.5px;font-weight:600;line-height:1.26;letter-spacing:-.018em;color:var(--ink);text-wrap:balance}\
+.mk-shifts .sh-kick{margin:7px 0 0;font-family:var(--f-mono);font-size:11.5px;line-height:1.4;color:var(--fc)}\
+.mk-shifts .sh-d{grid-column:3;grid-row:1;margin:0;font-size:14px;line-height:1.58;color:var(--hushed);text-wrap:pretty;min-width:0}\
+@media (max-width:960px){.mk-shifts .sh-row{grid-template-columns:52px minmax(0,1fr);gap:0 18px;padding:16px 0 18px}.mk-shifts .sh-d{grid-column:2;grid-row:2;margin-top:10px}.mk-shifts .sh-row::before{font-size:25px;width:36px;padding-bottom:7px;margin-top:2px}.mk-shifts .sh-title{font-size:21px}}\
+@media (max-width:520px){.mk-shifts{padding-top:16px}.mk-shifts .sh-row{grid-template-columns:38px minmax(0,1fr);gap:0 14px;padding:15px 0 17px}.mk-shifts .sh-row::before{font-size:21px;width:28px;padding-bottom:6px;margin-top:2px}.mk-shifts .sh-t{font-size:16px}.mk-shifts .sh-kick{font-size:11px;margin-top:6px}.mk-shifts .sh-d{grid-column:1/-1;font-size:13.5px;margin-top:11px}.mk-shifts .sh-title{font-size:19.5px}.mk-shifts .sh-note{font-size:11px}}\
 ";
   function injectCSS() {
     if (document.getElementById("mk-css")) return;
@@ -380,13 +394,33 @@
   }
 
   // ── сборка ──
+  // ── три сдвига: тезисы страницы ──
+  // Стоят СРАЗУ под полосой цифр и ВЫШЕ графиков: это вывод, а графики под ними —
+  // доказательства. Раньше блок висел вторым с конца, то есть выводы читались
+  // после доказательств. Номера рисует счётчик CSS, индекс в данные не
+  // протаскивается; <ol> сообщает порядок скринридеру, ::before — только оформление.
+  // Планка под номером — цвет --fc («статистика, не продукт»), тот же, что у .art-bar:
+  // оранжевый здесь означал бы «наше» или «активно» и врал бы.
+  // SHIFTS_NOTE — единственный текст блока, который НЕ считается из данных;
+  // цифр в нём нет намеренно, иначе он разошёлся бы с расчётом.
+  var SHIFTS_NOTE = "что изменилось · доказательства — на графиках ниже";
+  function shiftsHTML() {
+    return '<section class="mk-shifts" aria-labelledby="mk-sh-t">' +
+      '<div class="sh-head"><h2 class="sh-title" id="mk-sh-t">Три сдвига за семь лет</h2>' +
+      '<p class="sh-note">' + SHIFTS_NOTE + '</p></div>' +
+      '<ol class="sh-list">' + trio().map(function (r) {
+        return '<li class="sh-row"><div class="sh-say"><h3 class="sh-t">' + r.t + '</h3>' +
+          (r.en ? '<p class="sh-kick">' + r.en + '</p>' : '') +
+          '</div><p class="sh-d">' + r.d + '</p></li>';
+      }).join("") + '</ol></section>';
+  }
   function html(fam, lib, usecaseHTML) {
     injectCSS();
     var fc = fam.color;
     var left = usecaseHTML(lib, "Зачем это знать") +
       '<div class="kv"><div class="k">Как считали</div><div class="v">' + lib.how + '</div></div>' +
       '<div class="plaque"><div class="k">Оговорки</div>' + lib.risk + '</div>';
-    return numsHTML() + volHTML(fc) + yearHTML(fc) + shareHTML(fc) + timelineHTML(fc) + termsHTML(fc) +
+    return numsHTML() + shiftsHTML() + volHTML(fc) + yearHTML(fc) + shareHTML(fc) + timelineHTML(fc) + termsHTML(fc) +
       '<div class="art-grid"><div>' + left + '</div><div class="viz pf" style="--fc:' + fc + '">' + redeemHTML() + '</div></div>' +
       '<div class="pf-cap" style="margin-top:14px">* ' + last().y + ' год — по ' + AS.human + ', выпуски, размещение которых ещё идёт, учтены нулём. Расчёты Rumberg по открытым и доступным источникам; общий объём рынка за 2022–2025 — сводная оценка.</div>';
   }
