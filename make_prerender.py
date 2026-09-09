@@ -368,6 +368,13 @@ def theme_block(iss):
         elif t == "bignum":
             rows.append("%s %s, %s. %s" % (sec.get("v", ""), sec.get("kk", ""), sec.get("sub", ""),
                                            sec.get("text", "")))
+            b = sec.get("bars") or {}
+            if b.get("rows"):
+                rows.append("%s: %s." % (b.get("k", "Ряд"), "; ".join(
+                    "%s — %s" % (r.get("x", ""), str(r.get("v", "")).replace(".", ","))
+                    for r in b["rows"])))
+            if b.get("note"):
+                rows.append(b["note"])
         elif t == "columns":
             for c in sec.get("cols") or []:
                 rows.append("%s: %s." % (c.get("t", ""), "; ".join(
