@@ -762,9 +762,7 @@ HTML = T("""<!DOCTYPE html>
 <meta property="og:image:alt" content="Rumberg — структурные продукты">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#0B0C10">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@500;600;700&family=Onest:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="fonts/fonts.css?v=1" rel="stylesheet">
 <style>$css</style>
 <script src="metrika.js?v=2" defer></script>
 </head>

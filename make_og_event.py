@@ -116,9 +116,7 @@ TEMPLATE = """<!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Rubik:wght@600;700;800&display=swap" rel="stylesheet">
+<link href="fonts/fonts.css?v=1" rel="stylesheet">
 <style>
   :root{--bg:#0B0C10;--card:#14161C;--ink:#F2F3F7;--mut:rgba(242,243,247,.64);
     --mut2:rgba(242,243,247,.40);--bd:rgba(255,255,255,.11);--or:#EE7D1B;

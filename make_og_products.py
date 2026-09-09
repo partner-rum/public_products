@@ -71,9 +71,7 @@ TEMPLATE = r"""<!DOCTYPE html>
 <head>
 <meta charset="utf-8">
 <title>og product</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Rubik:wght@600;700;800&display=swap" rel="stylesheet">
+<link href="fonts/fonts.css?v=1" rel="stylesheet">
 <script src="data/instruments.js"></script>
 <script src="data/offerings.js"></script>
 <style>
