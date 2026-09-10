@@ -27,7 +27,7 @@ window.EVENTS = {
    "timeMsk": "15:00",
    "durationMin": 30,
    "place": "Онлайн · Контур.Толк · вход свободный",
-   "joinUrl": "",
+   "joinUrl": "https://rumbergcapital.ktalk.ru/app/stream/auditoriums/658e9720-624d-4b34-a192-823ce7e14452",
    "recordingUrl": "",
    "materials": [
     {
@@ -39,8 +39,8 @@ window.EVENTS = {
      "label": "Библиотека: Pre-IPO"
     }
    ],
-   "speaker": "Руслан Сабиров",
-   "speakerNote": "Rumberg — автор витрины структурных продуктов",
+   "speaker": "Полина Денисова",
+   "speakerNote": "Директор по развитию бизнеса, Rumberg Capital",
    "agenda": [
     "Где Pre-IPO в жизненном цикле компании и зачем он инвестору",
     "Как формируется финансовый результат: вход, переоценка, событие ликвидности, выход",
