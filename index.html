@@ -515,16 +515,10 @@
     .work { grid-template-columns:minmax(0,1fr); column-gap:0; }
     .work .cell { border-top:1px solid var(--line); margin-top:0; padding-top:16px; }
     .work .cell:nth-child(n) { grid-column:auto; }
-    /* Утром агент открывает телефон ради рынка, а не ради меню: сначала обзор,
-       разделы уезжают в конец. Порядок задан явно — от DOM он теперь отличается. */
-    .work .cell:nth-child(3) { order:1; border-top:0; }   /* Утро на рынках */
-    .work .cell:nth-child(2) { order:2; }                 /* Лучшие ставки */
-    .work .cell:nth-child(4) { order:3; }                 /* Актуальные продукты */
-    .work .cell:nth-child(5) { order:4; }                 /* Размещения */
-    .work .cell:first-child  { order:9; }                 /* Разделы */
-    .work .cell:first-child nav { display:grid; grid-template-columns:1fr 1fr; column-gap:16px; }
-    /* Тач-цель: на десктопе строка раздела 33px, для пальца нужно 44 */
-    .work .cell:first-child .rl { padding-top:13px; padding-bottom:13px; }
+    /* Порядок и видимость колонок на телефоне задаёт блок варианта B ниже:
+       прежняя раскладка ставила первым «Утро на рынках» (самый высокий блок,
+       515px), а список «Разделы» уезжал в конец, на y=2304 — то есть меню
+       было видно после 2,8 экранов скролла. */
     /* То же и для заголовков колонок: это входы в разделы, а не подписи.
        Ниже — тач-цели 44px там, где палец, а не курсор. */
     .ch { align-items:center; }
@@ -540,6 +534,64 @@
     .prow .pmain { padding:9px 0; }
     .prow .pcopy { width:44px; height:44px; }
   }
+  /* ── Мобильная структура: аккордеон (вариант B, выбран Русланом 11.09.2026) ──
+     Повод — замер исходной телефонной раскладки на 375×812: страница 3436px =
+     4,2 экрана, навигация лежала на y=2304 (её видно после 2,8 экранов), а
+     самый высокий блок «Утро на рынках» (515px) стоял первым. То есть витрина
+     открывалась новостями, а меню было последним.
+     Стало: меню чипсами сразу под лентой, порядок продуктовый, каждый раздел —
+     строка-заголовок со счётчиком, раскрывается тапом; открыты только
+     «Актуальные продукты». Страница 2,7 экрана вместо 4,2, весь контент цел.
+     Разметку строит JS, но ТОЛЬКО при совпадении медиазапроса — на десктопе
+     обёрток и кнопок нет вовсе. */
+
+  /* Чипсы навигации: заменяют список «Разделы» из подвала страницы.
+     Метки («110 шт.», даты) в чипсы не несём — с ними восемь чипсов занимали
+     пять строк и 230px, без них три строки и 146px; цифра всё равно стоит на
+     странице раздела. */
+  .mob-nav { display:none; }
+  .mob-tog { display:none; }
+  .mob-cnt { display:none; }
+
+  @media (max-width:860px) {
+    .mob-nav { display:flex; flex-wrap:wrap; gap:7px; margin:16px 0 4px; }
+    .mob-nav a { display:inline-flex; align-items:center; min-height:44px; padding:0 13px;
+      border:1px solid var(--line); border-radius:9px; background:var(--panel);
+      font-size:0.8125rem; font-weight:500; color:var(--tx); }
+    .mob-nav a:active { border-color:var(--solar); }
+
+    /* Кнопка-раскрытие. Это <button>, а он НЕ наследует color от body и берёт
+       системный buttontext — на тёмном это 1,16:1 (ловили на плитках .cell
+       в библиотеке). Цвет задаём явно. */
+    .mob-tog { display:inline-flex; margin-left:auto; align-items:center; justify-content:center;
+      width:44px; height:44px; padding:0; flex:none;
+      background:none; border:1px solid var(--line); border-radius:9px; color:var(--mut); }
+    .mob-tog svg { transition:transform .2s var(--ease); }
+    .mob-acc.open .mob-tog svg { transform:rotate(180deg); }
+    .mob-tog:active { border-color:var(--solar); color:var(--tx); }
+    .mob-cnt { display:inline; font-family:var(--m); font-size:0.6875rem; color:var(--dim);
+      margin-left:8px; white-space:nowrap; }
+    .mob-acc > .ch { min-height:56px; }
+    .mob-acc:not(.open) .mob-body { display:none; }
+
+    /* Шапка ленты на 375px ломалась: метка «МОЖЕМ ЗАПУСТИТЬ СЕЙЧАС» уходила
+       в три строки, а пояснение на 76 знаков вжималось рядом с ней в узкую
+       колонку. Раскладываем на две строки: метка и вход — первая, пояснение —
+       вторая, во всю ширину. */
+    .tape-cap { flex-wrap:wrap; }
+    .tape-cap .tlbl { white-space:nowrap; }
+    .tape-cap .launch-go { order:2; }
+    .tape-cap .tsub { order:3; flex-basis:100%; margin-top:3px; }
+
+    /* Порядок продуктовый: сначала товар, потом деньги, потом чтение */
+    .work .cell:nth-child(4) { order:1; border-top:0; }   /* Актуальные продукты */
+    .work .cell:nth-child(2) { order:2; }                 /* Лучшие ставки */
+    .work .cell:nth-child(5) { order:3; }                 /* Размещения */
+    .work .cell:nth-child(3) { order:4; }                 /* Утро на рынках */
+    /* Список «Разделы» скрыт, но ОСТАЁТСЯ в DOM: чипсы строятся из него */
+    .work .cell:first-child { display:none; }
+  }
+
   @media (max-width: 900px) {
     /* Подпись длинная (23 знака) и переполняет шапку раньше остальных —
        сворачиваем её в иконку на 260px раньше, чем ярлык Telegram. */
@@ -1353,6 +1405,126 @@
 <script src="search.js?v=1"></script>
 <script src="nav-about.js?v=7"></script>
 <script src="qualgate.js?v=5"></script>
+<script>
+/* ── Мобильная структура: чипсы навигации + аккордеон разделов ──────────────
+   Вариант B, выбран Русланом 11.09.2026 из пяти показанных на стенде.
+   Строим ТОЛЬКО при совпадении медиазапроса: на десктопе ни обёрток, ни
+   кнопок, ни счётчиков в DOM не появляется. Порядок блоков и видимость —
+   на CSS, здесь только разметка и состояние. */
+(function () {
+  var MQ = window.matchMedia ? window.matchMedia("(max-width:860px)") : null;
+  if (!MQ) return;
+  var built = false;
+
+  var CHEV = '<svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">' +
+    '<path d="M3 5 L7 9 L11 5" stroke="currentColor" stroke-width="1.7" ' +
+    'stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+  // Счётчики считаются из НАРИСОВАННОГО, кроме выступлений: там полоса
+  // намеренно показывает ротацией пару из четырёх, и «2 записи» противоречили бы
+  // разделу «Выступления · 4 записи».
+  function plural(n, one, few, many) {
+    var a = n % 10, b = n % 100;
+    return n + " " + ((a === 1 && b !== 11) ? one : (a >= 2 && a <= 4 && (b < 12 || b > 14)) ? few : many);
+  }
+  var COUNT = {
+    rates: function () { return plural(document.querySelectorAll("#rates > .rt2").length, "предложение", "предложения", "предложений"); },
+    news: function () { return plural(document.querySelectorAll("#news > .mn").length, "блок", "блока", "блоков"); },
+    prod: function () { return plural(document.querySelectorAll("#mprod > .prow").length, "позиция", "позиции", "позиций"); },
+    offers: function () { return plural(document.querySelectorAll("#offers > a").length, "выпуск", "выпуска", "выпусков"); },
+    talks: function () {
+      var n = (window.TALKS && window.TALKS.items) ? window.TALKS.items.length
+        : document.querySelectorAll("#talklist > .card").length;
+      return plural(n, "запись", "записи", "записей");
+    }
+  };
+
+  function accordion(cell, key, open) {
+    var ch = cell.querySelector(".ch");
+    if (!ch || cell.classList.contains("mob-acc")) return;
+    cell.classList.add("mob-acc");
+
+    // Обёртка ставится на уровне ЯЧЕЙКИ, а не внутри #news/#mprod: селекторы
+    // вида «#offers > a» и «.rt2:last-of-type» должны остаться рабочими.
+    var body = document.createElement("div");
+    body.className = "mob-body";
+    body.id = "mob-body-" + key;
+    var rest = [];
+    for (var i = 0; i < cell.children.length; i++) if (cell.children[i] !== ch) rest.push(cell.children[i]);
+    for (var j = 0; j < rest.length; j++) body.appendChild(rest[j]);
+    cell.appendChild(body);
+
+    if (COUNT[key]) {
+      var cnt = document.createElement("span");
+      cnt.className = "mob-cnt";
+      cnt.textContent = COUNT[key]();
+      ch.appendChild(cnt);
+    }
+
+    var b = document.createElement("button");
+    b.className = "mob-tog";
+    b.type = "button";
+    b.innerHTML = CHEV;
+    b.setAttribute("aria-controls", body.id);
+    var label = (ch.querySelector("h2") || {}).textContent || "раздел";
+    function state(on) {
+      cell.classList.toggle("open", on);
+      b.setAttribute("aria-expanded", on ? "true" : "false");
+      b.setAttribute("aria-label", (on ? "Свернуть" : "Раскрыть") + " «" + label.trim() + "»");
+    }
+    b.addEventListener("click", function () { state(!cell.classList.contains("open")); });
+    ch.appendChild(b);
+    state(!!open);
+  }
+
+  function build() {
+    if (built) return;
+    var work = document.querySelector(".work");
+    if (!work) return;
+    var cells = work.querySelectorAll(":scope > .cell");
+    if (cells.length < 5) return;      // рендер ещё не дошёл — попробуем позже
+    built = true;
+
+    // Чипсы из настоящего списка «Разделы»: подписи не дублируем в коде,
+    // иначе они разойдутся с колонкой на десктопе.
+    var rows = document.querySelectorAll("#rail-list .rl");
+    if (rows.length) {
+      var nav = document.createElement("nav");
+      nav.className = "mob-nav";
+      nav.setAttribute("aria-label", "Разделы витрины");
+      var html = "";
+      for (var i = 0; i < rows.length; i++) {
+        var t = (rows[i].querySelector(".rt") || {}).textContent || "";
+        html += '<a href="' + rows[i].getAttribute("href") + '">' + t.trim() + "</a>";
+      }
+      nav.innerHTML = html;
+      var band = document.querySelector(".bandwrap");
+      if (band && band.parentNode) band.parentNode.insertBefore(nav, band);
+    }
+
+    // Открыты по умолчанию только «Актуальные продукты»
+    accordion(cells[3], "prod", true);
+    accordion(cells[1], "rates", false);
+    accordion(cells[4], "offers", false);
+    accordion(cells[2], "news", false);
+    var talks = document.getElementById("talks");
+    if (talks) accordion(talks, "talks", false);
+  }
+
+  function tryBuild() {
+    if (!MQ.matches) return;
+    build();
+    // Колонки рисуются данными: если на первый заход их ещё нет, повторяем один раз
+    if (!built) setTimeout(build, 400);
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", tryBuild);
+  else tryBuild();
+  // Поворот экрана и переход через контрольную точку: строим при первом попадании
+  if (MQ.addEventListener) MQ.addEventListener("change", tryBuild);
+  else if (MQ.addListener) MQ.addListener(tryBuild);
+})();
+</script>
 <script>
 /* Архивы дайджестов (138 КБ) и разборов (183 КБ) нужны главной РОВНО для двух
    подписей с датами в списке разделов — 321 КБ, то есть 39% первой загрузки,
