@@ -30,7 +30,10 @@
   :root {
     --bg:#0B0C10; --panel:rgba(255,255,255,0.04); --line:rgba(255,255,255,0.09);
     --tx:#F2F3F7; --mut:#A0A5B8; --dim:#888C9C;
-    --solar:#EE7D1B; --solar-l:#F58E33; --blue:#4F86E6; --or:#EE7D1B; --up:#55C08A;
+    --solar:#EE7D1B; --solar-l:#F58E33; --blue:#4F86E6; --up:#55C08A;
+    /* Цвет карточки из бренд-коммитментов: был вписан литералом дважды.
+       Мёртвый --or (дубль --solar, ноль обращений) убран. */
+    --card:#14161C;
     --f:'Onest',system-ui,sans-serif; --m:'JetBrains Mono',Consolas,monospace; --display:'Rubik','Onest',system-ui,sans-serif;
     --ease:cubic-bezier(0.16,1,0.3,1);
     --rule-soft:rgba(255,255,255,0.05);
@@ -46,7 +49,7 @@
   /* Пропустить к содержимому: на странице 33 фокусируемых элемента, и без этой
      ссылки клавиатурный обход начинается с шапки на каждой загрузке */
   .skip { position:absolute; left:-9999px; top:0; z-index:100001; background:var(--solar); color:#0C0A08;
-    font-weight:600; font-size:13px; padding:14px 18px; border-radius:0 0 8px 0; }
+    font-weight:600; font-size:0.8125rem; padding:14px 18px; border-radius:0 0 8px 0; }
   .skip:focus { left:0; }
 
   /* Свечи: как на проде, но полоса ограничена верхом и уходит в глухой фон
@@ -61,17 +64,17 @@
   /* ── Шапка ── */
   .nav { position:sticky; top:0; z-index:10; background:rgba(11,12,16,0.8); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border-bottom:1px solid var(--line); }
   .nav-in { max-width:var(--shell); margin:0 auto; padding:0 44px; height:60px; display:flex; align-items:center; gap:12px; }
-  .nav .name { font-size:14px; font-weight:600; }
-  .btn-solar { margin-left:auto; display:inline-flex; align-items:center; gap:8px; background:var(--solar); color:#0C0A08; border-radius:6px; padding:9px 15px; font-size:13px; font-weight:600; transition:background .3s ease-in-out; }
+  .nav .name { font-size:0.875rem; font-weight:600; }
+  .btn-solar { margin-left:auto; display:inline-flex; align-items:center; gap:8px; background:var(--solar); color:#0C0A08; border-radius:6px; padding:9px 15px; font-size:0.8125rem; font-weight:600; transition:background .3s ease-in-out; }
   .btn-solar:hover { background:var(--solar-l); }
   .nav-cta { margin-left:auto; display:flex; align-items:center; gap:10px; }
   .nav-cta .btn-solar { margin-left:0; }
-  .btn-tg { display:inline-flex; align-items:center; gap:7px; background:var(--panel); border:1px solid var(--line); color:var(--tx); border-radius:6px; padding:8px 13px; font-size:13px; font-weight:600; transition:border-color .2s, background .2s; }
+  .btn-tg { display:inline-flex; align-items:center; gap:7px; background:var(--panel); border:1px solid var(--line); color:var(--tx); border-radius:6px; padding:8px 13px; font-size:0.8125rem; font-weight:600; transition:border-color .2s, background .2s; }
   .btn-tg:hover { border-color:var(--blue); background:rgba(79,134,230,0.12); }
   .btn-tg svg { display:block; }
   /* Вход партнёра в свой кабинет. Тише соседей намеренно: оранжевая кнопка —
      действие для всех гостей, эта — для тех, у кого уже есть ключ. */
-  .btn-ghost { display:inline-flex; align-items:center; gap:7px; background:var(--panel); border:1px solid var(--line); color:var(--mut); border-radius:6px; padding:8px 13px; font-size:13px; font-weight:600; transition:border-color .2s, color .2s; }
+  .btn-ghost { display:inline-flex; align-items:center; gap:7px; background:var(--panel); border:1px solid var(--line); color:var(--mut); border-radius:6px; padding:8px 13px; font-size:0.8125rem; font-weight:600; transition:border-color .2s, color .2s; }
   .btn-ghost:hover { border-color:var(--solar); color:var(--tx); }
   .btn-ghost svg { display:block; }
 
@@ -81,7 +84,7 @@
   .hero { position:relative; padding:42px 0 28px; }
   h1 { margin:0; font-family:var(--display); font-size:clamp(36px,5vw,60px); font-weight:600; line-height:1.06; letter-spacing:-0.02em; max-width:860px; }
   h1 .lm { color:var(--solar); }
-  .sub { margin:18px 0 0; font-size:17px; line-height:1.5; color:var(--mut); max-width:640px; }
+  .sub { margin:18px 0 0; font-size:1.0625rem; line-height:1.5; color:var(--mut); max-width:640px; }
 
   /* ── Полоса-анонс встречи ── */
   .evt { display:flex; align-items:center; gap:16px; margin:26px 0 0; padding:13px 18px;
@@ -91,18 +94,18 @@
   .evt:hover { border-color:var(--solar); background:linear-gradient(92deg, rgba(238,125,27,0.16), rgba(238,125,27,0.05) 55%, transparent); }
   .evt .ed { flex:none; display:flex; flex-direction:column; align-items:center; justify-content:center;
     min-width:58px; padding:7px 10px; border-radius:9px; background:var(--solar); color:#0C0A08; }
-  .evt .ed .d { font-family:var(--display); font-weight:700; font-size:16px; line-height:1; }
-  .evt .ed .m { font-family:var(--m); font-size:11px; letter-spacing:.08em; text-transform:uppercase; margin-top:3px; }
+  .evt .ed .d { font-family:var(--display); font-weight:700; font-size:1rem; line-height:1; }
+  .evt .ed .m { font-family:var(--m); font-size:0.6875rem; letter-spacing:.08em; text-transform:uppercase; margin-top:3px; }
   .evt .et { min-width:0; }
-  .evt .et .t { display:block; font-size:14.5px; font-weight:600; }
-  .evt .et .s { display:block; font-family:var(--m); font-size:11px; color:var(--mut); margin-top:3px; letter-spacing:.02em; }
+  .evt .et .t { display:block; font-size:0.90625rem; font-weight:600; }
+  .evt .et .s { display:block; font-family:var(--m); font-size:0.6875rem; color:var(--mut); margin-top:3px; letter-spacing:.02em; }
   /* Полоса несёт ДВА действия — встречу и разбор её темы, — поэтому сама она
      больше не ссылка: обёртка .ev-main ведёт на события, действия справа живут
      отдельными ссылками. Вложенная ссылка внутри ссылки была бы невалидна. */
   .evt .ev-main { flex:1 1 auto; min-width:0; display:flex; align-items:center; gap:16px; }
   .evt .egs { margin-left:auto; flex:none; display:flex; align-items:center; gap:16px; }
   .evt .eg { flex:none; display:inline-flex; align-items:center; gap:7px;
-    font-family:var(--m); font-size:12px; color:var(--solar); letter-spacing:.06em; white-space:nowrap; }
+    font-family:var(--m); font-size:0.75rem; color:var(--solar); letter-spacing:.06em; white-space:nowrap; }
   .evt .eg:hover { color:var(--solar-l); }
   /* Второе действие приглушено: на полосе одна главная кнопка, разбор — спутник */
   .evt .eg2 { color:var(--mut); }
@@ -110,6 +113,10 @@
   @media (max-width:860px) {
     .evt .egs { gap:12px; }
     .evt .eg2 { display:none; }
+    /* «Записаться» — основное действие анонса встречи, а как ссылка без своей
+       высоты оно давало 16px. Порог 44px на этой странице держится для шапки
+       и заголовков колонок, до полосы не доходил. */
+    .evt .eg { min-height:44px; align-items:center; }
   }
   @media (max-width:640px) {
     .evt { flex-wrap:wrap; gap:12px; padding:14px 16px; }
@@ -117,11 +124,11 @@
   }
 
   /* ── Лента «Можем запустить сейчас» ── */
-  .tape-cap { display:flex; align-items:center; gap:9px; font-family:var(--m); font-size:12px; margin:18px 0 8px; color:var(--solar); }
-  .tape-cap .tlbl { letter-spacing:.13em; text-transform:uppercase; font-size:11px; }
+  .tape-cap { display:flex; align-items:center; gap:9px; font-family:var(--m); font-size:0.75rem; margin:18px 0 8px; color:var(--solar); }
+  .tape-cap .tlbl { letter-spacing:.13em; text-transform:uppercase; font-size:0.6875rem; }
   .tape-cap .tdot { width:7px; height:7px; border-radius:50%; background:var(--solar); box-shadow:0 0 0 4px rgba(238,125,27,0.16); flex:none; animation:tpulse 2.2s ease-in-out 6; }
   /* Пояснение к ленте — обычным регистром: 76 знаков капсом не читаются */
-  .tape-cap .tsub { color:var(--dim); text-transform:none; letter-spacing:.01em; font-size:11.5px; }
+  .tape-cap .tsub { color:var(--dim); text-transform:none; letter-spacing:.01em; font-size:0.71875rem; }
   @keyframes tpulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:.5; transform:scale(.85); } }
   .tape-box { position:relative; border:1px solid var(--line); border-left:1px solid var(--solar); border-radius:12px; background:var(--panel); overflow:hidden; padding:12px 0; margin:0 0 8px; }
   /* Затухание по краям — на обёртке содержимого, НЕ на коробке: маска режет
@@ -129,14 +136,14 @@
   .tclip { overflow:hidden;
     -webkit-mask-image:linear-gradient(90deg, transparent 0, #000 28px, #000 calc(100% - 28px), transparent 100%);
     mask-image:linear-gradient(90deg, transparent 0, #000 28px, #000 calc(100% - 28px), transparent 100%); }
-  .tape { display:flex; gap:38px; white-space:nowrap; width:max-content; font-family:var(--m); font-size:12px; animation:slide 52s linear infinite; }
+  .tape { display:flex; gap:38px; white-space:nowrap; width:max-content; font-family:var(--m); font-size:0.75rem; animation:slide 52s linear infinite; }
   .tape .it { display:flex; align-items:baseline; }
   .tape .sym { color:var(--tx); font-weight:500; }
   .tape .nm { color:var(--mut); }
   .tape .qt { color:var(--solar); font-weight:500; margin-left:10px; font-variant-numeric:tabular-nums; }
   @keyframes slide { to { transform:translateX(-50%); } }
   .launch { display:block; }
-  .launch .launch-go { margin-left:auto; display:inline-flex; align-items:center; gap:5px; color:var(--solar-l); text-transform:none; letter-spacing:0; font-size:11px; white-space:nowrap; }
+  .launch .launch-go { margin-left:auto; display:inline-flex; align-items:center; gap:5px; color:var(--solar-l); text-transform:none; letter-spacing:0; font-size:0.6875rem; white-space:nowrap; }
   .launch .launch-go svg { transition:transform .3s var(--ease); }
   .launch .tape-box { transition:border-color .2s, background .2s; }
   .launch:hover .tape-box { border-color:var(--solar); background:rgba(238,125,27,0.05); }
@@ -184,14 +191,14 @@
   @keyframes hevNtf { from { opacity:0; transform:translateY(-42px); } }
   .hev .ntf i { width:7px; height:7px; border-radius:50%; background:var(--solar); box-shadow:0 0 0 3px rgba(238,125,27,0.18); flex:none; margin-top:3px; animation:evPulse 1.6s ease-in-out 3; }
   .hev .ntf .nb { min-width:0; }
-  .hev .ntf .nt { display:block; font-size:11.5px; font-weight:600; line-height:1.3; }
-  .hev .ntf .nd { display:block; font-family:var(--m); font-size:12px; color:rgba(242,243,247,.66); margin-top:2px; }
-  .hev .ntf .nw { margin-left:auto; flex:none; font-family:var(--m); font-size:12px; color:rgba(242,243,247,.66); }
+  .hev .ntf .nt { display:block; font-size:0.71875rem; font-weight:600; line-height:1.3; }
+  .hev .ntf .nd { display:block; font-family:var(--m); font-size:0.75rem; color:rgba(242,243,247,.66); margin-top:2px; }
+  .hev .ntf .nw { margin-left:auto; flex:none; font-family:var(--m); font-size:0.75rem; color:rgba(242,243,247,.66); }
   .hev .star { display:block; margin:14px auto 0; filter:drop-shadow(0 0 14px rgba(238,125,27,.55)); }
-  .hev .wm2 { display:block; text-align:center; font-family:var(--m); font-size:11px; letter-spacing:.22em; text-indent:.22em; text-transform:uppercase; color:rgba(242,243,247,.66); margin-top:10px; }
-  .hev .big { display:block; text-align:center; font-family:var(--display); font-weight:700; font-size:23px; letter-spacing:-.02em; margin-top:2px; }
-  .hev .feat { display:block; text-align:center; font-family:var(--m); font-size:12px; color:rgba(242,243,247,.66); margin-top:7px; line-height:1.5; }
-  .hev .pbtn { display:block; margin-top:12px; background:var(--solar); color:#0C0A08; border-radius:9px; text-align:center; font-weight:600; font-size:12.5px; padding:9px; transition:background .2s; }
+  .hev .wm2 { display:block; text-align:center; font-family:var(--m); font-size:0.6875rem; letter-spacing:.22em; text-indent:.22em; text-transform:uppercase; color:rgba(242,243,247,.66); margin-top:10px; }
+  .hev .big { display:block; text-align:center; font-family:var(--display); font-weight:700; font-size:1.4375rem; letter-spacing:-.02em; margin-top:2px; }
+  .hev .feat { display:block; text-align:center; font-family:var(--m); font-size:0.75rem; color:rgba(242,243,247,.66); margin-top:7px; line-height:1.5; }
+  .hev .pbtn { display:block; margin-top:12px; background:var(--solar); color:#0C0A08; border-radius:9px; text-align:center; font-weight:600; font-size:0.78125rem; padding:9px; transition:background .2s; }
   .hev:hover .pbtn { background:var(--solar-l); }
 
   .rise { opacity:0; transform:translateY(12px); animation:rise .6s var(--ease) forwards; }
@@ -216,19 +223,19 @@
   .ch { display:flex; flex-wrap:wrap; align-items:baseline; align-content:flex-end; gap:3px 9px;
     min-height:46px; padding-bottom:9px; border-bottom:1px solid var(--line); }
   .ch h2 { white-space:nowrap; }
-  .ch h2 { margin:0; font-family:var(--display); font-size:16.5px; font-weight:600; letter-spacing:-0.016em; }
-  .ch .cap { font-family:var(--m); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); }
+  .ch h2 { margin:0; font-family:var(--display); font-size:1.03125rem; font-weight:600; letter-spacing:-0.016em; }
+  .ch .cap { font-family:var(--m); font-size:0.6875rem; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); }
   /* Заголовок колонки — ссылка на свой раздел. Стрелка видна ПОСТОЯННО: на
      наведении она проявлялась только для мыши, а на телефоне hover-а нет —
      четыре из пяти входов в разделы выглядели там нерабочими подписями. */
   .ch .chl { display:inline-flex; align-items:center; gap:5px; transition:color .18s ease; }
-  .ch .chl::after { content:"→"; font-family:var(--m); font-size:12px; opacity:.5;
+  .ch .chl::after { content:"→"; font-family:var(--m); font-size:0.75rem; opacity:.5;
     transition:opacity .18s ease, transform .26s var(--ease); }
   .ch .chl:hover { color:var(--solar); }
   .ch .chl:hover::after { opacity:1; transform:translateX(3px); }
 
   /* Пометка под подборкой: подбор наш, а не из утреннего обзора */
-  .mnote { margin-top:10px; font-family:var(--m); font-size:12px; letter-spacing:.01em;
+  .mnote { margin-top:10px; font-family:var(--m); font-size:0.75rem; letter-spacing:.01em;
     color:var(--dim); line-height:1.5; }
 
   .rl { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:baseline; gap:8px;
@@ -238,10 +245,10 @@
     transform:scaleY(0); transition:transform .26s var(--ease); }
   .rl:hover { background:rgba(255,255,255,0.032); }
   .rl:hover::before { transform:scaleY(1); }
-  .rl .rt { font-size:12.5px; font-weight:500; letter-spacing:-0.005em; transition:color .18s ease; }
+  .rl .rt { font-size:0.78125rem; font-weight:500; letter-spacing:-0.005em; transition:color .18s ease; }
   .rl:hover .rt { color:var(--solar); }
-  .rl .rm { font-family:var(--m); font-size:11px; color:var(--dim); white-space:nowrap; }
-  .stamp { font-family:var(--m); font-size:12px; color:var(--dim); line-height:1.8; letter-spacing:.02em; padding-top:12px; }
+  .rl .rm { font-family:var(--m); font-size:0.6875rem; color:var(--dim); white-space:nowrap; }
+  .stamp { font-family:var(--m); font-size:0.75rem; color:var(--dim); line-height:1.8; letter-spacing:.02em; padding-top:12px; }
 
   /* ── Разделы: доминанта полосы ────────────────────────────────────────────
      Колонка была самой тихой из пяти: названия 12,5px и мелкие цифры справа
@@ -262,45 +269,45 @@
      лента и подпись внизу, а не сдвинут внутрь на 17px. Заодно длинному
      «Размещённые выпуски» хватает одной строки (нужно 188px, есть 192). */
   @media (min-width:1280px) {
-    .nv .nvbox { background:#14161C; border:1px solid var(--line); border-radius:12px;
+    .nv .nvbox { background:var(--card); border:1px solid var(--line); border-radius:12px;
       padding:17px 16px 14px; margin:12px -9px 0 -17px; }
   }
   .nv .ch { display:block; border-bottom:0; padding-bottom:14px; }
-  .nv .ch h2 { font-size:22px; letter-spacing:-0.028em; line-height:1.05; }
+  .nv .ch h2 { font-size:1.375rem; letter-spacing:-0.028em; line-height:1.05; }
   .nv .ch h2::after { content:"навигация по витрине"; display:block; font-family:var(--m);
-    font-size:11px; font-weight:400; letter-spacing:.08em; text-transform:uppercase;
+    font-size:0.6875rem; font-weight:400; letter-spacing:.08em; text-transform:uppercase;
     color:var(--dim); margin-top:7px; }
   .nv .rl { grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:0 10px;
     margin-left:0; padding:11px 0 11px 10px; }
   .nv .rl::before { left:0; }
-  .nv .rl .rt { grid-column:1; font-family:var(--display); font-size:16.5px; font-weight:600;
+  .nv .rl .rt { grid-column:1; font-family:var(--display); font-size:1.03125rem; font-weight:600;
     letter-spacing:-0.02em; line-height:1.2; }
   /* Подписи разделов — не только счётчики, но и короткие пояснения; капс им не идёт.
      white-space:normal перебивает nowrap базового .rm: тот писан под короткие
      счётчики справа, а здесь подпись стоит ПОД названием — длинная должна
      переноситься, а не вылезать под стрелку (наступили 27.08 на «Библиотеке») */
-  .nv .rl .rm { grid-column:1; font-size:11px; letter-spacing:.01em; white-space:normal; }
+  .nv .rl .rm { grid-column:1; font-size:0.6875rem; letter-spacing:.01em; white-space:normal; }
   /* Отступ только у заполненных: у половины разделов счётчика нет, и пустой
      span не должен раздвигать строку */
   .nv .rl .rm:not(:empty) { margin-top:4px; }
   .nv .rl::after { content:"→"; grid-column:2; grid-row:1 / span 2; align-self:center;
-    font-family:var(--m); font-size:12px; color:var(--dim);
+    font-family:var(--m); font-size:0.75rem; color:var(--dim);
     transition:color .18s ease, transform .26s var(--ease); }
   .nv .rl:hover::after { color:var(--solar); transform:translateX(3px); }
   .nv .stamp { padding-top:13px; }
 
   .mn { padding:11px 0 12px; border-bottom:1px solid var(--rule-soft); }
   .mn:last-child { border-bottom:0; padding-bottom:2px; }
-  .mn .rub { display:block; font-family:var(--m); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); }
-  .mn .ttl { display:block; font-family:var(--display); font-size:13px; font-weight:600; letter-spacing:-0.01em; line-height:1.35; margin-top:5px; }
+  .mn .rub { display:block; font-family:var(--m); font-size:0.6875rem; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); }
+  .mn .ttl { display:block; font-family:var(--display); font-size:0.8125rem; font-weight:600; letter-spacing:-0.01em; line-height:1.35; margin-top:5px; }
   /* Заголовок-ссылка на полный разбор: стрелка проявляется, чтобы не шуметь в покое */
   .mn .ttl.lnk svg { opacity:0; margin-left:4px; vertical-align:-1px; transition:opacity .18s ease, transform .26s var(--ease); }
   .mn .ttl.lnk:hover { color:var(--solar); }
   .mn .ttl.lnk:hover svg { opacity:1; transform:translateX(2px); }
 
   /* Пустое состояние колонки: объясняет, что данных нет, и даёт выход */
-  .mnone { padding:16px 0 4px; font-size:12px; line-height:1.6; color:var(--dim); }
-  .mnone-h { display:block; font-family:var(--display); font-size:14px; font-weight:600;
+  .mnone { padding:16px 0 4px; font-size:0.75rem; line-height:1.6; color:var(--dim); }
+  .mnone-h { display:block; font-family:var(--display); font-size:0.875rem; font-weight:600;
     color:var(--ink); letter-spacing:-0.01em; margin-bottom:5px; }
   .mnone-a { display:flex; flex-wrap:wrap; gap:6px 18px; }
   .mnone a { display:inline-flex; align-items:center; gap:6px; margin-top:8px; color:var(--solar-l); white-space:nowrap; }
@@ -309,10 +316,10 @@
   /* Продукт, id которого ушёл при перегенерации доски */
   .prow.gone { border-left-color:var(--line); }
   .prow.gone .q { color:var(--dim); }
-  .mn .body { margin-top:4px; font-size:12px; line-height:1.52; color:var(--mut); }
+  .mn .body { margin-top:4px; font-size:0.75rem; line-height:1.52; color:var(--mut); }
   .prow { display:flex; align-items:baseline; gap:4px; margin-top:8px; padding:7px 4px 7px 10px;
     border:1px solid var(--rule-soft); border-left:1px solid var(--solar); border-radius:6px;
-    background:rgba(255,255,255,0.032); font-size:12px; transition:background .18s ease, border-color .18s ease; }
+    background:rgba(255,255,255,0.032); font-size:0.75rem; transition:background .18s ease, border-color .18s ease; }
   /* Сейлз — первый пользователь: с главной ссылку клиенту приходилось собирать руками,
      хотя каждому продукту уже соответствует страница /p/<id>.html с персональным превью.
      Кнопка кладёт её в буфер вместе с меткой ?ref=, если она была в адресе входа. */
@@ -325,50 +332,50 @@
   .prow .pcopy svg { opacity:1; }
   .pcopy-said { position:fixed; left:50%; bottom:26px; transform:translateX(-50%); z-index:100002;
     background:var(--panel); border:1px solid var(--line); border-radius:9px; padding:10px 14px;
-    font-size:13px; color:var(--tx); max-width:min(92vw,520px); overflow-wrap:anywhere; }
+    font-size:0.8125rem; color:var(--tx); max-width:min(92vw,520px); overflow-wrap:anywhere; }
   .prow:hover { background:rgba(238,125,27,0.07); border-color:rgba(238,125,27,0.34); border-left-color:var(--solar-l); }
   .prow b { font-weight:500; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   /* В узкой колонке «Актуальные продукты» усечение съедало срок — там переносим */
   #mprod .prow { align-items:flex-start; }
   #mprod .prow b { white-space:normal; overflow:visible; text-overflow:clip; line-height:1.35; }
-  .prow .q { margin-left:auto; font-family:var(--m); font-size:12px; color:var(--solar); font-weight:500; white-space:nowrap; font-variant-numeric:tabular-nums; }
+  .prow .q { margin-left:auto; font-family:var(--m); font-size:0.75rem; color:var(--solar); font-weight:500; white-space:nowrap; font-variant-numeric:tabular-nums; }
   /* В «Актуальных продуктах» теперь пять позиций РАЗНЫХ типов, и цифра у каждой
      значит своё: премия, цена, участие, купон. Пока в колонке стояли три варранта,
      столбик читался как один показатель — с разными типами это уже обман. Метка
      мелкая и приглушённая: она поясняет цифру, а не спорит с ней. */
-  .prow .q i { display:block; margin-top:2px; font-style:normal; font-size:11px; font-weight:400;
+  .prow .q i { display:block; margin-top:2px; font-style:normal; font-size:0.6875rem; font-weight:400;
     letter-spacing:.08em; text-transform:uppercase; color:var(--dim); text-align:right; }
   .prow svg { flex:none; align-self:center; opacity:.5; transition:opacity .18s ease, transform .26s var(--ease); }
   .prow:hover svg { opacity:1; transform:translateX(2px); }
 
   .bench { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:10px; padding:10px 0 11px; border-bottom:1px solid var(--rule-soft); }
-  .bench .k { display:block; font-family:var(--m); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); }
-  .bench .v { display:block; font-family:var(--m); font-size:13px; font-weight:500; margin-top:4px; letter-spacing:-0.01em; font-variant-numeric:tabular-nums; }
+  .bench .k { display:block; font-family:var(--m); font-size:0.6875rem; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); }
+  .bench .v { display:block; font-family:var(--m); font-size:0.8125rem; font-weight:500; margin-top:4px; letter-spacing:-0.01em; font-variant-numeric:tabular-nums; }
   .rt2 { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:10px; align-items:baseline;
     padding:10px 0 11px; border-bottom:1px solid var(--rule-soft); }
   .rt2:last-of-type { border-bottom:0; }
-  .rt2 .kind { display:block; font-family:var(--m); font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); }
-  .rt2 .n { display:block; font-size:12px; font-weight:500; margin-top:4px; line-height:1.3; transition:color .18s ease;
+  .rt2 .kind { display:block; font-family:var(--m); font-size:0.6875rem; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); }
+  .rt2 .n { display:block; font-size:0.75rem; font-weight:500; margin-top:4px; line-height:1.3; transition:color .18s ease;
     min-width:0; overflow-wrap:anywhere; }
-  .rt2 .n em { font-style:normal; color:var(--dim); font-weight:400; font-size:11px; }
+  .rt2 .n em { font-style:normal; color:var(--dim); font-weight:400; font-size:0.6875rem; }
   .rt2:hover .n { color:var(--solar); }
-  .rt2 .v { font-family:var(--m); font-size:13px; font-weight:500; color:var(--up); white-space:nowrap; letter-spacing:-0.01em; font-variant-numeric:tabular-nums; }
+  .rt2 .v { font-family:var(--m); font-size:0.8125rem; font-weight:500; color:var(--up); white-space:nowrap; letter-spacing:-0.01em; font-variant-numeric:tabular-nums; }
 
   .om { display:block; padding:11px 0 12px; border-bottom:1px solid var(--rule-soft); }
   .om:last-of-type { border-bottom:0; }
   /* Это описание продукта, а не метка: капсом строка в 43 знака не читается */
-  .om .ok { display:block; font-family:var(--m); font-size:12px; letter-spacing:.01em; color:var(--dim); line-height:1.5; }
-  .om .on { display:block; font-family:var(--display); font-size:13px; font-weight:600; margin-top:5px; line-height:1.3;
+  .om .ok { display:block; font-family:var(--m); font-size:0.75rem; letter-spacing:.01em; color:var(--dim); line-height:1.5; }
+  .om .on { display:block; font-family:var(--display); font-size:0.8125rem; font-weight:600; margin-top:5px; line-height:1.3;
     letter-spacing:-0.01em; transition:color .18s ease; }
   .om:hover .on { color:var(--solar); }
   .om .r2 { display:flex; align-items:center; gap:9px; flex-wrap:wrap; margin-top:7px; }
-  .om .ost { font-family:var(--m); font-size:12px; letter-spacing:.01em; padding:3px 7px; border-radius:5px; white-space:nowrap; }
+  .om .ost { font-family:var(--m); font-size:0.75rem; letter-spacing:.01em; padding:3px 7px; border-radius:5px; white-space:nowrap; }
   .ost.upn { color:var(--solar); border:1px solid rgba(238,125,27,0.36); background:rgba(238,125,27,0.075); }
   .ost.live { color:var(--up); border:1px solid rgba(85,192,138,0.36); background:rgba(85,192,138,0.075); }
-  .om .ops { font-family:var(--m); font-size:12px; color:var(--dim); }
+  .om .ops { font-family:var(--m); font-size:0.75rem; color:var(--dim); }
   .om .ops b { color:var(--mut); font-weight:500; }
 
-  .foot { display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; padding:16px 0 26px; font-size:12px; color:var(--dim); }
+  .foot { display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; padding:16px 0 26px; font-size:0.75rem; color:var(--dim); }
   /* Страница заканчивалась юридическим отрицанием и больше ничем: последнее,
      что человек читал, — «не является рекомендацией». Перед ним — тихая строка
      с двумя реальными следующими шагами, теми же, что в шапке. */
@@ -384,24 +391,50 @@
   .talks .ch { margin-bottom:16px; }
   .tk { display:grid; grid-template-columns:repeat(2,1fr); gap:20px; }
   .tk .card { display:grid; grid-template-columns:190px 1fr; gap:16px; align-items:start; }
-  .tk .ph { position:relative; display:block; border-radius:7px; overflow:hidden; background:#14161C; border:1px solid var(--line); aspect-ratio:16/9; }
+  /* Элементы grid по умолчанию min-width:auto, поэтому длинная строка
+     организатора («Московская биржа · презентация на IR-платформе») не
+     сжималась и делала документ шире вьюпорта: замер в iframe без device-
+     эмуляции давал 7px горизонтального скролла на 360px и 70px на 305px.
+     Проверка проекта всегда шла ровно на 375, где это впритык влезало, —
+     поэтому и не всплывало. 360×640 — массовый Android, не край. */
+  .tk .card > * { min-width:0; }
+  /* break-word, а НЕ anywhere: anywhere обнуляет min-content и грид даёт
+     текстовой колонке почти нулевую ширину — «Газпромбанк» рвался как
+     «Газпромба/нк». Ширину отпускает min-width:0 выше, а здесь нужна лишь
+     страховка на случай реально длинного токена (ссылка, латинское имя). */
+  .tk .org, .tk .nm { overflow-wrap:break-word; }
+  .tk .ph { position:relative; display:block; border-radius:7px; overflow:hidden; background:var(--card); border:1px solid var(--line); aspect-ratio:16/9; }
   .tk .ph img { width:100%; height:100%; object-fit:cover; display:block; opacity:.9; transition:transform .5s var(--ease), opacity .3s; }
   .tk .card:hover .ph img { transform:scale(1.035); opacity:1; }
   .tk .play { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
   .tk .play i { width:34px; height:34px; border-radius:50%; background:rgba(11,12,16,.62); border:1px solid rgba(255,255,255,.22); display:flex; align-items:center; justify-content:center; transition:background .2s, border-color .2s; }
   .tk .card:hover .play i { background:rgba(238,125,27,.9); border-color:transparent; }
   .tk .bd { min-width:0; padding-top:1px; }
-  .tk .org { font-family:var(--m); font-size:11px; letter-spacing:.06em; color:var(--dim); display:flex; align-items:center; gap:7px; margin-bottom:7px; }
+  .tk .org { font-family:var(--m); font-size:0.6875rem; letter-spacing:.06em; color:var(--dim); display:flex; align-items:center; gap:7px; margin-bottom:7px; }
   .tk .org .d { width:3px; height:3px; border-radius:50%; background:rgba(255,255,255,.24); }
-  .tk .nm { font-family:var(--display); font-size:15px; font-weight:500; line-height:1.35; letter-spacing:-0.012em; margin:0 0 11px; display:block; }
+  .tk .nm { font-family:var(--display); font-size:0.9375rem; font-weight:500; line-height:1.35; letter-spacing:-0.012em; margin:0 0 11px; display:block; }
   .tk .card:hover .nm { color:var(--solar-l); }
-  .tk .ln { display:flex; gap:8px; }
-  .tk .ln a { font-family:var(--m); font-size:11px; letter-spacing:.04em; color:var(--mut); border:1px solid var(--line); border-radius:5px; padding:5px 9px; transition:border-color .2s, color .2s; }
+  /* Чипы переносятся: на ≤860 они получают min-height:44px и padding 0 13px,
+     и в колонке 120px (карточка 132px + текст на 320-пиксельном экране) двум
+     чипам нужно 156px — без переноса это давало 16px горизонтального скролла. */
+  .tk .ln { display:flex; flex-wrap:wrap; gap:8px; }
+  .tk .ln a { font-family:var(--m); font-size:0.6875rem; letter-spacing:.04em; color:var(--mut); border:1px solid var(--line); border-radius:5px; padding:5px 9px; transition:border-color .2s, color .2s; }
   .tk .ln a:hover { color:var(--tx); border-color:rgba(255,255,255,.26); }
   @media (max-width:860px) {
     .talks { padding-top:22px; margin-top:24px; }
     .tk { grid-template-columns:1fr; gap:16px; }
     .tk .card { grid-template-columns:132px 1fr; gap:13px; }
+    /* Ниже 420px карточка встаёт в ОДНУ колонку: обложка сверху, текст под ней.
+       Иначе на 132px обложки текстовой колонке остаётся ~120px, и строка
+       «Газпромбанк Инвестиции · подкаст · 59 мин · август 2024» шире её —
+       документ становился 375px независимо от вьюпорта (70px горизонтального
+       скролла на 320, 30px на 360). Лечить это разрывом слов нельзя:
+       overflow-wrap:anywhere рвал «Газпромба/нк». Здесь текст получает всю
+       ширину, и обложка на телефоне становится нормально рассматриваемой. */
+    @media (max-width:420px) {
+      .tk .card { grid-template-columns:minmax(0,1fr); gap:11px; }
+      .tk .ph { max-width:100%; }
+    }
     /* тач-цели ≥44px: чипы были 34px, название 41px; заголовок добирает .ch .chl */
     .tk .ln a { min-height:44px; display:inline-flex; align-items:center; padding:0 13px; }
     .tk .nm { padding:3px 0; margin-bottom:8px; }
@@ -410,11 +443,13 @@
   /* Своя линейка сверху: полоса выступлений входит с волосяной линией, и без
      такой же линии на выходе вопрос про продукт читался подписью под видео */
   .endcta { display:flex; align-items:baseline; gap:18px; flex-wrap:wrap; padding:24px 0 4px; margin-top:26px; border-top:1px solid var(--rule-soft); }
-  .endcta .q { font-family:var(--display); font-size:16.5px; font-weight:600; letter-spacing:-0.016em; }
-  .endcta a { display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:500; color:var(--solar-l); }
+  .endcta .q { font-family:var(--display); font-size:1.03125rem; font-weight:600; letter-spacing:-0.016em; }
+  .endcta a { display:inline-flex; align-items:center; gap:6px; font-size:0.8125rem; font-weight:500; color:var(--solar-l); }
   .endcta a:hover { color:var(--solar); }
   .endcta a + a { margin-left:2px; }
-  @media (max-width:860px) { .endcta { gap:10px; padding:18px 0 2px; } .endcta a { padding:12px 0; } }
+  /* padding 12px давал 41px — на 3px ниже порога */
+  @media (max-width:860px) { .endcta { gap:10px; padding:18px 0 2px; }
+    .endcta a { padding:12px 0; min-height:44px; } }
   .foot .mono { font-family:var(--m); }
 
 /* ── Интро при входе на сайт (один раз за сессию; синий+оранжевый Rumberg, нейтральный фон) ── */
@@ -429,13 +464,13 @@
   .intro .cn { opacity: 0; transition: opacity .3s ease; }
   .intro .cn.on { opacity: .4; }
   .intro .pl { filter: drop-shadow(0 0 12px rgba(238,125,27,.45)); }
-  .intro .cap { position: absolute; top: 26px; left: 30px; z-index: 2; font-family: var(--m); font-size: 11px; letter-spacing: .18em; text-transform: uppercase; color: rgba(255,255,255,.42); opacity: 0; transition: opacity .5s ease; }
+  .intro .cap { position: absolute; top: 26px; left: 30px; z-index: 2; font-family: var(--m); font-size:0.6875rem; letter-spacing: .18em; text-transform: uppercase; color: rgba(255,255,255,.42); opacity: 0; transition: opacity .5s ease; }
   .intro.go .cap { opacity: 1; }
   .intro .cnt { position: absolute; left: 30px; bottom: 30px; z-index: 2; color: #fff; font-family: var(--m); }
   .intro .cnt .v { font-size: clamp(56px, 9vw, 106px); font-weight: 500; letter-spacing: -0.03em; line-height: 1; }
   .intro .cnt .v i { font-style: normal; font-size: .45em; color: rgba(255,255,255,.5); margin-left: 4px; }
-  .intro .cnt .k { margin-top: 8px; font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: rgba(255,255,255,.4); }
-  .intro .hint { position: absolute; left: 50%; transform: translateX(-50%); bottom: 22px; z-index: 2; font-family: var(--m); font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase; color: rgba(255,255,255,.3); opacity: 0; transition: opacity .6s ease; }
+  .intro .cnt .k { margin-top: 8px; font-size:0.65625rem; letter-spacing: .16em; text-transform: uppercase; color: rgba(255,255,255,.4); }
+  .intro .hint { position: absolute; left: 50%; transform: translateX(-50%); bottom: 22px; z-index: 2; font-family: var(--m); font-size:0.65625rem; letter-spacing: .12em; text-transform: uppercase; color: rgba(255,255,255,.3); opacity: 0; transition: opacity .6s ease; }
   .intro.hinted .hint { opacity: 1; }
   .intro .fin { position: absolute; inset: 0; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; opacity: 0; pointer-events: none; }
   .intro.brandon .fin { opacity: 1; }
@@ -494,7 +529,7 @@
        Ниже — тач-цели 44px там, где палец, а не курсор. */
     .ch { align-items:center; }
     .ch .chl { padding:12px 0; }
-    .ch h2 { font-size:17px; }
+    .ch h2 { font-size:1.0625rem; }
     /* Заголовок разбора в «Утре» — тоже ссылка, ей нужна та же тач-цель */
     .mn .ttl.lnk { display:inline-block; padding:13px 0; }
     .btn-solar { padding:13px 16px; }
@@ -616,11 +651,9 @@
 
 <script src="data/instruments.js?v=fx7"></script>
 <script src="data/lib.js?v=ax8"></script>
-<script src="data/digest.js?v=srv6"></script>
 <script src="data/offerings.js?v=srv22"></script>
 <script src="data/rates.js?v=2"></script>
 <script src="data/morning.js?v=1"></script>
-<script src="data/ideas.js?v=1"></script>
 <script src="data/events.js?v=9"></script>
 <script src="data/talks.js?v=3"></script>
 <script>
@@ -1316,9 +1349,43 @@
   })();
 </script>
 <script src="intro.js?v=6"></script>
-<script src="chat.js?v=18"></script>
+<script src="chat.js?v=19"></script>
 <script src="search.js?v=1"></script>
-<script src="nav-about.js?v=6"></script>
+<script src="nav-about.js?v=7"></script>
 <script src="qualgate.js?v=5"></script>
+<script>
+/* Архивы дайджестов (138 КБ) и разборов (183 КБ) нужны главной РОВНО для двух
+   подписей с датами в списке разделов — 321 КБ, то есть 39% первой загрузки,
+   ради двух строк. Грузим их после первой отрисовки и дописываем даты на
+   месте. До ответа в строках стоят осмысленные подписи («идеи», «темы»), их же
+   видит робот в пререндере, так что не доехавший файл ничего не ломает.
+   Тот же приём, которым с главной уже убрали data/placements.js (51 КБ). */
+(function () {
+  function put(href, text) {
+    if (!text) return;
+    var el = document.querySelector('#rail-list a[href="' + href + '"] .rm');
+    if (el) el.textContent = text;
+  }
+  function load(src, done) {
+    var sc = document.createElement("script");
+    sc.src = src;
+    sc.async = true;
+    sc.onload = done;
+    document.head.appendChild(sc);   // отказ не обрабатываем: подпись остаётся прежней
+  }
+  function go() {
+    load("data/digest.js?v=srv6", function () {
+      if (window.DIGEST && window.DIGEST.date) put("digest.html", String(window.DIGEST.date).slice(0, 5));
+    });
+    load("data/ideas.js?v=1", function () {
+      var i = window.IDEAS && window.IDEAS.issues && window.IDEAS.issues[0];
+      // Дата выпуска лежит в ISO: тот же разбор, что у dmy() выше по файлу
+      if (i && i.date) put("ideas.html", String(i.date).split("-").reverse().join(".").slice(0, 5));
+    });
+  }
+  if ("requestIdleCallback" in window) requestIdleCallback(go, { timeout: 2500 });
+  else setTimeout(go, 1200);
+})();
+</script>
 </body>
 </html>

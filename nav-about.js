@@ -121,9 +121,15 @@
       // остаётся один — добавляем небольшой паддинг, чтобы область нажатия не была 22px.
       ".nav-in .brand{min-height:24px;}" +
       "@media(max-width:900px){.nav-in .brand{padding:3px;margin-left:-3px;}}" +
-      // Универсальный respect prefers-reduced-motion (модуль подключён на всех витринных
-      // страницах, правило документ-глобальное — гасит и анимации попапов/гейта/лент).
-      "@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important;scroll-behavior:auto !important;}}";
+      // Уважение prefers-reduced-motion за все страницы: модуль подключён на девяти,
+      // а свои блоки есть не у всех, и у qualgate/contact/intro/share обработки нет вовсе.
+      // ВАЖНО: у animation-* !important СНЯТ намеренно. С ним правило на «*» перебивало
+      // страничные блоки, написанные с осмысленными альтернативами, и вместо «движение
+      // тише» получалось «обратной связи нет». Специфичность «*» нулевая, поэтому любой
+      // страничный селектор теперь выигрывает сам, а страницы без своих правил всё равно
+      // прикрыты. У transition-duration и scroll-behavior !important оставлен: их никто
+      // из модулей не переопределяет, и снятие только вернуло бы им движение.
+      "@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:.001ms;animation-iteration-count:1;transition-duration:.001ms !important;scroll-behavior:auto !important;}}";
     document.head.appendChild(s);
   }
 

@@ -61,7 +61,7 @@
     ".ca-ttl{font-family:'Rubik','Onest',sans-serif;font-weight:600;font-size:14.5px;color:#F2F3F7;}" +
     ".ca-chip{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#8FB3F0;background:rgba(79,134,230,.14);border:1px solid rgba(79,134,230,.42);border-radius:5px;padding:2px 6px;}" +
     ".ca-sub{font-size:12px;color:rgba(242,243,247,.62);margin-top:1px;}" +
-    ".ca-x{margin-left:auto;width:42px;height:42px;border:0;background:none;color:rgba(242,243,247,.55);font-size:20px;line-height:1;cursor:pointer;border-radius:8px;flex:none;}" +
+    ".ca-x{margin-left:auto;width:44px;height:44px;border:0;background:none;color:rgba(242,243,247,.55);font-size:20px;line-height:1;cursor:pointer;border-radius:8px;flex:none;}" +
     ".ca-x:hover{color:#F2F3F7;background:rgba(255,255,255,.06);}" +
     /* Клавиатурный фокус: у кнопок виджета его не было вовсе (outline:none на
        полях, ни одного правила :focus-visible), а страницы объявляют рамку
@@ -96,7 +96,7 @@
     ".ca-row{display:flex;gap:8px;align-items:flex-end;}" +
     ".ca-in{flex:1;resize:none;max-height:96px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:12px;color:#F2F3F7;font-family:inherit;font-size:16px;line-height:1.4;padding:9px 12px;outline:none;}" +
     ".ca-in:focus{border-color:rgba(238,125,27,.6);}" +
-    ".ca-send{flex:none;width:42px;height:42px;border:0;border-radius:11px;background:#EE7D1B;color:#0C0A08;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;}" +
+    ".ca-send{flex:none;width:44px;height:44px;border:0;border-radius:11px;background:#EE7D1B;color:#0C0A08;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;}" +
     ".ca-send:hover{background:#F58E33;}.ca-send:disabled{opacity:.4;cursor:default;}" +
     ".ca-send svg{width:17px;height:17px;}" +
     ".ca-note{margin:7px 2px 0;font-size:12px;line-height:1.45;color:rgba(242,243,247,.62);text-align:center;}" +
@@ -129,8 +129,8 @@
   var ICON_STAR_XS =
     '<svg width="9" height="9" viewBox="0 0 26 26" fill="none" aria-hidden="true">' +
     '<path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>';
-  var ICON_SEND = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>';
-  var ICON_CHAT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-3.9-.9L3 21l1.9-5.6A8.5 8.5 0 0 1 12.5 3 8.38 8.38 0 0 1 21 11.5z"/></svg>';
+  var ICON_SEND = '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>';
+  var ICON_CHAT = '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-3.9-.9L3 21l1.9-5.6A8.5 8.5 0 0 1 12.5 3 8.38 8.38 0 0 1 21 11.5z"/></svg>';
 
   var msgs = [];         // {role, content}; живёт в sessionStorage — диалог не теряется при переходах
   try {
