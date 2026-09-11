@@ -412,6 +412,57 @@ def theme_block(iss):
     return block_body(intro, groups)
 
 
+def about_block():
+    """Библиотека: тексты статей — в исходник страницы.
+
+    Повод: в исходнике about.html роботу было видно 855 знаков (меню и лид),
+    а все 18 статей рисует JS. То есть единственный на витрине разбор
+    структурных продуктов по-русски поисковикам не существовал — при том что
+    ровно на эти запросы («структурная облигация», «варрант», «автоколл»)
+    в контексте платить дороже всего.
+
+    Статьи описаны НЕ в data/*.js, а объектом LIB внутри самой about.html,
+    поэтому читаем её же. Разбираем строки вида «    ключ: {…}» со строгим
+    JSON в значении: записи LIB устроены именно так, а соседний объект FAM
+    (label/color без кавычек у ключей) на json.loads молча отваливается —
+    что нам и нужно, это не статьи.
+
+    Берём name + tagline + how + risk + whenToUse: это 19,7 тыс знаков
+    настоящего текста страницы. profit/loss/payoffNote не берём — они про
+    цифры и подпись к графику, поиску дают мало, а блок раздули бы ещё на
+    четверть.
+    """
+    path = os.path.join(ROOT, "about.html")
+    src = io.open(path, encoding="utf-8").read()
+    # Свой прошлый вывод отрезаем до разбора: прогон должен быть идемпотентным
+    src = re.sub(r"<!-- seo:article:start -->.*?<!-- seo:article:end -->", "", src, flags=re.S)
+
+    arts = []
+    for _key, raw in re.findall(r"^\s{4}(\w+):\s*(\{.*?\}),?\s*$", src, re.M):
+        try:
+            d = json.loads(raw)
+        except ValueError:
+            continue                      # запись FAM, а не статья
+        if d.get("name") and d.get("how"):
+            arts.append(d)
+
+    # Вводная — ДОСЛОВНО лид самой страницы, а не сочинённая: правило пререндера
+    # в том, что текст робота есть подмножество отрисованного.
+    m = re.search(r"<h1>[^<]*</h1>\s*<p>([^<]+)</p>", src)
+    intro = m.group(1).strip() if m else ""
+
+    h = ['<div class="seo-pre">']
+    if intro:
+        h.append("<p>" + esc(intro) + "</p>")
+    for d in arts:
+        h.append("<h2>" + esc(d["name"]) + "</h2>")
+        for f in ("tagline", "how", "risk", "whenToUse"):
+            if d.get(f):
+                h.append("<p>" + esc(d[f]) + "</p>")
+    h.append("</div>")
+    return {"article": "".join(h)}
+
+
 def block_body(intro, groups):
     """То же, что block(), но без маркеров: у слотов свои именованные маркеры."""
     h = ['<div class="seo-pre"><p>' + esc(intro) + "</p>"]
@@ -425,8 +476,10 @@ def block_body(intro, groups):
     return "".join(h)
 
 
-# Контейнеры слотов: имя слота -> открывающий тег на странице
-INDEX_SLOTS = {
+# Контейнеры слотов: имя слота -> открывающий тег на странице.
+# Обслуживает главную (четыре колонки) и Библиотеку (одна статья), поэтому
+# имя общее, а не INDEX_SLOTS.
+SLOTS = {
     "rail": '<nav id="rail-list" aria-label="Разделы">',
     "ideas": '<main id="issue">',
     # ВАЖНО: только открывающие теги. С полным '<div id="news"></div>' текст
@@ -437,11 +490,14 @@ INDEX_SLOTS = {
     "rates": '<div id="rates">',
     "offers": '<div id="offers">',
     "talks": '<div class="tk" id="talklist">',
+    # Библиотека: статью рисует art.innerHTML = articleHTML(id), то есть
+    # контейнер затирается целиком — блок робота человек не увидит.
+    "article": '<article id="article">',
 }
 
 PAGES = [("board.html", board_block), ("placements.html", placements_block),
          ("offerings.html", offerings_block), ("index.html", index_blocks),
-         ("ideas.html", ideas_block)]
+         ("ideas.html", ideas_block), ("about.html", about_block)]
 
 
 def main():
@@ -466,8 +522,8 @@ def main():
                 wrapped = s + body + e
                 if s in new:
                     new = re.sub(re.escape(s) + ".*?" + re.escape(e), lambda m: wrapped, new, flags=re.S)
-                elif INDEX_SLOTS[slot] in new:
-                    new = new.replace(INDEX_SLOTS[slot], INDEX_SLOTS[slot] + wrapped, 1)
+                elif SLOTS[slot] in new:
+                    new = new.replace(SLOTS[slot], SLOTS[slot] + wrapped, 1)
                 else:
                     print("  ! %s: слот %s не найден — пропускаю" % (fname, slot))
                     continue
