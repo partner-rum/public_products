@@ -13,6 +13,17 @@
     var a = n % 10, b = n % 100;
     return (a === 1 && b !== 11) ? one : (a >= 2 && a <= 4 && (b < 12 || b > 14)) ? few : many;
   }
+  // Срок в годах из строки («6 месяцев» → 0,5, «3 года» → 3). Дословно как
+  // tenorYears в data/lib.js. Наивное «первое число строки» здесь не годится:
+  // у полугодового выпуска оно давало бы шесть ЛЕТ, то есть купон за срок и число
+  // наблюдений раздувались бы в двенадцать раз — и уехали бы клиенту в дайджест.
+  function tenorYears(t) {
+    var s = String(t || "");
+    var m = /(\d+(?:[.,]\d+)?)\s*мес/i.exec(s);
+    if (m) return parseFloat(m[1].replace(",", ".")) / 12;
+    var y = /(\d+(?:[.,]\d+)?)/.exec(s);
+    return y ? parseFloat(y[1].replace(",", ".")) : 0;
+  }
 
   // Продукт доски (instruments.js) → идея. Возвращает {supported:false,reason} для неподдержанных.
   function fromBoard(p) {
@@ -99,9 +110,9 @@
       if (cb == null) return { supported: false, reason: "У автоколла не задан барьер купона (couponBarrier)." };
       var obsY = num(p.obsPerYear), nc = num(p.nonCall);
       // Число наблюдений за срок: из срока в годах и частоты. Срок в данных —
-      // строка («3 года»), поэтому вытаскиваем первое число.
-      var yrs = num((String(p.tenor || "").match(/[\d.,]+/) || [""])[0].replace(",", "."));
-      var obsTotal = (obsY != null && yrs != null) ? Math.round(obsY * yrs) : null;
+      // строка («3 года», «18 месяцев»), разбирает её tenorYears.
+      var yrs = tenorYears(p.tenor);
+      var obsTotal = (obsY != null && yrs > 0) ? Math.round(obsY * yrs) : null;
       var basket = Array.isArray(p.basket) ? p.basket : null;
 
       base.family = "coupon"; base.kind = "Автоколл";
@@ -118,6 +129,37 @@
       if (obsTotal != null) base.payoff.obsTotal = obsTotal;
       if (obsY != null) base.payoff.obsPerYear = obsY;
       if (basket) base.payoff.basket = basket;
+      return base;
+    }
+
+    if (t === "revconv") {
+      // Купон реверс-конвертибла БЕЗУСЛОВНЫЙ и задан в % годовых (couponPa; на доске
+      // котировка quote — он же). Дайджесту нужен купон ЗА СРОК: у его графика нет
+      // оси времени, и годовая ставка дала бы и неверную высоту полки, и неверный
+      // безубыток — у полугодового выпуска ровно вдвое.
+      var rcPa = num(p.couponPa); if (!(rcPa > 0)) rcPa = quote;
+      // Страйк нулём — деление на ноль в графике; купон нулём — «продукт», у которого
+      // нет купона. Проверяем строго на ПОЛОЖИТЕЛЬНОЕ: num(null) отдаёт 0, а не null
+      // (Number(null) === 0), поэтому сравнение с null пропускало бы пустое поле.
+      var rcK = strike > 0 ? strike : 100;
+      var rcYrs = tenorYears(p.tenor);
+      if (!(rcPa > 0)) return { supported: false, reason: "У реверс-конвертибла не задан купон (couponPa)." };
+      if (!(rcYrs > 0)) {
+        return { supported: false, reason: "У реверс-конвертибла не распознан срок («" + (p.tenor || "") +
+                 "») — без него не посчитать купон за срок и точку безубытка." };
+      }
+      var rcTotal = Math.round(rcPa * rcYrs * 100) / 100;
+      base.family = "coupon"; base.kind = "Реверс-конвертибл";
+      base.metric = { v: comma(rcPa) + "% годовых", k: "безусловный купон" };
+      base.p.price = "100% номинала";
+      base.p.upside = "купон " + comma(rcPa) + "% годовых (" + comma(rcTotal) +
+                      "% за срок), выплачивается при любом сценарии";
+      // «нет» дословно, БЕЗ числа: audienceOf/riskOf в data/digest-lib.js отличают
+      // купон с защитой капитала от купона без неё по наличию «100» в этой строке,
+      // и фраза вида «ниже 100% номинал уменьшается» перевернула бы смысл на
+      // «капитал защищён на 100%».
+      base.p.protection = "нет";
+      base.payoff = { type: "revconv", couponPa: rcPa, couponPct: rcTotal, strikePct: rcK };
       return base;
     }
 
@@ -199,6 +241,21 @@
                    ? " На погашении номинал возвращается полностью, пока " + woShort + " выше " +
                      comma(pf.floorPct) + "%; ниже — выплата уменьшается пропорционально падению."
                    : " Условия погашения — в спецификации выпуска.");
+    } else if (pf.type === "revconv") {
+      // Ключ продукта — что падение считается ОТ СТРАЙКА, а купон безусловный и даёт
+      // подушку. Без обеих оговорок тексты купонного семейства были бы строже правды.
+      var rK = pf.strikePct != null ? pf.strikePct : 100;
+      var rTot = pf.couponPct != null ? pf.couponPct : 0;
+      var rBe = (rTot > 0 && rTot < 100) ? Math.round(rK * (100 - rTot) / 100 * 100) / 100 : null;
+      r.how = "Реверс-конвертибл: покупка по номиналу, купон " + comma(pf.couponPa) +
+              "% годовых начисляется независимо от того, куда пошёл базовый актив. Пока на дату оценки " +
+              "актив не ниже " + comma(rK) + "%, возвращается полный номинал; ниже — номинал уменьшается " +
+              "пропорционально падению от этого уровня." +
+              (rBe != null ? " Купон за срок (" + comma(rTot) + "%) окупает снижение актива до " +
+                             comma(rBe) + "%." : "");
+      r.payout = "Выплата = купон " + comma(rTot) + "% за срок плюс номинал, если актив не ниже " +
+                 comma(rK) + "%; если ниже — плюс тело по перформансу от " + comma(rK) +
+                 "%. Роста выше " + comma(rK) + "% держатель не получает.";
     } else if (r.family === "protection") {
       // участие и страйк знаем не всегда (у первички в данных может не быть) — текст
       // подстраиваем, а не подставляем «100%» по умолчанию: это была бы выдуманная цифра

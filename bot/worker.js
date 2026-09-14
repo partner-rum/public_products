@@ -2884,8 +2884,12 @@ function sanitizeItem(section, raw) {
       if (!src || typeof src !== "object") continue;
       if (k === "payoff") {
         const t = cleanStr(src.type, 20);
+        // revconv — реверс-конвертибл (couponPa, couponPct за срок, strikePct).
+        // Пока типа не было в списке, payoff срезался ЦЕЛИКОМ и график в дайджесте
+        // сваливался в ветку-заглушку «стоимость портфеля» — та же грабля, что была
+        // у autocall.
         if (["call", "callcap", "digital", "protected", "booster", "fixed", "portfolio",
-             "autocall"].includes(t)) {
+             "autocall", "revconv"].includes(t)) {
           const p = { type: t };
           // partPct/strikePct — защита капитала с доски: участие в росте и страйк опциона.
           // couponPa/couponBarrier/callBarrier/nonCall/obsTotal/obsPerYear — автоколл:
