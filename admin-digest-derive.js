@@ -163,23 +163,115 @@
       return base;
     }
 
-    // Купонный варрант НЕ подставляем намеренно. В дайджесте пэйофф с этим именем
-    // уже есть, но он рисует ОБЛИГАЦИОННУЮ форму: линия идёт от номинала 100% вверх
-    // на купон. У варрантной формы выплата считается от нуля и номинал не
-    // возвращается — та же картинка обещала бы клиенту возврат вложенного.
-    // Чтобы вывести диджитал в дайджест, нужен свой пэйофф в data/digest-lib.js
-    // и make_digest.py (экран и печать рисуют независимо).
+    if (t === "rcdigital") {
+      // Купон здесь ОДИН и платится на дату оценки, поэтому основное поле — couponPct
+      // (за срок). couponPa (годовой) и quote понимаются как запас совместимости:
+      // у этого типа котировка на витрине и есть купон.
+      var rdK = strike > 0 ? strike : 100;
+      var rdCpn = num(p.couponPct);
+      if (!(rdCpn > 0)) {
+        var rdPa = num(p.couponPa), rdY = tenorYears(p.tenor);
+        rdCpn = (rdPa > 0 && rdY > 0) ? Math.round(rdPa * rdY * 100) / 100 : quote;
+      }
+      if (!(rdCpn > 0)) {
+        return { supported: false, reason: "У реверс-конвертибла с условным купоном не задан купон (couponPct)." };
+      }
+      base.family = "coupon"; base.kind = "Реверс-конвертибл с условным купоном";
+      base.metric = { v: comma(rdCpn) + "%", k: "купон за срок" };
+      base.p.price = "100% номинала";
+      base.p.upside = "купон " + comma(rdCpn) + "% за срок, если актив не ниже " + comma(rdK) + "%";
+      // «нет» дословно, без числа — см. пояснение у реверс-конвертибла выше.
+      base.p.protection = "нет";
+      base.payoff = { type: "rcdigital", couponPct: rdCpn, strikePct: rdK };
+      return base;
+    }
+
     if (t === "digital") {
-      return { supported: false, reason: "Купонный варрант в дайджест пока не выводится: график дайджеста рисует диджитал от номинала, а у варрантной формы номинал не возвращается — картинка обещала бы возврат вложенного. Опишите идею вручную или выберите другой продукт." };
+      // У купонного варранта ДВЕ формы, и путать их нельзя: floorPct = 100 —
+      // облигационная (вход по номиналу, он и возвращается), иначе — варрантная
+      // (вход по премии, номинал НЕ возвращается). Один и тот же кадр на оба
+      // обещал бы клиенту возврат вложенного, поэтому и пэйоффы в дайджесте разные.
+      var dgK = strike > 0 ? strike : 100;
+      var dgPay = num(p.digitalPct);
+      var dgFloor = num(p.floorPct);
+      if (!(dgPay > 0)) {
+        return { supported: false, reason: "У купонного варранта не задан размер выплаты (digitalPct)." };
+      }
+      if (dgFloor === 100) {
+        base.family = "coupon"; base.kind = "Купонный варрант · облигационная форма";
+        base.metric = { v: comma(dgPay) + "%", k: "купон при активе ≥ " + comma(dgK) + "%" };
+        base.p.price = "100% номинала";
+        base.p.upside = "купон " + comma(dgPay) + "% номинала, если актив не ниже " + comma(dgK) + "%";
+        base.p.protection = "100% номинала на погашении";
+        base.payoff = { type: "digital", couponPct: dgPay, barrierPct: Math.round((dgK - 100) * 100) / 100 };
+        return base;
+      }
+      if (!(quote > 0)) return { supported: false, reason: "У купонного варранта нет котировки (премии)." };
+      base.family = "warrant"; base.kind = "Купонный варрант";
+      base.metric = { v: comma(dgPay) + "%", k: "выплата при активе ≥ " + comma(dgK) + "%" };
+      base.p.price = rub(quote);
+      base.p.upside = "фиксированная выплата " + comma(dgPay) + "% номинала, если актив не ниже " +
+                      comma(dgK) + "%; насколько выше — не важно";
+      base.p.protection = "нет";
+      base.payoff = { type: "callstep", strikePct: dgK, payoutPct: dgPay,
+                      premiumPct: quote, floorPct: dgFloor > 0 ? dgFloor : 0 };
+      return base;
     }
 
     return { supported: false, reason: "Тип продукта «" + t + "» не поддержан в дайджесте." };
   }
 
-  // Выпуск «На размещении» (offerings.js) → идея. Поддержана защита капитала.
+  // У размещений срок лежит числом-строкой («1.5»), у доски — уже словами («1,5 года»).
+  // В дайджест он идёт как есть и печатается клиенту, поэтому голое число доводим
+  // до человеческого вида, а готовую строку не трогаем.
+  function tenorText(t) {
+    var s = String(t == null ? "" : t).trim();
+    if (!s || !/^\d+([.,]\d+)?$/.test(s)) return s;
+    var n = parseFloat(s.replace(",", "."));
+    var whole = Math.abs(n - Math.round(n)) < 1e-9 ? Math.round(n) : null;
+    return comma(s) + " " + (whole == null ? "года" : plu(whole, "год", "года", "лет"));
+  }
+
+  // Выпуск «На размещении» (offerings.js) → идея. Поддержаны защита капитала и
+  // купонный варрант.
   function fromOffering(o) {
+    var oTenor = tenorText(o.tenor);
+    // Купонный варрант на размещении: family там «participation» (так у СП-2-79),
+    // поэтому тип узнаём по kind + name — тем же способом, что offerings.html.
+    // Кириллицу только ЯВНЫМ классом: в JS `\w` — это латиница, и шаблон вида
+    // /купонн\w*\s+варрант/ не совпадёт. На этой грабле уже теряли развилку
+    // исходов на карточке размещения.
+    var oTxt = String((o.kind || "") + " " + (o.name || ""));
+    if (/купонн[а-яё]*\s+варрант|диджитал/i.test(oTxt)) {
+      var oPrem = num(o.price), oPay = num(o.redeem);
+      // Страйк читаем тем же строгим шаблоном, что offerings.html и админка:
+      // он живёт ТОЛЬКО в названии («CALL 105»), отдельного поля у размещения нет.
+      var oKm = String(o.name || "").match(/CALL\s+(\d{2,3})/);
+      var oK = oKm ? Number(oKm[1]) : null;
+      if (!(oPrem > 0)) {
+        return { supported: false, reason: "У размещения не задана цена входа (price) — без премии купонный варрант не описать." };
+      }
+      if (!(oPay > 0)) {
+        return { supported: false, reason: "У размещения не задан размер выплаты (redeem)." };
+      }
+      if (!(oK > 0)) {
+        return { supported: false, reason: "В названии размещения не найден страйк («CALL 105»), а без него график выплаты не построить." };
+      }
+      return {
+        family: "warrant", kind: o.kind || "Купонный варрант",
+        underlying: o.reference || o.name, name: o.name, tenor: oTenor,
+        fx: isFx(o.currency) || !!o.fx,
+        metric: { v: comma(oPay) + "%", k: "выплата при активе ≥ " + comma(oK) + "%" },
+        p: { asset: o.reference || o.name, price: rub(oPrem),
+             upside: "фиксированная выплата " + comma(oPay) + "% номинала, если актив не ниже " +
+                     comma(oK) + "%; насколько выше — не важно",
+             protection: "нет" },
+        payoff: { type: "callstep", strikePct: oK, payoutPct: oPay, premiumPct: oPrem, floorPct: 0 },
+      };
+    }
     if (o.family !== "protection") {
-      return { supported: false, reason: "В дайджест из «Размещений» пока поддержаны только продукты с защитой капитала (family=protection)." };
+      return { supported: false, reason: "Размещение «" + (o.kind || o.family || "—") +
+               "» в дайджест пока не выводится: из «Размещений» поддержаны защита капитала и купонный варрант." };
     }
     var floor = num(String(o.protection || "").replace("%", ""));
     // participation в offerings.js — строка («100%»), в отличие от доли на доске
@@ -188,7 +280,7 @@
     if (partPct != null) pf.partPct = partPct;
     return {
       family: "protection", kind: o.kind || "Структурная облигация · защита капитала",
-      underlying: o.reference || o.name, name: o.name, tenor: o.tenor || "",
+      underlying: o.reference || o.name, name: o.name, tenor: oTenor,
       fx: isFx(o.currency) || !!o.fx,
       metric: { v: o.protection || (floor != null ? floor + "%" : ""), k: "защита капитала" },
       p: { asset: o.reference || o.name, price: "100% номинала",
@@ -202,7 +294,29 @@
   // не описывал механику руками (она и так однозначно следует из типа и цифр).
   function attachHowPayout(r) {
     var pf = r.payoff || {}, cap = pf.capPct, ku = pf.kuPct, gain = pf.gainPct, entry = pf.entryPct, floor = pf.floorPct;
-    if (r.family === "warrant") {
+    // Ступенчатые пэйоффы проверяем ДО семейств: у купонного варранта семейство
+    // «warrant», и общий варрантный текст обещал бы участие в росте, которого нет.
+    if (pf.type === "callstep") {
+      var cK = pf.strikePct, cPay = pf.payoutPct, cQ = pf.premiumPct;
+      r.how = "Купонный варрант: инвестор оплачивает только премию (" + comma(cQ) +
+              "% номинала) и получает фиксированную выплату " + comma(cPay) +
+              "% номинала, если на дату оценки актив не ниже " + comma(cK) +
+              "%. Насколько выше — не важно: выплата не растёт вместе с активом.";
+      r.payout = "Актив на дату оценки не ниже " + comma(cK) + "% — выплата " + comma(cPay) +
+                 "% номинала; ниже — выплаты нет, премия теряется полностью. Безубыток — сам страйк: " +
+                 "результат меняется скачком, и премия окупается сразу, как только актив дошёл до " +
+                 comma(cK) + "%.";
+    } else if (pf.type === "rcdigital") {
+      var dK = pf.strikePct, dC = pf.couponPct;
+      r.how = "Реверс-конвертибл с условным купоном: покупка по номиналу. Актив на дату оценки не ниже " +
+              comma(dK) + "% — возвращается номинал плюс купон " + comma(dC) +
+              "% за срок; ниже — купона нет вовсе, а номинал уменьшается пропорционально падению от " +
+              comma(dK) + "%.";
+      // Отличие от обычного реверс-конвертибла называем БЕЗ отсылки к нему: решение
+      // Руслана 08.09.2026 — клиенту продукт объясняем сам по себе.
+      r.payout = "Выплата = номинал плюс купон " + comma(dC) + "% при активе не ниже " + comma(dK) +
+                 "%; ниже — тело по перформансу от " + comma(dK) + "% и без купона. Безубыток — сам страйк.";
+    } else if (r.family === "warrant") {
       r.how = "Варрант: инвестор оплачивает только премию и получает участие в росте базового актива на весь номинал, без маржин-коллов.";
       r.payout = pf.type === "callcap"
         ? "Выплата равна росту актива выше страйка (максимум +" + comma(cap) + "%), рассчитанному от номинала; премия не возвращается."

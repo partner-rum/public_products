@@ -2884,22 +2884,25 @@ function sanitizeItem(section, raw) {
       if (!src || typeof src !== "object") continue;
       if (k === "payoff") {
         const t = cleanStr(src.type, 20);
-        // revconv — реверс-конвертибл (couponPa, couponPct за срок, strikePct).
-        // Пока типа не было в списке, payoff срезался ЦЕЛИКОМ и график в дайджесте
-        // сваливался в ветку-заглушку «стоимость портфеля» — та же грабля, что была
-        // у autocall.
+        // revconv — реверс-конвертибл; rcdigital — он же с условным купоном;
+        // callstep — купонный варрант в ВАРРАНТНОЙ форме (вход по премии, номинал не
+        // возвращается; «digital» в этом списке — его облигационная форма, другой кадр).
+        // Пока типа нет в списке, payoff срезается ЦЕЛИКОМ и график в дайджесте
+        // сваливается в ветку-заглушку «стоимость портфеля» — грабля уже была у autocall.
         if (["call", "callcap", "digital", "protected", "booster", "fixed", "portfolio",
-             "autocall", "revconv"].includes(t)) {
+             "autocall", "revconv", "rcdigital", "callstep"].includes(t)) {
           const p = { type: t };
           // partPct/strikePct — защита капитала с доски: участие в росте и страйк опциона.
           // couponPa/couponBarrier/callBarrier/nonCall/obsTotal/obsPerYear — автоколл:
           // без них объект уезжал в файл пустым, а тип «autocall» вообще не был в
           // списке разрешённых, из-за чего payoff срезался ЦЕЛИКОМ и график
           // сваливался в ветку-заглушку. Та же грабля описана у раздела board.
+          // payoutPct — размер фиксированной выплаты купонного варранта (callstep).
+          // Без него график рисовал бы «выплата 0%» при живой премии в параметрах.
           for (const nk of ["capPct", "premiumPct", "couponPct", "barrierPct", "kuPct",
                             "entryPct", "gainPct", "floorPct", "partPct", "strikePct",
                             "couponPa", "couponBarrier", "callBarrier", "nonCall",
-                            "obsTotal", "obsPerYear"]) {
+                            "obsTotal", "obsPerYear", "payoutPct"]) {
             const v = cleanNum(src[nk]); if (v != null) p[nk] = v;
           }
           // Корзина worst-of: строки, не числа — общая обработка их не собрала бы.

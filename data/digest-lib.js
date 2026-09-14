@@ -126,6 +126,69 @@ window.DF = (function () {
     return o + sTxt(CW - PADR, PADT - 4, lab, "end");
   }
 
+  // Купонный варрант в ВАРРАНТНОЙ форме (на доске type digital, floorPct ≠ 100):
+  // вход по премии, номинал НЕ возвращается. Отдельный тип кадра, а не ветка внутри
+  // «digital»: тот рисует облигационную форму (линия идёт ОТ номинала вверх на купон),
+  // и одна картинка на два разных продукта обещала бы возврат вложенного.
+  // Ступенька намеренная: наклонная на страйке обещала бы участие в росте, которого
+  // у пэйоффа нет — выплата не зависит от того, насколько актив перешагнул порог.
+  // Безубыток — САМ СТРАЙК: выплата меняется скачком, и премия окупается сразу, как
+  // только актив дошёл до K (ниже прибыли нет ни при каком росте).
+  function callstepSvg(p, color) {
+    const K = Number(p.strikePct) || 100, q = Number(p.premiumPct) || 0;
+    const payHi = Number(p.payoutPct) || 0, floor = Number(p.floorPct) || 0;
+    const s0 = K * 0.8, s1 = K * 1.25;
+    const ymax = Math.max(payHi, q) * 1.14 + 4;
+    const PADL = 8, PADR = 8, PADT = 15, PADB = 24;   // снизу — место под подпись страйка
+    const X = s => PADL + (s - s0) / (s1 - s0) * (CW - PADL - PADR);
+    const Y = v => CH - PADB - (v / ymax) * (CH - PADT - PADB);
+
+    let o = sLine(PADL, Y(0), CW - PADR, Y(0), GRID, 1);
+    if (q) {
+      o += sLine(PADL, Y(q), CW - PADR, Y(q), color, 1, "3 3") +
+           sTxt(PADL + 1, Y(q) - 5, "премия " + gnum(q) + "%", "start", EM);
+    }
+    o += sPath("M" + X(s0).toFixed(1) + " " + Y(floor).toFixed(1) +
+               " L" + X(K).toFixed(1) + " " + Y(floor).toFixed(1) +
+               " L" + X(K).toFixed(1) + " " + Y(payHi).toFixed(1) +
+               " L" + X(s1).toFixed(1) + " " + Y(payHi).toFixed(1), color, 2.5) +
+         sDia(X(K), Y(payHi), color) +
+         sTxt(X(K), Y(0) + 15, "K " + gnum(K), "middle");
+    // Точка безубытка лежит на самой вертикали: премия окупается ровно на страйке.
+    if (q && q < payHi) {
+      o += '<circle cx="' + X(K).toFixed(1) + '" cy="' + Y(q).toFixed(1) + '" r="3.2" fill="' + color + '"/>';
+    }
+    return o + sTxt(CW - PADR, PADT - 4, "выплата " + gnum(payHi) + "% ном.", "end");
+  }
+
+  // Реверс-конвертибл с УСЛОВНЫМ купоном (на доске type rcdigital): тело считается
+  // от страйка, как у обычного реверс-конвертибла, но купон исчезает вместе с
+  // просадкой — ниже страйка его нет ВОВСЕ. Поэтому здесь ступенька, а не сплошная
+  // линия, и безубыток равен САМОМУ СТРАЙКУ, а не лежит ниже него: это и есть
+  // разница с revconv, ради которой тип заведён отдельно.
+  function rcdigitalSvg(p, color) {
+    const K = Number(p.strikePct) || 100, cpn = Number(p.couponPct) || 0;
+    const body = s => Math.min(100, s / K * 100);
+    const s0 = Math.max(0, K - 60), s1 = K + 40;
+    const ymin = body(s0), ymax = 100 + cpn + (100 + cpn - ymin) * 0.16 + 2;
+    const PADL = 8, PADR = 8, PADT = 15, PADB = 22;
+    const X = s => PADL + (s - s0) / (s1 - s0) * (CW - PADL - PADR);
+    const Y = v => CH - PADB - (v - ymin) / (ymax - ymin) * (CH - PADT - PADB);
+
+    let o = sLine(PADL, Y(100), CW - PADR, Y(100), GRID, 1, "2 4") +
+            sTxt(CW - PADR, Y(100) + 14, "номинал 100%", "end");
+    o += sPath("M" + X(s0).toFixed(1) + " " + Y(body(s0)).toFixed(1) +
+               " L" + X(K).toFixed(1) + " " + Y(100).toFixed(1) +
+               " L" + X(K).toFixed(1) + " " + Y(100 + cpn).toFixed(1) +
+               " L" + X(s1).toFixed(1) + " " + Y(100 + cpn).toFixed(1), color, 2.5) +
+         sDia(X(K), Y(100 + cpn), color);
+    // Безубыток называем прямо: у этого типа он совпадает со страйком, и читатель,
+    // знакомый с обычным реверс-конвертиблом, ждёт его НИЖЕ — разницу надо назвать.
+    o += sLine(X(K), Y(100 + cpn) + 5, X(K), CH - PADB + 6, GHOST, 1, "3 3") +
+         sTxt(X(K), CH - 6, "б/у = K " + gnum(K), "middle");
+    return o + sTxt(CW - PADR, PADT - 4, "купон " + gnum(cpn) + "% за срок", "end");
+  }
+
   // Реверс-конвертибл: вход по номиналу, купон БЕЗУСЛОВНЫЙ, а тело на погашении
   // считается от СТРАЙКА (S/K·100), а не от старта. Отсюда главное, ради чего
   // рисуется кадр: купон смягчает падение, и безубыток лежит НИЖЕ страйка — без
@@ -226,6 +289,10 @@ window.DF = (function () {
       el = autocallSvg(p, color);
     } else if (p.type === "revconv") {
       el = revconvSvg(p, color);
+    } else if (p.type === "rcdigital") {
+      el = rcdigitalSvg(p, color);
+    } else if (p.type === "callstep") {
+      el = callstepSvg(p, color);
     } else if (p.type === "digital") {
       const base = y(0.62), up = y(0.18), bx = x(0.56);
       el = '<line x1="' + PAD + '" y1="' + base + '" x2="' + (W - PAD) + '" y2="' + base + '" stroke="rgba(255,255,255,0.17)" stroke-width="1" stroke-dasharray="2 4"/>' +
@@ -278,6 +345,20 @@ window.DF = (function () {
     if (idea.audience) return idea.audience;
     const a = (idea.p && idea.p.asset) || idea.underlying;
     const prot = idea.p && /100/.test(idea.p.protection || "");
+    // Ступенчатые пэйоффы — ДО семейств: у купонного варранта семейство «warrant»,
+    // и общий варрантный текст обещал бы участие в росте, которого у него нет.
+    if ((idea.payoff || {}).type === "callstep") {
+      const pf = idea.payoff;
+      return "Подходит, если вы ждёте, что «" + a + "» к дате оценки будет не ниже " +
+        numTxt(pf.strikePct) + "%, и вам достаточно фиксированной выплаты " + numTxt(pf.payoutPct) +
+        "% номинала: насколько актив уйдёт выше порога, значения не имеет. Риск ограничен премией.";
+    }
+    if ((idea.payoff || {}).type === "rcdigital") {
+      const pf = idea.payoff;
+      return "Подходит, если вы готовы держать «" + a + "» и рассчитываете, что к дате оценки бумага " +
+        "будет не ниже " + numTxt(pf.strikePct) + "%: тогда возвращается номинал плюс купон " +
+        numTxt(pf.couponPct) + "% за срок. Ниже этого уровня купона нет вовсе.";
+    }
     if (idea.family === "warrant") return "Подходит, если вы ждёте рост «" + a + "» и хотите усиленную экспозицию при ограниченном риске: оплачивается только премия, без маржин-коллов.";
     if ((idea.payoff || {}).type === "autocall") {
       const pf = idea.payoff;
@@ -312,6 +393,18 @@ window.DF = (function () {
   function riskOf(idea) {
     if (idea.risk) return idea.risk;
     const prot = idea.p && /100/.test(idea.p.protection || "");
+    if ((idea.payoff || {}).type === "callstep") {
+      const K = numTxt(idea.payoff.strikePct);
+      return "Риск ограничен премией, но он «всё или ничего»: если на дату оценки актив хоть немного ниже " +
+        K + "%, выплаты нет вовсе и премия теряется полностью. Промежуточные значения роли не играют — " +
+        "важно только, перешагнул актив " + K + "% или нет.";
+    }
+    if ((idea.payoff || {}).type === "rcdigital") {
+      const K = numTxt(idea.payoff.strikePct);
+      return "Ниже " + K + "% купон не выплачивается вовсе, а номинал уменьшается пропорционально падению " +
+        "от этого уровня: безубыток равен самому страйку, подушки из купона здесь нет. " +
+        "Роста выше " + K + "% держатель не получает. Дополнительно — кредитный риск эмитента облигации.";
+    }
     if (idea.family === "warrant") return "Риск ограничен премией: если базовый актив не вырос к погашению, премия теряется полностью, вложенные средства не возвращаются.";
     if ((idea.payoff || {}).type === "autocall") {
       const pf = idea.payoff;
@@ -365,7 +458,11 @@ window.DF = (function () {
         '<div class="df-sell"><div class="k">Кому подходит</div><p>' + audienceOf(idea) + '</p></div>' +
         '<div class="df-block"><div class="k">Логика идеи</div>' +
           (idea.situation ? '<p>' + idea.situation + '</p>' : "") +
-          '<ul>' + idea.factors.map(f => '<li>' + f + '</li>').join("") + '</ul>' +
+          // Факторы — поле НЕОБЯЗАТЕЛЬНОЕ: админка не кладёт его, если сейлз оставил
+          // текстарею пустой. Без охраны idea.factors.map ронял отрисовку выпуска на
+          // этой идее, и страница переставала отзываться на клики. В печатной версии
+          // защита была (`idea.get("factors") or []`), в экранной — нет.
+          ((idea.factors || []).length ? '<ul>' + idea.factors.map(f => '<li>' + f + '</li>').join("") + '</ul>' : "") +
           (idea.conclusion ? '<p class="concl">' + idea.conclusion + '</p>' : "") +
         '</div>' +
         '<div class="df-earn"><div class="k">Как заработать</div><p>' + idea.how + '</p></div>' +
