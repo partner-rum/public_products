@@ -156,7 +156,7 @@ window.DIGEST_ARCHIVE = {
     "id": "varrant-100-150-orcl-2-goda",
     "family": "warrant",
     "kind": "Варрант",
-    "name": "Варрант 100–150 · Oracle · 2 года",
+    "name": "Варрант · Oracle · Участие до 50% роста · 2 года",
     "underlying": "Oracle (ORCL)",
     "teaser": "Усиленное участие в потенциальном росте акций Oracle до 50%, максимальный доход 122% без учета валютной переоценки",
     "tenor": "2 года",
