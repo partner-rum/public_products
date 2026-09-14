@@ -353,16 +353,46 @@
   const offBroken = offRaw && !offRaw.opTemplate;
   const offering = offBroken ? null : offRaw;
 
+  // ── Превью продукта ДО отправки на одобрение ────────────────────────────────
+  // КОПИЯ БЛОКА ИЗ instrument.html (страницы самодостаточны, общего layout-а нет) —
+  // правишь здесь, правь и там. Админка кладёт собранную форму в localStorage и
+  // открывает лист с ?preview=1: печатный лист — это то, что уходит клиенту, и
+  // проверять его надо ДО одобрения, а не после.
+  const PREVIEW_KEY = "so_bd_preview", PREVIEW_TTL = 30 * 60 * 1000;
+  function readPreview() {
+    if (qs.get("preview") !== "1") return null;
+    try {
+      const raw = JSON.parse(localStorage.getItem(PREVIEW_KEY) || "null");
+      if (!raw || !raw.item || !raw.item.type || Date.now() - raw.ts > PREVIEW_TTL) return null;
+      return raw.item;
+    } catch (e) { return null; }
+  }
+  const PREVIEW = offering ? null : readPreview();
+
   // Продукта с таким id нет (снят с витрины, битая ссылка, пустой ?id) — печатаем
   // экран-заглушку вместо чужого продукта: findInstrument теперь возвращает null.
-  const found = offering ? null : S.findInstrument(qs.get("id"));
+  const found = offering ? null : (PREVIEW || S.findInstrument(qs.get("id")));
+  // Открыли превью, а черновика в хранилище уже нет (прошло полчаса, другой браузер).
+  // Общий текст «продукт снят с витрины» сбивал бы с толку — говорим, что случилось.
+  const PREVIEW_STALE = qs.get("preview") === "1" && !PREVIEW && !offering;
+
   if (!offering && !found) {
-    document.title = offBroken
+    document.title = PREVIEW_STALE
+      ? "Превью устарело — Rumberg"
+      : offBroken
       ? "One-pager для размещения пока не собирается — Rumberg"
       : "Продукт снят с витрины — Rumberg";
     document.getElementById("deck").innerHTML =
       '<section class="slide gone-slide">' +
-        (offBroken
+        (PREVIEW_STALE
+          ? '<div class="g-k">превью устарело</div>' +
+            '<h1>Черновик продукта не найден</h1>' +
+            '<p>Превью живёт полчаса и только в том браузере, где его открыли. ' +
+            'Вернитесь в админку на вкладку «Текущий продукт» и нажмите «Посмотреть превью» ещё раз — ' +
+            'форма не потеряна. На сайт при этом ничего не отправлялось.</p>' +
+            '<div class="g-act"><a href="admin.html">Открыть админку</a>' +
+            '<a class="alt" href="board.html">Открыть доску</a></div>'
+          : offBroken
           ? '<div class="g-k">лист ещё не готов</div>' +
             '<h1>Для этого размещения печатного листа пока нет</h1>' +
             '<p>Параметры выпуска, условия и документы — на странице размещения. ' +
@@ -1187,7 +1217,10 @@
     }
   })();
 
-  { const shHost = document.getElementById("sh-host");
+  // В превью обе кнопки НЕ вешаем: «Обсудить продукт» отправила бы настоящую
+  // заявку в группу продаж на продукт, которого ещё нет, а «Поделиться» дала бы
+  // ссылку на карточку, которая появится только после одобрения.
+  { const shHost = PREVIEW ? null : document.getElementById("sh-host");
     if (shHost && window.Share) {
       const prodUrl = offering
         ? new URL("offerings", location.href).href
@@ -1229,6 +1262,19 @@
       "slides=" + document.querySelectorAll(".slide").length
     ].join("\n");
     document.body.appendChild(dbg);
+  }
+
+  // Полоса «превью» печатается ТОЖЕ (в отличие от панели с кнопкой «Сохранить как
+  // PDF», которую прячет @media print): лист-превью, неотличимый от настоящего,
+  // рано или поздно уехал бы клиенту как готовый one-pager.
+  if (PREVIEW) {
+    document.title = "ПРЕВЬЮ · " + document.title;
+    var pvb = document.createElement("div");
+    pvb.textContent = "ПРЕВЬЮ ПРОДУКТА · на сайт не отправлено. Так лист будет выглядеть у клиента " +
+      "после одобрения. Клиенту этот файл не отправляйте.";
+    pvb.style.cssText = "background:#EE7D1B;color:#0C0A08;font-weight:600;text-align:center;" +
+      "padding:9px 16px;font-size:13px;line-height:1.45;font-family:var(--f,system-ui)";
+    document.body.insertBefore(pvb, document.body.firstChild);
   }
   }
 

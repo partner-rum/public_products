@@ -415,6 +415,13 @@
       </div>
     </div>
     <button class="send" type="submit">Отправить на одобрение</button>
+    <button class="send" type="button" id="bd-preview"
+            style="background:transparent;border:1px solid var(--line);color:var(--ink);margin-top:10px">
+      ↗ Посмотреть превью карточки</button>
+    <div class="hint" style="margin-top:8px">Превью открывается в новой вкладке и показывает настоящую карточку продукта —
+      ту, что увидит клиент. На сайт при этом ничего не уходит: заявка отправляется только кнопкой выше.
+      Кнопки «Обсудить продукт» и «Поделиться» в превью выключены, а печатный лист открывается ссылкой
+      «Скачать one-pager» на самой карточке.</div>
     <div class="msg" id="m-board"></div>
   </form>
 
@@ -1319,12 +1326,10 @@
 
   // Отправляем ТОЛЬКО отличающиеся поля: иначе заявка упирается в лимит payload
   // и врёт модератору, будто меняется каждое поле (та же логика, что у размещений).
-  function submitBoardEdit() {
-    var msgEl = document.getElementById("m-board");
-    msgEl.className = "msg";
-    var key = keyEl.value.trim();
-    if (!key) { msgEl.className = "msg err"; msgEl.textContent = "Введите ваш персональный ключ (в самом верху страницы)."; keyEl.focus(); return; }
-
+  // Дифф правки. Вынесен из submitBoardEdit по той же причине, что и сборка
+  // карточки: превью правки — это исходная запись, ДОПОЛНЕННАЯ этим диффом,
+  // и собирать её вторым способом значило бы показывать не то, что уедет.
+  function buildBoardPatch() {
     var patch = { id: bdOrig.id }, changed = [];
     var NUM = { quote: 1, minNom: 1, strike: 1, strike2: 1, participation: 1, protectionPct: 1, cap: 1, startFrom: 1, couponPct: 1 };
     var snap = bdSnap || {};
@@ -1338,6 +1343,16 @@
       if (NUM[k] && !isFinite(v)) return;
       patch[k] = v; changed.push(fieldLabel(fBoard, k) || k);
     });
+    return { patch: patch, changed: changed };
+  }
+
+  function submitBoardEdit() {
+    var msgEl = document.getElementById("m-board");
+    msgEl.className = "msg";
+    var key = keyEl.value.trim();
+    if (!key) { msgEl.className = "msg err"; msgEl.textContent = "Введите ваш персональный ключ (в самом верху страницы)."; keyEl.focus(); return; }
+
+    var built = buildBoardPatch(), patch = built.patch, changed = built.changed;
     if (!changed.length) {
       msgEl.className = "msg err";
       msgEl.textContent = "Вы ничего не изменили — правку отправлять не с чем.";
@@ -2168,7 +2183,14 @@
     e.preventDefault();
     // Правка идёт своим маршрутом: собираем ДИФФ, а не карточку целиком.
     if (bdOrig) { submitBoardEdit(); return; }
-    submit("board", fBoard, document.getElementById("m-board"), function () {
+    submit("board", fBoard, document.getElementById("m-board"), buildBoardItem);
+  });
+
+  // Сборка карточки продукта из формы. Вынесена из обработчика отправки, чтобы
+  // кнопка «Посмотреть превью» строила РОВНО ТО ЖЕ, что уйдёт на одобрение:
+  // иначе превью показывало бы одно, а модератор получал другое. Бросает
+  // исключение на непройденной проверке — его показывают и отправка, и превью.
+  function buildBoardItem() {
       var type = val(fBoard, "type");
       // Вход по номиналу — у защиты, автоколла и бустера: поле котировки скрыто,
       // требовать его значит требовать невидимое поле.
@@ -2301,7 +2323,38 @@
         : type === "digital" ? "dg" : type === "rcdigital" ? "rcd" : "w";
       item.id = pfx + "-" + slug(item.underlying) + "-" + slug(item.expiry).replace(/\./g, "") + "-s";
       return item;
-    });
+  }
+
+  // ── Превью карточки до отправки ──────────────────────────────────────────
+  // Продукт доски идёт через ✅ Руслана, то есть до одобрения его нет ни в
+  // каталоге, ни на сервере, — показать его «с сервера» нечем. Поэтому кладём
+  // собранную форму в localStorage и открываем настоящую карточку с ?preview=1.
+  // Ключ и срок продублированы в instrument.html и onepager.html.
+  document.getElementById("bd-preview").addEventListener("click", function () {
+    var msgEl = document.getElementById("m-board");
+    msgEl.className = "msg"; msgEl.textContent = "";
+    var item;
+    try {
+      // Те же проверки, что на отправке: превью недособранного продукта показало
+      // бы карточку с дырами и приучило бы проходить мимо ошибок формы.
+      if (bdOrig) {
+        var built = buildBoardPatch();
+        if (!built.changed.length) throw new Error("Вы ничего не изменили — превью совпадёт с карточкой на сайте.");
+        // Правка уходит диффом, а карточку рисует полная запись: накладываем дифф
+        // на исходник, иначе превью показало бы продукт без нетронутых полей.
+        item = Object.assign({}, bdOrig, built.patch);
+      } else {
+        item = buildBoardItem();
+      }
+    } catch (e) { msgEl.className = "msg err"; msgEl.textContent = String(e.message || e); return; }
+    try {
+      localStorage.setItem("so_bd_preview", JSON.stringify({ ts: Date.now(), item: item }));
+    } catch (e) {
+      msgEl.className = "msg err";
+      msgEl.textContent = "Браузер не дал сохранить черновик превью (приватный режим или запрет хранилища).";
+      return;
+    }
+    window.open("instrument.html?preview=1", "_blank", "noopener");
   });
 
   // ── НА РАЗМЕЩЕНИИ ──

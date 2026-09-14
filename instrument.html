@@ -249,15 +249,54 @@
 <script src="intro.js?v=6"></script>
 <script>
   const S = window.SITE;
-  const inst = S.findInstrument(new URLSearchParams(location.search).get("id"));
+
+  // ── Превью продукта ДО отправки на одобрение ────────────────────────────────
+  // Продукт доски проходит через ✅ Руслана, то есть до одобрения его нет ни в
+  // каталоге, ни на сервере. Поэтому кнопка «Посмотреть превью» в админке кладёт
+  // собранную форму в localStorage и открывает эту страницу с ?preview=1 — сейлз
+  // видит НАСТОЯЩУЮ карточку, а не пересказ полей в форме. Тот же приём, что у
+  // черновика дайджеста (digest.html?draft=1).
+  // localStorage, а не sessionStorage: вкладка открывается с rel="noopener", и
+  // sessionStorage в неё не наследуется. Срок 30 минут — чтобы забытый черновик
+  // не открывался «превью» через неделю.
+  // КОПИЯ ЭТОГО БЛОКА ЕСТЬ В onepager.html (страницы самодостаточны, общего
+  // layout-а у проекта нет) — правишь здесь, правь и там.
+  const PREVIEW_KEY = "so_bd_preview", PREVIEW_TTL = 30 * 60 * 1000;
+  function readPreview() {
+    if (new URLSearchParams(location.search).get("preview") !== "1") return null;
+    try {
+      const raw = JSON.parse(localStorage.getItem(PREVIEW_KEY) || "null");
+      if (!raw || !raw.item || !raw.item.type || Date.now() - raw.ts > PREVIEW_TTL) return null;
+      return raw.item;
+    } catch (e) { return null; }
+  }
+  const PREVIEW = readPreview();
+
+  const inst = PREVIEW || S.findInstrument(new URLSearchParams(location.search).get("id"));
 
   // Продукта с таким id в каталоге нет — показываем честный экран и НЕ рендерим
   // карточку. Раньше findInstrument молча возвращал первый инструмент каталога:
   // клиент по устаревшей ссылке видел чужой продукт с настоящей котировкой.
+  // Открыли превью, а черновика в хранилище уже нет (прошло полчаса, другой браузер,
+  // очищенные данные). Общий текст «продукт снят с витрины» тут сбивал бы с толку:
+  // сейлз решил бы, что сломал форму. Говорим, что произошло на самом деле.
+  const PREVIEW_STALE = new URLSearchParams(location.search).get("preview") === "1" && !PREVIEW;
+
   if (!inst) {
-    document.title = "Продукт снят с витрины — Rumberg";
-    document.querySelector(".wrap").innerHTML =
-      '<div class="gone">' +
+    document.title = PREVIEW_STALE ? "Превью устарело — Rumberg" : "Продукт снят с витрины — Rumberg";
+    document.querySelector(".wrap").innerHTML = PREVIEW_STALE
+      ? '<div class="gone">' +
+          '<div class="gone-k">превью устарело</div>' +
+          '<h1>Черновик продукта не найден</h1>' +
+          '<p>Превью живёт полчаса и только в том браузере, где его открыли. ' +
+          'Вернитесь в админку на вкладку «Текущий продукт» и нажмите «Посмотреть превью» ещё раз — ' +
+          'форма не потеряна. На сайт при этом ничего не отправлялось.</p>' +
+          '<div class="gone-act">' +
+            '<a class="btn-solar" href="admin.html">Открыть админку</a>' +
+            '<a class="btn-solar btn-secondary" href="board.html">Открыть доску</a>' +
+          '</div>' +
+        '</div>'
+      : '<div class="gone">' +
         '<div class="gone-k">ссылка устарела</div>' +
         '<h1>Продукт снят с витрины</h1>' +
         '<p>Этого продукта больше нет в каталоге: условия могли измениться, а выпуск — уже разместиться. ' +
@@ -716,13 +755,29 @@
   boardLink.href = "board.html?type=" + inst.type;
   document.getElementById("crumb-id").textContent = S.displayName(inst);
   document.getElementById("title").textContent = S.displayName(inst);
-  document.getElementById("onepager-link").href = "onepager.html?id=" + encodeURIComponent(inst.id) + "&print=1";
-  if (window.Contact) Contact.attach(document.getElementById("ct-host"), { title: S.displayName(inst), url: location.href, id: inst.id });
+  // В превью one-pager открываем тоже превью: продукта ещё нет в каталоге, и
+  // обычная ссылка по id привела бы на экран «продукт снят с витрины».
+  document.getElementById("onepager-link").href = PREVIEW
+    ? "onepager.html?preview=1&print=1"
+    : "onepager.html?id=" + encodeURIComponent(inst.id) + "&print=1";
+  // В превью обе кнопки НЕ вешаем. «Обсудить продукт» отправила бы настоящую
+  // заявку в группу продаж на продукт, которого ещё нет, а «Поделиться» дала бы
+  // ссылку /p/<id>.html, которая появится только после одобрения.
+  if (window.Contact && !PREVIEW) Contact.attach(document.getElementById("ct-host"), { title: S.displayName(inst), url: location.href, id: inst.id });
   // «Поделиться» отдаёт /p/<id> — лёгкую страницу с персональным og-превью (как на доске),
   // чтобы сейлз, скопировавший адрес из карточки, слал не обезличенную обложку (A.7).
-  if (window.Share) {
+  if (window.Share && !PREVIEW) {
     var prodUrl = new URL("p/" + encodeURIComponent(inst.id), location.href).href;
     Share.attach(document.getElementById("sh-host"), { url: prodUrl, title: S.displayName(inst), name: S.displayName(inst), pitch: content.subtitle, params: (content.metrics || []) });
+  }
+  if (PREVIEW) {
+    document.title = "ПРЕВЬЮ · " + document.title;
+    var pvb = document.createElement("div");
+    pvb.textContent = "ПРЕВЬЮ ПРОДУКТА · на сайт не отправлено. Так карточку увидит клиент после одобрения. " +
+      "«Обсудить продукт» и «Поделиться» здесь выключены — заявка ушла бы на несуществующий продукт.";
+    pvb.style.cssText = "position:sticky;top:0;z-index:99999;background:#EE7D1B;color:#0C0A08;font-weight:600;" +
+      "text-align:center;padding:9px 16px;font-size:13px;line-height:1.45;font-family:var(--f-body,system-ui)";
+    document.body.insertBefore(pvb, document.body.firstChild);
   }
   document.getElementById("badge").textContent = content.badge;
   document.getElementById("subtitle").textContent = content.subtitle;
