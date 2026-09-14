@@ -12,7 +12,7 @@
 Запуск:  python make_digest.py            (нужен segno для QR: pip install segno)
 Дальше:  открыть digest-print.html -> «Скачать PDF» / «Печать» -> A4, поля «нет».
 Авто:    .github/workflows/digest-pdf.yml рендерит PDF на каждый пуш data/digest.js."""
-import re, json, os, sys, io
+import re, json, os, sys, io, datetime
 from string import Template
 
 # Консоль Windows по умолчанию cp1251: «₽» в предупреждении об обрезанных текстах роняло
@@ -41,12 +41,34 @@ ISSUES  = ARCHIVE["issues"]
 # нужна своя страница: до 10.08.2026 «Печатная версия» из архива открывала сегодняшний
 # дайджест — сейлз выбирал старый выпуск и видел не его.
 WANT = next((a.split("=", 1)[1] for a in sys.argv[1:] if a.startswith("--issue=")), None)
-ISSUE = next((i for i in ISSUES if i["id"] == WANT), None) if WANT else ISSUES[0]
-if ISSUE is None:
-    sys.exit("нет выпуска «%s» в data/digest.js" % WANT)
-IS_CURRENT = ISSUE is ISSUES[0]
+IS_DRAFT = "--draft" in sys.argv
+
+if IS_DRAFT:
+    # Превью ЧЕРНОВИКА: тот же печатный лист, что уйдёт клиенту, но из ещё не
+    # опубликованных идей. Сейлзу это нужно не из любопытства: на A4 раскладка
+    # другая (обложка, содержание, лист на идею), и именно здесь видно, что
+    # длинный текст не влез, — на сайте он просто переносится.
+    # Странице печатного выпуска нужны у выпуска ТОЛЬКО id, дата и идеи; label,
+    # summary и intro она не читает, поэтому не выдумываем их.
+    # Дата — сегодняшняя по МСК, ровно как её проставит воркер в digest_publish.
+    # Опубликуют завтра — сдвинется и она; это черновик, а не обещание даты.
+    _msk = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=3)
+    ISSUE = {"id": "draft", "date": _msk.strftime("%d.%m.%Y"),
+             "ideas": (ARCHIVE.get("draft") or {}).get("ideas") or []}
+    if not ISSUE["ideas"]:
+        # Пустой черновик — страницы быть НЕ ДОЛЖНО: оставшаяся от прошлого раза,
+        # она показывала бы уже опубликованные идеи как неопубликованный черновик.
+        # Строку ловит workflow и удаляет файл.
+        print("DRAFT_EMPTY=1")
+        sys.exit(0)
+else:
+    ISSUE = next((i for i in ISSUES if i["id"] == WANT), None) if WANT else ISSUES[0]
+    if ISSUE is None:
+        sys.exit("нет выпуска «%s» в data/digest.js" % WANT)
+IS_CURRENT = (not IS_DRAFT) and ISSUE is ISSUES[0]
 ISSUE_ID = ISSUE["id"]
-PAGE = "digest-print.html" if IS_CURRENT else "digest-print-%s.html" % ISSUE_ID
+PAGE = ("digest-print-draft.html" if IS_DRAFT
+        else "digest-print.html" if IS_CURRENT else "digest-print-%s.html" % ISSUE_ID)
 OUT  = os.path.join(ROOT, PAGE)
 SECTIONS = ARCHIVE["sections"]
 
@@ -841,9 +863,17 @@ def page_legal(pg):
 # ══════════════════════════════════════════════════════════════════════════════
 #  СБОРКА
 # ══════════════════════════════════════════════════════════════════════════════
+# Полоса «черновик» — единственное, чем превью отличается от боевого листа.
+# Она печатается ТОЖЕ (в отличие от панели `.bar`, которую `@media print` прячет):
+# чёрновой PDF, неотличимый от настоящего, рано или поздно уехал бы клиенту.
+DRAFTBAR = ("""<div style="background:#EE7D1B;color:#0C0A08;font-weight:600;text-align:center;
+ padding:9px 16px;font-size:13px;line-height:1.45;font-family:'Onest',system-ui,sans-serif">
+ЧЕРНОВИК ВЫПУСКА · не опубликовано. Так дайджест будет выглядеть в печати после публикации —
+проверьте, что тексты влезли на лист. Клиенту этот файл не отправляйте.</div>""" if IS_DRAFT else "")
+
 BAR = T("""
 <div class="bar"><div class="bar-in">
-  <a class="back" href="digest.html">
+  <a class="back" href="$backhref">
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M12 7H2M6 3 2 7l4 4"
       stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
     К дайджесту</a>
@@ -861,7 +891,10 @@ BAR = T("""
       stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 12h10"
       stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round"/></svg>
     Скачать PDF</a>""", pdf=PDF) if HAS_PDF else ""),
-   date=DATE, n=str(len(ORDERED) + 2))
+   date=DATE, n=str(len(ORDERED) + 2),
+   # Из превью черновика «К дайджесту» ведёт в превью же, а не на боевую страницу:
+   # иначе сейлз уходил бы с черновика на опубликованный выпуск и не замечал этого.
+   backhref=("digest.html?draft=1" if IS_DRAFT else "digest.html"))
 
 # Автоподгонка страниц. Работает и на экране, и при рендере PDF: headless-хром
 # исполняет скрипт до печати (в воркфлоу на это дан --virtual-time-budget).
@@ -916,21 +949,28 @@ HTML = T("""<!DOCTYPE html>
 <style>$css</style>
 <script src="metrika.js?v=2" defer></script>
 </head>
-<body>$bar$pages
+<body>$draftbar$bar$pages
 $fitjs</body>
 </html>
-""", date=DATE, css=CSS, bar=BAR, pages="".join(PAGES), fitjs=FIT_JS, page=PAGE)
+""", date=DATE, css=CSS, bar=BAR, draftbar=DRAFTBAR, pages="".join(PAGES), fitjs=FIT_JS, page=PAGE)
 
 open(OUT, "w", encoding="utf-8", newline="\n").write(HTML)
 print("готово: %s" % OUT)
 print("выпуск: %s (%s) | идей: %d | листов: %d" % (ISSUE_ID, DATE, len(ORDERED), len(PAGES)))
-print("PDF_OUT=%s" % PDF)   # стабильная строка для CI: workflow парсит её, чтобы знать путь PDF
-# PDF_MAP=<страница>|<pdf> — что и куда рендерить. Строк столько, сколько выпусков
-# с PDF: workflow гоняет по ним хром. Одного PDF_OUT было мало — правка отрисовки
-# меняет вид ВСЕХ выпусков, а пересобирался только текущий, и в архиве оставались
-# старые листы (так после починки графика защиты клиент открывал архивный PDF и
-# видел прежний потолок).
-print("PDF_MAP=%s|%s" % (PAGE, PDF))
+# У черновика PDF НЕ рендерим и в PDF_MAP не отдаём: файл-двойник настоящего
+# дайджеста лежал бы в docs/ и однажды уехал бы клиенту. Сейлзу достаточно кнопки
+# «Печать» на самой странице — она сохранит в PDF у него локально.
+if not IS_DRAFT:
+    print("PDF_OUT=%s" % PDF)   # стабильная строка для CI: workflow парсит её, чтобы знать путь PDF
+    # PDF_MAP=<страница>|<pdf> — что и куда рендерить. Строк столько, сколько выпусков
+    # с PDF: workflow гоняет по ним хром. Одного PDF_OUT было мало — правка отрисовки
+    # меняет вид ВСЕХ выпусков, а пересобирался только текущий, и в архиве оставались
+    # старые листы (так после починки графика защиты клиент открывал архивный PDF и
+    # видел прежний потолок).
+    print("PDF_MAP=%s|%s" % (PAGE, PDF))
+else:
+    # Строку ловит workflow: страницу надо закоммитить, PDF — нет.
+    print("DRAFT_PAGE=%s" % PAGE)
 for idx, idea in enumerate(ORDERED):
     print("   %02d  %-14s %-40s payoff=%s" % (idx + 2, idea.get("family"),
           idea.get("name", "")[:40], (idea.get("payoff") or {}).get("type")))
@@ -968,3 +1008,15 @@ if "--all" in sys.argv:
         # скачивания, которой раньше не было.
         if it.get("pdf"):
             print("PDF_MAP=%s|%s" % (page, it["pdf"]))
+    # Превью черновика собираем тем же прогоном: воркфлоу и так запускается на
+    # каждое изменение data/digest.js, а добавление идеи в черновик — это оно и есть.
+    # Отдельным процессом, как архивные: данные выпуска здесь модульные глобали.
+    r = subprocess.run([sys.executable, os.path.abspath(__file__), "--draft"],
+                       capture_output=True, text=True, encoding="utf-8", errors="replace")
+    if r.returncode:
+        print("черновик: ОШИБКА сборки\n%s" % (r.stderr or "")[-1500:])
+        sys.exit(1)
+    # Пустой черновик — страницы быть не должно; строку ловит workflow и удаляет файл.
+    print("DRAFT_EMPTY=1" if "DRAFT_EMPTY=1" in r.stdout else "DRAFT_PAGE=digest-print-draft.html")
+    print("черновик: %s" % ("пуст — страница не нужна" if "DRAFT_EMPTY=1" in r.stdout
+                            else "digest-print-draft.html"))

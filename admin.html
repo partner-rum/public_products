@@ -737,9 +737,10 @@
       </div>
     </details>
     <div class="grp"><div class="gt">Черновик выпуска недели</div>
-      <div class="hint" style="margin:0 0 12px">Идеи, которые уже в черновике. Посмотри превью — это точь-в-точь то, что увидят на сайте. Когда готово, жми «Опубликовать»: сайт и PDF соберутся сами за 1–3 минуты.</div>
+      <div class="hint" style="margin:0 0 12px">Идеи, которые уже в черновике. Два превью: <b>на сайте</b> — точь-в-точь то, что увидят в браузере, <b>в печати</b> — лист A4, который уйдёт клиенту в PDF (там другая раскладка, и видно, если длинный текст не влез). Печатное превью пересобирается 1–3 минуты после каждой правки. Когда готово, жми «Опубликовать».</div>
       <div id="dg-draft"><div class="rm-empty">Загрузка…</div></div>
-      <a class="preview-link" id="dg-preview" href="digest.html?draft=1" target="_blank" rel="noopener" style="display:none">↗ Открыть превью выпуска в новой вкладке</a>
+      <a class="preview-link" id="dg-preview" href="digest.html?draft=1" target="_blank" rel="noopener" style="display:none">↗ Превью на сайте</a>
+      <a class="preview-link" id="dg-preview-print" href="digest-print-draft.html" target="_blank" rel="noopener" style="display:none;margin-left:18px">↗ Печатный вид (A4 / PDF)</a>
     </div>
     <button class="send" type="button" id="dg-publish" disabled>Опубликовать выпуск</button>
     <div class="msg" id="m-dpdf"></div>
@@ -2767,7 +2768,15 @@
           msgEl.textContent = x.d.where === "issue"
             ? "Добавлено в выпуск " + dgIssueLabel + " ✅ Идей в выпуске: " + x.d.count +
               ". Сайт и PDF обновятся автоматически (1–3 минуты)."
-            : "Добавлено в черновик ✅ В выпуске идей: " + x.d.count + ". Публикация — на вкладке «Выпуск недели».";
+            : "";
+          if (x.d.where !== "issue") {
+            // Ссылки прямо в сообщении: раньше сейлза отсылали на другую вкладку,
+            // и превью он открывал в лучшем случае перед самой публикацией.
+            msgEl.innerHTML = "Добавлено в черновик ✅ В черновике идей: " + Number(x.d.count) +
+              '. <a href="digest.html?draft=1" target="_blank" rel="noopener">Превью на сайте</a> · ' +
+              '<a href="digest-print-draft.html" target="_blank" rel="noopener">печатный вид</a> ' +
+              "(печатный собирается 1–3 минуты). Публикация — на вкладке «Выпуск недели».";
+          }
           fDigest.reset(); dgDerived.style.display = "none"; dgCurrent = null;
           loadEditable();                  // новая идея сразу доступна для правки
         } else if (x.d && x.d.error === "bad_key") { msgEl.className = "msg err"; msgEl.textContent = "Ключ не подошёл."; }
@@ -2782,12 +2791,14 @@
 
   function loadDraft() {
     var box = document.getElementById("dg-draft"), prev = document.getElementById("dg-preview");
+    var prevPrint = document.getElementById("dg-preview-print");
     box.innerHTML = '<div class="rm-empty">Загрузка…</div>';
     fetchData("data/digest.js").then(function (t) {
       var dg = dataObj(t) || {}, ideas = (dg.draft && dg.draft.ideas) || [];
       if (!ideas.length) {
         box.innerHTML = '<div class="rm-empty">Черновик пуст. Добавьте идеи на вкладке «Идея в дайджест».</div>';
-        prev.style.display = "none"; dgPublishBtn.disabled = true; return;
+        prev.style.display = "none"; prevPrint.style.display = "none";
+        dgPublishBtn.disabled = true; return;
       }
       box.innerHTML = '<div class="dg-count">В черновике: ' + ideas.length + '</div>';
       ideas.forEach(function (i) {
@@ -2798,7 +2809,7 @@
         b.addEventListener("click", function () { removeDraft(i, b); });
         el.appendChild(b); box.appendChild(el);
       });
-      prev.style.display = ""; dgPublishBtn.disabled = false;
+      prev.style.display = ""; prevPrint.style.display = ""; dgPublishBtn.disabled = false;
     }).catch(function () { box.innerHTML = '<div class="rm-empty">Не удалось загрузить черновик — обнови страницу.</div>'; });
   }
 

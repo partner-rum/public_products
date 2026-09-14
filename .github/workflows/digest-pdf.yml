@@ -74,6 +74,12 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # Пустой черновик — превью-страницу убираем. Оставшись от прошлого черновика,
+          # она показывала бы уже опубликованные идеи как неопубликованные.
+          if grep -q '^DRAFT_EMPTY=1$' /tmp/build.log; then
+            rm -f digest-print-draft.html
+            git add -- digest-print-draft.html 2>/dev/null || true   # зафиксировать удаление
+          fi
           git add digest-print.html digest-print-*.html docs/digest/*.pdf
           if git diff --cached --quiet; then
             echo "Изменений нет — коммит не нужен."
