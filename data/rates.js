@@ -3,15 +3,15 @@
 // Источники: ЦБ (ключевая, RUONIA), MOEX ISS (RUSFAR, БПИФы, ОФЗ),
 // Финуслуги (вклады и накопительные счета — витрина МосБиржи).
 window.RATES = {
-  "updated": "2026-09-15 11:17",
+  "updated": "2026-09-16 11:01",
   "cbr": {
     "key": {
       "rate": 14.0,
       "date": "2026-07-27"
     },
     "ruonia": {
-      "rate": 13.83,
-      "date": "2026-09-11"
+      "rate": 13.99,
+      "date": "2026-09-14"
     }
   },
   "rusfar": [
@@ -19,25 +19,25 @@ window.RATES = {
       "id": "RUSFAR",
       "term": "овернайт",
       "days": 1,
-      "rate": 14.06
+      "rate": 14.09
     },
     {
       "id": "RUSFAR1W",
       "term": "1 неделя",
       "days": 7,
-      "rate": 13.97
+      "rate": 14.0
     },
     {
       "id": "RUSFAR2W",
       "term": "2 недели",
       "days": 14,
-      "rate": 13.98
+      "rate": 13.99
     },
     {
       "id": "RUSFAR1M",
       "term": "1 месяц",
       "days": 30,
-      "rate": 14.07
+      "rate": 14.04
     },
     {
       "id": "RUSFAR3M",
@@ -50,51 +50,51 @@ window.RATES = {
     {
       "id": "BCSD",
       "name": "БКС Денежный рынок",
-      "price": 14.366,
+      "price": 14.374,
       "ter": 0.2,
-      "rate": 13.86
+      "rate": 13.89
     },
     {
       "id": "MONY",
       "name": "АК БАРС Денежный рынок",
-      "price": 132.91,
+      "price": 132.98,
       "ter": 0.2,
-      "rate": 13.86
+      "rate": 13.89
     },
     {
       "id": "LQDT",
       "name": "Ликвидность (ВИМ)",
-      "price": 2.0857,
+      "price": 2.0866,
       "ter": 0.29,
-      "rate": 13.77
+      "rate": 13.8
     },
     {
       "id": "SBMM",
       "name": "Первая Сберегательный",
-      "price": 19.398,
+      "price": 19.405,
       "ter": 0.3,
-      "rate": 13.76
+      "rate": 13.79
     },
     {
       "id": "AMNR",
       "name": "АТОН Накопительный",
-      "price": 156.774,
+      "price": 156.829,
       "ter": 0.3,
-      "rate": 13.76
+      "rate": 13.79
     },
     {
       "id": "AKMM",
       "name": "Альфа Денежный рынок",
-      "price": 177.54,
+      "price": 177.6,
       "ter": 0.69,
-      "rate": 13.37
+      "rate": 13.4
     },
     {
       "id": "TMON",
       "name": "Т-Капитал Денежный рынок",
-      "price": 164.28,
+      "price": 164.41,
       "ter": 1.15,
-      "rate": 12.91
+      "rate": 12.94
     }
   ],
   "ofz": [
@@ -103,27 +103,27 @@ window.RATES = {
       "name": "ОФЗ 26226",
       "maturity": "2026-10-07",
       "years": 0.06,
-      "rate": 12.06
+      "rate": 12.19
     },
     {
       "id": "SU26207RMFS9",
       "name": "ОФЗ 26207",
       "maturity": "2027-02-03",
-      "years": 0.39,
-      "rate": 12.62
+      "years": 0.38,
+      "rate": 12.81
     },
     {
       "id": "SU26232RMFS7",
       "name": "ОФЗ 26232",
       "maturity": "2027-10-06",
-      "years": 1.06,
+      "years": 1.05,
       "rate": 12.95
     },
     {
       "id": "SU26212RMFS9",
       "name": "ОФЗ 26212",
       "maturity": "2028-01-19",
-      "years": 1.35,
+      "years": 1.34,
       "rate": 13.66
     }
   ],
@@ -273,6 +273,22 @@ window.RATES = {
       "feature": null
     },
     {
+      "bank": "Альфа-Банк",
+      "name": "Альфа-Вклад Зарплатный",
+      "rate": 19.83,
+      "kind": "deposit",
+      "termMonths": 2,
+      "daysFrom": 62,
+      "daysTo": 62,
+      "minAmount": 10000,
+      "url": "https://finuslugi.ru/vklady/alfabank_alfa_vklad_zarplatnyj",
+      "promo": true,
+      "floating": false,
+      "refill": false,
+      "capitalization": true,
+      "feature": null
+    },
+    {
       "bank": "Газпромбанк",
       "name": "Ключевой момент",
       "rate": 16.0,
@@ -394,22 +410,6 @@ window.RATES = {
       "daysTo": 61,
       "minAmount": 1,
       "url": "https://finuslugi.ru/vklady/ozon_bank_nakopitelnyj_schet",
-      "promo": false,
-      "floating": false,
-      "refill": true,
-      "capitalization": true,
-      "feature": null
-    },
-    {
-      "bank": "Яндекс Банк",
-      "name": "Счет в Сейвах",
-      "rate": 15.0,
-      "kind": "saving",
-      "termMonths": 0,
-      "daysFrom": 1,
-      "daysTo": 62,
-      "minAmount": 1,
-      "url": "https://finuslugi.ru/vklady/yandeks_bank_sejv_bezsroka",
       "promo": false,
       "floating": false,
       "refill": true,
