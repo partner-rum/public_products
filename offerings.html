@@ -230,6 +230,187 @@
     .nav-in { height: auto; flex-wrap: wrap; padding: 12px 20px; row-gap: 10px; }
     .topnav { margin-left: 0; width: 100%; gap: 16px; font-size: 13.5px; }
   }
+  /* ─────────────────────────────────────────────────────────────────────────
+     ЛЕНДИНГ ВЫПУСКА (o.landing === true)
+     Карточка-паспорт остаётся у обычных размещений; выпуск с постером, корзиной
+     и роликом разворачивается в лендинг: герой → как устроена выплата (график
+     + калькулятор сценария) → корзина → сроки → параметры → материалы → ролик →
+     вопросы → риск. Всё рисуется ИЗ ДАННЫХ: нет поля — нет блока.
+     Полноэкранной полосы (100vw) намеренно НЕТ: на Windows она даёт
+     горизонтальный скролл на ширину полосы прокрутки.  */
+  .panel.landing { padding: 0; border: none; background: transparent; }
+  .layout.solo.lnd { margin-top: 12px; }
+  .lnd-head h1 { font-size: 19px; color: var(--hushed); font-weight: 400; }
+  .lnd-head .intro { display: none; }
+
+  /* ── Герой ────────────────────────────────────────────────────────────────
+     Кадр ролика вертикальный (9:16), и широкой полосой от него остаётся узкая
+     полоска. Поэтому кадр стоит СПРАВА своей пропорцией, а фоном идёт он же —
+     размытый и приглушённый: так видно и спутник, и общий тон, и текст не
+     ложится на детали. */
+  .lh { position: relative; border-radius: 18px; overflow: hidden; background: #07080B; border: 1px solid var(--border-soft); }
+  .lh-bg { position: absolute; inset: 0; overflow: hidden; }
+  .lh-bg img { width: 100%; height: 100%; object-fit: cover; display: block; transform: scale(1.14); filter: blur(30px) saturate(0.85); opacity: 0.5; }
+  .lh-scrim { position: absolute; inset: 0;
+    background:
+      radial-gradient(120% 80% at 88% 40%, rgba(7,8,11,0) 0%, rgba(7,8,11,0.55) 58%, rgba(7,8,11,0.9) 100%),
+      linear-gradient(to right, rgba(7,8,11,0.92) 0%, rgba(7,8,11,0.72) 44%, rgba(7,8,11,0.5) 100%); }
+  .lh-grid { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 34px; align-items: center; padding: 34px 34px 30px; }
+  .lh-media { position: relative; border-radius: 14px; overflow: hidden; background: #04050A; box-shadow: 0 18px 44px rgba(0,0,0,0.5); aspect-ratio: 9 / 13; }
+  .lh-media img, .lh-media video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 45%; display: block; }
+  .lh-media video { opacity: 0; transition: opacity 1.1s var(--ease); }
+  /* Вместо видеопетли — очень медленный наезд на кадр: в самом ролике
+     субтитры вшиты в картинку, и чистого куска длиннее двух секунд там нет. */
+  .lh-media img { animation: lh-pan 30s ease-in-out infinite alternate; }
+  @keyframes lh-pan { from { transform: scale(1.01); } to { transform: scale(1.12); } }
+  @media (prefers-reduced-motion: reduce) { .lh-media img { animation: none; } }
+  .lh-media video.on { opacity: 1; }
+  .lh-badge { position: absolute; top: 12px; left: 12px; right: 12px; z-index: 2; display: flex; justify-content: flex-end; }
+  .lh-badge .badge.live { background: rgba(11,12,16,0.72); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); border: 1px solid rgba(238,125,27,0.5); }
+  .lh-badge .badge.live .dot { background: var(--solar); }
+  .lh-kick { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(242,243,247,0.72); display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+  .lh-kick a { color: #49D69C; } /* фирменный зелёный АльянсКапитал */
+  .lh-kick a:hover { text-decoration: underline; }
+  .lh-kick .sep { color: rgba(242,243,247,0.38); }
+  .lh-name { margin: 12px 0 0; font-family: var(--display); font-size: 52px; line-height: 1.02; font-weight: 500; letter-spacing: -0.03em; }
+  .lh-lead { margin: 14px 0 0; max-width: 620px; font-size: 16px; line-height: 1.55; color: rgba(242,243,247,0.86); text-wrap: pretty; }
+  .lh-stats { display: flex; flex-wrap: wrap; gap: 30px; margin: 24px 0 0; }
+  .lh-stats .v { font-family: var(--f-mono); font-size: 30px; font-weight: 500; letter-spacing: -0.02em; line-height: 1; color: var(--solar); }
+  .lh-stats .st:nth-child(n+2) .v { color: var(--ink); }
+  .lh-stats .k { font-size: 12px; color: rgba(242,243,247,0.68); margin-top: 7px; }
+  .lh-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; margin: 26px 0 0; }
+  .lh-cta .ct-btn { min-height: 44px; }
+  .lh-cta .o-doc-btn { background: rgba(11,12,16,0.55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); min-height: 44px; }
+  .lh-foot { display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 18px 0 0; font-size: 12px; color: rgba(242,243,247,0.62); }
+  .lh-foot .cr { color: rgba(242,243,247,0.42); }
+
+  /* Секции лендинга */
+  .ls { margin-top: 42px; }
+  .ls-h { margin: 0 0 4px; font-family: var(--display); font-size: 24px; font-weight: 400; letter-spacing: -0.02em; }
+  .ls-sub { margin: 0 0 18px; font-size: 14px; color: var(--hushed); max-width: 660px; text-wrap: pretty; }
+
+  /* Выплата: график + калькулятор */
+  .pay { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 22px; align-items: stretch; }
+  .pay-chart { background: var(--card); border: 1px solid var(--border-soft); border-radius: 14px; padding: 18px 20px 14px; min-width: 0; }
+  .pay-chart svg { display: block; width: 100%; height: auto; }
+  .calc { background: var(--card); border: 1px solid var(--border-soft); border-radius: 14px; padding: 20px 22px; min-width: 0; display: flex; flex-direction: column; }
+  .calc .k { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.11em; text-transform: uppercase; color: var(--hushed); }
+  .calc-val { font-family: var(--f-mono); font-size: 30px; font-weight: 500; letter-spacing: -0.02em; margin-top: 8px; }
+  .calc input[type=range] { width: 100%; margin: 14px 0 4px; accent-color: var(--solar); height: 26px; }
+  .calc-scale { display: flex; justify-content: space-between; font-family: var(--f-mono); font-size: 11px; color: var(--faint); }
+  .calc-out { margin-top: 16px; border-top: 1px solid var(--border-soft); padding-top: 14px; display: flex; flex-direction: column; gap: 10px; }
+  .calc-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+  .calc-row .l { font-size: 13.5px; color: var(--hushed); }
+  .calc-row .r { font-family: var(--f-mono); font-size: 16px; font-weight: 500; white-space: nowrap; }
+  .calc-row.big .r { font-size: 23px; }
+  .calc-row .r.up { color: var(--up); } .calc-row .r.dn { color: var(--loss); }
+  .calc-note { margin-top: 14px; font-size: 11.5px; line-height: 1.5; color: var(--faint); text-wrap: pretty; }
+
+  /* Плитки параметров: пять в ряд на широком, три на планшете, две на телефоне.
+     Инлайновым стилем это задавать нельзя — он перебивает медиазапросы. */
+  .lstiles { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+
+  /* Шаги механики */
+  .lsteps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
+  .lstep { background: var(--card); border: 1px solid var(--border-soft); border-radius: 12px; padding: 16px 17px; min-width: 0; }
+  .lstep .n { font-family: var(--f-mono); font-size: 11px; color: var(--solar); letter-spacing: 0.1em; }
+  .lstep .t { font-size: 14px; line-height: 1.5; color: var(--hushed); margin-top: 8px; text-wrap: pretty; }
+  .lstep .t b { color: var(--ink); font-weight: 600; }
+
+  /* Корзина */
+  .bkbar { display: flex; gap: 4px; margin-bottom: 14px; }
+  .bkbar .seg { height: 8px; border-radius: 4px; background: rgba(73,214,156,0.30); }
+  .bkbar .seg:nth-child(1) { background: rgba(73,214,156,0.62); }
+  .bkbar .seg:nth-child(2) { background: rgba(73,214,156,0.42); }
+  .bkgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+  .bkc { background: var(--card); border: 1px solid var(--border-soft); border-radius: 12px; padding: 16px 17px; min-width: 0; display: flex; flex-direction: column; transition: border-color .18s; }
+  .bkc:hover { border-color: rgba(255,255,255,0.2); }
+  .bkc .top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+  .bkc .nm { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+  .bkc .wt { font-family: var(--f-mono); font-size: 13px; color: #49D69C; }
+  .bkc .tk { font-family: var(--f-mono); font-size: 11px; color: var(--faint); margin-top: 5px; }
+  .bkc .tk a { color: var(--faint); border-bottom: 1px dotted rgba(255,255,255,0.22); }
+  .bkc .tk a:hover { color: var(--steel); border-bottom-color: var(--steel); }
+  .bkc .why { font-size: 13px; line-height: 1.5; color: var(--hushed); margin-top: 10px; text-wrap: pretty; }
+  /* сектор прижат к низу — иначе строка гуляет по высоте вслед за длиной описания */
+  .bkc .sc { margin-top: auto; padding-top: 12px; font-size: 11px; color: var(--faint); }
+  .bk-src { margin-top: 12px; font-size: 11.5px; color: var(--faint); }
+
+  /* Сроки */
+  .tl { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 0; margin-top: 8px; }
+  .tlp { position: relative; padding: 26px 14px 0 0; min-width: 0; }
+  .tlp::before { content: ""; position: absolute; top: 7px; left: 0; right: 0; height: 1px; background: var(--border); }
+  .tlp:last-child::before { right: 70%; }
+  .tlp::after { content: ""; position: absolute; top: 3px; left: 0; width: 9px; height: 9px; border-radius: 50%; background: var(--panel-2); border: 1px solid rgba(255,255,255,0.32); }
+  .tlp.on::after { background: var(--solar); border-color: var(--solar); box-shadow: 0 0 0 4px rgba(238,125,27,0.18); }
+  .tlp .d { font-family: var(--f-mono); font-size: 13px; color: var(--ink); }
+  .tlp.on .d { color: var(--solar); }
+  .tlp .t { font-size: 13.5px; font-weight: 600; margin-top: 5px; }
+  .tlp .s { font-size: 12px; color: var(--hushed); margin-top: 4px; line-height: 1.45; text-wrap: pretty; }
+
+  /* Вопросы */
+  .faq { border-top: 1px solid var(--border-soft); max-width: 860px; }
+  .faq details { border-bottom: 1px solid var(--border-soft); }
+  .faq summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 12px; padding: 15px 2px; font-size: 15px; font-weight: 500; color: var(--ink); min-height: 44px; }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary::after { content: "+"; margin-left: auto; font-family: var(--f-mono); font-size: 17px; color: var(--hushed); flex: none; }
+  .faq details[open] summary::after { content: "–"; }
+  .faq summary:hover { color: var(--solar); }
+  .faq .a { padding: 0 34px 16px 2px; font-size: 14px; line-height: 1.6; color: var(--hushed); text-wrap: pretty; }
+
+  /* Ролик и материалы рядом */
+  .lmedia { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 22px; align-items: start; }
+  .lmedia .o-video { border-radius: 14px; }
+  .lmedia .o-video video { max-height: 620px; }
+
+  /* Риск и сценарии */
+  .lrisk { display: flex; gap: 14px; align-items: flex-start; background: rgba(224,112,90,0.07); border: 1px solid rgba(224,112,90,0.26); border-radius: 12px; padding: 16px 18px; }
+  .lrisk i { flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--loss); margin-top: 7px; }
+  .lrisk .tx { font-size: 14px; line-height: 1.6; color: rgba(242,243,247,0.82); text-wrap: pretty; }
+  .lrisk .tx b { color: var(--ink); font-weight: 600; }
+  .lex { max-width: 740px; }
+  .lex .ex-v.zero { color: var(--hushed); }
+
+  .lend { margin-top: 34px; display: flex; flex-wrap: wrap; align-items: center; gap: 14px; padding: 20px 22px; background: var(--card); border: 1px solid var(--border-soft); border-radius: 14px; }
+  .lend .tx { font-size: 15px; font-weight: 500; }
+  .lend .sub { font-size: 12.5px; color: var(--hushed); margin-top: 4px; }
+  .lend .act { margin-left: auto; display: flex; gap: 9px; flex-wrap: wrap; }
+  .lend .ct-btn { min-height: 44px; }
+  /* Попап CTA у правого края открываем внутрь страницы: иначе его ширина даёт
+     горизонтальный скролл всей страницы (видно только замером scrollWidth —
+     попап закрыт и глазами его не поймать). */
+  .lend .act .ct-menu { left: auto; right: 0; }
+
+  @media (max-width: 1023px) {
+    .lh-grid { grid-template-columns: minmax(0, 1fr) 260px; gap: 24px; padding: 28px 26px 26px; }
+    .lh-name { font-size: 42px; }
+    .pay { grid-template-columns: 1fr; }
+    .lsteps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .lstiles { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .lmedia { grid-template-columns: 1fr; }
+    .lmedia .o-video video { max-height: 70vh; }
+    .tl { grid-auto-flow: row; grid-auto-columns: auto; }
+    .tlp { padding: 0 0 18px 22px; }
+    .tlp::before { top: 0; bottom: 0; left: 4px; right: auto; width: 1px; height: auto; }
+    .tlp:last-child::before { bottom: 70%; right: auto; }
+    .tlp::after { top: 2px; left: 0; }
+  }
+  @media (max-width: 720px) {
+    .lh-grid { grid-template-columns: 1fr; gap: 20px; padding: 18px 18px 22px; }
+    .lh-media { aspect-ratio: 16 / 10; order: -1; }
+    .lh-media img, .lh-media video { object-position: 50% 42%; }
+    .lh-name { font-size: 32px; }
+    .lh-lead { font-size: 15px; }
+    .lh-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 20px; margin-top: 20px; }
+    .lh-stats .v { font-size: 24px; }
+    .lh-cta .o-doc-btn { font-size: 12.5px; padding: 8px 10px; }
+    .lsteps { grid-template-columns: 1fr; }
+    .lstiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .ls { margin-top: 32px; }
+    .ls-h { font-size: 21px; }
+    .calc-val { font-size: 26px; }
+    .lend .act { margin-left: 0; width: 100%; }
+  }
 </style>
 <script src="metrika.js?v=6" defer></script>
 </head>
@@ -265,7 +446,7 @@
   <div class="layout">
     <aside class="aside">
       <div class="filters" id="filters"></div>
-      <div class="list" id="list"><!-- seo:start --><div class="seo-pre"><p>Выпуски Rumberg на размещении: параметры, документы и порядок подачи заявок.</p><h2>На размещении</h2><ul><li>Купонный варрант CALL 105 · ОФЗ 26248 · 1,5 года, Купонный варрант, срок 1.5, ISIN RU000A10CVJ1, Старт 10.09.2026.</li></ul></div><!-- seo:end --></div>
+      <div class="list" id="list"><!-- seo:start --><div class="seo-pre"><p>Выпуски Rumberg на размещении: параметры, документы и порядок подачи заявок.</p><h2>На размещении</h2><ul><li>Космические технологии, Биржевая структурная облигация · колл-спред 100–200%, базовый актив — Корзина из 5 акций космической отрасли (в USD), срок 3, ISIN RU000A10BZ28, Приём заявок до 02.10.2026.</li></ul></div><!-- seo:end --></div>
     </aside>
     <div class="panel" id="panel"><button class="panel-close" id="close">← К списку</button><div id="panel-body"></div></div>
   </div>
@@ -588,13 +769,300 @@
       '</div></div>';
   }
 
+  // ── ЛЕНДИНГ ВЫПУСКА ───────────────────────────────────────────────────────
+  // Выпуск с постером, корзиной и роликом (o.landing) показывается не карточкой,
+  // а страницей: герой → выплата → корзина → сроки → параметры → материалы →
+  // ролик → вопросы → риск. Числа считаются из полей записи (price, capPay,
+  // nominal), а не зашиты: поменяется цена размещения — поменяются и график,
+  // и калькулятор, и подписи.
+  var RUB = v => Math.round(v).toLocaleString("ru-RU");
+  var pctTxt = v => (v > 0 ? "+" : v < 0 ? "−" : "") + fmt2(Math.abs(v)) + "%";
+
+  // Выплата колл-спреда в % номинала при изменении корзины g (%)
+  function csPay(o, g) { return Math.min(Math.max(g, 0), Number(o.capPay) || 100); }
+  // Результат на вложенное, % (выплата / цена входа − 1)
+  function csRes(o, g) { return csPay(o, g) / Number(o.price) * 100 - 100; }
+  // Геометрия графика выплаты — общая для отрисовки и для подвижной метки.
+  function csGeo(o) {
+    var cap = Number(o.capPay) || 100;
+    // Ширина viewBox подбирается под экран: SVG растягивается по ширине колонки,
+    // и на телефоне подписи кегля 11 из viewBox 520 печатались бы семёркой —
+    // ниже пола кегля витрины. Узкий вариант рисуется почти 1:1.
+    var narrow = window.matchMedia("(max-width: 720px)").matches;
+    var g = narrow
+      ? { W: 340, H: 250, L: 46, R: 12, T: 22, B: 34, cap: cap, be: Number(o.price), narrow: true }
+      : { W: 520, H: 290, L: 56, R: 18, T: 26, B: 40, cap: cap, be: Number(o.price), narrow: false };
+    g.x0 = -50; g.x1 = Math.round(cap * 1.6); g.y0 = -100; g.y1 = csRes(o, cap);
+    g.x = v => g.L + (v - g.x0) / (g.x1 - g.x0) * (g.W - g.L - g.R);
+    g.y = v => g.T + (g.y1 - v) / (g.y1 - g.y0) * (g.H - g.T - g.B);
+    return g;
+  }
+
+  // Профиль выплаты: по горизонтали — изменение корзины, по вертикали — результат
+  // на вложенную сумму. Три участка: полка −100% (корзина не выросла), подъём до
+  // потолка, полка потолка. Безубыток и потолок подписаны и отмечены точками.
+  function csChart(o) {
+    if (!isFinite(Number(o.price)) || Number(o.price) <= 0) return "";
+    var g = csGeo(o), x = g.x, y = g.y, cap = g.cap, be = g.be, capMax = g.y1;
+    var mono = 'font-family="JetBrains Mono, monospace"';
+    var col = "#EE7D1B", el = [];
+    [capMax, 0, g.y0].forEach(function (v) {
+      el.push('<line x1="' + g.L + '" y1="' + y(v) + '" x2="' + (g.W - g.R) + '" y2="' + y(v) + '" stroke="rgba(255,255,255,' + (v === 0 ? 0.26 : 0.1) + ')" stroke-width="1"' + (v === 0 ? ' stroke-dasharray="4 4"' : '') + '/>');
+      el.push('<text x="' + (g.L - 8) + '" y="' + (y(v) + 4) + '" text-anchor="end" font-size="11" ' + mono + ' fill="rgba(242,243,247,' + (v === 0 ? 0.72 : 0.5) + ')">' + pctTxt(Math.round(v)) + '</text>');
+    });
+    // зона прибыли — от безубытка до правого края
+    el.push('<defs><linearGradient id="csg" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0%" stop-color="' + col + '" stop-opacity="0.24"/><stop offset="100%" stop-color="' + col + '" stop-opacity="0.02"/></linearGradient></defs>');
+    el.push('<path d="M' + x(be) + ' ' + y(0) + ' L' + x(cap) + ' ' + y(capMax) + ' L' + x(g.x1) + ' ' + y(capMax) + ' L' + x(g.x1) + ' ' + y(0) + ' Z" fill="url(#csg)"/>');
+    // линия выплаты: полка потери → подъём → полка потолка
+    el.push('<path d="M' + x(g.x0) + ' ' + y(g.y0) + ' L' + x(0) + ' ' + y(g.y0) + '" stroke="rgba(242,243,247,0.42)" stroke-width="2.6" fill="none" stroke-linecap="round"/>');
+    el.push('<path d="M' + x(0) + ' ' + y(g.y0) + ' L' + x(cap) + ' ' + y(capMax) + ' L' + x(g.x1) + ' ' + y(capMax) + '" stroke="' + col + '" stroke-width="2.6" fill="none" stroke-linejoin="round" stroke-linecap="round"/>');
+    // безубыток — подпись СЛЕВА от точки, иначе её задевает подвижная метка
+    el.push('<circle cx="' + x(be) + '" cy="' + y(0) + '" r="4" fill="#55C08A"/>');
+    el.push('<text x="' + (x(be) - 9) + '" y="' + (y(0) - 11) + '" text-anchor="end" font-size="11.5" ' + mono + ' fill="#55C08A">безубыток +' + fmt2(be) + '%</text>');
+    // потолок
+    el.push('<circle cx="' + x(cap) + '" cy="' + y(capMax) + '" r="4" fill="' + col + '"/>');
+    if (!g.narrow) el.push('<text x="' + (x(cap) + 10) + '" y="' + (y(capMax) + 16) + '" font-size="11.5" ' + mono + ' fill="' + col + '">дальше не растёт</text>');
+    // подвижная метка сценария
+    el.push('<line id="cs-gx" x1="' + x(be) + '" y1="' + g.T + '" x2="' + x(be) + '" y2="' + y(g.y0) + '" stroke="rgba(255,255,255,0.28)" stroke-width="1" stroke-dasharray="3 4"/>');
+    el.push('<circle id="cs-dot" cx="' + x(be) + '" cy="' + y(0) + '" r="6" fill="#0B0C10" stroke="' + col + '" stroke-width="2.6"/>');
+    (g.narrow ? [g.x0, 0, cap] : [g.x0, 0, Math.round(cap / 2), cap, g.x1]).forEach(function (v) {
+      el.push('<text x="' + x(v) + '" y="' + (g.H - 14) + '" text-anchor="middle" font-size="11" ' + mono + ' fill="rgba(242,243,247,0.5)">' + pctTxt(v) + '</text>');
+    });
+    el.push('<text x="' + (g.W - g.R) + '" y="' + (g.H - 1) + '" text-anchor="end" font-size="11" ' + mono + ' fill="rgba(242,243,247,0.38)">изменение корзины →</text>');
+    return '<svg viewBox="0 0 ' + g.W + ' ' + g.H + '" role="img" aria-label="Профиль выплаты: если корзина не выросла, теряется вся вложенная сумма; ' +
+      'безубыток при росте корзины на ' + fmt2(be) + '%; при росте на ' + fmt2(cap) + '% и выше результат ' + pctTxt(Math.round(capMax)) + ' и дальше не растёт">' +
+      el.join("") + '</svg>';
+  }
+
+  // Калькулятор сценария. Никакой доходности «в год»: выплата в % номинала, сумма
+  // в рублях и результат на вложенное за срок — ровно то, что стоит в таблице
+  // сценариев, только подвижное.
+  function csCalc(o) {
+    var cap = Number(o.capPay) || 100, max = Math.round(cap * 1.6);
+    return '<div class="calc">' +
+      '<div class="k">Сценарий: корзина через ' + tenorTxt(o.tenor) + '</div>' +
+      '<div class="calc-val" id="cs-g"></div>' +
+      '<input type="range" id="cs-range" min="-50" max="' + max + '" step="1" value="50" ' +
+        'aria-label="Изменение корзины на дату финальной оценки, процентов">' +
+      '<div class="calc-scale"><span>−50%</span><span>0</span><span>+' + max + '%</span></div>' +
+      '<div class="calc-out">' +
+        '<div class="calc-row"><span class="l">Выплата по облигации</span><span class="r" id="cs-pay"></span></div>' +
+        '<div class="calc-row"><span class="l">Придёт на одну бумагу</span><span class="r" id="cs-rub"></span></div>' +
+        '<div class="calc-row big"><span class="l">Результат на вложенные ' + RUB(o.nominal * o.price / 100) + ' ₽</span><span class="r" id="cs-res"></span></div>' +
+      '</div>' +
+      '<div class="calc-note">Без учёта движения курса USD/RUB и валютного спреда 3%, который удерживается при погашении. Сценарий — не прогноз и не гарантия.</div>' +
+    '</div>';
+  }
+
+  // Первая отрисовка графика уже в разметке; при смене раскладки (поворот
+  // экрана) перерисовываем — иначе останется геометрия чужой ширины.
+  function csMount(o) {
+    var box = document.querySelector(".pay-chart");
+    if (!box) return;
+    csWire(o);
+    var mq = window.matchMedia("(max-width: 720px)");
+    if (mq.addEventListener) mq.addEventListener("change", function () { box.innerHTML = csChart(o); csWire(o); });
+  }
+
+  // Слайдер и подвижная метка на графике — геометрия общая (csGeo).
+  function csWire(o) {
+    var r = document.getElementById("cs-range");
+    if (!r) return;
+    var g = csGeo(o);
+    function upd() {
+      var v = Number(r.value), pay = csPay(o, v), res = csRes(o, v);
+      document.getElementById("cs-g").textContent = pctTxt(v);
+      document.getElementById("cs-pay").textContent = fmt2(pay) + "% номинала";
+      document.getElementById("cs-rub").textContent = RUB(o.nominal * pay / 100) + " ₽";
+      var el = document.getElementById("cs-res");
+      el.textContent = pctTxt(Math.round(res));
+      el.className = "r " + (res > 0 ? "up" : res < 0 ? "dn" : "");
+      var dot = document.getElementById("cs-dot"), gx = document.getElementById("cs-gx");
+      if (dot) { dot.setAttribute("cx", g.x(v)); dot.setAttribute("cy", g.y(res)); }
+      if (gx) { gx.setAttribute("x1", g.x(v)); gx.setAttribute("x2", g.x(v)); }
+    }
+    r.addEventListener("input", upd);
+    upd();
+  }
+
+  // Герой: кадр виден всегда, поверх него — беззвучная петля из ролика. Петлю не
+  // включаем на узких экранах (мобильный трафик) и при prefers-reduced-motion —
+  // там остаётся неподвижный кадр.
+  function heroWire(o) {
+    var v = document.getElementById("lh-vid");
+    if (!v || !o.hero || !o.hero.loop) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (window.matchMedia("(max-width: 720px)").matches) return;
+    v.addEventListener("canplay", function () { v.classList.add("on"); }, { once: true });
+    v.src = o.hero.loop;
+    var p = v.play();
+    if (p && p.catch) p.catch(function () { });
+  }
+
+  function landingHTML(o) {
+    var price = Number(o.price), cap = Number(o.capPay) || 100;
+    var capMax = Math.round(csRes(o, cap)), inv = o.nominal * price / 100;
+    var docs = o.docs || [];
+    var docBtns = docs.map(d => '<a class="o-doc-btn" href="' + S.esc(d.file) + '" target="_blank" rel="noopener" download>' +
+      docIcon + '<span>' + S.esc(d.short || d.name) + '</span></a>').join("");
+
+    // ГЕРОЙ
+    var hero = '<section class="lh">' +
+      (o.hero && o.hero.poster ? '<div class="lh-bg"><img src="' + S.esc(o.hero.poster) + '" alt="" aria-hidden="true"></div>' : '') +
+      '<div class="lh-scrim"></div>' +
+      '<div class="lh-grid"><div class="lh-in">' +
+        '<div class="lh-kick">' + S.esc(o.kind) +
+          (o.partner ? '<span class="sep">·</span><span>' + S.esc(o.partner.note || "совместно с") + ' ' +
+            (o.partner.url ? '<a href="' + S.esc(o.partner.url) + '" target="_blank" rel="noopener">' + S.esc(o.partner.name) + ' ↗</a>' : S.esc(o.partner.name)) + '</span>' : '') +
+        '</div>' +
+        '<h2 class="lh-name">' + S.esc(o.name) + '</h2>' +
+        (o.lead ? '<p class="lh-lead">' + S.esc(o.lead) + '</p>' : '') +
+        '<div class="lh-stats">' +
+          '<div class="st"><div class="v">' + fmt2(price) + '%</div><div class="k">цена входа, от номинала</div></div>' +
+          '<div class="st"><div class="v">до ' + fmt2(Math.round((100 + capMax) / 10) / 10) + '×</div><div class="k">потолок выплаты (' + pctTxt(capMax) + ')</div></div>' +
+          '<div class="st"><div class="v">' + tenorTxt(o.tenor) + '</div><div class="k">до погашения ' + S.esc(o.maturity) + '</div></div>' +
+        '</div>' +
+        '<div class="lh-cta"><span id="o-ct-host"></span>' + docBtns + '<span id="o-sh-host"></span></div>' +
+        '<div class="lh-foot">' +
+          (o.venue ? '<span>' + S.esc(o.venue) + '</span>' : '') +
+          (o.minBuy ? '<span>' + S.esc(o.minBuy) + '</span>' : '') +
+          (o.isin ? '<span>ISIN ' + S.esc(o.isin) + '</span>' : '') +
+          (o.hero && o.hero.credit ? '<span class="cr">' + S.esc(o.hero.credit) + '</span>' : '') +
+        '</div>' +
+      '</div>' +
+      (o.hero && o.hero.poster
+        ? '<div class="lh-media">' +
+            '<div class="lh-badge"><span class="badge live"><span class="dot"></span>' + (S.esc(o.statusLabel) || "Идёт размещение") + '</span></div>' +
+            '<img src="' + S.esc(o.hero.poster) + '" alt="" aria-hidden="true">' +
+            (o.hero.loop ? '<video id="lh-vid" muted loop playsinline preload="none" aria-hidden="true" tabindex="-1"></video>' : '') +
+          '</div>'
+        : '') +
+      '</div></section>';
+
+    // ВЫПЛАТА
+    var steps = [
+      ['Шаг 1', 'Вы платите <b>' + RUB(inv) + ' ₽</b> за облигацию номиналом ' + RUB(o.nominal) + ' ₽. Это вся сумма вложения: доплат и маржин-коллов не бывает.'],
+      ['Шаг 2', 'Фиксируется <b>начальный уровень корзины</b> — пять акций с равными весами по 20%.'],
+      ['Шаг 3', 'Через ' + tenorTxt(o.tenor) + ' считается рост корзины. Выплата равна росту в процентах от номинала, но <b>не больше ' + fmt2(cap) + '%</b> номинала.'],
+      ['Шаг 4', 'Выплата пересчитывается <b>по курсу ЦБ USD/RUB</b> и уменьшается на валютный спред 3%. Погашение — ' + S.esc(o.maturity) + '.']
+    ].map(s => '<div class="lstep"><div class="n">' + s[0] + '</div><div class="t">' + s[1] + '</div></div>').join("");
+
+    var payBlk = '<section class="ls"><h3 class="ls-h">Как устроена выплата</h3>' +
+      '<p class="ls-sub">Колл-спред: вы платите ' + fmt2(price) + '% номинала, а доход считается от полного номинала — ' +
+        'поэтому рост корзины на ' + fmt2(cap) + '% превращается в ' + pctTxt(capMax) + ' на вложенное. ' +
+        'Обратная сторона: если корзина не выросла, выплаты нет вовсе.</p>' +
+      '<div class="pay"><div class="pay-chart">' + csChart(o) + '</div>' + csCalc(o) + '</div>' +
+      '<div class="lsteps">' + steps + '</div></section>';
+
+    // КОРЗИНА
+    var basketBlk = "";
+    if (o.basket && o.basket.length) {
+      var secs = o.sectors || [];
+      var bar = secs.length ? '<div class="bkbar">' + secs.map(s => '<div class="seg" style="flex:' + s.w + '" title="' + S.esc(s.name) + ' · ' + s.w + '%"></div>').join("") + '</div>' : "";
+      var cards = o.basket.map(b => '<div class="bkc">' +
+        '<div class="top"><span class="nm">' + S.esc(b.name) + '</span><span class="wt">' + b.w + '%</span></div>' +
+        '<div class="tk">' + (b.quote ? '<a href="' + S.esc(b.quote) + '" target="_blank" rel="noopener">' + S.esc(b.ticker) + ' ↗</a>' : S.esc(b.ticker)) + '</div>' +
+        (b.why ? '<div class="why">' + S.esc(b.why) + '</div>' : '') +
+        (b.sector ? '<div class="sc">' + S.esc(b.sector) + '</div>' : '') +
+      '</div>').join("");
+      basketBlk = '<section class="ls"><h3 class="ls-h">Что внутри корзины</h3>' +
+        '<p class="ls-sub">Пять акций равными долями по 20%' +
+          (secs.length ? ': ' + secs.map(s => S.esc(s.name).toLowerCase() + ' — ' + s.w + '%').join(", ") : '') +
+          '. Веса зафиксированы в условиях выпуска и в течение срока не меняются.</p>' +
+        bar + '<div class="bkgrid">' + cards + '</div>' +
+        '<div class="bk-src">Тикеры, биржи и источники котировок — из ключевых условий выпуска; описания компаний — из презентации ' +
+          (o.partner ? S.esc(o.partner.name) : "партнёра") + '.</div>' +
+      '</section>';
+    }
+
+    // СРОКИ
+    var tlBlk = (o.timeline && o.timeline.length)
+      ? '<section class="ls"><h3 class="ls-h">Как пойдёт срок</h3><div class="tl">' +
+        o.timeline.map((p, i) => '<div class="tlp' + (i === 0 ? " on" : "") + '"><div class="d">' + S.esc(p.d) + '</div>' +
+          '<div class="t">' + S.esc(p.t) + '</div>' + (p.s ? '<div class="s">' + S.esc(p.s) + '</div>' : '') + '</div>').join("") +
+        '</div></section>' : "";
+
+    // ПАРАМЕТРЫ
+    var tiles = "";
+    tiles += tile(fmt2(price) + "%", "цена размещения", true);
+    tiles += tile(fmt2(cap) + "%", "максимальная выплата", true);
+    tiles += tile(RUB(o.nominal) + " " + o.currency, "номинал");
+    tiles += tile(tenorTxt(o.tenor), "срок");
+    if (o.fx) tiles += tile(o.fx, "валюта");
+    if (o.placement) tiles += tile(o.placement, o.placementLabel || "старт размещения");
+    if (o.maturity) tiles += tile(o.maturity, "дата погашения");
+    if (o.isin) tiles += tile(o.isin, "ISIN");
+    if (o.venue) tiles += tile(o.venue, "площадка");
+    if (o.serial) tiles += tile(o.serial, "серия");
+    var dealers = (o.dealers && o.dealers.length)
+      ? '<div class="blk" style="margin-top:16px"><h3 class="k">Дилеры-ориентиры</h3><div class="dealers">' +
+        o.dealers.map(x => '<span>' + S.esc(x) + '</span>').join("") + '</div></div>' : "";
+    var paramBlk = '<section class="ls"><h3 class="ls-h">Параметры выпуска</h3>' +
+      '<div class="tiles lstiles">' + tiles + '</div>' +
+      (S.esc(o.issuer) ? '<div class="ls-sub" style="margin:0;max-width:none">Эмитент: ' + S.esc(o.issuer) +
+        (o.regnum ? ' · регистрационный номер выпуска ' + S.esc(o.regnum) : '') + '</div>' : '') +
+      dealers + '</section>';
+
+    // РОЛИК + МАТЕРИАЛЫ
+    var vLabel = (o.video && (o.video.title || ("Видео о продукте: " + o.name)) || "").replace(/"/g, "&quot;");
+    var mediaBlk = (o.video || docs.length)
+      ? '<section class="ls"><h3 class="ls-h">Материалы</h3><div class="lmedia">' +
+        (o.video
+          ? '<div class="o-video"><video controls playsinline preload="none" aria-label="' + vLabel + '"' +
+            (o.video.poster ? ' poster="' + S.esc(o.video.poster) + '"' : '') + '>' +
+            '<source src="' + S.esc(o.video.src) + '" type="video/mp4">Ваш браузер не поддерживает видео.</video></div>'
+          : '<div></div>') +
+        '<div>' + (o.video && o.video.title ? '<div class="ls-sub">' + S.esc(o.video.title) + ' — что за отрасль, кто в корзине и почему.</div>' : '') +
+          docs.map(d => '<a class="doc" href="' + S.esc(d.file) + '" target="_blank" rel="noopener" download><span class="ic">' + docIcon + '</span>' +
+            '<span><span class="nm">' + S.esc(d.name) + '</span><span class="mt">' + S.esc(d.ext) + ' · ' + S.esc(d.size) + '</span></span>' +
+            '<span class="dl">' + dlIcon + '</span></a>').join("") +
+        '</div></div></section>' : "";
+
+    // ВОПРОСЫ
+    var faqBlk = (o.faq && o.faq.length)
+      ? '<section class="ls"><h3 class="ls-h">Частые вопросы</h3><div class="faq">' +
+        o.faq.map(f => '<details><summary>' + S.esc(f.q) + '</summary><div class="a">' + S.esc(f.a) + '</div></details>').join("") +
+        '</div></section>' : "";
+
+    // РИСК + СЦЕНАРИИ
+    // Ноль красим нейтрально: «выплата 0%» рядом с «−100%» в той же строке
+    // зелёным читалась как хорошая новость.
+    var exBlk = (o.example && o.example.rows && o.example.rows.length)
+      ? '<div class="blk lex" style="margin-top:18px"><h3 class="k">' + S.esc(o.example.title || "Сценарии") + '</h3><div class="ex"><table class="ex-tbl">' +
+        (o.example.cols ? '<thead><tr>' + o.example.cols.map(c => '<th scope="col">' + S.esc(c) + '</th>').join("") + '</tr></thead>' : '') +
+        '<tbody>' + o.example.rows.map(r => '<tr><th scope="row" class="ex-l">' + S.esc(r[0]) + '</th>' +
+          r.slice(1).map(v => {
+            var cls = /^0([,.]0+)?%?$/.test(String(v).trim()) ? "zero" : (String(v).indexOf("−") === 0 ? "dn" : "up");
+            return '<td class="ex-v ' + cls + '">' + S.esc(v) + '</td>';
+          }).join("") + '</tr>').join("") +
+        '</tbody></table></div>' + (o.example.note ? '<div class="ex-note">' + S.esc(o.example.note) + '</div>' : '') + '</div>'
+      : "";
+    var riskBlk = '<section class="ls"><h3 class="ls-h">Риск</h3>' +
+      '<div class="lrisk"><i></i><div class="tx"><b>Можно потерять всю вложенную сумму.</b> ' + S.esc(o.risk) + '</div></div>' +
+      exBlk + '</section>';
+
+    var end = '<div class="lend"><div><div class="tx">Готовы обсудить выпуск?</div>' +
+      '<div class="sub">Ответим по параметрам, поможем с заявкой у вашего брокера.</div></div>' +
+      '<div class="act"><span id="o-ct-host2"></span></div></div>';
+
+    return hero + payBlk + basketBlk + tlBlk + paramBlk + mediaBlk + faqBlk + riskBlk + end;
+  }
+
   function select(id, fromUser) {
     var o = D.items.find(x => x.id === id);
     if (!o) return;
     selected = id;
     var panel = document.getElementById("panel");
     panel.style.setProperty("--fc", famCol(o));
-    document.getElementById("panel-body").innerHTML = detailHTML(o);
+    // Выпуск с постером и корзиной (o.landing) разворачивается в лендинг: у него
+    // свои секции и свой график выплаты. Остальные размещения — прежний паспорт.
+    var lnd = !!o.landing;
+    panel.classList.toggle("landing", lnd);
+    document.querySelector(".layout").classList.toggle("lnd", lnd);
+    var head = document.querySelector(".head");
+    if (head) head.classList.toggle("lnd-head", lnd);
+    document.getElementById("panel-body").innerHTML = lnd ? landingHTML(o) : detailHTML(o);
     var shHost = document.getElementById("o-sh-host");
     if (shHost && window.Share) {
       // короткая ссылка на p/<id> — шелл с персональным og-превью (название выпуска
@@ -606,6 +1074,13 @@
       // Главный CTA — «поднять руку»: попап с Telegram и формой-заявкой → Worker /lead
       Contact.attach(ctHost, { title: o.name, url: location.origin + "/offerings#" + o.id, id: o.id, label: "Обсудить выпуск" });
     }
+    // У лендинга CTA стоит дважды — в герое и в закрывающей строке: страница
+    // длинная, и возвращаться наверх за кнопкой человек не станет.
+    var ctHost2 = document.getElementById("o-ct-host2");
+    if (ctHost2 && window.Contact) {
+      Contact.attach(ctHost2, { title: o.name, url: location.origin + "/offerings#" + o.id, id: o.id, label: "Обсудить выпуск" });
+    }
+    if (lnd) { csMount(o); heroWire(o); }
     document.querySelectorAll(".item").forEach(el => { var on = el.getAttribute("data-id") === id; el.classList.toggle("active", on); if (on) el.setAttribute("aria-current", "true"); else el.removeAttribute("aria-current"); });
     history.replaceState(null, "", "#" + id);
     if (fromUser && window.matchMedia("(max-width: 920px)").matches) panel.classList.add("open");
