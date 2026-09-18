@@ -1,8 +1,8 @@
 // Файл сгенерирован update_site.py — руками не править (перезапишется при следующем запуске).
 // Продукты с "src": "sales" добавлены через админку и сохраняются при перегенерации.
-// Обновлено: 2026-08-31
+// Обновлено: 2026-09-18
 window.SITE_DATA = {
-  "updated": "2026-08-31",
+  "updated": "2026-09-18",
   "instruments": [
     {
       "id": "RCD-OFZ248-K100-1Y",
@@ -1933,6 +1933,23 @@ window.SITE_DATA = {
       "spot": 100,
       "tenor": "1 год",
       "quote": 25,
+      "chg": 0,
+      "minNom": 1000000,
+      "src": "sales"
+    },
+    {
+      "id": "w-ofz-26254-18092028-s",
+      "type": "warrant",
+      "structure": "call",
+      "name": "CALL 100 · ОФЗ 26254 · 2 года",
+      "underlying": "ОФЗ-26254",
+      "cls": "Облигации",
+      "tenor": "2 года",
+      "expiry": "18.09.2028",
+      "currency": "RUB",
+      "spot": 100,
+      "strike": 100,
+      "quote": 13.6,
       "chg": 0,
       "minNom": 1000000,
       "src": "sales"
