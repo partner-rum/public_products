@@ -52,6 +52,12 @@ window.OFFERINGS = {
      "file": "docs/kuv-sp-1-43-cb-fx-rub.pdf",
      "ext": "PDF",
      "size": "470 КБ"
+    },
+    {
+     "name": "Ключевой информационный документ (КИД)",
+     "file": "docs/kid-sp-1-43-cb-fx-rub.pdf",
+     "ext": "PDF",
+     "size": "999 КБ"
     }
    ]
   }
