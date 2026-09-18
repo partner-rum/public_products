@@ -1965,7 +1965,7 @@ window.SITE_DATA = {
       "expiry": "18.09.2028",
       "currency": "RUB",
       "spot": 100,
-      "strike": 100,
+      "strike": 105,
       "quote": 9.45,
       "chg": 0,
       "minNom": 1000000,
