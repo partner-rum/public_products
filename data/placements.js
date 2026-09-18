@@ -784,7 +784,7 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26230",
      "w": 1.0,
      "f0": 63.766,
-     "px": 56.88,
+     "px": 56.909,
      "pxTime": "2026-09-18",
      "perfPct": -10.8
     }
@@ -907,9 +907,9 @@ window.PLACEMENTS_DATA = {
      "n": "SPDR S&P 500 ETF Trust",
      "w": 1.0,
      "f0": 689.17,
-     "px": 762.6,
+     "px": 760.71,
      "pxTime": "2026-09-17",
-     "perfPct": 10.7
+     "perfPct": 10.4
     }
    ],
    "dates": {
@@ -925,7 +925,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 70.0,
     "protectionPct": 100.0
    },
-   "perfPct": 10.7
+   "perfPct": 10.4
   },
   {
    "isin": "RU000A10CV70",
@@ -1639,9 +1639,9 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26246",
      "w": 1.0,
      "f0": 90.79,
-     "px": 81.847,
+     "px": 81.889,
      "pxTime": "2026-09-18",
-     "perfPct": -9.9
+     "perfPct": -9.8
     }
    ],
    "dates": {
@@ -1657,7 +1657,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 300.0,
     "protectionPct": 100.0
    },
-   "perfPct": -9.9
+   "perfPct": -9.8
   },
   {
    "isin": "RU000A10BUF3",
@@ -1967,9 +1967,9 @@ window.PLACEMENTS_DATA = {
      "n": "Currency Pair USD/RUB",
      "w": 1.0,
      "f0": 81.5616,
-     "px": 84.725,
+     "px": 84.665,
      "pxTime": "2026-09-18",
-     "perfPct": 3.9
+     "perfPct": 3.8
     }
    ],
    "dates": {
@@ -1985,7 +1985,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 145.0,
     "protectionPct": 95.0
    },
-   "perfPct": 3.9
+   "perfPct": 3.8
   },
   {
    "isin": "RU000A10A9F3",
@@ -2008,36 +2008,36 @@ window.PLACEMENTS_DATA = {
      "n": "МКПАО \"Хэдхантер\"",
      "w": 1.0,
      "f0": 3183.0,
-     "px": 2812.0,
+     "px": 2807.0,
      "pxTime": "2026-09-18",
-     "perfPct": -11.7
+     "perfPct": -11.8
     },
     {
      "t": "MOEX",
      "n": "МосБиржа",
      "w": 1.0,
      "f0": 201.8,
-     "px": 147.88,
+     "px": 146.8,
      "pxTime": "2026-09-18",
-     "perfPct": -26.7
+     "perfPct": -27.3
     },
     {
      "t": "TATN",
      "n": "Татнефть (ао)",
      "w": 1.0,
      "f0": 682.3,
-     "px": 619.5,
+     "px": 614.8,
      "pxTime": "2026-09-18",
-     "perfPct": -9.2
+     "perfPct": -9.9
     },
     {
      "t": "X5",
      "n": "Корпоративный центр ИКС 5",
      "w": 1.0,
      "f0": 3528.0,
-     "px": 1788.0,
+     "px": 1791.5,
      "pxTime": "2026-09-18",
-     "perfPct": -49.3
+     "perfPct": -49.2
     }
    ],
    "dates": {
@@ -2058,7 +2058,7 @@ window.PLACEMENTS_DATA = {
      "barrierPct": null
     }
    },
-   "perfPct": -49.3
+   "perfPct": -49.2
   },
   {
    "isin": "RU000A10A9G1",
@@ -2081,9 +2081,9 @@ window.PLACEMENTS_DATA = {
      "n": "SPDR S&P 500 ETF Trust",
      "w": 1.0,
      "f0": 536.7,
-     "px": 762.6,
+     "px": 760.71,
      "pxTime": "2026-09-17",
-     "perfPct": 42.1
+     "perfPct": 41.7
     }
    ],
    "dates": {
@@ -2099,7 +2099,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 120.0,
     "protectionPct": 100.0
    },
-   "perfPct": 42.1
+   "perfPct": 41.7
   },
   {
    "isin": "RU000A10A9C0",
