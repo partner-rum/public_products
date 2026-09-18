@@ -12,6 +12,11 @@
     var navIn = document.querySelector(".nav-in");
     if (!navIn || navIn.querySelector(".nav-burger")) return;
     var brand = navIn.querySelector(".brand") || navIn.querySelector(".name");
+    // На страницах без обёртки .brand имя и подпись-дескриптор лежат двумя
+    // соседними спанами: «О компании» должно встать ПОСЛЕ подписи, иначе
+    // кнопка разрезает вордмарк надвое.
+    var tag = brand && brand.nextElementSibling;
+    if (tag && tag.classList && tag.classList.contains("brand-tag")) brand = tag;
 
     injectCSS();
 
@@ -113,7 +118,12 @@
       ".nav-menu a.item-cta svg path{stroke:#EE7D1B;}" +
       // Порог 900, а не 640: с шестым пунктом («Ставки») ряд перестал влезать уже
       // на 760–900px и давал горизонтальный скролл. Ширина ряда ~890px.
-      "@media(max-width:900px){.nav-in .brand-name,.nav-in .name{display:none;}" +
+      ".nav-in .brand-tag{font-size:13px;font-weight:400;color:rgba(242,243,247,0.55);padding-left:9px;margin-left:9px;border-left:1px solid rgba(255,255,255,0.14);white-space:nowrap;}" +
+      // Имя компании видно и на телефоне: без него холодный посетитель не понимает,
+      // чей это сайт. Прячется только подпись-дескриптор — длинная как раз она,
+      // из-за неё ряд и не влезал на 760–900px.
+      "@media(max-width:1100px){.nav-in .brand-tag{display:none;}}" +
+      "@media(max-width:900px){" +
       ".nav-in .topnav a:not(.btn-solar){display:none;}.nav-about{display:none;}" +
       ".nav-burger{display:inline-flex;}}" +
       "@media(min-width:901px){.nav-menu,.nav-backdrop{display:none !important;}}" +

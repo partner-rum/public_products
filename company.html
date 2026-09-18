@@ -40,6 +40,11 @@
   .nav-in { max-width: 1080px; margin: 0 auto; padding: 0 44px; height: 62px; display: flex; align-items: center; gap: 12px; }
   .brand { display: flex; align-items: center; gap: 10px; }
   .brand-name { font-size: 14.5px; font-weight: 600; }
+  /* Подпись-дескриптор рядом с именем компании. Прячется на узком экране:
+     длинная как раз она, само имя нужно видеть всегда — иначе холодный
+     посетитель не понимает, чей это сайт (фидбек 18.09.2026). */
+  .brand-tag { font-size: 13px; font-weight: 400; color: var(--hushed); padding-left: 9px; margin-left: 9px; border-left: 1px solid var(--border); white-space: nowrap; }
+  @media (max-width: 1100px) { .brand-tag { display: none; } }
   .topnav { margin-left: auto; display: flex; align-items: center; gap: 22px; font-size: 14px; font-weight: 500; }
   .topnav a { color: var(--hushed); transition: color .2s; }
   .topnav a:hover { color: var(--ink); }
@@ -175,6 +180,32 @@
     .ci-nums { gap: 20px; } .ci-num .v { font-size: 28px; } .ci-num .k { max-width: 140px; }
     .ob-wrap { grid-template-columns: 1fr; } .ob { height: 300px; }
   }
+
+  /* ─── Наш бизнес ─── */
+  .bz-roles { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 22px; margin-top: 4px; }
+  .bz-r { padding-top: 13px; border-top: 1px solid rgba(238,125,27,0.4); }
+  .bz-r .n { font-family: var(--display); font-size: 15px; font-weight: 600; }
+  .bz-r .d { margin: 6px 0 0; font-size: 13.5px; line-height: 1.55; color: var(--hushed); }
+  .bz-w { padding: 16px 0; border-bottom: 1px solid var(--border-soft); }
+  .bz-w:first-child { border-top: 1px solid var(--border-soft); }
+  .bz-w .n { font-family: var(--display); font-size: 16px; font-weight: 600; }
+  .bz-w .d { margin-top: 5px; font-size: 13.5px; line-height: 1.55; color: var(--hushed); }
+  .bz-act { margin-top: 10px; }
+  .bz-go { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; color: var(--solar-l); }
+  .bz-go:hover { color: var(--solar); }
+  .bz-flow { list-style: none; counter-reset: bz; margin: 4px 0 0; padding: 0; display: grid; gap: 2px; }
+  .bz-flow li { counter-increment: bz; position: relative; padding: 11px 0 11px 38px;
+    border-bottom: 1px solid var(--border-soft); font-size: 13.5px; line-height: 1.55; color: var(--hushed); }
+  .bz-flow li:first-child { border-top: 1px solid var(--border-soft); }
+  .bz-flow li::before { content: counter(bz); position: absolute; left: 0; top: 10px;
+    width: 22px; height: 22px; border-radius: 50%; border: 1px solid var(--border);
+    font-family: var(--f-mono); font-size: 11px; color: var(--faint);
+    display: flex; align-items: center; justify-content: center; }
+  .bz-flow li b { color: var(--ink); font-weight: 600; }
+  @media (max-width: 720px) {
+    .bz-roles { grid-template-columns: minmax(0,1fr); gap: 16px; }
+    .bz-go { min-height: 44px; align-items: center; }
+  }
 </style>
 </head>
 <body>
@@ -185,7 +216,7 @@
       <svg width="22" height="22" viewBox="0 0 26 26" fill="none" aria-hidden="true">
         <path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/>
       </svg>
-      <span class="brand-name">Инвестиционные решения</span>
+      <span class="brand-name">Rumberg</span><span class="brand-tag">Инвестиционные решения</span>
     </a>
     <nav class="topnav">
       <a href="screener.html">Лучшие ставки</a>
@@ -204,6 +235,57 @@
 <div class="wrap">
   <h1>О компании</h1>
   <p class="lead">Готовые инвестиционные решения и альтернативные инвестиции для <b>квалифицированных инвесторов и финансовых институтов</b>. Этот сайт — витрина продуктов; полная информация о группе — на официальном сайте.</p>
+
+
+  <!-- ─── Наш бизнес: кто мы, кому и как проходит сделка ───────────────
+       Повод — фидбек от человека из фининститута 18.09.2026: «не очевидно,
+       как именно платформа помогает; я фининститут — что это для меня?».
+       До этого блока сайт описывал продукты и ни разу — сам бизнес. -->
+  <div class="cap" id="business">Наш бизнес</div>
+  <p class="ci-sub" style="max-width:620px">Rumberg — не витрина чужих продуктов и не прайсер. Мы эмитент: структуру под задачу считаем сами, выпускаем со своим ISIN и ведём до погашения.</p>
+
+  <div class="bz-roles">
+    <div class="bz-r">
+      <div class="n">Структурируем</div>
+      <p class="d">Базовый актив, срок и профиль выплаты — ваши. Собираем выплату из пяти базовых механик и любой их комбинации. На доске 112 инструментов с текущими ценами; под конкретный запрос считаем отдельно.</p>
+    </div>
+    <div class="bz-r">
+      <div class="n">Выпускаем</div>
+      <p class="d">Выпуск получает ISIN, КУВ и КИД — купить его можно у своего брокера. За два года 62 выпуска на ≈30 млрд ₽: от ОФЗ и российских акций до биткоин-ETF, урана и NVIDIA.</p>
+    </div>
+    <div class="bz-r">
+      <div class="n">Сопровождаем</div>
+      <p class="d">После размещения — индикативный Bid по обращающимся выпускам, переоценка и жизненный цикл в кабинете партнёра, документы по каждому выпуску.</p>
+    </div>
+  </div>
+
+  <div class="cap">Кому</div>
+  <div class="bz-who">
+    <div class="bz-w">
+      <div class="n">Финансовым институтам</div>
+      <div class="d">Банкам, брокерам и управляющим компаниям: структура под мандат, выпуск с ISIN, индикативная котировка после размещения. Приносите параметры — пришлём цену.</div>
+      <div class="bz-act" id="bz-ct"></div>
+    </div>
+    <div class="bz-w">
+      <div class="n">Агентам и партнёрам</div>
+      <div class="d">Продукт уходит клиенту одной ссылкой: параметры, график выплат, пример расчёта на его сумму, печатный one-pager. Заявка возвращается вам, сделки и вознаграждение — в рабочем столе.</div>
+      <div class="bz-act"><a class="bz-go" href="guide.html">Как это устроено<svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></a></div>
+    </div>
+    <div class="bz-w">
+      <div class="n">Квалифицированным инвесторам</div>
+      <div class="d">Выпуски на размещении и текущие продукты — через вашего менеджера или партнёра. Формула выплаты известна до сделки, документы по выпуску лежат рядом с ним.</div>
+      <div class="bz-act"><a class="bz-go" href="offerings.html">Что на размещении<svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></a></div>
+    </div>
+  </div>
+
+  <div class="cap">Как проходит сделка</div>
+  <ol class="bz-flow">
+    <li><b>Запрос.</b> Базовый актив, срок, желаемый профиль выплаты и объём.</li>
+    <li><b>Прайсинг.</b> Присылаем индикативные параметры — участие, купон или премию, смотря какая структура.</li>
+    <li><b>Согласование.</b> Фиксируем параметры, даты наблюдений и условия досрочного погашения.</li>
+    <li><b>Выпуск.</b> Эмиссия, ISIN, КУВ и КИД; покупка у своего брокера.</li>
+    <li><b>Сопровождение.</b> Индикативный Bid, переоценка и документы — до погашения.</li>
+  </ol>
 
   <!-- ─── О нас в цифрах: счётчики + конструктор структур + орбиты активов ─── -->
   <p class="ci-lead rv">Собираем структурные продукты как конструктор: <b>идея → базовый актив → структура выплаты → выпуск с ISIN</b>.</p>
@@ -243,7 +325,7 @@
       </div>
       <div class="ob-leg">
         <div class="st"><div class="v"><span data-cnt="25" data-suf="+">25+</span></div><div class="k">базовых активов в выпусках и на витрине</div></div>
-        <div class="st"><div class="v"><span data-cnt="54">54</span></div><div class="k">выпуска за два года</div></div>
+        <div class="st"><div class="v"><span data-cnt="62">62</span></div><div class="k">выпуска за два года</div></div>
         <div class="st"><div class="v"><span data-cnt="9">9</span></div><div class="k">собственных индексов Румберг</div></div>
         <div class="lg"><i style="background:#EE7D1B"></i>иностранные · 8</div>
         <div class="lg"><i style="background:rgba(242,243,247,0.85)"></i>локальные · 9</div>
@@ -558,5 +640,19 @@
 <script src="chat.js?v=19"></script>
 <script src="qualgate.js?v=5"></script>
 <script src="search.js?v=1"></script>
+<script src="contact.js?v=10"></script>
+<script>
+  // «Запросить прайсинг» в разделе «Наш бизнес» — общий конвейер заявок.
+  (function () {
+    var h = document.getElementById("bz-ct");
+    if (h && window.Contact) window.Contact.attach(h, {
+      title: "Прайсинг структуры под задачу",
+      url: location.origin + "/company.html#business",
+      id: "pricing",
+      label: "Запросить прайсинг"
+    });
+  })();
+</script>
 </body>
+
 </html>
