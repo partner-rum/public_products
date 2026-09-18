@@ -330,12 +330,23 @@
           <label><span class="k">Потолок роста БА, % (пусто = без потолка)</span><input name="cap" type="number" placeholder=""></label>
         </div>
       </div>
+      <!-- Страйк варранта: СВОИ поля с префиксом w. Делить общее поле strike
+           (оно у RC+DC) нельзя — форма одна, а два инпута с одним именем отдают
+           пустую строку, то есть сломались бы оба. -->
       <div id="b-warrant" style="display:none">
+        <div class="hint-box">Вход по ПРЕМИИ (поле «Котировка» выше). Уровни — в % ОТ СТАРТА базового
+          актива: страйк 100 — выплата с первого процента роста, 105 — только после роста на 5%.
+          У колл-спреда выплата упирается в потолок и больше (K₂ − K)% номинала не станет.
+          Страйк из названия («CALL 105») должен совпадать с полем — форма это проверит.</div>
         <div class="row">
           <label><span class="k">Структура <b>*</b></span>
-            <select name="structure"><option value="call">CALL 100 (рост без потолка)</option><option value="cs">Колл-спред 100–150</option></select>
+            <select name="structure"><option value="call">CALL — рост без потолка</option><option value="cs">Колл-спред — рост до потолка</option></select>
           </label>
           <label><span class="k">Текущий уровень БА (текстом)</span><input name="uRef" placeholder="$54,80 или 6 320 пт" maxlength="30"></label>
+        </div>
+        <div class="row">
+          <label><span class="k">Страйк (K), % от старта <b>*</b></span><input name="wStrike" type="number" step="0.5" value="100" placeholder="100"></label>
+          <label id="l-wstrike2"><span class="k">Потолок (K₂), % от старта <b>*</b></span><input name="wStrike2" type="number" step="0.5" placeholder="150"></label>
         </div>
       </div>
       <!-- Купонный варрант: вход по премии, выплата фиксированная. Свои поля с
@@ -1240,7 +1251,16 @@
     document.getElementById("l-quote").style.display = (isProt || t === "autocall" || t === "booster" || t === "revconv" || t === "rcdigital") ? "none" : "";
     // Переключились на этот тип — сразу подставляем купон в скрытую котировку
     if (t === "rcdigital" && fBoard.couponPct && fBoard.couponPct.value) fBoard.quote.value = fBoard.couponPct.value;
+    bdWarrantSync();
   });
+  // Потолок спрашиваем только у колл-спреда: у CALL роста без потолка это поле
+  // означало бы ограничение, которого в продукте нет.
+  function bdWarrantSync() {
+    var el = document.getElementById("l-wstrike2");
+    if (el) el.style.display = fBoard.structure && fBoard.structure.value === "cs" ? "" : "none";
+  }
+  fBoard.structure.addEventListener("change", bdWarrantSync);
+  bdWarrantSync();
   var fPlacement = document.getElementById("f-placement");
   fPlacement.kind.addEventListener("change", function () {
     var coupon = fPlacement.kind.value === "coupon";
@@ -1278,6 +1298,28 @@
     return n;
   }
   function num(form, name) { var v = val(form, name); return v === "" ? null : Number(v); }
+  // Имя продукта на витрине несёт страйк: «CALL 105 · ОФЗ 26254 · 2 года»,
+  // «CS 100–150 · NBIS · 2 года». 18.09.2026 сейлз завёл CALL 105, а страйк в форме
+  // был ЗАШИТ сотней — карточка считала безубыток 113,6% вместо 114,45% и рисовала
+  // K на 100. Теперь имя и поля обязаны сойтись: выплату витрина считает по полю,
+  // а клиент читает название.
+  function bdNum(x) { return Math.round(Number(String(x).replace(",", ".")) * 100) / 100; }
+  function bdNameErr(inName, inField, what) {
+    return "Название обещает " + what + " " + String(inName).replace(".", ",") + "%, а в поле стоит " +
+      String(inField).replace(".", ",") + "%. Выплату витрина считает по полю, а клиент читает название — " +
+      "поправьте одно из двух.";
+  }
+  function bdNameCheck(it) {
+    var nm = String(it.name || "");
+    var cs = nm.match(/\bCS\s*(\d{2,3}(?:[.,]\d+)?)\s*[-–—]\s*(\d{2,3}(?:[.,]\d+)?)/i);
+    if (cs) {
+      if (it.strike != null && bdNum(cs[1]) !== bdNum(it.strike)) throw new Error(bdNameErr(cs[1], it.strike, "страйк (K)"));
+      if (it.strike2 != null && bdNum(cs[2]) !== bdNum(it.strike2)) throw new Error(bdNameErr(cs[2], it.strike2, "потолок (K₂)"));
+      return;
+    }
+    var c = nm.match(/\bCALL\s*(\d{2,3}(?:[.,]\d+)?)/i);
+    if (c && it.strike != null && bdNum(c[1]) !== bdNum(it.strike)) throw new Error(bdNameErr(c[1], it.strike, "страйк (K)"));
+  }
   function put(obj, k, v) { if (v !== "" && v != null && !(typeof v === "number" && isNaN(v))) obj[k] = v; }
 
   function submit(section, form, msgEl, build) {
@@ -1333,16 +1375,31 @@
     var patch = { id: bdOrig.id }, changed = [];
     var NUM = { quote: 1, minNom: 1, strike: 1, strike2: 1, participation: 1, protectionPct: 1, cap: 1, startFrom: 1, couponPct: 1 };
     var snap = bdSnap || {};
-    BD_KEYS.forEach(function (k) {
+    BD_KEYS.concat(Object.keys(BD_ALIAS)).forEach(function (k) {
       var el = fBoard[k];
       if (!el) return;
+      var key = BD_ALIAS[k] || k;                   // имя поля → ключ записи
       var raw = String(el.value || "").trim();
       if (raw === "") return;                       // пустое поле ничего не затирает
       if (raw === (snap[k] || "")) return;          // поле не трогали с момента загрузки
-      var v = NUM[k] ? parseFloat(raw.replace(",", ".")) : raw;
-      if (NUM[k] && !isFinite(v)) return;
-      patch[k] = v; changed.push(fieldLabel(fBoard, k) || k);
+      var v = NUM[key] ? parseFloat(raw.replace(",", ".")) : raw;
+      if (NUM[key] && !isFinite(v)) return;
+      patch[key] = v; changed.push(fieldLabel(fBoard, k) || k);
     });
+    // Имя на витрине несёт страйк, и после правки они обязаны сойтись: поменять
+    // могли любое из двух, поэтому сверяем то, что ПОЛУЧИТСЯ, а не то, что пришло.
+    if (bdOrig && (bdOrig.type === "warrant" || bdOrig.type === "digital")) {
+      bdNameCheck({
+        name: patch.name != null ? patch.name : bdOrig.name,
+        strike: patch.strike != null ? patch.strike : bdOrig.strike,
+        strike2: patch.strike2 != null ? patch.strike2 : bdOrig.strike2
+      });
+      // Пустое поле ничего не затирает, значит снять потолок правкой нельзя —
+      // продукт остался бы колл-спредом со старым K₂. Говорим прямо, а не молча.
+      if (patch.structure === "call" && bdOrig.strike2 != null) {
+        throw new Error("Убрать потолок у заведённого колл-спреда через форму нельзя: правка не умеет стирать поля. Снимите продукт и заведите заново.");
+      }
+    }
     return { patch: patch, changed: changed };
   }
 
@@ -1352,7 +1409,12 @@
     var key = keyEl.value.trim();
     if (!key) { msgEl.className = "msg err"; msgEl.textContent = "Введите ваш персональный ключ (в самом верху страницы)."; keyEl.focus(); return; }
 
-    var built = buildBoardPatch(), patch = built.patch, changed = built.changed;
+    // buildBoardPatch бросает на разошедшемся названии и на снятии потолка —
+    // без try сейлз увидел бы молчание формы вместо объяснения.
+    var built;
+    try { built = buildBoardPatch(); }
+    catch (err) { msgEl.className = "msg err"; msgEl.textContent = String(err.message || err); return; }
+    var patch = built.patch, changed = built.changed;
     if (!changed.length) {
       msgEl.className = "msg err";
       msgEl.textContent = "Вы ничего не изменили — правку отправлять не с чем.";
@@ -1903,13 +1965,22 @@
      "quote", "minNom", "strike", "strike2", "participation", "protectionPct", "cap", "startFrom",
      // couponPct — купон RC+условного: единственный параметр этого типа, и без
      // него правка формой не могла бы изменить главное число продукта
-     "couponPct"];
+     "couponPct",
+     // structure — CALL или колл-спред: без неё правка страйков варранта уезжала
+     // бы, а вид продукта на витрине оставался прежним
+     "structure"];
+  // Поля, чьё имя в форме НЕ совпадает с ключом записи. Без карты правка молча
+  // теряется: цикл ниже ищет элемент по имени ключа — так до сих пор неисправимы
+  // формой купон реверс-конвертибла (rcCouponPa) и страйк бустера (bStrike).
+  var BD_ALIAS = { wStrike: "strike", wStrike2: "strike2" };
   // Сравнивать надо со снимком формы, а не с записью: у формы есть умолчания
   // (участие с 0, защита 100), которых в записи варранта нет вовсе — и они
   // попадали в правку как «изменённые», хотя сейлз их не трогал.
   function bdSnapshot() {
     var out = {};
-    BD_KEYS.forEach(function (k) { var el = fBoard[k]; if (el) out[k] = String(el.value || "").trim(); });
+    BD_KEYS.concat(Object.keys(BD_ALIAS)).forEach(function (k) {
+      var el = fBoard[k]; if (el) out[k] = String(el.value || "").trim();
+    });
     return out;
   }
 
@@ -1966,6 +2037,14 @@
       });
       var el = fBoard.rcBasket;
       if (el) el.value = Array.isArray(x.basket) ? x.basket.join(", ") : "";
+    }
+    // Варрант: структура и страйки лежат в своих полях. Правку этой пары
+    // отправляет BD_ALIAS — в отличие от автоколла, бустера и реверс-конвертибла,
+    // у которых имена полей так и остались вне списка.
+    if (x.type === "warrant") {
+      bdSetSel("structure", x.structure || "call");
+      if (fBoard.wStrike) fBoard.wStrike.value = x.strike != null ? x.strike : 100;
+      if (fBoard.wStrike2) fBoard.wStrike2.value = x.strike2 != null ? x.strike2 : "";
     }
     fBoard.type.dispatchEvent(new Event("change"));
     bdSnap = bdSnapshot();
@@ -2115,7 +2194,16 @@
       check.push("уровень БА текстом");
     } else if (type === "warrant") {
       setTxt("quote", o.price);
-      bdSetSel("structure", /спред|spread/i.test(String(o.name || "") + " " + String(o.kind || "")) ? "cs" : "call");
+      var isCsOff = /спред|spread/i.test(String(o.name || "") + " " + String(o.kind || ""));
+      bdSetSel("structure", isCsOff ? "cs" : "call");
+      bdWarrantSync();
+      // Страйк у размещения отдельным полем не хранится — читаем из названия тем
+      // же шаблоном, что у купонного варранта. Не прочитался — в поле остаётся 100,
+      // и сейлз получает прямое указание проверить, а не молчание.
+      var kW = bdOffStrike(o);
+      if (kW != null) setTxt("wStrike", kW);
+      else check.push("страйк — в названии выпуска его не видно, в поле осталось 100");
+      if (isCsOff) check.push("потолок колл-спреда (K₂)");
       check.push("уровень БА текстом");
     } else if (type === "discount") {
       setTxt("quote", o.price);
@@ -2246,8 +2334,23 @@
       if (type === "warrant") {
         item.structure = val(fBoard, "structure");
         put(item, "uRef", val(fBoard, "uRef"));
-        item.spot = 100; item.strike = 100;
-        if (item.structure === "cs") item.strike2 = 150;
+        // Страйк был ЗАШИТ сотней, а колл-спред — парой 100–150, хотя на доске уже
+        // жили CALL 105 и другие уровни. 18.09.2026 сейлз завёл «CALL 105», и в
+        // записи остался страйк 100: карточка считала безубыток 113,6% вместо
+        // 114,45%, рисовала K на 100 и завышала выплату примера на 5 п.п.
+        var isCs = item.structure === "cs";
+        req(fBoard, ["wStrike"].concat(isCs ? ["wStrike2"] : []));
+        needRange(fBoard, "wStrike", 1, 300, "%");
+        item.spot = 100;
+        item.strike = num(fBoard, "wStrike");
+        if (isCs) {
+          needRange(fBoard, "wStrike2", 1, 400, "%");
+          item.strike2 = num(fBoard, "wStrike2");
+          if (item.strike2 <= item.strike) {
+            throw new Error("Потолок колл-спреда (K₂) должен быть выше страйка (K): выплата ограничена разницей K₂ − K.");
+          }
+        }
+        bdNameCheck(item);
       }
       if (type === "digital") {
         req(fBoard, ["dgStrike", "dgPct"]);
@@ -2265,6 +2368,9 @@
         if (item.digitalPct != null && item.quote != null && item.digitalPct <= item.quote) {
           throw new Error("Выплата (" + item.digitalPct + "%) должна быть больше премии (" + item.quote + "%) — иначе продукт не может выйти в плюс.");
         }
+        // Порог тоже стоит в названии («CALL 105 · ОФЗ 26248»), и разойтись с полем
+        // ему нельзя по той же причине, что у варранта.
+        bdNameCheck(item);
       }
       if (type === "rcdigital") {
         req(fBoard, ["strike", "couponPct"]);
