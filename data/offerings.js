@@ -58,6 +58,12 @@ window.OFFERINGS = {
      "file": "docs/kid-sp-1-43-cb-fx-rub.pdf",
      "ext": "PDF",
      "size": "999 КБ"
+    },
+    {
+     "name": "Презентация: Космические технологии (Альянс Капитал)",
+     "file": "docs/preso-sp-1-43-cb-fx-rub.pdf",
+     "ext": "PDF",
+     "size": "1,6 МБ"
     }
    ]
   }
