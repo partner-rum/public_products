@@ -1953,6 +1953,23 @@ window.SITE_DATA = {
       "chg": 0,
       "minNom": 1000000,
       "src": "sales"
+    },
+    {
+      "id": "w-ofz-26254-18092028-s-2",
+      "type": "warrant",
+      "structure": "call",
+      "name": "CALL 105 · ОФЗ 26254 · 2 года",
+      "underlying": "ОФЗ-26254",
+      "cls": "Облигации",
+      "tenor": "2 года",
+      "expiry": "18.09.2028",
+      "currency": "RUB",
+      "spot": 100,
+      "strike": 100,
+      "quote": 9.45,
+      "chg": 0,
+      "minNom": 1000000,
+      "src": "sales"
     }
   ],
   "underlyings": {}
