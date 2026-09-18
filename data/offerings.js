@@ -229,7 +229,7 @@ window.OFFERINGS = {
      "name": "Ключевые условия выпуска (КУВ) · СП-1-43",
      "file": "docs/kuv-sp-1-43-cb-fx-rub.pdf",
      "ext": "PDF",
-     "size": "470 КБ",
+     "size": "468 КБ",
      "top": true,
      "short": "КУВ"
     },
@@ -237,7 +237,7 @@ window.OFFERINGS = {
      "name": "Ключевой информационный документ (КИД) · СП-1-43",
      "file": "docs/kid-sp-1-43-cb-fx-rub.pdf",
      "ext": "PDF",
-     "size": "1,0 МБ",
+     "size": "999 КБ",
      "top": true,
      "short": "КИД"
     }
