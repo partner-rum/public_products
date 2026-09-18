@@ -231,23 +231,20 @@
     .topnav { margin-left: 0; width: 100%; gap: 16px; font-size: 13.5px; }
   }
   /* ─────────────────────────────────────────────────────────────────────────
-     ЛЕНДИНГ ВЫПУСКА (o.landing === true)
-     Карточка-паспорт остаётся у обычных размещений; выпуск с постером, корзиной
-     и роликом разворачивается в лендинг: герой → как устроена выплата (график
-     + калькулятор сценария) → корзина → сроки → параметры → материалы → ролик →
-     вопросы → риск. Всё рисуется ИЗ ДАННЫХ: нет поля — нет блока.
-     Полноэкранной полосы (100vw) намеренно НЕТ: на Windows она даёт
+     ЛЕНДИНГ ВЫПУСКА (o.landing === true): ИДЕЯ → ЗАЧЕМ → УСЛОВИЯ → ДЕТАЛИ.
+     Три коротких экрана и свёрнутый хвост. Правила формы:
+       • карточка (поверхность + рамка) — только у интерактивного инструмента
+         (график и калькулятор в деталях) и у плеера;
+       • факты сделки — крупные моно-цифры с подписью, шесть штук, один ряд форм;
+       • всё, что в деталях, лежит на фоне и делится волосяными линейками.
+     Полноэкранной полосы (100vw) нет намеренно: на Windows она даёт
      горизонтальный скролл на ширину полосы прокрутки.  */
   .panel.landing { padding: 0; border: none; background: transparent; }
   .layout.solo.lnd { margin-top: 12px; }
   .lnd-head h1 { font-size: 19px; color: var(--hushed); font-weight: 400; }
   .lnd-head .intro { display: none; }
 
-  /* ── Герой ────────────────────────────────────────────────────────────────
-     Кадр ролика вертикальный (9:16), и широкой полосой от него остаётся узкая
-     полоска. Поэтому кадр стоит СПРАВА своей пропорцией, а фоном идёт он же —
-     размытый и приглушённый: так видно и спутник, и общий тон, и текст не
-     ложится на детали. */
+  /* ── ИДЕЯ: герой с плеером ─────────────────────────────────────────────── */
   .lh { position: relative; border-radius: 18px; overflow: hidden; background: #07080B; border: 1px solid var(--border-soft); }
   .lh-bg { position: absolute; inset: 0; overflow: hidden; }
   .lh-bg img { width: 100%; height: 100%; object-fit: cover; display: block; transform: scale(1.14); filter: blur(30px) saturate(0.85); opacity: 0.5; }
@@ -255,160 +252,200 @@
     background:
       radial-gradient(120% 80% at 88% 40%, rgba(7,8,11,0) 0%, rgba(7,8,11,0.55) 58%, rgba(7,8,11,0.9) 100%),
       linear-gradient(to right, rgba(7,8,11,0.92) 0%, rgba(7,8,11,0.72) 44%, rgba(7,8,11,0.5) 100%); }
-  .lh-grid { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 34px; align-items: center; padding: 34px 34px 30px; }
-  .lh-media { position: relative; border-radius: 14px; overflow: hidden; background: #04050A; box-shadow: 0 18px 44px rgba(0,0,0,0.5); aspect-ratio: 9 / 13; }
-  .lh-media img, .lh-media video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 45%; display: block; }
-  .lh-media video { opacity: 0; transition: opacity 1.1s var(--ease); }
-  /* Вместо видеопетли — очень медленный наезд на кадр: в самом ролике
-     субтитры вшиты в картинку, и чистого куска длиннее двух секунд там нет. */
-  .lh-media img { animation: lh-pan 30s ease-in-out infinite alternate; }
-  @keyframes lh-pan { from { transform: scale(1.01); } to { transform: scale(1.12); } }
-  @media (prefers-reduced-motion: reduce) { .lh-media img { animation: none; } }
-  .lh-media video.on { opacity: 1; }
-  .lh-badge { position: absolute; top: 12px; left: 12px; right: 12px; z-index: 2; display: flex; justify-content: flex-end; }
+  .lh-grid { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 36px; align-items: center; padding: 34px 34px; }
+  /* Плеер — рамка 9:16 под вертикальный ролик. Постер и видео одного кадра,
+     поэтому переключение по нажатию не дёргает картинку. */
+  .lh-media { position: relative; border-radius: 14px; overflow: hidden; background: #04050A; box-shadow: 0 18px 44px rgba(0,0,0,0.5); aspect-ratio: 9 / 16; cursor: pointer; }
+  .lh-media img, .lh-media video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; background: #04050A; }
+  .lh-media.playing { cursor: default; }
+  .lh-media.playing video { object-fit: contain; }
+  .lh-badge { position: absolute; top: 12px; left: 12px; right: 12px; z-index: 2; display: flex; justify-content: flex-end; pointer-events: none; }
   .lh-badge .badge.live { background: rgba(11,12,16,0.72); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); border: 1px solid rgba(238,125,27,0.5); }
   .lh-badge .badge.live .dot { background: var(--solar); }
+  .lh-media.playing .lh-badge { display: none; }
+  /* Кнопка «смотреть»: круг с треугольником и подпись, внизу кадра на градиенте */
+  .lh-pb { position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; display: flex; align-items: center; gap: 12px; padding: 60px 16px 16px;
+           background: linear-gradient(to top, rgba(4,5,10,0.92), rgba(4,5,10,0)); border: none; color: var(--ink); font-family: var(--f-body); cursor: pointer; text-align: left; }
+  .lh-pb .ico { flex: none; width: 46px; height: 46px; border-radius: 50%; background: var(--solar); display: grid; place-items: center; transition: transform .2s var(--ease), background .2s; }
+  .lh-pb .ico svg { margin-left: 2px; }
+  .lh-media:hover .lh-pb .ico { transform: scale(1.06); background: var(--solar-l); }
+  .lh-pb .lbl { font-size: 14px; font-weight: 600; line-height: 1.3; }
+  .lh-pb .lbl .dim { font-weight: 400; color: rgba(242,243,247,0.62); }
+  .lh-media.playing .lh-pb { display: none; }
   .lh-kick { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(242,243,247,0.72); display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
   .lh-kick a { color: #49D69C; } /* фирменный зелёный АльянсКапитал */
   .lh-kick a:hover { text-decoration: underline; }
   .lh-kick .sep { color: rgba(242,243,247,0.38); }
-  .lh-name { margin: 12px 0 0; font-family: var(--display); font-size: 52px; line-height: 1.02; font-weight: 500; letter-spacing: -0.03em; }
-  .lh-lead { margin: 14px 0 0; max-width: 620px; font-size: 16px; line-height: 1.55; color: rgba(242,243,247,0.86); text-wrap: pretty; }
-  .lh-stats { display: flex; flex-wrap: wrap; gap: 30px; margin: 24px 0 0; }
-  .lh-stats .v { font-family: var(--f-mono); font-size: 30px; font-weight: 500; letter-spacing: -0.02em; line-height: 1; color: var(--solar); }
-  .lh-stats .st:nth-child(n+2) .v { color: var(--ink); }
-  .lh-stats .k { font-size: 12px; color: rgba(242,243,247,0.68); margin-top: 7px; }
-  .lh-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; margin: 26px 0 0; }
+  .lh-name { margin: 14px 0 0; font-family: var(--display); font-size: 54px; line-height: 1.02; font-weight: 500; letter-spacing: -0.03em; }
+  .lh-lead { margin: 16px 0 0; max-width: 560px; font-size: 18px; line-height: 1.5; color: rgba(242,243,247,0.86); text-wrap: pretty; }
+  .lh-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; margin: 28px 0 0; }
   .lh-cta .ct-btn { min-height: 44px; }
   .lh-cta .o-doc-btn { background: rgba(11,12,16,0.55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); min-height: 44px; }
-  .lh-foot { display: flex; flex-wrap: wrap; gap: 8px 16px; margin: 18px 0 0; font-size: 12px; color: rgba(242,243,247,0.62); }
-  .lh-foot .cr { color: rgba(242,243,247,0.42); }
 
-  /* Секции лендинга */
-  .ls { margin-top: 42px; }
-  .ls-h { margin: 0 0 4px; font-family: var(--display); font-size: 24px; font-weight: 400; letter-spacing: -0.02em; }
-  .ls-sub { margin: 0 0 18px; font-size: 14px; color: var(--hushed); max-width: 660px; text-wrap: pretty; }
+  /* ── Разделы ───────────────────────────────────────────────────────────── */
+  .ls { margin-top: 44px; }
+  .ls-hd { padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+  .ls-h { margin: 0; font-family: var(--display); font-size: 26px; font-weight: 400; letter-spacing: -0.02em; }
+  .ls-sub { margin: 8px 0 0; font-size: 14px; line-height: 1.55; color: var(--hushed); max-width: 660px; text-wrap: pretty; }
+  .ls-k { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.11em; text-transform: uppercase; color: var(--hushed); margin-bottom: 9px; }
+  .src { margin: 14px 0 0; font-size: 12px; line-height: 1.55; color: var(--faint); text-wrap: pretty; max-width: 760px; }
 
-  /* Выплата: график + калькулятор */
-  .pay { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 22px; align-items: stretch; }
-  .pay-chart { background: var(--card); border: 1px solid var(--border-soft); border-radius: 14px; padding: 18px 20px 14px; min-width: 0; }
+  /* ── ЗАЧЕМ: три тезиса с цифрой ────────────────────────────────────────── */
+  .why { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 36px; margin-top: 8px; }
+  .wh { padding: 20px 0 6px; min-width: 0; }
+  .wh + .wh { border-left: 1px solid var(--border-soft); padding-left: 28px; margin-left: -18px; }
+  .wh .n { font-family: var(--f-mono); font-size: 34px; font-weight: 500; letter-spacing: -0.02em; line-height: 1; color: var(--ink); }
+  .wh .t { margin-top: 12px; font-size: 16px; font-weight: 600; line-height: 1.35; text-wrap: pretty; }
+  .wh .d { margin-top: 8px; font-size: 13.5px; line-height: 1.55; color: var(--hushed); text-wrap: pretty; }
+
+  /* ── УСЛОВИЯ: шесть фактов ─────────────────────────────────────────────── */
+  .facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 36px; margin-top: 4px; }
+  .fc { padding: 22px 0 18px; border-bottom: 1px solid var(--border-soft); min-width: 0; }
+  .fc .v { font-family: var(--f-mono); font-size: 34px; font-weight: 500; letter-spacing: -0.02em; line-height: 1; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fc.hi .v { color: var(--solar); }
+  .fc.loss .v { color: var(--loss); }
+  .fc .k { margin-top: 10px; font-size: 14.5px; font-weight: 600; }
+  .fc .d { margin-top: 5px; font-size: 13px; line-height: 1.5; color: var(--hushed); text-wrap: pretty; }
+  .terms-cta { margin-top: 22px; }
+  .terms-cta .o-doc-btn { background: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; }
+
+  /* ── ДЕТАЛИ: свёрнутые разделы ─────────────────────────────────────────── */
+  .fd { border-bottom: 1px solid var(--border-soft); }
+  .fd summary { cursor: pointer; list-style: none; display: flex; align-items: baseline; gap: 14px; padding: 17px 2px; min-height: 44px; }
+  .fd summary::-webkit-details-marker { display: none; }
+  .fd summary::after { content: "+"; margin-left: auto; font-family: var(--f-mono); font-size: 18px; color: var(--hushed); flex: none; line-height: 1; }
+  .fd[open] summary::after { content: "–"; }
+  .fd summary:hover .fd-t { color: var(--solar); }
+  .fd-t { font-family: var(--display); font-size: 18px; font-weight: 400; letter-spacing: -0.01em; flex: none; }
+  .fd-h { font-size: 13px; color: var(--faint); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fd-b { padding: 4px 0 26px; }
+
+  /* Таблица «поле — значение» (в деталях). Одна сетка на всю таблицу, чтобы
+     линейки слева и справа совпадали по высоте. */
+  .spec { margin: 10px 0 0; display: grid; grid-template-columns: 186px minmax(0, 1fr) 186px minmax(0, 1fr); column-gap: 14px; align-items: start; }
+  .sr { display: contents; }
+  .sr dt, .sr dd { padding: 10px 0; border-bottom: 1px solid var(--border-soft); }
+  .sr dt { font-size: 13.5px; color: var(--hushed); padding-right: 12px; }
+  .sr dd { margin: 0; font-family: var(--f-mono); font-size: 13.5px; color: var(--ink); line-height: 1.45; }
+  .sr dd .dim { color: var(--faint); }
+  .spec .sr:nth-child(2n) dt { padding-left: 22px; }
+  .sr.full dt { grid-column: 1; }
+  .sr.full dd { grid-column: 2 / -1; }
+
+  /* Полоса дат */
+  .cal { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; margin-top: 26px; padding-top: 4px; border-top: 1px solid var(--border-soft); }
+  .clp { position: relative; padding: 18px 12px 0 0; min-width: 0; }
+  .clp::after { content: ""; position: absolute; top: -4px; left: 0; width: 7px; height: 7px; border-radius: 50%; background: var(--panel-2); border: 1px solid rgba(255,255,255,0.32); }
+  .clp.on::after { background: var(--solar); border-color: var(--solar); }
+  .clp .d { display: block; font-family: var(--f-mono); font-size: 13px; color: var(--ink); }
+  .clp.on .d { color: var(--solar); }
+  .clp .t { display: block; font-size: 12.5px; color: var(--hushed); margin-top: 4px; line-height: 1.4; text-wrap: pretty; }
+
+  /* Выплата: формула словами + график и калькулятор */
+  .fx { margin: 10px 0 0; max-width: 720px; }
+  .fx p { margin: 0; font-size: 16px; line-height: 1.55; color: var(--ink); text-wrap: pretty; }
+  .fx p.d { margin-top: 8px; font-size: 13.5px; line-height: 1.6; color: var(--hushed); }
+  .pay { display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr); gap: 18px; align-items: stretch; margin-top: 18px; }
+  .pay-chart { background: var(--card); border: 1px solid var(--border-soft); border-radius: 12px; padding: 16px 18px 12px; min-width: 0; }
   .pay-chart svg { display: block; width: 100%; height: auto; }
-  .calc { background: var(--card); border: 1px solid var(--border-soft); border-radius: 14px; padding: 20px 22px; min-width: 0; display: flex; flex-direction: column; }
+  .calc { background: var(--card); border: 1px solid var(--border-soft); border-radius: 12px; padding: 18px 20px; min-width: 0; display: flex; flex-direction: column; }
   .calc .k { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.11em; text-transform: uppercase; color: var(--hushed); }
-  .calc-val { font-family: var(--f-mono); font-size: 30px; font-weight: 500; letter-spacing: -0.02em; margin-top: 8px; }
+  .calc-val { font-family: var(--f-mono); font-size: 29px; font-weight: 500; letter-spacing: -0.02em; margin-top: 8px; }
   .calc input[type=range] { width: 100%; margin: 14px 0 4px; accent-color: var(--solar); height: 26px; }
   .calc-scale { display: flex; justify-content: space-between; font-family: var(--f-mono); font-size: 11px; color: var(--faint); }
   .calc-out { margin-top: 16px; border-top: 1px solid var(--border-soft); padding-top: 14px; display: flex; flex-direction: column; gap: 10px; }
   .calc-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
   .calc-row .l { font-size: 13.5px; color: var(--hushed); }
   .calc-row .r { font-family: var(--f-mono); font-size: 16px; font-weight: 500; white-space: nowrap; }
-  .calc-row.big .r { font-size: 23px; }
+  .calc-row.big .r { font-size: 22px; }
   .calc-row .r.up { color: var(--up); } .calc-row .r.dn { color: var(--loss); }
   .calc-note { margin-top: 14px; font-size: 11.5px; line-height: 1.5; color: var(--faint); text-wrap: pretty; }
+  .exwrap { margin-top: 22px; }
+  .exwrap .ex { max-width: 720px; }
+  .exwrap .ex-v.zero { color: var(--hushed); }
 
-  /* Плитки параметров: пять в ряд на широком, три на планшете, две на телефоне.
-     Инлайновым стилем это задавать нельзя — он перебивает медиазапросы. */
-  .lstiles { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  /* Корзина — таблица */
+  .btbl { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  .btbl th, .btbl td { text-align: left; padding: 11px 12px 11px 0; border-bottom: 1px solid var(--border-soft); vertical-align: baseline; }
+  .btbl thead th { font-family: var(--f-mono); font-size: 11px; font-weight: 400; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); border-bottom-color: var(--border); padding-bottom: 8px; }
+  .btbl .bnm { font-size: 15px; font-weight: 600; color: var(--ink); }
+  .btbl .bfull { display: block; font-size: 11.5px; font-weight: 400; color: var(--faint); margin-top: 3px; }
+  .btbl .btk { font-family: var(--f-mono); font-size: 12.5px; color: var(--hushed); white-space: nowrap; }
+  .btbl .btk a { color: var(--hushed); border-bottom: 1px dotted rgba(255,255,255,0.24); }
+  .btbl .btk a:hover { color: var(--steel); border-bottom-color: var(--steel); }
+  .btbl .bsec { font-size: 13px; color: var(--hushed); }
+  .btbl .bw { font-family: var(--f-mono); font-size: 13.5px; color: #49D69C; text-align: right; padding-right: 0; white-space: nowrap; }
+  .btbl thead th:last-child { text-align: right; }
 
-  /* Шаги механики */
-  .lsteps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
-  .lstep { background: var(--card); border: 1px solid var(--border-soft); border-radius: 12px; padding: 16px 17px; min-width: 0; }
-  .lstep .n { font-family: var(--f-mono); font-size: 11px; color: var(--solar); letter-spacing: 0.1em; }
-  .lstep .t { font-size: 14px; line-height: 1.5; color: var(--hushed); margin-top: 8px; text-wrap: pretty; }
-  .lstep .t b { color: var(--ink); font-weight: 600; }
+  /* Риски — нумерованный список */
+  .rl { margin: 10px 0 0; padding: 0; list-style: none; counter-reset: rk; max-width: 780px; }
+  .rl li { counter-increment: rk; position: relative; padding: 0 0 12px 32px; font-size: 14.5px; line-height: 1.6; color: var(--hushed); text-wrap: pretty; }
+  .rl li::before { content: counter(rk); position: absolute; left: 0; top: 2px; width: 20px; height: 20px; border-radius: 50%; border: 1px solid rgba(224,112,90,0.5); color: var(--loss); font-family: var(--f-mono); font-size: 11px; display: flex; align-items: center; justify-content: center; }
+  .rl li b { color: var(--ink); font-weight: 600; }
 
-  /* Корзина */
-  .bkbar { display: flex; gap: 4px; margin-bottom: 14px; }
-  .bkbar .seg { height: 8px; border-radius: 4px; background: rgba(73,214,156,0.30); }
-  .bkbar .seg:nth-child(1) { background: rgba(73,214,156,0.62); }
-  .bkbar .seg:nth-child(2) { background: rgba(73,214,156,0.42); }
-  .bkgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
-  .bkc { background: var(--card); border: 1px solid var(--border-soft); border-radius: 12px; padding: 16px 17px; min-width: 0; display: flex; flex-direction: column; transition: border-color .18s; }
-  .bkc:hover { border-color: rgba(255,255,255,0.2); }
-  .bkc .top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
-  .bkc .nm { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
-  .bkc .wt { font-family: var(--f-mono); font-size: 13px; color: #49D69C; }
-  .bkc .tk { font-family: var(--f-mono); font-size: 11px; color: var(--faint); margin-top: 5px; }
-  .bkc .tk a { color: var(--faint); border-bottom: 1px dotted rgba(255,255,255,0.22); }
-  .bkc .tk a:hover { color: var(--steel); border-bottom-color: var(--steel); }
-  .bkc .why { font-size: 13px; line-height: 1.5; color: var(--hushed); margin-top: 10px; text-wrap: pretty; }
-  /* сектор прижат к низу — иначе строка гуляет по высоте вслед за длиной описания */
-  .bkc .sc { margin-top: auto; padding-top: 12px; font-size: 11px; color: var(--faint); }
-  .bk-src { margin-top: 12px; font-size: 11.5px; color: var(--faint); }
-
-  /* Сроки */
-  .tl { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 0; margin-top: 8px; }
-  .tlp { position: relative; padding: 26px 14px 0 0; min-width: 0; }
-  .tlp::before { content: ""; position: absolute; top: 7px; left: 0; right: 0; height: 1px; background: var(--border); }
-  .tlp:last-child::before { right: 70%; }
-  .tlp::after { content: ""; position: absolute; top: 3px; left: 0; width: 9px; height: 9px; border-radius: 50%; background: var(--panel-2); border: 1px solid rgba(255,255,255,0.32); }
-  .tlp.on::after { background: var(--solar); border-color: var(--solar); box-shadow: 0 0 0 4px rgba(238,125,27,0.18); }
-  .tlp .d { font-family: var(--f-mono); font-size: 13px; color: var(--ink); }
-  .tlp.on .d { color: var(--solar); }
-  .tlp .t { font-size: 13.5px; font-weight: 600; margin-top: 5px; }
-  .tlp .s { font-size: 12px; color: var(--hushed); margin-top: 4px; line-height: 1.45; text-wrap: pretty; }
+  .mats { margin-top: 8px; max-width: 720px; }
 
   /* Вопросы */
-  .faq { border-top: 1px solid var(--border-soft); max-width: 860px; }
+  .faq { margin-top: 4px; max-width: 860px; }
   .faq details { border-bottom: 1px solid var(--border-soft); }
-  .faq summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 12px; padding: 15px 2px; font-size: 15px; font-weight: 500; color: var(--ink); min-height: 44px; }
+  .faq details:last-child { border-bottom: none; }
+  .faq summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 12px; padding: 13px 2px; font-size: 15px; font-weight: 500; color: var(--ink); min-height: 44px; }
   .faq summary::-webkit-details-marker { display: none; }
   .faq summary::after { content: "+"; margin-left: auto; font-family: var(--f-mono); font-size: 17px; color: var(--hushed); flex: none; }
   .faq details[open] summary::after { content: "–"; }
   .faq summary:hover { color: var(--solar); }
   .faq .a { padding: 0 34px 16px 2px; font-size: 14px; line-height: 1.6; color: var(--hushed); text-wrap: pretty; }
 
-  /* Ролик и материалы рядом */
-  .lmedia { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 22px; align-items: start; }
-  .lmedia .o-video { border-radius: 14px; }
-  .lmedia .o-video video { max-height: 620px; }
-
-  /* Риск и сценарии */
-  .lrisk { display: flex; gap: 14px; align-items: flex-start; background: rgba(224,112,90,0.07); border: 1px solid rgba(224,112,90,0.26); border-radius: 12px; padding: 16px 18px; }
-  .lrisk i { flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--loss); margin-top: 7px; }
-  .lrisk .tx { font-size: 14px; line-height: 1.6; color: rgba(242,243,247,0.82); text-wrap: pretty; }
-  .lrisk .tx b { color: var(--ink); font-weight: 600; }
-  .lex { max-width: 740px; }
-  .lex .ex-v.zero { color: var(--hushed); }
-
-  .lend { margin-top: 34px; display: flex; flex-wrap: wrap; align-items: center; gap: 14px; padding: 20px 22px; background: var(--card); border: 1px solid var(--border-soft); border-radius: 14px; }
+  .lend { margin-top: 38px; display: flex; flex-wrap: wrap; align-items: center; gap: 14px; padding: 20px 22px; background: var(--card); border: 1px solid var(--border-soft); border-radius: 12px; }
   .lend .tx { font-size: 15px; font-weight: 500; }
   .lend .sub { font-size: 12.5px; color: var(--hushed); margin-top: 4px; }
   .lend .act { margin-left: auto; display: flex; gap: 9px; flex-wrap: wrap; }
   .lend .ct-btn { min-height: 44px; }
   /* Попап CTA у правого края открываем внутрь страницы: иначе его ширина даёт
-     горизонтальный скролл всей страницы (видно только замером scrollWidth —
-     попап закрыт и глазами его не поймать). */
+     горизонтальный скролл всей страницы (видно только замером scrollWidth). */
   .lend .act .ct-menu { left: auto; right: 0; }
 
   @media (max-width: 1023px) {
-    .lh-grid { grid-template-columns: minmax(0, 1fr) 260px; gap: 24px; padding: 28px 26px 26px; }
+    .lh-grid { grid-template-columns: minmax(0, 1fr) 250px; gap: 24px; padding: 26px; }
     .lh-name { font-size: 42px; }
+    .why, .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 28px; }
+    .wh + .wh { border-left: none; padding-left: 0; margin-left: 0; }
+    .spec { grid-template-columns: 186px minmax(0, 1fr); }
+    .spec .sr:nth-child(2n) dt { padding-left: 0; }
+    .sr.full dd { grid-column: 2; }
     .pay { grid-template-columns: 1fr; }
-    .lsteps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .lstiles { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    .lmedia { grid-template-columns: 1fr; }
-    .lmedia .o-video video { max-height: 70vh; }
-    .tl { grid-auto-flow: row; grid-auto-columns: auto; }
-    .tlp { padding: 0 0 18px 22px; }
-    .tlp::before { top: 0; bottom: 0; left: 4px; right: auto; width: 1px; height: auto; }
-    .tlp:last-child::before { bottom: 70%; right: auto; }
-    .tlp::after { top: 2px; left: 0; }
+    .cal { grid-auto-flow: row; grid-auto-columns: auto; border-top: none; }
+    .clp { padding: 0 0 14px 20px; border-left: 1px solid var(--border-soft); }
+    .clp::after { top: 3px; left: -4px; }
+    .clp .t { display: inline; margin-left: 10px; }
   }
   @media (max-width: 720px) {
-    .lh-grid { grid-template-columns: 1fr; gap: 20px; padding: 18px 18px 22px; }
-    .lh-media { aspect-ratio: 16 / 10; order: -1; }
-    .lh-media img, .lh-media video { object-position: 50% 42%; }
+    .lh-grid { grid-template-columns: 1fr; gap: 18px; padding: 16px 16px 20px; }
+    /* Плеер на телефоне — под текстом, 9:16 целиком, но не выше ~2/3 экрана */
+    .lh-media { order: 1; width: min(100%, calc(66vh * 9 / 16)); margin: 0 auto; aspect-ratio: 9 / 16; }
+    /* «+» остаётся в строке заголовка, подсказка переносится под него */
+    .fd summary::after { order: 1; }
+    .fd-t { order: 0; }
+    .fd-h { order: 2; }
     .lh-name { font-size: 32px; }
-    .lh-lead { font-size: 15px; }
-    .lh-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 20px; margin-top: 20px; }
-    .lh-stats .v { font-size: 24px; }
+    .lh-lead { font-size: 16px; }
     .lh-cta .o-doc-btn { font-size: 12.5px; padding: 8px 10px; }
-    .lsteps { grid-template-columns: 1fr; }
-    .lstiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .ls { margin-top: 32px; }
-    .ls-h { font-size: 21px; }
-    .calc-val { font-size: 26px; }
+    .ls-h { font-size: 22px; }
+    .why, .facts { grid-template-columns: 1fr; gap: 0; }
+    .wh { padding: 16px 0 4px; border-bottom: 1px solid var(--border-soft); }
+    .wh .n { font-size: 30px; }
+    .fc { padding: 16px 0 14px; }
+    .fc .v { font-size: 28px; }
+    .fd summary { flex-wrap: wrap; gap: 4px 10px; }
+    .fd-h { white-space: normal; flex-basis: 100%; }
+    .spec { grid-template-columns: 1fr; }
+    .sr dt { font-size: 12.5px; padding: 9px 0 0; border-bottom: none; }
+    .sr dd { padding: 2px 0 9px; }
+    .sr.full dd { grid-column: 1; }
+    .btbl .bsec { display: none; }
+    .btbl thead th:nth-child(3) { display: none; }
+    .calc-val { font-size: 25px; }
     .lend .act { margin-left: 0; width: 100%; }
   }
 </style>
@@ -770,13 +807,23 @@
   }
 
   // ── ЛЕНДИНГ ВЫПУСКА ───────────────────────────────────────────────────────
-  // Выпуск с постером, корзиной и роликом (o.landing) показывается не карточкой,
-  // а страницей: герой → выплата → корзина → сроки → параметры → материалы →
-  // ролик → вопросы → риск. Числа считаются из полей записи (price, capPay,
-  // nominal), а не зашиты: поменяется цена размещения — поменяются и график,
-  // и калькулятор, и подписи.
+  // Размещение с флагом o.landing рисуется не карточкой-паспортом, а страницей
+  // из ТРЁХ экранов и свёрнутого хвоста (схема Руслана, 18.09.2026: «идея,
+  // зачем, условия — и ниже уже все детали для самых желающих»):
+  //   ИДЕЯ    — герой: название, одна фраза о сути, ролик партнёра ПЛЕЕРОМ
+  //             (не строкой-файлом), статус приёма заявок и действие.
+  //   ЗАЧЕМ   — три тезиса рынка с цифрой каждый, источник подписан.
+  //   УСЛОВИЯ — шесть фактов сделки крупно, среди них честный шестой:
+  //             «если корзина не вырастет — 0 ₽»; тут же документы и кнопка.
+  //   ДЕТАЛИ  — свёрнутые разделы: выплата с графиком и калькулятором,
+  //             корзина, все условия и даты, риски, документы, вопросы.
+  // Каждое число живёт в одном месте: в «Условиях» — как факт, в «Деталях» —
+  // как механика. В герое и тезисах цифр сделки нет вовсе.
+  // Числа считаются из полей записи (price, capPay, nominal): поменяется цена
+  // размещения — поменяются и факты, и график, и калькулятор.
   var RUB = v => Math.round(v).toLocaleString("ru-RU");
   var pctTxt = v => (v > 0 ? "+" : v < 0 ? "−" : "") + fmt2(Math.abs(v)) + "%";
+  var esc = v => S.esc(v);
 
   // Выплата колл-спреда в % номинала при изменении корзины g (%)
   function csPay(o, g) { return Math.min(Math.max(g, 0), Number(o.capPay) || 100); }
@@ -810,20 +857,15 @@
       el.push('<line x1="' + g.L + '" y1="' + y(v) + '" x2="' + (g.W - g.R) + '" y2="' + y(v) + '" stroke="rgba(255,255,255,' + (v === 0 ? 0.26 : 0.1) + ')" stroke-width="1"' + (v === 0 ? ' stroke-dasharray="4 4"' : '') + '/>');
       el.push('<text x="' + (g.L - 8) + '" y="' + (y(v) + 4) + '" text-anchor="end" font-size="11" ' + mono + ' fill="rgba(242,243,247,' + (v === 0 ? 0.72 : 0.5) + ')">' + pctTxt(Math.round(v)) + '</text>');
     });
-    // зона прибыли — от безубытка до правого края
     el.push('<defs><linearGradient id="csg" x1="0" y1="0" x2="0" y2="1">' +
       '<stop offset="0%" stop-color="' + col + '" stop-opacity="0.24"/><stop offset="100%" stop-color="' + col + '" stop-opacity="0.02"/></linearGradient></defs>');
     el.push('<path d="M' + x(be) + ' ' + y(0) + ' L' + x(cap) + ' ' + y(capMax) + ' L' + x(g.x1) + ' ' + y(capMax) + ' L' + x(g.x1) + ' ' + y(0) + ' Z" fill="url(#csg)"/>');
-    // линия выплаты: полка потери → подъём → полка потолка
     el.push('<path d="M' + x(g.x0) + ' ' + y(g.y0) + ' L' + x(0) + ' ' + y(g.y0) + '" stroke="rgba(242,243,247,0.42)" stroke-width="2.6" fill="none" stroke-linecap="round"/>');
     el.push('<path d="M' + x(0) + ' ' + y(g.y0) + ' L' + x(cap) + ' ' + y(capMax) + ' L' + x(g.x1) + ' ' + y(capMax) + '" stroke="' + col + '" stroke-width="2.6" fill="none" stroke-linejoin="round" stroke-linecap="round"/>');
-    // безубыток — подпись СЛЕВА от точки, иначе её задевает подвижная метка
     el.push('<circle cx="' + x(be) + '" cy="' + y(0) + '" r="4" fill="#55C08A"/>');
     el.push('<text x="' + (x(be) - 9) + '" y="' + (y(0) - 11) + '" text-anchor="end" font-size="11.5" ' + mono + ' fill="#55C08A">безубыток +' + fmt2(be) + '%</text>');
-    // потолок
     el.push('<circle cx="' + x(cap) + '" cy="' + y(capMax) + '" r="4" fill="' + col + '"/>');
     if (!g.narrow) el.push('<text x="' + (x(cap) + 10) + '" y="' + (y(capMax) + 16) + '" font-size="11.5" ' + mono + ' fill="' + col + '">дальше не растёт</text>');
-    // подвижная метка сценария
     el.push('<line id="cs-gx" x1="' + x(be) + '" y1="' + g.T + '" x2="' + x(be) + '" y2="' + y(g.y0) + '" stroke="rgba(255,255,255,0.28)" stroke-width="1" stroke-dasharray="3 4"/>');
     el.push('<circle id="cs-dot" cx="' + x(be) + '" cy="' + y(0) + '" r="6" fill="#0B0C10" stroke="' + col + '" stroke-width="2.6"/>');
     (g.narrow ? [g.x0, 0, cap] : [g.x0, 0, Math.round(cap / 2), cap, g.x1]).forEach(function (v) {
@@ -836,8 +878,8 @@
   }
 
   // Калькулятор сценария. Никакой доходности «в год»: выплата в % номинала, сумма
-  // в рублях и результат на вложенное за срок — ровно то, что стоит в таблице
-  // сценариев, только подвижное.
+  // в рублях и результат на вложенное за срок — то же, что в таблице сценариев,
+  // только подвижное.
   function csCalc(o) {
     var cap = Number(o.capPay) || 100, max = Math.round(cap * 1.6);
     return '<div class="calc">' +
@@ -855,8 +897,8 @@
     '</div>';
   }
 
-  // Первая отрисовка графика уже в разметке; при смене раскладки (поворот
-  // экрана) перерисовываем — иначе останется геометрия чужой ширины.
+  // Первая отрисовка графика уже в разметке; при смене раскладки (поворот экрана)
+  // перерисовываем — иначе останется геометрия чужой ширины.
   function csMount(o) {
     var box = document.querySelector(".pay-chart");
     if (!box) return;
@@ -865,7 +907,6 @@
     if (mq.addEventListener) mq.addEventListener("change", function () { box.innerHTML = csChart(o); csWire(o); });
   }
 
-  // Слайдер и подвижная метка на графике — геометрия общая (csGeo).
   function csWire(o) {
     var r = document.getElementById("cs-range");
     if (!r) return;
@@ -886,167 +927,178 @@
     upd();
   }
 
-  // Герой: кадр виден всегда, поверх него — беззвучная петля из ролика. Петлю не
-  // включаем на узких экранах (мобильный трафик) и при prefers-reduced-motion —
-  // там остаётся неподвижный кадр.
+  // Плеер в герое: постер с кнопкой «смотреть», по нажатию — сам ролик со
+  // штатными контролами. Ролик грузится только по нажатию (preload=none):
+  // 24 МБ не должны ехать каждому, кто открыл страницу.
   function heroWire(o) {
+    var box = document.getElementById("lh-play");
     var v = document.getElementById("lh-vid");
-    if (!v || !o.hero || !o.hero.loop) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    if (window.matchMedia("(max-width: 720px)").matches) return;
-    v.addEventListener("canplay", function () { v.classList.add("on"); }, { once: true });
-    v.src = o.hero.loop;
-    var p = v.play();
-    if (p && p.catch) p.catch(function () { });
+    if (!box || !v) return;
+    var start = function () {
+      if (box.classList.contains("playing")) return;
+      box.classList.add("playing");
+      v.setAttribute("controls", "");
+      var p = v.play();
+      if (p && p.catch) p.catch(function () { });
+    };
+    box.querySelector(".lh-pb").addEventListener("click", start);
+    v.addEventListener("click", start);
+  }
+
+  // ── Кирпичи ───────────────────────────────────────────────────────────────
+  function sec(title, note, inner, cls, id) {
+    return '<section class="ls' + (cls ? ' ' + cls : '') + '"' + (id ? ' id="' + id + '"' : '') + '><div class="ls-hd"><h3 class="ls-h">' + esc(title) + '</h3>' +
+      (note ? '<p class="ls-sub">' + note + '</p>' : '') + '</div>' + inner + '</section>';
+  }
+  // Таблица «поле — значение» — форма для неизменных параметров в деталях.
+  function spec(rows) {
+    return '<dl class="spec">' + rows.filter(Boolean).map(r =>
+      '<div class="sr' + (r[3] ? ' ' + r[3] : '') + '"><dt>' + r[0] + '</dt>' +
+      '<dd' + (r[2] ? ' class="' + r[2] + '"' : '') + '>' + r[1] + '</dd></div>').join("") + '</dl>';
+  }
+  // Свёрнутый раздел деталей: строка-заголовок с подсказкой, содержимое за тапом.
+  function fold(title, hint, inner) {
+    return '<details class="fd"><summary><span class="fd-t">' + esc(title) + '</span>' +
+      (hint ? '<span class="fd-h">' + esc(hint) + '</span>' : '') + '</summary><div class="fd-b">' + inner + '</div></details>';
   }
 
   function landingHTML(o) {
     var price = Number(o.price), cap = Number(o.capPay) || 100;
     var capMax = Math.round(csRes(o, cap)), inv = o.nominal * price / 100;
     var docs = o.docs || [];
-    var docBtns = docs.map(d => '<a class="o-doc-btn" href="' + S.esc(d.file) + '" target="_blank" rel="noopener" download>' +
-      docIcon + '<span>' + S.esc(d.short || d.name) + '</span></a>').join("");
+    var docBtns = docs.map(d => '<a class="o-doc-btn" href="' + esc(d.file) + '" target="_blank" rel="noopener" download>' +
+      docIcon + '<span>' + esc(d.short || d.name) + '</span></a>').join("");
+    var vLabel = (o.video && (o.video.title || ("Видео о продукте: " + o.name)) || "").replace(/"/g, "&quot;");
 
-    // ГЕРОЙ
+    // ── ИДЕЯ: герой с плеером. Цифр сделки здесь нет — они в «Условиях».
+    var media = o.video
+      ? '<div class="lh-media" id="lh-play">' +
+          '<div class="lh-badge"><span class="badge live"><span class="dot"></span>' + (esc(o.statusLabel) || "Идёт размещение") + '</span></div>' +
+          '<video id="lh-vid" playsinline preload="none" aria-label="' + vLabel + '"' +
+            (o.video.poster ? ' poster="' + esc(o.video.poster) + '"' : '') + '>' +
+            '<source src="' + esc(o.video.src) + '" type="video/mp4">Ваш браузер не поддерживает видео.</video>' +
+          '<button class="lh-pb" type="button" aria-label="Смотреть ролик о выпуске">' +
+            '<span class="ico"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true"><path d="M7 4.5 L17 11 L7 17.5 Z" fill="#0C0A08"/></svg></span>' +
+            '<span class="lbl">Смотреть ролик' + (o.video.meta ? '<span class="dim"> · ' + esc(o.video.meta) + '</span>' : '') + '</span></button>' +
+        '</div>'
+      : (o.hero && o.hero.poster
+          ? '<div class="lh-media"><img src="' + esc(o.hero.poster) + '" alt="" aria-hidden="true"></div>' : '');
     var hero = '<section class="lh">' +
-      (o.hero && o.hero.poster ? '<div class="lh-bg"><img src="' + S.esc(o.hero.poster) + '" alt="" aria-hidden="true"></div>' : '') +
+      (o.hero && o.hero.poster ? '<div class="lh-bg"><img src="' + esc(o.hero.poster) + '" alt="" aria-hidden="true"></div>' : '') +
       '<div class="lh-scrim"></div>' +
       '<div class="lh-grid"><div class="lh-in">' +
-        '<div class="lh-kick">' + S.esc(o.kind) +
-          (o.partner ? '<span class="sep">·</span><span>' + S.esc(o.partner.note || "совместно с") + ' ' +
-            (o.partner.url ? '<a href="' + S.esc(o.partner.url) + '" target="_blank" rel="noopener">' + S.esc(o.partner.name) + ' ↗</a>' : S.esc(o.partner.name)) + '</span>' : '') +
+        '<div class="lh-kick">' + esc(o.kind) +
+          (o.partner ? '<span class="sep">·</span><span>' + esc(o.partner.note || "совместно с") + ' ' +
+            (o.partner.url ? '<a href="' + esc(o.partner.url) + '" target="_blank" rel="noopener">' + esc(o.partner.name) + ' ↗</a>' : esc(o.partner.name)) + '</span>' : '') +
         '</div>' +
-        '<h2 class="lh-name">' + S.esc(o.name) + '</h2>' +
-        (o.lead ? '<p class="lh-lead">' + S.esc(o.lead) + '</p>' : '') +
-        '<div class="lh-stats">' +
-          '<div class="st"><div class="v">' + fmt2(price) + '%</div><div class="k">цена входа, от номинала</div></div>' +
-          '<div class="st"><div class="v">до ' + fmt2(Math.round((100 + capMax) / 10) / 10) + '×</div><div class="k">потолок выплаты (' + pctTxt(capMax) + ')</div></div>' +
-          '<div class="st"><div class="v">' + tenorTxt(o.tenor) + '</div><div class="k">до погашения ' + S.esc(o.maturity) + '</div></div>' +
-        '</div>' +
-        '<div class="lh-cta"><span id="o-ct-host"></span>' + docBtns + '<span id="o-sh-host"></span></div>' +
-        '<div class="lh-foot">' +
-          (o.venue ? '<span>' + S.esc(o.venue) + '</span>' : '') +
-          (o.minBuy ? '<span>' + S.esc(o.minBuy) + '</span>' : '') +
-          (o.isin ? '<span>ISIN ' + S.esc(o.isin) + '</span>' : '') +
-          (o.hero && o.hero.credit ? '<span class="cr">' + S.esc(o.hero.credit) + '</span>' : '') +
-        '</div>' +
-      '</div>' +
-      (o.hero && o.hero.poster
-        ? '<div class="lh-media">' +
-            '<div class="lh-badge"><span class="badge live"><span class="dot"></span>' + (S.esc(o.statusLabel) || "Идёт размещение") + '</span></div>' +
-            '<img src="' + S.esc(o.hero.poster) + '" alt="" aria-hidden="true">' +
-            (o.hero.loop ? '<video id="lh-vid" muted loop playsinline preload="none" aria-hidden="true" tabindex="-1"></video>' : '') +
-          '</div>'
-        : '') +
-      '</div></section>';
+        '<h2 class="lh-name">' + esc(o.name) + '</h2>' +
+        (o.lead ? '<p class="lh-lead">' + esc(o.lead) + '</p>' : '') +
+        '<div class="lh-cta"><span id="o-ct-host"></span><a class="o-doc-btn" href="#terms">Условия ↓</a><span id="o-sh-host"></span></div>' +
+      '</div>' + media + '</div></section>';
 
-    // ВЫПЛАТА
-    var steps = [
-      ['Шаг 1', 'Вы платите <b>' + RUB(inv) + ' ₽</b> за облигацию номиналом ' + RUB(o.nominal) + ' ₽. Это вся сумма вложения: доплат и маржин-коллов не бывает.'],
-      ['Шаг 2', 'Фиксируется <b>начальный уровень корзины</b> — пять акций с равными весами по 20%.'],
-      ['Шаг 3', 'Через ' + tenorTxt(o.tenor) + ' считается рост корзины. Выплата равна росту в процентах от номинала, но <b>не больше ' + fmt2(cap) + '%</b> номинала.'],
-      ['Шаг 4', 'Выплата пересчитывается <b>по курсу ЦБ USD/RUB</b> и уменьшается на валютный спред 3%. Погашение — ' + S.esc(o.maturity) + '.']
-    ].map(s => '<div class="lstep"><div class="n">' + s[0] + '</div><div class="t">' + s[1] + '</div></div>').join("");
+    // ── ЗАЧЕМ: три тезиса рынка с цифрой каждый. Цифры — из презентации партнёра,
+    //    подпись с источниками стоит прямо под ними; это прогнозы, так и написано.
+    var whySec = (o.why && o.why.length)
+      ? sec("Зачем", "", '<div class="why">' + o.why.map(w =>
+          '<div class="wh"><div class="n">' + esc(w.n) + '</div><div class="t">' + esc(w.t) + '</div><div class="d">' + esc(w.d) + '</div></div>').join("") +
+          '</div>' + (o.whySrc ? '<p class="src">' + esc(o.whySrc) + '</p>' : ''))
+      : "";
 
-    var payBlk = '<section class="ls"><h3 class="ls-h">Как устроена выплата</h3>' +
-      '<p class="ls-sub">Колл-спред: вы платите ' + fmt2(price) + '% номинала, а доход считается от полного номинала — ' +
-        'поэтому рост корзины на ' + fmt2(cap) + '% превращается в ' + pctTxt(capMax) + ' на вложенное. ' +
-        'Обратная сторона: если корзина не выросла, выплаты нет вовсе.</p>' +
-      '<div class="pay"><div class="pay-chart">' + csChart(o) + '</div>' + csCalc(o) + '</div>' +
-      '<div class="lsteps">' + steps + '</div></section>';
+    // ── УСЛОВИЯ: шесть фактов крупно. Шестой — про ноль, и он стоит в одном ряду
+    //    с остальными, а не сноской.
+    var facts = [
+      [ fmt2(price) + '%', 'цена входа', 'от номинала: ' + RUB(inv) + ' ₽ за бумагу', 'hi' ],
+      [ fmt2(cap) + '%', 'потолок выплаты', 'от номинала: до ' + fmt2(Math.round((100 + capMax) / 10) / 10) + '× на вложенное*', 'hi' ],
+      [ tenorTxt(o.tenor), 'срок', 'погашение ' + esc(o.maturity) ],
+      [ esc(o.placement || ""), (o.placementLabel || 'приём заявок'), esc(o.venue || "") + (o.minBuy ? ', ' + esc(o.minBuy) : '') ],
+      [ esc(o.isin || ""), 'ISIN', 'у любого брокера — по этому коду' ],
+      [ '0 ₽', 'если корзина не выросла', 'выплаты нет, вложенные ' + RUB(inv) + ' ₽ теряются', 'loss' ],
+    ];
+    var termsSec = sec("Условия", "",
+      '<div class="facts">' + facts.map(f => '<div class="fc' + (f[3] ? ' ' + f[3] : '') + '"><div class="v">' + f[0] + '</div>' +
+        '<div class="k">' + f[1] + '</div><div class="d">' + f[2] + '</div></div>').join("") + '</div>' +
+      '<p class="src">* До валютной переоценки и спреда 3%: выплата пересчитывается по курсу ЦБ USD/RUB. Как считается — в деталях ниже.</p>' +
+      '<div class="lh-cta terms-cta"><span id="o-ct-host2"></span>' + docBtns + '</div>', "", "terms");
 
-    // КОРЗИНА
-    var basketBlk = "";
-    if (o.basket && o.basket.length) {
-      var secs = o.sectors || [];
-      var bar = secs.length ? '<div class="bkbar">' + secs.map(s => '<div class="seg" style="flex:' + s.w + '" title="' + S.esc(s.name) + ' · ' + s.w + '%"></div>').join("") + '</div>' : "";
-      var cards = o.basket.map(b => '<div class="bkc">' +
-        '<div class="top"><span class="nm">' + S.esc(b.name) + '</span><span class="wt">' + b.w + '%</span></div>' +
-        '<div class="tk">' + (b.quote ? '<a href="' + S.esc(b.quote) + '" target="_blank" rel="noopener">' + S.esc(b.ticker) + ' ↗</a>' : S.esc(b.ticker)) + '</div>' +
-        (b.why ? '<div class="why">' + S.esc(b.why) + '</div>' : '') +
-        (b.sector ? '<div class="sc">' + S.esc(b.sector) + '</div>' : '') +
-      '</div>').join("");
-      basketBlk = '<section class="ls"><h3 class="ls-h">Что внутри корзины</h3>' +
-        '<p class="ls-sub">Пять акций равными долями по 20%' +
-          (secs.length ? ': ' + secs.map(s => S.esc(s.name).toLowerCase() + ' — ' + s.w + '%').join(", ") : '') +
-          '. Веса зафиксированы в условиях выпуска и в течение срока не меняются.</p>' +
-        bar + '<div class="bkgrid">' + cards + '</div>' +
-        '<div class="bk-src">Тикеры, биржи и источники котировок — из ключевых условий выпуска; описания компаний — из презентации ' +
-          (o.partner ? S.esc(o.partner.name) : "партнёра") + '.</div>' +
-      '</section>';
-    }
-
-    // СРОКИ
-    var tlBlk = (o.timeline && o.timeline.length)
-      ? '<section class="ls"><h3 class="ls-h">Как пойдёт срок</h3><div class="tl">' +
-        o.timeline.map((p, i) => '<div class="tlp' + (i === 0 ? " on" : "") + '"><div class="d">' + S.esc(p.d) + '</div>' +
-          '<div class="t">' + S.esc(p.t) + '</div>' + (p.s ? '<div class="s">' + S.esc(p.s) + '</div>' : '') + '</div>').join("") +
-        '</div></section>' : "";
-
-    // ПАРАМЕТРЫ
-    var tiles = "";
-    tiles += tile(fmt2(price) + "%", "цена размещения", true);
-    tiles += tile(fmt2(cap) + "%", "максимальная выплата", true);
-    tiles += tile(RUB(o.nominal) + " " + o.currency, "номинал");
-    tiles += tile(tenorTxt(o.tenor), "срок");
-    if (o.fx) tiles += tile(o.fx, "валюта");
-    if (o.placement) tiles += tile(o.placement, o.placementLabel || "старт размещения");
-    if (o.maturity) tiles += tile(o.maturity, "дата погашения");
-    if (o.isin) tiles += tile(o.isin, "ISIN");
-    if (o.venue) tiles += tile(o.venue, "площадка");
-    if (o.serial) tiles += tile(o.serial, "серия");
-    var dealers = (o.dealers && o.dealers.length)
-      ? '<div class="blk" style="margin-top:16px"><h3 class="k">Дилеры-ориентиры</h3><div class="dealers">' +
-        o.dealers.map(x => '<span>' + S.esc(x) + '</span>').join("") + '</div></div>' : "";
-    var paramBlk = '<section class="ls"><h3 class="ls-h">Параметры выпуска</h3>' +
-      '<div class="tiles lstiles">' + tiles + '</div>' +
-      (S.esc(o.issuer) ? '<div class="ls-sub" style="margin:0;max-width:none">Эмитент: ' + S.esc(o.issuer) +
-        (o.regnum ? ' · регистрационный номер выпуска ' + S.esc(o.regnum) : '') + '</div>' : '') +
-      dealers + '</section>';
-
-    // РОЛИК + МАТЕРИАЛЫ
-    var vLabel = (o.video && (o.video.title || ("Видео о продукте: " + o.name)) || "").replace(/"/g, "&quot;");
-    var mediaBlk = (o.video || docs.length)
-      ? '<section class="ls"><h3 class="ls-h">Материалы</h3><div class="lmedia">' +
-        (o.video
-          ? '<div class="o-video"><video controls playsinline preload="none" aria-label="' + vLabel + '"' +
-            (o.video.poster ? ' poster="' + S.esc(o.video.poster) + '"' : '') + '>' +
-            '<source src="' + S.esc(o.video.src) + '" type="video/mp4">Ваш браузер не поддерживает видео.</video></div>'
-          : '<div></div>') +
-        '<div>' + (o.video && o.video.title ? '<div class="ls-sub">' + S.esc(o.video.title) + ' — что за отрасль, кто в корзине и почему.</div>' : '') +
-          docs.map(d => '<a class="doc" href="' + S.esc(d.file) + '" target="_blank" rel="noopener" download><span class="ic">' + docIcon + '</span>' +
-            '<span><span class="nm">' + S.esc(d.name) + '</span><span class="mt">' + S.esc(d.ext) + ' · ' + S.esc(d.size) + '</span></span>' +
-            '<span class="dl">' + dlIcon + '</span></a>').join("") +
-        '</div></div></section>' : "";
-
-    // ВОПРОСЫ
-    var faqBlk = (o.faq && o.faq.length)
-      ? '<section class="ls"><h3 class="ls-h">Частые вопросы</h3><div class="faq">' +
-        o.faq.map(f => '<details><summary>' + S.esc(f.q) + '</summary><div class="a">' + S.esc(f.a) + '</div></details>').join("") +
-        '</div></section>' : "";
-
-    // РИСК + СЦЕНАРИИ
-    // Ноль красим нейтрально: «выплата 0%» рядом с «−100%» в той же строке
-    // зелёным читалась как хорошая новость.
+    // ── ДЕТАЛИ: всё остальное, свёрнуто.
+    var fml = o.formula ? (Array.isArray(o.formula) ? o.formula : [o.formula]) : [];
+    var formula = fml.length
+      ? '<div class="fx">' + fml.map((t, i) => '<p' + (i ? ' class="d"' : '') + '>' + esc(t) + '</p>').join("") + '</div>' : "";
     var exBlk = (o.example && o.example.rows && o.example.rows.length)
-      ? '<div class="blk lex" style="margin-top:18px"><h3 class="k">' + S.esc(o.example.title || "Сценарии") + '</h3><div class="ex"><table class="ex-tbl">' +
-        (o.example.cols ? '<thead><tr>' + o.example.cols.map(c => '<th scope="col">' + S.esc(c) + '</th>').join("") + '</tr></thead>' : '') +
-        '<tbody>' + o.example.rows.map(r => '<tr><th scope="row" class="ex-l">' + S.esc(r[0]) + '</th>' +
+      ? '<div class="exwrap"><div class="ls-k">' + esc(o.example.title || "Сценарии") + '</div><div class="ex"><table class="ex-tbl">' +
+        (o.example.cols ? '<thead><tr>' + o.example.cols.map(c => '<th scope="col">' + esc(c) + '</th>').join("") + '</tr></thead>' : '') +
+        '<tbody>' + o.example.rows.map(r => '<tr><th scope="row" class="ex-l">' + esc(r[0]) + '</th>' +
           r.slice(1).map(v => {
             var cls = /^0([,.]0+)?%?$/.test(String(v).trim()) ? "zero" : (String(v).indexOf("−") === 0 ? "dn" : "up");
-            return '<td class="ex-v ' + cls + '">' + S.esc(v) + '</td>';
+            return '<td class="ex-v ' + cls + '">' + esc(v) + '</td>';
           }).join("") + '</tr>').join("") +
-        '</tbody></table></div>' + (o.example.note ? '<div class="ex-note">' + S.esc(o.example.note) + '</div>' : '') + '</div>'
+        '</tbody></table></div>' + (o.example.note ? '<div class="ex-note">' + esc(o.example.note) + '</div>' : '') + '</div>'
       : "";
-    var riskBlk = '<section class="ls"><h3 class="ls-h">Риск</h3>' +
-      '<div class="lrisk"><i></i><div class="tx"><b>Можно потерять всю вложенную сумму.</b> ' + S.esc(o.risk) + '</div></div>' +
-      exBlk + '</section>';
+    var payFold = fold("Как считается выплата", "формула, график, калькулятор сценария",
+      formula + '<div class="pay"><div class="pay-chart">' + csChart(o) + '</div>' + csCalc(o) + '</div>' + exBlk);
+
+    var basketFold = "";
+    if (o.basket && o.basket.length) {
+      var rows = o.basket.map(b => '<tr>' +
+        '<th scope="row" class="bnm">' + esc(b.name) + (b.full ? '<span class="bfull">' + esc(b.full) + '</span>' : '') + '</th>' +
+        '<td class="btk">' + (b.quote ? '<a href="' + esc(b.quote) + '" target="_blank" rel="noopener">' + esc(b.ticker) + ' ↗</a>' : esc(b.ticker)) + '</td>' +
+        '<td class="bsec">' + esc(b.sector || "") + '</td>' +
+        '<td class="bw">' + b.w + '%</td></tr>').join("");
+      basketFold = fold("Состав корзины", o.basket.map(b => b.name).join(", "),
+        '<table class="btbl"><thead><tr><th scope="col">Компания</th><th scope="col">Тикер</th>' +
+        '<th scope="col">Направление</th><th scope="col">Вес</th></tr></thead><tbody>' + rows + '</tbody></table>' +
+        '<p class="src">Уровень корзины — среднее изменение пяти акций с равными весами; веса зафиксированы в условиях выпуска. ' +
+        'Тикеры и биржи — из ключевых условий выпуска, направления — из презентации ' + (o.partner ? esc(o.partner.name) : "партнёра") + '.</p>');
+    }
+
+    var allTerms = spec([
+      [ "Инструмент", esc(o.kind) ],
+      [ "Базовый актив", esc(o.reference) ],
+      [ "Цена размещения", fmt2(price) + '% номинала — ' + RUB(inv) + ' ₽ за бумагу' ],
+      [ "Номинал", RUB(o.nominal) + " " + esc(o.currency) ],
+      [ "Максимальная выплата", fmt2(cap) + '% номинала' ],
+      [ "Срок", tenorTxt(o.tenor) ],
+      o.fx ? [ "Валюта расчёта", esc(o.fx) ] : null,
+      o.minBuy ? [ "Минимальная покупка", esc(o.minBuy).replace(/^покупка /, "") ] : null,
+      o.venue ? [ "Где купить", esc(o.venue) ] : null,
+      o.isin ? [ "ISIN", esc(o.isin) ] : null,
+      o.serial ? [ "Серия", esc(o.serial) ] : null,
+      o.issuer ? [ "Эмитент", esc(o.issuer) + (o.regnum ? '<span class="dim"> · рег. номер ' + esc(o.regnum) + '</span>' : '') ] : null,
+      (o.dealers && o.dealers.length) ? [ "Дилеры-ориентиры", o.dealers.map(esc).join(" · "), "", "full" ] : null,
+    ]);
+    var cal = (o.timeline && o.timeline.length)
+      ? '<div class="cal">' + o.timeline.map((p, i) =>
+          '<div class="clp' + (i === 0 ? " on" : "") + '"><span class="d">' + esc(p.d) + '</span>' +
+          '<span class="t">' + esc(p.t) + '</span></div>').join("") + '</div>'
+      : "";
+    var termsFold = fold("Все условия и даты", "параметры выпуска, эмитент, календарь", allTerms + cal);
+
+    var risks = (o.risks && o.risks.length) ? o.risks : (o.risk ? [{ d: o.risk }] : []);
+    var riskFold = risks.length
+      ? fold("Риски", risks.map(r => r.t).filter(Boolean).join(", ").toLowerCase(),
+          '<ol class="rl">' + risks.map(r => '<li>' + (r.t ? '<b>' + esc(r.t) + '.</b> ' : '') + esc(r.d || r) + '</li>').join("") + '</ol>')
+      : "";
+
+    var docsFold = docs.length
+      ? fold("Документы", docs.map(d => d.short || d.name).join(", "),
+          '<div class="mats">' + docs.map(d => '<a class="doc" href="' + esc(d.file) + '" target="_blank" rel="noopener" download><span class="ic">' + docIcon + '</span>' +
+            '<span><span class="nm">' + esc(d.name) + '</span><span class="mt">' + esc(d.ext) + ' · ' + esc(d.size) + '</span></span>' +
+            '<span class="dl">' + dlIcon + '</span></a>').join("") + '</div>')
+      : "";
+
+    var faqFold = (o.faq && o.faq.length)
+      ? fold("Вопросы", o.faq.length + " ответов", '<div class="faq">' +
+          o.faq.map(f => '<details><summary>' + esc(f.q) + '</summary><div class="a">' + esc(f.a) + '</div></details>').join("") + '</div>')
+      : "";
+
+    var detailsSec = sec("Детали", "Для тех, кто хочет разобраться до конца — каждый раздел раскрывается по нажатию.",
+      payFold + basketFold + termsFold + riskFold + docsFold + faqFold, "ldet");
 
     var end = '<div class="lend"><div><div class="tx">Готовы обсудить выпуск?</div>' +
       '<div class="sub">Ответим по параметрам, поможем с заявкой у вашего брокера.</div></div>' +
-      '<div class="act"><span id="o-ct-host2"></span></div></div>';
+      '<div class="act"><span id="o-ct-host3"></span></div></div>';
 
-    return hero + payBlk + basketBlk + tlBlk + paramBlk + mediaBlk + faqBlk + riskBlk + end;
+    return hero + whySec + termsSec + detailsSec + end;
   }
 
   function select(id, fromUser) {
@@ -1079,6 +1131,10 @@
     var ctHost2 = document.getElementById("o-ct-host2");
     if (ctHost2 && window.Contact) {
       Contact.attach(ctHost2, { title: o.name, url: location.origin + "/offerings#" + o.id, id: o.id, label: "Обсудить выпуск" });
+    }
+    var ctHost3 = document.getElementById("o-ct-host3");
+    if (ctHost3 && window.Contact) {
+      Contact.attach(ctHost3, { title: o.name, url: location.origin + "/offerings#" + o.id, id: o.id, label: "Обсудить выпуск" });
     }
     if (lnd) { csMount(o); heroWire(o); }
     document.querySelectorAll(".item").forEach(el => { var on = el.getAttribute("data-id") === id; el.classList.toggle("active", on); if (on) el.setAttribute("aria-current", "true"); else el.removeAttribute("aria-current"); });
