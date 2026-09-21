@@ -46,7 +46,7 @@ window.DIGEST_ARCHIVE = {
     "id": "call-100-hang-seng-2-goda",
     "family": "warrant",
     "kind": "Варрант",
-    "name": "CALL 100 · Hang Seng · 2 года",
+    "name": "Варрант · Hang Seng · 2 года",
     "underlying": "Hang Seng",
     "teaser": "Рост китайского фондового рынка на фоне притока ликвидности и улучшения отношения инвесторов к китайским активам.",
     "tenor": "2 года",
