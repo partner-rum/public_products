@@ -606,36 +606,6 @@
     .bench { gap:8px; }
   }
 
-  /* ── «Кому и чем полезны» ─────────────────────────────────────────────
-     Повод — разбор фидбека 18.09.2026 от человека из фининститута: «не
-     очевидно, как именно платформа помогает; я фининститут — что это для
-     меня, просто прайсер?». Замер подтвердил буквально: слов «финансовые
-     институты» и «эмитент» (про нас) на главной не было НИ РАЗУ — витрина
-     описывала продукты и ни разу сам бизнес. Полоса отвечает на два вопроса
-     первого посетителя: кто мы и что здесь для него.
-     На телефоне переезжает ПОД чипсы разделов (см. мобильную пересборку):
-     выше она отодвигала меню с y≈730 на y≈1223. */
-  .sg { margin:24px 0 0; }
-  .sg-head { display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; padding:0 0 14px; }
-  .sg-head h2 { margin:0; font-family:var(--display); font-size:1.1875rem; font-weight:600; letter-spacing:-0.018em; }
-  .sg-cap { font-family:var(--m); font-size:0.6875rem; letter-spacing:.05em; color:var(--dim); }
-  .sg-grid { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:26px; }
-  .sg-i { padding-top:14px; border-top:1px solid var(--line); }
-  /* Планка фининститутов акцентная: это единственный сегмент, который до
-     полосы не был назван на витрине вообще. */
-  .sg-i.hi { border-top-color:rgba(238,125,27,0.5); }
-  .sg-k { font-size:0.96875rem; font-weight:600; letter-spacing:-0.01em; }
-  .sg-t { margin:7px 0 0; font-size:0.84375rem; line-height:1.55; color:var(--mut); }
-  .sg-go { margin-top:11px; display:inline-flex; align-items:center; gap:6px;
-    font-size:0.8125rem; font-weight:500; color:var(--solar-l); }
-  a.sg-go:hover { color:var(--solar); }
-  @media (max-width:1023px) { .sg-grid { grid-template-columns:repeat(2, minmax(0,1fr)); gap:20px; } }
-  @media (max-width:860px) {
-    .sg { margin:20px 0 0; }
-    .sg-grid { grid-template-columns:minmax(0,1fr); gap:16px; }
-    .sg-t { font-size:0.875rem; }
-    .sg-go { min-height:44px; align-items:center; }
-  }
 </style>
 <script src="metrika.js?v=6" defer></script>
 </head>
@@ -668,38 +638,9 @@
 <main id="main">
   <section class="hero">
     <h1 class="rise"><span class="lm">Уверенность</span><br>в каждой сделке.</h1>
-    <p class="sub rise" style="animation-delay:.07s">Структурные облигации для квалифицированных инвесторов и финансовых институтов — от ОФЗ до биткоина. Структуру под вашу задачу считаем и выпускаем сами: 62 выпуска с ISIN за два года, формула выплаты известна до сделки.</p>
+    <p class="sub rise" style="animation-delay:.07s">Структурные облигации для квалифицированных инвесторов: от ОФЗ до биткоина, с формулой выплаты, известной до сделки, и расчётом на вашу сумму.</p>
     <div id="hevslot"></div>
   </section>
-
-  <!-- Кому и чем полезны. Разметка статична — робот и человек без JS видят
-       то же самое. Кнопка «Запросить прайсинг» — общий конвейер заявок
-       (contact.js → /lead → группа продаж), в форме уже есть сегмент
-       «Финансовый институт». -->
-  <section class="sg" id="seg" aria-labelledby="seg-h">
-    <div class="sg-head">
-      <h2 id="seg-h">Кому и чем полезны</h2>
-      <span class="sg-cap">эмитент структурных продуктов · 62 выпуска с ISIN за два года</span>
-    </div>
-    <div class="sg-grid">
-      <div class="sg-i hi">
-        <div class="sg-k">Финансовым институтам</div>
-        <p class="sg-t">Приносите задачу — считаем структуру под ваш мандат, выпускаем её с ISIN и сопровождаем до погашения. Доска показывает текущие цены; под конкретный запрос прайсингуем отдельно.</p>
-        <div id="seg-ct"></div>
-      </div>
-      <div class="sg-i">
-        <div class="sg-k">Агентам и партнёрам</div>
-        <p class="sg-t">Продукт уходит клиенту одной ссылкой: параметры, график выплат, пример расчёта на его сумму. Заявка возвращается вам.</p>
-        <a class="sg-go" href="guide.html">Как это устроено<svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
-      </div>
-      <div class="sg-i">
-        <div class="sg-k">Действующим партнёрам</div>
-        <p class="sg-t">Рабочий стол: ваши выпуски и сделки, жизненный цикл, документы, вознаграждение и Bid по обращающимся выпускам.</p>
-        <a class="sg-go" href="me.html">Войти в кабинет<svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
-      </div>
-    </div>
-  </section>
-
 
   <div id="evslot"></div>
 
@@ -1563,11 +1504,6 @@
       var band = document.querySelector(".bandwrap");
       if (band && band.parentNode) band.parentNode.insertBefore(nav, band);
 
-      // Полоса «Кому и чем полезны» встаёт ПОД чипсы: выше неё меню
-      // уезжало с y≈730 на y≈1223, а пересборка 11.09.2026 поднимала его
-      // наверх ровно затем, чтобы навигация была видна сразу.
-      var seg = document.getElementById("seg");
-      if (seg) nav.parentNode.insertBefore(seg, nav.nextSibling);
     }
 
     // Открыты по умолчанию только «Актуальные продукты»
@@ -1626,20 +1562,6 @@
   if ("requestIdleCallback" in window) requestIdleCallback(go, { timeout: 2500 });
   else setTimeout(go, 1200);
 })();
-</script>
-<script src="contact.js?v=10"></script>
-<script>
-  // «Запросить прайсинг» в полосе «Кому и чем полезны». Тот же конвейер,
-  // что у карточки продукта: заявка уходит в группу продаж с меткой pricing.
-  (function () {
-    var h = document.getElementById("seg-ct");
-    if (h && window.Contact) window.Contact.attach(h, {
-      title: "Прайсинг структуры под задачу",
-      url: location.origin + "/",
-      id: "pricing",
-      label: "Запросить прайсинг"
-    });
-  })();
 </script>
 </body>
 
