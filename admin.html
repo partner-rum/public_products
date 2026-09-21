@@ -708,7 +708,9 @@
     </div>
 
     <div class="grp" id="dg-product-grp"><div class="gt">1. Выберите продукт</div>
-      <div class="hint" style="margin:0 0 12px">Цифры, график выплаты и параметры подставятся из продукта сами — вводить руками ничего не нужно. Ты только опишешь идею словами.</div>
+      <div class="hint" style="margin:0 0 12px">Цифры, график выплаты и параметры подставятся из продукта сами — вводить руками ничего не нужно. Ты только опишешь идею словами.
+        В списке и продукты доски, и выпуски <b>«На размещении»</b>: из них выводятся защита капитала, дисконтная облигация, купонный варрант, колл-спред и обычный варрант.
+        Серая строка в списке — продукт, у которого в записи не хватает параметров выплаты; причина написана рядом с названием.</div>
       <label><span class="k">Продукт <b>*</b></span>
         <select id="dg-product"><option value="">— загрузка списка… —</option></select>
       </label>
@@ -917,7 +919,7 @@
   </main>
 </div>
 
-<script src="admin-digest-derive.js?v=4"></script>
+<script src="admin-digest-derive.js?v=5"></script>
 <script>
 (function () {
   "use strict";
@@ -2725,6 +2727,14 @@
   var FAM_LABEL = { warrant: "Варранты", booster: "Бустеры", coupon: "Купоны",
                     discount: "Дисконтные облигации", protection: "Защита капитала", portfolio: "Портфель" };
 
+  // Причина в строке списка — длинную режем: она и так повторится в панели под
+  // списком, если продукт выбрать (выбрать нельзя — строка disabled).
+  function dgWhyNot(s) {
+    // Имя продукта в строке уже есть — «Размещение «…»» в начале причины его дублирует.
+    s = String(s || "в дайджест не выводится").replace(/^Размещение «[^»]*»\s*/, "");
+    return s.length > 120 ? s.slice(0, 118).replace(/[\s,.:;—-]+$/, "") + "…" : s;
+  }
+
   function loadProducts() {
     var bust = "?cb=" + Date.now();
     Promise.all([
@@ -2735,15 +2745,24 @@
       [{ label: "Доска", items: (dataObj(t[0]) || {}).instruments || [], source: "board" },
        { label: "На размещении", items: (dataObj(t[1]) || {}).items || [], source: "offering" }
       ].forEach(function (g) {
-        var ok = g.items.filter(function (p) {
-          try { return window.deriveDigestIdea(p, g.source).supported; } catch (e) { return false; }
-        });
-        if (!ok.length) return;
+        if (!g.items.length) return;
         opts.push('<optgroup label="' + esc(g.label) + '">');
-        ok.forEach(function (p) {
-          var key = g.source + ":" + p.id;
-          dgProducts[key] = { product: p, source: g.source };
-          opts.push('<option value="' + esc(key) + '">' + esc(p.name || p.id) + '</option>');
+        g.items.forEach(function (p) {
+          var r;
+          try { r = window.deriveDigestIdea(p, g.source); }
+          catch (e) { r = { supported: false, reason: "не удалось разобрать запись продукта" }; }
+          var nm = p.name || p.id;
+          if (r.supported) {
+            var key = g.source + ":" + p.id;
+            dgProducts[key] = { product: p, source: g.source };
+            opts.push('<option value="' + esc(key) + '">' + esc(nm) + '</option>');
+            return;
+          }
+          // Непригодный продукт показываем СЕРЫМ и с причиной, а не прячем: пока
+          // группа целиком исчезала, сейлз искал свой выпуск в списке и не понимал,
+          // почему его там нет (21.09.2026 с этим и пришли — «На размещении» не
+          // выводилось вовсе, потому что единственный выпуск не был поддержан).
+          opts.push('<option value="" disabled>' + esc(nm) + " — " + esc(dgWhyNot(r.reason)) + '</option>');
         });
         opts.push('</optgroup>');
       });

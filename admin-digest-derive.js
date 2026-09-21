@@ -232,23 +232,108 @@
     return comma(s) + " " + (whole == null ? "года" : plu(whole, "год", "года", "лет"));
   }
 
-  // Выпуск «На размещении» (offerings.js) → идея. Поддержаны защита капитала и
-  // купонный варрант.
+  // Страйк выпуска живёт ТОЛЬКО в названии («CALL 105») — отдельного поля у
+  // размещения нет. Шаблон дословно тот же, что digitalStrike на offerings.html и
+  // bdOffStrike в админке: разойдись они, карточка выпуска и дайджест напечатали
+  // бы клиенту разные пороги одной бумаги.
+  function offStrike(o) {
+    var m = String(o.name || "").match(/CALL\s+(\d{2,3})(?:[.,](\d+))?/i);
+    if (!m) return null;
+    var v = Number(m[1] + (m[2] ? "." + m[2] : ""));
+    return (isFinite(v) && v >= 50 && v <= 300) ? v : null;
+  }
+
+  // Уровни колл-спреда. Сначала поля записи (strike / capLevel / capPay — они есть
+  // у свежих выпусков), иначе пара чисел из названия («CS 100-200», «колл-спред
+  // 100–200%»): у старых записей этих полей не было вовсе, а название несёт уровни
+  // всегда. capPay — максимальная ВЫПЛАТА в % номинала, она же (capLevel − strike).
+  function csLevels(o, txt) {
+    var K = num(o.strike), top = num(o.capLevel), pay = num(o.capPay);
+    if (K == null || top == null) {
+      var m = txt.match(/(\d{2,3})\s*[-–—]\s*(\d{2,3})/);
+      if (m) {
+        if (K == null) K = Number(m[1]);
+        if (top == null) top = Number(m[2]);
+      }
+    }
+    if (pay == null && K != null && top != null && top > K) pay = top - K;
+    return { K: K, cap: pay };
+  }
+
+  // Выпуск «На размещении» (offerings.js) → идея дайджеста. Поддержано всё, что
+  // ОДНОЗНАЧНО описывается цифрами самой записи: защита капитала, дисконтная (CLN),
+  // купонный варрант, колл-спред и обычный CALL-варрант. Отказ остаётся там, где
+  // параметров выплаты в записи нет вовсе (автоколл, реверс-конвертибл, Pre-IPO без
+  // цены): выдумать их нельзя — они уедут клиенту в карточку и в PDF.
+  //
+  // ПОРЯДОК ПРОВЕРОК МЕНЯТЬ НЕЛЬЗЯ. Сначала семейства protection и discount (вход по
+  // номиналу, двусмысленности нет), затем купонный варрант — в его названии стоит
+  // «CALL 105», и проверка обычного варранта перехватила бы его, — затем колл-спред
+  // (в названии тоже CALL и «CS 100-200»), обычный варрант последним. Та же грабля
+  // с порядком уже стоила двух правок в risk_of печатного дайджеста.
   function fromOffering(o) {
-    var oTenor = tenorText(o.tenor);
-    // Купонный варрант на размещении: family там «participation» (так у СП-2-79),
-    // поэтому тип узнаём по kind + name — тем же способом, что offerings.html.
-    // Кириллицу только ЯВНЫМ классом: в JS `\w` — это латиница, и шаблон вида
+    var txt = String((o.kind || "") + " " + (o.name || ""));
+    var prem = num(o.price);
+    var base = {
+      underlying: o.reference || o.name, name: o.name, tenor: tenorText(o.tenor),
+      fx: isFx(o.currency) || !!o.fx,
+      p: { asset: o.reference || o.name },
+    };
+    // Рублёвые суммы карточка считает от номинала 1 000 ₽ — строку «Номинал» она
+    // печатает сама, а поле p.nominal воркер в файл не пропускает. При другом
+    // номинале цена входа в дайджесте разошлась бы с выпуском.
+    var nom = num(o.nominal);
+    if (nom != null && Math.abs(nom - 1000) > 0.5) {
+      return { supported: false, reason: "У выпуска номинал " + comma(nom) +
+        " ₽, а карточка дайджеста считает суммы от 1 000 ₽ — цифры разошлись бы." };
+    }
+
+    // ── Защита капитала ──
+    if (o.family === "protection") {
+      var floor = num(String(o.protection || "").replace("%", ""));
+      // participation в offerings.js — строка («100%»), в отличие от доли на доске
+      var partPct = num(String(o.participation == null ? "" : o.participation).replace("%", ""));
+      var pf = { type: "protected", floorPct: floor != null ? floor : 100 };
+      if (partPct != null) pf.partPct = partPct;
+      base.family = "protection";
+      base.kind = o.kind || "Структурная облигация · защита капитала";
+      base.metric = { v: o.protection || (floor != null ? floor + "%" : ""), k: "защита капитала" };
+      base.p.price = "100% номинала";
+      base.p.upside = (o.participation || "100%") + " роста базового актива";
+      base.p.protection = o.protection || (floor != null ? floor + "%" : "есть");
+      base.payoff = pf;
+      return base;
+    }
+
+    // ── Дисконтная облигация (CLN) ──
+    if (o.family === "discount") {
+      if (!(prem > 0)) {
+        return { supported: false, reason: "У дисконтной облигации не задана цена входа (price)." };
+      }
+      var red = num(o.redeem); if (red == null) red = 100;
+      // Кадр дайджеста подписан «погашение 100%» — при другом погашении он соврал бы.
+      if (Math.abs(red - 100) > 0.01) {
+        return { supported: false, reason: "Погашение выпуска — " + comma(red) +
+          "% номинала, а кадр дайджеста рисует погашение по 100%." };
+      }
+      var gain = Math.round((100 / prem - 1) * 100);
+      base.family = "discount";
+      base.kind = o.kind || "Дисконтная облигация";
+      base.metric = { v: "+" + gain + "%", k: "доход к погашению" };
+      base.p.price = rub(prem);
+      base.p.upside = "+" + gain + "% к погашению по 100%";
+      base.p.protection = "погашение по 100% номинала";
+      base.payoff = { type: "fixed", entryPct: prem, gainPct: gain };
+      return base;
+    }
+
+    // ── Купонный варрант ──
+    // Кириллицу только ЯВНЫМ классом: в JS `\w` — латиница, и шаблон вида
     // /купонн\w*\s+варрант/ не совпадёт. На этой грабле уже теряли развилку
     // исходов на карточке размещения.
-    var oTxt = String((o.kind || "") + " " + (o.name || ""));
-    if (/купонн[а-яё]*\s+варрант|диджитал/i.test(oTxt)) {
-      var oPrem = num(o.price), oPay = num(o.redeem);
-      // Страйк читаем тем же строгим шаблоном, что offerings.html и админка:
-      // он живёт ТОЛЬКО в названии («CALL 105»), отдельного поля у размещения нет.
-      var oKm = String(o.name || "").match(/CALL\s+(\d{2,3})/);
-      var oK = oKm ? Number(oKm[1]) : null;
-      if (!(oPrem > 0)) {
+    if (/купонн[а-яё]*\s+варрант|диджитал|digital/i.test(txt)) {
+      var oPay = num(o.redeem), oK = offStrike(o);
+      if (!(prem > 0)) {
         return { supported: false, reason: "У размещения не задана цена входа (price) — без премии купонный варрант не описать." };
       }
       if (!(oPay > 0)) {
@@ -257,37 +342,64 @@
       if (!(oK > 0)) {
         return { supported: false, reason: "В названии размещения не найден страйк («CALL 105»), а без него график выплаты не построить." };
       }
-      return {
-        family: "warrant", kind: o.kind || "Купонный варрант",
-        underlying: o.reference || o.name, name: o.name, tenor: oTenor,
-        fx: isFx(o.currency) || !!o.fx,
-        metric: { v: comma(oPay) + "%", k: "выплата при активе ≥ " + comma(oK) + "%" },
-        p: { asset: o.reference || o.name, price: rub(oPrem),
-             upside: "фиксированная выплата " + comma(oPay) + "% номинала, если актив не ниже " +
-                     comma(oK) + "%; насколько выше — не важно",
-             protection: "нет" },
-        payoff: { type: "callstep", strikePct: oK, payoutPct: oPay, premiumPct: oPrem, floorPct: 0 },
-      };
+      // Выплата ≤ премии — почти всегда опечатка в разряде: такой выпуск не может
+      // выйти в плюс ни при каком росте. Та же проверка стоит в форме доски.
+      if (oPay <= prem) {
+        return { supported: false, reason: "Выплата (" + comma(oPay) + "%) не больше премии (" +
+          comma(prem) + "%) — продукт не может выйти в плюс. Проверьте цифры выпуска." };
+      }
+      base.family = "warrant"; base.kind = o.kind || "Купонный варрант";
+      base.metric = { v: comma(oPay) + "%", k: "выплата при активе ≥ " + comma(oK) + "%" };
+      base.p.price = rub(prem);
+      base.p.upside = "фиксированная выплата " + comma(oPay) + "% номинала, если актив не ниже " +
+                      comma(oK) + "%; насколько выше — не важно";
+      base.p.protection = "нет";
+      base.payoff = { type: "callstep", strikePct: oK, payoutPct: oPay, premiumPct: prem, floorPct: 0 };
+      return base;
     }
-    if (o.family !== "protection") {
-      return { supported: false, reason: "Размещение «" + (o.kind || o.family || "—") +
-               "» в дайджест пока не выводится: из «Размещений» поддержаны защита капитала и купонный варрант." };
+
+    // ── Колл-спред: вход по премии, выплата растёт от страйка и упирается в потолок ──
+    var cs = csLevels(o, txt);
+    if (/колл-спред|call\s*-?\s*spread|\bcs\s*\d{2,3}\s*[-–—]\s*\d{2,3}/i.test(txt) || num(o.capLevel) != null) {
+      if (!(prem > 0)) {
+        return { supported: false, reason: "У колл-спреда не задана цена входа (price) — без премии график не построить." };
+      }
+      if (cs.K == null || !(cs.cap > 0)) {
+        return { supported: false, reason: "У колл-спреда не видно уровней: нужны поля strike и capLevel (или capPay) либо пара уровней в названии — «CS 100–200»." };
+      }
+      if (cs.cap <= prem) {
+        return { supported: false, reason: "Потолок выплаты (" + comma(cs.cap) + "% номинала) не больше премии (" +
+          comma(prem) + "%) — продукт не может выйти в плюс. Проверьте цифры выпуска." };
+      }
+      base.family = "warrant"; base.kind = o.kind || "Варрант · колл-спред";
+      base.metric = { v: "+" + comma(cs.cap) + "%", k: "потолок роста" };
+      base.p.price = rub(prem);
+      base.p.upside = "рост актива выше " + comma(cs.K) + "% — до +" + comma(cs.cap) + "% номинала";
+      base.p.protection = "нет";
+      base.payoff = { type: "callcap", premiumPct: prem, capPct: cs.cap, strikePct: cs.K };
+      return base;
     }
-    var floor = num(String(o.protection || "").replace("%", ""));
-    // participation в offerings.js — строка («100%»), в отличие от доли на доске
-    var partPct = num(String(o.participation == null ? "" : o.participation).replace("%", ""));
-    var pf = { type: "protected", floorPct: floor != null ? floor : 100 };
-    if (partPct != null) pf.partPct = partPct;
-    return {
-      family: "protection", kind: o.kind || "Структурная облигация · защита капитала",
-      underlying: o.reference || o.name, name: o.name, tenor: oTenor,
-      fx: isFx(o.currency) || !!o.fx,
-      metric: { v: o.protection || (floor != null ? floor + "%" : ""), k: "защита капитала" },
-      p: { asset: o.reference || o.name, price: "100% номинала",
-           upside: (o.participation || "100%") + " роста базового актива",
-           protection: o.protection || (floor != null ? floor + "%" : "есть") },
-      payoff: pf,
-    };
+
+    // ── Обычный CALL-варрант ──
+    if (o.family === "warrant" || /варрант|warrant|\bcall\b/i.test(txt)) {
+      if (!(prem > 0)) {
+        return { supported: false, reason: "У варранта не задана цена входа (price) — без премии описать его нечем." };
+      }
+      var wK = offStrike(o);
+      base.family = "warrant"; base.kind = o.kind || "Варрант";
+      base.metric = { v: comma(prem) + "%", k: "премия от номинала" };
+      base.p.price = rub(prem);
+      base.p.upside = "рост актива" + (wK ? " выше " + comma(wK) + "%" : "") + ", без потолка";
+      base.p.protection = "нет";
+      base.payoff = { type: "call", premiumPct: prem };
+      if (wK) base.payoff.strikePct = wK;
+      return base;
+    }
+
+    // Список поддержанных типов живёт в подсказке формы: в строке списка он не
+    // помещается, а причина по этому выпуску важнее перечисления.
+    return { supported: false, reason: "Размещение «" + (o.kind || o.family || "—") +
+      "» не выводится: в записи нет параметров выплаты, из которых строится график." };
   }
 
   // Авто-тексты «как заработать» и «структура выплаты» по типу продукта — чтобы сейлз
