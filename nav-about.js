@@ -1,4 +1,9 @@
-/* Шапка: ссылка «О компании» рядом с логотипом (десктоп) + бургер-меню на мобильном.
+/* Шапка: пилюля «Сотрудничество» рядом с логотипом (десктоп) + бургер-меню на мобильном.
+   Пилюля вела на company.html и называлась «О компании» до 22.09.2026. Поменяли,
+   потому что холодный посетитель (финансовый институт или агент) не догадывается,
+   что условия работы с нами спрятаны за ярлыком «О компании»: слов «сотрудничество»,
+   «агент» и «финансовые институты» на главной не было ни разу. «О компании» никуда
+   не делась — она осталась в списке разделов на главной, в бургер-меню и в подвалах.
    На десктопе — как раньше: звезда + «О компании» + пункты меню + «Доска».
    На узком экране (≤900px) длинные пункты прячутся, вместо них — кнопка ☰, по тапу
    выпадает панель со всеми разделами (Дайджест / Размещения / Выпуски / Библиотека /
@@ -6,7 +11,8 @@
    Подключение: <script src="nav-about.js?v=3"></script> перед </body>. Без зависимостей. */
 (function () {
   "use strict";
-  var onCompany = /company\.html$/.test(location.pathname);
+  var onCompany  = /company\.html$/.test(location.pathname);
+  var onPartners = /partners\.html$/.test(location.pathname);
 
   function init() {
     var navIn = document.querySelector(".nav-in");
@@ -20,12 +26,12 @@
 
     injectCSS();
 
-    // «О компании» рядом с логотипом (десктоп) — как раньше; на самой странице не нужно
-    if (brand && !onCompany && !navIn.querySelector(".nav-about")) {
+    // «Сотрудничество» рядом с логотипом (десктоп); на самой странице не нужно
+    if (brand && !onPartners && !navIn.querySelector(".nav-about")) {
       var a = document.createElement("a");
       a.className = "nav-about";
-      a.href = "company.html";
-      a.textContent = "О компании";
+      a.href = "partners.html";
+      a.textContent = "Сотрудничество";
       brand.insertAdjacentElement("afterend", a);
     }
 
@@ -41,11 +47,17 @@
         cta: a.classList.contains("btn-solar")
       });
     });
-    // «О компании» — перед кнопкой «Доска», если её нет в списке
-    if (!onCompany && !items.some(function (i) { return /company\.html/.test(i.href); })) {
+    // «Сотрудничество» и «О компании» — перед кнопкой «Доска», если их нет в списке.
+    // На телефоне пилюля шапки скрыта, и бургер — единственный вход в эти разделы.
+    [{ href: "partners.html", text: "Сотрудничество", skip: onPartners },
+     { href: "company.html",  text: "О компании",     skip: onCompany }
+    ].forEach(function (extra) {
+      if (extra.skip) return;
+      var file = extra.href.split(".")[0];
+      if (items.some(function (i) { return new RegExp(file + "\.html").test(i.href); })) return;
       var ctaAt = items.findIndex(function (i) { return i.cta; });
-      items.splice(ctaAt < 0 ? items.length : ctaAt, 0, { href: "company.html", text: "О компании", cta: false });
-    }
+      items.splice(ctaAt < 0 ? items.length : ctaAt, 0, { href: extra.href, text: extra.text, cta: false });
+    });
 
     var here = location.pathname.split("/").pop() || "index.html";
 

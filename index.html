@@ -86,6 +86,20 @@
   h1 .lm { color:var(--solar); }
   .sub { margin:18px 0 0; font-size:1.0625rem; line-height:1.5; color:var(--mut); max-width:640px; }
 
+  /* ── Вход «Сотрудничество» ──
+     Холодный посетитель (финансовый институт или агент) должен с первого экрана
+     видеть, что с нами можно работать: слов «сотрудничество», «агент» и
+     «финансовые институты» на главной не было ни разу. Полоса из трёх сегментов
+     с описаниями (18.09.2026) отклонена за объём — она стоила 203px первого
+     экрана; здесь только два входа, 49px, описания живут на partners.html. */
+  .coop { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:16px 0 0; }
+  .coop .cl { font-size:0.8125rem; color:var(--dim); }
+  .coop a { display:inline-flex; align-items:center; gap:7px; font-size:0.84375rem; font-weight:500;
+    color:#F0AE72; border:1px solid rgba(238,125,27,0.42); border-radius:999px; padding:7px 14px;
+    transition:background .2s, color .2s, border-color .2s; }
+  .coop a:hover { background:var(--solar); color:#0C0A08; border-color:var(--solar); }
+  @media (max-width:860px) { .coop a { min-height:44px; } }
+
   /* ── Полоса-анонс встречи ── */
   .evt { display:flex; align-items:center; gap:16px; margin:26px 0 0; padding:13px 18px;
     border:1px solid rgba(238,125,27,0.34); border-radius:12px;
@@ -639,6 +653,11 @@
   <section class="hero">
     <h1 class="rise"><span class="lm">Уверенность</span><br>в каждой сделке.</h1>
     <p class="sub rise" style="animation-delay:.07s">Структурные облигации для квалифицированных инвесторов: от ОФЗ до биткоина, с формулой выплаты, известной до сделки, и расчётом на вашу сумму.</p>
+    <div class="coop rise" style="animation-delay:.1s">
+      <span class="cl">Работаем с:</span>
+      <a href="partners.html#fi">Финансовыми институтами<svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+      <a href="partners.html#ag">Агентами и партнёрами<svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+    </div>
     <div id="hevslot"></div>
   </section>
 
@@ -657,7 +676,7 @@
              читались бы как её метаданные -->
         <div class="nvbox">
           <div class="ch"><h2>Разделы</h2></div>
-          <nav id="rail-list" aria-label="Разделы"><!-- seo:rail:start --><p>Разделы витрины: дайджест инвестиционных идей; разборы тем и компаний; текущие продукты — доска прайсинга, 112 инструментов; размещённые выпуски, 62 выпуска; библиотека типов продуктов; события; о компании; выступления — интервью и эфиры на внешних площадках.</p><!-- seo:rail:end --></nav>
+          <nav id="rail-list" aria-label="Разделы"><!-- seo:rail:start --><p>Разделы витрины: сотрудничество — условия работы для финансовых институтов и агентов; дайджест инвестиционных идей; разборы тем и компаний; текущие продукты — доска прайсинга, 112 инструментов; размещённые выпуски, 62 выпуска; библиотека типов продуктов; события; о компании; выступления — интервью и эфиры на внешних площадках.</p><!-- seo:rail:end --></nav>
         </div>
         <div class="stamp" id="stamp"></div>
       </section>
@@ -694,6 +713,7 @@
     <span class="q">Нужен продукт под конкретного клиента?</span>
     <a href="board.html">Собрать на доске<svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
     <a href="https://t.me/+NHbVOoUI5IBkN2Uy" target="_blank" rel="noopener">Написать в Telegram<svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+    <a href="partners.html">Стать агентом или партнёром<svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
   </div>
 </main>
 
@@ -917,6 +937,10 @@
     // Переход туда остаётся — заголовок каждой колонки сам является ссылкой.
     var nt = (window.TALKS && TALKS.items) ? TALKS.items.length : 0;
     var rail = [
+      // Первым пунктом намеренно: единственная строка витрины, отвечающая холодному
+      // посетителю «а мне-то с вами что делать». На телефоне из этого же массива
+      // строятся чипсы, поэтому вход появляется и там, где пилюля шапки скрыта.
+      { href: "partners.html", t: "Сотрудничество", m: "фининститутам и агентам" },
       { href: "digest.html", t: "Дайджест", m: window.DIGEST ? window.DIGEST.date.slice(0, 5) : "идеи" },
       // Разбор темы раз в две недели под вебинар: метка — дата выпуска из data/ideas.js
       { href: "ideas.html", t: "Разборы", m: (window.IDEAS && IDEAS.issues && IDEAS.issues[0]) ? dmy(IDEAS.issues[0].date).slice(0, 5) : "темы" },
@@ -1406,7 +1430,7 @@
 <script src="intro.js?v=6"></script>
 <script src="chat.js?v=19"></script>
 <script src="search.js?v=1"></script>
-<script src="nav-about.js?v=8"></script>
+<script src="nav-about.js?v=9"></script>
 <script src="qualgate.js?v=5"></script>
 <script>
 /* ── Мобильная структура: чипсы навигации + аккордеон разделов ──────────────

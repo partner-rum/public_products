@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Сотрудничество — Rumberg</title>
+<meta name="description" content="Rumberg — эмитент структурных облигаций. Финансовым институтам — прайсинг под мандат и выпуск с ISIN. Агентам — продукт клиенту одной ссылкой, рабочий стол со сделками и вознаграждением.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Rumberg">
+<meta property="og:locale" content="ru_RU">
+<meta property="og:title" content="Сотрудничество — Rumberg">
+<meta property="og:description" content="Финансовым институтам — прайсинг под мандат и выпуск с ISIN. Агентам — продукт клиенту одной ссылкой и рабочий стол со сделками.">
+<meta property="og:url" content="https://invest.rumberg.ru/partners.html">
+<link rel="canonical" href="https://invest.rumberg.ru/partners.html">
+<meta property="og:image" content="https://invest.rumberg.ru/og-cover.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0B0C10">
+<link href="fonts/fonts.css?v=1" rel="stylesheet">
+<script src="metrika.js?v=6" defer></script>
+<style>
+  :root {
+    --canvas: #0B0C10; --card: #14161C;
+    --ink: #F2F3F7; --hushed: rgba(242,243,247,0.64); --faint: rgba(242,243,247,0.56);
+    --border: rgba(255,255,255,0.11); --border-soft: rgba(255,255,255,0.07);
+    --solar: #EE7D1B; --solar-l: #F58E33; --blue: #4F86E6; --green: #55C08A;
+    --f-body: 'Onest', system-ui, sans-serif;
+    --f-mono: 'JetBrains Mono', Consolas, monospace;
+    --display: 'Rubik', 'Onest', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--canvas); color: var(--ink); font-family: var(--f-body); -webkit-font-smoothing: antialiased; }
+  a { text-decoration: none; color: inherit; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+  .skip { position:absolute; left:-9999px; top:0; background:var(--card); color:var(--ink); padding:10px 14px; border-radius:6px; z-index:99; }
+  .skip:focus { left:12px; top:10px; }
+
+  /* шапка — тот же ряд, что на company.html */
+  .nav { position: sticky; top: 0; z-index: 20; background: rgba(11,12,16,0.82); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); }
+  .nav-in { max-width: 1080px; margin: 0 auto; padding: 0 44px; height: 62px; display: flex; align-items: center; gap: 12px; }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand-name { font-size: 14.5px; font-weight: 600; }
+  .brand-tag { font-size: 13px; font-weight: 400; color: var(--hushed); padding-left: 9px; margin-left: 9px; border-left: 1px solid var(--border); white-space: nowrap; }
+  @media (max-width: 1100px) { .brand-tag { display: none; } }
+  .topnav { margin-left: auto; display: flex; align-items: center; gap: 22px; font-size: 14px; font-weight: 500; }
+  .topnav a { color: var(--hushed); transition: color .2s; }
+  .topnav a:hover { color: var(--ink); }
+  .topnav a.on { color: var(--ink); }
+  .btn-solar { background: var(--solar); color: #0C0A08 !important; border-radius: 6px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 7px; transition: background .3s ease-in-out; }
+  .btn-solar:hover { background: var(--solar-l); }
+
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 0 24px 80px; }
+  h1 { margin: 46px 0 14px; font-family: var(--display); font-size: clamp(27px, 4vw, 36px); font-weight: 600; letter-spacing: -0.02em; line-height: 1.12; }
+  .lead { margin: 0; font-size: 16px; line-height: 1.62; color: var(--hushed); max-width: 660px; }
+  .lead b { color: var(--ink); font-weight: 600; }
+
+  .cap { margin: 46px 0 14px; font-family: var(--f-mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); display: flex; align-items: center; gap: 8px; }
+  .cap::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--solar); }
+
+  /* ДВА ТРЕКА — ядро страницы */
+  .tracks { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px; }
+  .trk { scroll-margin-top: 78px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px 24px 22px; display: flex; flex-direction: column; min-width: 0; }
+  .trk-t { font-family: var(--display); font-size: 21px; font-weight: 600; letter-spacing: -0.01em; }
+  .trk-w { margin-top: 5px; font-size: 13px; line-height: 1.5; color: var(--faint); }
+  .trk-l { margin: 16px 0 0; padding: 0; list-style: none; }
+  .trk-l li { position: relative; padding-left: 20px; margin-bottom: 11px; font-size: 14px; line-height: 1.55; color: var(--hushed); }
+  .trk-l li b { color: var(--ink); font-weight: 600; }
+  .trk-l li::before { content: ""; position: absolute; left: 3px; top: 8px; width: 6px; height: 6px; border-radius: 50%; background: var(--solar); opacity: .85; }
+  .trk.b .trk-l li::before { background: var(--blue); }
+  .trk-h { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border-soft); font-family: var(--f-mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); }
+  .trk-s { margin: 11px 0 0; padding: 0; list-style: none; counter-reset: s; }
+  .trk-s li { counter-increment: s; position: relative; padding-left: 26px; margin-bottom: 8px; font-size: 13.5px; line-height: 1.5; color: var(--hushed); }
+  .trk-s li::before { content: counter(s); position: absolute; left: 0; top: 0; width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--border); font-family: var(--f-mono); font-size: 10.5px; display: grid; place-items: center; color: var(--faint); }
+  .trk-act { margin-top: auto; padding-top: 20px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .trk-go { font-size: 13.5px; color: var(--hushed); border-bottom: 1px solid var(--border); padding-bottom: 2px; transition: color .2s, border-color .2s; }
+  .trk-go:hover { color: var(--ink); border-color: var(--ink); }
+  /* попап заявки у правой колонки открывается влево: закрытый он всё равно
+     занимает место и даёт горизонтальный скролл всей страницы */
+  .trk.b .ct-menu { left: auto; right: 0; }
+
+  /* КАК ПРОХОДИТ СДЕЛКА */
+  .flow { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; margin-top: 18px; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .fs { padding: 18px 18px 20px; border-right: 1px solid var(--border-soft); min-width: 0; }
+  .fs:last-child { border-right: none; }
+  .fs .n { font-family: var(--f-mono); font-size: 11px; color: var(--solar); letter-spacing: .08em; }
+  .fs .t { margin-top: 7px; font-size: 14.5px; font-weight: 600; }
+  .fs .d { margin-top: 6px; font-size: 12.5px; line-height: 1.5; color: var(--faint); }
+
+  /* ЦИФРЫ */
+  .nums { display: flex; gap: 40px; flex-wrap: wrap; margin-top: 18px; padding: 22px 0; border-top: 1px solid var(--border-soft); border-bottom: 1px solid var(--border-soft); }
+  .nm .v { font-family: var(--display); font-size: 32px; font-weight: 600; letter-spacing: -0.02em; color: var(--solar); line-height: 1.05; font-variant-numeric: tabular-nums; }
+  .nm .k { margin-top: 6px; font-size: 12.5px; line-height: 1.45; color: var(--hushed); max-width: 190px; }
+
+  /* ВОПРОСЫ */
+  .faq { margin-top: 16px; border-top: 1px solid var(--border-soft); }
+  .faq details { border-bottom: 1px solid var(--border-soft); }
+  .faq summary { list-style: none; cursor: pointer; padding: 15px 30px 15px 0; font-size: 15px; font-weight: 500; position: relative; }
+  .faq summary::-webkit-details-marker { display: none; }
+  .faq summary::after { content: "+"; position: absolute; right: 4px; top: 13px; font-size: 18px; color: var(--faint); font-weight: 400; }
+  .faq details[open] summary::after { content: "–"; }
+  .faq .a { padding: 0 30px 16px 0; font-size: 14px; line-height: 1.62; color: var(--hushed); max-width: 760px; }
+
+  /* ЗАКРЫВАЮЩИЙ БЛОК */
+  .end { margin-top: 46px; padding: 26px 26px 24px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .end .q { font-family: var(--display); font-size: 19px; font-weight: 600; }
+  .end .s { margin-top: 5px; font-size: 13.5px; color: var(--hushed); max-width: 420px; line-height: 1.5; }
+  .end .r { margin-left: auto; display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+  .end a.ln { color: var(--hushed); border-bottom: 1px solid var(--border); padding-bottom: 1px; }
+  .end a.ln:hover { color: var(--ink); }
+  .end .r a.ln { font-size: 14px; }
+
+  .foot { max-width: 1000px; margin: 0 auto; padding: 24px; border-top: 1px solid var(--border-soft); display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; font-size: 12.5px; color: var(--faint); }
+
+  @media (max-width: 900px) {
+    .nav-in { padding: 0 18px; }
+    .topnav { gap: 14px; font-size: 13px; }
+    .tracks { grid-template-columns: 1fr; }
+    .trk.b .ct-menu { left: 0; right: auto; }
+    .flow { grid-template-columns: 1fr; }
+    .fs { border-right: none; border-bottom: 1px solid var(--border-soft); }
+    .fs:last-child { border-bottom: none; }
+    .end .r { margin-left: 0; }
+  }
+  /* тач-цели >=44px: правило витрины для <=860px */
+  @media (max-width: 860px) {
+    .trk-go, .end a.ln, .foot a { display: inline-flex; align-items: center; min-height: 44px; }
+    .faq summary { padding-top: 18px; padding-bottom: 18px; }
+    .btn-solar { padding: 12px 15px; min-height: 44px; }
+    .nav-burger { width: 44px !important; height: 44px !important; }
+    .brand { min-height: 44px; }
+  }
+  /* Закрытый попап заявки всё равно занимает место: на 320px он торчал за правый
+     край и давал горизонтальный скролл ВСЕЙ страницы (ловится только замером
+     scrollWidth). Сдвигаем его к краю окна на ширину внутренних отступов. */
+  @media (max-width: 640px) {
+    .trk .ct-menu, .trk.b .ct-menu, .end .ct-menu { left: -24px; right: auto; max-width: calc(100vw - 32px); }
+  }
+  @media (max-width: 640px) {
+    .topnav a:not(.btn-solar) { display: none; }
+    .wrap { padding: 0 16px 60px; }
+    .nums { gap: 26px; }
+    h1 { margin-top: 34px; }
+  }
+</style>
+</head>
+<body>
+
+<a class="skip" href="#main">Пропустить к содержимому</a>
+
+<header class="nav">
+  <div class="nav-in">
+    <a class="brand" href="index.html" aria-label="На главную">
+      <svg width="22" height="22" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>
+      <span class="brand-name">Rumberg</span><span class="brand-tag">Инвестиционные решения</span>
+    </a>
+    <nav class="topnav">
+      <!-- «О компании» и пилюлю в шапку вставляет nav-about.js: дублировать нельзя.
+           На самой странице «Сотрудничество» пилюля модулем не рисуется. -->
+      <a href="offerings.html">Размещения</a>
+      <a href="placements.html">Выпуски</a>
+      <a href="about.html">Библиотека</a>
+      <a class="btn-solar" href="board.html">Доска
+        <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+<main id="main">
+  <h1>Сотрудничество</h1>
+  <p class="lead">Rumberg — <b>эмитент</b>: структуру под задачу считаем сами, выпускаем со своим ISIN и ведём до погашения. Работаем по двум направлениям — с финансовыми институтами и с агентами. Ниже — что это значит на практике и с чего начать.</p>
+
+  <div class="tracks">
+    <section class="trk a" id="fi">
+      <div class="trk-t">Финансовым институтам</div>
+      <div class="trk-w">Банкам, брокерам и управляющим компаниям</div>
+      <ul class="trk-l">
+        <li><b>Прайсинг под ваш мандат.</b> Базовый актив, срок и профиль выплаты — ваши. Считаем и присылаем индикативные параметры: участие, купон или премию.</li>
+        <li><b>Выпуск с ISIN, КУВ и КИД.</b> Бумага покупается у вашего брокера в обычном режиме — отдельной инфраструктуры не нужно.</li>
+        <li><b>Сопровождение до погашения.</b> Индикативный Bid по обращающимся выпускам, переоценка и документы по каждому выпуску.</li>
+        <li><b>Готовые цены на витрине.</b> 112 инструментов на 31 базовый актив — можно посмотреть уровни, не отправляя запрос.</li>
+      </ul>
+      <div class="trk-h">С чего начать</div>
+      <ol class="trk-s">
+        <li>Пришлите параметры — или откройте доску и посмотрите текущие уровни.</li>
+        <li>Получите индикативную цену.</li>
+        <li>Согласуем условия и выпускаем.</li>
+      </ol>
+      <div class="trk-act">
+        <span id="ct-fi"></span>
+        <a class="trk-go" href="board.html">Открыть доску →</a>
+      </div>
+    </section>
+
+    <section class="trk b" id="ag">
+      <div class="trk-t">Агентам и партнёрам</div>
+      <div class="trk-w">Тем, кто работает с квалифицированными инвесторами</div>
+      <ul class="trk-l">
+        <li><b>Продукт уходит клиенту одной ссылкой:</b> параметры, график выплат, расчёт на его сумму и печатный one-pager — собирать презентацию не нужно.</li>
+        <li><b>Заявка возвращается вам.</b> В ссылке стоит ваша метка, обращение клиента приходит с ней.</li>
+        <li><b>Рабочий стол:</b> ваши выпуски, индикативный Bid, сделки и вознаграждение — в одном месте.</li>
+        <li><b>Материалы для разговора:</b> дайджест идей, разборы тем и компаний, библиотека продуктов и AI-помощник, который объяснит продукт вашими словами.</li>
+      </ul>
+      <div class="trk-h">С чего начать</div>
+      <ol class="trk-s">
+        <li>Напишите нам — доступ выдаём вручную, самостоятельной регистрации нет.</li>
+        <li>Получаете ID и ключ от рабочего стола.</li>
+        <li>Отправляете клиенту ссылку на продукт.</li>
+      </ol>
+      <div class="trk-act">
+        <span id="ct-ag"></span>
+        <a class="trk-go" href="guide.html">Как это устроено →</a>
+      </div>
+    </section>
+  </div>
+
+  <div class="cap">Как проходит сделка</div>
+  <div class="flow">
+    <div class="fs"><div class="n">01</div><div class="t">Запрос</div><div class="d">Базовый актив, срок, желаемый профиль выплаты и объём.</div></div>
+    <div class="fs"><div class="n">02</div><div class="t">Прайсинг</div><div class="d">Присылаем индикативные параметры — участие, купон или премию, смотря какая структура.</div></div>
+    <div class="fs"><div class="n">03</div><div class="t">Согласование</div><div class="d">Фиксируем параметры, даты наблюдений и условия досрочного погашения.</div></div>
+    <div class="fs"><div class="n">04</div><div class="t">Выпуск</div><div class="d">Эмиссия, ISIN, КУВ и КИД; покупка у своего брокера.</div></div>
+    <div class="fs"><div class="n">05</div><div class="t">Сопровождение</div><div class="d">Индикативный Bid, переоценка и документы — до погашения.</div></div>
+  </div>
+
+  <div class="cap">Что за нами</div>
+  <div class="nums">
+    <div class="nm"><div class="v">62</div><div class="k">выпуска за два года, первый — апрель 2024</div></div>
+    <div class="nm"><div class="v">≈30 млрд ₽</div><div class="k">объём выпущенных продуктов</div></div>
+    <div class="nm"><div class="v">112</div><div class="k">инструментов с ценами на доске прямо сейчас</div></div>
+    <div class="nm"><div class="v">31</div><div class="k">базовый актив: от ОФЗ и акций РФ до биткоин-ETF и урана</div></div>
+  </div>
+
+  <div class="cap">Частые вопросы</div>
+  <div class="faq">
+    <details><summary>Кто эмитент?</summary><div class="a">Мы. Структуру считаем сами и выпускаем под своим именем: у выпуска есть ISIN и регистрационный номер, а рядом с ним лежат ключевой информационный документ (КИД) и условия выпуска (КУВ).</div></details>
+    <details><summary>Как клиент покупает выпуск?</summary><div class="a">У своего брокера, как обычную облигацию. Открывать счёт у нас не нужно — по выпуску известны ISIN и дилеры-ориентиры.</div></details>
+    <details><summary>Можно принести свою идею?</summary><div class="a">Да. Базовый актив, срок и профиль выплаты задаёте вы: выплата собирается из базовых механик и любой их комбинации. На доске видно, что уже собрано; под конкретный запрос считаем отдельно.</div></details>
+    <details><summary>Как устроено вознаграждение агента?</summary><div class="a">Вознаграждение партнёра заложено в цену выпуска — клиент не платит ничего сверх котировки, которую видит. Размер обсуждаем индивидуально, начисления и выплаты видны в рабочем столе.</div></details>
+    <details><summary>Что происходит после размещения?</summary><div class="a">По обращающимся выпускам мы показываем индикативный Bid и переоцениваем его, пока выпуск живёт. Документы и параметры лежат на странице выпуска и доступны всё время до погашения.</div></details>
+    <details><summary>Кому предназначены продукты?</summary><div class="a">Квалифицированным инвесторам. Витрина — информационный материал, а не оферта и не индивидуальная инвестиционная рекомендация.</div></details>
+  </div>
+
+  <div class="end">
+    <div>
+      <div class="q">Начнём с разговора</div>
+      <div class="s">Ответим в течение рабочего дня. Если удобнее письмом — <a class="ln" href="mailto:sales@rumberg.ru">sales@rumberg.ru</a></div>
+    </div>
+    <div class="r">
+      <span id="ct-end"></span>
+      <a class="ln" href="https://t.me/+NHbVOoUI5IBkN2Uy" target="_blank" rel="noopener">Telegram-группа →</a>
+    </div>
+  </div>
+</main>
+</div>
+
+<footer class="foot">
+  <span>Не является индивидуальной инвестиционной рекомендацией.</span>
+  <span><a href="company.html">О компании</a></span>
+</footer>
+
+<script src="contact.js?v=10"></script>
+<script src="chat.js?v=19"></script>
+<script src="nav-about.js?v=9"></script>
+<script>
+  (function () {
+    if (!window.Contact) return;
+    var base = location.origin + "/partners.html";
+    Contact.attach(document.getElementById("ct-fi"),
+      { title: "Сотрудничество — финансовый институт", url: base, id: "pricing", label: "Запросить прайсинг" });
+    Contact.attach(document.getElementById("ct-ag"),
+      { title: "Сотрудничество — агент", url: base, id: "agent", label: "Стать агентом" });
+    Contact.attach(document.getElementById("ct-end"),
+      { title: "Сотрудничество", url: base, id: "coop", label: "Написать нам" });
+  })();
+</script>
+</body>
+</html>

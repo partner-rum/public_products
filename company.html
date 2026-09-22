@@ -45,7 +45,9 @@
      посетитель не понимает, чей это сайт (фидбек 18.09.2026). */
   .brand-tag { font-size: 13px; font-weight: 400; color: var(--hushed); padding-left: 9px; margin-left: 9px; border-left: 1px solid var(--border); white-space: nowrap; }
   @media (max-width: 1100px) { .brand-tag { display: none; } }
-  .topnav { margin-left: auto; display: flex; align-items: center; gap: 22px; font-size: 14px; font-weight: 500; }
+  /* gap 22 → 14: с пунктом «Сотрудничество» (22.09.2026) ряд перестал влезать
+     на 1280 и 1440 — переполнение 49px. Кегль не трогаем, режем воздух. */
+  .topnav { margin-left: auto; display: flex; align-items: center; gap: 14px; font-size: 14px; font-weight: 500; }
   .topnav a { color: var(--hushed); transition: color .2s; }
   .topnav a:hover { color: var(--ink); }
   .btn-solar { background: var(--solar); color: #0C0A08 !important; border-radius: 6px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 7px; transition: background .3s ease-in-out; }
@@ -219,13 +221,14 @@
       <span class="brand-name">Rumberg</span><span class="brand-tag">Инвестиционные решения</span>
     </a>
     <nav class="topnav">
+      <a href="partners.html">Сотрудничество</a>
       <a href="screener.html">Лучшие ставки</a>
       <a href="ideas.html">Разборы</a>
       <a href="digest.html">Дайджест</a>
       <a href="offerings.html">Размещения</a>
       <a href="placements.html">Выпуски</a>
       <a href="about.html">Библиотека</a>
-      <a class="btn-solar" href="board.html?type=warrant">Доска
+      <a class="btn-solar" href="board.html">Доска
         <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </a>
     </nav>
@@ -269,7 +272,7 @@
     <div class="bz-w">
       <div class="n">Агентам и партнёрам</div>
       <div class="d">Продукт уходит клиенту одной ссылкой: параметры, график выплат, пример расчёта на его сумму, печатный one-pager. Заявка возвращается вам, сделки и вознаграждение — в рабочем столе.</div>
-      <div class="bz-act"><a class="bz-go" href="guide.html">Как это устроено<svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></a></div>
+      <div class="bz-act"><a class="bz-go" href="partners.html#ag">Как это устроено<svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></a></div>
     </div>
     <div class="bz-w">
       <div class="n">Квалифицированным инвесторам</div>
