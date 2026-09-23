@@ -276,6 +276,10 @@
   .lh-kick a { color: #49D69C; } /* фирменный зелёный АльянсКапитал */
   .lh-kick a:hover { text-decoration: underline; }
   .lh-kick .sep { color: rgba(242,243,247,0.38); }
+  /* Ряд переносится на любой ширине, и «·» висел в конце строки, а на 320px стоял
+     отдельной строкой. Партнёр всегда идёт своей строкой — разделитель не нужен. */
+  .lh-kick .sep { display: none; }
+  .lh-kick .sep + span { flex-basis: 100%; }
   .lh-name { margin: 14px 0 0; font-family: var(--display); font-size: 54px; line-height: 1.02; font-weight: 500; letter-spacing: -0.03em; }
   .lh-lead { margin: 16px 0 0; max-width: 560px; font-size: 18px; line-height: 1.5; color: rgba(242,243,247,0.86); text-wrap: pretty; }
   .lh-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; margin: 28px 0 0; }
@@ -300,8 +304,12 @@
 
   /* ── УСЛОВИЯ: шесть фактов ─────────────────────────────────────────────── */
   .facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 36px; margin-top: 4px; }
-  .fc { padding: 22px 0 18px; border-bottom: 1px solid var(--border-soft); min-width: 0; }
-  .fc .v { font-family: var(--f-mono); font-size: 34px; font-weight: 500; letter-spacing: -0.02em; line-height: 1; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .fc { padding: 22px 0 18px; border-bottom: 1px solid var(--border-soft); min-width: 0; container-type: inline-size; }
+  /* Кегль цифры — от ширины САМОЙ плитки (cqi): «24.09–09.10.2026» на 1024–1101px
+     не влезал в колонку и обрезался многоточием. 10.4cqi — 16 знаков моно-шрифта
+     с запасом; на широких плитках срабатывает потолок, и вид не меняется.
+     Без поддержки cqi вторая строка отбрасывается и остаётся первая. */
+  .fc .v { font-family: var(--f-mono); font-size: 34px; font-size: min(34px, 10.4cqi); font-weight: 500; letter-spacing: -0.02em; line-height: 1; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .fc.hi .v { color: var(--solar); }
   .fc.loss .v { color: var(--loss); }
   .fc .k { margin-top: 10px; font-size: 14.5px; font-weight: 600; }
@@ -414,10 +422,11 @@
     .spec .sr:nth-child(2n) dt { padding-left: 0; }
     .sr.full dd { grid-column: 2; }
     .pay { grid-template-columns: 1fr; }
-    .cal { grid-auto-flow: row; grid-auto-columns: auto; border-top: none; }
+    /* padding-left: точка сидит на линии и выступает за неё на 4px, а панель
+       страницы режет всё, что левее её края (overflow:auto без отступа). */
+    .cal { grid-auto-flow: row; grid-auto-columns: auto; border-top: none; padding-left: 5px; }
     .clp { padding: 0 0 14px 20px; border-left: 1px solid var(--border-soft); }
     .clp::after { top: 3px; left: -4px; }
-    .clp .t { display: inline; margin-left: 10px; }
   }
   @media (max-width: 720px) {
     .lh-grid { grid-template-columns: 1fr; gap: 18px; padding: 16px 16px 20px; }
@@ -436,7 +445,7 @@
     .wh { padding: 16px 0 4px; border-bottom: 1px solid var(--border-soft); }
     .wh .n { font-size: 30px; }
     .fc { padding: 16px 0 14px; }
-    .fc .v { font-size: 28px; }
+    .fc .v { font-size: 28px; font-size: min(28px, 10.4cqi); }
     .fd summary { flex-wrap: wrap; gap: 4px 10px; }
     .fd-h { white-space: normal; flex-basis: 100%; }
     .spec { grid-template-columns: 1fr; }
@@ -483,7 +492,7 @@
   <div class="layout">
     <aside class="aside">
       <div class="filters" id="filters"></div>
-      <div class="list" id="list"><!-- seo:start --><div class="seo-pre"><p>Выпуски Rumberg на размещении: параметры, документы и порядок подачи заявок.</p><h2>На размещении</h2><ul><li>Космические технологии, Биржевая структурная облигация · колл-спред 100–200%, базовый актив — Корзина из 3 акций космической отрасли (в USD), срок 3 года, ISIN RU000A10B9Y3, Приём заявок до 09.10.2026.</li></ul></div><!-- seo:end --></div>
+      <div class="list" id="list"><!-- seo:start --><div class="seo-pre"><p>Выпуски Rumberg на размещении: параметры, документы и порядок подачи заявок.</p><h2>На размещении</h2><ul><li>Космические технологии, Биржевая структурная облигация · колл-спред 100–200%, базовый актив — Корзина из 3 акций космической отрасли (в USD), срок 3 года, ISIN RU000A10B9Y3, Приём заявок до 09.10.2026.</li></ul></div><!-- seo:end --></div>
     </aside>
     <div class="panel" id="panel"><button class="panel-close" id="close">← К списку</button><div id="panel-body"></div></div>
   </div>
