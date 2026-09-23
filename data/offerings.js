@@ -6,7 +6,10 @@ window.OFFERINGS = {
  "updated": "2026-09-23",
  "items": [
   {
-   "id": "sp-1-43-cb-fx-rub-3",
+   "id": "sp-1-31-cb-fx-rub",
+   "aliases": [
+    "sp-1-43-cb-fx-rub-3"
+   ],
    "family": "participation",
    "accent": "#EE7D1B",
    "landing": true,

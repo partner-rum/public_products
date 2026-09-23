@@ -222,6 +222,14 @@ def main():
         html = TEMPLATE.format(title=esc(o.get("name", pid)), desc=esc(describe_offering(o)),
                                base=BASE, id=pid, ogimg=img, redir=redir, target=target)
         written += write_if_changed(os.path.join(OUTDIR, pid + ".html"), html)
+        # Прежние адреса выпуска (o.aliases): при перевыпуске id меняется, а ссылки
+        # /p/<старый id>.html уже разосланы. Шелл под старым id ведёт на новый —
+        # без этого чистка ниже удалила бы его как «снятый продукт».
+        for alias in o.get("aliases") or []:
+            wanted.add(alias)
+            html = TEMPLATE.format(title=esc(o.get("name", pid)), desc=esc(describe_offering(o)),
+                                   base=BASE, id=alias, ogimg=img, redir=redir, target=target)
+            written += write_if_changed(os.path.join(OUTDIR, alias + ".html"), html)
     # чистим шеллы снятых продуктов
     removed = 0
     for path in glob.glob(os.path.join(OUTDIR, "*.html")):

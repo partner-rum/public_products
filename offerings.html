@@ -1158,6 +1158,10 @@
   // history.replaceState и перезаписал бы hash. Затем возвращаем выбор на целевой —
   // работает и для скрытых выпусков по прямой ссылке (offerings#<id>).
   var startId = decodeURIComponent(location.hash.slice(1));
+  // Старые адреса выпуска (o.aliases): id меняется при перевыпуске, а ссылки на
+  // прежний уже разосланы. Открываем тот же выпуск, select() перепишет якорь.
+  var byAlias = D.items.find(o => (o.aliases || []).indexOf(startId) >= 0);
+  if (byAlias) startId = byAlias.id;
   if (!D.items.some(o => o.id === startId)) startId = null;
   renderList();
   if (startId) select(startId, true);  // true — открыть паспорт-оверлей на мобиле
