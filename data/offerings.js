@@ -40,12 +40,6 @@ window.OFFERINGS = {
     "poster": "media/space-poster.jpg",
     "credit": "Кадр — из ролика АльянсКапитал"
    },
-   "video": {
-    "src": "media/space-tech.mp4",
-    "poster": "media/space-poster.jpg",
-    "title": "Ролик о портфеле «Космические технологии»",
-    "meta": "3 мин 43 с"
-   },
    "partner": {
     "name": "АльянсКапитал",
     "url": "https://alliancecap.ru/",
@@ -195,14 +189,6 @@ window.OFFERINGS = {
     "АО «ФИНАМ»"
    ],
    "docs": [
-    {
-     "name": "Презентация: Космические технологии (АльянсКапитал)",
-     "file": "docs/preso-sp-1-43-cb-fx-rub.pdf",
-     "ext": "PDF",
-     "size": "1,6 МБ",
-     "top": true,
-     "short": "Презентация"
-    },
     {
      "name": "Ключевые условия выпуска (КУВ) · СП-1-31",
      "file": "docs/kuv-sp-1-31-cb-fx-rub.pdf",
