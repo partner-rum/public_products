@@ -3,15 +3,15 @@
 // Источники: ЦБ (ключевая, RUONIA), MOEX ISS (RUSFAR, БПИФы, ОФЗ),
 // Финуслуги (вклады и накопительные счета — витрина МосБиржи).
 window.RATES = {
-  "updated": "2026-09-23 10:30",
+  "updated": "2026-09-24 10:42",
   "cbr": {
     "key": {
       "rate": 14.0,
       "date": "2026-07-27"
     },
     "ruonia": {
-      "rate": 14.09,
-      "date": "2026-09-21"
+      "rate": 14.08,
+      "date": "2026-09-22"
     }
   },
   "rusfar": [
@@ -19,82 +19,82 @@ window.RATES = {
       "id": "RUSFAR",
       "term": "овернайт",
       "days": 1,
-      "rate": 14.03
+      "rate": 14.21
     },
     {
       "id": "RUSFAR1W",
       "term": "1 неделя",
       "days": 7,
-      "rate": 14.06
+      "rate": 14.19
     },
     {
       "id": "RUSFAR2W",
       "term": "2 недели",
       "days": 14,
-      "rate": 14.08
+      "rate": 14.16
     },
     {
       "id": "RUSFAR1M",
       "term": "1 месяц",
       "days": 30,
-      "rate": 14.09
+      "rate": 14.14
     },
     {
       "id": "RUSFAR3M",
       "term": "3 месяца",
       "days": 90,
-      "rate": 14.03
+      "rate": 14.07
     }
   ],
   "funds": [
     {
       "id": "BCSD",
       "name": "БКС Денежный рынок",
-      "price": 14.409,
+      "price": 14.417,
       "ter": 0.2,
-      "rate": 13.83
+      "rate": 14.01
     },
     {
       "id": "MONY",
       "name": "АК БАРС Денежный рынок",
-      "price": 132.99,
+      "price": 133.66,
       "ter": 0.2,
-      "rate": 13.83
+      "rate": 14.01
     },
     {
       "id": "LQDT",
       "name": "Ликвидность (ВИМ)",
-      "price": 2.0921,
+      "price": 2.0929,
       "ter": 0.29,
-      "rate": 13.74
+      "rate": 13.92
     },
     {
       "id": "SBMM",
       "name": "Первая Сберегательный",
-      "price": 19.4575,
+      "price": 19.465,
       "ter": 0.3,
-      "rate": 13.73
+      "rate": 13.91
     },
     {
       "id": "AMNR",
       "name": "АТОН Накопительный",
-      "price": 157.248,
+      "price": 157.31,
       "ter": 0.3,
-      "rate": 13.73
+      "rate": 13.91
     },
     {
       "id": "AKMM",
       "name": "Альфа Денежный рынок",
-      "price": 178.06,
+      "price": 178.15,
       "ter": 0.69,
-      "rate": 13.34
+      "rate": 13.52
     },
     {
       "id": "TMON",
       "name": "Т-Капитал Денежный рынок",
-      "price": 164.75,
+      "price": 164.88,
       "ter": 1.15,
-      "rate": 12.88
+      "rate": 13.06
     }
   ],
   "ofz": [
@@ -103,28 +103,28 @@ window.RATES = {
       "name": "ОФЗ 26226",
       "maturity": "2026-10-07",
       "years": 0.04,
-      "rate": 11.28
+      "rate": 11.44
     },
     {
       "id": "SU26207RMFS9",
       "name": "ОФЗ 26207",
       "maturity": "2027-02-03",
       "years": 0.36,
-      "rate": 12.43
+      "rate": 12.4
     },
     {
       "id": "SU26232RMFS7",
       "name": "ОФЗ 26232",
       "maturity": "2027-10-06",
-      "years": 1.04,
-      "rate": 12.37
+      "years": 1.03,
+      "rate": 12.42
     },
     {
       "id": "SU26212RMFS9",
       "name": "ОФЗ 26212",
       "maturity": "2028-01-19",
       "years": 1.32,
-      "rate": 13.69
+      "rate": 13.72
     }
   ],
   "deposits": [
