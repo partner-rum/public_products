@@ -2,7 +2,8 @@
    Один раз на браузер (180 дней) поверх витрины: подтверждение статуса до доступа к материалам.
    Подключение: <script src="qualgate.js?v=1"></script> перед </body>. Без зависимостей.
    На главной ждёт завершения интро-ролика (.intro / body.intro-lock), затем показывает гейт —
-   ровно «после загрузки витрины». Демо: ?qual=1 — принудительно показать (без записи в хранилище). */
+   ровно «после загрузки витрины». Демо: ?qual=1 — принудительно показать (без записи в хранилище).
+   Поисковым роботам гейт не показывается — см. isBot(). */
 (function () {
   "use strict";
 
@@ -189,8 +190,20 @@
     }, 9000);
   }
 
+  // Поисковым роботам гейт не показываем. «Да» они не нажимают, и отрисованная
+  // страница для них — одна и та же модалка поверх размытого фона на всех адресах
+  // (28.09.2026: в Google и Bing ноль страниц витрины при живых ссылках на неё).
+  // Для обязательного гейта Google сам советует пускать робота без него (Search
+  // Central, «Interstitials and dialogs»). Содержимое то же, что человек видит
+  // после «Да», — это не клоакинг. Защита не слабеет: подменить user-agent сложнее,
+  // чем нажать кнопку. Google-InspectionTool — это «Проверка URL» в Search Console.
+  var BOT = /googlebot|google-inspectiontool|bingbot|yandex(?:bot|mobilebot|renderresourcesbot)|duckduckbot|applebot/i;
+  function isBot() {
+    try { return BOT.test(navigator.userAgent || ""); } catch (e) { return false; }
+  }
+
   function init() {
-    if (seen()) return;
+    if (seen() || (!demo && isBot())) return;
     whenClear(show);
   }
 

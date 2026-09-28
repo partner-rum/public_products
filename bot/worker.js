@@ -3871,7 +3871,7 @@ async function commitResearchIssue(env, issue) {
 // Скрапер превью (Telegram) не исполняет JS, поэтому нужна статичная страница на продукт.
 // Шаблон 1:1 с make_product_pages.py — чтобы массовая регенерация не давала лишних диффов.
 const SHELL_BASE = "https://invest.rumberg.ru";
-const SHELL_TYPE_LABEL = { discount: "Дисконтная облигация", protection: "Облигация с защитой капитала", warrant: "Варрант", digital: "Купонный варрант", booster: "Бустер", autocall: "Автоколл", revconv: "Реверс-конвертибл" };
+const SHELL_TYPE_LABEL = { discount: "Дисконтная облигация", protection: "Облигация с защитой капитала", warrant: "Варрант", digital: "Купонный варрант", booster: "Бустер", autocall: "Автоколл", revconv: "Реверс-конвертибл", rcdigital: "Реверс-конвертибл с условным купоном" };
 function shellEsc(s) { return String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 function shellDesc(item) {
   const tl = SHELL_TYPE_LABEL[item.type] || "Структурный продукт";
@@ -3883,6 +3883,15 @@ function shellDesc(item) {
     const cpn = item.couponPa != null ? item.couponPa : item.quote;
     if (cpn != null) parts.push("купон " + shellNum(cpn) + "% годовых");
     if (item.type === "revconv") parts.push("страйк " + shellNum(item.strike != null ? item.strike : 100) + "%");
+  } else if (item.type === "rcdigital") {
+    // купон ЗА СРОК (одна выплата на дату оценки), не годовой; вход по номиналу —
+    // без этой ветки превью печатало «котировка 28,5% от номинала», то есть цену входа
+    const cpn = item.couponPct != null ? item.couponPct : item.quote;
+    if (cpn != null) {
+      parts.push("купон " + shellNum(cpn) + "% номинала при уровне от " +
+        shellNum(item.strike != null ? item.strike : 100) + "%");
+    }
+    parts.push("ниже страйка купона нет");
   } else if (item.type === "digital") {
     // у купонного варранта в превью важнее смысл: фиксированная выплата и её порог
     if (item.digitalPct != null) {
@@ -3940,6 +3949,10 @@ function productShell(item, section, ogimg) {
   const redir = isOffering
     ? '"/offerings.html"+location.search+"#' + id + '"'
     : '"/instrument.html?id=' + id + '"+location.search.replace("?","&")';
+  // Канонический адрес — страница, куда шелл уводит, а не сам шелл: раньше он
+  // объявлял каноническим себя и тут же уводил редиректом. Якорь размещения в
+  // canonical не входит. ТО ЖЕ собирает canonical_url() в make_product_pages.py.
+  const canon = isOffering ? B + "/offerings.html" : B + "/instrument.html?id=" + id;
   const title = shellEsc(item.name || id);
   const desc = shellEsc(isOffering ? shellDescOffering(item) : shellDesc(item));
   const img = ogimg || "og-cover.png";
@@ -3958,7 +3971,7 @@ function productShell(item, section, ogimg) {
     '<meta property="og:image:alt" content="Rumberg — структурные продукты">',
     '<meta name="twitter:card" content="summary_large_image">',
     '<meta name="theme-color" content="#0B0C10">',
-    '<link rel="canonical" href="' + B + '/p/' + id + '.html">',
+    '<link rel="canonical" href="' + canon + '">',
     '<script>location.replace(' + redir + ');</script>',
     "<style>html,body{margin:0;height:100%}body{background:#0B0C10;color:rgba(242,243,247,.6);font-family:'Onest',system-ui,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px}a{color:#EE7D1B}</style>",
     '</head>',
