@@ -529,10 +529,7 @@
     .work { grid-template-columns:minmax(0,1fr); column-gap:0; }
     .work .cell { border-top:1px solid var(--line); margin-top:0; padding-top:16px; }
     .work .cell:nth-child(n) { grid-column:auto; }
-    /* Порядок и видимость колонок на телефоне задаёт блок варианта B ниже:
-       прежняя раскладка ставила первым «Утро на рынках» (самый высокий блок,
-       515px), а список «Разделы» уезжал в конец, на y=2304 — то есть меню
-       было видно после 2,8 экранов скролла. */
+    /* Колонки данных на телефоне скрыты целиком — см. «Главная на телефоне» ниже */
     /* То же и для заголовков колонок: это входы в разделы, а не подписи.
        Ниже — тач-цели 44px там, где палец, а не курсор. */
     .ch { align-items:center; }
@@ -548,64 +545,6 @@
     .prow .pmain { padding:9px 0; }
     .prow .pcopy { width:44px; height:44px; }
   }
-  /* ── Мобильная структура: аккордеон (вариант B, выбран Русланом 11.09.2026) ──
-     Повод — замер исходной телефонной раскладки на 375×812: страница 3436px =
-     4,2 экрана, навигация лежала на y=2304 (её видно после 2,8 экранов), а
-     самый высокий блок «Утро на рынках» (515px) стоял первым. То есть витрина
-     открывалась новостями, а меню было последним.
-     Стало: меню чипсами сразу под лентой, порядок продуктовый, каждый раздел —
-     строка-заголовок со счётчиком, раскрывается тапом; открыты только
-     «Актуальные продукты». Страница 2,7 экрана вместо 4,2, весь контент цел.
-     Разметку строит JS, но ТОЛЬКО при совпадении медиазапроса — на десктопе
-     обёрток и кнопок нет вовсе. */
-
-  /* Чипсы навигации: заменяют список «Разделы» из подвала страницы.
-     Метки («110 шт.», даты) в чипсы не несём — с ними восемь чипсов занимали
-     пять строк и 230px, без них три строки и 146px; цифра всё равно стоит на
-     странице раздела. */
-  .mob-nav { display:none; }
-  .mob-tog { display:none; }
-  .mob-cnt { display:none; }
-
-  @media (max-width:860px) {
-    .mob-nav { display:flex; flex-wrap:wrap; gap:7px; margin:16px 0 4px; }
-    .mob-nav a { display:inline-flex; align-items:center; min-height:44px; padding:0 13px;
-      border:1px solid var(--line); border-radius:9px; background:var(--panel);
-      font-size:0.8125rem; font-weight:500; color:var(--tx); }
-    .mob-nav a:active { border-color:var(--solar); }
-
-    /* Кнопка-раскрытие. Это <button>, а он НЕ наследует color от body и берёт
-       системный buttontext — на тёмном это 1,16:1 (ловили на плитках .cell
-       в библиотеке). Цвет задаём явно. */
-    .mob-tog { display:inline-flex; margin-left:auto; align-items:center; justify-content:center;
-      width:44px; height:44px; padding:0; flex:none;
-      background:none; border:1px solid var(--line); border-radius:9px; color:var(--mut); }
-    .mob-tog svg { transition:transform .2s var(--ease); }
-    .mob-acc.open .mob-tog svg { transform:rotate(180deg); }
-    .mob-tog:active { border-color:var(--solar); color:var(--tx); }
-    .mob-cnt { display:inline; font-family:var(--m); font-size:0.6875rem; color:var(--dim);
-      margin-left:8px; white-space:nowrap; }
-    .mob-acc > .ch { min-height:56px; }
-    .mob-acc:not(.open) .mob-body { display:none; }
-
-    /* Шапка ленты на 375px ломалась: метка «МОЖЕМ ЗАПУСТИТЬ СЕЙЧАС» уходила
-       в три строки, а пояснение на 76 знаков вжималось рядом с ней в узкую
-       колонку. Раскладываем на две строки: метка и вход — первая, пояснение —
-       вторая, во всю ширину. */
-    .tape-cap { flex-wrap:wrap; }
-    .tape-cap .tlbl { white-space:nowrap; }
-    .tape-cap .launch-go { order:2; }
-    .tape-cap .tsub { order:3; flex-basis:100%; margin-top:3px; }
-
-    /* Порядок продуктовый: сначала товар, потом деньги, потом чтение */
-    .work .cell:nth-child(4) { order:1; border-top:0; }   /* Актуальные продукты */
-    .work .cell:nth-child(2) { order:2; }                 /* Лучшие ставки */
-    .work .cell:nth-child(5) { order:3; }                 /* Размещения */
-    .work .cell:nth-child(3) { order:4; }                 /* Утро на рынках */
-    /* Список «Разделы» скрыт, но ОСТАЁТСЯ в DOM: чипсы строятся из него */
-    .work .cell:first-child { display:none; }
-  }
-
   @media (max-width: 900px) {
     /* Подпись длинная (23 знака) и переполняет шапку раньше остальных —
        сворачиваем её в иконку на 260px раньше, чем ярлык Telegram. */
@@ -620,6 +559,118 @@
     .bench { gap:8px; }
   }
 
+  /* ══════════ Главная на телефоне: минималистичная (28.09.2026) ══════════
+     Вариант A со стенда _min-view.html, выбор Руслана. Всё живёт ТОЛЬКО ниже
+     860px; на десктопе новые узлы скрыты (.mx-btns, .mx-root), меню не строится
+     вовсе. Что ушло с телефона и почему — в комментарии к скрипту внизу. */
+  .mx-root, .mx-btns, .mx-sheet { display:none; }
+  /* Лид ОДИН на оба экрана: полные обороты («от ОФЗ до биткоина», «и расчётом
+     на вашу сумму») спрятаны в .xl и на телефоне не печатаются, тире .xs —
+     наоборот. Второго <p> и второго <h1> в DOM нет. */
+  .sub .xs { display:none; }
+  
+  @media (max-width:860px) {
+    /* ── Что уходит с телефона ──
+       Свечи за текстом героя, пилюли «Работаем с», телефон «События», лента,
+       мини-дорожки intro.js, чипсы, аккордеон с данными, выступления,
+       закрывающая строка, подвал и три кнопки шапки. Всё это остаётся на
+       своих страницах и в меню. */
+    .bg-market,
+    .hero .coop,
+    #hevslot,
+    #evslot,
+    .launch,
+    .in-mini,
+    .bandwrap,
+    .talks,
+    .endcta,
+    .foot,
+    .nav-cta { display:none !important; }
+
+    /* ── Шапка в одну строку: имя слева, поиск и меню справа ──
+       search.js на ≤900px переносит поле во вторую строку и снимает высоту —
+       отсюда 162px липкой шапки. Поле прячем за иконку и показываем по тапу. */
+    .nav-in { padding-top:6px !important; padding-bottom:6px !important; min-height:56px; column-gap:10px; }
+    .nav .name { font-family:var(--display); font-size:1.0625rem; font-weight:600; letter-spacing:-0.012em; }
+    .nav .sf { display:none !important; }
+    .nav.mx-s .sf { display:block !important; margin:4px 0 6px !important; }
+    .mx-btns { display:flex; align-items:center; gap:2px; margin-left:auto; margin-right:-10px; }
+    .mx-ib { width:44px; height:44px; display:inline-flex; align-items:center; justify-content:center;
+      padding:0; border:0; border-radius:10px; background:none; color:var(--tx); cursor:pointer;
+      -webkit-tap-highlight-color:transparent; transition:background .2s; }
+    .mx-ib:active { background:rgba(255,255,255,0.07); }
+    .mx-ib .ic-x { display:none; }
+    .mx-ib[aria-expanded="true"] .ic-x { display:block; }
+    .mx-ib[aria-expanded="true"] .ic-o { display:none; }
+
+    /* ── Первый экран: заголовок и лид — те же элементы, что на десктопе ── */
+    .hero { padding:34px 0 0; }
+    /* 38px до 360px; ниже кегль плывёт за шириной: «в каждой сделке.» при 38px
+       занимает 318px, а на 320-пиксельном экране есть 280 — строка рвалась
+       на три. При 10.3vw на 320 выходит 33px (274px), на 360 — 37px */
+    h1 { font-size:clamp(2rem, 10.3vw, 2.375rem); line-height:1.04; letter-spacing:-0.028em; max-width:none; text-wrap:balance; }
+    h1 .lm { color:inherit; }
+    .sub { margin:16px 0 0; font-size:1.0625rem; line-height:1.5; max-width:none; }
+    .sub .xl { display:none; }
+    .sub .xs { display:inline; }
+    /* На планшете (600–860) строки не растягиваем на всю ширину: лид в 90 знаков
+       не читается, а строки оглавления с шевроном за 700px теряют связь */
+    .hero, .mx-root { max-width:600px; }
+    .mx-root { display:block; position:relative; z-index:1; }
+    .mx-cta { display:flex; align-items:center; gap:10px; min-height:56px; margin-top:28px; padding:0 18px 0 20px;
+      border-radius:12px; background:var(--solar); color:#0C0A08; font-size:1.0625rem; font-weight:600;
+      letter-spacing:-0.005em; -webkit-tap-highlight-color:transparent; transition:background .2s; }
+    .mx-cta:active { background:var(--solar-l); }
+    .mx-cta .n { margin-left:auto; font-family:var(--m); font-size:0.9375rem; font-weight:400; }
+    .mx-cta svg { flex:none; }
+    /* Второй вход — тише кнопки: название и под ним, кому это */
+    .mx-co { display:block; margin-top:10px; padding:10px 0; -webkit-tap-highlight-color:transparent; }
+    .mx-co .t { display:inline-flex; align-items:center; gap:8px; font-size:0.9375rem; font-weight:500; color:var(--tx); }
+    .mx-co .t svg { color:var(--dim); transition:transform .25s var(--ease); }
+    .mx-co:active .t svg { transform:translateX(3px); }
+    .mx-co .s { display:block; margin-top:3px; font-size:0.8125rem; line-height:1.4; color:var(--dim); }
+
+    /* ── Группы и строки: одна форма на всё, что ведёт в раздел ──
+       Справа у строки стоит ТОЛЬКО число или дата — то, что меняется
+       (срок приёма заявок, дата обзора, лучшая ставка, число записей). */
+    .mx-g { margin-top:44px; }
+    .mx-cap { margin:0 0 4px; font-family:var(--m); font-size:0.6875rem; font-weight:400; letter-spacing:.1em;
+      text-transform:uppercase; color:var(--dim); }
+    .mx-list { border-top:1px solid rgba(255,255,255,0.08); }
+    .mx-row { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; column-gap:10px;
+      min-height:62px; padding:12px 0; border-bottom:1px solid rgba(255,255,255,0.08);
+      -webkit-tap-highlight-color:transparent; transition:background .2s; }
+    .mx-row:active { background:rgba(255,255,255,0.035); }
+    .mx-row .t { display:block; font-size:1.0625rem; font-weight:500; line-height:1.3; letter-spacing:-0.005em; }
+    .mx-row .m { display:block; margin-top:3px; font-size:0.8125rem; line-height:1.4; color:var(--dim); }
+    .mx-row .d { font-family:var(--m); font-size:0.75rem; color:var(--mut); }
+    .mx-row .r { display:flex; align-items:center; gap:12px; color:var(--dim); }
+    .mx-row .r .n { font-family:var(--m); font-size:0.9375rem; color:var(--mut); font-variant-numeric:tabular-nums; white-space:nowrap; }
+
+    /* ── Подвал: низ 96px — под AI-орб, иначе он закрывает конец дисклеймера ── */
+    .mx-foot { margin-top:48px; padding:14px 0 calc(96px + env(safe-area-inset-bottom, 0px));
+      border-top:1px solid rgba(255,255,255,0.08); font-size:0.8125rem; line-height:1.5; color:var(--dim); }
+    .mx-foot .l { display:flex; flex-wrap:wrap; gap:0 22px; margin-bottom:10px; }
+    .mx-foot .l a { display:inline-flex; align-items:center; gap:8px; min-height:44px; font-size:0.9375rem; color:var(--mut); }
+
+    /* ── Меню: весь сайт одним списком ── */
+    .mx-sheet { display:block; position:fixed; inset:0; z-index:400; overflow-y:auto; overscroll-behavior:contain;
+      background:var(--bg); visibility:hidden; opacity:0; transform:translateY(-6px);
+      transition:opacity .2s var(--ease), transform .32s var(--ease), visibility 0s linear .32s; }
+    .mx-sheet.on { visibility:visible; opacity:1; transform:none;
+      transition:opacity .2s var(--ease), transform .32s var(--ease); }
+    .mx-sheet .sh { position:sticky; top:0; z-index:1; display:flex; align-items:center; gap:10px;
+      min-height:56px; padding:6px 20px; background:var(--bg); border-bottom:1px solid var(--line); }
+    .mx-sheet .sh .name { font-family:var(--display); font-size:1.0625rem; font-weight:600; letter-spacing:-0.012em; }
+    .mx-sheet .sh .mx-ib { margin-left:auto; margin-right:-10px; }
+    .mx-sheet .sb { max-width:600px; padding:6px 20px calc(40px + env(safe-area-inset-bottom, 0px)); }
+    .mx-sheet .mx-g { margin-top:32px; }
+    body.mx-lock { overflow:hidden; }
+  }
+
+  @media (max-width:860px) and (prefers-reduced-motion: reduce) {
+    .mx-sheet, .mx-sheet.on { transition:none; transform:none; }
+  }
 </style>
 <script src="metrika.js?v=6" defer></script>
 </head>
@@ -645,6 +696,17 @@
       <a class="btn-solar" href="board.html">Открыть доску
         <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
     </div>
+    <!-- Телефон: вместо трёх кнопок и поля поиска — две иконки; поле search.js
+         раскрывается по тапу второй строкой, меню — полноэкранным списком -->
+    <div class="mx-btns">
+      <button class="mx-ib mx-sbtn" type="button" aria-label="Поиск: продукт, тикер, ISIN" aria-expanded="false">
+        <svg class="ic-o" width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true"><circle cx="9.5" cy="9.5" r="6" stroke="currentColor" stroke-width="1.7"/><path d="M14 14 L18.5 18.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+        <svg class="ic-x" width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true"><path d="M6 6 L16 16 M16 6 L6 16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+      </button>
+      <button class="mx-ib mx-mbtn" type="button" aria-label="Меню" aria-expanded="false" aria-controls="mx-sheet">
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true"><path d="M4 8 H18 M4 14 H18" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+      </button>
+    </div>
   </div>
 </header>
 
@@ -652,7 +714,7 @@
 <main id="main">
   <section class="hero">
     <h1 class="rise"><span class="lm">Уверенность</span><br>в каждой сделке.</h1>
-    <p class="sub rise" style="animation-delay:.07s">Структурные облигации для квалифицированных инвесторов: от ОФЗ до биткоина, с формулой выплаты, известной до сделки, и расчётом на вашу сумму.</p>
+    <p class="sub rise" style="animation-delay:.07s"><span class="xs">Rumberg выпускает с</span><span class="xl">С</span>труктурные облигации для квалифицированных инвесторов<span class="xl">: от ОФЗ до биткоина,</span><span class="xs">&nbsp;—</span> с&nbsp;формулой выплаты, известной до сделки<span class="xl">, и расчётом на вашу сумму</span>.</p>
     <div class="coop rise" style="animation-delay:.1s">
       <span class="cl">Работаем с:</span>
       <a href="partners.html#fi">Финансовыми институтами<svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
@@ -660,6 +722,22 @@
     </div>
     <div id="hevslot"></div>
   </section>
+
+  <!-- Телефон (≤860px): кнопка, второй вход, оглавление и подвал. Заголовок и
+       лид — из героя выше, те же элементы, что на десктопе. На десктопе блок
+       скрыт. Без данных остаются кнопка и статические строки оглавления. -->
+  <div class="mx-root" id="mx-root">
+    <a class="mx-cta rise" style="animation-delay:.12s" href="board.html">Смотреть продукты<span class="n" id="mx-n"></span><svg width="16" height="16" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+    <a class="mx-co rise" style="animation-delay:.16s" href="partners.html"><span class="t">Сотрудничество<svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="s">для финансовых институтов и агентов</span></a>
+    <div id="mx-idx"></div>
+    <div class="mx-foot">
+      <div class="l">
+        <a href="https://t.me/+NHbVOoUI5IBkN2Uy" target="_blank" rel="noopener"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.46-.52-.19L7.74 13.3 3.64 12c-.88-.25-.89-.86.2-1.3l15.97-6.16c.73-.27 1.43.18 1.15 1.3l-2.72 12.81c-.19.91-.74 1.13-1.5.71L12.6 16.3l-1.99 1.93c-.23.23-.42.42-.83.42z" fill="#4F86E6"/></svg>Telegram-группа</a>
+        <a href="me.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="8" r="3.4" stroke="currentColor" stroke-width="1.7"/><path d="M5 19.6c0-3.5 3.1-5.4 7-5.4s7 1.9 7 5.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>Кабинет партнёра</a>
+      </div>
+      Не является индивидуальной инвестиционной рекомендацией. Котировки индикативны.
+    </div>
+  </div>
 
   <div id="evslot"></div>
 
@@ -1433,124 +1511,179 @@
 <script src="nav-about.js?v=9"></script>
 <script src="qualgate.js?v=6"></script>
 <script>
-/* ── Мобильная структура: чипсы навигации + аккордеон разделов ──────────────
-   Вариант B, выбран Русланом 11.09.2026 из пяти показанных на стенде.
-   Строим ТОЛЬКО при совпадении медиазапроса: на десктопе ни обёрток, ни
-   кнопок, ни счётчиков в DOM не появляется. Порядок блоков и видимость —
-   на CSS, здесь только разметка и состояние. */
+/* ── Главная на телефоне: первый экран + оглавление + меню (28.09.2026) ──────
+   Вариант A, выбран Русланом из трёх на стенде _min-view.html. Повод — «при
+   заходе с телефона ничего не понятно, даже мне»: липкая шапка занимала 162px
+   в три ряда, на первом экране было 12 входов шести видов, страница — 2,9 экрана.
+   Теперь ниже 860px: шапка в одну строку (поиск и меню иконками), заголовок и
+   лид те же элементы, что на десктопе, одна кнопка, оглавление разделов тремя
+   группами со строкой на раздел и полноэкранное меню со всем сайтом. Свечи,
+   лента, мини-дорожки, пилюли и колонки данных на телефоне скрыты CSS.
+   Строим ТОЛЬКО при совпадении медиазапроса: на десктопе ни меню, ни строк
+   оглавления в DOM не появляется. Справа у строки — только то, что меняется
+   (срок заявок, лучшая ставка, даты, число записей), и всё из данных. */
 (function () {
+  "use strict";
   var MQ = window.matchMedia ? window.matchMedia("(max-width:860px)") : null;
   if (!MQ) return;
-  var built = false;
+  var built = false, sheet = null;
 
-  var CHEV = '<svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">' +
-    '<path d="M3 5 L7 9 L11 5" stroke="currentColor" stroke-width="1.7" ' +
-    'stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var ESC = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+  function esc(v) { return v == null ? "" : String(v).replace(/[&<>"']/g, function (c) { return ESC[c]; }); }
+  function dm(iso) { return String(iso || "").split("-").reverse().join(".").slice(0, 5); }
+  function plural(n, one, few, many) { var a = n % 10, b = n % 100; return n + " " + ((a === 1 && b !== 11) ? one : (a >= 2 && a <= 4 && (b < 12 || b > 14)) ? few : many); }
 
-  // Счётчики считаются из НАРИСОВАННОГО, кроме выступлений: там полоса
-  // намеренно показывает ротацией пару из четырёх, и «2 записи» противоречили бы
-  // разделу «Выступления · 4 записи».
-  function plural(n, one, few, many) {
-    var a = n % 10, b = n % 100;
-    return n + " " + ((a === 1 && b !== 11) ? one : (a >= 2 && a <= 4 && (b < 12 || b > 14)) ? few : many);
+  var CHEV = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M5 2.5 L9.5 7 L5 11.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var STAR = '<svg width="21" height="21" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>';
+  var XIC = '<svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true"><path d="M6 6 L16 16 M16 6 L6 16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>';
+
+  function row(o) {
+    return '<a class="mx-row" href="' + esc(o.href) + '">' +
+      '<span class="l"><span class="t">' + esc(o.t) + '</span>' + (o.m ? '<span class="m">' + o.m + '</span>' : "") + '</span>' +
+      '<span class="r">' + (o.n != null ? '<span class="n">' + esc(o.n) + '</span>' : "") + CHEV + '</span></a>';
   }
-  var COUNT = {
-    rates: function () { return plural(document.querySelectorAll("#rates > .rt2").length, "предложение", "предложения", "предложений"); },
-    news: function () { return plural(document.querySelectorAll("#news > .mn").length, "блок", "блока", "блоков"); },
-    prod: function () { return plural(document.querySelectorAll("#mprod > .prow").length, "позиция", "позиции", "позиций"); },
-    offers: function () { return plural(document.querySelectorAll("#offers > a").length, "выпуск", "выпуска", "выпусков"); },
-    talks: function () {
-      var n = (window.TALKS && window.TALKS.items) ? window.TALKS.items.length
-        : document.querySelectorAll("#talklist > .card").length;
-      return plural(n, "запись", "записи", "записей");
+  function group(cap, rows) {
+    return '<section class="mx-g"><h2 class="mx-cap">' + esc(cap) + '</h2><div class="mx-list">' + rows.join("") + '</div></section>';
+  }
+
+  // ── Подписи строк: считаются при каждой отрисовке, данные могут доехать позже ──
+  function index(full) {
+    var INSTR = (window.SITE_DATA && SITE_DATA.instruments) || [];
+
+    var OFF = (window.OFFERINGS && OFFERINGS.items) || [];
+    var off = OFF[0] || null;
+    // Срок приёма заявок встаёт справа, где у других строк число; год не печатаем.
+    // «Космические технологии» само по себе ничего не говорит — рядом что это и на сколько.
+    var offDue = off && String(off.statusLabel || "").match(/до\s+(\d{2}\.\d{2})(?:\.\d{4})?/);
+    var offWhat = /облигац/i.test(String(off && off.kind || "")) ? "облигация" : "выпуск";
+    var offMeta = !off ? "новых выпусков сейчас нет"
+      : esc(off.name) + " · " + offWhat + (off.tenor ? " на " + esc(off.tenor) : "") +
+        (!offDue && off.statusLabel ? " · " + esc(String(off.statusLabel).charAt(0).toLowerCase() + String(off.statusLabel).slice(1)) : "");
+    var offHref = off ? "offerings.html#" + encodeURIComponent(off.id) : "offerings.html";
+
+    // Утро: свежий обзор — рубрики и дата; старше трёх дней главная новости
+    // прячет, и здесь честно «последний обзор был …»
+    var M = window.MORNING || {}, age = null;
+    if (M.date) {
+      var p = String(M.date).split("-").map(Number), t = new Date();
+      age = Math.round((Date.UTC(t.getFullYear(), t.getMonth(), t.getDate()) - Date.UTC(p[0], p[1] - 1, p[2])) / 86400000);
     }
-  };
+    var rub = (M.news || []).map(function (n) { return n.rubric; }).filter(Boolean);
+    var morning = !M.date ? { m: "обзор выходит по утрам" }
+      : age <= 3 ? { m: esc(rub.join(" · ")) || "обзор дня", n: dm(M.date) }
+      : { m: "последний обзор был " + dm(M.date) };
 
-  function accordion(cell, key, open) {
-    var ch = cell.querySelector(".ch");
-    if (!ch || cell.classList.contains("mob-acc")) return;
-    cell.classList.add("mob-acc");
+    // Лучшие ставки: лучшая из тех же четырёх, что показывает главная (без промо)
+    var R = window.RATES || {};
+    function best(list) { return (list || []).reduce(function (a, x) { return (!a || x.rate > a.rate) ? x : a; }, null); }
+    var cand = [best((R.deposits || []).filter(function (d) { return (d.termMonths || 0) <= 12 && !d.promo; })),
+                best(R.funds), best((R.ofz || []).filter(function (o) { return o.years <= 1.02; }))].filter(Boolean);
+    var topRate = cand.length ? Math.max.apply(null, cand.map(function (x) { return x.rate; })) : null;
+    var rateN = topRate != null ? "до " + String(Math.round(topRate * 10) / 10).replace(".", ",") + "%" : null;
 
-    // Обёртка ставится на уровне ЯЧЕЙКИ, а не внутри #news/#mprod: селекторы
-    // вида «#offers > a» и «.rt2:last-of-type» должны остаться рабочими.
-    var body = document.createElement("div");
-    body.className = "mob-body";
-    body.id = "mob-body-" + key;
-    var rest = [];
-    for (var i = 0; i < cell.children.length; i++) if (cell.children[i] !== ch) rest.push(cell.children[i]);
-    for (var j = 0; j < rest.length; j++) body.appendChild(rest[j]);
-    cell.appendChild(body);
+    var EV = (window.EVENTS && EVENTS.items) || [], now = Date.now();
+    function startOf(e) { var d = e.date.split("-").map(Number), tt = e.timeMsk.split(":").map(Number); return Date.UTC(d[0], d[1] - 1, d[2], tt[0] - 3, tt[1]); }
+    var upcoming = EV.filter(function (e) { return startOf(e) + (e.durationMin || 30) * 60000 > now; })
+      .sort(function (a, b) { return startOf(a) - startOf(b); })[0] || null;
 
-    if (COUNT[key]) {
-      var cnt = document.createElement("span");
-      cnt.className = "mob-cnt";
-      cnt.textContent = COUNT[key]();
-      ch.appendChild(cnt);
+    var T = (window.TALKS && TALKS.items) || [], seen = {}, orgs = [];
+    T.forEach(function (x) { if (x.org && !seen[x.org]) { seen[x.org] = 1; orgs.push(x.org); } });
+
+    // Дайджест и разборы приезжают лениво (см. загрузчик ниже) — до ответа общие подписи
+    var D = window.DIGEST, nIdeas = D && D.ideas ? D.ideas.length : 0;
+    var I = window.IDEAS && IDEAS.issues && IDEAS.issues[0];
+
+    var prod = [
+      row({ href: offHref, t: "На размещении", m: offMeta, n: offDue ? "до " + offDue[1] : null }),
+      row({ href: "placements.html", t: "Размещённые выпуски", m: "уже выпущенные облигации: котировка и документы" }),
+      row({ href: "screener.html", t: "Лучшие ставки", m: "вклады, фонды и ОФЗ до года", n: rateN })
+    ];
+    if (full) prod.unshift(row({ href: "board.html", t: "Текущие продукты", m: "все продукты с котировками", n: INSTR.length || null }));
+    var read = [];
+    // Ближайший вебинар — единственное, что датировано вперёд: первым в группе
+    if (upcoming) read.push(row({ href: "events.html", t: "Вебинар", m: esc(upcoming.title) + " · " + esc(upcoming.timeMsk) + " МСК", n: dm(upcoming.date) }));
+    read.push(row({ href: "research.html", t: "Утро на рынках", m: morning.m, n: morning.n || null }));
+    read.push(row({ href: "digest.html", t: "Дайджест", m: nIdeas ? plural(nIdeas, "идея", "идеи", "идей") + " недели" : "идеи недели", n: D && D.date ? String(D.date).slice(0, 5) : null }));
+    read.push(row({ href: "ideas.html", t: "Разборы", m: I && I.title ? esc(I.title) : "темы вебинаров", n: I && I.date ? dm(I.date) : null }));
+    if (!upcoming && full) read.push(row({ href: "events.html", t: "События", m: "записи встреч для агентов" }));
+    var us = [
+      row({ href: "about.html", t: "Библиотека", m: "как устроен каждый тип продукта" }),
+      row({ href: "company.html", t: "О компании", m: "юрлица и контакты" }),
+      row({ href: "company.html#talks", t: "Выступления", m: esc(orgs.slice(0, 3).join(", ")) || "интервью и эфиры", n: T.length ? plural(T.length, "запись", "записи", "записей") : null })
+    ];
+    if (full) {
+      us.splice(1, 0, row({ href: "partners.html", t: "Сотрудничество", m: "фининститутам и агентам" }));
+      // Путеводитель для агента: на десктопе его показывают мини-дорожки intro.js,
+      // на телефоне они скрыты — вход остаётся в меню
+      us.push(row({ href: "guide.html", t: "Как это работает", m: "сайт как инструмент продаж" }));
     }
+    return group("Продукты", prod) + group("Аналитика", read) + group("Rumberg", us);
+  }
 
-    var b = document.createElement("button");
-    b.className = "mob-tog";
-    b.type = "button";
-    b.innerHTML = CHEV;
-    b.setAttribute("aria-controls", body.id);
-    var label = (ch.querySelector("h2") || {}).textContent || "раздел";
-    function state(on) {
-      cell.classList.toggle("open", on);
-      b.setAttribute("aria-expanded", on ? "true" : "false");
-      b.setAttribute("aria-label", (on ? "Свернуть" : "Раскрыть") + " «" + label.trim() + "»");
-    }
-    b.addEventListener("click", function () { state(!cell.classList.contains("open")); });
-    ch.appendChild(b);
-    state(!!open);
+  function paint() {
+    var idx = document.getElementById("mx-idx");
+    if (idx) idx.innerHTML = index(false);
+    if (sheet) sheet.querySelector(".sbi").innerHTML = index(true);
+    var n = document.getElementById("mx-n"), INSTR = (window.SITE_DATA && SITE_DATA.instruments) || [];
+    if (n) n.textContent = INSTR.length || "";
   }
 
   function build() {
     if (built) return;
-    var work = document.querySelector(".work");
-    if (!work) return;
-    var cells = work.querySelectorAll(":scope > .cell");
-    if (cells.length < 5) return;      // рендер ещё не дошёл — попробуем позже
     built = true;
 
-    // Чипсы из настоящего списка «Разделы»: подписи не дублируем в коде,
-    // иначе они разойдутся с колонкой на десктопе.
-    var rows = document.querySelectorAll("#rail-list .rl");
-    if (rows.length) {
-      var nav = document.createElement("nav");
-      nav.className = "mob-nav";
-      nav.setAttribute("aria-label", "Разделы витрины");
-      var html = "";
-      for (var i = 0; i < rows.length; i++) {
-        var t = (rows[i].querySelector(".rt") || {}).textContent || "";
-        html += '<a href="' + rows[i].getAttribute("href") + '">' + t.trim() + "</a>";
-      }
-      nav.innerHTML = html;
-      var band = document.querySelector(".bandwrap");
-      if (band && band.parentNode) band.parentNode.insertBefore(nav, band);
+    // ── Меню: весь сайт одним списком, поверх страницы ──
+    sheet = document.createElement("div");
+    sheet.className = "mx-sheet";
+    sheet.id = "mx-sheet";
+    sheet.setAttribute("role", "dialog");
+    sheet.setAttribute("aria-modal", "true");
+    sheet.setAttribute("aria-label", "Разделы витрины");
+    var foot = document.querySelector(".mx-foot .l");
+    sheet.innerHTML = '<div class="sh">' + STAR + '<span class="name">Rumberg</span>' +
+      '<button class="mx-ib mx-close" type="button" aria-label="Закрыть меню">' + XIC + '</button></div>' +
+      '<div class="sb"><div class="sbi"></div><div class="mx-foot"><div class="l">' + (foot ? foot.innerHTML : "") + '</div>' +
+      'Не является индивидуальной инвестиционной рекомендацией.</div></div>';
+    document.body.appendChild(sheet);
+    paint();
 
+    var nav = document.querySelector(".nav"), wrap = document.querySelector(".wrap");
+    var mb = nav && nav.querySelector(".mx-mbtn"), sb = nav && nav.querySelector(".mx-sbtn");
+    function menu(on) {
+      sheet.classList.toggle("on", on);
+      document.body.classList.toggle("mx-lock", on);
+      if (mb) mb.setAttribute("aria-expanded", on ? "true" : "false");
+      if (wrap) wrap.inert = on;
+      if (nav) nav.inert = on;
+      if (on) { sheet.scrollTop = 0; sheet.querySelector(".mx-close").focus(); } else if (mb) mb.focus();
     }
+    if (mb) mb.addEventListener("click", function () { menu(true); });
+    sheet.querySelector(".mx-close").addEventListener("click", function () { menu(false); });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape" && sheet.classList.contains("on")) menu(false); });
+    // Возврат кнопкой «Назад» из bfcache: страница просыпается с открытым меню
+    // и заблокированной прокруткой — закрываем
+    window.addEventListener("pageshow", function (e) { if (e.persisted && sheet.classList.contains("on")) menu(false); });
 
-    // Открыты по умолчанию только «Актуальные продукты»
-    accordion(cells[3], "prod", true);
-    accordion(cells[1], "rates", false);
-    accordion(cells[4], "offers", false);
-    accordion(cells[2], "news", false);
-    var talks = document.getElementById("talks");
-    if (talks) accordion(talks, "talks", false);
+    // ── Поиск: иконка раскрывает поле search.js второй строкой шапки ──
+    if (sb) sb.addEventListener("click", function () {
+      var on = !nav.classList.contains("mx-s");
+      nav.classList.toggle("mx-s", on);
+      sb.setAttribute("aria-expanded", on ? "true" : "false");
+      sb.setAttribute("aria-label", on ? "Закрыть поиск" : "Поиск: продукт, тикер, ISIN");
+      var inp = nav.querySelector(".sf-in"), box = nav.querySelector(".sf");
+      if (on && inp) inp.focus();
+      if (!on) { if (inp) inp.blur(); if (box) box.classList.remove("open"); }
+    });
   }
 
-  function tryBuild() {
-    if (!MQ.matches) return;
-    build();
-    // Колонки рисуются данными: если на первый заход их ещё нет, повторяем один раз
-    if (!built) setTimeout(build, 400);
-  }
-
+  function tryBuild() { if (MQ.matches) build(); }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", tryBuild);
   else tryBuild();
   // Поворот экрана и переход через контрольную точку: строим при первом попадании
   if (MQ.addEventListener) MQ.addEventListener("change", tryBuild);
   else if (MQ.addListener) MQ.addListener(tryBuild);
+  // Дайджест и разборы доехали — дописываем их даты и счётчики
+  window.addEventListener("so-lazy", function () { if (built) paint(); });
 })();
 </script>
 <script>
@@ -1576,11 +1709,13 @@
   function go() {
     load("data/digest.js?v=srv6", function () {
       if (window.DIGEST && window.DIGEST.date) put("digest.html", String(window.DIGEST.date).slice(0, 5));
+      window.dispatchEvent(new Event("so-lazy"));   // телефонное оглавление дописывает дату
     });
     load("data/ideas.js?v=1", function () {
       var i = window.IDEAS && window.IDEAS.issues && window.IDEAS.issues[0];
       // Дата выпуска лежит в ISO: тот же разбор, что у dmy() выше по файлу
       if (i && i.date) put("ideas.html", String(i.date).split("-").reverse().join(".").slice(0, 5));
+      window.dispatchEvent(new Event("so-lazy"));   // телефонное оглавление дописывает дату
     });
   }
   if ("requestIdleCallback" in window) requestIdleCallback(go, { timeout: 2500 });
