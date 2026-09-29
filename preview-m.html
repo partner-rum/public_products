@@ -639,7 +639,24 @@
     .mx-sub { margin:14px 0 0; font-size:1.0625rem; line-height:1.5; color:var(--mut); }
     .mx-huge { display:block; font-family:var(--m); font-size:3.5rem; font-weight:500; letter-spacing:-0.03em; line-height:1; font-variant-numeric:tabular-nums; }
     .mx-lab { display:block; margin-top:10px; font-family:var(--m); font-size:0.75rem; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); }
-    .mx-nm { margin:18px 0 0; font-size:1.125rem; font-weight:500; line-height:1.35; }
+    /* Продукты дня: пять строк на одном экране — слева тип и актив со сроком,
+       справа цифра с меткой (премия, участие, купон, цена) */
+    .mx-prods { border-top:1px solid var(--line); }
+    .mx-prods a { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; column-gap:14px; min-height:56px;
+      padding:10px 0; border-bottom:1px solid var(--rule-soft); -webkit-tap-highlight-color:transparent; }
+    .mx-prods a:active { background:rgba(255,255,255,0.035); }
+    .mx-prods .pn b { display:block; font-size:1rem; font-weight:500; line-height:1.3; }
+    .mx-prods .pn span { display:block; margin-top:2px; font-size:0.875rem; line-height:1.35; color:var(--mut); }
+    .mx-prods .pf { text-align:right; }
+    .mx-prods .pf b { display:block; font-family:var(--m); font-size:1.0625rem; font-weight:500; white-space:nowrap; font-variant-numeric:tabular-nums; }
+    .mx-prods .pf i { display:block; margin-top:2px; font-style:normal; font-family:var(--m); font-size:0.6875rem; letter-spacing:.06em;
+      text-transform:uppercase; color:var(--dim); }
+    /* Низкий экран (320×568): пять строк с переносом имени не влезали на 21 px —
+       поджимаем поля экрана и строк */
+    @media (max-height:620px) {
+      .mx-s { padding-top:16px; padding-bottom:20px; }
+      .mx-prods a { min-height:52px; padding:8px 0; }
+    }
     .mx-go { display:inline-flex; align-self:flex-start; align-items:center; gap:8px; margin-top:22px; min-height:48px;
       font-size:1rem; font-weight:500; color:var(--solar-l); -webkit-tap-highlight-color:transparent; }
     .mx-go:active { color:var(--solar); }
@@ -1219,10 +1236,18 @@
         return picked;
       }
 
-      function renderProducts() {
+      // Пятёрка дня одна на оба экрана: колонка десктопа рисует её здесь, телефонные
+      // экраны «Продукты дня» берут ту же через window.soDay — своей копии подбора нет
+      function dayProducts() {
         var items = (M.products || []).map(byId).filter(Boolean);
         var derived = false;
         if (!items.length) { items = pickByNews(); derived = items.length > 0; }
+        return { items: items.slice(0, PRODUCT_LIMIT), derived: derived };
+      }
+      window.soDay = dayProducts;
+
+      function renderProducts() {
+        var day = dayProducts(), items = day.items, derived = day.derived;
         if (!items.length) {
           pbox.innerHTML = !INSTR.length
             ? failBox("каталог продуктов")
@@ -1230,7 +1255,7 @@
               '<a href="board.html">Открыть доску' + AR + '</a></div>';
           return;
         }
-        pbox.innerHTML = items.slice(0, PRODUCT_LIMIT).map(function (r) {
+        pbox.innerHTML = items.map(function (r) {
           var f = figure(r);
           return '<div class="prow">' +
             '<a class="pmain" href="instrument.html?id=' + encodeURIComponent(r.id) + '">' +
@@ -1561,7 +1586,8 @@
 /* ── Главная на телефоне: «Экраны» (вариант 4, выбор Руслана 29.09.2026) ──────
    Одна мысль на экран. Первый экран — сам герой: заголовок и лид в телефонной
    редакции (.xs), кнопка «Смотреть продукты» и вход «Сотрудничество». Дальше по
-   экрану на продукт дня, размещение, лучшие ставки и утро на рынках, в конце —
+   экрану на пять продуктов дня строками (та же пятёрка, что в колонке десктопа,
+   window.soDay), размещение, лучшие ставки и утро на рынках, в конце —
    все разделы строками и подвал. Листается как Reels: один свайп — один экран
    (прилипание задаёт CSS, здесь только точки и свободный хвост). Выбран из пяти форматов на стенде _fmt-view.html
    (витрина, цифры, поиск, экраны, лента) после того, как вариант A в проде
@@ -1691,35 +1717,46 @@
     return group("Продукты", prod, tag) + group("Аналитика", read, tag) + group("Rumberg", us, tag);
   }
 
-  // ── Экраны после первого: продукт дня, размещение, ставки, утро ──
-  var KIND = { warrant: "Варрант", protection: "Защита капитала", discount: "Дисконтная облигация", autocall: "Автоколл",
-               booster: "Бустер", revconv: "Реверс-конвертибл", rcdigital: "Условный купон", digital: "Купонный варрант" };
+  // ── Экраны после первого: продукты дня, размещение, ставки, утро ──
   function scr(id, title, inner) {
     return '<section class="mx-s" aria-labelledby="' + id + '"><h2 id="' + id + '">' + title + '</h2>' + inner + '</section>';
+  }
+  // Имя продукта в строке — двумя строками: тип («Варрант CALL 100») и актив со
+  // сроком («Hang Seng · 2 года»); одной строкой точка-разделитель повисала на
+  // переносе. У варранта первым стоит «CALL 100», и без слова «Варрант» холодный
+  // посетитель не поймёт, что это; имя без актива («Call», бывает у заведённых
+  // руками) дописываем активом и сроком
+  function pname(r) {
+    var parts = String(r.name || "").split(" · "), head = parts.shift() || "";
+    if (!parts.length) parts = [r.underlying, r.tenor].filter(Boolean);
+    if (r.type === "warrant" && !/^варрант/i.test(head)) head = "Варрант " + head.replace(/^Call\b/i, "CALL");
+    function glue(s) { return s.replace(/(CALL|PUT|ОФЗ) (\d)/g, "$1 $2"); }
+    return { head: glue(head), rest: glue(parts.join(" · ")) };
   }
   function screens() {
     var box = document.getElementById("mx-scr");
     if (!box) return;
-    var INSTR = instr(), fig = window.soFigure, out = [];
+    var fig = window.soFigure, M = window.MORNING || {}, age = morningAge(), out = [];
 
-    // Продукт дня: первый из утреннего обзора; обзора нет — первый с доски
-    var M = window.MORNING || {}, r = null;
-    (M.products || []).some(function (id) {
-      for (var i = 0; i < INSTR.length; i++) if (INSTR[i].id === id) { r = INSTR[i]; return true; }
-      return false;
-    });
-    if (!r) r = INSTR[0] || null;
-    if (r && fig) {
-      var f = fig(r), parts = String(r.name || "").split(" · "), head = parts.shift();
-      // Имя без актива («Call») ничего не говорит — вместо него актив и срок
-      var rest = parts.join(" · ") || [r.underlying, r.tenor].filter(Boolean).join(" · ");
-      var kind = KIND[r.type] || head;
-      if (r.type === "warrant") kind = "Варрант " + head.replace(/^Call$/i, "CALL");
-      out.push(scr("mx-s-p", "Продукт дня · " + esc(kind),
-        '<b class="mx-huge">' + esc(f.v) + '</b>' +
-        '<span class="mx-lab">' + (f.n ? esc(f.n) + " · " : "") + 'индикативно</span>' +
-        '<p class="mx-nm">' + esc(nb(rest)) + '</p>' +
-        '<a class="mx-go" href="instrument.html?id=' + encodeURIComponent(r.id) + '">Открыть продукт' + AR + '</a>'));
+    // Продукты дня — та же пятёрка, что в колонке десктопа (window.soDay): её
+    // выбирает утренний конвейер по статье, а без его списка — поиск по темам
+    // новостей. Все пять — на ОДНОМ экране строками: по экрану на продукт Руслан
+    // отклонил («пусть они все будут на одном экране»). «Дня» — только при
+    // сегодняшнем обзоре: пятёрка с доски не протухает, но пятничная в
+    // воскресенье уже не «дня».
+    var day = window.soDay ? window.soDay() : { items: [], derived: false };
+    var cap = day.derived ? "По темам обзора" : age === 0 ? "Продукты дня" : "Актуальные продукты";
+    if (fig && day.items.length) {
+      var total = instr().length;
+      out.push(scr("mx-s-p", cap,
+        '<div class="mx-prods">' + day.items.map(function (r) {
+          var f = fig(r), nm = pname(r);
+          return '<a href="instrument.html?id=' + encodeURIComponent(r.id) + '">' +
+            '<span class="pn"><b>' + esc(nb(nm.head)) + '</b>' + (nm.rest ? '<span>' + esc(nb(nm.rest)) + '</span>' : "") + '</span>' +
+            '<span class="pf"><b>' + esc(f.v) + '</b>' + (f.n ? '<i>' + esc(f.n) + '</i>' : "") + '</span></a>';
+        }).join("") + '</div>' +
+        '<span class="mx-lab">котировки индикативны</span>' +
+        '<a class="mx-go" href="board.html">Все продукты' + (total ? " · " + total : "") + AR + '</a>'));
     }
 
     var off = offering();
@@ -1744,7 +1781,7 @@
         '<a class="mx-go" href="screener.html">Весь скринер' + AR + '</a>'));
     }
 
-    var age = morningAge(), news = (age !== null && age <= 3) ? (M.news || []) : [];
+    var news = (age !== null && age <= 3) ? (M.news || []) : [];
     if (news.length) {
       out.push(scr("mx-s-m", "Утро на рынках · " + esc(dm(M.date)),
         '<div class="mx-lines">' + news.map(function (n) {
