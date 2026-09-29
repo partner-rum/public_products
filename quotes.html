@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Котировки выпусков</title>
+<!-- Служебная страница «по ссылке»: не в sitemap, ни одной ссылки на неё с витрины,
+     без Метрики и чата. Данные лежат в data/quotes.enc ЗАШИФРОВАННЫМИ (репозиторий
+     публичный, а тут котировки выбитых выпусков, которых витрина не показывает).
+     Ключ приходит в адресе после «#k=» — эта часть на сервер не уходит. Собирает
+     файл make_quotes.py (локальный). -->
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#0B0C10">
+<link href="fonts/fonts.css?v=1" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B0C10; --card:#14161C; --ink:#F2F3F7; --mute:rgba(242,243,247,.64);
+    --line:rgba(255,255,255,.11); --or:#EE7D1B; --orh:#F58E33; --up:#55C08A; --down:#E5484D;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--bg);color:var(--ink);font:0.9375rem/1.5 Onest,system-ui,sans-serif}
+  .wrap{max-width:880px;margin:0 auto;padding:40px 20px 64px}
+  .brand{display:flex;align-items:center;gap:10px;font:600 1rem Rubik,sans-serif;color:var(--ink);text-decoration:none}
+  .brand svg{width:20px;height:20px}
+  h1{font:600 2rem/1.15 Rubik,sans-serif;margin:28px 0 8px;letter-spacing:-.01em}
+  .sub{color:var(--mute);margin:0 0 28px}
+  .sub b{color:var(--ink);font-weight:500;font-family:"JetBrains Mono",monospace;font-size:.875rem}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+  .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  button{font:600 .9375rem Onest,sans-serif;border-radius:10px;padding:0 18px;min-height:44px;cursor:pointer;border:1px solid var(--line);background:transparent;color:var(--ink)}
+  button.pri{background:var(--or);border-color:var(--or);color:#0C0A08}
+  button.pri:hover{background:var(--orh)}
+  button:not(.pri):hover{border-color:rgba(255,255,255,.3)}
+  button:focus-visible,textarea:focus-visible{outline:2px solid var(--or);outline-offset:2px}
+  label{display:block;font-size:.875rem;color:var(--mute);margin:20px 0 8px}
+  textarea{width:100%;min-height:88px;resize:vertical;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:.875rem/1.5 "JetBrains Mono",monospace}
+  .hint{font-size:.8125rem;color:var(--mute);margin-top:6px}
+  .warn{color:#F2A896}
+  table{width:100%;border-collapse:collapse;margin-top:24px;font-size:.875rem}
+  th{text-align:left;font:500 .75rem "JetBrains Mono",monospace;color:var(--mute);letter-spacing:.06em;text-transform:uppercase;padding:0 10px 10px;border-bottom:1px solid var(--line)}
+  td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  td.m,th.m{font-family:"JetBrains Mono",monospace;white-space:nowrap}
+  th.r,td.r{text-align:right}
+  td.v{color:var(--up);font-weight:600}
+  td.none{color:var(--mute)}
+  tr.miss td{color:#F2A896}
+  .foot{font-size:.8125rem;color:var(--mute);margin-top:24px;max-width:640px}
+  .state{padding:48px 0;color:var(--mute);max-width:520px}
+  .state h2{font:600 1.25rem Rubik,sans-serif;color:var(--ink);margin:0 0 8px}
+  @media (max-width:600px){
+    .wrap{padding:24px 16px 48px} h1{font-size:1.625rem}
+    .nm{display:none} button{flex:1 1 auto}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="brand" href="/" aria-label="Rumberg">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#EE7D1B" d="M12 1l2.6 8.4H23l-6.8 5 2.6 8.4L12 17.8 5.2 22.8l2.6-8.4L1 9.4h8.4z"/></svg>
+    Rumberg
+  </a>
+  <main id="app"><div class="state">Загружаем котировки…</div></main>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var app = document.getElementById("app");
+  var HEAD = ["ISIN", "Котировка, % номинала"];
+
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+  function state(t, d) { app.innerHTML = '<div class="state"><h2>' + esc(t) + "</h2>" + esc(d) + "</div>"; }
+  function unb64(s) {
+    s = s.replace(/-/g, "+").replace(/_/g, "/"); while (s.length % 4) s += "=";
+    var b = atob(s), u = new Uint8Array(b.length);
+    for (var i = 0; i < b.length; i++) u[i] = b.charCodeAt(i);
+    return u;
+  }
+  function ruDate(iso) { var m = /^(\d{4})-(\d\d)-(\d\d)(.*)$/.exec(iso || ""); return m ? m[3] + "." + m[2] + "." + m[1] + m[4] : iso || ""; }
+
+  var m = /(?:^#|&)k=([A-Za-z0-9_-]{43})/.exec(location.hash);
+  if (!m || !window.crypto || !crypto.subtle) {
+    state("Ссылка неполная", "Откройте ссылку целиком, как её прислали, — вместе с частью после «#». Если не помогает, попросите прислать ссылку заново.");
+    return;
+  }
+
+  fetch("data/quotes.enc?t=" + Date.now(), { cache: "no-store" })
+    .then(function (r) { if (!r.ok) throw new Error("http"); return r.json(); })
+    .then(function (o) {
+      return crypto.subtle.importKey("raw", unb64(m[1]), "AES-GCM", false, ["decrypt"])
+        .then(function (k) { return crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(o.iv) }, k, unb64(o.ct)); })
+        .then(function (pt) { return JSON.parse(new TextDecoder().decode(pt)); },
+              function () { throw new Error("key"); });
+    })
+    .then(render)
+    .catch(function (e) {
+      if (e && e.message === "key") state("Ссылка устарела", "Ключ в ссылке больше не подходит. Попросите прислать актуальную ссылку.");
+      else state("Не удалось загрузить котировки", "Проверьте соединение и обновите страницу.");
+    });
+
+  function render(D) {
+    var byIsin = {};
+    D.rows.forEach(function (r) { byIsin[r.isin] = r; });
+    var stamp = (D.asof || "").slice(0, 10);
+
+    app.innerHTML =
+      '<h1>Котировки выпусков</h1>' +
+      '<p class="sub">Индикативный Bid, % номинала · данные от <b>' + esc(ruDate(D.asof)) + '</b></p>' +
+      '<div class="panel">' +
+        '<div class="row"><button class="pri" id="csv">Скачать CSV</button><button id="xlsx">Скачать Excel</button></div>' +
+        '<label for="pick">Только эти ISIN — необязательно</label>' +
+        '<textarea id="pick" spellcheck="false" placeholder="Вставьте список ISIN через пробел, запятую или с новой строки. Пусто — все выпуски."></textarea>' +
+        '<div class="hint" id="pinfo" aria-live="polite"></div>' +
+      '</div>' +
+      '<table><thead><tr><th>ISIN</th><th class="nm">Выпуск</th><th class="m">Погашение</th><th class="r">Bid</th></tr></thead><tbody id="tb"></tbody></table>' +
+      '<p class="foot">Котировки индикативные и не являются офертой. Пустое значение — по выпуску нет оценки. ' +
+      'Файл CSV: разделитель «;», десятичная запятая, UTF-8.</p>';
+
+    var pick = document.getElementById("pick"), tb = document.getElementById("tb"), pinfo = document.getElementById("pinfo");
+
+    function current() {
+      var want = (pick.value.toUpperCase().match(/[A-Z]{2}[A-Z0-9]{9}\d/g) || []);
+      if (!want.length) return { rows: D.rows, miss: [] };
+      var seen = {}, rows = [], miss = [];
+      want.forEach(function (i) {
+        if (seen[i]) return; seen[i] = 1;
+        if (byIsin[i]) rows.push(byIsin[i]);
+        else { rows.push({ isin: i, name: "", v: null, s: "", maturity: "", miss: true }); miss.push(i); }
+      });
+      return { rows: rows, miss: miss };
+    }
+
+    function draw() {
+      var c = current();
+      tb.innerHTML = c.rows.map(function (r) {
+        return '<tr' + (r.miss ? ' class="miss"' : "") + '><td class="m">' + esc(r.isin) + '</td><td class="nm">' +
+          esc(r.miss ? "нет среди выпусков" : r.name) + '</td><td class="m">' + esc(ruDate(r.maturity)) +
+          '</td><td class="m r ' + (r.v > 0 ? "v" : "none") + '">' + (r.s ? esc(r.s) : "—") + "</td></tr>";
+      }).join("");
+      var n = c.rows.length;
+      pinfo.innerHTML = pick.value.trim()
+        ? "В файле " + n + " " + plural(n) + (c.miss.length ? ' · <span class="warn">не найдены: ' + esc(c.miss.join(", ")) + "</span> — в файле будут с пустым значением" : "")
+        : "В файле все " + n + " " + plural(n) + ", по ISIN по алфавиту.";
+    }
+    function plural(n) { var a = n % 10, b = n % 100; return a === 1 && b !== 11 ? "выпуск" : a >= 2 && a <= 4 && (b < 12 || b > 14) ? "выпуска" : "выпусков"; }
+
+    pick.addEventListener("input", draw);
+    draw();
+
+    document.getElementById("csv").onclick = function () {
+      var lines = [HEAD.join(";")].concat(current().rows.map(function (r) { return r.isin + ";" + r.s; }));
+      save(new Blob(["﻿" + lines.join("\r\n") + "\r\n"], { type: "text/csv;charset=utf-8" }), "rumberg-quotes-" + stamp + ".csv");
+    };
+    document.getElementById("xlsx").onclick = function () {
+      save(xlsx(current().rows), "rumberg-quotes-" + stamp + ".xlsx");
+    };
+  }
+
+  function save(blob, name) {
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+  }
+
+  // ── XLSX без библиотек: минимальная книга в zip без сжатия ─────────────────
+  function xe(s) { return String(s).replace(/[&<>]/g, function (c) { return {"&":"&amp;","<":"&lt;",">":"&gt;"}[c]; }); }
+  function xlsx(rows) {
+    var cell = function (ref, t, st) { return '<c r="' + ref + '" t="inlineStr"' + (st ? ' s="' + st + '"' : "") + "><is><t>" + xe(t) + "</t></is></c>"; };
+    var sd = '<row r="1">' + cell("A1", HEAD[0], 1) + cell("B1", HEAD[1], 1) + "</row>";
+    rows.forEach(function (r, i) {
+      var n = i + 2;
+      sd += '<row r="' + n + '">' + cell("A" + n, r.isin) + (r.v == null ? "" : '<c r="B' + n + '" s="2"><v>' + r.v + "</v></c>") + "</row>";
+    });
+    var X = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
+    var files = {
+      "[Content_Types].xml": X + '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/></Types>',
+      "_rels/.rels": X + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>',
+      "xl/workbook.xml": X + '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Котировки" sheetId="1" r:id="rId1"/></sheets></workbook>',
+      "xl/_rels/workbook.xml.rels": X + '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>',
+      "xl/styles.xml": X + '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="1"><numFmt numFmtId="164" formatCode="0.00"/></numFmts><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/><xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>',
+      "xl/worksheets/sheet1.xml": X + '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols><col min="1" max="1" width="16" customWidth="1"/><col min="2" max="2" width="24" customWidth="1"/></cols><sheetData>' + sd + "</sheetData></worksheet>"
+    };
+    return new Blob([zip(files)], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  }
+
+  var CRC = (function () { var t = [], c; for (var n = 0; n < 256; n++) { c = n; for (var k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+  function crc32(u) { var c = 0xFFFFFFFF; for (var i = 0; i < u.length; i++) c = CRC[(c ^ u[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+  function zip(files) {
+    var enc = new TextEncoder(), parts = [], central = [], off = 0;
+    function h(n, len) { var b = []; for (var i = 0; i < len; i++) b.push((n >>> (8 * i)) & 255); return b; }
+    Object.keys(files).forEach(function (name) {
+      var nm = enc.encode(name), data = enc.encode(files[name]), crc = crc32(data);
+      var common = [].concat(h(20, 2), h(0x0800, 2), h(0, 2), h(0, 2), h(0x21, 2), h(crc, 4), h(data.length, 4), h(data.length, 4), h(nm.length, 2), h(0, 2));
+      var local = new Uint8Array([].concat(h(0x04034b50, 4), common));
+      parts.push(local, nm, data);
+      central.push(new Uint8Array([].concat(h(0x02014b50, 4), h(20, 2), common, h(0, 2), h(0, 2), h(0, 2), h(0, 4), h(off, 4))), nm);
+      off += local.length + nm.length + data.length;
+    });
+    var csize = central.reduce(function (s, u) { return s + u.length; }, 0), cnt = Object.keys(files).length;
+    var end = new Uint8Array([].concat(h(0x06054b50, 4), h(0, 2), h(0, 2), h(cnt, 2), h(cnt, 2), h(csize, 4), h(off, 4), h(0, 2)));
+    return new Blob(parts.concat(central, [end]));
+  }
+})();
+</script>
+</body>
+</html>
