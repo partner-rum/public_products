@@ -89,6 +89,11 @@
   /* Статья */
   .art-title { margin: 0 0 9px; font-family: var(--display); font-size: clamp(27px, 3.4vw, 37px); font-weight: 500; letter-spacing: -0.02em; line-height: 1.1; max-width: 620px; }
   .art-kind { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.11em; text-transform: uppercase; color: var(--fc); margin: 0 0 10px; }
+  .art-kind .mapc { color: var(--hushed); border-bottom: 1px solid var(--border); }
+  .art-kind .mapc:hover { color: var(--ink); border-bottom-color: var(--fc); }
+  .maplink { margin-top: 14px !important; font-size: 14px !important; }
+  .maplink a { color: var(--ink); font-weight: 600; border-bottom: 1px solid rgba(238,125,27,0.5); }
+  .maplink a:hover { border-bottom-color: var(--solar); }
   .art-sub { font-size: 15px; line-height: 1.55; color: var(--hushed); max-width: 640px; text-wrap: pretty; }
   .art-bar { width: 56px; height: 4px; background: var(--fc); margin: 16px 0 22px; }
   .art-grid { display: grid; grid-template-columns: 1.25fr 1fr; gap: 28px; align-items: start; }
@@ -239,6 +244,7 @@
     .boardlink { min-height: 44px; }
     .lrow { min-height: 44px; }
     .gloss summary { min-height: 44px; }
+    .art-kind .mapc, .maplink a { display: inline-flex; align-items: center; min-height: 44px; }
   }
 </style>
 <script src="metrika.js?v=6" defer></script>
@@ -270,6 +276,7 @@
 <section class="wrap page-head">
   <h1>Как это работает</h1>
   <p>Сначала базовые бумаги, из которых всё собрано, затем сами продукты. По каждому: как устроен, профиль выплаты, риск и когда уместен.</p>
+  <p class="maplink">Все типы рынка одним справочником, с формулами выплат: <a href="map.html">Российская карта структурных продуктов →</a></p>
 </section>
 
 <section class="wrap principles">
@@ -749,9 +756,17 @@
       '<div class="metric"><div class="k">Макс. убыток</div><div class="v">' + d.loss + '</div></div>' +
     '</div>';
   }
-  function headHTML(kind, title, sub) {
+  // Код типа в «Российской карте структурных продуктов» (map.html): ссылка из
+  // статьи в справочник, где тот же тип стоит среди всех 34 по классификации EUSIPA.
+  // Карта ссылается обратно — таблица OURS в make_spmap.py; правишь одну, сверь вторую
+  var MAPCODE = { protection: "1100", revconv: "1220", booster: "1240", autocall: "1260", preipo: "1300",
+    discount: "1440", call: "2100", put: "2100", callspread: "2110", putspread: "2110",
+    callko: "2200", putko: "2200", digital: "2199" };
+  function headHTML(kind, title, sub, id) {
     // Классификация — ПОД заголовком, не эйрбрау над ним (тот же паттерн убирали на главной и столе)
-    return '<h2 class="art-title">' + title + '</h2><div class="art-kind">' + kind + '</div>' +
+    var mc = id === "warrants" ? '<a class="mapc" href="map.html#g21">группы 21–22 по карте →</a>'
+      : MAPCODE[id] ? '<a class="mapc" href="map.html#p' + MAPCODE[id] + '">код ' + MAPCODE[id] + ' по карте →</a>' : "";
+    return '<h2 class="art-title">' + title + '</h2><div class="art-kind">' + kind + (mc ? ' · ' + mc : '') + '</div>' +
       '<div class="art-sub">' + sub + '</div><div class="art-bar"></div>';
   }
   // Живой счётчик доски: сколько выпусков этого типа сейчас в data/instruments.js.
@@ -1051,7 +1066,7 @@
     if (famKey === "basic") return basicHTML(id, fam);
     if (id === "preipo") {
       var dp = LIB.preipo;
-      return headHTML("Продукт · альтернативный", dp.name, dp.tagline) +
+      return headHTML("Продукт · альтернативный", dp.name, dp.tagline, "preipo") +
         '<div class="art-grid"><div>' +
           usecaseHTML(dp) +
           '<div class="kv"><div class="k">Как работает</div><div class="v">' + dp.how + '</div></div>' +
@@ -1070,7 +1085,7 @@
         '</dl></details>';
     }
     if (id === "warrants") {
-      return headHTML("Семейство · активный", "Варранты", "Ставка на движение базового актива за ограниченную премию. Шесть типов — комбинации направления (CALL — рост, PUT — падение) и структуры (базовый, с потолком, с барьером KO). Выберите тип, чтобы открыть его описание.") +
+      return headHTML("Семейство · активный", "Варранты", "Ставка на движение базового актива за ограниченную премию. Шесть типов — комбинации направления (CALL — рост, PUT — падение) и структуры (базовый, с потолком, с барьером KO). Выберите тип, чтобы открыть его описание.", "warrants") +
         '<div class="mx">' +
           '<div class="hd"></div><div class="hd">Базовый</div><div class="hd">С потолком</div><div class="hd">С барьером KO</div>' +
           '<div class="rl"><span class="t">CALL</span><span class="s">ставка на рост</span></div>' +
@@ -1124,7 +1139,7 @@
     }
     var back = (famKey === "warrant" || id === "digital")
       ? '<button class="backmx" data-back="warrants">← Ко всем варрантам (матрица)</button>' : "";
-    return back + headHTML(kind, d.name, d.tagline) +
+    return back + headHTML(kind, d.name, d.tagline, id) +
       '<div class="art-grid"><div>' + left + '</div><div class="viz" style="--fc:' + fam.color + '">' + viz + '</div></div>';
   }
 
