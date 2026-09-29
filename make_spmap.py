@@ -84,10 +84,11 @@ OURS = {
 }
 
 # Цвет — по классу, не по группе: семь цветов без легенды не читались (фидбек
-# Алексея 29.09.2026). Синий — инвестиционные продукты, бирюзовый — с плечом;
-# легенда стоит в лиде карты. Янтарный для класса 2 отвергнут Русланом: на тёмном
-# фоне сливался с оранжевым акцентом, которым помечены наши продукты
-CLASS_COLOR = {"1": "#4F86E6", "2": "#4FA3A0"}
+# Алексея 29.09.2026). Синий — инвестиционные продукты, зелёный — с плечом;
+# легенда таблицей под лидом карты. Отвергнуты Русланом: янтарный (сливался с
+# оранжевым акцентом «есть на витрине») и бирюзовый (сливался с синим)
+CLASS_COLOR = {"1": "#4F86E6", "2": "#55C08A"}
+CLASS_WORD = {"1": "синий", "2": "зелёный"}
 GROUP_COLOR = {g: CLASS_COLOR[g[0]] for g in ("11", "12", "13", "14", "21", "22", "23")}
 BEAR = "#E0705A"
 
@@ -913,7 +914,7 @@ def render(doc):
 
     ov = []
     for ccode, cname, csub in CLASSES:
-        ov.append('<div class="cls"><div class="cls-h"><span class="n">%s</span><span class="t">%s</span><span class="s lbl">%s</span></div><div class="ov">' % (ccode, cname, csub))
+        ov.append('<div class="cls" style="--fc:%s"><div class="cls-h"><span class="n">%s</span><span class="t">%s</span><span class="s lbl">%s</span></div><div class="ov">' % (CLASS_COLOR[ccode], ccode, cname, csub))
         for g in [g for g in groups if g["code"][0] == ccode]:
             ov.append('<div class="ovg" style="--fc:%s"><a class="ovh" href="#g%s"><span class="gc">%s</span>%s</a><ul>' % (GROUP_COLOR[g["code"]], g["code"], g["code"], esc(g["name"])))
             for p in g["products"]:
@@ -933,6 +934,10 @@ def render(doc):
             "".join(prod_html(p, g["code"]) for p in g["products"])))
 
     assets = "".join(asset_html(a) for a in doc["assets"])
+    legend = "".join(
+        '<div class="lr"><span class="sw" style="--c:%s"></span><span class="ln">%s</span><span class="lt">%s</span><span class="ls lbl">%s · %s</span></div>'
+        % (CLASS_COLOR[c], c, esc(n), esc(sub), CLASS_WORD[c]) for c, n, sub in CLASSES)
+    legend += '<div class="lr"><span class="dot"></span><span class="ln"></span><span class="lt">Есть на нашей витрине</span><span class="ls lbl">ссылка на статью и доску — в карточке продукта</span></div>'
     note = ('<p class="pnote">%s.</p>' % esc(doc["products_note"][0].upper() + doc["products_note"][1:])) if doc["products_note"] else ""
     lead = ("%d типа продуктов в семи группах: что каждый обещает, как считается выплата и где проходит риск. "
             "Классификация повторяет европейскую EUSIPA; названия, термины и формулы — российские." % n_codes)
@@ -940,7 +945,7 @@ def render(doc):
         ed=doc.get("ed", ""), title=esc(doc["title"]), sub=esc(doc["sub"]), lead=esc(lead), n=n_codes, ng=len(groups),
         nt=len(doc["terms"]), nours=n_ours, anatomy=anatomy_html(groups),
         toc="".join(toc), overview="".join(ov), terms=terms, mech_intro=para(doc["mech_intro"]) if doc["mech_intro"] else "",
-        mechs=mechs, groups="".join(gsec), assets=assets, pnote=note,
+        mechs=mechs, groups="".join(gsec), assets=assets, pnote=note, legend=legend,
         desc=esc("Классификация структурных продуктов по экономическому смыслу: "
                  "%d типов в семи группах — защита капитала, повышение доходности, участие, "
                  "кредитные продукты и продукты с плечом. Графики выплат, формулы, "
