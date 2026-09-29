@@ -81,6 +81,13 @@
   .toc-kids-in { overflow: hidden; min-height: 0; padding-left: 13px; border-left: 1px solid var(--border-soft); }
   .toc-kids .toc-i { padding: 6px 9px; }
   .toc-kids .toc-i .nm { font-size: 13px; font-weight: 500; }
+  .toc-link { display: flex; gap: 11px; align-items: baseline; padding: 8px 9px; border-radius: 8px; color: var(--ink); transition: background .15s; }
+  .toc-link:hover { background: rgba(255,255,255,0.05); }
+  .toc-link .dot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--fc); position: relative; top: -1px; }
+  .toc-link .tx { flex: 1; min-width: 0; }
+  .toc-link .nm { font-size: 14px; font-weight: 600; line-height: 1.3; }
+  .toc-link .sub { font-family: var(--f-mono); font-size: 11px; color: var(--faint); margin-top: 2px; }
+  .toc-link .ar { flex: none; color: var(--solar); align-self: center; font-size: 14px; }
   .toc-i .chev { flex: none; color: var(--faint); transition: transform .25s var(--ease); align-self: center; }
   .toc-i.exp .chev { transform: rotate(180deg); }
   .toc-i.exp { background: rgba(255,255,255,0.05); }
@@ -245,6 +252,7 @@
     .lrow { min-height: 44px; }
     .gloss summary { min-height: 44px; }
     .art-kind .mapc, .maplink a { display: inline-flex; align-items: center; min-height: 44px; }
+    .toc-link { min-height: 44px; align-items: center; }
   }
 </style>
 <script src="metrika.js?v=6" defer></script>
@@ -276,7 +284,7 @@
 <section class="wrap page-head">
   <h1>Как это работает</h1>
   <p>Сначала базовые бумаги, из которых всё собрано, затем сами продукты. По каждому: как устроен, профиль выплаты, риск и когда уместен.</p>
-  <p class="maplink">Все типы рынка одним справочником, с формулами выплат: <a href="map.html">Российская карта структурных продуктов →</a></p>
+  <p class="maplink">Все типы рынка с формулами выплат — в <a href="map.html">карте структурных продуктов →</a></p>
 </section>
 
 <section class="wrap principles">
@@ -743,7 +751,14 @@
     // было бы неправдой. Группа из одного пункта — это приложение, чем он и является
     '<div class="toc-sec">Для сравнения</div>' + tocItem("futures") +
     // Статистика рынка — отдельная группа: это не продукт и не материал, а контекст
-    '<div class="toc-sec">Рынок</div>' + tocItem("market");
+    '<div class="toc-sec">Рынок</div>' + tocItem("market") +
+    // Карта — отдельная страница, поэтому ссылка, а не кнопка .toc-i: обработчик
+    // кнопок переключает статью по data-id и на ней сломался бы. Стрелка в конце —
+    // единственный пункт содержания, который уводит с этой страницы
+    '<div class="toc-sec">Справочник</div>' +
+    '<a class="toc-link" href="map.html" style="--fc:#8A93A6"><span class="dot" aria-hidden="true"></span>' +
+      '<span class="tx"><span class="nm">Карта структурных продуктов</span><br><span class="sub">все типы рынка · формулы выплат</span></span>' +
+      '<span class="ar" aria-hidden="true">→</span></a>';
 
   // ── Статьи ──
   function usecaseHTML(d, label) {
