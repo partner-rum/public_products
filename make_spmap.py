@@ -107,6 +107,10 @@ def pretty(s):
     s = re.sub(r"\s*([=≥≤<>+·/-])\s*", r" \1 ", s)
     s = s.replace(" - ", " − ").replace("( ", "(").replace(" )", ")")
     s = re.sub(r"\s+", " ", s).strip()
+    # Кусок формулы, оканчивающийся знаком операции, продолжается следующим узлом
+    # (∏, дробь, индекс) — воздух после знака сохраняем
+    if s and s[-1] in "=·+−<>≥≤(":
+        s += " "
     s = esc(s)
     # Sc — уровень ограничения, в тексте документа именно так; подстрочник для чтения
     s = re.sub(r"\bSc\b", "S<sub>c</sub>", s)
@@ -325,8 +329,11 @@ def parse(path):
                     if "жаргон" in inner:
                         note = inner.strip()
                     else:
-                        jar = [inner.strip()]
-                rest = rest[:paren.start()].strip()
+                        # «(Single-name и Basket)», «(в т.ч. FTD)» — уточнение
+                        # названия, остаётся в нём; жаргон в документе всегда в «»
+                        paren = None
+                if paren:
+                    rest = rest[:paren.start()].strip()
             if note:
                 doc["products_note"] = note
             prod = {"code": code, "name": rest, "jargon": jar, "en": "", "desc": [], "img": None,
@@ -359,6 +366,8 @@ def parse(path):
             if all(l[0] == "t" for l in ls):
                 if text.strip() == "TBD":
                     prod["notes"].append("Формулы и график появятся в следующей редакции карты.")
+                elif st == "ListParagraph":
+                    prod["desc"].append(("li", text))
                 else:
                     prod["desc"].append(text)
             continue
@@ -527,6 +536,19 @@ def para(t):
     return "<p>%s</p>" % esc(t)
 
 
+def desc_html(items):
+    """Абзацы описания; подряд идущие пункты списка — одним <ul>."""
+    o, li = [], []
+    for d in items + [None]:
+        if isinstance(d, tuple):
+            li.append("<li>%s</li>" % esc(d[1])); continue
+        if li:
+            o.append("<ul>%s</ul>" % "".join(li)); li = []
+        if d is not None:
+            o.append(para(d))
+    return "".join(o)
+
+
 def bars_html(bars):
     return "".join('<div class="bar"><span class="bar-k">%s</span><span class="chips">%s</span></div>' % (esc(br["label"]), "".join(
         '<span class="chip"><span class="ck">%s</span>%s</span>' % (esc(k.lower()), esc(v)) for k, v in br["pairs"])) for br in bars)
@@ -555,7 +577,7 @@ def prod_html(p, gcode):
     # колонка, и график должен идти сразу за описанием, а не после всех формул.
     # На широком экране сетка ставит график справа на обе строки
     o.append('<div class="pd-g%s">' % ("" if has_body else " solo"))
-    o.append('<div class="pd-d">%s' % "".join(para(d) for d in p["desc"]))
+    o.append('<div class="pd-d">%s' % desc_html(p["desc"]))
     if not p["desc"] and not has_body:
         o.append('<p class="tbd">Описание появится в следующей редакции карты.</p>')
     for n in p["notes"]:
