@@ -83,8 +83,11 @@ OURS = {
     "2200": ("callko", "Варранты с барьером KO", "board.html?type=warrant"),
 }
 
-GROUP_COLOR = {"11": "#4F86E6", "12": "#C77FA1", "13": "#8E7CC3", "14": "#5E9B82",
-               "21": "#E0A24A", "22": "#E0A24A", "23": "#E0A24A"}
+# Цвет — по классу, не по группе: семь цветов без легенды не читались (фидбек
+# Алексея 29.09.2026). Синий — инвестиционные продукты, янтарный — с плечом;
+# легенда стоит в лиде карты. Тот же янтарный у семейства варрантов в Библиотеке
+CLASS_COLOR = {"1": "#4F86E6", "2": "#E0A24A"}
+GROUP_COLOR = {g: CLASS_COLOR[g[0]] for g in ("11", "12", "13", "14", "21", "22", "23")}
 BEAR = "#E0705A"
 
 esc = lambda s: html.escape(s, quote=False)
@@ -406,7 +409,7 @@ def parse(path):
         if block is None:
             if all(l[0] == "t" for l in ls):
                 if text.strip() == "TBD":
-                    prod["notes"].append("Формулы и график появятся в следующей редакции карты.")
+                    pass  # заглушек на странице нет — фидбек Алексея 29.09.2026
                 elif st == "ListParagraph":
                     prod["desc"].append(("li", text))
                 else:
@@ -453,7 +456,7 @@ BLOCK_FIXES = {
 # Координаты: x — уровень базового актива (0…10, старт на 5), y — результат
 # (−4…4, ноль на оси). Тонкая диагональ «актив» y = x − 5 есть на каждом кадре:
 # это та точка отсчёта, от которой продукт отличается. Остальное — ломаные.
-CW, CH, PX, PT, PB = 340, 214, 30, 16, 24
+CW, CH, PX, PT, PB = 340, 226, 30, 28, 28
 GRID = "rgba(255,255,255,0.09)"; AX = "rgba(255,255,255,0.22)"; LAB = "rgba(255,255,255,0.68)"
 MONO = 'font-family="JetBrains Mono, monospace"'
 
@@ -466,6 +469,9 @@ def chart_svg(spec, color):
     o = ['<svg viewBox="0 0 %d %d" role="img" aria-label="%s">' % (CW, CH, esc(spec.get("alt", "график выплаты")))]
     o.append('<line x1="%g" y1="%g" x2="%g" y2="%g" stroke="%s"/>' % (PX, cy(0), CW - 10, cy(0), AX))
     o.append('<line x1="%g" y1="%g" x2="%g" y2="%g" stroke="%s"/>' % (PX, PT - 4, PX, CH - PB + 4, AX))
+    # Подписи осей: по вертикали результат инвестора, по горизонтали цена актива
+    o.append('<text x="%g" y="%g" font-size="10.5" %s fill="%s">результат инвестора ↑</text>' % (PX - 6, 12, MONO, LAB))
+    o.append('<text x="%g" y="%g" font-size="10.5" %s fill="%s" text-anchor="end">цена актива на дату расчёта →</text>' % (CW - 10, CH - 5, MONO, LAB))
     o.append('<text x="%g" y="%g" font-size="11" %s fill="%s" text-anchor="end">+</text>' % (PX - 7, PT + 8, MONO, LAB))
     o.append('<text x="%g" y="%g" font-size="11" %s fill="%s" text-anchor="end">−</text>' % (PX - 7, CH - PB, MONO, LAB))
     o.append('<text x="%g" y="%g" font-size="11" %s fill="%s" text-anchor="end">0</text>' % (PX - 7, cy(0) + 4, MONO, LAB))
@@ -574,7 +580,7 @@ CHARTS = {
     # 2210 — мини-фьючерс
     "image20.png": {"lines": [{"p": [[3.4, -1.1], [8.6, 4]]}, {"p": [[3.4, -1.1], [3.4, -2.1]], "dash": True}],
                     "v": [[3.0, -2.1, -3.2]],
-                    "t": [[3.3, -0.5, "стоп-лосс", "end"], [3.3, -3.3, "уровень финансирования", "start"]],
+                    "t": [[3.3, -0.5, "стоп-лосс", "end"], [3.7, -3.7, "уровень финансирования", "start"]],
                     "alt": "Линейное участие с плечом, досрочное погашение на стоп-лоссе"},
     # 2230 — двойной нокаут
     "image21.png": {"lines": [{"p": [[2.8, 2], [8, 2]]}, {"p": [[0.3, -0.6], [2.8, -0.6]], "dash": True}, {"p": [[8, -0.6], [9.7, -0.6]], "dash": True}],
@@ -704,8 +710,6 @@ def prod_html(p, gcode):
     # На широком экране сетка ставит график справа на обе строки
     o.append('<div class="pd-g%s">' % ("" if has_body else " solo"))
     o.append('<div class="pd-d">%s' % desc_html(p["desc"]))
-    if not p["desc"] and not has_body:
-        o.append('<p class="tbd">Описание появится в следующей редакции карты.</p>')
     for n in p["notes"]:
         o.append('<p class="tbd">%s</p>' % esc(n))
     o.append("</div>")
@@ -786,7 +790,7 @@ def pval(parts, mono):
 def asset_html(a):
     title = esc(a["t"])
     if not a["table"]:
-        return '<div class="asset none"><h3>%s</h3><span class="tbd">в этой редакции карты не описаны</span></div>' % title
+        return ""  # валюты и товары в документе — TBD; на странице их нет (фидбек Алексея)
     hdr = [FIELD_LABELS.get(_norm(" ".join(c)), " ".join(c)) for c in a["table"][0]]
     desc = "".join('<p class="ad">%s</p>' % esc(d) for d in a["d"] if d.strip() != "TBD")
     fields = "".join("<li>%s</li>" % esc(h) for h in hdr)
@@ -831,6 +835,30 @@ def anatomy_html(groups):
             '</div>' % (code(1, "#F2F3F7"), code(2, gc), esc(g12["name"].lower()), code(4, gc), esc(p["name"].lower()), esc(jar)))
 
 
+# Группы словаря (фидбек Алексея: «термины в две колонки хаотично — группировать»).
+# Порядок внутри группы — как в документе; термин вне списка попадёт в «Прочее»
+TERM_GROUPS = [
+    ("Актив и его цена", ["Базовый актив", "Начальная цена", "Показатель базового актива", "Наблюдение (фиксинг)", "Страйк", "Барьер"]),
+    ("Выплаты и обязанное лицо", ["Выплата", "Структурный доход", "Погашение", "Защита капитала", "Плечо (рычаг)", "Эмитент"]),
+    ("Кредитные продукты (группа 14)", ["Контрольное лицо", "Контрольное обязательство", "Кредитное событие", "Ставка возмещения"]),
+]
+
+
+def terms_html(terms):
+    by = {t["t"].strip(): t for t in terms}
+    used, out = set(), []
+    for gname, names in TERM_GROUPS + [("Прочее", [])]:
+        items = [by[n] for n in names if n in by] if names else [t for t in terms if t["t"].strip() not in used]
+        if not items:
+            continue
+        out.append('<div class="tg"><div class="tg-h lbl">%s</div>' % esc(gname))
+        for t in items:
+            used.add(t["t"].strip())
+            out.append('<div class="term"><dt>%s</dt><dd>%s</dd></div>' % (esc(t["t"]), "".join(para(d) for d in t["d"])))
+        out.append("</div>")
+    return "".join(out)
+
+
 def render(doc):
     groups = doc["groups"]
     n_codes = sum(len(g["products"]) for g in groups)
@@ -852,7 +880,7 @@ def render(doc):
             ov.append("</ul></div>")
         ov.append("</div></div>")
 
-    terms = "".join('<div class="term"><dt>%s</dt><dd>%s</dd></div>' % (esc(t["t"]), "".join(para(d) for d in t["d"])) for t in doc["terms"])
+    terms = terms_html(doc["terms"])
     mechs = "".join('<div class="mech"><h3>%s</h3>%s%s</div>' % (esc(m["t"]), "".join(para(d) for d in m["d"]),
                     ("<ul>%s</ul>" % "".join("<li>%s</li>" % esc(x) for x in m["list"])) if m["list"] else "") for m in doc["mechs"])
 
