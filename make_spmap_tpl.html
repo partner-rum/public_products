@@ -114,14 +114,10 @@
   .td { display: none; } .td.on { display: block; }
   .td h3 { margin: 6px 0 10px; font-family: var(--display); font-size: 21px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.2; }
   .td p { margin: 0 0 8px; font-size: 14.5px; line-height: 1.6; color: var(--hushed); text-wrap: pretty; max-width: 62ch; }
+  .td ul { margin: 4px 0 8px; padding-left: 20px; font-size: 14px; line-height: 1.6; color: var(--hushed); max-width: 62ch; }
+  .td li + li { margin-top: 5px; }
   .thint { margin: -8px 0 22px; }
 
-  .mechs { columns: 2; column-gap: 16px; }
-  .mech { break-inside: avoid; margin-bottom: 16px; background: var(--card); border: 1px solid var(--border-soft); border-radius: 14px; padding: 18px 20px; }
-  .mech h3 { margin: 0 0 8px; font-family: var(--display); font-size: 16.5px; font-weight: 600; line-height: 1.3; letter-spacing: -0.01em; }
-  .mech p { margin: 0 0 8px; font-size: 14px; line-height: 1.6; color: var(--hushed); text-wrap: pretty; }
-  .mech ul { margin: 0; padding-left: 18px; font-size: 14px; line-height: 1.55; color: var(--hushed); }
-  .mech li + li { margin-top: 4px; }
 
   /* ── Карта: два класса, в каждом — колонки групп ── */
   .cls + .cls { margin-top: 22px; }
@@ -261,7 +257,6 @@
     .toc a { flex: none; border: 1px solid var(--border); white-space: nowrap; border-radius: 999px; }
     .toc a.on { border-color: var(--solar); border-radius: 999px; }
     .toc a.g + a:not(.g), .toc a:not(.g) + a.g { margin-top: 0; }
-    .mechs { columns: 1; }
     .tdict { grid-template-columns: 1fr; gap: 18px; }
     .tdef { position: static; }
     .cls-h .s { display: none; }
@@ -352,8 +347,8 @@
     <section class="sec" id="mechs">
       <div class="lbl">Устройство</div>
       <h2 class="sec-h">Механизмы</h2>
-      <div class="sec-lead">@@mech_intro@@</div>
-      <div class="mechs">@@mechs@@</div>
+      <div class="sec-lead">@@mech_intro@@<p style="margin-top:8px">Наведите на механизм — описание появится рядом; нажмите, чтобы закрепить.</p></div>
+      <div class="tdict">@@mechs@@</div>
     </section>
 
     @@groups@@
@@ -408,24 +403,26 @@
 (function () {
   // Словарь: наведение показывает определение, клик закрепляет; уход мыши со
   // списка возвращает закреплённое. Фокус с клавиатуры работает как наведение
-  var list = document.getElementById("tlist"), def = document.getElementById("tdef");
-  if (!list || !def) return;
-  var chips = [].slice.call(list.querySelectorAll(".tchip")), defs = [].slice.call(def.querySelectorAll(".td"));
-  var pinned = chips[0];
-  function show(ch) {
-    chips.forEach(function (c) { var on = c === ch; c.classList.toggle("on", on); c.setAttribute("aria-expanded", on ? "true" : "false"); });
-    var id = ch.getAttribute("data-t");
-    defs.forEach(function (d) { d.classList.toggle("on", d.id === id); });
-  }
-  chips.forEach(function (c) {
-    c.addEventListener("mouseenter", function () { show(c); });
-    c.addEventListener("focus", function () { show(c); });
-    c.addEventListener("click", function () {
-      pinned = c; show(c);
-      if (window.matchMedia("(max-width: 960px)").matches) def.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  [].forEach.call(document.querySelectorAll(".tdict"), function (box) {
+    var list = box.querySelector(".tlist"), def = box.querySelector(".tdef");
+    if (!list || !def) return;
+    var chips = [].slice.call(list.querySelectorAll(".tchip")), defs = [].slice.call(def.querySelectorAll(".td"));
+    var pinned = chips[0];
+    function show(ch) {
+      chips.forEach(function (c) { var on = c === ch; c.classList.toggle("on", on); c.setAttribute("aria-expanded", on ? "true" : "false"); });
+      var id = ch.getAttribute("data-t");
+      defs.forEach(function (d) { d.classList.toggle("on", d.id === id); });
+    }
+    chips.forEach(function (c) {
+      c.addEventListener("mouseenter", function () { show(c); });
+      c.addEventListener("focus", function () { show(c); });
+      c.addEventListener("click", function () {
+        pinned = c; show(c);
+        if (window.matchMedia("(max-width: 960px)").matches) def.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      });
     });
+    list.addEventListener("mouseleave", function () { show(pinned); });
   });
-  list.addEventListener("mouseleave", function () { show(pinned); });
 })();
 </script>
 <script src="chat.js?v=19"></script>

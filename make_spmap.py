@@ -844,28 +844,60 @@ TERM_GROUPS = [
 ]
 
 
-def terms_html(terms):
-    """Слева — термины плашками по группам, справа — панель с ОДНИМ определением:
-    наведение показывает, клик закрепляет. Все определения лежат в DOM (поиск и
-    без-JS видят их), показывается только активное — через класс .on."""
-    by = {t["t"].strip(): t for t in terms}
-    used, chips, defs, i = set(), [], [], 0
-    for gname, names in TERM_GROUPS + [("Прочее", [])]:
-        items = [by[n] for n in names if n in by] if names else [t for t in terms if t["t"].strip() not in used]
+def dict_html(sections, prefix):
+    """Справочник: слева плашки по группам, справа панель с ОДНИМ описанием —
+    наведение показывает, клик закрепляет. Все описания лежат в DOM (поиск и
+    без-JS видят их), показывается только активное — класс .on. Одна разметка
+    для терминов и механизмов; prefix делает id уникальными на странице."""
+    chips, defs, i = [], [], 0
+    pid = "tdef-" + prefix
+    for gname, items in sections:
         if not items:
             continue
         chips.append('<div class="tg"><div class="tg-h lbl">%s</div><div class="tchips">' % esc(gname))
-        for t in items:
-            used.add(t["t"].strip())
-            tid = "t%d" % i; on = " on" if i == 0 else ""
-            chips.append('<button type="button" class="tchip%s" data-t="%s" aria-controls="tdef" aria-expanded="%s">%s</button>'
-                         % (on, tid, "true" if i == 0 else "false", esc(t["t"])))
+        for label, title, body in items:
+            tid = "%s%d" % (prefix, i); on = " on" if i == 0 else ""
+            chips.append('<button type="button" class="tchip%s" data-t="%s" aria-controls="%s" aria-expanded="%s">%s</button>'
+                         % (on, tid, pid, "true" if i == 0 else "false", esc(label)))
             defs.append('<div class="td%s" id="%s"><div class="lbl">%s</div><h3>%s</h3>%s</div>'
-                        % (on, tid, esc(gname), esc(t["t"]), "".join(para(d) for d in t["d"])))
+                        % (on, tid, esc(gname), esc(title), body))
             i += 1
         chips.append("</div></div>")
-    return ('<div class="tlist" id="tlist">%s</div>'
-            '<div class="tdef" id="tdef" aria-live="polite">%s</div>' % ("".join(chips), "".join(defs)))
+    return ('<div class="tlist">%s</div><div class="tdef" id="%s" aria-live="polite">%s</div>'
+            % ("".join(chips), pid, "".join(defs)))
+
+
+def terms_html(terms):
+    by = {t["t"].strip(): t for t in terms}
+    used, sections = set(), []
+    for gname, names in TERM_GROUPS + [("Прочее", [])]:
+        items = [by[n] for n in names if n in by] if names else [t for t in terms if t["t"].strip() not in used]
+        used.update(t["t"].strip() for t in items)
+        sections.append((gname, [(t["t"], t["t"], "".join(para(d) for d in t["d"])) for t in items]))
+    return dict_html(sections, "t")
+
+
+# Механизмы: короткие имена для плашек (заголовки документа длиной в строку) и
+# две группы — по тому, к каким продуктам механизм применяется (так сказано в
+# тексте каждого). Заголовок вне списка попадёт в первую группу как есть
+MECH_SHORT = {
+    "Способ расчета цены базового актива в зависимости от числа базовых активов": "Корзина: чья цена считается",
+    "Способ наблюдения цены (способ фиксинга)": "Способ фиксинга",
+    "Выплата в валюте, отличной от валюты номинала": "Выплата в другой валюте",
+    "Автоколл (отзыв)": "Автоколл (отзыв)",
+    "Определение ставки возмещения": "Ставка возмещения",
+    "Риск на структурный доход": "Риск на структурный доход",
+    "Момент погашения при кредитном событии": "Момент погашения",
+}
+MECH_CREDIT = {"Определение ставки возмещения", "Риск на структурный доход", "Момент погашения при кредитном событии"}
+
+
+def mechs_html(mechs):
+    def body(m):
+        return "".join(para(d) for d in m["d"]) + (("<ul>%s</ul>" % "".join("<li>%s</li>" % esc(x) for x in m["list"])) if m["list"] else "")
+    price = [(MECH_SHORT.get(m["t"], m["t"]), m["t"], body(m)) for m in mechs if m["t"] not in MECH_CREDIT]
+    credit = [(MECH_SHORT.get(m["t"], m["t"]), m["t"], body(m)) for m in mechs if m["t"] in MECH_CREDIT]
+    return dict_html([("Для продуктов на цену актива", price), ("Для кредитных продуктов (группа 14)", credit)], "m")
 
 
 def render(doc):
@@ -890,8 +922,7 @@ def render(doc):
         ov.append("</div></div>")
 
     terms = terms_html(doc["terms"])
-    mechs = "".join('<div class="mech"><h3>%s</h3>%s%s</div>' % (esc(m["t"]), "".join(para(d) for d in m["d"]),
-                    ("<ul>%s</ul>" % "".join("<li>%s</li>" % esc(x) for x in m["list"])) if m["list"] else "") for m in doc["mechs"])
+    mechs = mechs_html(doc["mechs"])
 
     gsec = []
     for g in groups:
