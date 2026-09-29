@@ -564,10 +564,10 @@
      860px; на десктопе новые узлы скрыты (.mx-btns, .mx-root), меню не строится
      вовсе. Что ушло с телефона и почему — в комментарии к скрипту внизу. */
   .mx-root, .mx-btns, .mx-sheet { display:none; }
-  /* Лид ОДИН на оба экрана: полные обороты («от ОФЗ до биткоина», «и расчётом
-     на вашу сумму») спрятаны в .xl и на телефоне не печатаются, тире .xs —
-     наоборот. Второго <p> и второго <h1> в DOM нет. */
-  .sub .xs { display:none; }
+  /* Заголовок и лид — ОДНИ на оба экрана: у каждого две редакции, десктопная в
+     .xl и телефонная в .xs, видна ровно одна. Второго <h1> и второго <p> в DOM
+     нет. Кнопка первого экрана (.mx-first) и точки-указатель — только телефон. */
+  .hero .xs, .mx-first, .mx-dots { display:none; }
   
   @media (max-width:860px) {
     /* ── Что уходит с телефона ──
@@ -603,20 +603,90 @@
     .mx-ib[aria-expanded="true"] .ic-x { display:block; }
     .mx-ib[aria-expanded="true"] .ic-o { display:none; }
 
-    /* ── Первый экран: заголовок и лид — те же элементы, что на десктопе ── */
-    .hero { padding:34px 0 0; }
-    /* 38px до 360px; ниже кегль плывёт за шириной: «в каждой сделке.» при 38px
-       занимает 318px, а на 320-пиксельном экране есть 280 — строка рвалась
-       на три. При 10.3vw на 320 выходит 33px (274px), на 360 — 37px */
-    h1 { font-size:clamp(2rem, 10.3vw, 2.375rem); line-height:1.04; letter-spacing:-0.028em; max-width:none; text-wrap:balance; }
+    /* ── Экраны: одна мысль на экран (вариант 4, выбор Руслана 29.09.2026) ──
+       Первый экран — сам герой: заголовок, фраза, кнопка и вход «Сотрудничество».
+       Дальше по экрану на продукт дня, размещение, ставки и утро (строит скрипт
+       внизу из данных; нет данных — нет экрана), в конце — все разделы.
+       Листается как Reels: один свайп — ровно один экран. Листание СВОЁ, скриптом
+       (paging в модуле ниже) — выбор Руслана 29.09.2026 из трёх режимов на превью:
+       палец ведёт страницу 1:1, отпустил — экран доезжает с замедлением, как в
+       приложении. Прилипание браузера (scroll-snap) не используется: длительность
+       и кривую его доводки не задать, медленный сдвиг меньше полэкрана оно
+       откатывает назад, а резкий взмах осаживает как в стену.
+       scroll-padding-top — ровно высота липкой шапки: скрипт берёт её отсюда как
+       единственный источник, и якоря встают под шапку, а не под неё. svh, а не dvh:
+       высота экрана не прыгает, когда браузер прячет свою панель адреса. */
+    html { scroll-padding-top:57px; }
+    /* Шапка без размытия: blur под едущей страницей — самая дорогая отрисовка на
+       телефоне, а на сплошном тёмном фоне разницы не видно */
+    .nav { background:var(--bg, #0B0C10); backdrop-filter:none; -webkit-backdrop-filter:none; }
+    /* Въезд содержимого: пока экран поднимается в кадр, его строки идут чуть
+       быстрее страницы и проявляются. Привязано к прокрутке, а не к времени —
+       движение ведёт палец. Хвост — только заголовок и группы: список целиком
+       выше окна, и он проявлялся бы полэкрана. Нет поддержки — просто без движения. */
+    @supports (animation-timeline: view()) {
+      @media (prefers-reduced-motion: no-preference) {
+        #mx-scr .mx-s > *, .mx-tail > h2, .mx-tail .mx-g {
+          animation:mx-in linear both; animation-timeline:view(); animation-range:entry 35% entry 100%; }
+      }
+    }
+    @keyframes mx-in { from { opacity:.25; transform:translateY(26px); } to { opacity:1; transform:none; } }
+    .hero, .mx-s { min-height:calc(100vh - 57px); min-height:calc(100svh - 57px);
+      display:flex; flex-direction:column; justify-content:center; }
+    .hero { padding:28px 0 40px; }
+    /* Кегль от ширины экрана: самое длинное слово заголовка — «квалифицированных»,
+       309 px при 30 px, а колонка на 320 — 280 px. Формула держит его в колонке
+       от 320 и выше; с 375 кегль упирается в 30 px. */
+    h1, .mx-big { font-size:1.625rem; font-size:clamp(1.5rem, 9.4vw - 0.25rem, 1.875rem); }
+    h1 { line-height:1.12; letter-spacing:-0.024em; max-width:none; text-wrap:balance; }
     h1 .lm { color:inherit; }
-    .sub { margin:16px 0 0; font-size:1.0625rem; line-height:1.5; max-width:none; }
-    .sub .xl { display:none; }
-    .sub .xs { display:inline; }
+    .hero .xl { display:none; }
+    .hero .xs { display:inline; }
+    .sub { margin:14px 0 0; font-size:1.0625rem; line-height:1.5; max-width:none; }
+    .mx-first { display:block; }
     /* На планшете (600–860) строки не растягиваем на всю ширину: лид в 90 знаков
        не читается, а строки оглавления с шевроном за 700px теряют связь */
     .hero, .mx-root { max-width:600px; }
     .mx-root { display:block; position:relative; z-index:1; }
+    .mx-s { padding:28px 0 36px; border-top:1px solid var(--rule-soft); }
+    .mx-s h2 { margin:0 0 16px; font-family:var(--display); font-size:1.0625rem; font-weight:600; color:var(--mut); letter-spacing:-0.01em; }
+    .mx-big { margin:0; font-family:var(--display); font-weight:600; line-height:1.12; letter-spacing:-0.024em; text-wrap:balance; }
+    .mx-sub { margin:14px 0 0; font-size:1.0625rem; line-height:1.5; color:var(--mut); }
+    .mx-huge { display:block; font-family:var(--m); font-size:3.5rem; font-weight:500; letter-spacing:-0.03em; line-height:1; font-variant-numeric:tabular-nums; }
+    .mx-lab { display:block; margin-top:10px; font-family:var(--m); font-size:0.75rem; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); }
+    /* Продукты дня: пять строк на одном экране — слева тип и актив со сроком,
+       справа цифра с меткой (премия, участие, купон, цена) */
+    .mx-prods { border-top:1px solid var(--line); }
+    .mx-prods a { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; column-gap:14px; min-height:56px;
+      padding:10px 0; border-bottom:1px solid var(--rule-soft); -webkit-tap-highlight-color:transparent; }
+    .mx-prods a:active { background:rgba(255,255,255,0.035); }
+    .mx-prods .pn b { display:block; font-size:1rem; font-weight:500; line-height:1.3; }
+    .mx-prods .pn span { display:block; margin-top:2px; font-size:0.875rem; line-height:1.35; color:var(--mut); }
+    .mx-prods .pf { text-align:right; }
+    .mx-prods .pf b { display:block; font-family:var(--m); font-size:1.0625rem; font-weight:500; white-space:nowrap; font-variant-numeric:tabular-nums; }
+    .mx-prods .pf i { display:block; margin-top:2px; font-style:normal; font-family:var(--m); font-size:0.6875rem; letter-spacing:.06em;
+      text-transform:uppercase; color:var(--dim); }
+    /* Низкий экран (320×568): пять строк с переносом имени не влезали на 21 px —
+       поджимаем поля экрана и строк */
+    @media (max-height:620px) {
+      .mx-s { padding-top:16px; padding-bottom:20px; }
+      .mx-prods a { min-height:52px; padding:8px 0; }
+    }
+    .mx-go { display:inline-flex; align-self:flex-start; align-items:center; gap:8px; margin-top:22px; min-height:48px;
+      font-size:1rem; font-weight:500; color:var(--solar-l); -webkit-tap-highlight-color:transparent; }
+    .mx-go:active { color:var(--solar); }
+    .mx-lines { margin-top:18px; border-top:1px solid var(--line); }
+    .mx-lines a { display:flex; justify-content:space-between; align-items:center; gap:12px; min-height:48px; padding:10px 0;
+      border-bottom:1px solid var(--rule-soft); font-size:0.9375rem; line-height:1.4; -webkit-tap-highlight-color:transparent; }
+    .mx-lines a:active { background:rgba(255,255,255,0.035); }
+    .mx-lines .k b { font-weight:500; color:var(--dim); margin-right:7px; }
+    .mx-lines .v { font-family:var(--m); font-weight:500; color:var(--up); white-space:nowrap; }
+    .mx-tail { padding-top:36px; }
+    .mx-tail > h2 { margin:0; font-family:var(--display); font-size:1.0625rem; font-weight:600; color:var(--mut); letter-spacing:-0.01em; }
+    .mx-tail .mx-g:first-of-type { margin-top:20px; }
+    .mx-dots { position:fixed; right:7px; top:50%; transform:translateY(-50%); z-index:5; display:flex; flex-direction:column; gap:9px; pointer-events:none; }
+    .mx-dots i { display:block; width:5px; height:5px; border-radius:50%; background:rgba(255,255,255,0.22); transition:background .2s, transform .2s; }
+    .mx-dots i.on { background:var(--solar); transform:scale(1.4); }
     .mx-cta { display:flex; align-items:center; gap:10px; min-height:56px; margin-top:28px; padding:0 18px 0 20px;
       border-radius:12px; background:var(--solar); color:#0C0A08; font-size:1.0625rem; font-weight:600;
       letter-spacing:-0.005em; -webkit-tap-highlight-color:transparent; transition:background .2s; }
@@ -670,6 +740,7 @@
 
   @media (max-width:860px) and (prefers-reduced-motion: reduce) {
     .mx-sheet, .mx-sheet.on { transition:none; transform:none; }
+    .mx-dots i { transition:none; }
   }
 </style>
 <script src="metrika.js?v=6" defer></script>
@@ -713,8 +784,13 @@
 <div class="wrap">
 <main id="main">
   <section class="hero">
-    <h1 class="rise"><span class="lm">Уверенность</span><br>в каждой сделке.</h1>
-    <p class="sub rise" style="animation-delay:.07s"><span class="xs">Rumberg выпускает с</span><span class="xl">С</span>труктурные облигации для квалифицированных инвесторов<span class="xl">: от ОФЗ до биткоина,</span><span class="xs">&nbsp;—</span> с&nbsp;формулой выплаты, известной до сделки<span class="xl">, и расчётом на вашу сумму</span>.</p>
+    <h1 class="rise"><span class="xl"><span class="lm">Уверенность</span><br>в каждой сделке.</span> <span class="xs">Rumberg выпускает структурные облигации для квалифицированных инвесторов.</span></h1>
+    <p class="sub rise" style="animation-delay:.07s"><span class="xl">Структурные облигации для квалифицированных инвесторов: от ОФЗ до биткоина, с&nbsp;формулой выплаты, известной до сделки, и расчётом на вашу сумму.</span> <span class="xs">Формула выплаты известна до сделки&nbsp;— её можно посчитать на&nbsp;своей сумме заранее.</span></p>
+    <!-- Телефон: кнопка и вход «Сотрудничество» — часть первого экрана -->
+    <div class="mx-first">
+      <a class="mx-cta rise" style="animation-delay:.12s" href="board.html">Смотреть продукты<span class="n" id="mx-n"></span><svg width="16" height="16" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+      <a class="mx-co rise" style="animation-delay:.16s" href="partners.html"><span class="t">Сотрудничество<svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="s">для финансовых институтов и агентов</span></a>
+    </div>
     <div class="coop rise" style="animation-delay:.1s">
       <span class="cl">Работаем с:</span>
       <a href="partners.html#fi">Финансовыми институтами<svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
@@ -723,12 +799,13 @@
     <div id="hevslot"></div>
   </section>
 
-  <!-- Телефон (≤860px): кнопка, второй вход, оглавление и подвал. Заголовок и
-       лид — из героя выше, те же элементы, что на десктопе. На десктопе блок
-       скрыт. Без данных остаются кнопка и статические строки оглавления. -->
+  <!-- Телефон (≤860px): экраны после первого (продукт дня, размещение, ставки,
+       утро — строит скрипт внизу из данных) и хвост со всеми разделами и
+       подвалом. На десктопе блок скрыт. -->
   <div class="mx-root" id="mx-root">
-    <a class="mx-cta rise" style="animation-delay:.12s" href="board.html">Смотреть продукты<span class="n" id="mx-n"></span><svg width="16" height="16" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
-    <a class="mx-co rise" style="animation-delay:.16s" href="partners.html"><span class="t">Сотрудничество<svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="s">для финансовых институтов и агентов</span></a>
+    <div class="mx-scr" id="mx-scr"></div>
+    <section class="mx-tail" aria-labelledby="mx-tail-h">
+    <h2 id="mx-tail-h">Разделы</h2>
     <div id="mx-idx"></div>
     <div class="mx-foot">
       <div class="l">
@@ -737,6 +814,7 @@
       </div>
       Не является индивидуальной инвестиционной рекомендацией. Котировки индикативны.
     </div>
+    </section>
   </div>
 
   <div id="evslot"></div>
@@ -961,6 +1039,7 @@
       if (r.type === "discount") return { v: fmtQ(r.quote) + "%", n: "цена" };
       return { v: fmtQ(r.quote) + "%", n: "премия" };
     }
+    window.soFigure = figure;   // телефонные экраны берут ту же цифру, что колонки
 
     // Каталог доски берём ЧЕРЕЗ ОХРАНУ: раньше здесь стояло прямое
     // SITE_DATA.instruments.length и PLACEMENTS_DATA.issues.length, и один
@@ -1172,10 +1251,18 @@
         return picked;
       }
 
-      function renderProducts() {
+      // Пятёрка дня одна на оба экрана: колонка десктопа рисует её здесь, телефонные
+      // экраны «Продукты дня» берут ту же через window.soDay — своей копии подбора нет
+      function dayProducts() {
         var items = (M.products || []).map(byId).filter(Boolean);
         var derived = false;
         if (!items.length) { items = pickByNews(); derived = items.length > 0; }
+        return { items: items.slice(0, PRODUCT_LIMIT), derived: derived };
+      }
+      window.soDay = dayProducts;
+
+      function renderProducts() {
+        var day = dayProducts(), items = day.items, derived = day.derived;
         if (!items.length) {
           pbox.innerHTML = !INSTR.length
             ? failBox("каталог продуктов")
@@ -1183,7 +1270,7 @@
               '<a href="board.html">Открыть доску' + AR + '</a></div>';
           return;
         }
-        pbox.innerHTML = items.slice(0, PRODUCT_LIMIT).map(function (r) {
+        pbox.innerHTML = items.map(function (r) {
           var f = figure(r);
           return '<div class="prow">' +
             '<a class="pmain" href="instrument.html?id=' + encodeURIComponent(r.id) + '">' +
@@ -1511,17 +1598,21 @@
 <script src="nav-about.js?v=9"></script>
 <script src="qualgate.js?v=6"></script>
 <script>
-/* ── Главная на телефоне: первый экран + оглавление + меню (28.09.2026) ──────
-   Вариант A, выбран Русланом из трёх на стенде _min-view.html. Повод — «при
-   заходе с телефона ничего не понятно, даже мне»: липкая шапка занимала 162px
-   в три ряда, на первом экране было 12 входов шести видов, страница — 2,9 экрана.
-   Теперь ниже 860px: шапка в одну строку (поиск и меню иконками), заголовок и
-   лид те же элементы, что на десктопе, одна кнопка, оглавление разделов тремя
-   группами со строкой на раздел и полноэкранное меню со всем сайтом. Свечи,
-   лента, мини-дорожки, пилюли и колонки данных на телефоне скрыты CSS.
-   Строим ТОЛЬКО при совпадении медиазапроса: на десктопе ни меню, ни строк
-   оглавления в DOM не появляется. Справа у строки — только то, что меняется
-   (срок заявок, лучшая ставка, даты, число записей), и всё из данных. */
+/* ── Главная на телефоне: «Экраны» (вариант 4, выбор Руслана 29.09.2026) ──────
+   Одна мысль на экран. Первый экран — сам герой: заголовок и лид в телефонной
+   редакции (.xs), кнопка «Смотреть продукты» и вход «Сотрудничество». Дальше по
+   экрану на пять продуктов дня строками (та же пятёрка, что в колонке десктопа,
+   window.soDay), размещение, лучшие ставки и утро на рынках, в конце —
+   все разделы строками и подвал. Листается как Reels: один свайп — один экран,
+   листание своё (paging ниже), точки справа — где мы. Выбран из пяти форматов на стенде _fmt-view.html
+   (витрина, цифры, поиск, экраны, лента) после того, как вариант A в проде
+   «всё равно не нравится».
+   Экраны строятся из данных: нет продукта, размещения, ставок или свежего
+   обзора — нет и экрана. Цифра продукта — та же figure(), что у колонок
+   десктопа (window.soFigure), своей копии нет.
+   Строим ТОЛЬКО при совпадении медиазапроса: на десктопе ни экранов, ни меню,
+   ни строк оглавления в DOM не появляется. Шапка в одну строку (поиск и меню
+   иконками) — та же, что была у варианта A. */
 (function () {
   "use strict";
   var MQ = window.matchMedia ? window.matchMedia("(max-width:860px)") : null;
@@ -1532,54 +1623,74 @@
   function esc(v) { return v == null ? "" : String(v).replace(/[&<>"']/g, function (c) { return ESC[c]; }); }
   function dm(iso) { return String(iso || "").split("-").reverse().join(".").slice(0, 5); }
   function plural(n, one, few, many) { var a = n % 10, b = n % 100; return n + " " + ((a === 1 && b !== 11) ? one : (a >= 2 && a <= 4 && (b < 12 || b > 14)) ? few : many); }
+  function pct1(n) { return String(Math.round(n * 10) / 10).replace(".", ",") + "%"; }
+  function lc(s) { s = String(s || ""); return s.charAt(0).toLowerCase() + s.slice(1); }
+  // «2 года» не должно рваться на «2» в конце строки и «года» в начале следующей,
+  // «до 08.10.2026» — на «до» и дату
+  function nb(s) { return String(s || "").replace(/(\d) (год|года|лет|мес)/g, "$1 $2").replace(/(^|\s)(до|от|с|по) (?=\d)/g, "$1$2 "); }
 
   var CHEV = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M5 2.5 L9.5 7 L5 11.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var AR = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   var STAR = '<svg width="21" height="21" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>';
   var XIC = '<svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true"><path d="M6 6 L16 16 M16 6 L6 16" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>';
+
+  // ── Данные, общие для экранов и оглавления ──
+  function instr() { return (window.SITE_DATA && SITE_DATA.instruments) || []; }
+  function offering() { return ((window.OFFERINGS && OFFERINGS.items) || [])[0] || null; }
+  // Свежий обзор — не старше трёх дней, как и у колонки «Утро» на десктопе
+  function morningAge() {
+    var M = window.MORNING || {};
+    if (!M.date) return null;
+    var p = String(M.date).split("-").map(Number), t = new Date();
+    return Math.round((Date.UTC(t.getFullYear(), t.getMonth(), t.getDate()) - Date.UTC(p[0], p[1] - 1, p[2])) / 86400000);
+  }
+  // Лучшие ставки — те же четыре строки, что показывает главная (без промо)
+  function rateRows() {
+    var R = window.RATES || {};
+    function best(list) { return (list || []).reduce(function (a, x) { return (!a || x.rate > a.rate) ? x : a; }, null); }
+    var deps = (R.deposits || []).filter(function (d) { return (d.termMonths || 0) <= 12 && !d.promo; });
+    var sav = best(deps.filter(function (d) { return d.kind === "saving" || d.kind === "savingAccount"; }));
+    var dep = best(deps.filter(function (d) { return d.kind === "deposit"; }));
+    var fund = best(R.funds), ofz = best((R.ofz || []).filter(function (o) { return o.years <= 1.02; }));
+    var rows = [];
+    if (sav) rows.push({ k: "накопительный счёт", n: sav.bank, v: sav.rate, href: sav.url });
+    if (dep) rows.push({ k: "вклад на " + dep.termMonths + " мес.", n: dep.bank, v: dep.rate, href: dep.url });
+    if (fund) rows.push({ k: "фонд денежного рынка", n: fund.name, v: fund.rate, href: "https://www.moex.com/ru/issue.aspx?code=" + fund.id });
+    if (ofz) rows.push({ k: "короткие ОФЗ", n: ofz.name, v: ofz.rate, href: "https://www.moex.com/ru/issue.aspx?code=" + ofz.id });
+    return rows;
+  }
 
   function row(o) {
     return '<a class="mx-row" href="' + esc(o.href) + '">' +
       '<span class="l"><span class="t">' + esc(o.t) + '</span>' + (o.m ? '<span class="m">' + o.m + '</span>' : "") + '</span>' +
       '<span class="r">' + (o.n != null ? '<span class="n">' + esc(o.n) + '</span>' : "") + CHEV + '</span></a>';
   }
-  function group(cap, rows) {
-    return '<section class="mx-g"><h2 class="mx-cap">' + esc(cap) + '</h2><div class="mx-list">' + rows.join("") + '</div></section>';
+  // На странице группы стоят под заголовком «Разделы» (h3), в меню — сами по себе (h2)
+  function group(cap, rows, tag) {
+    return '<section class="mx-g"><' + tag + ' class="mx-cap">' + esc(cap) + '</' + tag + '><div class="mx-list">' + rows.join("") + '</div></section>';
   }
 
-  // ── Подписи строк: считаются при каждой отрисовке, данные могут доехать позже ──
+  // ── Оглавление: подписи считаются при каждой отрисовке, данные могут доехать позже ──
   function index(full) {
-    var INSTR = (window.SITE_DATA && SITE_DATA.instruments) || [];
-
-    var OFF = (window.OFFERINGS && OFFERINGS.items) || [];
-    var off = OFF[0] || null;
+    var INSTR = instr(), off = offering();
     // Срок приёма заявок встаёт справа, где у других строк число; год не печатаем.
     // «Космические технологии» само по себе ничего не говорит — рядом что это и на сколько.
     var offDue = off && String(off.statusLabel || "").match(/до\s+(\d{2}\.\d{2})(?:\.\d{4})?/);
     var offWhat = /облигац/i.test(String(off && off.kind || "")) ? "облигация" : "выпуск";
     var offMeta = !off ? "новых выпусков сейчас нет"
       : esc(off.name) + " · " + offWhat + (off.tenor ? " на " + esc(off.tenor) : "") +
-        (!offDue && off.statusLabel ? " · " + esc(String(off.statusLabel).charAt(0).toLowerCase() + String(off.statusLabel).slice(1)) : "");
+        (!offDue && off.statusLabel ? " · " + esc(lc(off.statusLabel)) : "");
     var offHref = off ? "offerings.html#" + encodeURIComponent(off.id) : "offerings.html";
 
-    // Утро: свежий обзор — рубрики и дата; старше трёх дней главная новости
-    // прячет, и здесь честно «последний обзор был …»
-    var M = window.MORNING || {}, age = null;
-    if (M.date) {
-      var p = String(M.date).split("-").map(Number), t = new Date();
-      age = Math.round((Date.UTC(t.getFullYear(), t.getMonth(), t.getDate()) - Date.UTC(p[0], p[1] - 1, p[2])) / 86400000);
-    }
+    // Утро: свежий обзор — рубрики и дата; старше трёх дней честно «последний обзор был …»
+    var M = window.MORNING || {}, age = morningAge();
     var rub = (M.news || []).map(function (n) { return n.rubric; }).filter(Boolean);
     var morning = !M.date ? { m: "обзор выходит по утрам" }
       : age <= 3 ? { m: esc(rub.join(" · ")) || "обзор дня", n: dm(M.date) }
       : { m: "последний обзор был " + dm(M.date) };
 
-    // Лучшие ставки: лучшая из тех же четырёх, что показывает главная (без промо)
-    var R = window.RATES || {};
-    function best(list) { return (list || []).reduce(function (a, x) { return (!a || x.rate > a.rate) ? x : a; }, null); }
-    var cand = [best((R.deposits || []).filter(function (d) { return (d.termMonths || 0) <= 12 && !d.promo; })),
-                best(R.funds), best((R.ofz || []).filter(function (o) { return o.years <= 1.02; }))].filter(Boolean);
-    var topRate = cand.length ? Math.max.apply(null, cand.map(function (x) { return x.rate; })) : null;
-    var rateN = topRate != null ? "до " + String(Math.round(topRate * 10) / 10).replace(".", ",") + "%" : null;
+    var rr = rateRows();
+    var topRate = rr.length ? Math.max.apply(null, rr.map(function (x) { return x.v; })) : null;
 
     var EV = (window.EVENTS && EVENTS.items) || [], now = Date.now();
     function startOf(e) { var d = e.date.split("-").map(Number), tt = e.timeMsk.split(":").map(Number); return Date.UTC(d[0], d[1] - 1, d[2], tt[0] - 3, tt[1]); }
@@ -1596,7 +1707,7 @@
     var prod = [
       row({ href: offHref, t: "На размещении", m: offMeta, n: offDue ? "до " + offDue[1] : null }),
       row({ href: "placements.html", t: "Размещённые выпуски", m: "уже выпущенные облигации: котировка и документы" }),
-      row({ href: "screener.html", t: "Лучшие ставки", m: "вклады, фонды и ОФЗ до года", n: rateN })
+      row({ href: "screener.html", t: "Лучшие ставки", m: "вклады, фонды и ОФЗ до года", n: topRate != null ? "до " + pct1(topRate) : null })
     ];
     if (full) prod.unshift(row({ href: "board.html", t: "Текущие продукты", m: "все продукты с котировками", n: INSTR.length || null }));
     var read = [];
@@ -1617,15 +1728,214 @@
       // на телефоне они скрыты — вход остаётся в меню
       us.push(row({ href: "guide.html", t: "Как это работает", m: "сайт как инструмент продаж" }));
     }
-    return group("Продукты", prod) + group("Аналитика", read) + group("Rumberg", us);
+    var tag = full ? "h2" : "h3";
+    return group("Продукты", prod, tag) + group("Аналитика", read, tag) + group("Rumberg", us, tag);
+  }
+
+  // ── Экраны после первого: продукты дня, размещение, ставки, утро ──
+  function scr(id, title, inner) {
+    return '<section class="mx-s" aria-labelledby="' + id + '"><h2 id="' + id + '">' + title + '</h2>' + inner + '</section>';
+  }
+  // Имя продукта в строке — двумя строками: тип («Варрант CALL 100») и актив со
+  // сроком («Hang Seng · 2 года»); одной строкой точка-разделитель повисала на
+  // переносе. У варранта первым стоит «CALL 100», и без слова «Варрант» холодный
+  // посетитель не поймёт, что это; имя без актива («Call», бывает у заведённых
+  // руками) дописываем активом и сроком
+  function pname(r) {
+    var parts = String(r.name || "").split(" · "), head = parts.shift() || "";
+    if (!parts.length) parts = [r.underlying, r.tenor].filter(Boolean);
+    if (r.type === "warrant" && !/^варрант/i.test(head)) head = "Варрант " + head.replace(/^Call\b/i, "CALL");
+    function glue(s) { return s.replace(/(CALL|PUT|ОФЗ) (\d)/g, "$1 $2"); }
+    return { head: glue(head), rest: glue(parts.join(" · ")) };
+  }
+  function screens() {
+    var box = document.getElementById("mx-scr");
+    if (!box) return;
+    var fig = window.soFigure, M = window.MORNING || {}, age = morningAge(), out = [];
+
+    // Продукты дня — та же пятёрка, что в колонке десктопа (window.soDay): её
+    // выбирает утренний конвейер по статье, а без его списка — поиск по темам
+    // новостей. Все пять — на ОДНОМ экране строками: по экрану на продукт Руслан
+    // отклонил («пусть они все будут на одном экране»). «Дня» — только при
+    // сегодняшнем обзоре: пятёрка с доски не протухает, но пятничная в
+    // воскресенье уже не «дня».
+    var day = window.soDay ? window.soDay() : { items: [], derived: false };
+    var cap = day.derived ? "По темам обзора" : age === 0 ? "Продукты дня" : "Актуальные продукты";
+    if (fig && day.items.length) {
+      var total = instr().length;
+      out.push(scr("mx-s-p", cap,
+        '<div class="mx-prods">' + day.items.map(function (r) {
+          var f = fig(r), nm = pname(r);
+          return '<a href="instrument.html?id=' + encodeURIComponent(r.id) + '">' +
+            '<span class="pn"><b>' + esc(nb(nm.head)) + '</b>' + (nm.rest ? '<span>' + esc(nb(nm.rest)) + '</span>' : "") + '</span>' +
+            '<span class="pf"><b>' + esc(f.v) + '</b>' + (f.n ? '<i>' + esc(f.n) + '</i>' : "") + '</span></a>';
+        }).join("") + '</div>' +
+        '<span class="mx-lab">котировки индикативны</span>' +
+        '<a class="mx-go" href="board.html">Все продукты' + (total ? " · " + total : "") + AR + '</a>'));
+    }
+
+    var off = offering();
+    if (off) {
+      var what = /облигац/i.test(String(off.kind || "")) ? "облигация" : "выпуск";
+      out.push(scr("mx-s-o", "На размещении",
+        '<p class="mx-big">' + esc(off.name) + '</p>' +
+        '<p class="mx-sub">' + esc(nb(what + (off.tenor ? " на " + off.tenor : "") + (off.statusLabel ? " · " + lc(off.statusLabel) : ""))) + '</p>' +
+        '<a class="mx-go" href="offerings.html#' + encodeURIComponent(off.id) + '">Условия выпуска' + AR + '</a>'));
+    }
+
+    var rr = rateRows();
+    if (rr.length) {
+      var top = Math.max.apply(null, rr.map(function (x) { return x.v; }));
+      out.push(scr("mx-s-r", "Лучшие ставки до года",
+        '<b class="mx-huge">до ' + esc(pct1(top)) + '</b><span class="mx-lab">вклады, фонды и ОФЗ</span>' +
+        '<div class="mx-lines">' + rr.slice(0, 3).map(function (x) {
+          var ext = /^https?:/.test(String(x.href || ""));
+          return '<a href="' + esc(x.href || "screener.html") + '"' + (ext ? ' target="_blank" rel="noopener"' : "") + '>' +
+            '<span class="k"><b>' + esc(x.k) + '</b>' + esc(x.n) + '</span><span class="v">' + esc(pct1(x.v)) + '</span></a>';
+        }).join("") + '</div>' +
+        '<a class="mx-go" href="screener.html">Весь скринер' + AR + '</a>'));
+    }
+
+    var news = (age !== null && age <= 3) ? (M.news || []) : [];
+    if (news.length) {
+      out.push(scr("mx-s-m", "Утро на рынках · " + esc(dm(M.date)),
+        '<div class="mx-lines">' + news.map(function (n) {
+          return '<a href="' + esc(n.link || "research.html") + '"><span class="k"><b>' + esc(n.rubric || "") + '</b>' + esc(n.title || "") + '</span></a>';
+        }).join("") + '</div>' +
+        '<a class="mx-go" href="research.html">Читать разбор' + AR + '</a>'));
+    }
+    box.innerHTML = out.join("");
+  }
+
+  // Точки справа: сколько экранов и где мы. Только указатель, не кнопки.
+  // Горит экран под серединой окна, а не «виден больше чем наполовину»: хвост с
+  // разделами выше окна, и на 320 px его видимая доля не доходит до половины —
+  // порог по доле не зажёг бы последнюю точку никогда.
+  function track(list, pad) {
+    var d = document.createElement("div");
+    d.className = "mx-dots";
+    d.setAttribute("aria-hidden", "true");
+    d.innerHTML = list.map(function () { return "<i></i>"; }).join("");
+    document.body.appendChild(d);
+    var cur = -1, raf = 0;
+    function tick() {
+      raf = 0;
+      var mid = pad + (window.innerHeight - pad) / 2, i = 0;
+      for (var k = 0; k < list.length; k++) if (list[k].getBoundingClientRect().top <= mid) i = k;
+      if (i !== cur) { cur = i; Array.prototype.forEach.call(d.children, function (x, j) { x.classList.toggle("on", j === i); }); }
+    }
+    function later() { if (!raf) raf = requestAnimationFrame(tick); }
+    window.addEventListener("scroll", later, { passive: true });
+    window.addEventListener("resize", later);
+    tick();
+  }
+
+  // ── Листание своё, как в приложении (выбор Руслана 29.09.2026 из трёх режимов) ──
+  // Палец ведёт страницу 1:1 (нативная прокрутка на экранах перехвачена),
+  // отпустил — экран доезжает за фиксированное время с замедлением (ease-out).
+  // У прилипания браузера длительность и кривую не задать, медленный сдвиг
+  // меньше полэкрана оно откатывает назад, а резкий взмах осаживает как в стену —
+  // отсюда было «свайп не плавный».
+  // Хвост с разделами выше экрана: внутри него палец не перехватываем, прокрутка
+  // нативная; ушла ли она вверх в экраны — по окончании доводим до ближайшего.
+  // Шапка, меню, панель чата и гейт — не наши: касания там пропускаем.
+  // Мышь, клавиатура и полоса прокрутки не трогаются вовсе.
+  function paging(list, pad) {
+    var root = document.documentElement, body = document.body;
+    var DUR = 420, BACK = 260;                         // мс: к соседнему экрану / назад на место
+    var RM = window.matchMedia("(prefers-reduced-motion: reduce)");   // просили меньше движения — экран ставим сразу
+    var anim = 0, touching = false, armed = false, moved = false;
+    var y0 = 0, s0 = 0, lastY = 0, lastT = 0, vel = 0, base = 0;
+    root.style.scrollBehavior = "auto";                // scrollTo ставит позицию сразу, без своей анимации
+    function tops() { return list.map(function (el) { return Math.round(el.getBoundingClientRect().top + window.pageYOffset - pad); }); }
+    function nearest(tp, y) { var b = 0; for (var k = 0; k < tp.length; k++) if (Math.abs(tp[k] - y) < Math.abs(tp[b] - y)) b = k; return b; }
+    function stop() { if (anim) { cancelAnimationFrame(anim); anim = 0; } }
+    function glide(to, dur) {
+      stop();
+      var from = window.pageYOffset, d = to - from, start = 0;
+      if (Math.abs(d) < 1 || RM.matches) { window.scrollTo(0, to); return; }
+      // Короткий путь — короче и время, иначе доводка на 40 px тянется как на весь экран
+      dur = Math.round(dur * Math.max(0.35, Math.min(1, Math.abs(d) / (window.innerHeight - pad))));
+      function frame(ts) {
+        if (!start) start = ts;
+        var t = Math.min(1, (ts - start) / dur), e = 1 - Math.pow(1 - t, 3);
+        window.scrollTo(0, from + d * e);
+        anim = t < 1 ? requestAnimationFrame(frame) : 0;
+      }
+      anim = requestAnimationFrame(frame);
+    }
+    // Касание внутри шапки, меню, панели чата, любого прокручиваемого блока — не наше
+    function foreign(el) {
+      for (; el && el !== body; el = el.parentNode) {
+        if (el.nodeType !== 1) continue;
+        var cs = getComputedStyle(el), o = cs.overflowY;
+        if (cs.position === "fixed" || cs.position === "sticky") return true;
+        if ((o === "auto" || o === "scroll") && el.scrollHeight > el.clientHeight + 1) return true;
+      }
+      return false;
+    }
+    document.addEventListener("touchstart", function (e) {
+      touching = true; armed = false; moved = false; vel = 0;
+      if (e.touches.length !== 1) return;
+      if (root.classList.contains("qg-lock") || body.classList.contains("mx-lock") || foreign(e.target)) return;
+      var tp = tops(), y = window.pageYOffset;
+      if (y > tp[tp.length - 1] + 2) return;             // внутри хвоста — нативная прокрутка
+      stop();
+      armed = true;
+      y0 = lastY = e.touches[0].clientY; lastT = e.timeStamp; s0 = y; base = nearest(tp, y);
+    }, { passive: true });
+    // Слушатель не пассивный всегда, а решение — внутри: добавленный на лету
+    // обработчик браузер может не учесть для уже начатого касания
+    document.addEventListener("touchmove", function (e) {
+      if (!armed) return;
+      if (e.touches.length !== 1) { armed = false; return; }
+      var y = e.touches[0].clientY, t = e.timeStamp, dy = y0 - y;   // вверх — плюс
+      if (!moved) {
+        if (Math.abs(dy) < 6) return;                    // дрожание пальца при тапе — не свайп
+        // С начала хвоста дальше вниз по списку — отдаём браузеру
+        if (base === list.length - 1 && dy > 0) { armed = false; return; }
+        moved = true;
+      }
+      e.preventDefault();
+      if (t > lastT) vel = 0.6 * vel + 0.4 * ((lastY - y) / (t - lastT));   // px/мс
+      lastY = y; lastT = t;
+      var tp = tops();
+      window.scrollTo(0, Math.max(0, Math.min(tp[tp.length - 1], s0 + dy)));
+    }, { passive: false });
+    // Нативная прокрутка (из хвоста) ушла вверх в экраны и остановилась —
+    // доводим до ближайшего. Зовётся с каждого события прокрутки и с отпускания
+    // пальца: медленный сдвиг без разгона кончается вместе с пальцем, и после
+    // него событий прокрутки уже не будет
+    var st = 0;
+    function settle() {
+      clearTimeout(st);
+      st = setTimeout(function () {
+        if (touching || anim) return;
+        var tp = tops(), y = window.pageYOffset;
+        if (y < tp[tp.length - 1] - 2) { var n = nearest(tp, y); if (Math.abs(tp[n] - y) > 1) glide(tp[n], BACK); }
+      }, 140);
+    }
+    function end() {
+      touching = false;
+      if (!armed) { settle(); return; }
+      armed = false;
+      if (!moved) return;
+      var tp = tops(), h = window.innerHeight - pad, dy = window.pageYOffset - s0, target = base;
+      if (dy > h * 0.18 || (dy > 12 && vel > 0.35)) target = Math.min(tp.length - 1, base + 1);
+      else if (dy < -h * 0.18 || (dy < -12 && vel < -0.35)) target = Math.max(0, base - 1);
+      glide(tp[target], target === base ? BACK : DUR);
+    }
+    document.addEventListener("touchend", end, { passive: true });
+    document.addEventListener("touchcancel", end, { passive: true });
+    window.addEventListener("scroll", function () { if (!touching && !anim) settle(); }, { passive: true });
   }
 
   function paint() {
     var idx = document.getElementById("mx-idx");
     if (idx) idx.innerHTML = index(false);
     if (sheet) sheet.querySelector(".sbi").innerHTML = index(true);
-    var n = document.getElementById("mx-n"), INSTR = (window.SITE_DATA && SITE_DATA.instruments) || [];
-    if (n) n.textContent = INSTR.length || "";
+    var n = document.getElementById("mx-n");
+    if (n) n.textContent = instr().length || "";
   }
 
   function build() {
@@ -1645,7 +1955,18 @@
       '<div class="sb"><div class="sbi"></div><div class="mx-foot"><div class="l">' + (foot ? foot.innerHTML : "") + '</div>' +
       'Не является индивидуальной инвестиционной рекомендацией.</div></div>';
     document.body.appendChild(sheet);
+    screens();
     paint();
+
+    // Экраны по порядку: герой, экраны из данных, хвост с разделами
+    var list = [document.querySelector(".hero")]
+      .concat(Array.prototype.slice.call(document.querySelectorAll("#mx-scr > .mx-s")), [document.querySelector(".mx-tail")])
+      .filter(Boolean);
+    if (list.length >= 2) {
+      var pad = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 57;
+      track(list, pad);
+      paging(list, pad);
+    }
 
     var nav = document.querySelector(".nav"), wrap = document.querySelector(".wrap");
     var mb = nav && nav.querySelector(".mx-mbtn"), sb = nav && nav.querySelector(".mx-sbtn");
