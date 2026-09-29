@@ -811,19 +811,24 @@ def asset_html(a):
 
 
 def anatomy_html(groups):
-    """Как читать код — на живом примере 1220 (реверс-конвертибл, есть на витрине)."""
+    """Как читать код — на живом примере 1220: три строки, в каждой подсвечена
+    своя часть кода (класс → группа → тип), чтобы вложенность была видна."""
     g12 = next(g for g in groups if g["code"] == "12")
     p = next(p for p in g12["products"] if p["code"] == "1220")
-    ink, gc, so = "#F2F3F7", GROUP_COLOR["12"], "#EE7D1B"
-    return ('<div class="anat" aria-label="Как читать код продукта"><div class="lbl">Как читать код</div>'
-            '<div class="anat-code"><span class="d" style="--dc:%s">1</span><span class="d" style="--dc:%s">2</span>'
-            '<span class="d" style="--dc:%s">2</span><span class="d" style="--dc:%s">0</span></div>'
-            '<div class="anat-leg">'
-            '<div style="--dc:%s"><b>1</b><span><b>класс</b> — инвестиционные продукты; 2 — продукты с плечом</span></div>'
-            '<div style="--dc:%s"><b>12</b><span><b>группа</b> — %s</span></div>'
-            '<div style="--dc:%s"><b>20</b><span><b>тип внутри группы</b> — здесь %s; 99 — прочие в группе</span></div>'
-            '</div></div>' % (ink, gc, so, so, ink, gc, esc(g12["name"].lower()), so,
-                              esc("«%s»" % p["jargon"][0].lower()) if p["jargon"] else esc(p["name"].lower())))
+    gc = GROUP_COLOR["12"]
+
+    def code(n, color):
+        return '<span class="ac" style="--hc:%s">%s</span>' % (color, "".join(
+            '<b%s>%s</b>' % (' class="on"' if i < n else "", d) for i, d in enumerate("1220")))
+    jar = ("«%s»" % p["jargon"][0].lower()) if p["jargon"] else ""
+    return ('<div class="anat" aria-label="Как читать код продукта"><div class="lbl">Как читать код продукта</div>'
+            '<div class="anat-rows">'
+            '<div class="ar">%s<span class="at"><b>Класс 1</b>первая цифра: 1&nbsp;— инвестиционные продукты, 2&nbsp;— продукты с&nbsp;плечом</span></div>'
+            '<div class="ar">%s<span class="at"><b>Группа 12</b>первые две цифры: %s</span></div>'
+            '<div class="ar">%s<span class="at"><b>Тип 1220</b>все четыре: %s&nbsp;%s</span></div>'
+            '</div>'
+            '<div class="anat-note">Тип с последними цифрами 99 — прочие продукты группы, не вошедшие в остальные типы.</div>'
+            '</div>' % (code(1, "#F2F3F7"), code(2, gc), esc(g12["name"].lower()), code(4, gc), esc(p["name"].lower()), esc(jar)))
 
 
 def render(doc):

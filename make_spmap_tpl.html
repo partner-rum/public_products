@@ -68,16 +68,20 @@
   .stats .v { font-family: var(--f-mono); font-size: 30px; font-weight: 500; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
   .stats .v.o { color: var(--solar); }
   .stats .k { margin-top: 8px; }
-  /* Анатомия кода: четыре цифры и что каждая значит — классификация на одном
-     примере, а не абзацем */
-  .anat { background: var(--card); border: 1px solid var(--border-soft); border-radius: 16px; padding: 24px 26px 22px; }
-  .anat .lbl { margin-bottom: 18px; }
-  .anat-code { display: flex; gap: 6px; align-items: flex-end; }
-  .anat-code .d { font-family: var(--f-mono); font-size: 60px; line-height: 1; font-weight: 500; letter-spacing: -0.04em; padding-bottom: 12px; border-bottom: 4px solid var(--dc); flex: 1; text-align: center; }
-  .anat-leg { display: grid; gap: 12px; margin-top: 20px; }
-  .anat-leg > div { display: grid; grid-template-columns: 34px 1fr; gap: 12px; align-items: baseline; font-size: 13.5px; line-height: 1.45; color: var(--hushed); }
-  .anat-leg > div > b { font-family: var(--f-mono); font-weight: 500; font-size: 15px; color: var(--dc); }
-  .anat-leg span b { color: var(--ink); font-weight: 600; }
+  /* Анатомия кода: код повторён трижды, в каждой строке подсвечена своя часть —
+     класс (1) → группа (12) → тип (1220). Так видно, что код вложенный, а не
+     четыре независимые цифры */
+  .anat { background: var(--card); border: 1px solid var(--border-soft); border-radius: 16px; padding: 22px 26px 22px; }
+  .anat .lbl { margin-bottom: 16px; }
+  .anat-rows { display: grid; gap: 4px; }
+  .ar { display: grid; grid-template-columns: 116px 1fr; gap: 16px; align-items: center; padding: 10px 0; }
+  .ar + .ar { border-top: 1px solid var(--border-soft); }
+  .ac { font-family: var(--f-mono); font-size: 26px; font-weight: 500; letter-spacing: 0.1em; line-height: 1; white-space: nowrap; }
+  .ac b { font-weight: 500; color: rgba(242,243,247,0.2); }
+  .ac b.on { color: var(--hc); }
+  .at { font-size: 13.5px; line-height: 1.45; color: var(--hushed); text-wrap: pretty; }
+  .at b { display: block; color: var(--ink); font-weight: 600; margin-bottom: 2px; }
+  .anat-note { margin-top: 12px; font-size: 12.5px; line-height: 1.5; color: var(--faint); }
 
   /* ── Каркас ── */
   .layout { display: grid; grid-template-columns: 224px minmax(0, 1fr); gap: 56px; align-items: start; margin-top: 24px; }
@@ -257,7 +261,8 @@
     .toc a, .ovg li a, .ovh, .eyebrow a { align-items: center; }
     .eyebrow a { display: inline-flex; }
     .vars summary { min-height: 44px; }
-    .anat-code .d { font-size: 48px; }
+    .ac { font-size: 22px; }
+    .ar { grid-template-columns: 100px 1fr; }
   }
   @media (max-width: 480px) {
     .pd-h { flex-direction: column; gap: 8px; }
