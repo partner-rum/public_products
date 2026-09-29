@@ -675,7 +675,7 @@ def desc_html(items):
 
 
 def bars_html(bars):
-    return "".join('<div class="bar"><span class="bar-k">%s</span><span class="chips">%s</span></div>' % (esc(br["label"]), "".join(
+    return "".join('<div class="bar"><span class="bar-k lbl">%s</span><span class="chips">%s</span></div>' % (esc(br["label"]), "".join(
         '<span class="chip"><span class="ck">%s</span>%s</span>' % (esc(k.lower()), esc(v)) for k, v in br["pairs"])) for br in bars)
 
 
@@ -696,7 +696,7 @@ def prod_html(p, gcode):
         lk = '<a href="about.html#%s">Статья «%s» в Библиотеке<span class="ar" aria-hidden="true">→</span></a>' % (ours[0], esc(ours[1]))
         if ours[2]:
             lk += '<a href="%s">Продукты на доске<span class="ar" aria-hidden="true">→</span></a>' % ours[2]
-        o.append('<div class="ours"><span class="k">есть на витрине</span>%s</div>' % lk)
+        o.append('<div class="ours"><span class="k lbl">есть на витрине</span>%s</div>' % lk)
     spec = chart_for(p)
     has_body = spec or p["blocks"] or p["barriers"]
     # Порядок в разметке — описание, график, формулы: на телефоне это одна
@@ -714,7 +714,7 @@ def prod_html(p, gcode):
         o.append('<figure class="viz">%s<figcaption>%s</figcaption></figure>' % (chart_svg(spec, color), cap))
     o.append('<div class="pd-f">')
     for b in p["blocks"]:
-        o.append('<div class="fb"><div class="fb-k">%s</div>' % b["label"])
+        o.append('<div class="fb"><div class="fb-k lbl">%s</div>' % b["label"])
         for kind, v in b["items"]:
             if kind == "f":
                 o.append('<div class="fx">%s</div>' % v)
@@ -723,7 +723,7 @@ def prod_html(p, gcode):
             else:
                 o.append('<div class="fn">%s</div>' % esc(v))
         if b["vars"]:
-            o.append('<details class="vars"><summary>Обозначения</summary><dl>%s</dl></details>' % "".join(
+            o.append('<details class="vars"><summary><span class="lbl">Обозначения</span></summary><dl>%s</dl></details>' % "".join(
                 "<dt>%s</dt><dd>%s</dd>" % (pretty(v) if len(v) < 12 else esc(v), esc(d)) for v, d in b["vars"]))
         o.append(bars_html(b["barriers"]) + "</div>")
     o.append(bars_html(p["barriers"]))
@@ -742,21 +742,110 @@ def td(parts):
     return "<td%s>%s</td>" % (cls, "<br>".join(esc(x) for x in parts))
 
 
+CLASSES = [("1", "Инвестиционные продукты", "группы 11–14"), ("2", "Продукты с плечом", "группы 21–23")]
+
+# Подписи полей паспорта базового актива — по заголовкам таблиц документа
+FIELD_LABELS = {
+    "наименование эмитента актива": "Эмитент",
+    "категория (тип) ценной бумаги": "Тип бумаги",
+    "тикер": "Тикер",
+    "isin": "ISIN",
+    "валюта базового актива": "Валюта",
+    "вес": "Вес в корзине",
+    "1. биржа 2. источник информации о котировке базового актива": "Биржа и источник котировки",
+    "биржа срочных контрактов": "Биржа срочных контрактов",
+    "полное наименование ценной бумаги": "Полное наименование",
+    "тип цены": "Тип цены",
+    "источник информации о котировке базового актива": "Источник котировки",
+    "наименование (описание) индекса": "Индекс",
+    "страница индекса": "Страница индекса",
+    "администратор индекса": "Администратор",
+}
+MONO_FIELDS = {"Тикер", "ISIN", "Вес в корзине"}
+
+
+def _norm(s):
+    return re.sub(r"\s+", " ", s).strip().lower()
+
+
+def pval(parts, mono):
+    """Значение поля паспорта: адреса — ссылками, пояснение в скобках — мелко под ними."""
+    out = []
+    for x in parts:
+        m = re.match(r"(https?://\S+)\s*(\(.*\))?$", x)
+        if m:
+            url, note = m.group(1), m.group(2)
+            out.append('<a href="%s" target="_blank" rel="noopener">%s</a>%s' % (
+                esc(url), esc(re.sub(r"^https?://(www\.)?", "", url)),
+                ('<small>%s</small>' % esc(note.strip("()"))) if note else ""))
+        else:
+            out.append(esc(x))
+    return '<div class="pv%s">%s</div>' % (" m" if mono else "", "<br>".join(out))
+
+
+def asset_html(a):
+    title = esc(a["t"])
+    if not a["table"]:
+        return '<div class="asset none"><h3>%s</h3><span class="tbd">в этой редакции карты не описаны</span></div>' % title
+    hdr = [FIELD_LABELS.get(_norm(" ".join(c)), " ".join(c)) for c in a["table"][0]]
+    desc = "".join('<p class="ad">%s</p>' % esc(d) for d in a["d"] if d.strip() != "TBD")
+    fields = "".join("<li>%s</li>" % esc(h) for h in hdr)
+    passes = []
+    for row in a["table"][1:]:
+        cells = dict(zip(hdr, row))
+        name = " ".join(cells.get(hdr[0], []))
+        w = " ".join(cells.get("Вес в корзине", []))
+        rows = ""
+        for h, c in zip(hdr, row):
+            if h == hdr[0] or h == "Вес в корзине" or not c:
+                continue
+            rows += '<div class="prow"><div class="pk">%s</div>%s</div>' % (esc(h), pval(c, h in MONO_FIELDS))
+        passes.append('<div class="pass"><div class="pt">%s%s</div>%s</div>' % (
+            esc(name), ('<span class="w">вес %s</span>' % esc(w)) if w else "", rows))
+    n = len(passes)
+    ex = "Пример: корзина из двух бумаг" if n == 2 else "Пример заполнения"
+    return ('<div class="asset"><h3>%s</h3>%s<div class="asset-g">'
+            '<div><div class="lbl">Что указывается</div><ul class="fields">%s</ul></div>'
+            '<div><div class="lbl">%s</div><div class="passes">%s</div></div></div></div>' % (
+                title, desc, fields, ex, "".join(passes)))
+
+
+def anatomy_html(groups):
+    """Как читать код — на живом примере 1220 (реверс-конвертибл, есть на витрине)."""
+    g12 = next(g for g in groups if g["code"] == "12")
+    p = next(p for p in g12["products"] if p["code"] == "1220")
+    ink, gc, so = "#F2F3F7", GROUP_COLOR["12"], "#EE7D1B"
+    return ('<div class="anat" aria-label="Как читать код продукта"><div class="lbl">Как читать код</div>'
+            '<div class="anat-code"><span class="d" style="--dc:%s">1</span><span class="d" style="--dc:%s">2</span>'
+            '<span class="d" style="--dc:%s">2</span><span class="d" style="--dc:%s">0</span></div>'
+            '<div class="anat-leg">'
+            '<div style="--dc:%s"><b>1</b><span><b>класс</b> — инвестиционные продукты; 2 — продукты с плечом</span></div>'
+            '<div style="--dc:%s"><b>12</b><span><b>группа</b> — %s</span></div>'
+            '<div style="--dc:%s"><b>20</b><span><b>тип внутри группы</b> — здесь %s; 99 — прочие в группе</span></div>'
+            '</div></div>' % (ink, gc, so, so, ink, gc, esc(g12["name"].lower()), so,
+                              esc("«%s»" % p["jargon"][0].lower()) if p["jargon"] else esc(p["name"].lower())))
+
+
 def render(doc):
     groups = doc["groups"]
     n_codes = sum(len(g["products"]) for g in groups)
-    toc = ['<a href="#terms">Термины</a>', '<a href="#mechs">Механизмы</a>', '<a href="#overview">Карта продуктов</a>']
+    codes = {p["code"] for g in groups for p in g["products"]}
+    n_ours = len([c for c in OURS if c in codes])
+    toc = ['<a href="#overview">Карта</a>', '<a href="#terms">Термины</a>', '<a href="#mechs">Механизмы</a>']
     for g in groups:
         toc.append('<a class="g" href="#g%s" style="--fc:%s"><span class="gc">%s</span>%s</a>' % (g["code"], GROUP_COLOR[g["code"]], g["code"], esc(g["name"])))
     toc.append('<a href="#assets">Базовые активы</a>')
 
     ov = []
-    for g in groups:
-        ov.append('<div class="ovg" style="--fc:%s"><a class="ovh" href="#g%s"><span class="gc">%s</span>%s</a><ul>' % (GROUP_COLOR[g["code"]], g["code"], g["code"], esc(g["name"])))
-        for p in g["products"]:
-            mark = '<span class="dot" title="есть на витрине" aria-label="есть на витрине"></span>' if p["code"] in OURS else ""
-            ov.append('<li><a href="#p%s"><span class="c">%s</span><span class="n">%s</span>%s</a></li>' % (p["code"], p["code"], esc(p["name"]), mark))
-        ov.append("</ul></div>")
+    for ccode, cname, csub in CLASSES:
+        ov.append('<div class="cls"><div class="cls-h"><span class="n">%s</span><span class="t">%s</span><span class="s lbl">%s</span></div><div class="ov">' % (ccode, cname, csub))
+        for g in [g for g in groups if g["code"][0] == ccode]:
+            ov.append('<div class="ovg" style="--fc:%s"><a class="ovh" href="#g%s"><span class="gc">%s</span>%s</a><ul>' % (GROUP_COLOR[g["code"]], g["code"], g["code"], esc(g["name"])))
+            for p in g["products"]:
+                mark = '<span class="dot" title="есть на витрине" aria-label="есть на витрине"></span>' if p["code"] in OURS else ""
+                ov.append('<li><a href="#p%s"><span class="c">%s</span><span class="n">%s</span>%s</a></li>' % (p["code"], p["code"], esc(p["name"]), mark))
+            ov.append("</ul></div>")
+        ov.append("</div></div>")
 
     terms = "".join('<div class="term"><dt>%s</dt><dd>%s</dd></div>' % (esc(t["t"]), "".join(para(d) for d in t["d"])) for t in doc["terms"])
     mechs = "".join('<div class="mech"><h3>%s</h3>%s%s</div>' % (esc(m["t"]), "".join(para(d) for d in m["d"]),
@@ -765,32 +854,23 @@ def render(doc):
     gsec = []
     for g in groups:
         jar = (' <span class="jar">%s</span>' % " · ".join("«%s»" % esc(j) for j in g["jargon"])) if g["jargon"] else ""
-        gsec.append('<section class="grp" id="g%s" style="--fc:%s"><div class="grp-h"><span class="gc">Группа %s</span><h2>%s%s</h2>%s</div>%s</section>' % (
+        gsec.append('<section class="grp" id="g%s" style="--fc:%s"><div class="grp-h"><span class="gc lbl">Группа %s</span><h2>%s%s</h2>%s</div>%s</section>' % (
             g["code"], GROUP_COLOR[g["code"]], g["code"], esc(g["name"]), jar, para(g["lead"]) if g["lead"] else "",
             "".join(prod_html(p, g["code"]) for p in g["products"])))
 
-    assets = []
-    for a in doc["assets"]:
-        t = ""
-        if a["table"]:
-            hdr = a["table"][0]; rows = a["table"][1:]
-            t = '<div class="tw"><table><thead><tr>%s</tr></thead><tbody>%s</tbody></table></div>' % (
-                "".join("<th>%s</th>" % "<br>".join(esc(x) for x in c) for c in hdr),
-                "".join("<tr>%s</tr>" % "".join(td(c) for c in r) for r in rows))
-        body = "".join(para(d) for d in a["d"] if d.strip() != "TBD")
-        if any(d.strip() == "TBD" for d in a["d"]):
-            body += '<p class="tbd">Шаблон появится в следующей редакции карты.</p>'
-        assets.append('<div class="asset"><h3>%s</h3>%s%s</div>' % (esc(a["t"]), body, t))
-
+    assets = "".join(asset_html(a) for a in doc["assets"])
     note = ('<p class="pnote">%s.</p>' % esc(doc["products_note"][0].upper() + doc["products_note"][1:])) if doc["products_note"] else ""
+    lead = ("%d типа продуктов в семи группах: что каждый обещает, как считается выплата и где проходит риск. "
+            "Классификация повторяет европейскую EUSIPA; названия, термины и формулы — российские." % n_codes)
     return fill(TEMPLATE,
-        ed=doc.get("ed", ""), title=esc(doc["title"]), sub=esc(doc["sub"]), n=n_codes, ng=len(groups), nt=len(doc["terms"]),
+        ed=doc.get("ed", ""), title=esc(doc["title"]), sub=esc(doc["sub"]), lead=esc(lead), n=n_codes, ng=len(groups),
+        nt=len(doc["terms"]), nours=n_ours, anatomy=anatomy_html(groups),
         toc="".join(toc), overview="".join(ov), terms=terms, mech_intro=para(doc["mech_intro"]) if doc["mech_intro"] else "",
-        mechs=mechs, groups="".join(gsec), assets_intro=para(doc["assets_intro"]) if doc["assets_intro"] else "",
-        assets="".join(assets), pnote=note, desc=esc("Классификация структурных продуктов по экономическому смыслу: "
-                                                      "%d типов в семи группах — защита капитала, повышение доходности, участие, "
-                                                      "кредитные продукты и продукты с плечом. Графики выплат, формулы, "
-                                                      "термины и механизмы. На основе европейской классификации EUSIPA." % n_codes))
+        mechs=mechs, groups="".join(gsec), assets=assets, pnote=note,
+        desc=esc("Классификация структурных продуктов по экономическому смыслу: "
+                 "%d типов в семи группах — защита капитала, повышение доходности, участие, "
+                 "кредитные продукты и продукты с плечом. Графики выплат, формулы, "
+                 "термины и механизмы. На основе европейской классификации EUSIPA." % n_codes))
 
 
 def fill(tpl, **kw):

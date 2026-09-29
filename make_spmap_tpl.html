@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- Страница СОБРАНА make_spmap.py из docx — руками не править: следующая
      сборка перезапишет. Правится шаблон make_spmap_tpl.html или сам скрипт -->
-<title>@@title@@ — типы, графики выплат, формулы</title>
+<title>@@title@@</title>
 <meta name="description" content="@@desc@@">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Rumberg">
@@ -22,26 +22,31 @@
 <meta name="theme-color" content="#0B0C10">
 <link href="fonts/fonts.css?v=1" rel="stylesheet">
 <style>
+  /* Раскладка: герой с «анатомией кода» → карта двумя классами → термины и
+     механизмы → группы с карточками продуктов → паспорта базовых активов.
+     Мир — «полярная ночь»: три ступени поверхности, хайрлайны, один оранжевый */
   :root {
-    --canvas: #0B0C10; --card: #14161C;
-    --ink: #F2F3F7; --hushed: rgba(242,243,247,0.64); --faint: rgba(242,243,247,0.56);
+    --canvas: #0B0C10; --card: #14161C; --card-2: #191B22; --well: #0C0E13;
+    --ink: #F2F3F7; --hushed: rgba(242,243,247,0.66); --faint: rgba(242,243,247,0.56);
     --border: rgba(255,255,255,0.11); --border-soft: rgba(255,255,255,0.07);
     --solar: #EE7D1B; --solar-l: #F58E33; --fc: #8A93A6;
     --f-body: 'Onest', system-ui, sans-serif; --f-mono: 'JetBrains Mono', Consolas, monospace; --display: 'Rubik','Onest',system-ui,sans-serif;
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
     color-scheme: dark;
   }
   * { box-sizing: border-box; }
   html { scroll-behavior: smooth; background: var(--canvas); }
-  body { margin: 0; background: var(--canvas); color: var(--ink); font-family: var(--f-body); font-size: 14px; -webkit-font-smoothing: antialiased; }
+  body { margin: 0; background: var(--canvas); color: var(--ink); font-family: var(--f-body); font-size: 15px; -webkit-font-smoothing: antialiased; }
   a { text-decoration: none; color: inherit; }
   ::selection { background: rgba(238,125,27,0.35); color: var(--ink); }
   a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 4px; }
-  .wrap { max-width: 1240px; margin: 0 auto; padding: 0 44px; }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 0 40px; }
   .skip { position: absolute; left: -9999px; top: 0; z-index: 100; background: var(--solar); color: #0C0A08; padding: 10px 16px; border-radius: 0 0 8px 0; font-size: 14px; }
   .skip:focus { left: 0; }
+  .lbl { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); }
 
   .nav { position: sticky; top: 0; z-index: 30; background: rgba(11,12,16,0.82); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); }
-  .nav-in { max-width: 1240px; margin: 0 auto; padding: 0 44px; height: 62px; display: flex; align-items: center; gap: 12px; }
+  .nav-in { max-width: 1200px; margin: 0 auto; padding: 0 40px; height: 62px; display: flex; align-items: center; gap: 12px; }
   .brand { display: flex; align-items: center; gap: 10px; } .brand-name { font-size: 14.5px; font-weight: 600; }
   .topnav { margin-left: auto; display: flex; align-items: center; gap: 22px; font-size: 14px; font-weight: 500; }
   .topnav a { color: var(--hushed); transition: color .2s; } .topnav a:hover { color: var(--ink); }
@@ -49,135 +54,169 @@
   .btn-solar { background: var(--solar); color: #0C0A08 !important; border-radius: 6px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 7px; transition: background .3s ease-in-out; }
   .btn-solar:hover { background: var(--solar-l); }
 
-  .page-head { padding-top: 44px; }
-  .eyebrow { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  /* ── Герой ── */
+  .hero { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 64px; align-items: center; padding: 64px 0 40px; }
+  .eyebrow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .eyebrow .tag { border: 1px solid var(--border); border-radius: 999px; padding: 4px 10px; }
   .eyebrow a { color: var(--hushed); border-bottom: 1px solid var(--border); }
   .eyebrow a:hover { color: var(--ink); }
-  .page-head h1 { margin: 12px 0 14px; font-family: var(--display); font-size: clamp(30px, 4vw, 44px); font-weight: 500; line-height: 1.08; letter-spacing: -0.02em; text-wrap: balance; max-width: 820px; }
-  .page-head .lead { margin: 0; font-size: 16px; line-height: 1.6; color: var(--hushed); max-width: 720px; text-wrap: pretty; }
-  .stats { display: flex; gap: 34px; flex-wrap: wrap; margin-top: 26px; padding-top: 18px; border-top: 1px solid var(--border-soft); }
-  .stats .v { font-family: var(--display); font-size: 30px; font-weight: 500; line-height: 1; }
-  .stats .k { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); margin-top: 7px; }
+  .hero h1 { margin: 18px 0 16px; font-family: var(--display); font-size: clamp(34px, 4.6vw, 58px); font-weight: 600; line-height: 1.05; letter-spacing: -0.03em; text-wrap: balance; }
+  .hero .lead { margin: 0; font-size: 17px; line-height: 1.6; color: var(--hushed); max-width: 46ch; text-wrap: pretty; }
+  .stats { display: flex; flex-wrap: wrap; margin-top: 30px; border-top: 1px solid var(--border-soft); }
+  .stats > div { padding: 18px 28px 0 0; }
+  .stats > div + div { border-left: 1px solid var(--border-soft); padding-left: 28px; }
+  .stats .v { font-family: var(--f-mono); font-size: 30px; font-weight: 500; line-height: 1; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+  .stats .v.o { color: var(--solar); }
+  .stats .k { margin-top: 8px; }
+  /* Анатомия кода: четыре цифры и что каждая значит — классификация на одном
+     примере, а не абзацем */
+  .anat { background: var(--card); border: 1px solid var(--border-soft); border-radius: 16px; padding: 24px 26px 22px; }
+  .anat .lbl { margin-bottom: 18px; }
+  .anat-code { display: flex; gap: 6px; align-items: flex-end; }
+  .anat-code .d { font-family: var(--f-mono); font-size: 60px; line-height: 1; font-weight: 500; letter-spacing: -0.04em; padding-bottom: 12px; border-bottom: 4px solid var(--dc); flex: 1; text-align: center; }
+  .anat-leg { display: grid; gap: 12px; margin-top: 20px; }
+  .anat-leg > div { display: grid; grid-template-columns: 34px 1fr; gap: 12px; align-items: baseline; font-size: 13.5px; line-height: 1.45; color: var(--hushed); }
+  .anat-leg > div > b { font-family: var(--f-mono); font-weight: 500; font-size: 15px; color: var(--dc); }
+  .anat-leg span b { color: var(--ink); font-weight: 600; }
 
-  .layout { display: grid; grid-template-columns: 232px minmax(0, 1fr); gap: 44px; align-items: start; margin-top: 40px; }
-  /* min-width:0 у элементов сетки: иначе колонка растягивается до ширины
-     таблицы активов (760px) и на телефоне уезжает вся страница */
+  /* ── Каркас ── */
+  .layout { display: grid; grid-template-columns: 224px minmax(0, 1fr); gap: 56px; align-items: start; margin-top: 24px; }
   .layout > * { min-width: 0; }
   .toc { position: sticky; top: 82px; display: flex; flex-direction: column; gap: 1px; max-height: calc(100vh - 100px); overflow: auto; }
-  .toc-h { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint); padding: 0 10px 8px; }
-  .toc a { display: flex; gap: 10px; align-items: baseline; padding: 8px 10px; border-radius: 8px; font-size: 13.5px; line-height: 1.35; color: var(--hushed); transition: background .15s, color .15s; }
+  .toc-h { padding: 0 10px 8px; }
+  .toc a { display: flex; gap: 10px; align-items: baseline; padding: 8px 10px; border-radius: 8px; font-size: 13.5px; line-height: 1.35; color: var(--hushed); border-left: 2px solid transparent; transition: background .15s, color .15s; }
   .toc a:hover { background: rgba(255,255,255,0.05); color: var(--ink); }
-  .toc a.on { background: rgba(255,255,255,0.07); color: var(--ink); }
+  .toc a.on { color: var(--ink); border-left-color: var(--solar); border-radius: 0 8px 8px 0; }
   .toc a.g .gc { flex: none; font-family: var(--f-mono); font-size: 11px; color: var(--fc); min-width: 18px; }
-  .toc a.g + a:not(.g) { margin-top: 8px; }
+  .toc a.g + a:not(.g), .toc a:not(.g) + a.g { margin-top: 10px; }
 
-  .sec { scroll-margin-top: 80px; }
-  .sec + .sec { margin-top: 64px; }
-  .sec-h { font-family: var(--display); font-size: clamp(24px, 2.8vw, 30px); font-weight: 500; letter-spacing: -0.015em; margin: 0 0 8px; }
-  .sec-lead { font-size: 15px; line-height: 1.6; color: var(--hushed); max-width: 720px; margin: 0 0 22px; text-wrap: pretty; }
+  .sec { scroll-margin-top: 80px; padding-top: 48px; }
+  .sec + .sec { margin-top: 24px; border-top: 1px solid var(--border-soft); }
+  .sec-h { margin: 8px 0 10px; font-family: var(--display); font-size: clamp(26px, 3vw, 34px); font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; }
+  .sec-lead { font-size: 16px; line-height: 1.6; color: var(--hushed); max-width: 60ch; margin: 0 0 26px; text-wrap: pretty; }
   .sec-lead p { margin: 0; }
 
-  /* Термины и механизмы — газетными колонками, а не сеткой: у сетки строка
-     равна самому длинному соседу, и под короткими определениями зияли дыры */
-  .terms { columns: 2; column-gap: 36px; margin: 0; }
+  /* Термины — газетными колонками */
+  .terms { columns: 2; column-gap: 40px; margin: 0; }
   .term { padding: 14px 0; border-top: 1px solid var(--border-soft); break-inside: avoid; }
-  .term dt { font-size: 15px; font-weight: 600; }
-  .term dd { margin: 5px 0 0; font-size: 13.5px; line-height: 1.6; color: var(--hushed); text-wrap: pretty; }
+  .term dt { font-family: var(--display); font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+  .term dd { margin: 5px 0 0; font-size: 14px; line-height: 1.6; color: var(--hushed); text-wrap: pretty; }
   .term dd p { margin: 0; } .term dd p + p { margin-top: 5px; }
 
-  .mechs { columns: 2; column-gap: 14px; }
-  .mech { break-inside: avoid; margin-bottom: 14px; background: var(--card); border: 1px solid var(--border-soft); border-radius: 12px; padding: 16px 18px; }
-  .mech h3 { margin: 0 0 8px; font-size: 15px; font-weight: 600; line-height: 1.35; }
-  .mech p { margin: 0 0 8px; font-size: 13.5px; line-height: 1.6; color: var(--hushed); text-wrap: pretty; }
-  .mech ul { margin: 0; padding-left: 18px; font-size: 13.5px; line-height: 1.55; color: var(--hushed); }
+  .mechs { columns: 2; column-gap: 16px; }
+  .mech { break-inside: avoid; margin-bottom: 16px; background: var(--card); border: 1px solid var(--border-soft); border-radius: 14px; padding: 18px 20px; }
+  .mech h3 { margin: 0 0 8px; font-family: var(--display); font-size: 16.5px; font-weight: 600; line-height: 1.3; letter-spacing: -0.01em; }
+  .mech p { margin: 0 0 8px; font-size: 14px; line-height: 1.6; color: var(--hushed); text-wrap: pretty; }
+  .mech ul { margin: 0; padding-left: 18px; font-size: 14px; line-height: 1.55; color: var(--hushed); }
   .mech li + li { margin-top: 4px; }
 
-  /* Карта — сама классификация одним взглядом: семь групп колонками */
-  .ov { display: grid; grid-template-columns: repeat(auto-fill, minmax(214px, 1fr)); gap: 12px; }
-  .ovg { background: var(--card); border: 1px solid var(--border-soft); border-top: 3px solid var(--fc); border-radius: 12px; padding: 12px 8px 8px; }
-  .ovh { display: flex; gap: 8px; align-items: baseline; padding: 2px 8px 10px; font-size: 14px; font-weight: 600; line-height: 1.3; }
-  .ovh .gc { font-family: var(--f-mono); font-size: 12px; color: var(--fc); }
+  /* ── Карта: два класса, в каждом — колонки групп ── */
+  .cls + .cls { margin-top: 22px; }
+  .cls-h { display: flex; align-items: baseline; gap: 14px; padding: 0 0 12px; }
+  .cls-h .n { font-family: var(--f-mono); font-size: 26px; font-weight: 500; color: var(--ink); letter-spacing: -0.02em; }
+  .cls-h .t { font-family: var(--display); font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
+  .cls-h .s { margin-left: auto; }
+  .ov { display: grid; grid-template-columns: repeat(auto-fit, minmax(186px, 1fr)); gap: 12px; }
+  .ovg { background: var(--card); border: 1px solid var(--border-soft); border-radius: 14px; padding: 0 8px 8px; overflow: hidden; }
+  .ovg::before { content: ""; display: block; height: 3px; background: var(--fc); margin: 0 -8px 12px; }
+  .ovh { display: flex; gap: 10px; align-items: baseline; padding: 2px 8px 10px; font-family: var(--display); font-size: 15px; font-weight: 600; line-height: 1.3; letter-spacing: -0.01em; }
+  .ovh .gc { font-family: var(--f-mono); font-size: 18px; font-weight: 500; color: var(--fc); }
   .ovg ul { list-style: none; margin: 0; padding: 0; }
-  .ovg li a { display: flex; gap: 9px; align-items: baseline; padding: 6px 8px; border-radius: 7px; font-size: 13px; line-height: 1.35; color: var(--hushed); }
-  .ovg li a:hover { background: rgba(255,255,255,0.05); color: var(--ink); }
-  .ovg .c { flex: none; font-family: var(--f-mono); font-size: 11.5px; color: var(--faint); }
+  .ovg li a { display: flex; gap: 9px; align-items: baseline; padding: 7px 8px; border-radius: 8px; font-size: 13px; line-height: 1.35; color: var(--hushed); transition: background .15s, color .15s; }
+  .ovg li a:hover { background: rgba(255,255,255,0.06); color: var(--ink); }
+  .ovg .c { flex: none; font-family: var(--f-mono); font-size: 11.5px; color: var(--fc); opacity: .85; }
   .ovg .n { flex: 1; min-width: 0; }
-  .ovg .dot { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--solar); position: relative; top: -1px; }
-  .ov-leg { display: flex; gap: 8px; align-items: center; font-size: 12.5px; color: var(--faint); margin-top: 12px; }
-  .ov-leg .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--solar); }
-  .pnote { font-size: 13px; color: var(--faint); margin: 14px 0 0; }
+  .ovg .dot, .ov-leg .dot { flex: none; width: 7px; height: 7px; border-radius: 50%; background: var(--solar); position: relative; top: -1px; }
+  .ov-leg { display: flex; gap: 8px; align-items: center; font-size: 13px; color: var(--faint); margin-top: 14px; }
+  .pnote { font-size: 13px; color: var(--faint); margin: 10px 0 0; }
 
+  /* ── Группа и продукт ── */
   .grp { scroll-margin-top: 80px; margin-top: 56px; }
-  .grp-h { border-top: 3px solid var(--fc); padding-top: 16px; margin-bottom: 8px; }
-  .grp-h .gc { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--fc); }
-  .grp-h h2 { font-family: var(--display); font-size: clamp(24px, 2.8vw, 30px); font-weight: 500; letter-spacing: -0.015em; margin: 6px 0 8px; }
-  .grp-h h2 .jar { font-family: var(--f-body); font-size: 15px; font-weight: 400; color: var(--faint); letter-spacing: 0; }
-  .grp-h p { margin: 0; font-size: 15px; line-height: 1.6; color: var(--hushed); max-width: 760px; text-wrap: pretty; }
+  .grp-h { border-top: 3px solid var(--fc); padding-top: 18px; margin-bottom: 4px; }
+  .grp-h .gc { color: var(--fc); }
+  .grp-h h2 { font-family: var(--display); font-size: clamp(26px, 3vw, 34px); font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; margin: 8px 0 10px; }
+  .grp-h h2 .jar { font-family: var(--f-body); font-size: 15px; font-weight: 400; color: var(--faint); letter-spacing: 0; margin-left: 8px; }
+  .grp-h p { margin: 0; font-size: 16px; line-height: 1.6; color: var(--hushed); max-width: 64ch; text-wrap: pretty; }
 
-  .pd { scroll-margin-top: 80px; padding: 26px 0 28px; border-bottom: 1px solid var(--border-soft); }
-  .pd-h { display: flex; gap: 16px; align-items: flex-start; }
-  .pd-code { flex: none; font-family: var(--f-mono); font-size: 13px; font-weight: 600; color: var(--fc); border: 1px solid var(--fc); border-radius: 6px; padding: 3px 7px; margin-top: 2px; }
+  .pd { scroll-margin-top: 80px; padding: 30px 0 32px; border-bottom: 1px solid var(--border-soft); }
+  .pd-h { display: flex; gap: 18px; align-items: flex-start; }
+  .pd-code { flex: none; font-family: var(--f-mono); font-size: 15px; font-weight: 500; color: var(--fc); border: 1px solid var(--fc); border-radius: 8px; padding: 6px 9px; line-height: 1; margin-top: 3px; letter-spacing: 0.02em; }
   .pd-t { min-width: 0; }
-  .pd h3 { margin: 0; font-family: var(--display); font-size: 20px; font-weight: 500; line-height: 1.25; letter-spacing: -0.01em; text-wrap: balance; }
-  .pd-meta { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 6px; font-size: 12.5px; color: var(--faint); }
+  .pd h3 { margin: 0; font-family: var(--display); font-size: 22px; font-weight: 600; line-height: 1.25; letter-spacing: -0.02em; text-wrap: balance; }
+  .pd-meta { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 7px; font-size: 12.5px; color: var(--faint); }
   .pd-meta .en { font-family: var(--f-mono); font-size: 11.5px; }
-  .ours { display: flex; flex-wrap: wrap; gap: 6px 20px; align-items: center; margin: 14px 0 0; padding: 9px 12px; border-radius: 9px; background: rgba(238,125,27,0.10); border: 1px solid rgba(238,125,27,0.22); }
-  .ours .k { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--solar); }
+  .ours { display: flex; flex-wrap: wrap; gap: 6px 20px; align-items: center; margin: 16px 0 0; padding: 10px 14px; border-radius: 10px; background: rgba(238,125,27,0.10); border: 1px solid rgba(238,125,27,0.22); }
+  .ours .k { color: var(--solar); }
   .ours a { display: inline-flex; gap: 6px; align-items: center; font-size: 13.5px; font-weight: 600; }
   .ours a .ar { color: var(--solar); } .ours a:hover { color: var(--solar-l); }
-  .pd-g { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); grid-template-rows: auto 1fr; gap: 0 28px; align-items: start; margin-top: 16px; }
+  .pd-g { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); grid-template-rows: auto 1fr; gap: 0 32px; align-items: start; margin-top: 18px; }
   .pd-g.solo { grid-template-columns: minmax(0, 1fr); }
   .pd-d, .pd-f { grid-column: 1; }
   .pd-g > .viz { grid-column: 2; grid-row: 1 / span 2; }
-  .pd-d > p { margin: 0 0 12px; font-size: 14.5px; line-height: 1.62; color: var(--hushed); text-wrap: pretty; max-width: 640px; }
-  .pd-d ul { margin: 0 0 12px; padding-left: 20px; font-size: 14.5px; line-height: 1.62; color: var(--hushed); max-width: 640px; }
+  .pd-d > p { margin: 0 0 12px; font-size: 15px; line-height: 1.62; color: var(--hushed); text-wrap: pretty; max-width: 56ch; }
+  .pd-d ul { margin: 0 0 12px; padding-left: 20px; font-size: 15px; line-height: 1.62; color: var(--hushed); max-width: 56ch; }
   .pd-d li + li { margin-top: 6px; }
-  .pd-d > p.tbd, .tbd { font-size: 13.5px; color: var(--faint); font-style: italic; }
+  .tbd { font-size: 13.5px; color: var(--faint); font-style: italic; }
 
-  .fb { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border-soft); }
-  .fb-k { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.11em; text-transform: uppercase; color: var(--faint); margin-bottom: 8px; }
+  /* Формулы — в колодце: это «выписка», другая поверхность, чем проза */
+  .pd-f { margin-top: 6px; }
+  .fb { background: var(--well); border: 1px solid var(--border-soft); border-radius: 12px; padding: 14px 16px 12px; margin-top: 10px; }
+  .fb-k { margin-bottom: 10px; }
   .fc { font-size: 13px; color: var(--hushed); margin: 10px 0 4px; }
   .fn { font-size: 13px; line-height: 1.5; color: var(--hushed); margin: 6px 0; }
-  .fx { font-family: var(--f-mono); font-size: 13.5px; line-height: 1.5; color: var(--ink); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 4px 0; overflow-x: auto; }
+  .fx { font-family: var(--f-mono); font-size: 14px; line-height: 1.5; color: var(--ink); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 4px 0; overflow-x: auto; }
   .fx i { font-style: normal; color: #CFE0FF; }
   .fx sub { font-size: 0.72em; }
   .fx .nary { font-size: 1.35em; line-height: 1; }
-  /* Система уравнений: фигурная скобка — левой рамкой с закруглением,
-     строка — значение слева, условие справа */
   .cases { display: inline-grid; grid-template-columns: auto auto; gap: 3px 22px; border-left: 1.5px solid rgba(255,255,255,0.45); border-radius: 8px 0 0 8px; padding: 3px 0 3px 12px; }
   .cr { display: contents; }
   .cc { color: var(--hushed); }
   .cc::before { content: "если "; color: var(--faint); }
-  .vars { margin-top: 8px; }
-  .vars summary { cursor: pointer; list-style: none; display: inline-flex; align-items: center; gap: 7px; font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); }
+  .vars { margin-top: 10px; }
+  .vars summary { cursor: pointer; list-style: none; display: inline-flex; align-items: center; gap: 7px; }
   .vars summary::-webkit-details-marker { display: none; }
   .vars summary::before { content: "+"; color: var(--fc); font-size: 14px; width: 10px; }
   .vars[open] summary::before { content: "\2212"; }
-  .vars summary:hover { color: var(--hushed); }
+  .vars summary:hover .lbl { color: var(--hushed); }
   .vars dl { display: grid; grid-template-columns: auto 1fr; gap: 5px 14px; margin: 10px 0 0; font-size: 13px; line-height: 1.5; }
   .vars dt { font-family: var(--f-mono); color: var(--ink); white-space: nowrap; }
   .vars dt i { font-style: normal; }
   .vars dd { margin: 0; color: var(--hushed); }
   .bar { margin-top: 12px; }
-  .bar-k { display: block; font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.11em; text-transform: uppercase; color: var(--faint); margin-bottom: 6px; }
+  .bar-k { display: block; margin-bottom: 6px; }
   .chips { display: flex; flex-wrap: wrap; gap: 6px; }
   .chip { display: inline-flex; gap: 6px; align-items: baseline; border: 1px solid var(--border); border-radius: 999px; padding: 4px 10px; font-size: 12.5px; }
   .chip .ck { font-family: var(--f-mono); font-size: 11px; color: var(--faint); }
 
-  .viz { margin: 0; background: var(--card); border: 1px solid var(--border-soft); border-radius: 12px; padding: 14px 14px 10px; }
+  .viz { margin: 0; background: var(--card); border: 1px solid var(--border-soft); border-radius: 14px; padding: 14px 14px 10px; }
   .viz svg { display: block; width: 100%; height: auto; }
   .viz figcaption { font-size: 12px; line-height: 1.5; color: var(--faint); margin-top: 6px; }
 
-  .asset { margin-top: 22px; }
-  .asset h3 { margin: 0 0 6px; font-size: 16px; font-weight: 600; }
-  .asset p { margin: 0 0 10px; font-size: 14px; line-height: 1.6; color: var(--hushed); max-width: 760px; }
-  /* Таблица шире колонки — прокрутка только внутри своей рамки, не у страницы */
-  .tw { overflow-x: auto; border: 1px solid var(--border-soft); border-radius: 10px; }
-  table { border-collapse: collapse; width: 100%; font-size: 12.5px; line-height: 1.45; min-width: 760px; }
-  th { text-align: left; font-family: var(--f-mono); font-size: 11px; font-weight: 400; color: var(--faint); background: rgba(255,255,255,0.03); padding: 9px 10px; vertical-align: bottom; }
-  td { padding: 9px 10px; border-top: 1px solid var(--border-soft); color: var(--hushed); vertical-align: top; }
-  td.nw { white-space: nowrap; } td.u { overflow-wrap: anywhere; min-width: 220px; }
+  /* ── Базовые активы: паспорт вместо таблицы ── */
+  .asset { margin-top: 22px; background: var(--card); border: 1px solid var(--border-soft); border-radius: 16px; padding: 22px 24px 20px; }
+  .asset.none { padding: 16px 24px; display: flex; gap: 16px; align-items: baseline; flex-wrap: wrap; }
+  .asset.none h3 { margin: 0; }
+  .asset h3 { margin: 0 0 6px; font-family: var(--display); font-size: 19px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.3; }
+  .asset .ad { margin: 0 0 16px; font-size: 14px; line-height: 1.6; color: var(--hushed); max-width: 64ch; text-wrap: pretty; }
+  .asset-g { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 28px; align-items: start; }
+  .asset-g > * { min-width: 0; }
+  .fields { list-style: none; margin: 8px 0 0; padding: 0; }
+  .fields li { padding: 7px 0; border-top: 1px solid var(--border-soft); font-size: 13.5px; line-height: 1.4; display: flex; gap: 10px; align-items: baseline; }
+  .fields li::before { content: ""; flex: none; width: 6px; height: 6px; border-radius: 50%; background: var(--fc); position: relative; top: -2px; }
+  .passes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); gap: 12px; margin-top: 8px; }
+  .pass { background: var(--well); border: 1px solid var(--border-soft); border-radius: 12px; padding: 12px 14px 6px; }
+  .pass .pt { font-family: var(--display); font-size: 15px; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 6px; line-height: 1.3; }
+  .pass .pt .w { font-family: var(--f-mono); font-size: 12px; font-weight: 500; color: var(--solar); margin-left: 8px; white-space: nowrap; }
+  .prow { display: grid; grid-template-columns: 118px 1fr; gap: 10px; padding: 7px 0; border-top: 1px solid var(--border-soft); font-size: 13px; line-height: 1.45; }
+  .prow .pk { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--faint); padding-top: 2px; }
+  .prow .pv { color: var(--hushed); overflow-wrap: anywhere; }
+  .prow .pv.m { font-family: var(--f-mono); color: var(--ink); font-size: 12.5px; }
+  .prow .pv a { color: var(--ink); border-bottom: 1px solid rgba(238,125,27,0.5); }
+  .prow .pv a:hover { border-bottom-color: var(--solar); }
+  .prow .pv small { display: block; color: var(--faint); font-size: 12px; margin-top: 2px; }
+
+  .about-doc { margin-top: 40px; padding: 18px 20px; border: 1px solid var(--border-soft); border-radius: 12px; font-size: 13.5px; line-height: 1.6; color: var(--hushed); max-width: 72ch; }
+  .about-doc .lbl { display: block; margin-bottom: 6px; }
 
   .endcta { margin-top: 44px; border-top: 1px solid var(--border); padding-top: 20px; display: flex; gap: 26px; flex-wrap: wrap; align-items: center; }
   .endcta .t { font-size: 14.5px; color: var(--hushed); }
@@ -187,38 +226,46 @@
   footer { margin-top: 56px; border-top: 1px solid var(--border); color: var(--hushed); }
   .footer-in { padding: 34px 0 44px; display: flex; justify-content: space-between; gap: 32px; flex-wrap: wrap; }
   .footer-brand .row { display: flex; align-items: center; gap: 10px; color: var(--ink); font-size: 14px; font-weight: 600; }
-  .footer-brand .sub { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); margin-top: 8px; }
+  .footer-brand .sub { margin-top: 8px; }
   .footer-right { display: flex; flex-direction: column; gap: 10px; max-width: 460px; }
   .disclaimer { font-size: 12.5px; line-height: 1.55; }
 
-  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .topnav a, .btn-solar, .toc a { transition: none; } }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .topnav a, .btn-solar, .toc a, .ovg li a { transition: none; } }
   @media (max-width: 1100px) {
+    .hero { grid-template-columns: 1fr; gap: 28px; }
+    .anat { max-width: 380px; }
     .pd-g { grid-template-columns: 1fr; grid-template-rows: none; }
     .pd-g > .viz { grid-column: 1; grid-row: auto; max-width: 460px; margin: 4px 0 6px; }
+    .asset-g { grid-template-columns: 1fr; gap: 16px; }
   }
   @media (max-width: 960px) {
     .wrap { padding: 0 20px; } .nav-in { padding: 0 20px; }
-    .layout { grid-template-columns: 1fr; gap: 26px; }
-    /* Содержание на узком экране — лента групп, листается вбок внутри себя */
+    .hero { padding: 40px 0 28px; }
+    .layout { grid-template-columns: 1fr; gap: 20px; }
     .toc { position: static; flex-direction: row; overflow-x: auto; max-height: none; gap: 6px; padding-bottom: 4px; }
     .toc-h { display: none; }
-    .toc a { flex: none; border: 1px solid var(--border); white-space: nowrap; }
-    .toc a.g + a:not(.g) { margin-top: 0; }
+    .toc a { flex: none; border: 1px solid var(--border); white-space: nowrap; border-radius: 999px; }
+    .toc a.on { border-color: var(--solar); border-radius: 999px; }
+    .toc a.g + a:not(.g), .toc a:not(.g) + a.g { margin-top: 0; }
     .terms, .mechs { columns: 1; }
+    .cls-h .s { display: none; }
   }
   @media (max-width: 860px) {
     .nav-in { height: auto; flex-wrap: wrap; padding: 12px 20px; row-gap: 10px; }
     .topnav { margin-left: 0; width: 100%; gap: 16px; font-size: 13.5px; }
     .btn-solar, .toc a, .ovg li a, .ovh, .ours a, .endcta a, .eyebrow a { min-height: 44px; }
-    .eyebrow a { display: inline-flex; align-items: center; }
-    .toc a, .ovg li a, .ovh { align-items: center; }
+    .toc a, .ovg li a, .ovh, .eyebrow a { align-items: center; }
+    .eyebrow a { display: inline-flex; }
     .vars summary { min-height: 44px; }
+    .anat-code .d { font-size: 48px; }
   }
   @media (max-width: 480px) {
     .pd-h { flex-direction: column; gap: 8px; }
     .cases { grid-template-columns: auto; gap: 0; }
     .cc { margin-bottom: 4px; }
-    .stats { gap: 22px; }
+    .stats > div { padding-right: 18px; } .stats > div + div { padding-left: 18px; }
+    .prow { grid-template-columns: 1fr; gap: 2px; }
+    .asset { padding: 16px 16px 14px; }
   }
 </style>
 <script src="metrika.js?v=6" defer></script>
@@ -248,48 +295,56 @@
 </header>
 
 <main>
-<section class="wrap page-head">
-  <div class="eyebrow"><span class="tag">Справочник · редакция @@ed@@</span><span>по классификации EUSIPA</span><a href="about.html">← Библиотека</a></div>
-  <h1>@@title@@</h1>
-  <p class="lead">@@sub@@</p>
-  <div class="stats">
-    <div><div class="v">@@n@@</div><div class="k">типов продуктов</div></div>
-    <div><div class="v">@@ng@@</div><div class="k">групп</div></div>
-    <div><div class="v">@@nt@@</div><div class="k">терминов</div></div>
+<section class="wrap hero">
+  <div>
+    <div class="eyebrow lbl"><span class="tag">Справочник · редакция @@ed@@</span><span>по классификации EUSIPA</span><a href="about.html">← Библиотека</a></div>
+    <h1>@@title@@</h1>
+    <p class="lead">@@lead@@</p>
+    <div class="stats">
+      <div><div class="v">@@n@@</div><div class="k lbl">типов продуктов</div></div>
+      <div><div class="v">@@ng@@</div><div class="k lbl">групп</div></div>
+      <div><div class="v o">@@nours@@</div><div class="k lbl">есть на витрине</div></div>
+    </div>
   </div>
+  @@anatomy@@
 </section>
 
 <div class="wrap layout" id="content">
   <nav class="toc" aria-label="Содержание карты">
-    <div class="toc-h">Содержание</div>
+    <div class="toc-h lbl">Содержание</div>
     @@toc@@
   </nav>
   <div>
+    <section class="sec" id="overview" style="padding-top:16px">
+      <div class="lbl">Карта</div>
+      <h2 class="sec-h">Все типы одним взглядом</h2>
+      <div class="sec-lead"><p>Код читается слева направо: класс, группа, тип. Цвет колонки — цвет группы, он же стоит у каждого продукта ниже.</p></div>
+      @@overview@@
+      <div class="ov-leg"><span class="dot" aria-hidden="true"></span>такой продукт есть на нашей витрине — ссылка на статью и доску стоит в его карточке</div>
+      @@pnote@@
+    </section>
+
     <section class="sec" id="terms">
+      <div class="lbl">Словарь</div>
       <h2 class="sec-h">Термины</h2>
       <dl class="terms">@@terms@@</dl>
     </section>
 
     <section class="sec" id="mechs">
+      <div class="lbl">Устройство</div>
       <h2 class="sec-h">Механизмы</h2>
       <div class="sec-lead">@@mech_intro@@</div>
       <div class="mechs">@@mechs@@</div>
     </section>
 
-    <section class="sec" id="overview">
-      <h2 class="sec-h">Карта продуктов</h2>
-      <div class="sec-lead"><p>Первая цифра кода — класс: 1 — инвестиционные продукты, 2 — продукты с плечом. Вторая — группа, последние две — тип внутри группы; «99» — прочие.</p></div>
-      <div class="ov">@@overview@@</div>
-      <div class="ov-leg"><span class="dot" aria-hidden="true"></span>такой продукт есть на нашей витрине — ссылка на статью и доску стоит в его карточке</div>
-      @@pnote@@
-    </section>
-
     @@groups@@
 
-    <section class="sec" id="assets" style="margin-top:64px">
+    <section class="sec" id="assets" style="margin-top:56px">
+      <div class="lbl">Паспорт актива</div>
       <h2 class="sec-h">Базовые активы</h2>
-      <div class="sec-lead">@@assets_intro@@</div>
+      <div class="sec-lead"><p>Формула выплаты работает, только если цену базового актива можно найти однозначно. Поэтому документация продукта описывает каждый актив по одному шаблону: что это за бумага, с каким весом входит в корзину, где и как наблюдается её цена. Ниже — состав шаблона для каждого вида актива и пример заполненного описания.</p></div>
       @@assets@@
+      <div class="about-doc"><span class="lbl">Об источнике</span>@@sub@@</div>
     </section>
 
     <div class="endcta">
@@ -305,7 +360,7 @@
   <div class="wrap footer-in">
     <div class="footer-brand">
       <div class="row"><svg width="18" height="18" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>Инвестиционные решения</div>
-      <div class="sub">Витрина инструментов</div>
+      <div class="sub lbl">Витрина инструментов</div>
     </div>
     <div class="footer-right">
       <div class="disclaimer">Не является индивидуальной инвестиционной рекомендацией. Материал носит справочный характер: описывает типы продуктов, а не условия конкретных выпусков — они задаются документацией выпуска. Продукты доступны только квалифицированным инвесторам.</div>
