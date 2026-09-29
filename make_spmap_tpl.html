@@ -100,14 +100,21 @@
   .sec-lead { font-size: 16px; line-height: 1.6; color: var(--hushed); max-width: 60ch; margin: 0 0 26px; text-wrap: pretty; }
   .sec-lead p { margin: 0; }
 
-  /* Термины — группами, строкой «термин | определение» в одну колонку */
-  .terms { margin: 0; }
-  .tg + .tg { margin-top: 26px; }
-  .tg-h { padding-bottom: 8px; }
-  .term { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 20px; padding: 12px 0; border-top: 1px solid var(--border-soft); }
-  .term dt { font-family: var(--display); font-size: 16px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.35; }
-  .term dd { margin: 0; font-size: 14px; line-height: 1.6; color: var(--hushed); text-wrap: pretty; max-width: 66ch; }
-  .term dd p { margin: 0; } .term dd p + p { margin-top: 5px; }
+  /* Термины — плашки по группам слева, одно определение справа: наведение
+     показывает, клик закрепляет. На экране всегда один текст, а не шестнадцать */
+  .tdict { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 28px; align-items: start; }
+  .tdict > * { min-width: 0; }
+  .tg + .tg { margin-top: 18px; }
+  .tg-h { padding-bottom: 6px; }
+  .tchips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tchip { background: none; border: 1px solid var(--border); border-radius: 999px; padding: 7px 12px; font-family: var(--f-body); font-size: 13px; font-weight: 500; line-height: 1.2; color: var(--hushed); cursor: pointer; transition: color .15s, border-color .15s, background .15s; }
+  .tchip:hover { color: var(--ink); border-color: rgba(255,255,255,0.3); }
+  .tchip.on { color: var(--ink); border-color: var(--solar); background: rgba(238,125,27,0.10); }
+  .tdef { position: sticky; top: 82px; background: var(--card); border: 1px solid var(--border-soft); border-radius: 16px; padding: 20px 24px 18px; min-height: 180px; }
+  .td { display: none; } .td.on { display: block; }
+  .td h3 { margin: 6px 0 10px; font-family: var(--display); font-size: 21px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.2; }
+  .td p { margin: 0 0 8px; font-size: 14.5px; line-height: 1.6; color: var(--hushed); text-wrap: pretty; max-width: 62ch; }
+  .thint { margin: -8px 0 22px; }
 
   .mechs { columns: 2; column-gap: 16px; }
   .mech { break-inside: avoid; margin-bottom: 16px; background: var(--card); border: 1px solid var(--border-soft); border-radius: 14px; padding: 18px 20px; }
@@ -255,7 +262,8 @@
     .toc a.on { border-color: var(--solar); border-radius: 999px; }
     .toc a.g + a:not(.g), .toc a:not(.g) + a.g { margin-top: 0; }
     .mechs { columns: 1; }
-    .term { grid-template-columns: 1fr; gap: 4px; }
+    .tdict { grid-template-columns: 1fr; gap: 18px; }
+    .tdef { position: static; }
     .cls-h .s { display: none; }
   }
   @media (max-width: 860px) {
@@ -265,6 +273,7 @@
     .toc a, .ovg li a, .ovh, .eyebrow a { align-items: center; }
     .eyebrow a { display: inline-flex; }
     .vars summary { min-height: 44px; }
+    .tchip { min-height: 44px; padding: 8px 14px; }
     .ac { font-size: 22px; }
     .ar { grid-template-columns: 100px 1fr; }
   }
@@ -336,7 +345,8 @@
     <section class="sec" id="terms">
       <div class="lbl">Словарь</div>
       <h2 class="sec-h">Термины</h2>
-      <dl class="terms">@@terms@@</dl>
+      <p class="sec-lead">Шестнадцать слов, которыми написана вся карта. Наведите на термин — определение появится рядом; нажмите, чтобы закрепить.</p>
+      <div class="tdict">@@terms@@</div>
     </section>
 
     <section class="sec" id="mechs">
@@ -394,6 +404,28 @@
   }
   window.addEventListener("scroll", function () { if (!tick) { tick = true; requestAnimationFrame(upd); } }, { passive: true });
   upd();
+})();
+(function () {
+  // Словарь: наведение показывает определение, клик закрепляет; уход мыши со
+  // списка возвращает закреплённое. Фокус с клавиатуры работает как наведение
+  var list = document.getElementById("tlist"), def = document.getElementById("tdef");
+  if (!list || !def) return;
+  var chips = [].slice.call(list.querySelectorAll(".tchip")), defs = [].slice.call(def.querySelectorAll(".td"));
+  var pinned = chips[0];
+  function show(ch) {
+    chips.forEach(function (c) { var on = c === ch; c.classList.toggle("on", on); c.setAttribute("aria-expanded", on ? "true" : "false"); });
+    var id = ch.getAttribute("data-t");
+    defs.forEach(function (d) { d.classList.toggle("on", d.id === id); });
+  }
+  chips.forEach(function (c) {
+    c.addEventListener("mouseenter", function () { show(c); });
+    c.addEventListener("focus", function () { show(c); });
+    c.addEventListener("click", function () {
+      pinned = c; show(c);
+      if (window.matchMedia("(max-width: 960px)").matches) def.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    });
+  });
+  list.addEventListener("mouseleave", function () { show(pinned); });
 })();
 </script>
 <script src="chat.js?v=19"></script>

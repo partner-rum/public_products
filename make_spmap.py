@@ -845,18 +845,27 @@ TERM_GROUPS = [
 
 
 def terms_html(terms):
+    """Слева — термины плашками по группам, справа — панель с ОДНИМ определением:
+    наведение показывает, клик закрепляет. Все определения лежат в DOM (поиск и
+    без-JS видят их), показывается только активное — через класс .on."""
     by = {t["t"].strip(): t for t in terms}
-    used, out = set(), []
+    used, chips, defs, i = set(), [], [], 0
     for gname, names in TERM_GROUPS + [("Прочее", [])]:
         items = [by[n] for n in names if n in by] if names else [t for t in terms if t["t"].strip() not in used]
         if not items:
             continue
-        out.append('<div class="tg"><div class="tg-h lbl">%s</div>' % esc(gname))
+        chips.append('<div class="tg"><div class="tg-h lbl">%s</div><div class="tchips">' % esc(gname))
         for t in items:
             used.add(t["t"].strip())
-            out.append('<div class="term"><dt>%s</dt><dd>%s</dd></div>' % (esc(t["t"]), "".join(para(d) for d in t["d"])))
-        out.append("</div>")
-    return "".join(out)
+            tid = "t%d" % i; on = " on" if i == 0 else ""
+            chips.append('<button type="button" class="tchip%s" data-t="%s" aria-controls="tdef" aria-expanded="%s">%s</button>'
+                         % (on, tid, "true" if i == 0 else "false", esc(t["t"])))
+            defs.append('<div class="td%s" id="%s"><div class="lbl">%s</div><h3>%s</h3>%s</div>'
+                        % (on, tid, esc(gname), esc(t["t"]), "".join(para(d) for d in t["d"])))
+            i += 1
+        chips.append("</div></div>")
+    return ('<div class="tlist" id="tlist">%s</div>'
+            '<div class="tdef" id="tdef" aria-live="polite">%s</div>' % ("".join(chips), "".join(defs)))
 
 
 def render(doc):
