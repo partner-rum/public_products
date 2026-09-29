@@ -3,7 +3,7 @@
 // Источники: ЦБ (ключевая, RUONIA), MOEX ISS (RUSFAR, БПИФы, ОФЗ),
 // Финуслуги (вклады и накопительные счета — витрина МосБиржи).
 window.RATES = {
-  "updated": "2026-09-29 10:30",
+  "updated": "2026-09-29 13:30",
   "cbr": {
     "key": {
       "rate": 14.0,
@@ -19,25 +19,25 @@ window.RATES = {
       "id": "RUSFAR",
       "term": "овернайт",
       "days": 1,
-      "rate": 14.15
+      "rate": 14.17
     },
     {
       "id": "RUSFAR1W",
       "term": "1 неделя",
       "days": 7,
-      "rate": 14.09
+      "rate": 14.17
     },
     {
       "id": "RUSFAR2W",
       "term": "2 недели",
       "days": 14,
-      "rate": 14.09
+      "rate": 14.12
     },
     {
       "id": "RUSFAR1M",
       "term": "1 месяц",
       "days": 30,
-      "rate": 14.09
+      "rate": 14.1
     },
     {
       "id": "RUSFAR3M",
@@ -50,51 +50,51 @@ window.RATES = {
     {
       "id": "BCSD",
       "name": "БКС Денежный рынок",
-      "price": 14.444,
+      "price": 14.443,
       "ter": 0.2,
-      "rate": 13.95
+      "rate": 13.97
     },
     {
       "id": "MONY",
       "name": "АК БАРС Денежный рынок",
-      "price": 133.42,
+      "price": 133.6,
       "ter": 0.2,
-      "rate": 13.95
+      "rate": 13.97
     },
     {
       "id": "LQDT",
       "name": "Ликвидность (ВИМ)",
-      "price": 2.0969,
+      "price": 2.0968,
       "ter": 0.29,
-      "rate": 13.86
+      "rate": 13.88
     },
     {
       "id": "SBMM",
       "name": "Первая Сберегательный",
-      "price": 19.5015,
+      "price": 19.502,
       "ter": 0.3,
-      "rate": 13.85
+      "rate": 13.87
     },
     {
       "id": "AMNR",
       "name": "АТОН Накопительный",
-      "price": 157.608,
+      "price": 157.609,
       "ter": 0.3,
-      "rate": 13.85
+      "rate": 13.87
     },
     {
       "id": "AKMM",
       "name": "Альфа Денежный рынок",
       "price": 178.45,
       "ter": 0.69,
-      "rate": 13.46
+      "rate": 13.48
     },
     {
       "id": "TMON",
       "name": "Т-Капитал Денежный рынок",
-      "price": 165.1,
+      "price": 165.14,
       "ter": 1.15,
-      "rate": 13.0
+      "rate": 13.02
     }
   ],
   "ofz": [
@@ -103,28 +103,28 @@ window.RATES = {
       "name": "ОФЗ 26226",
       "maturity": "2026-10-07",
       "years": 0.02,
-      "rate": 12.06
+      "rate": 10.56
     },
     {
       "id": "SU26207RMFS9",
       "name": "ОФЗ 26207",
       "maturity": "2027-02-03",
       "years": 0.35,
-      "rate": 12.04
+      "rate": 12.03
     },
     {
       "id": "SU26232RMFS7",
       "name": "ОФЗ 26232",
       "maturity": "2027-10-06",
       "years": 1.02,
-      "rate": 12.73
+      "rate": 12.77
     },
     {
       "id": "SU26212RMFS9",
       "name": "ОФЗ 26212",
       "maturity": "2028-01-19",
       "years": 1.31,
-      "rate": 13.88
+      "rate": 13.86
     }
   ],
   "deposits": [
@@ -536,7 +536,7 @@ window.RATES = {
       "termMonths": 6,
       "daysFrom": 91,
       "daysTo": 367,
-      "minAmount": 50000,
+      "minAmount": 300000,
       "url": "https://finuslugi.ru/vklady/promsvyazbank_vklad_v_pobedu",
       "promo": false,
       "floating": false,
@@ -575,6 +575,54 @@ window.RATES = {
       "refill": false,
       "capitalization": false,
       "feature": null
+    },
+    {
+      "bank": "Банк ПСБ",
+      "name": "Мой доход",
+      "rate": 14.1,
+      "kind": "deposit",
+      "termMonths": 6,
+      "daysFrom": 91,
+      "daysTo": 731,
+      "minAmount": 50000,
+      "url": "https://finuslugi.ru/vklady/promsvyazbank_moj_dohod",
+      "promo": false,
+      "floating": false,
+      "refill": true,
+      "capitalization": false,
+      "feature": null
+    },
+    {
+      "bank": "Банк ПСБ",
+      "name": "Вклад в Победу",
+      "rate": 14.1,
+      "kind": "deposit",
+      "termMonths": 3,
+      "daysFrom": 91,
+      "daysTo": 367,
+      "minAmount": 300000,
+      "url": "https://finuslugi.ru/vklady/promsvyazbank_vklad_v_pobedu",
+      "promo": false,
+      "floating": false,
+      "refill": false,
+      "capitalization": false,
+      "feature": "3000 ₽ в фонд «Подари Себе Будущее»"
+    },
+    {
+      "bank": "Банк ПСБ",
+      "name": "Сильная ставка",
+      "rate": 14.1,
+      "kind": "deposit",
+      "termMonths": 3,
+      "daysFrom": 91,
+      "daysTo": 731,
+      "minAmount": 50000,
+      "url": "https://finuslugi.ru/vklady/promsvyazbank_silnaya_stavka",
+      "promo": false,
+      "floating": false,
+      "refill": false,
+      "capitalization": false,
+      "feature": "Повышенная ставка для новых денег"
     },
     {
       "bank": "Реалист Банк",
@@ -626,6 +674,22 @@ window.RATES = {
     },
     {
       "bank": "Банк ПСБ",
+      "name": "Мой доход",
+      "rate": 14.0,
+      "kind": "deposit",
+      "termMonths": 3,
+      "daysFrom": 91,
+      "daysTo": 731,
+      "minAmount": 50000,
+      "url": "https://finuslugi.ru/vklady/promsvyazbank_moj_dohod",
+      "promo": false,
+      "floating": false,
+      "refill": true,
+      "capitalization": false,
+      "feature": null
+    },
+    {
+      "bank": "Банк ПСБ",
       "name": "Сильная ставка",
       "rate": 14.0,
       "kind": "deposit",
@@ -648,7 +712,7 @@ window.RATES = {
       "termMonths": 12,
       "daysFrom": 91,
       "daysTo": 367,
-      "minAmount": 50000,
+      "minAmount": 300000,
       "url": "https://finuslugi.ru/vklady/promsvyazbank_vklad_v_pobedu",
       "promo": false,
       "floating": false,
@@ -671,22 +735,6 @@ window.RATES = {
       "refill": false,
       "capitalization": false,
       "feature": null
-    },
-    {
-      "bank": "Банк ПСБ",
-      "name": "Вклад в Победу",
-      "rate": 13.9,
-      "kind": "deposit",
-      "termMonths": 3,
-      "daysFrom": 91,
-      "daysTo": 367,
-      "minAmount": 50000,
-      "url": "https://finuslugi.ru/vklady/promsvyazbank_vklad_v_pobedu",
-      "promo": false,
-      "floating": false,
-      "refill": false,
-      "capitalization": false,
-      "feature": "3000 ₽ в фонд «Подари Себе Будущее»"
     },
     {
       "bank": "ДОМ.РФ Банк",
@@ -737,22 +785,6 @@ window.RATES = {
       "feature": null
     },
     {
-      "bank": "Банк ПСБ",
-      "name": "Сильная ставка",
-      "rate": 13.8,
-      "kind": "deposit",
-      "termMonths": 3,
-      "daysFrom": 91,
-      "daysTo": 731,
-      "minAmount": 50000,
-      "url": "https://finuslugi.ru/vklady/promsvyazbank_silnaya_stavka",
-      "promo": false,
-      "floating": false,
-      "refill": false,
-      "capitalization": false,
-      "feature": "Повышенная ставка для новых денег"
-    },
-    {
       "bank": "Банк «Приморье»",
       "name": "Подарок - новые деньги (% ежемесячно)",
       "rate": 13.77,
@@ -765,22 +797,6 @@ window.RATES = {
       "promo": false,
       "floating": false,
       "refill": false,
-      "capitalization": false,
-      "feature": null
-    },
-    {
-      "bank": "Банк ПСБ",
-      "name": "Мой доход",
-      "rate": 13.7,
-      "kind": "deposit",
-      "termMonths": 6,
-      "daysFrom": 91,
-      "daysTo": 731,
-      "minAmount": 50000,
-      "url": "https://finuslugi.ru/vklady/promsvyazbank_moj_dohod",
-      "promo": false,
-      "floating": false,
-      "refill": true,
       "capitalization": false,
       "feature": null
     },
@@ -815,22 +831,6 @@ window.RATES = {
       "refill": false,
       "capitalization": false,
       "feature": "Для новых накоплений"
-    },
-    {
-      "bank": "Банк ПСБ",
-      "name": "Мой доход",
-      "rate": 13.6,
-      "kind": "deposit",
-      "termMonths": 3,
-      "daysFrom": 91,
-      "daysTo": 731,
-      "minAmount": 50000,
-      "url": "https://finuslugi.ru/vklady/promsvyazbank_moj_dohod",
-      "promo": false,
-      "floating": false,
-      "refill": true,
-      "capitalization": false,
-      "feature": null
     },
     {
       "bank": "Газпромбанк",
@@ -881,19 +881,51 @@ window.RATES = {
       "feature": "С привязкой к ключевой ставке ЦБ РФ"
     },
     {
-      "bank": "РосДорБанк",
-      "name": "ONLINE-Ключевая минус 0,5%",
+      "bank": "Банк ПСБ",
+      "name": "Мой доход",
       "rate": 13.5,
       "kind": "deposit",
       "termMonths": 9,
-      "daysFrom": 62,
-      "daysTo": 546,
+      "daysFrom": 91,
+      "daysTo": 731,
+      "minAmount": 50000,
+      "url": "https://finuslugi.ru/vklady/promsvyazbank_moj_dohod",
+      "promo": false,
+      "floating": false,
+      "refill": true,
+      "capitalization": false,
+      "feature": null
+    },
+    {
+      "bank": "Трансстройбанк",
+      "name": "Стабильный",
+      "rate": 13.5,
+      "kind": "deposit",
+      "termMonths": 9,
+      "daysFrom": 181,
+      "daysTo": 550,
       "minAmount": 100000,
-      "url": "https://finuslugi.ru/vklady/rosdorbank_online_klyuchevaya_minus_0_5",
+      "url": "https://finuslugi.ru/vklady/transstrojbank_stabilnyj",
       "promo": false,
       "floating": false,
       "refill": true,
       "capitalization": true,
+      "feature": null
+    },
+    {
+      "bank": "Банк ПСБ",
+      "name": "Мой доход",
+      "rate": 13.5,
+      "kind": "deposit",
+      "termMonths": 12,
+      "daysFrom": 91,
+      "daysTo": 731,
+      "minAmount": 50000,
+      "url": "https://finuslugi.ru/vklady/promsvyazbank_moj_dohod",
+      "promo": false,
+      "floating": false,
+      "refill": true,
+      "capitalization": false,
       "feature": null
     },
     {
@@ -943,38 +975,6 @@ window.RATES = {
       "refill": false,
       "capitalization": false,
       "feature": "С привязкой к ключевой ставке ЦБ РФ"
-    },
-    {
-      "bank": "Банк ПСБ",
-      "name": "Мой доход",
-      "rate": 13.1,
-      "kind": "deposit",
-      "termMonths": 9,
-      "daysFrom": 91,
-      "daysTo": 731,
-      "minAmount": 50000,
-      "url": "https://finuslugi.ru/vklady/promsvyazbank_moj_dohod",
-      "promo": false,
-      "floating": false,
-      "refill": true,
-      "capitalization": false,
-      "feature": null
-    },
-    {
-      "bank": "Банк ПСБ",
-      "name": "Мой доход",
-      "rate": 13.1,
-      "kind": "deposit",
-      "termMonths": 12,
-      "daysFrom": 91,
-      "daysTo": 731,
-      "minAmount": 50000,
-      "url": "https://finuslugi.ru/vklady/promsvyazbank_moj_dohod",
-      "promo": false,
-      "floating": false,
-      "refill": true,
-      "capitalization": false,
-      "feature": null
     },
     {
       "bank": "Газпромбанк",
