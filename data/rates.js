@@ -3,7 +3,7 @@
 // Источники: ЦБ (ключевая, RUONIA), MOEX ISS (RUSFAR, БПИФы, ОФЗ),
 // Финуслуги (вклады и накопительные счета — витрина МосБиржи).
 window.RATES = {
-  "updated": "2026-09-30 14:41",
+  "updated": "2026-09-30 16:30",
   "cbr": {
     "key": {
       "rate": 14.0,
@@ -50,14 +50,14 @@ window.RATES = {
     {
       "id": "BCSD",
       "name": "БКС Денежный рынок",
-      "price": 14.447,
+      "price": 14.448,
       "ter": 0.2,
       "rate": 13.87
     },
     {
       "id": "MONY",
       "name": "АК БАРС Денежный рынок",
-      "price": 133.51,
+      "price": 133.6,
       "ter": 0.2,
       "rate": 13.87
     },
@@ -71,14 +71,14 @@ window.RATES = {
     {
       "id": "SBMM",
       "name": "Первая Сберегательный",
-      "price": 19.51,
+      "price": 19.5095,
       "ter": 0.3,
       "rate": 13.77
     },
     {
       "id": "AMNR",
       "name": "АТОН Накопительный",
-      "price": 157.668,
+      "price": 157.669,
       "ter": 0.3,
       "rate": 13.77
     },
@@ -92,7 +92,7 @@ window.RATES = {
     {
       "id": "TMON",
       "name": "Т-Капитал Денежный рынок",
-      "price": 165.16,
+      "price": 165.15,
       "ter": 1.15,
       "rate": 12.92
     }
@@ -103,28 +103,28 @@ window.RATES = {
       "name": "ОФЗ 26226",
       "maturity": "2026-10-07",
       "years": 0.02,
-      "rate": 7.84
+      "rate": 8.09
     },
     {
       "id": "SU26207RMFS9",
       "name": "ОФЗ 26207",
       "maturity": "2027-02-03",
       "years": 0.35,
-      "rate": 11.68
+      "rate": 11.56
     },
     {
       "id": "SU26232RMFS7",
       "name": "ОФЗ 26232",
       "maturity": "2027-10-06",
       "years": 1.02,
-      "rate": 12.5
+      "rate": 12.54
     },
     {
       "id": "SU26212RMFS9",
       "name": "ОФЗ 26212",
       "maturity": "2028-01-19",
       "years": 1.3,
-      "rate": 13.91
+      "rate": 13.89
     }
   ],
   "deposits": [
@@ -177,22 +177,6 @@ window.RATES = {
       "feature": null
     },
     {
-      "bank": "ДОМ.РФ Банк",
-      "name": "Социальный",
-      "rate": 25.0,
-      "kind": "deposit",
-      "termMonths": 12,
-      "daysFrom": 365,
-      "daysTo": 365,
-      "minAmount": 1,
-      "url": "https://finuslugi.ru/vklady/domrf_socialnyj",
-      "promo": true,
-      "floating": false,
-      "refill": true,
-      "capitalization": false,
-      "feature": null
-    },
-    {
       "bank": "Банк ПСБ",
       "name": "Александр Невский",
       "rate": 23.0,
@@ -205,54 +189,6 @@ window.RATES = {
       "promo": true,
       "floating": false,
       "refill": false,
-      "capitalization": false,
-      "feature": null
-    },
-    {
-      "bank": "Банк ПСБ",
-      "name": "Ярослав Мудрый",
-      "rate": 23.0,
-      "kind": "deposit",
-      "termMonths": 3,
-      "daysFrom": 32,
-      "daysTo": 122,
-      "minAmount": 10000,
-      "url": "https://finuslugi.ru/vklady/promsvyazbank_yaroslav_mudryj",
-      "promo": true,
-      "floating": false,
-      "refill": false,
-      "capitalization": false,
-      "feature": null
-    },
-    {
-      "bank": "Банк ПСБ",
-      "name": "Народный",
-      "rate": 22.0,
-      "kind": "deposit",
-      "termMonths": 3,
-      "daysFrom": 32,
-      "daysTo": 150,
-      "minAmount": 10000,
-      "url": "https://finuslugi.ru/vklady/promsvyazbank_narodnyj_vklad",
-      "promo": true,
-      "floating": false,
-      "refill": false,
-      "capitalization": false,
-      "feature": null
-    },
-    {
-      "bank": "Сбербанк",
-      "name": "Социальный",
-      "rate": 22.0,
-      "kind": "deposit",
-      "termMonths": 12,
-      "daysFrom": 365,
-      "daysTo": 365,
-      "minAmount": 1,
-      "url": "https://finuslugi.ru/vklady/sberbank_socialnyj",
-      "promo": true,
-      "floating": false,
-      "refill": true,
       "capitalization": false,
       "feature": null
     },
@@ -318,6 +254,22 @@ window.RATES = {
       "floating": false,
       "refill": false,
       "capitalization": true,
+      "feature": null
+    },
+    {
+      "bank": "Яндекс Банк",
+      "name": "Вклад в Сейвах",
+      "rate": 17.0,
+      "kind": "deposit",
+      "termMonths": 0,
+      "daysFrom": 14,
+      "daysTo": 730,
+      "minAmount": 10000,
+      "url": "https://finuslugi.ru/vklady/yandeks_bank_sejv_so_srokom",
+      "promo": true,
+      "floating": false,
+      "refill": true,
+      "capitalization": false,
       "feature": null
     },
     {
@@ -465,18 +417,18 @@ window.RATES = {
       "feature": null
     },
     {
-      "bank": "Банк Уралсиб",
-      "name": "Доход Плюс. Премиум",
+      "bank": "Яндекс Банк",
+      "name": "Вклад в Сейвах",
       "rate": 15.0,
       "kind": "deposit",
-      "termMonths": 6,
-      "daysFrom": 181,
-      "daysTo": 181,
-      "minAmount": 2500000,
-      "url": "https://finuslugi.ru/vklady/bank_uralsib_dohod_plyus_premium",
+      "termMonths": 3,
+      "daysFrom": 14,
+      "daysTo": 730,
+      "minAmount": 10000,
+      "url": "https://finuslugi.ru/vklady/yandeks_bank_sejv_so_srokom",
       "promo": false,
       "floating": false,
-      "refill": false,
+      "refill": true,
       "capitalization": false,
       "feature": null
     },
@@ -673,6 +625,22 @@ window.RATES = {
       "feature": null
     },
     {
+      "bank": "Яндекс Банк",
+      "name": "Вклад в Сейвах",
+      "rate": 14.0,
+      "kind": "deposit",
+      "termMonths": 6,
+      "daysFrom": 14,
+      "daysTo": 730,
+      "minAmount": 10000,
+      "url": "https://finuslugi.ru/vklady/yandeks_bank_sejv_so_srokom",
+      "promo": false,
+      "floating": false,
+      "refill": true,
+      "capitalization": false,
+      "feature": null
+    },
+    {
       "bank": "Банк ПСБ",
       "name": "Сильная ставка",
       "rate": 14.0,
@@ -798,6 +766,22 @@ window.RATES = {
       "floating": false,
       "refill": false,
       "capitalization": true,
+      "feature": null
+    },
+    {
+      "bank": "Яндекс Банк",
+      "name": "Вклад в Сейвах",
+      "rate": 13.7,
+      "kind": "deposit",
+      "termMonths": 12,
+      "daysFrom": 14,
+      "daysTo": 730,
+      "minAmount": 10000,
+      "url": "https://finuslugi.ru/vklady/yandeks_bank_sejv_so_srokom",
+      "promo": false,
+      "floating": false,
+      "refill": true,
+      "capitalization": false,
       "feature": null
     },
     {
