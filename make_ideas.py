@@ -18,6 +18,7 @@
 
 Запуск:  python make_ideas.py [id-темы]     (по умолчанию — ru-market)
          python make_ideas.py pre-ipo        (тематический выпуск из JSON)
+         python make_ideas.py space          (космос, вебинар 06.10.2026)
 """
 import glob
 import html
@@ -133,6 +134,12 @@ CONFIGS = {
 CONFIGS["pre-ipo"] = {
     "kind": "theme",
     "src": _res("pre-ipo-2026-09", "issue.json"),
+}
+# Космос — материал вебинара 06.10.2026 про корзину выпуска СП-1-31: компании
+# публичные, поэтому в рейке обзора не срок IPO, а доля в корзине (railK/railN).
+CONFIGS["space"] = {
+    "kind": "theme",
+    "src": _res("space-2026-10", "issue.json"),
 }
 THEME_BLOCKS = ("stages", "cards", "steps", "tiles", "bignum", "columns", "chain",
                 "glossary", "faq", "map", "profiles", "cta")
