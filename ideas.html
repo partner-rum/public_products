@@ -475,8 +475,16 @@
   /* закрывающий блок: заявка тем же contact.js, что на карточке продукта */
   .th-cta { display:flex; flex-wrap:wrap; align-items:center; gap:18px 30px; padding:26px 30px;
     background:var(--card); border:1px solid var(--border); border-radius:16px }
-  .th-cta .th-cta-txt { flex:1 1 380px }
-  .th-cta h3 { font-size:20px; font-weight:600; letter-spacing:-.01em }
+  .th-cta .th-cta-txt { flex:1 1 440px }
+  .th-cta h3 { font-size:20px; font-weight:600; letter-spacing:-.01em; text-wrap:balance }
+  /* Блок заявки в шапке (раздел cta с top:true): то же содержимое, что в конце
+     страницы, но на первом экране и с акцентной рамкой — срок заявок и кнопка
+     видны без прокрутки */
+  .th-hero .th-cta { margin-top:26px; max-width:1040px; border-color:rgba(238,125,27,.42);
+    background:linear-gradient(90deg,rgba(238,125,27,.08),rgba(238,125,27,0) 60%),var(--card) }
+  /* Шапка темы: заголовки материалов длинные, при 16ch они рвались на 4 строки */
+  .th-hero h1 { max-width:24ch }
+  .th-hero .sub { font-size:17px }
   .th-cta p { margin:6px 0 0; font-size:14.5px; color:var(--hushed); line-height:1.5 }
   .th-cta .th-cta-act { display:flex; flex-wrap:wrap; gap:12px; align-items:center }
   .th-cta .th-link { margin-top:0 }
@@ -1112,7 +1120,7 @@
   function thCta(s) {
     return '<div class="th-cta"><div class="th-cta-txt"><h3>' + esc(s.h) + '</h3>' +
       (s.p ? '<p>' + esc(s.p) + '</p>' : '') + '</div>' +
-      '<div class="th-cta-act"><span id="th-ct" data-title="' + esc(s.ctTitle || s.h) + '" data-id="' +
+      '<div class="th-cta-act"><span class="th-ct" data-title="' + esc(s.ctTitle || s.h) + '" data-id="' +
         esc(s.ctId || "preipo") + '"></span>' +
       (s.links || []).map(function (a) {
         return '<a class="th-link" href="' + esc(a.href) + '">' + esc(a.label) + ' →</a>';
@@ -1179,6 +1187,10 @@
       ? '<a class="ev" href="events.html#' + esc(iss.eventId) + '"><span class="dot"></span>' +
         'Тема вебинара <b>' + humanShort(iss.eventDate) + '</b> — ' + esc(iss.eventTitle) + ' &nbsp;→</a>'
       : "";
+    // Раздел cta с флагом top дублируется в шапку: срок и кнопка — на первом
+    // экране, а в конце страницы блок остаётся для дочитавших
+    var topSec = secs.filter(function (s) { return s.type === "cta" && s.top; })[0];
+    var top = topSec ? thCta(topSec) : "";
     var ctx = iss.context
       ? '<div class="note ctx"><b>' + esc(iss.context.split(".")[0]) + '.</b>' +
         esc(iss.context.slice(iss.context.indexOf(".") + 1)) + '</div>'
@@ -1186,7 +1198,7 @@
     return '<section class="hero th-hero" style="--c:' + c + '"><div class="wrap">' +
       '<div class="kick">' + esc(iss.kick || "Материал вебинара") + ' · ' + human(iss.date) + '</div>' +
       '<h1>' + esc(iss.title) + '</h1>' +
-      '<p class="sub">' + esc(iss.sub) + '</p>' + ev +
+      '<p class="sub">' + esc(iss.sub) + '</p>' + ev + top +
       (toc ? '<nav class="lchips" aria-label="Разделы материала">' + toc + '</nav>' : '') +
       (facts ? '<div class="facts">' + facts + '</div>' : '') + ctx +
       '<div class="note">Материал подготовлен к вебинару Rumberg Capital и носит информационный ' +
@@ -1207,14 +1219,16 @@
   // продукта: заявка уходит сейлзам в Telegram. Без модуля остаётся ссылка в
   // Библиотеку, пустого места не бывает.
   function themeMount(box) {
-    var host = box.querySelector("#th-ct");
-    if (!host) return;
+    var hosts = box.querySelectorAll(".th-ct");
+    if (!hosts.length) return;
     // contact.js подключён в конце страницы, а первый рендер идёт ещё при разборе
     // HTML — модуля в этот момент нет. При переключении выпусков он уже на месте.
     var go = function () {
       if (!window.Contact) return;
-      Contact.attach(host, { title: host.getAttribute("data-title") || document.title,
-        url: location.href.split("#")[0], id: host.getAttribute("data-id") || "preipo", label: "Обсудить с менеджером" });
+      [].forEach.call(hosts, function (host) {
+        Contact.attach(host, { title: host.getAttribute("data-title") || document.title,
+          url: location.href.split("#")[0], id: host.getAttribute("data-id") || "preipo", label: "Обсудить с менеджером" });
+      });
     };
     if (window.Contact) go();
     else document.addEventListener("DOMContentLoaded", go, { once: true });

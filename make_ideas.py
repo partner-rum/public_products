@@ -313,7 +313,10 @@ def theme_issue(key, cfg):
     ids = [it["id"] for it in issue.get("items") or []]
     if len(ids) != len(set(ids)):
         raise SystemExit("Повторяются id компаний")
-    issue["date"] = datetime.fromtimestamp(os.path.getmtime(src)).strftime("%Y-%m-%d")
+    # Дата выпуска — из JSON, если задана (материал к вебинару датируется днём
+    # эфира); иначе по времени правки файла, как было у Pre-IPO
+    if not re.match(r"^\d{4}-\d{2}-\d{2}$", str(issue.get("date") or "")):
+        issue["date"] = datetime.fromtimestamp(os.path.getmtime(src)).strftime("%Y-%m-%d")
     return issue, issue["date"]
 
 
