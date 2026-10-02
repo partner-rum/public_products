@@ -142,7 +142,7 @@ CONFIGS["space"] = {
     "src": _res("space-2026-10", "issue.json"),
 }
 THEME_BLOCKS = ("stages", "cards", "steps", "tiles", "bignum", "columns", "chain",
-                "glossary", "faq", "map", "profiles", "cta")
+                "glossary", "faq", "map", "profiles", "cta", "payoff")
 
 CUR_SIGN = {"RUB": "₽", "USD": "$"}
 

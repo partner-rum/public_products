@@ -368,6 +368,9 @@ def theme_block(iss):
         elif t == "bignum":
             rows.append("%s %s, %s. %s" % (sec.get("v", ""), sec.get("kk", ""), sec.get("sub", ""),
                                            sec.get("text", "")))
+            m = sec.get("more") or {}
+            if m.get("v"):
+                rows.append("%s %s, %s." % (m.get("v", ""), m.get("kk", ""), m.get("sub", "")))
             b = sec.get("bars") or {}
             if b.get("rows"):
                 rows.append("%s: %s." % (b.get("k", "Ряд"), "; ".join(
@@ -395,10 +398,13 @@ def theme_block(iss):
                 row = "%s — %s. %s" % (x.get("company", ""), (x.get("what") or "").rstrip("."),
                                        " ".join((x.get("body") or [])[:1]))
                 if x.get("ipo"):
-                    row += " IPO: " + x["ipo"]
+                    row += " %s: %s" % (x.get("ipoK") or "IPO", x["ipo"])
                 if x.get("watch"):
                     row += " На что смотреть: " + "; ".join(x["watch"]) + "."
                 rows.append(row)
+        elif t == "payoff":
+            if sec.get("text"):
+                rows.append(sec["text"])
         else:  # cards, steps, tiles, glossary
             rows += ["%s — %s" % (x.get("t", ""), x.get("d", "")) for x in sec.get("items") or []]
         if sec.get("note"):
