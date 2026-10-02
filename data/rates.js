@@ -3,7 +3,7 @@
 // Источники: ЦБ (ключевая, RUONIA), MOEX ISS (RUSFAR, БПИФы, ОФЗ),
 // Финуслуги (вклады и накопительные счета — витрина МосБиржи).
 window.RATES = {
-  "updated": "2026-10-02 10:30",
+  "updated": "2026-10-02 12:41",
   "cbr": {
     "key": {
       "rate": 14.0,
@@ -19,82 +19,82 @@ window.RATES = {
       "id": "RUSFAR",
       "term": "овернайт",
       "days": 1,
-      "rate": 14.07
+      "rate": 13.83
     },
     {
       "id": "RUSFAR1W",
       "term": "1 неделя",
       "days": 7,
-      "rate": 14.07
+      "rate": 13.91
     },
     {
       "id": "RUSFAR2W",
       "term": "2 недели",
       "days": 14,
-      "rate": 14.09
+      "rate": 13.96
     },
     {
       "id": "RUSFAR1M",
       "term": "1 месяц",
       "days": 30,
-      "rate": 14.08
+      "rate": 14.05
     },
     {
       "id": "RUSFAR3M",
       "term": "3 месяца",
       "days": 90,
-      "rate": 14.09
+      "rate": 14.06
     }
   ],
   "funds": [
     {
       "id": "BCSD",
       "name": "БКС Денежный рынок",
-      "price": 14.47,
+      "price": 14.469,
       "ter": 0.2,
-      "rate": 13.87
+      "rate": 13.63
     },
     {
       "id": "MONY",
       "name": "АК БАРС Денежный рынок",
       "price": 133.57,
       "ter": 0.2,
-      "rate": 13.87
+      "rate": 13.63
     },
     {
       "id": "LQDT",
       "name": "Ликвидность (ВИМ)",
       "price": 2.1009,
       "ter": 0.29,
-      "rate": 13.78
+      "rate": 13.54
     },
     {
       "id": "SBMM",
       "name": "Первая Сберегательный",
-      "price": 19.5395,
+      "price": 19.54,
       "ter": 0.3,
-      "rate": 13.77
+      "rate": 13.53
     },
     {
       "id": "AMNR",
       "name": "АТОН Накопительный",
-      "price": 157.898,
+      "price": 157.905,
       "ter": 0.3,
-      "rate": 13.77
+      "rate": 13.53
     },
     {
       "id": "AKMM",
       "name": "Альфа Денежный рынок",
-      "price": 178.77,
+      "price": 178.76,
       "ter": 0.69,
-      "rate": 13.38
+      "rate": 13.14
     },
     {
       "id": "TMON",
       "name": "Т-Капитал Денежный рынок",
-      "price": 165.44,
+      "price": 165.39,
       "ter": 1.15,
-      "rate": 12.92
+      "rate": 12.68
     }
   ],
   "ofz": [
@@ -103,28 +103,28 @@ window.RATES = {
       "name": "ОФЗ 26226",
       "maturity": "2026-10-07",
       "years": 0.01,
-      "rate": 4.92
+      "rate": 5.97
     },
     {
       "id": "SU26207RMFS9",
       "name": "ОФЗ 26207",
       "maturity": "2027-02-03",
       "years": 0.34,
-      "rate": 10.9
+      "rate": 10.55
     },
     {
       "id": "SU26232RMFS7",
       "name": "ОФЗ 26232",
       "maturity": "2027-10-06",
       "years": 1.01,
-      "rate": 12.4
+      "rate": 12.26
     },
     {
       "id": "SU26212RMFS9",
       "name": "ОФЗ 26212",
       "maturity": "2028-01-19",
       "years": 1.3,
-      "rate": 13.85
+      "rate": 13.84
     }
   ],
   "deposits": [
@@ -241,6 +241,22 @@ window.RATES = {
       "feature": null
     },
     {
+      "bank": "Челиндбанк",
+      "name": "Выгодная дата",
+      "rate": 18.0,
+      "kind": "deposit",
+      "termMonths": 2,
+      "daysFrom": 63,
+      "daysTo": 63,
+      "minAmount": 10000,
+      "url": "https://finuslugi.ru/vklady/chelindbank_vygodnaya_data",
+      "promo": true,
+      "floating": false,
+      "refill": false,
+      "capitalization": false,
+      "feature": null
+    },
+    {
       "bank": "Яндекс Банк",
       "name": "Вклад в Сейвах",
       "rate": 17.0,
@@ -330,22 +346,6 @@ window.RATES = {
       "daysTo": 61,
       "minAmount": 1,
       "url": "https://finuslugi.ru/vklady/mts_bank_mts_schet",
-      "promo": false,
-      "floating": false,
-      "refill": true,
-      "capitalization": true,
-      "feature": null
-    },
-    {
-      "bank": "Совкомбанк",
-      "name": "Копилка",
-      "rate": 15.5,
-      "kind": "saving",
-      "termMonths": 0,
-      "daysFrom": 1,
-      "daysTo": 91,
-      "minAmount": 1,
-      "url": "https://finuslugi.ru/vklady/sovcombank_nakopitelnyj_schet_onlajn_kopilka",
       "promo": false,
       "floating": false,
       "refill": true,
