@@ -21,9 +21,22 @@
 var MET_PRIVATE = /\/(me|me-test|admin|boss)\.html$/.test(location.pathname) ||
                   window.METRIKA_NO_RECORD === true;
 
+// ТЕЛЕФОНЫ — БЕЗ ВЕБВИЗОРА (решение Руслана 02.10.2026: «он мне не нужен с телефона»).
+// Замер листания главной: слушатели Вебвизора забирали почти половину обработки
+// каждого касания и три четверти обработки каждого шага прокрутки, и свайп шёл с
+// лагом. Посещаемость, цели и карта кликов на телефоне остаются — пропадает только
+// запись сессий. Телефон — сенсорный экран, у которого короткая сторона уже 600 px:
+// так планшеты и сенсорные ноутбуки остаются с записью, а поворот экрана ответ не
+// меняет (размер экрана, а не окна).
+var MET_PHONE = false;
+try {
+  MET_PHONE = window.matchMedia("(pointer: coarse)").matches &&
+              Math.min(screen.width, screen.height) < 600;
+} catch (e) {}
+
 ym(110759242, "init", {
   ssr: true,
-  webvisor: !MET_PRIVATE,
+  webvisor: !MET_PRIVATE && !MET_PHONE,
   clickmap: !MET_PRIVATE,
   ecommerce: "dataLayer",
   accurateTrackBounce: true,

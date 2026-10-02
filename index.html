@@ -620,6 +620,13 @@
     /* Шапка без размытия: blur под едущей страницей — самая дорогая отрисовка на
        телефоне, а на сплошном тёмном фоне разницы не видно */
     .nav { background:var(--bg, #0B0C10); backdrop-filter:none; -webkit-backdrop-filter:none; }
+    /* Листание своё (класс mx-pg ставит скрипт, только когда оно включилось):
+       панорамировать экраны браузеру не даём — палец ведёт скрипт, а щипок
+       для увеличения остаётся. Обёртка страницы заранее на своём слое: на нём
+       композитор везёт доводку экрана, и слой не создаётся заново в начале
+       каждой доводки. */
+    html.mx-pg .hero, html.mx-pg #mx-scr > .mx-s { touch-action:pinch-zoom; }
+    html.mx-pg .wrap { will-change:transform; }
     /* Въезд содержимого: пока экран поднимается в кадр, его строки идут чуть
        быстрее страницы и проявляются. Привязано к прокрутке, а не к времени —
        движение ведёт палец. Хвост — только заголовок и группы: список целиком
@@ -743,7 +750,7 @@
     .mx-dots i { transition:none; }
   }
 </style>
-<script src="metrika.js?v=6" defer></script>
+<script src="metrika.js?v=7" defer></script>
 </head>
 <body>
 
@@ -1507,8 +1514,14 @@
     }
     genTo(Math.ceil(W / STEP) - 1);
     if (isStatic) return;
-    let prev = performance.now();
+    // На телефоне фон скрыт (display:none), а цикл всё равно перестраивал его
+    // каждый кадр и занимал главный поток в каждом кадре листания (правка
+    // 02.10.2026, «свайпается с лагом»). Порог тот же, что прячет фон в CSS;
+    // вернулись на широкий экран — фон снова едет.
+    const hidden = window.matchMedia("(max-width:860px)");
+    let prev = performance.now(), running = false;
     function frame(now) {
+      if (hidden.matches) { running = false; return; }
       const dt = Math.min(1, (now - prev) / 1000);
       prev = now;
       offset += SPEED * dt;
@@ -1517,7 +1530,9 @@
       cleanup();
       requestAnimationFrame(frame);
     }
-    requestAnimationFrame(frame);
+    function run() { if (running || hidden.matches) return; running = true; prev = performance.now(); requestAnimationFrame(frame); }
+    if (hidden.addEventListener) hidden.addEventListener("change", run); else if (hidden.addListener) hidden.addListener(run);
+    run();
   })();
 
   /* ── Копирование ссылки для клиента ─────────────────────────────────────
@@ -1807,10 +1822,15 @@
     box.innerHTML = out.join("");
   }
 
+  // Верх элемента в документе по раскладке. Не getBoundingClientRect: на время
+  // доводки обёртка страницы сдвинута трансформом, и экранная координата врала бы.
+  function docTop(el) { var y = 0; for (; el; el = el.offsetParent) y += el.offsetTop; return y; }
+
   // Точки справа: сколько экранов и где мы. Только указатель, не кнопки.
   // Горит экран под серединой окна, а не «виден больше чем наполовину»: хвост с
   // разделами выше окна, и на 320 px его видимая доля не доходит до половины —
   // порог по доле не зажёг бы последнюю точку никогда.
+  // Возвращает «обновить», чтобы листание могло позвать его по концу доводки.
   function track(list, pad) {
     var d = document.createElement("div");
     d.className = "mx-dots";
@@ -1820,14 +1840,15 @@
     var cur = -1, raf = 0;
     function tick() {
       raf = 0;
-      var mid = pad + (window.innerHeight - pad) / 2, i = 0;
-      for (var k = 0; k < list.length; k++) if (list[k].getBoundingClientRect().top <= mid) i = k;
+      var mid = window.pageYOffset + pad + (window.innerHeight - pad) / 2, i = 0;
+      for (var k = 0; k < list.length; k++) if (docTop(list[k]) <= mid) i = k;
       if (i !== cur) { cur = i; Array.prototype.forEach.call(d.children, function (x, j) { x.classList.toggle("on", j === i); }); }
     }
     function later() { if (!raf) raf = requestAnimationFrame(tick); }
     window.addEventListener("scroll", later, { passive: true });
     window.addEventListener("resize", later);
     tick();
+    return later;
   }
 
   // ── Листание своё, как в приложении (выбор Руслана 29.09.2026 из трёх режимов) ──
@@ -1840,29 +1861,84 @@
   // нативная; ушла ли она вверх в экраны — по окончании доводим до ближайшего.
   // Шапка, меню, панель чата и гейт — не наши: касания там пропускаем.
   // Мышь, клавиатура и полоса прокрутки не трогаются вовсе.
-  function paging(list, pad) {
-    var root = document.documentElement, body = document.body;
+  //
+  // ДОВОДКА — НА КОМПОЗИТОРЕ (правка 02.10.2026, «свайпается с лагом»). Раньше
+  // экран доезжал покадрово: каждый кадр скрипт ставил позицию прокрутки, и всё,
+  // что занимало главный поток (Вебвизор на каждое событие прокрутки, загрузка
+  // Метрики в первые секунды), останавливало доводку. Теперь позиция прокрутки
+  // сразу встаёт в цель, а обёртка страницы на время доводки сдвинута трансформом
+  // назад и съезжает к нулю той же кривой — это анимация композитора: главный
+  // поток в ней не участвует, и на экране 120 Гц она идёт с частотой экрана.
+  // Въезд строк привязан к прокрутке и после прыжка встал бы в конец рывком,
+  // поэтому видимые строки доезжают из того вида, в котором их застал палец.
+  // Позиции экранов берутся из раскладки (docTop) и считаются раз на касание.
+  // Браузеру панорамировать экраны не даём заранее (класс mx-pg → touch-action
+  // в CSS): иначе первое движение пальца меньше порога свайпа могло начать
+  // нативную прокрутку, и она тянула бы страницу против скрипта.
+  function paging(list, pad, dots) {
+    var root = document.documentElement, body = document.body, wrap = document.querySelector(".wrap");
     var DUR = 420, BACK = 260;                         // мс: к соседнему экрану / назад на место
+    var EASE = "cubic-bezier(0.33, 1, 0.68, 1)";       // 1 − (1 − t)³ — та же кривая, что была у покадровой доводки
+    var IN = "#mx-scr .mx-s > *, .mx-tail > h2, .mx-tail .mx-g";   // строки с въездом (их анимация — в CSS)
     var RM = window.matchMedia("(prefers-reduced-motion: reduce)");   // просили меньше движения — экран ставим сразу
-    var anim = 0, touching = false, armed = false, moved = false;
-    var y0 = 0, s0 = 0, lastY = 0, lastT = 0, vel = 0, base = 0;
+    var CAN = !!(wrap && wrap.animate);                // нет Web Animations — доводка по кадрам, как раньше
+    var anim = 0, glideA = null, over = [], glideTo = 0;
+    var touching = false, armed = false, moved = false;
+    var y0 = 0, s0 = 0, lastY = 0, lastT = 0, vel = 0, base = 0, tp = [];
     root.style.scrollBehavior = "auto";                // scrollTo ставит позицию сразу, без своей анимации
-    function tops() { return list.map(function (el) { return Math.round(el.getBoundingClientRect().top + window.pageYOffset - pad); }); }
+    root.classList.add("mx-pg");
+    function tops() { return list.map(function (el) { return Math.round(docTop(el) - pad); }); }
     function nearest(tp, y) { var b = 0; for (var k = 0; k < tp.length; k++) if (Math.abs(tp[k] - y) < Math.abs(tp[b] - y)) b = k; return b; }
-    function stop() { if (anim) { cancelAnimationFrame(anim); anim = 0; } }
+    // Где страница ВИДНА: во время доводки прокрутка уже в цели, а обёртка ещё
+    // сдвинута назад на остаток пути
+    function shown() {
+      if (!glideA) return window.pageYOffset;
+      var m = getComputedStyle(wrap).transform, ty = 0;
+      if (m && m !== "none") { var v = m.slice(m.indexOf("(") + 1, -1).split(","); ty = parseFloat(v.length === 16 ? v[13] : v[5]) || 0; }
+      return window.pageYOffset - ty;
+    }
+    function drop() {
+      if (glideA) glideA.cancel();
+      over.forEach(function (a) { a.cancel(); });
+      glideA = null; over = [];
+    }
+    function stop() {
+      if (anim) { cancelAnimationFrame(anim); anim = 0; }
+      if (glideA) { var y = shown(); drop(); window.scrollTo(0, Math.round(y)); }   // страница остаётся там, где её видно
+    }
     function glide(to, dur) {
       stop();
-      var from = window.pageYOffset, d = to - from, start = 0;
+      var from = window.pageYOffset, d = to - from;
       if (Math.abs(d) < 1 || RM.matches) { window.scrollTo(0, to); return; }
       // Короткий путь — короче и время, иначе доводка на 40 px тянется как на весь экран
       dur = Math.round(dur * Math.max(0.35, Math.min(1, Math.abs(d) / (window.innerHeight - pad))));
-      function frame(ts) {
-        if (!start) start = ts;
-        var t = Math.min(1, (ts - start) / dur), e = 1 - Math.pow(1 - t, 3);
-        window.scrollTo(0, from + d * e);
-        anim = t < 1 ? requestAnimationFrame(frame) : 0;
+      if (!CAN) {
+        var start = 0;
+        var frame = function (ts) {
+          if (!start) start = ts;
+          var t = Math.min(1, (ts - start) / dur), e = 1 - Math.pow(1 - t, 3);
+          window.scrollTo(0, from + d * e);
+          anim = t < 1 ? requestAnimationFrame(frame) : 0;
+        };
+        anim = requestAnimationFrame(frame);
+        return;
       }
-      anim = requestAnimationFrame(frame);
+      // Строки с въездом, которые окажутся в кадре по пути: снимаем их вид до прыжка
+      var lo = Math.min(from, to), hi = Math.max(from, to) + window.innerHeight;
+      var els = Array.prototype.filter.call(document.querySelectorAll(IN), function (el) {
+        var t = docTop(el); return t < hi && t + el.offsetHeight > lo;
+      });
+      var was = els.map(function (el) { var cs = getComputedStyle(el); return { opacity: cs.opacity, transform: cs.transform }; });
+      window.scrollTo(0, to);
+      glideTo = window.pageYOffset;
+      var k = glideTo - from;                          // фактический путь: у края страницы браузер мог упереться
+      glideA = wrap.animate([{ transform: "translate3d(0," + k + "px,0)" }, { transform: "translate3d(0,0,0)" }], { duration: dur, easing: EASE });
+      glideA.onfinish = function () { glideA = null; over = []; if (dots) dots(); };
+      // Конца у ключевых кадров нет — это «как сейчас велит прокрутка»: строка
+      // доезжает от снятого вида к своему, без рывка в конец въезда
+      over = els.map(function (el, i) {
+        return el.animate([{ offset: 0, opacity: was[i].opacity, transform: was[i].transform }], { duration: dur, easing: EASE });
+      });
     }
     // Касание внутри шапки, меню, панели чата, любого прокручиваемого блока — не наше
     function foreign(el) {
@@ -1878,9 +1954,10 @@
       touching = true; armed = false; moved = false; vel = 0;
       if (e.touches.length !== 1) return;
       if (root.classList.contains("qg-lock") || body.classList.contains("mx-lock") || foreign(e.target)) return;
-      var tp = tops(), y = window.pageYOffset;
+      stop();                                          // доводку палец ловит там, где страница видна
+      tp = tops();
+      var y = window.pageYOffset;
       if (y > tp[tp.length - 1] + 2) return;             // внутри хвоста — нативная прокрутка
-      stop();
       armed = true;
       y0 = lastY = e.touches[0].clientY; lastT = e.timeStamp; s0 = y; base = nearest(tp, y);
     }, { passive: true });
@@ -1899,7 +1976,6 @@
       e.preventDefault();
       if (t > lastT) vel = 0.6 * vel + 0.4 * ((lastY - y) / (t - lastT));   // px/мс
       lastY = y; lastT = t;
-      var tp = tops();
       window.scrollTo(0, Math.max(0, Math.min(tp[tp.length - 1], s0 + dy)));
     }, { passive: false });
     // Нативная прокрутка (из хвоста) ушла вверх в экраны и остановилась —
@@ -1910,7 +1986,7 @@
     function settle() {
       clearTimeout(st);
       st = setTimeout(function () {
-        if (touching || anim) return;
+        if (touching || anim || glideA) return;
         var tp = tops(), y = window.pageYOffset;
         if (y < tp[tp.length - 1] - 2) { var n = nearest(tp, y); if (Math.abs(tp[n] - y) > 1) glide(tp[n], BACK); }
       }, 140);
@@ -1919,15 +1995,22 @@
       touching = false;
       if (!armed) { settle(); return; }
       armed = false;
-      if (!moved) return;
-      var tp = tops(), h = window.innerHeight - pad, dy = window.pageYOffset - s0, target = base;
+      // Не сдвинул: обычный тап — или палец остановил доезжающий экран на полпути;
+      // во втором случае страница не должна остаться между экранами
+      if (!moved) { settle(); return; }
+      var h = window.innerHeight - pad, dy = window.pageYOffset - s0, target = base;
       if (dy > h * 0.18 || (dy > 12 && vel > 0.35)) target = Math.min(tp.length - 1, base + 1);
       else if (dy < -h * 0.18 || (dy < -12 && vel < -0.35)) target = Math.max(0, base - 1);
       glide(tp[target], target === base ? BACK : DUR);
     }
     document.addEventListener("touchend", end, { passive: true });
     document.addEventListener("touchcancel", end, { passive: true });
-    window.addEventListener("scroll", function () { if (!touching && !anim) settle(); }, { passive: true });
+    window.addEventListener("scroll", function () {
+      // Пока экран доезжал, страницу прокрутил кто-то другой (колесо, клавиатура,
+      // якорь): сдвиг обёртки снимаем — страница там, куда её поставили
+      if (glideA && Math.abs(window.pageYOffset - glideTo) > 1) drop();
+      if (!touching && !anim && !glideA) settle();
+    }, { passive: true });
   }
 
   function paint() {
@@ -1964,8 +2047,7 @@
       .filter(Boolean);
     if (list.length >= 2) {
       var pad = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 57;
-      track(list, pad);
-      paging(list, pad);
+      paging(list, pad, track(list, pad));
     }
 
     var nav = document.querySelector(".nav"), wrap = document.querySelector(".wrap");
