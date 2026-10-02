@@ -59,7 +59,7 @@ window.EVENTS = {
    "durationMin": 30,
    "place": "Онлайн · Контур.Толк · вход свободный",
    "joinUrl": "https://rumbergcapital.ktalk.ru/app/stream/auditoriums/658e9720-624d-4b34-a192-823ce7e14452",
-   "recordingUrl": "",
+   "recordingUrl": "https://rumbergcapital.ktalk.ru/recordings/RuAX1Pg3o2uCrEQMWdjf",
    "materials": [
     {
      "url": "ideas.html?i=pre-ipo",
