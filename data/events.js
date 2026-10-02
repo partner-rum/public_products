@@ -27,7 +27,7 @@ window.EVENTS = {
    "timeMsk": "13:00",
    "durationMin": 30,
    "place": "Онлайн · Контур.Толк · вход свободный",
-   "joinUrl": "",
+   "joinUrl": "https://rumbergcapital.ktalk.ru/app/stream/auditoriums/12d045ad-6d20-4d84-b73d-4a9ea37f9fcb",
    "recordingUrl": "",
    "materials": [
     {
