@@ -3,15 +3,11 @@
 // Источники: ЦБ (ключевая, RUONIA), MOEX ISS (RUSFAR, БПИФы, ОФЗ),
 // Финуслуги (вклады и накопительные счета — витрина МосБиржи).
 window.RATES = {
-  "updated": "2026-10-02 13:30",
+  "updated": "2026-10-02 15:42",
   "cbr": {
-    "key": {
-      "rate": 14.0,
-      "date": "2026-07-27"
-    },
     "ruonia": {
-      "rate": 14.04,
-      "date": "2026-09-30"
+      "rate": 13.97,
+      "date": "2026-10-01"
     }
   },
   "rusfar": [
@@ -50,7 +46,7 @@ window.RATES = {
     {
       "id": "BCSD",
       "name": "БКС Денежный рынок",
-      "price": 14.469,
+      "price": 14.472,
       "ter": 0.2,
       "rate": 13.63
     },
@@ -78,21 +74,21 @@ window.RATES = {
     {
       "id": "AMNR",
       "name": "АТОН Накопительный",
-      "price": 157.906,
+      "price": 157.905,
       "ter": 0.3,
       "rate": 13.53
     },
     {
       "id": "AKMM",
       "name": "Альфа Денежный рынок",
-      "price": 178.76,
+      "price": 178.77,
       "ter": 0.69,
       "rate": 13.14
     },
     {
       "id": "TMON",
       "name": "Т-Капитал Денежный рынок",
-      "price": 165.43,
+      "price": 165.44,
       "ter": 1.15,
       "rate": 12.68
     }
@@ -103,28 +99,28 @@ window.RATES = {
       "name": "ОФЗ 26226",
       "maturity": "2026-10-07",
       "years": 0.01,
-      "rate": 5.83
+      "rate": 5.69
     },
     {
       "id": "SU26207RMFS9",
       "name": "ОФЗ 26207",
       "maturity": "2027-02-03",
       "years": 0.34,
-      "rate": 10.79
+      "rate": 10.69
     },
     {
       "id": "SU26232RMFS7",
       "name": "ОФЗ 26232",
       "maturity": "2027-10-06",
       "years": 1.01,
-      "rate": 12.35
+      "rate": 12.36
     },
     {
       "id": "SU26212RMFS9",
       "name": "ОФЗ 26212",
       "maturity": "2028-01-19",
       "years": 1.3,
-      "rate": 13.84
+      "rate": 13.74
     }
   ],
   "deposits": [
@@ -234,7 +230,7 @@ window.RATES = {
       "daysTo": 62,
       "minAmount": 10000,
       "url": "https://finuslugi.ru/vklady/alfabank_alfa_vklad_zarplatnyj",
-      "promo": true,
+      "promo": false,
       "floating": false,
       "refill": false,
       "capitalization": true,
@@ -250,7 +246,7 @@ window.RATES = {
       "daysTo": 63,
       "minAmount": 10000,
       "url": "https://finuslugi.ru/vklady/chelindbank_vygodnaya_data",
-      "promo": true,
+      "promo": false,
       "floating": false,
       "refill": false,
       "capitalization": false,
@@ -266,7 +262,7 @@ window.RATES = {
       "daysTo": 730,
       "minAmount": 10000,
       "url": "https://finuslugi.ru/vklady/yandeks_bank_sejv_so_srokom",
-      "promo": true,
+      "promo": false,
       "floating": false,
       "refill": true,
       "capitalization": false,
