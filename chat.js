@@ -2,8 +2,9 @@
    Дизайн-язык ИИ: фирменная 4-лучевая звезда, бейдж AI; в поле строки по буквам печатаются
    примеры вопросов — три умения ассистента в одном порядке (объяснить продукт, посчитать цену
    опциона, подсказать, где что на сайте); пометка «может ошибаться» (не колл-центр: без зелёной
-   точки «онлайн»). На телефоне строка — пилюля «Спросить AI» без поля. Второй вход — «✦ AI»
-   в шапке (от 1200px). Оговорка «считаю только CALL и PUT» — внутри открытого чата, не на заставке.
+   точки «онлайн»). Строка СВЕТЛАЯ на тёмном сайте — единственный светлый предмет на экране,
+   чтобы ассистента было видно сразу (слово Руслана). На телефоне строка — пилюля «Спросить AI»
+   без поля. Оговорка «считаю только CALL и PUT» — внутри открытого чата, не на заставке.
    Бэкенд: Cloudflare Worker /chat → DeepSeek (ключи — секреты Cloudflare, не в репо).
    Подключение: <script src="chat.js?v=21"></script> перед </body>. Без зависимостей. */
 (function () {
@@ -87,13 +88,15 @@
 
   var css = "" +
     /* — строка-вопрос внизу по центру (на телефоне — пилюля без поля) — */
-    ".ca-dock{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:300;display:flex;align-items:center;gap:10px;width:600px;max-width:calc(100vw - 32px);height:56px;margin:0;padding:0 8px 0 18px;box-sizing:border-box;border-radius:999px;background:#14161C;border:1px solid rgba(255,255,255,.16);box-shadow:0 14px 40px rgba(0,0,0,.55);font-family:'Onest',system-ui,sans-serif;color:#F2F3F7;transition:border-color .2s;}" +
-    ".ca-dock:hover,.ca-dock:focus-within{border-color:rgba(238,125,27,.7);}" +
+        // Светлая на тёмном: фон — цвет текста витрины #F2F3F7, текст — тот же тёмный, что на
+    // оранжевых кнопках. Рамка не нужна, предмет и так отделён; фокус/наведение — оранжевое кольцо.
+    ".ca-dock{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:300;display:flex;align-items:center;gap:10px;width:600px;max-width:calc(100vw - 32px);height:56px;margin:0;padding:0 8px 0 18px;box-sizing:border-box;border-radius:999px;background:#F2F3F7;border:0;box-shadow:0 14px 40px rgba(0,0,0,.6),0 0 0 2px rgba(238,125,27,0);font-family:'Onest',system-ui,sans-serif;color:#0C0A08;transition:box-shadow .2s;}" +
+    ".ca-dock:hover,.ca-dock:focus-within{box-shadow:0 14px 40px rgba(0,0,0,.6),0 0 0 2px rgba(238,125,27,.75);}" +
     ".ca-dock.hide{display:none;}" +
     ".ca-dock>svg{flex:none;}" +
-    ".ca-dock-tag{flex:none;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;letter-spacing:.08em;color:#8FB3F0;border:1px solid rgba(79,134,230,.42);border-radius:5px;padding:2px 5px;}" +
-    ".ca-dock-in{flex:1;min-width:0;background:none;border:0;outline:none;color:#F2F3F7;font-family:inherit;font-size:15px;line-height:1.3;padding:0;}" +
-    ".ca-dock-in::placeholder{color:rgba(242,243,247,.56);}" +
+    ".ca-dock-tag{flex:none;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;letter-spacing:.08em;color:#2E5EC2;border:1px solid rgba(46,94,194,.45);border-radius:5px;padding:2px 5px;}" +
+    ".ca-dock-in{flex:1;min-width:0;background:none;border:0;outline:none;color:#0C0A08;font-family:inherit;font-size:15px;line-height:1.3;padding:0;}" +
+    ".ca-dock-in::placeholder{color:rgba(12,10,8,.58);}" +
     ".ca-dock-go{flex:none;display:inline-flex;align-items:center;gap:7px;height:40px;padding:0 16px;border:0;border-radius:999px;background:#EE7D1B;color:#0C0A08;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;transition:background .15s;}" +
     ".ca-dock-go:hover{background:#F58E33;}.ca-dock-go svg{width:14px;height:14px;}" +
     ".ca-dock-lbl{display:none;}" +
@@ -102,7 +105,7 @@
     "@media(max-width:860px){.ca-dock{width:auto;max-width:none;height:50px;padding:0 18px 0 14px;gap:9px;cursor:pointer;}" +
     ".ca-dock-in,.ca-dock-go,.ca-dock-tag{display:none;}" +
     ".ca-dock-lbl{display:block;font-size:14.5px;font-weight:600;line-height:1.15;white-space:nowrap;text-align:left;}" +
-    ".ca-dock-lbl small{display:block;margin-top:2px;font-size:11.5px;font-weight:400;line-height:1.2;color:rgba(242,243,247,.66);}}" +
+    ".ca-dock-lbl small{display:block;margin-top:2px;font-size:11.5px;font-weight:400;line-height:1.2;color:rgba(12,10,8,.64);}}" +
     /* — панель — */
     // visibility:hidden в закрытом состоянии убирает содержимое панели из табуляции
     // и из дерева скринридера (opacity+pointer-events этого не делали — A.6).
@@ -119,7 +122,7 @@
     /* Клавиатурный фокус: у кнопок виджета его не было вовсе (outline:none на
        полях, ни одного правила :focus-visible), а страницы объявляют рамку
        только на <a> — виджет выпадал из обхода незаметно для глаза. */
-    ".ca-dock-go:focus-visible,.ca-hdr:focus-visible,.ca-x:focus-visible,.ca-send:focus-visible,.ca-discuss:focus-visible,.ca-sug button:focus-visible{outline:2px solid #EE7D1B;outline-offset:3px;}" +
+    ".ca-dock-go:focus-visible,.ca-x:focus-visible,.ca-send:focus-visible,.ca-discuss:focus-visible,.ca-sug button:focus-visible{outline:2px solid #EE7D1B;outline-offset:3px;}" +
     ".ca-in:focus-visible,.ca-lead input:focus-visible{outline:2px solid #EE7D1B;outline-offset:1px;}" +
     /* — лента сообщений — */
     ".ca-log{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;}" +
@@ -167,14 +170,6 @@
     "@media(max-width:480px){.ca-panel,.ca-panel.on{left:8px;right:8px;bottom:8px;height:calc(100dvh - 16px);transform:none;}}" +
     /* — оговорка про CALL/PUT внутри чата — тише обычной реплики: пунктирная рамка без заливки — */
     ".ca-msg.a.n{max-width:92%;background:none;border:1px dashed rgba(255,255,255,.18);color:rgba(242,243,247,.66);font-size:12.5px;line-height:1.5;}" +
-    /* — вход в шапке — */
-    ".ca-hdr{display:inline-flex;align-items:center;gap:7px;height:30px;margin-left:10px;padding:0 13px 0 10px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:#14161C;color:#F2F3F7;font-family:'Onest',system-ui,sans-serif;font-size:13px;font-weight:500;white-space:nowrap;cursor:pointer;flex:none;transition:border-color .2s,background .2s;}" +
-    ".ca-hdr:hover{border-color:rgba(238,125,27,.7);background:rgba(238,125,27,.08);}" +
-    ".ca-hdr svg{flex:none;}" +
-    // Шапка заполнена до предела: у контейнера 1280px свободно ~99px (их сейчас берёт поле
-    // поиска), на 901–1199 — ноль. Полное «AI-ассистент» (128px) выталкивало «Доску» за
-    // край, поэтому в шапке — компактное «✦ AI», и только от 1200px.
-    "@media(max-width:1199px){.ca-hdr{display:none;}}" +
     "@media(prefers-reduced-motion:reduce){.ca-panel{transition:none;}}";
 
   function inject() {
@@ -472,8 +467,6 @@
     var limOv = parseInt(((location.search.match(/[?&]chatlimit=(\d+)/) || [])[1]) || "0", 10);
     if (limOv > 0) CFG.msgLimit = limOv;  // локальное демо: ?chatlimit=2
 
-    var ICON_STAR_HDR = '<svg width="13" height="13" viewBox="0 0 26 26" aria-hidden="true">' +
-      '<path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>';
     var ICON_STAR_20 = '<svg width="20" height="20" viewBox="0 0 26 26" aria-hidden="true">' +
       '<path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>';
     var ICON_ARROW = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
@@ -574,29 +567,6 @@
 
     window.Chat = { open: open, close: close, ask: ask };
 
-    // Второй вход — «✦ AI» в шапке, сразу за «Сотрудничество» (или за логотипом). На столе
-    // партнёра его нет: там шапка своя.
-    function mountHeader() {
-      if (SETUP.desk) return;
-      var navIn = document.querySelector(".nav-in");
-      if (!navIn || navIn.querySelector(".ca-hdr")) return;
-      var after = navIn.querySelector(".nav-about");
-      if (!after) {
-        after = navIn.querySelector(".brand") || navIn.querySelector(".name");
-        var tag = after && after.nextElementSibling;
-        if (tag && tag.classList && tag.classList.contains("brand-tag")) after = tag;
-      }
-      if (!after) return;
-      var h = document.createElement("button");
-      h.type = "button";
-      h.className = "ca-hdr";
-      h.setAttribute("aria-label", "Спросить AI-ассистента");
-      h.title = "AI-ассистент: продукты, цены, навигация по сайту";
-      h.innerHTML = ICON_STAR_HDR + "<span>AI</span>";
-      h.addEventListener("click", function () { goal("chat_header"); open(); });
-      after.insertAdjacentElement("afterend", h);
-    }
-
     // Примеры вопросов «печатаются» в подсказке поля — три умения подряд, два круга, потом
     // поле успокаивается. Пока поле в фокусе или в нём текст — не трогаем. При reduced-motion
     // и на телефоне (поле скрыто) — ничего не печатаем.
@@ -625,9 +595,6 @@
       setTimeout(next, 1400);
     }
 
-    mountHeader();
-    // nav-about.js может вставить «Сотрудничество» уже после нас — порядок в шапке от этого
-    // не зависит (его пилюля встаёт сразу за логотипом, наша — следом).
     runDockPrompts();
   }
 
