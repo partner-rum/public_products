@@ -42,8 +42,8 @@
   var OWN_SUG = Array.isArray(SETUP.suggestions) && SETUP.suggestions.length;
   if (OWN_SUG) CFG.suggestions = SETUP.suggestions.slice(0, 4);
 
-  // Гейт квалинвестора пройден — те же три места, что у seen() в qualgate.js. Расчёт
-  // CALL/PUT в чате работает только после гейта (воркер смотрит на qual), поэтому и
+  // Гейт квалинвестора пройден — те же три места, что у seen() в qualgate.js. Расчёт цены
+  // опциона в чате работает только после гейта (воркер смотрит на qual), поэтому и
   // обещание «посчитаю» показываем только тогда — иначе оно было бы неправдой.
   function qualOk() {
     if (document.cookie.indexOf("so_qual_v1=1") !== -1) return true;
@@ -51,27 +51,49 @@
     try { if (sessionStorage.getItem("so_qual_v1") === "1") return true; } catch (e) {}
     return false;
   }
-  var PRICE_GREETING = "Здравствуйте! Я AI-ассистент Rumberg. Посчитаю индикативную цену CALL или PUT " +
-    "на акцию, индекс или фонд — на ваш срок и страйк. А ещё объясню, как устроены продукты, и подскажу, где что на сайте.";
-  var PRICE_EXAMPLES = ["Посчитай колл на Сбербанк на 2 года", "Сколько стоит пут на Лукойл на полгода?"];
-  function greeting() {
-    return (typeof SETUP.greeting === "string" && SETUP.greeting) || (qualOk() ? PRICE_GREETING : CFG.greeting);
-  }
-  function suggestions() {
-    if (OWN_SUG || !qualOk()) return CFG.suggestions;
-    return PRICE_EXAMPLES.concat(CFG.suggestions[0]);
-  }
-  var STORE = SETUP.desk ? "so_chat_desk" : "so_chat";
 
-  // СТЕНД вариантов подсветки ассистента (локально, до выбора Руслана): ?ailook=0|a|b|c,
-  // выбор помнится в sessionStorage. 0 — как сейчас на сайте. После выбора стенд убрать.
+  // СТЕНД расположения ассистента (локально, до выбора Руслана): ?ailook=0|d|e|f, выбор
+  // помнится в sessionStorage. 0 — как сейчас на сайте; d — строка-вопрос внизу по центру;
+  // e — язычок на правом краю и шторка во всю высоту; f — полоса под шапкой. После выбора
+  // стенд убрать, оставить один вариант.
   var LOOK = (function () {
-    var m = location.search.match(/[?&]ailook=([0abc])/);
+    var m = location.search.match(/[?&]ailook=([0def])/);
     try {
       if (m) sessionStorage.setItem("ca_look", m[1]);
       return (m && m[1]) || sessionStorage.getItem("ca_look") || "0";
     } catch (e) { return m ? m[1] : "0"; }
   })();
+
+  // Что умеет ассистент — ТРИ вещи, везде в одном порядке: объяснить продукт, посчитать цену
+  // опциона, подсказать, где что на сайте. На заставке (кнопка, строка, полоса, подсказка)
+  // ассистент НЕ сужается до CALL/PUT — оговорка «считаю только CALL и PUT на один актив»
+  // появляется уже внутри открытого чата, второй репликой после приветствия (решение
+  // Руслана 05.10.2026: «пусть этот дисклеймер будет, когда его уже откроет клиент»).
+  var PRICE_GREETING = "Здравствуйте! Я AI-ассистент Rumberg. Объясню, как устроены структурные продукты, " +
+    "подскажу, где что на сайте, и посчитаю индикативную цену опциона на ваш срок и страйк.";
+  var PRICE_NOTE = "Цену пока считаю только для CALL и PUT на один актив — акцию, индекс или фонд. " +
+    "Остальные структуры посчитает менеджер: кнопка «Обсудить с Румбергом» внизу.";
+  var EXAMPLES = [
+    "Чем автоколл отличается от облигации с защитой капитала?",
+    "Посчитай колл на Сбербанк на 2 года",
+    "Где посмотреть уже размещённые выпуски?"
+  ];
+  var CAN_LIST = "о продуктах, ценах и сайте";   // подпись под «Спросить AI» на заставке
+  function greeting() {
+    if (typeof SETUP.greeting === "string" && SETUP.greeting) return SETUP.greeting;
+    return (LOOK !== "0" && qualOk()) ? PRICE_GREETING : CFG.greeting;
+  }
+  // Оговорка про CALL/PUT: только когда расчёт действительно доступен (гейт пройден) и
+  // приветствие не задано страницей (рабочий стол партнёра говорит своё).
+  function priceNote() {
+    return (LOOK !== "0" && qualOk() && !(typeof SETUP.greeting === "string" && SETUP.greeting)) ? PRICE_NOTE : "";
+  }
+  function suggestions() {
+    if (OWN_SUG || LOOK === "0" || !qualOk()) return CFG.suggestions;
+    return EXAMPLES;
+  }
+  function examples() { return qualOk() ? EXAMPLES : CFG.suggestions; }
+  var STORE = SETUP.desk ? "so_chat_desk" : "so_chat";
 
   var css = "" +
     /* — кнопка: тёмный круг с тонкой линией и фирменной звездой; без свечений и вращений — */
@@ -142,51 +164,87 @@
     ".ca-lead-send:hover{background:#F58E33;}.ca-lead-send:disabled{opacity:.5;cursor:default;}" +
     ".ca-lead-ok{font-size:13px;line-height:1.55;color:#F2F3F7;}.ca-lead-ok a{color:#F58E33;}" +
     "@media(max-width:480px){.ca-panel{right:8px;bottom:8px;height:calc(100dvh - 16px);}}" +
-    /* ===== Подсветка ассистента (варианты A/B/C на стенде, ?ailook=) ===== */
-    /* — кнопка с подписью вместо немого круга — */
+    /* ===== Расположение ассистента (варианты D/E/F на стенде, ?ailook=) ===== */
+    /* — общее: кнопка с подписью (F), вход в шапке (D/E/F), оговорка внутри чата — */
     ".ca-btn.lab{width:auto;height:54px;padding:0 20px 0 15px;border-radius:999px;gap:11px;border-color:rgba(238,125,27,.55);background:#14161C;box-shadow:0 12px 30px rgba(0,0,0,.55);}" +
     ".ca-btn.lab:hover{border-color:#EE7D1B;background:#181A21;}" +
     ".ca-btn.lab .ca-ai{display:none;}" +
     ".ca-btn .lt{display:flex;flex-direction:column;align-items:flex-start;gap:2px;font-family:'Onest',system-ui,sans-serif;text-align:left;}" +
     ".ca-btn .l1{font-size:14.5px;font-weight:600;color:#F2F3F7;line-height:1.15;}" +
-    ".ca-btn .l2{font-size:12px;color:rgba(242,243,247,.68);line-height:1.2;}" +
-    ".ca-btn .l2 b,.ca-hdr .mono,.ca-tz .mono{font-family:'JetBrains Mono',monospace;font-weight:500;color:#F0AE72;letter-spacing:.02em;}" +
+    ".ca-btn .l2{font-size:12px;color:rgba(242,243,247,.68);line-height:1.2;white-space:nowrap;}" +
+    // Оговорка про CALL/PUT внутри чата — тише обычной реплики: пунктирная рамка без заливки.
+    ".ca-msg.a.n{max-width:92%;background:none;border:1px dashed rgba(255,255,255,.18);color:rgba(242,243,247,.66);font-size:12.5px;line-height:1.5;}" +
     /* — вход в шапке — */
     ".ca-hdr{display:inline-flex;align-items:center;gap:7px;height:30px;margin-left:10px;padding:0 13px 0 10px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:#14161C;color:#F2F3F7;font-family:'Onest',system-ui,sans-serif;font-size:13px;font-weight:500;white-space:nowrap;cursor:pointer;flex:none;transition:border-color .2s,background .2s;}" +
     ".ca-hdr:hover{border-color:rgba(238,125,27,.7);background:rgba(238,125,27,.08);}" +
-    ".ca-hdr:focus-visible,.ca-tz button:focus-visible,.ca-stand a:focus-visible{outline:2px solid #EE7D1B;outline-offset:3px;}" +
+    ".ca-hdr:focus-visible,.ca-tab:focus-visible,.ca-dock-go:focus-visible,.ca-tz button:focus-visible,.ca-strip button:focus-visible,.ca-stand a:focus-visible{outline:2px solid #EE7D1B;outline-offset:3px;}" +
     ".ca-hdr svg{flex:none;}" +
     // Шапка заполнена до предела: у контейнера 1280px свободно ~99px (их сейчас берёт поле
     // поиска), на 901–1199 — ноль. Полное «AI-ассистент» (128px) выталкивало «Доску» за
     // край, поэтому в шапке — компактное «✦ AI», и только от 1200px.
     "@media(max-width:1199px){.ca-hdr{display:none;}}" +
-    /* — подсказка над кнопкой — */
-    ".ca-tz{position:fixed;right:20px;bottom:88px;z-index:299;width:340px;max-width:calc(100vw - 32px);background:#14161C;border:1px solid rgba(255,255,255,.13);border-radius:16px;box-shadow:0 18px 48px rgba(0,0,0,.55);font-family:'Onest',system-ui,sans-serif;color:#F2F3F7;opacity:0;transform:translateY(12px);transition:opacity .35s cubic-bezier(.16,1,.3,1),transform .5s cubic-bezier(.16,1,.3,1);}" +
-    ".ca-tz.on{opacity:1;transform:none;}" +
+    /* — D: строка-вопрос внизу по центру (на телефоне — пилюля без поля) — */
+    ".ca-dock{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:300;display:flex;align-items:center;gap:10px;width:600px;max-width:calc(100vw - 32px);height:56px;margin:0;padding:0 8px 0 18px;box-sizing:border-box;border-radius:999px;background:#14161C;border:1px solid rgba(255,255,255,.16);box-shadow:0 14px 40px rgba(0,0,0,.55);font-family:'Onest',system-ui,sans-serif;color:#F2F3F7;transition:border-color .2s;}" +
+    ".ca-dock:hover,.ca-dock:focus-within{border-color:rgba(238,125,27,.7);}" +
+    ".ca-dock.hide{display:none;}" +
+    ".ca-dock>svg{flex:none;}" +
+    ".ca-dock-tag{flex:none;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;letter-spacing:.08em;color:#8FB3F0;border:1px solid rgba(79,134,230,.42);border-radius:5px;padding:2px 5px;}" +
+    ".ca-dock-in{flex:1;min-width:0;background:none;border:0;outline:none;color:#F2F3F7;font-family:inherit;font-size:15px;line-height:1.3;padding:0;}" +
+    ".ca-dock-in::placeholder{color:rgba(242,243,247,.56);}" +
+    ".ca-dock-go{flex:none;display:inline-flex;align-items:center;gap:7px;height:40px;padding:0 16px;border:0;border-radius:999px;background:#EE7D1B;color:#0C0A08;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;transition:background .15s;}" +
+    ".ca-dock-go:hover{background:#F58E33;}.ca-dock-go svg{width:14px;height:14px;}" +
+    ".ca-dock-lbl{display:none;}" +
+    ".ca-panel.dock{right:auto;left:50%;bottom:20px;transform:translate(-50%,14px) scale(.98);}" +
+    ".ca-panel.dock.on{transform:translate(-50%,0);}" +
+    // Строка закрывает низ страницы — отодвигаем подвал, чтобы последние строки читались.
+    "@media(min-width:861px){html.ca-dock-pad body{padding-bottom:88px;}}" +
+    "@media(max-width:860px){.ca-dock{width:auto;max-width:none;height:50px;padding:0 18px 0 14px;gap:9px;cursor:pointer;}" +
+    ".ca-dock-in,.ca-dock-go,.ca-dock-tag{display:none;}" +
+    ".ca-dock-lbl{display:block;font-size:14.5px;font-weight:600;line-height:1.15;white-space:nowrap;text-align:left;}" +
+    ".ca-dock-lbl small{display:block;margin-top:2px;font-size:11.5px;font-weight:400;line-height:1.2;color:rgba(242,243,247,.66);}}" +
+    "@media(max-width:480px){.ca-panel.dock,.ca-panel.dock.on{left:8px;right:8px;bottom:8px;transform:none;}}" +
+    /* — E: язычок на правом краю + шторка во всю высоту — */
+    ".ca-tab{position:fixed;right:0;top:50%;transform:translateY(-50%);z-index:300;display:flex;flex-direction:column;align-items:center;gap:9px;width:42px;padding:14px 0 13px;border:1px solid rgba(255,255,255,.16);border-right:0;border-radius:12px 0 0 12px;background:#14161C;color:#F2F3F7;box-shadow:-8px 0 28px rgba(0,0,0,.45);cursor:pointer;font-family:'Onest',system-ui,sans-serif;transition:border-color .2s,transform .2s,background .2s;}" +
+    ".ca-tab:hover{border-color:rgba(238,125,27,.7);background:#181A21;transform:translateY(-50%) translateX(-2px);}" +
+    ".ca-tab.hide{display:none;}" +
+    ".ca-tab svg{flex:none;}" +
+    ".ca-tab .vt,.ca-tab .vs{writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;}" +
+    ".ca-tab .vt{font-size:13px;font-weight:500;letter-spacing:.03em;}" +
+    ".ca-tab .vs{display:none;font-size:12px;font-weight:600;letter-spacing:.06em;}" +
+    ".ca-panel.drawer{top:0;right:0;bottom:0;height:auto;max-height:none;width:420px;max-width:100vw;border-radius:0;border:0;border-left:1px solid rgba(255,255,255,.12);box-shadow:-24px 0 70px rgba(0,0,0,.55);transform:translateX(28px);}" +
+    ".ca-panel.drawer.on{transform:none;}" +
+    "@media(max-width:860px){.ca-tab{top:auto;bottom:112px;transform:none;width:38px;padding:12px 0 10px;}" +
+    ".ca-tab:hover{transform:translateX(-2px);}.ca-tab .vt{display:none;}.ca-tab .vs{display:block;}}" +
+    "@media(max-width:480px){.ca-panel.drawer,.ca-panel.drawer.on{left:0;right:0;bottom:0;width:100vw;height:auto;border-left:0;}}" +
+    /* — подсказка-выноска у язычка (E): появляется через ~3,5 с, уходит сама — */
+    ".ca-tz{position:fixed;z-index:299;background:#14161C;border:1px solid rgba(238,125,27,.45);border-radius:14px;box-shadow:0 18px 48px rgba(0,0,0,.55);font-family:'Onest',system-ui,sans-serif;color:#F2F3F7;opacity:0;transition:opacity .35s cubic-bezier(.16,1,.3,1),transform .5s cubic-bezier(.16,1,.3,1);}" +
+    ".ca-tz.on{opacity:1;}" +
     ".ca-tz-x{position:absolute;top:4px;right:4px;width:40px;height:40px;border:0;background:none;color:rgba(242,243,247,.55);font-size:19px;line-height:1;cursor:pointer;border-radius:10px;}" +
     ".ca-tz-x:hover{color:#F2F3F7;background:rgba(255,255,255,.06);}" +
-    ".ca-tz.a{padding:16px 16px 14px;}" +
-    ".ca-tz .h{display:flex;align-items:center;gap:9px;font-family:'Rubik','Onest',sans-serif;font-weight:600;font-size:15.5px;line-height:1.3;padding-right:34px;}" +
-    ".ca-tz .p{margin:7px 0 12px;font-size:13px;line-height:1.5;color:rgba(242,243,247,.72);}" +
-    ".ca-tz .ex{display:flex;flex-direction:column;gap:7px;}" +
-    ".ca-tz .ex button{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px;padding:10px 13px;border-radius:11px;border:1px solid rgba(238,125,27,.35);background:rgba(238,125,27,.06);color:#F2F3F7;font-family:inherit;font-size:13.5px;text-align:left;cursor:pointer;transition:background .15s,border-color .15s;}" +
-    ".ca-tz .ex button:hover{background:rgba(238,125,27,.14);border-color:rgba(238,125,27,.7);}" +
-    ".ca-tz .ex svg{flex:none;width:15px;height:15px;color:#F0AE72;}" +
-    ".ca-tz.b{padding:15px 16px 14px;}" +
-    ".ca-tz.b .q{font-family:'JetBrains Mono',monospace;font-size:13.5px;line-height:1.5;color:#F2F3F7;min-height:20px;padding-right:34px;}" +
-    ".ca-tz.b .q .pr{color:#EE7D1B;margin-right:7px;}.ca-tz.b .q .cur{color:#EE7D1B;animation:caCaret 1s steps(1) infinite;}" +
-    ".ca-tz.b .r{display:grid;grid-template-columns:1fr auto;align-items:baseline;gap:3px 12px;margin-top:11px;padding-top:11px;border-top:1px solid rgba(255,255,255,.09);opacity:0;transform:translateY(4px);transition:opacity .45s cubic-bezier(.16,1,.3,1),transform .45s cubic-bezier(.16,1,.3,1);}" +
-    ".ca-tz.b .r.on{opacity:1;transform:none;}" +
-    ".ca-tz.b .r .n{font-size:13.5px;font-weight:600;}.ca-tz.b .r .v{font-family:'JetBrains Mono',monospace;font-size:17px;font-weight:500;text-align:right;}" +
-    ".ca-tz.b .r .s{grid-column:1/-1;font-size:12px;color:rgba(242,243,247,.6);}" +
-    ".ca-tz.b .go{margin-top:12px;width:100%;min-height:44px;border:0;border-radius:11px;background:#EE7D1B;color:#0C0A08;font-family:inherit;font-weight:600;font-size:13.5px;cursor:pointer;transition:background .15s;}" +
-    ".ca-tz.b .go:hover{background:#F58E33;}" +
-    ".ca-tz.c{width:auto;max-width:min(320px,calc(100vw - 32px));padding:12px 44px 12px 15px;border-radius:16px 16px 5px 16px;border-color:rgba(238,125,27,.4);}" +
-    ".ca-tz.c .say{display:block;background:none;border:0;padding:0;text-align:left;cursor:pointer;font-family:inherit;font-size:13.5px;line-height:1.5;color:#F2F3F7;}" +
-    ".ca-tz.c .say b{font-weight:500;color:#F0AE72;}" +
-    "@media(max-width:480px){.ca-btn.lab{right:12px;bottom:12px;height:50px;padding:0 17px 0 13px;}" +
-    ".ca-tz{right:12px;left:12px;width:auto;max-width:none;bottom:76px;}.ca-tz.c{left:auto;}}" +
-    "@media(prefers-reduced-motion:reduce){.ca-tz,.ca-tz.b .r{transition:none;transform:none;}.ca-hdr.q .cur,.ca-tz.b .q .cur{animation:none;}}" +
+    ".ca-tz.e{right:54px;top:50%;transform:translate(10px,-50%);width:310px;max-width:calc(100vw - 70px);padding:14px 40px 14px 16px;}" +
+    ".ca-tz.e.on{transform:translate(0,-50%);}" +
+    ".ca-tz.e::after{content:'';position:absolute;right:-6px;top:50%;width:10px;height:10px;margin-top:-5px;background:#14161C;border-top:1px solid rgba(238,125,27,.45);border-right:1px solid rgba(238,125,27,.45);transform:rotate(45deg);}" +
+    ".ca-tz .say{display:flex;gap:9px;align-items:flex-start;font-size:13.5px;line-height:1.5;}" +
+    ".ca-tz .say svg{flex:none;margin-top:3px;}" +
+    ".ca-tz .say b{font-weight:500;color:#F0AE72;}" +
+    ".ca-tz .go{margin:11px 0 0 27px;height:36px;padding:0 15px;border:0;border-radius:999px;background:#EE7D1B;color:#0C0A08;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s;}" +
+    ".ca-tz .go:hover{background:#F58E33;}" +
+    "@media(max-width:860px){.ca-tz.e{top:auto;bottom:112px;right:50px;transform:translate(10px,0);}.ca-tz.e.on{transform:none;}.ca-tz.e::after{top:auto;bottom:24px;margin-top:0;}}" +
+    /* — F: полоса под шапкой (в потоке, уезжает со страницей; крестик — до конца визита) — */
+    ".ca-strip{position:relative;z-index:2;background:rgba(238,125,27,.08);border-bottom:1px solid rgba(238,125,27,.25);font-family:'Onest',system-ui,sans-serif;color:#F2F3F7;}" +
+    ".ca-strip-in{max-width:1280px;margin:0 auto;padding:8px 56px 8px 20px;box-sizing:border-box;display:flex;align-items:center;gap:12px;min-height:44px;position:relative;}" +
+    ".ca-strip svg{flex:none;}" +
+    ".ca-strip .t{font-size:13.5px;line-height:1.4;}.ca-strip .t b{font-weight:600;}" +
+    ".ca-strip .go{flex:none;height:32px;padding:0 14px;border:0;border-radius:999px;background:#EE7D1B;color:#0C0A08;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s;}" +
+    ".ca-strip .go:hover{background:#F58E33;}" +
+    ".ca-strip .x{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:40px;height:40px;border:0;background:none;color:rgba(242,243,247,.6);font-size:19px;line-height:1;cursor:pointer;border-radius:10px;}" +
+    ".ca-strip .x:hover{color:#F2F3F7;background:rgba(255,255,255,.06);}" +
+    // На телефоне кнопке «Спросить» места нет (текст уходил в три строки) — тапается вся полоса,
+    // приглашение стоит в конце фразы.
+    ".ca-strip .t .m,.ca-strip .t .xs{display:none;}" +
+    "@media(max-width:860px){.ca-strip-in{padding:10px 44px 10px 16px;gap:10px;cursor:pointer;}.ca-strip .t{font-size:13px;}.ca-strip .go,.ca-strip .t .xl{display:none;}.ca-strip .t .xs{display:inline;}.ca-strip .t .m{display:inline;color:#F58E33;font-weight:600;white-space:nowrap;}}" +
+    "@media(max-width:480px){.ca-btn.lab{right:12px;bottom:12px;height:50px;padding:0 17px 0 13px;}}" +
+    "@media(prefers-reduced-motion:reduce){.ca-tz,.ca-panel.dock,.ca-panel.drawer,.ca-tab{transition:none;}}" +
     /* — переключатель стенда (только localhost) — */
     ".ca-stand{position:fixed;left:12px;bottom:12px;z-index:100001;display:flex;align-items:center;gap:3px;padding:4px;border-radius:12px;background:#0B0C10;border:1px solid rgba(255,255,255,.2);font:500 12px 'JetBrains Mono',monospace;box-shadow:0 8px 24px rgba(0,0,0,.5);}" +
     ".ca-stand span{color:rgba(242,243,247,.55);padding:0 6px;}" +
@@ -490,20 +548,48 @@
     inject();
     var limOv = parseInt(((location.search.match(/[?&]chatlimit=(\d+)/) || [])[1]) || "0", 10);
     if (limOv > 0) CFG.msgLimit = limOv;  // локальное демо: ?chatlimit=2
-    var btn = document.createElement("button");
-    btn.className = "ca-btn"; btn.setAttribute("aria-label", "Открыть AI-ассистента");
-    // Подпись у кнопки (варианты A/B/C): «Спросить AI», а после гейта ещё и «посчитаю
-    // CALL и PUT». Гейт проходят на этой же странице, поэтому подпись перерисовывается.
-    function paintBtn() {
-      if (LOOK === "0") { btn.innerHTML = ICON_STARS + '<span class="ca-ai">AI</span>'; return; }
-      btn.classList.add("lab");
-      btn.innerHTML = ICON_STARS + '<span class="lt"><span class="l1">Спросить AI</span>' +
-        (qualOk() ? '<span class="l2">посчитаю <b>CALL</b> и <b>PUT</b></span>' : '') + '</span>';
+
+    var ICON_STAR_HDR = '<svg width="13" height="13" viewBox="0 0 26 26" aria-hidden="true">' +
+      '<path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>';
+    var ICON_STAR_20 = '<svg width="20" height="20" viewBox="0 0 26 26" aria-hidden="true">' +
+      '<path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>';
+    var ICON_ARROW = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+    var REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var MOBILE = window.matchMedia && window.matchMedia("(max-width: 860px)").matches;
+
+    // Вход в ассистента — по варианту стенда: 0 и F — кнопка в углу (F — с подписью),
+    // D — строка-вопрос внизу по центру, E — язычок на правом краю. Пока панель открыта,
+    // вход спрятан (класс hide), как раньше пряталась кнопка.
+    var entry, dockIn = null;
+    if (LOOK === "d") {
+      entry = document.createElement("form");
+      entry.className = "ca-dock";
+      entry.setAttribute("aria-label", "Вопрос AI-ассистенту");
+      entry.innerHTML = ICON_STAR_20 + '<span class="ca-dock-tag">AI</span>' +
+        '<input class="ca-dock-in" type="text" autocomplete="off" aria-label="Вопрос AI-ассистенту" placeholder="Спросите о продукте, цене или сайте…">' +
+        '<span class="ca-dock-lbl">Спросить AI<small>' + CAN_LIST + '</small></span>' +
+        '<button class="ca-dock-go" type="submit">Спросить' + ICON_ARROW + '</button>';
+      dockIn = entry.querySelector(".ca-dock-in");
+      document.documentElement.classList.add("ca-dock-pad");
+    } else if (LOOK === "e") {
+      entry = document.createElement("button");
+      entry.type = "button"; entry.className = "ca-tab";
+      entry.setAttribute("aria-label", "Открыть AI-ассистента");
+      entry.innerHTML = ICON_STAR_SM + '<span class="vt">AI-ассистент</span><span class="vs">AI</span>';
+    } else {
+      entry = document.createElement("button");
+      entry.type = "button"; entry.className = "ca-btn";
+      entry.setAttribute("aria-label", "Открыть AI-ассистента");
+      if (LOOK === "0") entry.innerHTML = ICON_STARS + '<span class="ca-ai">AI</span>';
+      else {
+        entry.classList.add("lab");
+        entry.innerHTML = ICON_STARS + '<span class="lt"><span class="l1">Спросить AI</span><span class="l2">' + CAN_LIST + '</span></span>';
+      }
     }
-    paintBtn();
 
     var panel = document.createElement("div");
-    panel.className = "ca-panel"; panel.setAttribute("role", "dialog"); panel.setAttribute("aria-label", "AI-ассистент");
+    panel.className = "ca-panel" + (LOOK === "d" ? " dock" : LOOK === "e" ? " drawer" : "");
+    panel.setAttribute("role", "dialog"); panel.setAttribute("aria-label", "AI-ассистент");
     panel.innerHTML =
       '<div class="ca-head">' +
         '<span class="ca-ava">' + ICON_STAR_SM + '</span>' +
@@ -518,7 +604,7 @@
         '<button class="ca-send" aria-label="Отправить">' + ICON_SEND + '</button>' +
       '</div><div class="ca-note">Отвечает ИИ — может ошибаться · Не является индивидуальной инвестиционной рекомендацией</div></div>';
 
-    document.body.appendChild(btn);
+    document.body.appendChild(entry);
     document.body.appendChild(panel);
 
     els.log = panel.querySelector(".ca-log");
@@ -527,12 +613,16 @@
 
     var opened = false;
     function open() {
-      panel.classList.add("on"); btn.classList.add("hide");
-      hideTeaser(true);   // чат открыт — подсказка своё дело сделала, до конца визита не нужна
-      if (qualOk()) els.input.placeholder = "Колл на Сбер на 2 года?";
+      panel.classList.add("on"); entry.classList.add("hide");
+      hideTeaser(true);   // чат открыт — подсказка и полоса своё дело сделали, до конца визита не нужны
+      hideStrip(true);
+      if (LOOK !== "0" && qualOk()) els.input.placeholder = "Спросите про продукт, цену или сайт…";
       if (!opened) {
         opened = true;
         addMsg("assistant", greeting());
+        // Оговорка про CALL/PUT — ЗДЕСЬ, а не на заставке: второй репликой, тише первой.
+        var note = priceNote();
+        if (note) addMsg("assistant", note).classList.add("n");
         if (msgs.length) {
           // Восстанавливаем диалог, начатый на другой странице (sessionStorage)
           msgs.forEach(function (m) { addMsg(m.role, m.content); });
@@ -544,9 +634,33 @@
       }
       setTimeout(function () { els.input.focus(); }, 150);
     }
-    function close() { panel.classList.remove("on"); btn.classList.remove("hide"); }
+    function close() { panel.classList.remove("on"); entry.classList.remove("hide"); }
 
-    btn.addEventListener("click", open);
+    // Открыть чат и сразу задать вопрос: примеры на заставке показывают работу делом.
+    function ask(text) {
+      open();
+      if (busy || locked) return;
+      els.input.value = text;
+      send();
+    }
+
+    if (LOOK === "d") {
+      entry.addEventListener("submit", function (e) {
+        e.preventDefault();
+        var t = dockIn.value.trim();
+        dockIn.value = "";
+        goal(t ? "chat_dock_ask" : "chat_dock_open");
+        if (t) ask(t); else open();
+      });
+      // На телефоне строка — пилюля без поля: тап по ней открывает чат.
+      entry.addEventListener("click", function (e) {
+        if (e.target === dockIn || (e.target.closest && e.target.closest(".ca-dock-go"))) return;
+        if (getComputedStyle(dockIn).display === "none") { goal("chat_dock_open"); open(); }
+        else dockIn.focus();
+      });
+    } else {
+      entry.addEventListener("click", open);
+    }
     panel.querySelector(".ca-x").addEventListener("click", close);
     var disc = panel.querySelector(".ca-discuss");
     if (disc) disc.addEventListener("click", showLeadForm);
@@ -560,35 +674,9 @@
     });
     document.addEventListener("keydown", function (e) { if (e.key === "Escape" && panel.classList.contains("on")) close(); });
 
-    // Открыть чат и сразу задать вопрос: кнопки-примеры («колл на Сбер на 2 года»)
-    // показывают расчёт делом, а не обещанием.
-    function ask(text) {
-      open();
-      if (busy || locked) return;
-      els.input.value = text;
-      send();
-    }
-
     window.Chat = { open: open, close: close, ask: ask };
 
-    // ---------- Подсветка ассистента: вход в шапке + подсказка над кнопкой ----------
-    var ICON_STAR_HDR = '<svg width="13" height="13" viewBox="0 0 26 26" aria-hidden="true">' +
-      '<path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>';
-    var ICON_ARROW = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
-    var REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    // Печатная машинка: пишет строку по буквам, при reduced-motion — сразу целиком.
-    function typeInto(node, text, done) {
-      if (REDUCED) { node.textContent = text; if (done) done(); return; }
-      var i = 0;
-      (function step() {
-        if (!node.isConnected) return;
-        node.textContent = text.slice(0, ++i);
-        if (i < text.length) setTimeout(step, 42 + Math.random() * 38);
-        else if (done) done();
-      })();
-    }
-
+    // ---------- Заставка: вход в шапке, бегущие примеры в строке (D), выноска у язычка (E), полоса (F) ----------
     function mountHeader() {
       if (LOOK === "0" || SETUP.desk) return;
       var navIn = document.querySelector(".nav-in");
@@ -603,11 +691,39 @@
       var h = document.createElement("button");
       h.type = "button";
       h.className = "ca-hdr";
-      h.setAttribute("aria-label", qualOk() ? "Спросить AI-ассистента: посчитает CALL и PUT" : "Спросить AI-ассистента");
-      h.title = qualOk() ? "AI-ассистент: посчитает CALL и PUT" : "AI-ассистент";
+      h.setAttribute("aria-label", "Спросить AI-ассистента");
+      h.title = "AI-ассистент: продукты, цены, навигация по сайту";
       h.innerHTML = ICON_STAR_HDR + "<span>AI</span>";
       h.addEventListener("click", function () { goal("chat_header"); open(); });
       after.insertAdjacentElement("afterend", h);
+    }
+
+    // D: примеры вопросов «печатаются» в подсказке поля — три умения подряд, два круга,
+    // потом поле успокаивается. Пока поле в фокусе или в нём текст — не трогаем. При
+    // reduced-motion — статичная подсказка.
+    function runDockPrompts() {
+      if (!dockIn || REDUCED) return;
+      var list = examples(), round = 0, idx = 0, stopped = false;
+      var STATIC = dockIn.placeholder;
+      function idle() { return document.activeElement === dockIn || dockIn.value; }
+      function next() {
+        if (stopped || !dockIn.isConnected) return;
+        if (getComputedStyle(dockIn).display === "none") { setTimeout(next, 1500); return; }
+        if (idle()) { setTimeout(next, 1200); return; }
+        if (round >= 2) { dockIn.placeholder = STATIC; return; }
+        var text = list[idx], i = 0;
+        (function step() {
+          if (stopped || !dockIn.isConnected) return;
+          if (idle()) { dockIn.placeholder = STATIC; setTimeout(next, 1200); return; }
+          dockIn.placeholder = text.slice(0, ++i);
+          if (i < text.length) setTimeout(step, 34 + Math.random() * 30);
+          else setTimeout(function () {
+            idx = (idx + 1) % list.length; if (idx === 0) round++;
+            next();
+          }, 2300);
+        })();
+      }
+      setTimeout(next, 1400);
     }
 
     var tz = null;
@@ -620,80 +736,86 @@
       setTimeout(function () { node.remove(); }, REDUCED ? 0 : 400);
     }
 
-    // Пример с живой цифрой (вариант B): берём котировку с доски — ту же, что посчитает чат.
-    function sampleQuote() {
-      var list = (window.SITE_DATA && (window.SITE_DATA.instruments || window.SITE_DATA.items)) || [];
-      var it = null;
-      for (var i = 0; i < list.length; i++) {
-        var x = list[i];
-        if (x.type === "warrant" && /SBER/.test(x.underlying || "") && /2 года/.test(x.tenor || x.name || "") && x.strike === 100 && !x.strike2) { it = x; break; }
-      }
-      return it && it.quote != null ? String(it.quote).replace(".", ",") + "%" : "";
-    }
-
+    // E: выноска от язычка — одна реплика о трёх умениях и кнопка. Уходит сама через
+    // 12 с (крестик — до конца визита, кнопка — открывает чат).
     function showTeaser() {
       if (tz || panel.classList.contains("on")) return;
       tz = document.createElement("div");
-      tz.className = "ca-tz " + LOOK;
+      tz.className = "ca-tz e";
       tz.setAttribute("role", "complementary");
-      tz.setAttribute("aria-label", "AI-ассистент считает опционы");
-      var x = '<button class="ca-tz-x" type="button" aria-label="Скрыть подсказку">&times;</button>';
-      if (LOOK === "a") {
-        tz.innerHTML = x +
-          '<div class="h">' + ICON_STAR_SM + 'Посчитаю опцион за пару секунд</div>' +
-          '<p class="p">CALL или PUT на акцию, индекс или фонд — на ваш срок и страйк. Цена индикативная.</p>' +
-          '<div class="ex">' + PRICE_EXAMPLES.map(function (q) {
-            return '<button type="button" data-q="' + esc(q) + '"><span>' + esc(q) + '</span>' + ICON_ARROW + '</button>';
-          }).join("") + '</div>';
-      } else if (LOOK === "b") {
-        var qv = sampleQuote();
-        tz.innerHTML = x +
-          '<div class="q"><span class="pr">›</span><span class="qt"></span><span class="cur">▍</span></div>' +
-          (qv ? '<div class="r"><span class="n">CALL 100 · Сбербанк · 2 года</span><span class="v">' + qv + '</span>' +
-                '<span class="s">премия, % номинала — индикативно</span></div>' : '') +
-          '<button class="go" type="button" data-q="' + esc(PRICE_EXAMPLES[0]) + '">Посчитать в чате</button>';
-      } else {
-        tz.innerHTML = x + '<button class="say" type="button" data-q="' + esc(PRICE_EXAMPLES[0]) + '">' +
-          'Посчитаю CALL или PUT за пару секунд. Спросите, например: <b>«колл на Сбер на 2 года»</b></button>';
-      }
+      tz.setAttribute("aria-label", "AI-ассистент");
+      tz.innerHTML = '<button class="ca-tz-x" type="button" aria-label="Скрыть подсказку">&times;</button>' +
+        '<div class="say">' + ICON_STAR_HDR + '<span>Я AI-ассистент Rumberg: объясню продукт, ' +
+        (qualOk() ? 'посчитаю цену опциона' : 'сориентирую по ценам') + ' и подскажу, где что на сайте.</span></div>' +
+        '<button class="go" type="button">Спросить</button>';
       document.body.appendChild(tz);
       tz.querySelector(".ca-tz-x").addEventListener("click", function () { goal("chat_teaser_close"); hideTeaser(true); });
-      [].forEach.call(tz.querySelectorAll("[data-q]"), function (b) {
-        b.addEventListener("click", function () { goal("chat_teaser_ask"); ask(b.getAttribute("data-q")); });
-      });
+      tz.querySelector(".go").addEventListener("click", function () { goal("chat_teaser_open"); open(); });
       // Проявление: пересчёт раскладки фиксирует стартовое состояние, класс — на таймере.
       // Двойной requestAnimationFrame тут не годится: в фоновой вкладке кадры придерживаются,
       // и подсказка оставалась прозрачной до возврата на вкладку.
       void tz.offsetWidth;
       setTimeout(function () { if (tz) tz.classList.add("on"); }, 30);
-      if (LOOK === "b") {
-        var qn = tz.querySelector(".qt"), r = tz.querySelector(".r");
-        setTimeout(function () {
-          typeInto(qn, "колл на сбер на 2 года", function () { if (r) setTimeout(function () { r.classList.add("on"); }, 350); });
-        }, REDUCED ? 0 : 450);
-      }
+      setTimeout(function () { hideTeaser(false); }, 12000);
       goal("chat_teaser_show");
     }
 
-    // Подсказка — на каждой странице (выбор «заметно»), но только тем, кто прошёл гейт:
-    // остальным чат считать не будет. Не всплывает поверх гейта, интро-ролика и открытого
-    // чата; закрыли крестиком или уже пользовались чатом — до конца визита больше не показываем.
+    // Выноска — на каждой странице, через ~3,5 с. Не всплывает поверх гейта, интро-ролика
+    // и открытого чата; закрыли крестиком или уже пользовались чатом — больше не показываем.
     function scheduleTeaser() {
-      if (LOOK === "0" || SETUP.desk || tzOff()) return;
+      if (LOOK !== "e" || SETUP.desk || tzOff()) return;
       if (msgs.some(function (m) { return m.role === "user"; })) return;
-      var t0 = Date.now(), wasQual = qualOk();
+      var t0 = Date.now();
       (function wait() {
         if (tz || tzOff()) return;
-        var q = qualOk();
-        if (q && !wasQual) { wasQual = true; paintBtn(); }
         var blocked = document.querySelector(".qg-veil") || document.querySelector(".intro") ||
           document.body.classList.contains("intro-lock") || panel.classList.contains("on");
-        if (!q || blocked || Date.now() - t0 < 3500) {
+        if (blocked || Date.now() - t0 < 3500) {
           if (Date.now() - t0 < 180000) setTimeout(wait, 600);
           return;
         }
         showTeaser();
       })();
+    }
+
+    // F: полоса под шапкой — в потоке страницы, уезжает с прокруткой. Ширина и поля — как у
+    // контейнера шапки, чтобы текст стоял на той же вертикали. На телефонной главной
+    // (экраны-«рилсы» по высоте окна) полосу не ставим — она сбила бы высоту первого экрана.
+    var strip = null;
+    function stripOff() { try { return sessionStorage.getItem("ca_strip_off") === "1"; } catch (e) { return false; } }
+    function hideStrip(forVisit) {
+      if (forVisit) { try { sessionStorage.setItem("ca_strip_off", "1"); } catch (e) {} }
+      if (strip) { strip.remove(); strip = null; }
+    }
+    function mountStrip() {
+      if (LOOK !== "f" || SETUP.desk || stripOff()) return;
+      if (msgs.some(function (m) { return m.role === "user"; })) return;
+      var nav = document.querySelector("header.nav, .nav");
+      if (!nav || !nav.parentNode) return;
+      if (MOBILE && document.querySelector(".mx-root")) return;
+      strip = document.createElement("div");
+      strip.className = "ca-strip";
+      strip.setAttribute("role", "complementary");
+      strip.setAttribute("aria-label", "AI-ассистент");
+      strip.innerHTML = '<div class="ca-strip-in">' + ICON_STAR_HDR +
+        '<span class="t"><b>AI-ассистент<span class="xl"> Rumberg</span></b><span class="xl"> — объяснит продукт, ' +
+        (qualOk() ? 'посчитает цену опциона' : 'сориентирует по ценам') + ' и подскажет, где что на сайте.</span>' +
+        '<span class="xs">: продукты, ' + (qualOk() ? 'цена опциона' : 'цены') + ', где что на сайте.</span> <b class="m">Спросить →</b></span>' +
+        '<button class="go" type="button">Спросить</button>' +
+        '<button class="x" type="button" aria-label="Скрыть">&times;</button></div>';
+      var navIn = nav.querySelector(".nav-in");
+      if (navIn) {
+        var cs = getComputedStyle(navIn), inn = strip.firstChild;
+        if (cs.maxWidth && cs.maxWidth !== "none") inn.style.maxWidth = cs.maxWidth;
+        if (!MOBILE) { inn.style.paddingLeft = cs.paddingLeft; inn.style.paddingRight = "calc(" + cs.paddingRight + " + 36px)"; }
+      }
+      strip.querySelector(".go").addEventListener("click", function () { goal("chat_strip_open"); open(); });
+      strip.querySelector(".ca-strip-in").addEventListener("click", function (e) {
+        if (e.target.closest && (e.target.closest(".x") || e.target.closest(".go"))) return;
+        if (MOBILE) { goal("chat_strip_open"); open(); }
+      });
+      strip.querySelector(".x").addEventListener("click", function () { goal("chat_strip_close"); hideStrip(true); });
+      nav.insertAdjacentElement("afterend", strip);
     }
 
     // Переключатель вариантов — ТОЛЬКО на локальном стенде.
@@ -702,11 +824,13 @@
       if (!/[?&]ailook=/.test(location.search) && LOOK === "0") return;
       var bar = document.createElement("div");
       bar.className = "ca-stand";
-      bar.innerHTML = "<span>AI:</span>" + [["0", "сейчас"], ["a", "A"], ["b", "B"], ["c", "C"]].map(function (v) {
+      bar.innerHTML = "<span>AI:</span>" + [["0", "сейчас"], ["d", "D"], ["e", "E"], ["f", "F"]].map(function (v) {
         return '<a href="?ailook=' + v[0] + '"' + (LOOK === v[0] ? ' class="on"' : "") + ">" + v[1] + "</a>";
       }).join("");
       [].forEach.call(bar.querySelectorAll("a"), function (a) {
-        a.addEventListener("click", function () { try { sessionStorage.removeItem("ca_tz_off"); } catch (e) {} });
+        a.addEventListener("click", function () {
+          try { sessionStorage.removeItem("ca_tz_off"); sessionStorage.removeItem("ca_strip_off"); } catch (e) {}
+        });
       });
       document.body.appendChild(bar);
     }
@@ -714,6 +838,8 @@
     mountHeader();
     // nav-about.js может вставить «Сотрудничество» уже после нас — порядок в шапке от этого
     // не зависит (его пилюля встаёт сразу за логотипом, наша — следом).
+    mountStrip();
+    runDockPrompts();
     scheduleTeaser();
     mountStand();
   }
