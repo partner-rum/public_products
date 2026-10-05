@@ -1,8 +1,11 @@
-/* AI-ассистент (консьерж по сайту). Плавающая кнопка-«звезда» + панель, тёмная тема.
-   Дизайн-язык ИИ: фирменная 4-лучевая звезда + искры, градиент оранжевый→синий, бейдж AI,
-   подсказки-вопросы, пометка «может ошибаться» (не колл-центр: без зелёной точки «онлайн»).
-   Бэкенд: Cloudflare Worker /chat → YandexGPT (ключи — секреты Cloudflare, не в репо).
-   Подключение: <script src="chat.js?v=3"></script> перед </body>. Без зависимостей. */
+/* AI-ассистент (консьерж по сайту). Строка-вопрос внизу по центру экрана + панель, тёмная тема.
+   Дизайн-язык ИИ: фирменная 4-лучевая звезда, бейдж AI; в поле строки по буквам печатаются
+   примеры вопросов — три умения ассистента в одном порядке (объяснить продукт, посчитать цену
+   опциона, подсказать, где что на сайте); пометка «может ошибаться» (не колл-центр: без зелёной
+   точки «онлайн»). На телефоне строка — пилюля «Спросить AI» без поля. Второй вход — «✦ AI»
+   в шапке (от 1200px). Оговорка «считаю только CALL и PUT» — внутри открытого чата, не на заставке.
+   Бэкенд: Cloudflare Worker /chat → DeepSeek (ключи — секреты Cloudflare, не в репо).
+   Подключение: <script src="chat.js?v=21"></script> перед </body>. Без зависимостей. */
 (function () {
   "use strict";
 
@@ -52,23 +55,11 @@
     return false;
   }
 
-  // СТЕНД расположения ассистента (локально, до выбора Руслана): ?ailook=0|d|e|f, выбор
-  // помнится в sessionStorage. 0 — как сейчас на сайте; d — строка-вопрос внизу по центру;
-  // e — язычок на правом краю и шторка во всю высоту; f — полоса под шапкой. После выбора
-  // стенд убрать, оставить один вариант.
-  var LOOK = (function () {
-    var m = location.search.match(/[?&]ailook=([0def])/);
-    try {
-      if (m) sessionStorage.setItem("ca_look", m[1]);
-      return (m && m[1]) || sessionStorage.getItem("ca_look") || "0";
-    } catch (e) { return m ? m[1] : "0"; }
-  })();
-
   // Что умеет ассистент — ТРИ вещи, везде в одном порядке: объяснить продукт, посчитать цену
-  // опциона, подсказать, где что на сайте. На заставке (кнопка, строка, полоса, подсказка)
+  // опциона, подсказать, где что на сайте. На заставке (строка, её подпись, вход в шапке)
   // ассистент НЕ сужается до CALL/PUT — оговорка «считаю только CALL и PUT на один актив»
-  // появляется уже внутри открытого чата, второй репликой после приветствия (решение
-  // Руслана 05.10.2026: «пусть этот дисклеймер будет, когда его уже откроет клиент»).
+  // появляется уже внутри открытого чата, второй репликой после приветствия (решение Руслана
+  // 05.10.2026: «пусть этот дисклеймер будет, когда его уже откроет клиент»).
   var PRICE_GREETING = "Здравствуйте! Я AI-ассистент Rumberg. Объясню, как устроены структурные продукты, " +
     "подскажу, где что на сайте, и посчитаю индикативную цену опциона на ваш срок и страйк.";
   var PRICE_NOTE = "Цену пока считаю только для CALL и PUT на один актив — акцию, индекс или фонд. " +
@@ -78,35 +69,45 @@
     "Посчитай колл на Сбербанк на 2 года",
     "Где посмотреть уже размещённые выпуски?"
   ];
-  var CAN_LIST = "о продуктах, ценах и сайте";   // подпись под «Спросить AI» на заставке
+  var CAN_LIST = "о продуктах, ценах и сайте";   // подпись под «Спросить AI» на телефоне
   function greeting() {
     if (typeof SETUP.greeting === "string" && SETUP.greeting) return SETUP.greeting;
-    return (LOOK !== "0" && qualOk()) ? PRICE_GREETING : CFG.greeting;
+    return qualOk() ? PRICE_GREETING : CFG.greeting;
   }
   // Оговорка про CALL/PUT: только когда расчёт действительно доступен (гейт пройден) и
   // приветствие не задано страницей (рабочий стол партнёра говорит своё).
   function priceNote() {
-    return (LOOK !== "0" && qualOk() && !(typeof SETUP.greeting === "string" && SETUP.greeting)) ? PRICE_NOTE : "";
+    return (qualOk() && !(typeof SETUP.greeting === "string" && SETUP.greeting)) ? PRICE_NOTE : "";
   }
   function suggestions() {
-    if (OWN_SUG || LOOK === "0" || !qualOk()) return CFG.suggestions;
+    if (OWN_SUG || !qualOk()) return CFG.suggestions;
     return EXAMPLES;
   }
-  function examples() { return qualOk() ? EXAMPLES : CFG.suggestions; }
   var STORE = SETUP.desk ? "so_chat_desk" : "so_chat";
 
   var css = "" +
-    /* — кнопка: тёмный круг с тонкой линией и фирменной звездой; без свечений и вращений — */
-    ".ca-btn{position:fixed;right:20px;bottom:20px;z-index:300;width:56px;height:56px;border:1px solid rgba(255,255,255,.18);border-radius:50%;background:#101114;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 10px 28px rgba(0,0,0,.5);transition:border-color .18s;}" +
-    ".ca-btn:hover{border-color:rgba(238,125,27,.65);}" +
-    ".ca-btn svg{display:block;}" +
-    ".ca-btn .ca-ai{position:absolute;top:-5px;right:-5px;background:#0B0C10;color:#8FB3F0;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;letter-spacing:.06em;padding:2px 5px;border-radius:4px;border:1px solid rgba(79,134,230,.5);}" +
-    ".ca-btn.hide{display:none;}" +
+    /* — строка-вопрос внизу по центру (на телефоне — пилюля без поля) — */
+    ".ca-dock{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:300;display:flex;align-items:center;gap:10px;width:600px;max-width:calc(100vw - 32px);height:56px;margin:0;padding:0 8px 0 18px;box-sizing:border-box;border-radius:999px;background:#14161C;border:1px solid rgba(255,255,255,.16);box-shadow:0 14px 40px rgba(0,0,0,.55);font-family:'Onest',system-ui,sans-serif;color:#F2F3F7;transition:border-color .2s;}" +
+    ".ca-dock:hover,.ca-dock:focus-within{border-color:rgba(238,125,27,.7);}" +
+    ".ca-dock.hide{display:none;}" +
+    ".ca-dock>svg{flex:none;}" +
+    ".ca-dock-tag{flex:none;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;letter-spacing:.08em;color:#8FB3F0;border:1px solid rgba(79,134,230,.42);border-radius:5px;padding:2px 5px;}" +
+    ".ca-dock-in{flex:1;min-width:0;background:none;border:0;outline:none;color:#F2F3F7;font-family:inherit;font-size:15px;line-height:1.3;padding:0;}" +
+    ".ca-dock-in::placeholder{color:rgba(242,243,247,.56);}" +
+    ".ca-dock-go{flex:none;display:inline-flex;align-items:center;gap:7px;height:40px;padding:0 16px;border:0;border-radius:999px;background:#EE7D1B;color:#0C0A08;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;transition:background .15s;}" +
+    ".ca-dock-go:hover{background:#F58E33;}.ca-dock-go svg{width:14px;height:14px;}" +
+    ".ca-dock-lbl{display:none;}" +
+    // Строка закрывает низ страницы — отодвигаем подвал, чтобы последние строки читались.
+    "@media(min-width:861px){html.ca-dock-pad body{padding-bottom:88px;}}" +
+    "@media(max-width:860px){.ca-dock{width:auto;max-width:none;height:50px;padding:0 18px 0 14px;gap:9px;cursor:pointer;}" +
+    ".ca-dock-in,.ca-dock-go,.ca-dock-tag{display:none;}" +
+    ".ca-dock-lbl{display:block;font-size:14.5px;font-weight:600;line-height:1.15;white-space:nowrap;text-align:left;}" +
+    ".ca-dock-lbl small{display:block;margin-top:2px;font-size:11.5px;font-weight:400;line-height:1.2;color:rgba(242,243,247,.66);}}" +
     /* — панель — */
     // visibility:hidden в закрытом состоянии убирает содержимое панели из табуляции
     // и из дерева скринридера (opacity+pointer-events этого не делали — A.6).
-    ".ca-panel{position:fixed;right:20px;bottom:20px;z-index:301;width:376px;max-width:calc(100vw - 32px);height:560px;max-height:calc(100dvh - 40px);background:#14161C;border:1px solid rgba(255,255,255,.12);border-radius:18px;box-shadow:0 24px 70px rgba(0,0,0,.55);display:flex;flex-direction:column;overflow:hidden;font-family:'Onest',system-ui,sans-serif;opacity:0;visibility:hidden;transform:translateY(14px) scale(.98);transition:opacity .2s,transform .2s,visibility 0s linear .2s;pointer-events:none;}" +
-    ".ca-panel.on{opacity:1;visibility:visible;transform:none;pointer-events:auto;transition:opacity .2s,transform .2s,visibility 0s;}" +
+    ".ca-panel{position:fixed;left:50%;bottom:20px;z-index:301;width:376px;max-width:calc(100vw - 32px);height:560px;max-height:calc(100dvh - 40px);background:#14161C;border:1px solid rgba(255,255,255,.12);border-radius:18px;box-shadow:0 24px 70px rgba(0,0,0,.55);display:flex;flex-direction:column;overflow:hidden;font-family:'Onest',system-ui,sans-serif;opacity:0;visibility:hidden;transform:translate(-50%,14px) scale(.98);transition:opacity .2s,transform .2s,visibility 0s linear .2s;pointer-events:none;}" +
+    ".ca-panel.on{opacity:1;visibility:visible;transform:translate(-50%,0);pointer-events:auto;transition:opacity .2s,transform .2s,visibility 0s;}" +
     ".ca-head{display:flex;align-items:center;gap:11px;padding:13px 16px;border-bottom:1px solid rgba(255,255,255,.09);flex:none;background:#14161C;}" +
     ".ca-ava{width:38px;height:38px;border-radius:10px;background:#0B0C10;border:1px solid rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;flex:none;}" +
     ".ca-ttl-row{display:flex;align-items:center;gap:7px;}" +
@@ -118,7 +119,7 @@
     /* Клавиатурный фокус: у кнопок виджета его не было вовсе (outline:none на
        полях, ни одного правила :focus-visible), а страницы объявляют рамку
        только на <a> — виджет выпадал из обхода незаметно для глаза. */
-    ".ca-btn:focus-visible,.ca-x:focus-visible,.ca-send:focus-visible,.ca-discuss:focus-visible,.ca-sug button:focus-visible{outline:2px solid #EE7D1B;outline-offset:3px;}" +
+    ".ca-dock-go:focus-visible,.ca-hdr:focus-visible,.ca-x:focus-visible,.ca-send:focus-visible,.ca-discuss:focus-visible,.ca-sug button:focus-visible{outline:2px solid #EE7D1B;outline-offset:3px;}" +
     ".ca-in:focus-visible,.ca-lead input:focus-visible{outline:2px solid #EE7D1B;outline-offset:1px;}" +
     /* — лента сообщений — */
     ".ca-log{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;}" +
@@ -163,93 +164,18 @@
     ".ca-lead-send{background:#EE7D1B;color:#0C0A08;border:0;border-radius:10px;padding:9px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;}" +
     ".ca-lead-send:hover{background:#F58E33;}.ca-lead-send:disabled{opacity:.5;cursor:default;}" +
     ".ca-lead-ok{font-size:13px;line-height:1.55;color:#F2F3F7;}.ca-lead-ok a{color:#F58E33;}" +
-    "@media(max-width:480px){.ca-panel{right:8px;bottom:8px;height:calc(100dvh - 16px);}}" +
-    /* ===== Расположение ассистента (варианты D/E/F на стенде, ?ailook=) ===== */
-    /* — общее: кнопка с подписью (F), вход в шапке (D/E/F), оговорка внутри чата — */
-    ".ca-btn.lab{width:auto;height:54px;padding:0 20px 0 15px;border-radius:999px;gap:11px;border-color:rgba(238,125,27,.55);background:#14161C;box-shadow:0 12px 30px rgba(0,0,0,.55);}" +
-    ".ca-btn.lab:hover{border-color:#EE7D1B;background:#181A21;}" +
-    ".ca-btn.lab .ca-ai{display:none;}" +
-    ".ca-btn .lt{display:flex;flex-direction:column;align-items:flex-start;gap:2px;font-family:'Onest',system-ui,sans-serif;text-align:left;}" +
-    ".ca-btn .l1{font-size:14.5px;font-weight:600;color:#F2F3F7;line-height:1.15;}" +
-    ".ca-btn .l2{font-size:12px;color:rgba(242,243,247,.68);line-height:1.2;white-space:nowrap;}" +
-    // Оговорка про CALL/PUT внутри чата — тише обычной реплики: пунктирная рамка без заливки.
+    "@media(max-width:480px){.ca-panel,.ca-panel.on{left:8px;right:8px;bottom:8px;height:calc(100dvh - 16px);transform:none;}}" +
+    /* — оговорка про CALL/PUT внутри чата — тише обычной реплики: пунктирная рамка без заливки — */
     ".ca-msg.a.n{max-width:92%;background:none;border:1px dashed rgba(255,255,255,.18);color:rgba(242,243,247,.66);font-size:12.5px;line-height:1.5;}" +
     /* — вход в шапке — */
     ".ca-hdr{display:inline-flex;align-items:center;gap:7px;height:30px;margin-left:10px;padding:0 13px 0 10px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:#14161C;color:#F2F3F7;font-family:'Onest',system-ui,sans-serif;font-size:13px;font-weight:500;white-space:nowrap;cursor:pointer;flex:none;transition:border-color .2s,background .2s;}" +
     ".ca-hdr:hover{border-color:rgba(238,125,27,.7);background:rgba(238,125,27,.08);}" +
-    ".ca-hdr:focus-visible,.ca-tab:focus-visible,.ca-dock-go:focus-visible,.ca-tz button:focus-visible,.ca-strip button:focus-visible,.ca-stand a:focus-visible{outline:2px solid #EE7D1B;outline-offset:3px;}" +
     ".ca-hdr svg{flex:none;}" +
     // Шапка заполнена до предела: у контейнера 1280px свободно ~99px (их сейчас берёт поле
     // поиска), на 901–1199 — ноль. Полное «AI-ассистент» (128px) выталкивало «Доску» за
     // край, поэтому в шапке — компактное «✦ AI», и только от 1200px.
     "@media(max-width:1199px){.ca-hdr{display:none;}}" +
-    /* — D: строка-вопрос внизу по центру (на телефоне — пилюля без поля) — */
-    ".ca-dock{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:300;display:flex;align-items:center;gap:10px;width:600px;max-width:calc(100vw - 32px);height:56px;margin:0;padding:0 8px 0 18px;box-sizing:border-box;border-radius:999px;background:#14161C;border:1px solid rgba(255,255,255,.16);box-shadow:0 14px 40px rgba(0,0,0,.55);font-family:'Onest',system-ui,sans-serif;color:#F2F3F7;transition:border-color .2s;}" +
-    ".ca-dock:hover,.ca-dock:focus-within{border-color:rgba(238,125,27,.7);}" +
-    ".ca-dock.hide{display:none;}" +
-    ".ca-dock>svg{flex:none;}" +
-    ".ca-dock-tag{flex:none;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;letter-spacing:.08em;color:#8FB3F0;border:1px solid rgba(79,134,230,.42);border-radius:5px;padding:2px 5px;}" +
-    ".ca-dock-in{flex:1;min-width:0;background:none;border:0;outline:none;color:#F2F3F7;font-family:inherit;font-size:15px;line-height:1.3;padding:0;}" +
-    ".ca-dock-in::placeholder{color:rgba(242,243,247,.56);}" +
-    ".ca-dock-go{flex:none;display:inline-flex;align-items:center;gap:7px;height:40px;padding:0 16px;border:0;border-radius:999px;background:#EE7D1B;color:#0C0A08;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;transition:background .15s;}" +
-    ".ca-dock-go:hover{background:#F58E33;}.ca-dock-go svg{width:14px;height:14px;}" +
-    ".ca-dock-lbl{display:none;}" +
-    ".ca-panel.dock{right:auto;left:50%;bottom:20px;transform:translate(-50%,14px) scale(.98);}" +
-    ".ca-panel.dock.on{transform:translate(-50%,0);}" +
-    // Строка закрывает низ страницы — отодвигаем подвал, чтобы последние строки читались.
-    "@media(min-width:861px){html.ca-dock-pad body{padding-bottom:88px;}}" +
-    "@media(max-width:860px){.ca-dock{width:auto;max-width:none;height:50px;padding:0 18px 0 14px;gap:9px;cursor:pointer;}" +
-    ".ca-dock-in,.ca-dock-go,.ca-dock-tag{display:none;}" +
-    ".ca-dock-lbl{display:block;font-size:14.5px;font-weight:600;line-height:1.15;white-space:nowrap;text-align:left;}" +
-    ".ca-dock-lbl small{display:block;margin-top:2px;font-size:11.5px;font-weight:400;line-height:1.2;color:rgba(242,243,247,.66);}}" +
-    "@media(max-width:480px){.ca-panel.dock,.ca-panel.dock.on{left:8px;right:8px;bottom:8px;transform:none;}}" +
-    /* — E: язычок на правом краю + шторка во всю высоту — */
-    ".ca-tab{position:fixed;right:0;top:50%;transform:translateY(-50%);z-index:300;display:flex;flex-direction:column;align-items:center;gap:9px;width:42px;padding:14px 0 13px;border:1px solid rgba(255,255,255,.16);border-right:0;border-radius:12px 0 0 12px;background:#14161C;color:#F2F3F7;box-shadow:-8px 0 28px rgba(0,0,0,.45);cursor:pointer;font-family:'Onest',system-ui,sans-serif;transition:border-color .2s,transform .2s,background .2s;}" +
-    ".ca-tab:hover{border-color:rgba(238,125,27,.7);background:#181A21;transform:translateY(-50%) translateX(-2px);}" +
-    ".ca-tab.hide{display:none;}" +
-    ".ca-tab svg{flex:none;}" +
-    ".ca-tab .vt,.ca-tab .vs{writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;}" +
-    ".ca-tab .vt{font-size:13px;font-weight:500;letter-spacing:.03em;}" +
-    ".ca-tab .vs{display:none;font-size:12px;font-weight:600;letter-spacing:.06em;}" +
-    ".ca-panel.drawer{top:0;right:0;bottom:0;height:auto;max-height:none;width:420px;max-width:100vw;border-radius:0;border:0;border-left:1px solid rgba(255,255,255,.12);box-shadow:-24px 0 70px rgba(0,0,0,.55);transform:translateX(28px);}" +
-    ".ca-panel.drawer.on{transform:none;}" +
-    "@media(max-width:860px){.ca-tab{top:auto;bottom:112px;transform:none;width:38px;padding:12px 0 10px;}" +
-    ".ca-tab:hover{transform:translateX(-2px);}.ca-tab .vt{display:none;}.ca-tab .vs{display:block;}}" +
-    "@media(max-width:480px){.ca-panel.drawer,.ca-panel.drawer.on{left:0;right:0;bottom:0;width:100vw;height:auto;border-left:0;}}" +
-    /* — подсказка-выноска у язычка (E): появляется через ~3,5 с, уходит сама — */
-    ".ca-tz{position:fixed;z-index:299;background:#14161C;border:1px solid rgba(238,125,27,.45);border-radius:14px;box-shadow:0 18px 48px rgba(0,0,0,.55);font-family:'Onest',system-ui,sans-serif;color:#F2F3F7;opacity:0;transition:opacity .35s cubic-bezier(.16,1,.3,1),transform .5s cubic-bezier(.16,1,.3,1);}" +
-    ".ca-tz.on{opacity:1;}" +
-    ".ca-tz-x{position:absolute;top:4px;right:4px;width:40px;height:40px;border:0;background:none;color:rgba(242,243,247,.55);font-size:19px;line-height:1;cursor:pointer;border-radius:10px;}" +
-    ".ca-tz-x:hover{color:#F2F3F7;background:rgba(255,255,255,.06);}" +
-    ".ca-tz.e{right:54px;top:50%;transform:translate(10px,-50%);width:310px;max-width:calc(100vw - 70px);padding:14px 40px 14px 16px;}" +
-    ".ca-tz.e.on{transform:translate(0,-50%);}" +
-    ".ca-tz.e::after{content:'';position:absolute;right:-6px;top:50%;width:10px;height:10px;margin-top:-5px;background:#14161C;border-top:1px solid rgba(238,125,27,.45);border-right:1px solid rgba(238,125,27,.45);transform:rotate(45deg);}" +
-    ".ca-tz .say{display:flex;gap:9px;align-items:flex-start;font-size:13.5px;line-height:1.5;}" +
-    ".ca-tz .say svg{flex:none;margin-top:3px;}" +
-    ".ca-tz .say b{font-weight:500;color:#F0AE72;}" +
-    ".ca-tz .go{margin:11px 0 0 27px;height:36px;padding:0 15px;border:0;border-radius:999px;background:#EE7D1B;color:#0C0A08;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s;}" +
-    ".ca-tz .go:hover{background:#F58E33;}" +
-    "@media(max-width:860px){.ca-tz.e{top:auto;bottom:112px;right:50px;transform:translate(10px,0);}.ca-tz.e.on{transform:none;}.ca-tz.e::after{top:auto;bottom:24px;margin-top:0;}}" +
-    /* — F: полоса под шапкой (в потоке, уезжает со страницей; крестик — до конца визита) — */
-    ".ca-strip{position:relative;z-index:2;background:rgba(238,125,27,.08);border-bottom:1px solid rgba(238,125,27,.25);font-family:'Onest',system-ui,sans-serif;color:#F2F3F7;}" +
-    ".ca-strip-in{max-width:1280px;margin:0 auto;padding:8px 56px 8px 20px;box-sizing:border-box;display:flex;align-items:center;gap:12px;min-height:44px;position:relative;}" +
-    ".ca-strip svg{flex:none;}" +
-    ".ca-strip .t{font-size:13.5px;line-height:1.4;}.ca-strip .t b{font-weight:600;}" +
-    ".ca-strip .go{flex:none;height:32px;padding:0 14px;border:0;border-radius:999px;background:#EE7D1B;color:#0C0A08;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s;}" +
-    ".ca-strip .go:hover{background:#F58E33;}" +
-    ".ca-strip .x{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:40px;height:40px;border:0;background:none;color:rgba(242,243,247,.6);font-size:19px;line-height:1;cursor:pointer;border-radius:10px;}" +
-    ".ca-strip .x:hover{color:#F2F3F7;background:rgba(255,255,255,.06);}" +
-    // На телефоне кнопке «Спросить» места нет (текст уходил в три строки) — тапается вся полоса,
-    // приглашение стоит в конце фразы.
-    ".ca-strip .t .m,.ca-strip .t .xs{display:none;}" +
-    "@media(max-width:860px){.ca-strip-in{padding:10px 44px 10px 16px;gap:10px;cursor:pointer;}.ca-strip .t{font-size:13px;}.ca-strip .go,.ca-strip .t .xl{display:none;}.ca-strip .t .xs{display:inline;}.ca-strip .t .m{display:inline;color:#F58E33;font-weight:600;white-space:nowrap;}}" +
-    "@media(max-width:480px){.ca-btn.lab{right:12px;bottom:12px;height:50px;padding:0 17px 0 13px;}}" +
-    "@media(prefers-reduced-motion:reduce){.ca-tz,.ca-panel.dock,.ca-panel.drawer,.ca-tab{transition:none;}}" +
-    /* — переключатель стенда (только localhost) — */
-    ".ca-stand{position:fixed;left:12px;bottom:12px;z-index:100001;display:flex;align-items:center;gap:3px;padding:4px;border-radius:12px;background:#0B0C10;border:1px solid rgba(255,255,255,.2);font:500 12px 'JetBrains Mono',monospace;box-shadow:0 8px 24px rgba(0,0,0,.5);}" +
-    ".ca-stand span{color:rgba(242,243,247,.55);padding:0 6px;}" +
-    ".ca-stand a{color:rgba(242,243,247,.8);text-decoration:none;padding:8px 10px;border-radius:8px;}" +
-    ".ca-stand a.on{background:#EE7D1B;color:#0C0A08;}";
+    "@media(prefers-reduced-motion:reduce){.ca-panel{transition:none;}}";
 
   function inject() {
     if (document.getElementById("ca-css")) return;
@@ -258,9 +184,6 @@
   }
 
   /* фирменная 4-лучевая звезда (одна, без «искр-компаньонов» — это знак дома, не спарклы) */
-  var ICON_STARS =
-    '<svg width="24" height="24" viewBox="0 0 26 26" fill="none" aria-hidden="true">' +
-    '<path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>';
   var ICON_STAR_SM =
     '<svg width="18" height="18" viewBox="0 0 26 26" fill="none" aria-hidden="true">' +
     '<path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>';
@@ -555,41 +478,21 @@
       '<path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>';
     var ICON_ARROW = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
     var REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    var MOBILE = window.matchMedia && window.matchMedia("(max-width: 860px)").matches;
 
-    // Вход в ассистента — по варианту стенда: 0 и F — кнопка в углу (F — с подписью),
-    // D — строка-вопрос внизу по центру, E — язычок на правом краю. Пока панель открыта,
-    // вход спрятан (класс hide), как раньше пряталась кнопка.
-    var entry, dockIn = null;
-    if (LOOK === "d") {
-      entry = document.createElement("form");
-      entry.className = "ca-dock";
-      entry.setAttribute("aria-label", "Вопрос AI-ассистенту");
-      entry.innerHTML = ICON_STAR_20 + '<span class="ca-dock-tag">AI</span>' +
-        '<input class="ca-dock-in" type="text" autocomplete="off" aria-label="Вопрос AI-ассистенту" placeholder="Спросите о продукте, цене или сайте…">' +
-        '<span class="ca-dock-lbl">Спросить AI<small>' + CAN_LIST + '</small></span>' +
-        '<button class="ca-dock-go" type="submit">Спросить' + ICON_ARROW + '</button>';
-      dockIn = entry.querySelector(".ca-dock-in");
-      document.documentElement.classList.add("ca-dock-pad");
-    } else if (LOOK === "e") {
-      entry = document.createElement("button");
-      entry.type = "button"; entry.className = "ca-tab";
-      entry.setAttribute("aria-label", "Открыть AI-ассистента");
-      entry.innerHTML = ICON_STAR_SM + '<span class="vt">AI-ассистент</span><span class="vs">AI</span>';
-    } else {
-      entry = document.createElement("button");
-      entry.type = "button"; entry.className = "ca-btn";
-      entry.setAttribute("aria-label", "Открыть AI-ассистента");
-      if (LOOK === "0") entry.innerHTML = ICON_STARS + '<span class="ca-ai">AI</span>';
-      else {
-        entry.classList.add("lab");
-        entry.innerHTML = ICON_STARS + '<span class="lt"><span class="l1">Спросить AI</span><span class="l2">' + CAN_LIST + '</span></span>';
-      }
-    }
+    // Вход — строка-вопрос внизу по центру: на десктопе поле с бегущими примерами и кнопка,
+    // на телефоне пилюля «Спросить AI» (поле скрыто CSS). Пока панель открыта, строка спрятана.
+    var dock = document.createElement("form");
+    dock.className = "ca-dock";
+    dock.setAttribute("aria-label", "Вопрос AI-ассистенту");
+    dock.innerHTML = ICON_STAR_20 + '<span class="ca-dock-tag">AI</span>' +
+      '<input class="ca-dock-in" type="text" autocomplete="off" aria-label="Вопрос AI-ассистенту" placeholder="Спросите о продукте, цене или сайте…">' +
+      '<span class="ca-dock-lbl">Спросить AI<small>' + CAN_LIST + '</small></span>' +
+      '<button class="ca-dock-go" type="submit">Спросить' + ICON_ARROW + '</button>';
+    var dockIn = dock.querySelector(".ca-dock-in");
+    document.documentElement.classList.add("ca-dock-pad");
 
     var panel = document.createElement("div");
-    panel.className = "ca-panel" + (LOOK === "d" ? " dock" : LOOK === "e" ? " drawer" : "");
-    panel.setAttribute("role", "dialog"); panel.setAttribute("aria-label", "AI-ассистент");
+    panel.className = "ca-panel"; panel.setAttribute("role", "dialog"); panel.setAttribute("aria-label", "AI-ассистент");
     panel.innerHTML =
       '<div class="ca-head">' +
         '<span class="ca-ava">' + ICON_STAR_SM + '</span>' +
@@ -604,7 +507,7 @@
         '<button class="ca-send" aria-label="Отправить">' + ICON_SEND + '</button>' +
       '</div><div class="ca-note">Отвечает ИИ — может ошибаться · Не является индивидуальной инвестиционной рекомендацией</div></div>';
 
-    document.body.appendChild(entry);
+    document.body.appendChild(dock);
     document.body.appendChild(panel);
 
     els.log = panel.querySelector(".ca-log");
@@ -613,10 +516,8 @@
 
     var opened = false;
     function open() {
-      panel.classList.add("on"); entry.classList.add("hide");
-      hideTeaser(true);   // чат открыт — подсказка и полоса своё дело сделали, до конца визита не нужны
-      hideStrip(true);
-      if (LOOK !== "0" && qualOk()) els.input.placeholder = "Спросите про продукт, цену или сайт…";
+      panel.classList.add("on"); dock.classList.add("hide");
+      if (qualOk()) els.input.placeholder = "Спросите про продукт, цену или сайт…";
       if (!opened) {
         opened = true;
         addMsg("assistant", greeting());
@@ -634,9 +535,9 @@
       }
       setTimeout(function () { els.input.focus(); }, 150);
     }
-    function close() { panel.classList.remove("on"); entry.classList.remove("hide"); }
+    function close() { panel.classList.remove("on"); dock.classList.remove("hide"); }
 
-    // Открыть чат и сразу задать вопрос: примеры на заставке показывают работу делом.
+    // Открыть чат и сразу задать вопрос (Enter в строке, кнопки-примеры): работа делом, не обещанием.
     function ask(text) {
       open();
       if (busy || locked) return;
@@ -644,23 +545,20 @@
       send();
     }
 
-    if (LOOK === "d") {
-      entry.addEventListener("submit", function (e) {
-        e.preventDefault();
-        var t = dockIn.value.trim();
-        dockIn.value = "";
-        goal(t ? "chat_dock_ask" : "chat_dock_open");
-        if (t) ask(t); else open();
-      });
-      // На телефоне строка — пилюля без поля: тап по ней открывает чат.
-      entry.addEventListener("click", function (e) {
-        if (e.target === dockIn || (e.target.closest && e.target.closest(".ca-dock-go"))) return;
-        if (getComputedStyle(dockIn).display === "none") { goal("chat_dock_open"); open(); }
-        else dockIn.focus();
-      });
-    } else {
-      entry.addEventListener("click", open);
-    }
+    dock.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var t = dockIn.value.trim();
+      dockIn.value = "";
+      goal(t ? "chat_dock_ask" : "chat_dock_open");
+      if (t) ask(t); else open();
+    });
+    // На телефоне строка — пилюля без поля: тап по ней открывает чат; на десктопе клик по
+    // пустому месту строки ставит курсор в поле.
+    dock.addEventListener("click", function (e) {
+      if (e.target === dockIn || (e.target.closest && e.target.closest(".ca-dock-go"))) return;
+      if (getComputedStyle(dockIn).display === "none") { goal("chat_dock_open"); open(); }
+      else dockIn.focus();
+    });
     panel.querySelector(".ca-x").addEventListener("click", close);
     var disc = panel.querySelector(".ca-discuss");
     if (disc) disc.addEventListener("click", showLeadForm);
@@ -676,9 +574,10 @@
 
     window.Chat = { open: open, close: close, ask: ask };
 
-    // ---------- Заставка: вход в шапке, бегущие примеры в строке (D), выноска у язычка (E), полоса (F) ----------
+    // Второй вход — «✦ AI» в шапке, сразу за «Сотрудничество» (или за логотипом). На столе
+    // партнёра его нет: там шапка своя.
     function mountHeader() {
-      if (LOOK === "0" || SETUP.desk) return;
+      if (SETUP.desk) return;
       var navIn = document.querySelector(".nav-in");
       if (!navIn || navIn.querySelector(".ca-hdr")) return;
       var after = navIn.querySelector(".nav-about");
@@ -698,22 +597,22 @@
       after.insertAdjacentElement("afterend", h);
     }
 
-    // D: примеры вопросов «печатаются» в подсказке поля — три умения подряд, два круга,
-    // потом поле успокаивается. Пока поле в фокусе или в нём текст — не трогаем. При
-    // reduced-motion — статичная подсказка.
+    // Примеры вопросов «печатаются» в подсказке поля — три умения подряд, два круга, потом
+    // поле успокаивается. Пока поле в фокусе или в нём текст — не трогаем. При reduced-motion
+    // и на телефоне (поле скрыто) — ничего не печатаем.
     function runDockPrompts() {
-      if (!dockIn || REDUCED) return;
-      var list = examples(), round = 0, idx = 0, stopped = false;
+      if (REDUCED) return;
+      var list = suggestions(), round = 0, idx = 0;
       var STATIC = dockIn.placeholder;
       function idle() { return document.activeElement === dockIn || dockIn.value; }
       function next() {
-        if (stopped || !dockIn.isConnected) return;
+        if (!dockIn.isConnected) return;
         if (getComputedStyle(dockIn).display === "none") { setTimeout(next, 1500); return; }
         if (idle()) { setTimeout(next, 1200); return; }
         if (round >= 2) { dockIn.placeholder = STATIC; return; }
         var text = list[idx], i = 0;
         (function step() {
-          if (stopped || !dockIn.isConnected) return;
+          if (!dockIn.isConnected) return;
           if (idle()) { dockIn.placeholder = STATIC; setTimeout(next, 1200); return; }
           dockIn.placeholder = text.slice(0, ++i);
           if (i < text.length) setTimeout(step, 34 + Math.random() * 30);
@@ -726,122 +625,10 @@
       setTimeout(next, 1400);
     }
 
-    var tz = null;
-    function tzOff() { try { return sessionStorage.getItem("ca_tz_off") === "1"; } catch (e) { return false; } }
-    function hideTeaser(forVisit) {
-      if (forVisit) { try { sessionStorage.setItem("ca_tz_off", "1"); } catch (e) {} }
-      if (!tz) return;
-      var node = tz; tz = null;
-      node.classList.remove("on");
-      setTimeout(function () { node.remove(); }, REDUCED ? 0 : 400);
-    }
-
-    // E: выноска от язычка — одна реплика о трёх умениях и кнопка. Уходит сама через
-    // 12 с (крестик — до конца визита, кнопка — открывает чат).
-    function showTeaser() {
-      if (tz || panel.classList.contains("on")) return;
-      tz = document.createElement("div");
-      tz.className = "ca-tz e";
-      tz.setAttribute("role", "complementary");
-      tz.setAttribute("aria-label", "AI-ассистент");
-      tz.innerHTML = '<button class="ca-tz-x" type="button" aria-label="Скрыть подсказку">&times;</button>' +
-        '<div class="say">' + ICON_STAR_HDR + '<span>Я AI-ассистент Rumberg: объясню продукт, ' +
-        (qualOk() ? 'посчитаю цену опциона' : 'сориентирую по ценам') + ' и подскажу, где что на сайте.</span></div>' +
-        '<button class="go" type="button">Спросить</button>';
-      document.body.appendChild(tz);
-      tz.querySelector(".ca-tz-x").addEventListener("click", function () { goal("chat_teaser_close"); hideTeaser(true); });
-      tz.querySelector(".go").addEventListener("click", function () { goal("chat_teaser_open"); open(); });
-      // Проявление: пересчёт раскладки фиксирует стартовое состояние, класс — на таймере.
-      // Двойной requestAnimationFrame тут не годится: в фоновой вкладке кадры придерживаются,
-      // и подсказка оставалась прозрачной до возврата на вкладку.
-      void tz.offsetWidth;
-      setTimeout(function () { if (tz) tz.classList.add("on"); }, 30);
-      setTimeout(function () { hideTeaser(false); }, 12000);
-      goal("chat_teaser_show");
-    }
-
-    // Выноска — на каждой странице, через ~3,5 с. Не всплывает поверх гейта, интро-ролика
-    // и открытого чата; закрыли крестиком или уже пользовались чатом — больше не показываем.
-    function scheduleTeaser() {
-      if (LOOK !== "e" || SETUP.desk || tzOff()) return;
-      if (msgs.some(function (m) { return m.role === "user"; })) return;
-      var t0 = Date.now();
-      (function wait() {
-        if (tz || tzOff()) return;
-        var blocked = document.querySelector(".qg-veil") || document.querySelector(".intro") ||
-          document.body.classList.contains("intro-lock") || panel.classList.contains("on");
-        if (blocked || Date.now() - t0 < 3500) {
-          if (Date.now() - t0 < 180000) setTimeout(wait, 600);
-          return;
-        }
-        showTeaser();
-      })();
-    }
-
-    // F: полоса под шапкой — в потоке страницы, уезжает с прокруткой. Ширина и поля — как у
-    // контейнера шапки, чтобы текст стоял на той же вертикали. На телефонной главной
-    // (экраны-«рилсы» по высоте окна) полосу не ставим — она сбила бы высоту первого экрана.
-    var strip = null;
-    function stripOff() { try { return sessionStorage.getItem("ca_strip_off") === "1"; } catch (e) { return false; } }
-    function hideStrip(forVisit) {
-      if (forVisit) { try { sessionStorage.setItem("ca_strip_off", "1"); } catch (e) {} }
-      if (strip) { strip.remove(); strip = null; }
-    }
-    function mountStrip() {
-      if (LOOK !== "f" || SETUP.desk || stripOff()) return;
-      if (msgs.some(function (m) { return m.role === "user"; })) return;
-      var nav = document.querySelector("header.nav, .nav");
-      if (!nav || !nav.parentNode) return;
-      if (MOBILE && document.querySelector(".mx-root")) return;
-      strip = document.createElement("div");
-      strip.className = "ca-strip";
-      strip.setAttribute("role", "complementary");
-      strip.setAttribute("aria-label", "AI-ассистент");
-      strip.innerHTML = '<div class="ca-strip-in">' + ICON_STAR_HDR +
-        '<span class="t"><b>AI-ассистент<span class="xl"> Rumberg</span></b><span class="xl"> — объяснит продукт, ' +
-        (qualOk() ? 'посчитает цену опциона' : 'сориентирует по ценам') + ' и подскажет, где что на сайте.</span>' +
-        '<span class="xs">: продукты, ' + (qualOk() ? 'цена опциона' : 'цены') + ', где что на сайте.</span> <b class="m">Спросить →</b></span>' +
-        '<button class="go" type="button">Спросить</button>' +
-        '<button class="x" type="button" aria-label="Скрыть">&times;</button></div>';
-      var navIn = nav.querySelector(".nav-in");
-      if (navIn) {
-        var cs = getComputedStyle(navIn), inn = strip.firstChild;
-        if (cs.maxWidth && cs.maxWidth !== "none") inn.style.maxWidth = cs.maxWidth;
-        if (!MOBILE) { inn.style.paddingLeft = cs.paddingLeft; inn.style.paddingRight = "calc(" + cs.paddingRight + " + 36px)"; }
-      }
-      strip.querySelector(".go").addEventListener("click", function () { goal("chat_strip_open"); open(); });
-      strip.querySelector(".ca-strip-in").addEventListener("click", function (e) {
-        if (e.target.closest && (e.target.closest(".x") || e.target.closest(".go"))) return;
-        if (MOBILE) { goal("chat_strip_open"); open(); }
-      });
-      strip.querySelector(".x").addEventListener("click", function () { goal("chat_strip_close"); hideStrip(true); });
-      nav.insertAdjacentElement("afterend", strip);
-    }
-
-    // Переключатель вариантов — ТОЛЬКО на локальном стенде.
-    function mountStand() {
-      if (!/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) return;
-      if (!/[?&]ailook=/.test(location.search) && LOOK === "0") return;
-      var bar = document.createElement("div");
-      bar.className = "ca-stand";
-      bar.innerHTML = "<span>AI:</span>" + [["0", "сейчас"], ["d", "D"], ["e", "E"], ["f", "F"]].map(function (v) {
-        return '<a href="?ailook=' + v[0] + '"' + (LOOK === v[0] ? ' class="on"' : "") + ">" + v[1] + "</a>";
-      }).join("");
-      [].forEach.call(bar.querySelectorAll("a"), function (a) {
-        a.addEventListener("click", function () {
-          try { sessionStorage.removeItem("ca_tz_off"); sessionStorage.removeItem("ca_strip_off"); } catch (e) {}
-        });
-      });
-      document.body.appendChild(bar);
-    }
-
     mountHeader();
     // nav-about.js может вставить «Сотрудничество» уже после нас — порядок в шапке от этого
     // не зависит (его пилюля встаёт сразу за логотипом, наша — следом).
-    mountStrip();
     runDockPrompts();
-    scheduleTeaser();
-    mountStand();
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", build);
