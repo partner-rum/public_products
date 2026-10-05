@@ -1730,6 +1730,7 @@ const PRICE_TOOL = {
       type: "object",
       properties: {
         underlying: { type: "string", description: "Тикер базового актива, как на бирже: SBER, GAZP, LKOH, YDEX, NVDA. " +
+          "Для ОФЗ — «ОФЗ» и номер выпуска: «ОФЗ 26238». " +
           "Если клиент назвал компанию словами и тикер неизвестен — название как есть." },
         option_type: { type: "string", enum: ["call", "put"], description: "call — на рост, put — на падение." },
         tenor: { type: "string", description: "Срок: '2Y', '18M', '6M', '90D' или дата экспирации YYYY-MM-DD." },
@@ -1850,6 +1851,47 @@ function priceQuote(pv) {
 // поэтому берём только биржевые тикеры, а из пары «оригинал / двойник -RM»
 // оставляем оригинал (Tesla → TSLA, а не TSLA-RM). Однозначный лидер — считаем,
 // иначе возвращаем варианты для вопроса клиенту.
+// ОФЗ у прайсера. Биржевые обозначения («ОФЗ_26238», SU26238RMFS) в его рыночных данных
+// не считаются; облигации заведены отдельными тикерами DOFZ<номер> (на 05.10.2026 — 26230,
+// 26238, 26246, 26248; в справочнике они подписаны «DUMMY OFZ …» — это имя наружу не идёт).
+// Номер узнаём из любой формы: «ОФЗ 26238», «ОФЗ-ПД 26238», «OFZ26238», «SU26238RMFS», «26238».
+function priceOfzNum(s) {
+  const t = String(s || "").trim();
+  const m = t.match(/(?:^|[^\p{L}])(?:офз|ofz)(?:[\s-]*пд)?[\s_-]*(\d{5})(?!\d)/iu) ||
+    t.match(/^(?:su|dofz)[\s_-]*(\d{5})/i) || t.match(/^(\d{5})$/);
+  return m ? m[1] : "";
+}
+// Как называть актив клиенту: DOFZ26238 → «ОФЗ 26238», остальное — тикер как есть.
+function priceShowTicker(t) {
+  const m = String(t || "").match(/^DOFZ(\d{5})$/);
+  return m ? "ОФЗ " + m[1] : String(t || "");
+}
+// Подсказки и ответы прайсера несут его внутренний справочник: ноты других эмитентов
+// («Сбербанк КИБ CIB-SN-…, нота на ОФЗ 26238»), служебные имена (DUMMY). Клиенту — никогда:
+// текст с такими словами заменяется нейтральным отказом (последний рубеж, если фильтр выше
+// что-то пропустил). Слово «нота» на витрине запрещено вовсе.
+const PRICE_LEAK_RE = /(?:^|[^\p{L}])(?:нот[аыуеой]|note)(?![\p{L}])|CIB|КИБ|DUMMY|[\p{L}\d]_[\p{L}\d]/iu;
+const PRICE_LEAK_TEXT = "По этому активу посчитать в чате не получилось. Нажмите «Обсудить с Румбергом» — посчитает менеджер.";
+
+// Ставка дисконтирования для облигаций. Прайсер для облигаций не принимает свою кривую
+// RUB_MAIN (падает с «market_data.rate.RUB … unable to parse 'RUB_MAIN'» — ошибка на их
+// стороне, акции считаются нормально), поэтому ставку передаём числом — ключевую ЦБ из
+// data/rates.js витрины (её же показывает скринер), запасной вариант 14%. Цена колла на ОФЗ
+// к ставке почти не чувствительна: 10–16% дают 7,9–8,2% у CALL 100 на 2 года.
+let PRICE_BOND_RATE = { v: 0, at: 0 };
+async function priceBondRate(env) {
+  if (PRICE_BOND_RATE.v && Date.now() - PRICE_BOND_RATE.at < 3600e3) return PRICE_BOND_RATE.v;
+  let v = 14;
+  try {
+    const base = (env.SITE_BASE || "https://invest.rumberg.ru/").replace(/\/?$/, "/");
+    const R = await fetchDataObj(base + "data/rates.js", "RATES");
+    const k = Number(R && R.cbr && R.cbr.key && R.cbr.key.rate);
+    if (k > 1 && k < 40) v = k;
+  } catch (e) {}
+  PRICE_BOND_RATE = { v, at: Date.now() };
+  return v;
+}
+
 function priceNamePick(rs) {
   if (rs.status === "resolved" && rs.ticker) return { ticker: rs.ticker, name: rs.name || "", options: [] };
   const cands = (rs.matches || [])
@@ -1864,7 +1906,7 @@ function priceNamePick(rs) {
 // Один расчёт. Всегда возвращает текст для клиента: и котировку, и честный отказ.
 // fair — справедливая цена прайсера, ТОЛЬКО для внутреннего лога.
 async function priceWarrant(a, env, who) {
-  const fail = (text) => ({ ok: false, text });
+  const fail = (text) => ({ ok: false, text: PRICE_LEAK_RE.test(text) ? PRICE_LEAK_TEXT : text });
   const type = String(a.option_type || "").toLowerCase();
   if (type !== "call" && type !== "put") return fail("Уточните, какой нужен варрант: CALL (на рост) или PUT (на падение).");
   const tenor = priceTenor(a.tenor);
@@ -1886,8 +1928,23 @@ async function priceWarrant(a, env, who) {
   // Тикер модель передаёт заглавными; «Tesla», «Sber» — это название компании.
   // Название, которое справочник не узнал, всё же пробуем как тикер («Qbts»).
   const asName = !tickerLike || rawU !== rawU.toUpperCase() || rawU.length > 8;
-  let ticker = tickerLike ? rawU.toUpperCase() : "", name = "", listed = false;
-  try {
+  let ticker = tickerLike ? rawU.toUpperCase() : "", name = "", listed = false, isBond = false;
+  const ofz = priceOfzNum(rawU);
+  if (ofz) {
+    ticker = "DOFZ" + ofz; name = "ОФЗ " + ofz; isBond = true;
+    try {
+      const rr = await mcpCall(env, "resolve_ticker", { query: ticker, mode: "fast" }, 20000);
+      const rs = rr.structuredContent || {};
+      const found = (rs.status === "resolved" && rs.ticker === ticker) || (rs.matches || []).some((m) => m && m.ticker === ticker);
+      if (!found) {
+        return fail("По ОФЗ " + ofz + " у прайсера пока нет рыночных данных — посчитать в чате не могу. " +
+          "Нажмите «Обсудить с Румбергом» — посчитает менеджер.");
+      }
+      listed = true;
+    } catch (e) {
+      listed = true;   // справочник не ответил — пробуем считать, прайсер сам скажет, если выпуска нет
+    }
+  } else try {
     const rr = await mcpCall(env, "resolve_ticker", { query: asName ? rawU : ticker, mode: "fast" }, 20000);
     const rs = rr.structuredContent || {};
     const exact = (rs.matches || []).find((m) => m && m.ticker === ticker);
@@ -1905,6 +1962,8 @@ async function priceWarrant(a, env, who) {
           ? "Уточните актив «" + rawU + "»: " + pick.options.join(", ") + "?"
           : "Не нашёл актив «" + rawU + "». Напишите его тикер — например, SBER или GAZP.");
       }
+      // выпуск ОФЗ, найденный по названию: человеческое имя вместо «DUMMY OFZ …»
+      if (/^DOFZ\d{5}$/.test(ticker)) { name = priceShowTicker(ticker); isBond = true; }
     }
   } catch (e) {
     if (!tickerLike) return fail("Не удалось найти актив «" + rawU + "» — справочник прайсера не ответил. Напишите тикер, например SBER.");
@@ -1919,6 +1978,7 @@ async function priceWarrant(a, env, who) {
     underlying: ticker, option_type: type, expiry: tenor.expiry, strike, wrapper: "warrant",
     outputs: ["PV"], context: { user_id: who },
   };
+  if (isBond) args.rate_override = await priceBondRate(env);
   let res;
   try {
     // Тикера нет в справочнике (IBM, IONQ…) — прайсер всё равно ищет его в рыночных
@@ -1933,12 +1993,24 @@ async function priceWarrant(a, env, who) {
       ? "Прайсер не успел посчитать. Попробуйте ещё раз через минуту или нажмите «Обсудить с Румбергом» — посчитает менеджер."
       : "Расчёт сейчас недоступен. Попробуйте позже или нажмите «Обсудить с Румбергом» — посчитает менеджер.");
   }
-  const sc = res.structuredContent || {};
+  let sc = res.structuredContent || {};
+  // Прайсер упал на кривой ставок (так бывает с облигациями — см. priceBondRate): один повтор
+  // со ставкой числом.
+  if (res.isError && sc.error === "backend_rejected" && args.rate_override == null &&
+      /market_data\.rate|RUB_MAIN/.test(String(sc.message || "") + String(sc.backend_detail || ""))) {
+    args.rate_override = await priceBondRate(env);
+    try {
+      res = await mcpCall(env, "price_vanilla", args, PRICE_TIMEOUT_MS);
+      sc = res.structuredContent || {};
+    } catch (e) {
+      return fail("Расчёт сейчас недоступен. Попробуйте позже или нажмите «Обсудить с Румбергом» — посчитает менеджер.");
+    }
+  }
   if (res.isError) {
     const code = sc.error || "";
     if (code === "rate_limited") return fail("Слишком много расчётов подряд. Попробуйте через минуту.");
     if (code === "unknown_ticker" || code === "market_data_missing") {
-      return fail("По активу " + ticker + " нет рыночных данных — посчитать не могу. Проверьте тикер.");
+      return fail("По активу " + priceShowTicker(ticker) + " нет рыночных данных — посчитать не могу. Проверьте тикер.");
     }
     if (code === "invalid_term") return fail("С такими условиями посчитать не получилось. Проверьте срок и страйк.");
     return fail("Расчёт сейчас недоступен. Попробуйте позже или нажмите «Обсудить с Румбергом» — посчитает менеджер.");
@@ -1946,8 +2018,15 @@ async function priceWarrant(a, env, who) {
   if (sc.status === "needs_input") {
     const q = (sc.questions || [])[0] || {};
     if (q.field === "underlyings") {
-      const cands = (q.options || []).slice(0, 4).map((o) => o.label).filter(Boolean);
-      return fail("По тикеру " + ticker + " нет рыночных данных." + (cands.length ? " Возможно, вы имели в виду: " + cands.join(", ") + "?" : " Проверьте тикер."));
+      // Варианты прайсера — его справочник целиком, вместе с чужими нотами («Сбербанк КИБ
+      // CIB-SN-…, нота на ОФЗ 26238»). Берём только биржевые тикеры из аргументов варианта,
+      // его подпись (label) не печатаем никогда.
+      const cands = (q.options || [])
+        .map((o) => String(((o && o.arguments) || {}).underlying || ""))
+        .filter((t) => /^[A-Z][A-Z0-9.-]{0,11}$/.test(t) && t !== ticker)
+        .slice(0, 4).map(priceShowTicker);
+      const shown = priceShowTicker(ticker);
+      return fail("По активу " + shown + " нет рыночных данных." + (cands.length ? " Возможно, вы имели в виду: " + cands.join(", ") + "?" : " Проверьте тикер."));
     }
     return fail("Для " + ticker + " не удалось определить валюту расчёта автоматически. Нажмите «Обсудить с Румбергом» — посчитает менеджер.");
   }
@@ -1962,7 +2041,7 @@ async function priceWarrant(a, env, who) {
   const sign = PRICE_CCY[ccy] || ccy;
   const spot = Number((md.spots || {})[ticker]);
   const kAbs = Number(t.strike_abs) || (isFinite(spot) ? spot * strike / 100 : NaN);
-  const asset = name ? name + " (" + ticker + ")" : ticker;
+  const asset = isBond ? (name || priceShowTicker(ticker)) : (name ? name + " (" + ticker + ")" : ticker);
 
   // Конкретных дат (экспирации, даты расчёта) клиенту не показываем — слово Руслана
   // 05.10.2026; срок назван словами в заголовке.
@@ -1970,7 +2049,8 @@ async function priceWarrant(a, env, who) {
   const lines = [
     "**" + head + " · " + asset + " · " + tenor.label + "**",
     "Премия: **" + priceNum(q) + "% номинала** — индикативно",
-    "• Страйк: " + priceNum(strike) + "% от текущей цены" + (isFinite(kAbs) ? " — " + priceNum(kAbs) + " " + sign : ""),
+    "• Страйк: " + priceNum(strike) + "% от текущей цены" +
+      (isFinite(kAbs) ? " — " + priceNum(kAbs) + (isBond ? "% номинала облигации" : " " + sign) : ""),
   ];
   lines.push(type === "put"
     ? "• Выплата: падение актива ниже страйка, в % номинала"
