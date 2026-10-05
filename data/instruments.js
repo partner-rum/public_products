@@ -2027,8 +2027,8 @@ window.SITE_DATA = {
       "id": "w-srednyaya-dinamika-korziny-05102027-s-2",
       "type": "warrant",
       "structure": "call",
-      "name": "CALL 100 · среднее по корзине · 1 год",
-      "underlying": "Лукойл / Озон / Полюс",
+      "name": "Средняя динамика корзины · 1 год",
+      "underlying": "Лукойл/Озон/Полюс",
       "basket": [
         "LKOH",
         "OZON",
