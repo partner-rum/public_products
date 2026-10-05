@@ -1975,8 +1975,8 @@ window.SITE_DATA = {
       "id": "w-srednyaya-dinamika-korziny-05102027-s",
       "type": "warrant",
       "structure": "call",
-      "name": "CALL 100 · среднее по корзине · 1 год",
-      "underlying": "Газпром / Лукойл / Мечел / Озон / Полюс / ВК",
+      "name": "Средняя динамика корзины · 1 год",
+      "underlying": "Газпром/Лукойл/Мечел/Озон/Полюс/ВК",
       "basket": [
         "GAZP",
         "LKOH",
