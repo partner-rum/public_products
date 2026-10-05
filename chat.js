@@ -134,6 +134,11 @@
     // оранжевый витрины на светлом не держит контраст для текста — ссылки темнее (4,6:1)
     ".ca-msg.a a{color:#B4580B;}" +
     ".ca-msg.a b{color:#14161C;font-weight:600;}" +
+    // кнопка one-pager под расчётом цены
+    ".ca-msg.a a.ca-op{display:inline-flex;align-items:center;gap:7px;min-height:40px;padding:0 14px;border-radius:10px;border:1px solid rgba(238,125,27,.6);background:#FFF4EA;color:#B4580B;font-weight:600;font-size:13px;text-decoration:none;white-space:nowrap;transition:background .15s,border-color .15s;}" +
+    ".ca-msg.a a.ca-op:hover{background:#FFE8D4;border-color:#EE7D1B;}" +
+    ".ca-msg.a a.ca-op:focus-visible{outline:2px solid #EE7D1B;outline-offset:2px;}" +
+    ".ca-msg.a a.ca-op svg{width:15px;height:15px;flex:none;}" +
     /* — подсказки-вопросы — */
     ".ca-sug{display:flex;flex-direction:column;gap:8px;align-items:flex-start;}" +
     ".ca-sug button{border:1px solid rgba(20,22,28,.14);background:#F8F9FB;color:rgba(20,22,28,.86);border-radius:12px;padding:10px 12px;min-height:44px;font-family:inherit;font-size:12.5px;line-height:1.4;cursor:pointer;text-align:left;transition:border-color .15s,color .15s,background .15s;}" +
@@ -210,7 +215,14 @@
 
   function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
   /* ИИ любит markdown-жирный — рендерим **…** как <b>, остальное экранируем */
-  function fmt(s) { return esc(s).replace(/\*\*([^*\n]+)\*\*/g, "<b>$1</b>"); }
+  // Ссылка на one-pager под расчётом цены — единственная ссылка, которую ответ может
+  // превратить в кнопку: адрес строго onepager.html?pq=<id расчёта>, иначе текст как есть.
+  var ICON_DOC = '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg>';
+  function fmt(s) {
+    return esc(s).replace(/\*\*([^*\n]+)\*\*/g, "<b>$1</b>")
+      .replace(/\[([^\]\n]{1,60})\]\((onepager\.html\?pq=[a-z0-9]{16})\)/g,
+        '<a class="ca-op" href="$2" target="_blank" rel="noopener">' + ICON_DOC + '$1</a>');
+  }
 
   function addMsg(role, text) {
     var d = document.createElement("div");
@@ -562,6 +574,10 @@
     var disc = panel.querySelector(".ca-discuss");
     if (disc) disc.addEventListener("click", showLeadForm);
     els.send.addEventListener("click", send);
+    els.log.addEventListener("click", function (e) {
+      var a = e.target.closest && e.target.closest("a.ca-op");
+      if (a) goal("chat_onepager");
+    });
     els.input.addEventListener("keydown", function (e) {
       if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
     });

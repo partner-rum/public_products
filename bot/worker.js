@@ -42,6 +42,7 @@
 // Маршруты:
 //   POST /lead   — форма-заявка с сайта  → сообщение в CHAT_ID
 //   POST /chat   — сообщение чат-ассистента → Claude API → ответ обратно на сайт
+//   POST /pq     — расчёт из чата по id (для one-pager под запрос прайсинга, onepager.html?pq=)
 //   POST /submit — админка сейлзов: продукт → карточка с кнопками ✅/❌ в ADMIN_CHAT_ID
 //   POST /tg     — вебхук Telegram: callback-кнопки модерации (✅ публикует коммитом в GitHub),
 //                  /start <id> приветствует клиента и шлёт лид в CHAT_ID, прочее пересылает в CHAT_ID;
@@ -64,6 +65,7 @@ export default {
     if (url.pathname === "/boss" && request.method === "POST") return handleBoss(request, env, cors);
     if (url.pathname === "/act" && request.method === "POST") return handleAct(request, env, cors);
     if (url.pathname === "/chat" && request.method === "POST") return handleChat(request, env, cors, ctx);
+    if (url.pathname === "/pq" && request.method === "POST") return handlePricedQuote(request, env, cors);
     if (url.pathname === "/submit" && request.method === "POST") return handleSubmit(request, env, cors, ctx);
     if (url.pathname === "/tg" && request.method === "POST") return handleTelegram(request, env, ctx);
 
@@ -2059,9 +2061,52 @@ async function priceWarrant(a, env, who) {
   lines.push("• Безубыток: актив " + (type === "put" ? "ниже " : "выше ") + priceNum(be) + "% от текущей цены");
   lines.push("• Риск ограничен уплаченной премией");
   const out = { ok: true, text: lines.join("\n"), fair: pv, quote: q, ticker, type, tenor: tenor.expiry, strike };
+  // для one-pager: имя как на доске («CALL 100 · Сбербанк · 2 года»), актив как в каталоге
+  out.pq = await pqSave(env, {
+    v: 1, type: "warrant", structure: type, strike, spot: 100,
+    name: head + " · " + (isBond ? asset : (name || ticker)) + " · " + tenor.label,
+    underlying: asset, ticker, tenor: tenor.label, quote: q, currency: ccy, isBond, at: Date.now(),
+  });
   PRICE_CACHE.set(key, { at: Date.now(), out });
   if (PRICE_CACHE.size > 300) PRICE_CACHE.delete(PRICE_CACHE.keys().next().value);
   return out;
+}
+
+// ── One-pager под расчёт чата ───────────────────────────────────────────────
+// Каждый удачный расчёт кладётся в KV `pq:<id>` (30 дней), а под ответом чата —
+// ссылка onepager.html?pq=<id>. Лист берёт цифры ТОЛЬКО отсюда: параметры в адресе
+// подделать можно (официальный лист Rumberg с выдуманной ценой), id случайного
+// расчёта — нельзя. В записи только то, что клиент и так видел в ответе: актив,
+// CALL/PUT, страйк, срок, котировка с наценкой. Справедливой цены прайсера нет.
+const PQ_TTL = 30 * 24 * 3600;
+const PQ_ID_RE = /^[a-z0-9]{16}$/;
+function pqId() {
+  const a = "abcdefghijkmnpqrstuvwxyz23456789", b = new Uint8Array(16);
+  crypto.getRandomValues(b);
+  let out = "";
+  for (const x of b) out += a[x % a.length];   // 256 % 32 = 0 — без перекоса
+  return out;
+}
+async function pqSave(env, rec) {
+  if (!env.POST_KV) return "";
+  const id = pqId();
+  try { await env.POST_KV.put("pq:" + id, JSON.stringify(rec), { expirationTtl: PQ_TTL }); return id; }
+  catch (e) { return ""; }
+}
+async function handlePricedQuote(request, env, cors) {
+  const origin = request.headers.get("Origin");
+  if (env.ALLOW_ORIGIN && env.ALLOW_ORIGIN !== "*" && origin && origin !== env.ALLOW_ORIGIN) {
+    return json({ ok: false, error: "forbidden_origin" }, 403, cors);
+  }
+  let data = {};
+  try { data = await request.json(); } catch {}
+  const id = String(data.id || "");
+  if (!PQ_ID_RE.test(id)) return json({ ok: false, error: "bad_id" }, 422, cors);
+  if (!env.POST_KV) return json({ ok: false, error: "no_store" }, 503, cors);
+  let rec = null;
+  try { rec = await env.POST_KV.get("pq:" + id, "json"); } catch (e) {}
+  if (!rec) return json({ ok: false, error: "not_found" }, 404, cors);
+  return json({ ok: true, item: rec }, 200, cors);
 }
 
 function priceFooter(partnerMode) {
@@ -2094,7 +2139,9 @@ async function chatWithPricing(system, messages, env, opts) {
     try { a = JSON.parse(c.function.arguments || "{}"); } catch { /* пустые аргументы → честный отказ */ }
     return priceWarrant(a, env, opts.who || "site-chat");
   }));
-  const reply = outs.map((o) => o.text).join("\n\n") + (outs.some((o) => o.ok) ? "\n\n" + priceFooter(opts.partnerMode) : "");
+  // Под каждым удачным расчётом — ссылка на one-pager (chat.js рисует её кнопкой).
+  const reply = outs.map((o) => o.text + (o.ok && o.pq ? "\n\n[One-pager для клиента](onepager.html?pq=" + o.pq + ")" : ""))
+    .join("\n\n") + (outs.some((o) => o.ok) ? "\n\n" + priceFooter(opts.partnerMode) : "");
   return { reply, priced: outs };
 }
 

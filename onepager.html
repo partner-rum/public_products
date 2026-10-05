@@ -369,22 +369,66 @@
   }
   const PREVIEW = offering ? null : readPreview();
 
+  // ── Лист под расчёт AI-ассистента (?pq=<id>) ────────────────────────────────
+  // Чат кладёт каждый удачный расчёт CALL/PUT в хранилище воркера и даёт ссылку
+  // onepager.html?pq=<id>. Цифры берутся ТОЛЬКО оттуда, а не из адреса: параметры
+  // в адресе позволили бы напечатать официальный лист Rumberg с любой ценой.
+  const PQ = offering ? "" : (qs.get("pq") || "");
+  const PQ_OK = /^[a-z0-9]{16}$/.test(PQ);
+  const PQ_API = (location.hostname === "invest.rumberg.ru" ? "/api" : "https://so-leads.ruslan-sabirov.workers.dev") + "/pq";
+  const clean = (v) => String(v == null ? "" : v).replace(/[<>&"']/g, "").slice(0, 120);
+  function pqItem(r) {
+    if (!r || r.type !== "warrant" || (r.structure !== "call" && r.structure !== "put")) return null;
+    const q = Number(r.quote), k = Number(r.strike);
+    if (!(q > 0 && q < 100) || !(k >= 20 && k <= 300)) return null;
+    // Актив — по названию из каталога витрины, если тикер там есть: у прайсера свои
+    // имена («ЛУКОЙЛ»), а описание компании на листе ищется по имени витрины («Лукойл (LKOH)»).
+    let und = clean(r.underlying), name = clean(r.name);
+    const tk = clean(r.ticker);
+    if (tk && !r.isBond) {
+      const L = (window.SITE_DATA && (SITE_DATA.instruments || SITE_DATA.items)) || [];
+      const hit = L.find((x) => x && typeof x.underlying === "string" && x.underlying.indexOf("/") < 0 &&
+        x.underlying.endsWith("(" + tk + ")"));
+      if (hit) {
+        und = hit.underlying;
+        const parts = name.split(" · ");
+        if (parts.length === 3) { parts[1] = und.replace(/\s*\([^)]*\)\s*$/, ""); name = parts.join(" · "); }
+      }
+    }
+    return { id: "chat-" + PQ, type: "warrant", structure: r.structure, name: name,
+      underlying: und, currency: clean(r.currency) || "RUB", strike: k, strike2: null,
+      spot: 100, tenor: clean(r.tenor), quote: q, minNom: 1000000, chat: true, at: Number(r.at) || 0 };
+  }
+
+  function boot(CHAT) {
   // Продукта с таким id нет (снят с витрины, битая ссылка, пустой ?id) — печатаем
   // экран-заглушку вместо чужого продукта: findInstrument теперь возвращает null.
-  const found = offering ? null : (PREVIEW || S.findInstrument(qs.get("id")));
+  const found = offering ? null : (CHAT || PREVIEW || S.findInstrument(qs.get("id")));
+  // Ссылка на расчёт, которого в хранилище нет (прошло 30 дней, опечатка в адресе).
+  const PQ_STALE = !!PQ && !CHAT;
   // Открыли превью, а черновика в хранилище уже нет (прошло полчаса, другой браузер).
   // Общий текст «продукт снят с витрины» сбивал бы с толку — говорим, что случилось.
   const PREVIEW_STALE = qs.get("preview") === "1" && !PREVIEW && !offering;
 
   if (!offering && !found) {
-    document.title = PREVIEW_STALE
+    document.title = PQ_STALE
+      ? "Расчёт не найден — Rumberg"
+      : PREVIEW_STALE
       ? "Превью устарело — Rumberg"
       : offBroken
       ? "One-pager для размещения пока не собирается — Rumberg"
       : "Продукт снят с витрины — Rumberg";
     document.getElementById("deck").innerHTML =
       '<section class="slide gone-slide">' +
-        (PREVIEW_STALE
+        (PQ_STALE
+          ? '<div class="g-k">расчёт не найден</div>' +
+            '<h1>Этот расчёт больше недоступен</h1>' +
+            '<p>Лист собирается по расчёту AI-ассистента и хранится 30 дней. ' +
+            'Посчитайте опцион в чате заново — котировка будет по текущему рынку, ' +
+            'а под ответом появится свежая ссылка на one-pager.</p>' +
+            '<div class="g-act"><a href="board.html">Открыть доску</a>' +
+            '<a class="alt" href="https://t.me/Rumberb_Sales_Team_bot" target="_blank" rel="noopener">Написать в Telegram</a></div>'
+          : PREVIEW_STALE
           ? '<div class="g-k">превью устарело</div>' +
             '<h1>Черновик продукта не найден</h1>' +
             '<p>Превью живёт полчаса и только в том браузере, где его открыли. ' +
@@ -433,7 +477,8 @@
     inst = found;
     nom = inst.minNom; q = inst.quote; name = S.displayName(inst);
     isForeign = S.isFxSensitive(inst.underlying);
-    backHref = "board.html#" + encodeURIComponent(inst.id); backText = "← К инструменту";
+    backHref = inst.chat ? "board.html" : "board.html#" + encodeURIComponent(inst.id);
+    backText = inst.chat ? "← К доске" : "← К инструменту";
   }
   const U = S.underlyingInfo(inst.underlying);
 
@@ -461,7 +506,9 @@
   document.title = "One-pager — " + name;
   { const bl = document.getElementById("back-link"); bl.href = backHref; bl.textContent = backText; }
 
-  const today = new Date();
+  // У расчёта из чата дата листа — день РАСЧЁТА: котировка действует на момент
+  // расчёта, и лист, открытый через неделю, не должен выдавать её за сегодняшнюю.
+  const today = inst.chat && inst.at ? new Date(inst.at) : new Date();
   const dateS = ("0" + today.getDate()).slice(-2) + "." + ("0" + (today.getMonth() + 1)).slice(-2) + "." + today.getFullYear();
   const starSvg = (s, f) => '<svg width="' + s + '" height="' + s + '" viewBox="0 0 26 26" fill="none"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="' + f + '"/></svg>';
   const QUAL = "Только для квалифицированных инвесторов<br>Не является индивидуальной инвестиционной рекомендацией";
@@ -514,6 +561,29 @@
       '<text x="' + x(K) + '" y="' + (y(0) + 15) + '" text-anchor="middle" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>K ' + S.fmtSmart(K) + '</text>' +
       '<circle cx="' + x(sBe) + '" cy="' + y(q) + '" r="4" fill="' + C.or + '"/>' +
       '<text x="' + (x(sBe) + (beEnd ? -7 : 7)) + '" y="' + (y(q) + 14) + '"' + (beEnd ? ' text-anchor="end"' : '') + ' fill="' + C.or + '" font-size="10" ' + MONO + '>б/у ' + S.fmtSmart(sBe) + '</text>' +
+      '</svg>';
+  }
+  // PUT: выплата = max(K − S; 0) в % номинала, растёт при падении актива ниже страйка.
+  // Потолок у пута естественный — актив не падает ниже нуля, поэтому стрелки нет.
+  function chPut() {
+    const K = inst.strike, sBe = K - q;
+    const s0 = Math.max(4, Math.min(K * 0.62, sBe - (K - sBe) * 0.6)), s1 = K * 1.22;
+    const yMax = Math.max(34, (K - s0) + 6);
+    const x = s => PAD + ((s - s0) / (s1 - s0)) * (CW - PAD * 2);
+    const y = v => CH - PAD - (v / yMax) * (CH - PAD * 2);
+    const line = "M" + x(s0).toFixed(1) + " " + y(K - s0).toFixed(1) +
+      " L" + x(K).toFixed(1) + " " + y(0).toFixed(1) + " L" + x(s1).toFixed(1) + " " + y(0).toFixed(1);
+    const beLeft = x(sBe) < CW * 0.3;
+    return '<svg viewBox="0 0 ' + CW + ' ' + CH + '" width="100%" style="display:block">' +
+      '<line x1="' + PAD + '" y1="' + y(0) + '" x2="' + (CW - PAD) + '" y2="' + y(0) + '" stroke="' + C.grid + '" stroke-width="1"/>' +
+      '<line x1="' + PAD + '" y1="' + y(q) + '" x2="' + (CW - PAD) + '" y2="' + y(q) + '" stroke="' + C.or + '" stroke-width="1" stroke-dasharray="4 4"/>' +
+      '<text x="' + (CW - PAD - 2) + '" y="' + (y(q) - 5) + '" text-anchor="end" fill="' + C.or + '" font-size="10" ' + MONO + '>премия ' + S.fmt1(q) + '%</text>' +
+      '<path d="' + line + '" fill="none" stroke="' + C.line + '" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>' +
+      '<text x="' + (PAD + 2) + '" y="11" fill="' + C.line + '" font-size="10" ' + MONO + '>выплата растёт при падении</text>' +
+      '<rect x="' + (x(K) - 4) + '" y="' + (y(0) - 4) + '" width="8" height="8" transform="rotate(45 ' + x(K) + ' ' + y(0) + ')" fill="' + C.line + '"/>' +
+      '<text x="' + x(K) + '" y="' + (y(0) + 15) + '" text-anchor="middle" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>K ' + S.fmtSmart(K) + '</text>' +
+      '<circle cx="' + x(sBe) + '" cy="' + y(q) + '" r="4" fill="' + C.or + '"/>' +
+      '<text x="' + (x(sBe) + (beLeft ? 7 : -7)) + '" y="' + (y(q) + 14) + '"' + (beLeft ? '' : ' text-anchor="end"') + ' fill="' + C.or + '" font-size="10" ' + MONO + '>б/у ' + S.fmtSmart(sBe) + '</text>' +
       '</svg>';
   }
   function chDigital() {
@@ -798,6 +868,30 @@
       explainer: "Дисконтная структурная облигация (CLN) с привязкой к кредитному качеству " + offering.reference + ". Покупается по " + S.fmt2(q) + "% номинала; при отсутствии кредитного события по контрольному лицу погашается по 100% номинала. Доход — дисконт, зафиксированный в день сделки; купона нет.",
       underLabel: "Главный риск · кредитное событие",
       underDesc: "Кредитный риск на контрольное лицо — " + offering.reference + ". При кредитном событии (банкротство, неплатёж, реструктуризация обязательства) выплата при погашении может быть меньше номинала — вплоть до нуля."
+    };
+  } else if (inst.type === "warrant" && inst.structure === "put") {
+    const K = inst.strike;
+    const premiumRub = nom * q / 100;
+    // Сценарий падения считается ОТ ПРЕМИИ, как рост у колла: полтора безубытка,
+    // не меньше 20% и не глубже 90%.
+    const beDown = 100 - (K - q);
+    const downPct = Math.min(90, Math.max(20, Math.round((beDown * 1.5) / 10) * 10));
+    const payout1 = nom * Math.max(K - (100 - downPct), 0) / 100;
+    const net1 = payout1 - premiumRub;
+    c = {
+      badge: "PUT · структурная облигация",
+      subtitle: "Заработать на падении " + uName + " с экспозицией на весь номинал и риском, ограниченным премией.",
+      underLabel: woLabel, underDesc: woDesc,
+      chart: chPut,
+      params: [["Страйк (K)", S.fmtSmart(K) + "% нач. уровня", false], ["Макс. убыток", "премия", false],
+        ["Срок", inst.tenor, false], ["Экспозиция", "100% номинала", false]],
+      chartCap: "Выплата в % от номинала; уровень БА — в % от начального. Чем глубже падение ниже K, тем больше выплата. Пунктир — премия; б/у — безубыток.",
+      exIntro: "Номинал " + S.fmtInt(nom) + " ₽ · премия " + S.fmt2(q) + "% = " + S.fmtInt(premiumRub) + " ₽",
+      scen: [
+        [uFell + " на " + downPct + "%", "выплата " + S.fmtInt(payout1) + " ₽", (net1 >= 0 ? "+" : "−") + S.fmtInt(Math.abs(net1)) + " ₽", net1 >= 0 ? "var(--up)" : "var(--down)", roiTxt(net1, premiumRub)],
+        [inst.underlying + " не упал ниже страйка", "выплаты нет — премия потеряна полностью", "−" + S.fmtInt(premiumRub) + " ₽", "var(--down)", "−100% вложенных"]
+      ],
+      explainer: "PUT-варрант — право на выплату, равную падению базового актива ниже страйка. Инвестор платит только премию (" + S.fmt2(q) + "% номинала) и получает экспозицию на весь номинал без маржин-коллов. Если актив не упал ниже страйка — теряется только премия."
     };
   } else if (inst.type === "warrant") {
     const isCS = inst.structure === "cs";
@@ -1163,7 +1257,9 @@
       ? '<div class="c-over">Параметры изменены вручную через адрес страницы (' +
         esc(OVERRIDDEN.join(", ")) + '). Это не котировка витрины.</div>'
       : '') +
-    '<div class="c-foot">Пример иллюстративный, без учёта комиссий и налогов.</div>' +
+    '<div class="c-foot">' + (inst.chat
+      ? "Котировка рассчитана AI-ассистентом Rumberg по рыночным данным на дату листа и может измениться. "
+      : "") + 'Пример иллюстративный, без учёта комиссий и налогов.</div>' +
     '</section>';
 
   // Слайд 3 — дисклеймер
@@ -1228,6 +1324,8 @@
     if (shHost && window.Share) {
       const prodUrl = offering
         ? new URL("offerings", location.href).href
+        : inst.chat
+        ? new URL("onepager.html?pq=" + PQ, location.href).href
         : new URL("instrument?id=" + encodeURIComponent(inst.id), location.href).href;
       const params = [["Цена входа", S.fmt2(q) + "% ном."]].concat((c.params || []).map(p => [p[0], p[1]]));
       Share.attach(shHost, { url: prodUrl, title: name, name: name, pitch: c.subtitle, params: params });
@@ -1281,6 +1379,18 @@
     document.body.insertBefore(pvb, document.body.firstChild);
   }
   }
+  }
+
+  if (PQ) {
+    if (!PQ_OK) boot(null);
+    else {
+      document.getElementById("deck").innerHTML = '<section class="slide gone-slide"><div class="g-k">загружаем расчёт…</div></section>';
+      fetch(PQ_API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: PQ }) })
+        .then((r) => r.ok ? r.json() : null)
+        .then((d) => boot(d && d.ok ? pqItem(d.item) : null))
+        .catch(() => boot(null));
+    }
+  } else boot(null);
 
 </script>
 </body>
