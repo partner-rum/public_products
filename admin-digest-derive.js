@@ -507,15 +507,75 @@
   // в data/lib.js: поле basketMode, без него — слово «среднее» в названии; автоколл
   // описан по худшей бумаге своей веткой и сюда не попадает.
   var BK_AVG_RE = /(^|[^а-яё])средн(ее|яя|ей|ему|юю|ий|его|ем)([^а-яё]|$)/i;
-  function basketText(p) {
+  function basketInfo(p) {
     if (!p || p.type === "autocall" || !Array.isArray(p.basket) || p.basket.length < 2) return null;
     var avg = p.basketMode === "avg" || (p.basketMode == null && BK_AVG_RE.test(String(p.name || "")));
-    if (!avg) return { upside: "по худшей бумаге корзины", how: "Все условия считаются по худшей бумаге корзины, а не по средней." };
     var w = Array.isArray(p.basketW) && p.basketW.length === p.basket.length ? p.basketW : null;
     var eq = !w || w.every(function (x) { return x === w[0]; });
     var wt = eq ? "равные веса" : p.basket.map(function (t, i) { return t + " " + comma(w[i]) + "%"; }).join(", ");
-    return { upside: "по среднему изменению бумаг корзины (" + wt + ")",
-             how: "Уровень корзины — среднее изменение бумаг (" + wt + "), а не худшая из них." };
+    return avg ? {
+      avg: true, gen: "корзины", nom: "корзина в среднем", Nom: "Корзина в среднем",
+      lvl: "средний уровень корзины", with: "корзиной", noGrow: "корзина в среднем не выросла",
+      reached: "корзина в среднем дошла до", went: "куда пошла корзина",
+      how: "Уровень корзины — среднее изменение бумаг (" + wt + "), а не худшая из них: рост одних бумаг компенсирует падение других.",
+      upside: "; уровень корзины — среднее изменение бумаг (" + wt + ")",
+      fit: " в целом: результат считается по среднему изменению бумаг, а не по худшей",
+      prot: " (по среднему изменению бумаг)"
+    } : {
+      avg: false, gen: "худшей бумаги корзины", nom: "худшая бумага корзины", Nom: "Худшая бумага корзины",
+      lvl: "уровень худшей бумаги корзины", with: "худшей бумагой", noGrow: "худшая бумага корзины не выросла",
+      reached: "худшая бумага корзины дошла до", went: "куда пошли бумаги корзины",
+      how: "Все условия считаются по худшей бумаге корзины, а не по средней.",
+      upside: "",
+      fit: " — всех бумаг сразу: результат считается по худшей из них",
+      prot: " (по худшей бумаге)"
+    };
+  }
+  // Тексты идеи написаны про один актив («рост актива», «актив не ниже»). У корзины
+  // подставляем её подлежащее — шаблоны выше живут в этом же файле, поэтому замены
+  // точные, а не угадывание. Порядок важен: длинные обороты раньше коротких.
+  function basketWords(s, b) {
+    if (!s) return s;
+    return String(s)
+      .replace(/при активе не ниже/g, "при уровне " + b.gen + " не ниже")
+      .replace(/Актив на дату оценки/g, b.Nom + " на дату оценки")
+      .replace(/актив не ниже/g, b.nom + " не ниже")
+      .replace(/актив не вырос/g, b.noGrow)
+      .replace(/актив дошёл до/g, b.reached)
+      .replace(/куда пошёл базовый актив/g, b.went)
+      .replace(/снижение актива/g, "снижение " + b.gen)
+      .replace(/вместе с активом/g, "вместе с " + b.with)
+      .replace(/базового актива/g, b.gen)
+      .replace(/(рост[ауе]?) актива/g, "$1 " + b.gen);
+  }
+  function applyBasket(r, product) {
+    var b = basketInfo(product);
+    if (!b) return r;
+    var U = r.underlying, pf = r.payoff || {};
+    r.how = basketWords(r.how, b) + " " + b.how;
+    r.payout = basketWords(r.payout, b);
+    if (r.p && r.p.upside) r.p.upside = basketWords(r.p.upside, b) + b.upside;
+    // «Кому подходит» (экран) и «Риск» (экран и печать) дайджест пишет сам по семейству —
+    // про корзину он не знает, поэтому для ходовых форм отдаём готовый текст
+    // (поля idea.audience / idea.risk оба рендера понимают как переопределение).
+    if (pf.type === "callstep") {
+      r.audience = "Подходит, если вы ждёте, что " + b.lvl + " «" + U + "» к дате оценки будет не ниже " +
+        comma(pf.strikePct) + "%, и вам достаточно фиксированной выплаты " + comma(pf.payoutPct) +
+        "% номинала: насколько выше порога, значения не имеет. Риск ограничен премией.";
+      r.risk = "Риск ограничен премией, но он «всё или ничего»: если на дату оценки " + b.lvl +
+        " хоть немного ниже " + comma(pf.strikePct) + "%, выплаты нет вовсе и премия теряется полностью.";
+    } else if (r.family === "warrant") {
+      r.audience = "Подходит, если вы ждёте рост корзины «" + U + "»" + b.fit +
+        ". Экспозиция усиленная, риск ограничен: оплачивается только премия, без маржин-коллов.";
+      r.risk = "Риск ограничен премией: если " + b.noGrow + " к погашению, премия теряется полностью, " +
+        "вложенные средства не возвращаются.";
+    } else if (r.family === "protection") {
+      var f = pf.floorPct != null ? pf.floorPct : 100;
+      r.audience = (f < 100
+        ? "Осторожным клиентам: возврат не менее " + comma(f) + "% номинала плюс участие в росте корзины «"
+        : "Осторожным клиентам: полная защита капитала плюс участие в росте корзины «") + U + "»" + b.prot + ".";
+    }
+    return r;
   }
 
   g.deriveDigestIdea = function (product, source) {
@@ -524,11 +584,6 @@
     if (r && r.supported === false) return r;
     r.supported = true;
     r = attachHowPayout(r);
-    var bt = source === "offering" ? null : basketText(product);
-    if (bt) {
-      if (r.p && r.p.upside) r.p.upside += "; " + bt.upside;
-      if (r.how) r.how += " " + bt.how;
-    }
-    return r;
+    return source === "offering" ? r : applyBasket(r, product);
   };
 })(typeof window !== "undefined" ? window : globalThis);

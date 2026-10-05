@@ -940,7 +940,7 @@
   </main>
 </div>
 
-<script src="admin-digest-derive.js?v=6"></script>
+<script src="admin-digest-derive.js?v=7"></script>
 <script>
 (function () {
   "use strict";
@@ -3077,6 +3077,10 @@
     };
     if (dgCurrent.tenor) item.tenor = dgCurrent.tenor;
     if (dgCurrent.fx) item.fx = true;
+    // Готовые «Кому подходит» и «Риск» — у продуктов на корзину (см. applyBasket в
+    // admin-digest-derive.js): шаблоны дайджеста про корзину не знают.
+    if (dgCurrent.audience) item.audience = dgCurrent.audience;
+    if (dgCurrent.risk) item.risk = dgCurrent.risk;
     put(item, "situation", val(fDigest, "situation"));
     put(item, "conclusion", val(fDigest, "conclusion"));
     var factors = val(fDigest, "factors").split("\n").map(function (s) { return s.trim(); }).filter(Boolean);

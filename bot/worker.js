@@ -2882,8 +2882,10 @@ const SUBMIT_SECTIONS = {
   digest: {
     label: "Дайджест (идея недели)",
     file: "data/digest.js",
+    // audience/risk — готовые «Кому подходит» и «Риск»: админка присылает их у
+    // продуктов на корзину, где шаблоны дайджеста писали бы про один актив.
     str: ["id", "family", "kind", "name", "underlying", "teaser", "tenor",
-          "hypothesis", "situation", "conclusion", "how", "payout"],
+          "hypothesis", "situation", "conclusion", "how", "payout", "audience", "risk"],
     num: [],
     arr: ["factors"],
     obj: { metric: ["v", "k"], p: ["asset", "price", "upside", "protection"],
