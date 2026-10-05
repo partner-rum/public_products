@@ -88,15 +88,15 @@
 
   var css = "" +
     /* — строка-вопрос внизу по центру (на телефоне — пилюля без поля) — */
-        // Светлая на тёмном: фон — цвет текста витрины #F2F3F7, текст — тот же тёмный, что на
-    // оранжевых кнопках. Рамка не нужна, предмет и так отделён; фокус/наведение — оранжевое кольцо.
-    ".ca-dock{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:300;display:flex;align-items:center;gap:10px;width:600px;max-width:calc(100vw - 32px);height:56px;margin:0;padding:0 8px 0 18px;box-sizing:border-box;border-radius:999px;background:#F2F3F7;border:0;box-shadow:0 14px 40px rgba(0,0,0,.6),0 0 0 2px rgba(238,125,27,0);font-family:'Onest',system-ui,sans-serif;color:#0C0A08;transition:box-shadow .2s;}" +
-    ".ca-dock:hover,.ca-dock:focus-within{box-shadow:0 14px 40px rgba(0,0,0,.6),0 0 0 2px rgba(238,125,27,.75);}" +
+        // Светлая на тёмном, но приглушённая (Руслан: «чуть более спокойный контраст»): фон — серо-
+    // голубой #D3D7DF вместо белого #F2F3F7, текст — карточный #14161C. Рамка не нужна, предмет и так отделён; фокус/наведение — оранжевое кольцо.
+    ".ca-dock{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:300;display:flex;align-items:center;gap:10px;width:600px;max-width:calc(100vw - 32px);height:56px;margin:0;padding:0 8px 0 18px;box-sizing:border-box;border-radius:999px;background:#D3D7DF;border:0;box-shadow:0 12px 32px rgba(0,0,0,.5),0 0 0 2px rgba(238,125,27,0);font-family:'Onest',system-ui,sans-serif;color:#14161C;transition:box-shadow .2s;}" +
+    ".ca-dock:hover,.ca-dock:focus-within{box-shadow:0 12px 32px rgba(0,0,0,.5),0 0 0 2px rgba(238,125,27,.7);}" +
     ".ca-dock.hide{display:none;}" +
     ".ca-dock>svg{flex:none;}" +
-    ".ca-dock-tag{flex:none;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;letter-spacing:.08em;color:#2E5EC2;border:1px solid rgba(46,94,194,.45);border-radius:5px;padding:2px 5px;}" +
-    ".ca-dock-in{flex:1;min-width:0;background:none;border:0;outline:none;color:#0C0A08;font-family:inherit;font-size:15px;line-height:1.3;padding:0;}" +
-    ".ca-dock-in::placeholder{color:rgba(12,10,8,.58);}" +
+    ".ca-dock-tag{flex:none;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;letter-spacing:.08em;color:#2A56B0;border:1px solid rgba(42,86,176,.45);border-radius:5px;padding:2px 5px;}" +
+    ".ca-dock-in{flex:1;min-width:0;background:none;border:0;outline:none;color:#14161C;font-family:inherit;font-size:15px;line-height:1.3;padding:0;}" +
+    ".ca-dock-in::placeholder{color:rgba(20,22,28,.66);}" +
     ".ca-dock-go{flex:none;display:inline-flex;align-items:center;gap:7px;height:40px;padding:0 16px;border:0;border-radius:999px;background:#EE7D1B;color:#0C0A08;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;transition:background .15s;}" +
     ".ca-dock-go:hover{background:#F58E33;}.ca-dock-go svg{width:14px;height:14px;}" +
     ".ca-dock-lbl{display:none;}" +
@@ -105,7 +105,7 @@
     "@media(max-width:860px){.ca-dock{width:auto;max-width:none;height:50px;padding:0 18px 0 14px;gap:9px;cursor:pointer;}" +
     ".ca-dock-in,.ca-dock-go,.ca-dock-tag{display:none;}" +
     ".ca-dock-lbl{display:block;font-size:14.5px;font-weight:600;line-height:1.15;white-space:nowrap;text-align:left;}" +
-    ".ca-dock-lbl small{display:block;margin-top:2px;font-size:11.5px;font-weight:400;line-height:1.2;color:rgba(12,10,8,.64);}}" +
+    ".ca-dock-lbl small{display:block;margin-top:2px;font-size:11.5px;font-weight:400;line-height:1.2;color:rgba(20,22,28,.68);}}" +
     /* — панель — */
     // visibility:hidden в закрытом состоянии убирает содержимое панели из табуляции
     // и из дерева скринридера (opacity+pointer-events этого не делали — A.6).
