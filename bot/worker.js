@@ -1532,6 +1532,7 @@ async function handleChat(request, env, cors, ctx) {
         who: partnerMode ? "site-desk" : "site-chat",
         limiter: env.CHAT_RATE_LIMIT,
         ip: request.headers.get("CF-Connecting-IP") || "anon",
+        cat,
       });
       reply = out.reply; priced = out.priced;
     }
@@ -1757,6 +1758,7 @@ const PRICING_PROMPT = `
 Ты считаешь цену ТОЛЬКО ДВУХ продуктов: обычный колл-опцион (CALL) и обычный пут-опцион (PUT) на ОДИН базовый актив. Больше ты не прайсишь НИЧЕГО.
 Когда клиент просит посчитать, запрайсить, оценить или узнать цену колла или пута (колл-опциона, пут-опциона, CALL, PUT, варранта на рост или на падение) на конкретный актив — вызови price_warrant. Ответ с ценой клиенту соберёт сервер: сам цену не называй и не придумывай.
 - Тикер передавай как на бирже (SBER, GAZP, LKOH, YDEX, NVDA). Не знаешь тикер — передай название компании как есть.
+- Индекс, фонд и валюта — тоже ОДИН актив, их считаешь: индекс МосБиржи → IMOEX, индекс РТС → RTSI, S&P 500 → SPY, золото → GLD, биткоин → IBIT, юань → CNYRUB. Не отказывай словами «это индекс, а не один актив».
 - Срок обязателен. Не назван — спроси срок и инструмент не вызывай. Срок НИКОГДА не придумывай и не бери «по умолчанию». «2 года» → '2Y', «18 месяцев» → '18M', «полгода» → '6M'.
 - Страйк по умолчанию 100% (на уровне текущей цены). «Страйк 110», «на 10% выше рынка» → strike_pct 110. Страйк деньгами («страйк 1500 рублей», «страйк 300 $») → strike_abs 1500 / 300, в проценты сам не пересчитывай.
 - Клиент меняет условия прошлого расчёта («а на 3 года?», «а страйк 110?») — вызови инструмент снова, остальные условия возьми из прошлого расчёта.
@@ -1841,7 +1843,14 @@ function priceTenor(raw) {
     const t = Date.UTC(+m[1], +m[2] - 1, +m[3]);
     const today = Date.parse(mskDate().key + "T00:00:00Z");
     if (!isFinite(t)) return null;
-    return { expiry: m[0], days: Math.round((t - today) / 86400000), label: "до " + m[3] + "." + m[2] + "." + m[1] };
+    // Подпись — длительностью («1 год 3 месяца»), не датой: конкретных дат клиенту не
+    // показываем (слово Руслана 05.10.2026; дата в заголовке поймана проверкой в тот же день).
+    const days = Math.round((t - today) / 86400000);
+    const mo = Math.round(days / (365 / 12)), y = Math.floor(mo / 12), r = mo % 12;
+    const label = days < 45 ? days + " " + plural(days, "день", "дня", "дней")
+      : mo < 12 ? mo + " " + plural(mo, "месяц", "месяца", "месяцев")
+      : y + " " + plural(y, "год", "года", "лет") + (r ? " " + r + " " + plural(r, "месяц", "месяца", "месяцев") : "");
+    return { expiry: m[0], days, label };
   }
   return null;
 }
@@ -1902,6 +1911,31 @@ async function priceBondRate(env) {
   return v;
 }
 
+// Имя актива в ответе — как на витрине («Газпром (GAZP)», «Золото (GLD)»), а не сырое имя
+// справочника прайсера («ГАЗПРОМ ао», «Currency Pair CNY/RUB», «SPDR Gold Shares (GLD)»).
+// Сначала каталог доски по тикеру, затем словарь популярных, затем очистка имени прайсера.
+const PRICE_NAMES = {
+  CNYRUB: "Юань", USDRUB: "Доллар США", EURRUB: "Евро", IMOEX: "Индекс МосБиржи", RTSI: "Индекс РТС",
+  AAPL: "Apple", TSLA: "Tesla", AMZN: "Amazon", GOOGL: "Alphabet", GOOG: "Alphabet", MSFT: "Microsoft",
+  META: "Meta", AMD: "AMD", INTC: "Intel", NFLX: "Netflix",
+};
+function priceAssetName(ticker, raw, cat) {
+  const T = String(ticker || "");
+  for (const x of (cat && cat.instr) || []) {
+    const u = x && typeof x.underlying === "string" ? x.underlying : "";
+    if (u && u.indexOf("/") < 0 && u.endsWith("(" + T + ")")) return u.replace(/\s*\([^)]*\)\s*$/, "");
+  }
+  if (PRICE_NAMES[T]) return PRICE_NAMES[T];
+  let n = String(raw || "").trim();
+  n = n.split("(" + T + ")").join("").replace(/^Currency Pair\s+/i, "")
+    .replace(/[\s,]+(?:ао|ап|АО|АП|ПАО|PJSC|Inc\.?|Corp\.?|Corporation|Ltd\.?|plc|N\.V\.|S\.A\.|AG|SE)$/u, "")
+    .replace(/\s{2,}/g, " ").trim();
+  if (!n || n.toUpperCase() === T) return "";
+  // Русское ВСЁ ЗАГЛАВНЫМИ («ЛУКОЙЛ») — в обычный регистр; латинские бренды (NVIDIA, AMD) не трогаем
+  if (n.length > 3 && n === n.toUpperCase() && /^[А-ЯЁ0-9\s.\-]+$/.test(n)) n = n.charAt(0) + n.slice(1).toLowerCase();
+  return n;
+}
+
 function priceNamePick(rs) {
   if (rs.status === "resolved" && rs.ticker) return { ticker: rs.ticker, name: rs.name || "", options: [] };
   const cands = (rs.matches || [])
@@ -1915,7 +1949,7 @@ function priceNamePick(rs) {
 
 // Один расчёт. Всегда возвращает текст для клиента: и котировку, и честный отказ.
 // fair — справедливая цена прайсера, ТОЛЬКО для внутреннего лога.
-async function priceWarrant(a, env, who) {
+async function priceWarrant(a, env, who, cat) {
   const fail = (text) => ({ ok: false, text: PRICE_LEAK_RE.test(text) ? PRICE_LEAK_TEXT : text });
   const type = String(a.option_type || "").toLowerCase();
   if (type !== "call" && type !== "put") return fail("Уточните, какой нужен варрант: CALL (на рост) или PUT (на падение).");
@@ -1964,7 +1998,7 @@ async function priceWarrant(a, env, who) {
     const rs = rr.structuredContent || {};
     const exact = (rs.matches || []).find((m) => m && m.ticker === ticker);
     if (!asName) {
-      if (rs.status === "resolved" && rs.ticker === ticker) { name = rs.name || ""; listed = true; }
+      if (rs.status === "resolved" && rs.ticker === ticker) { name = rs.name || (exact && exact.name) || ""; listed = true; }
       else if (exact) { name = exact.name || ""; listed = true; }
     } else {
       const pick = priceNamePick(rs);
@@ -2068,6 +2102,7 @@ async function priceWarrant(a, env, who) {
   const sign = PRICE_CCY[ccy] || ccy;
   const spot = Number((md.spots || {})[ticker]);
   const kAbs = Number(t.strike_abs) || (isFinite(spot) ? spot * strike / 100 : NaN);
+  if (!isBond) name = priceAssetName(ticker, name, cat);
   const asset = isBond ? (name || priceShowTicker(ticker)) : (name ? name + " (" + ticker + ")" : ticker);
 
   // Конкретных дат (экспирации, даты расчёта) клиенту не показываем — слово Руслана
@@ -2150,10 +2185,12 @@ function priceFooter(partnerMode) {
 //    или это уточнение прошлого расчёта («а страйк 110?» — срок берётся из него).
 // 2) Страйк деньгами в тексте клиента — его берём сами, а не из разбора модели.
 // 3) Клиент назвал страйк, а модель его не передала — переспрашиваем, а не считаем от 100%.
-const PRICE_TENOR_RE = /\d+(?:[.,]\d+)?\s*-?\s*(?:год|года|лет|г\.|мес|месяц|месяца|месяцев|нед|недел|дн|день|дня|дней)(?![\p{L}])|\d+\s*[ymwd](?![\p{L}])|(?:^|[^\p{L}])(?:полгода|полугод|полтора|год|годик|квартал|месяц)(?![\p{L}])|\d{4}-\d{2}-\d{2}|\d{1,2}\.\d{1,2}\.\d{2,4}|(?:январ|феврал|март|апрел|ма[йя]|июн|июл|август|сентябр|октябр|ноябр|декабр)/iu;
+const PRICE_TENOR_RE = /\d+(?:[.,]\d+)?\s*-?\s*(?:год|года|лет|г\.|мес|месяц|месяца|месяцев|нед|недел|дн|день|дня|дней|years?|yrs?|months?|mos?|weeks?|wks?|days?)(?![\p{L}])|(?:^|[^\p{L}])(?:a|one|two|three|four|five|six|half\s+a|1\.5)[\s-]+(?:years?|months?)(?![\p{L}])|\d+\s*[ymwd](?![\p{L}])|(?:^|[^\p{L}])(?:полгода|полугод|полтора|год|годик|квартал|месяц)(?![\p{L}])|\d{4}-\d{2}-\d{2}|\d{1,2}\.\d{1,2}\.\d{2,4}|(?:январ|феврал|март|апрел|ма[йя]|июн|июл|август|сентябр|октябр|ноябр|декабр)/iu;
 const PRICE_HEAD_RE = /^\*\*(?:CALL|PUT) [\d,]+ · /m;
 const PRICE_STRIKE_ABS_RE = /страйк\p{L}*[^\d\n]{0,12}(\d[\d\s]*(?:[.,]\d+)?)\s*(?:руб|р\.|₽|\$|долл|usd|rub|юан|¥|евро|€)/iu;
 const PRICE_STRIKE_ANY_RE = /страйк\p{L}*[^\d\n]{0,12}\d/iu;
+// «в деньгах» (ITM) и «вне денег» (OTM) — это НЕ страйк 100: модель путала их с «на деньгах».
+const PRICE_MONEYNESS_RE = /(?:^|[^\p{L}])(?:в\s+деньгах|вне\s+денег|in[\s-]the[\s-]money|out[\s-]of[\s-]the[\s-]money|itm|otm)(?![\p{L}])/iu;
 function priceGuard(a, messages) {
   const recent = [];
   let follow = false;
@@ -2176,6 +2213,10 @@ function priceGuard(a, messages) {
     if (n > 0) { a = { ...a, strike_abs: n }; delete a.strike_pct; }
   } else if (PRICE_STRIKE_ANY_RE.test(last) && (a.strike_pct == null || a.strike_pct === "") && !(Number(a.strike_abs) > 0)) {
     return { ask: "Уточните страйк для расчёта: в процентах от текущей цены (например, 110%) или ценой актива (например, 1500 ₽)." };
+  } else if (PRICE_MONEYNESS_RE.test(last) && !PRICE_STRIKE_ANY_RE.test(last) && !/\d\s*%/.test(last)) {
+    return { ask: "Уточните страйк в процентах от текущей цены: у " + (isPut ? "пута" : "колла") + " «в деньгах» он " +
+      (isPut ? "выше 100% (например, 110%)" : "ниже 100% (например, 90%)") + ", «вне денег» — " +
+      (isPut ? "ниже (например, 90%)." : "выше (например, 110%).") };
   }
   return { a };
 }
@@ -2200,7 +2241,7 @@ async function chatWithPricing(system, messages, env, opts) {
     try { a = JSON.parse(c.function.arguments || "{}"); } catch { /* пустые аргументы → честный отказ */ }
     const g = priceGuard(a, messages);
     if (g.ask) return { ok: false, text: g.ask };
-    return priceWarrant(g.a, env, opts.who || "site-chat");
+    return priceWarrant(g.a, env, opts.who || "site-chat", opts.cat);
   }));
   // Под каждым удачным расчётом — ссылка на one-pager (chat.js рисует её кнопкой).
   const reply = outs.map((o) => o.text + (o.ok && o.pq ? "\n\n[One-pager для клиента](onepager.html?pq=" + o.pq + ")" : ""))
