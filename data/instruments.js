@@ -2004,6 +2004,23 @@ window.SITE_DATA = {
       "chg": 0,
       "minNom": 1000000,
       "src": "sales"
+    },
+    {
+      "id": "w-srednyaya-dinamika-korziny-05102027-s-2",
+      "type": "warrant",
+      "structure": "call",
+      "name": "Лукойл/Озон/Полюс",
+      "underlying": "Средняя динамика корзины",
+      "cls": "Акции РФ",
+      "tenor": "1 год",
+      "expiry": "05.10.2027",
+      "currency": "RUB",
+      "spot": 100,
+      "strike": 100,
+      "quote": 25.5,
+      "chg": 0,
+      "minNom": 30000000,
+      "src": "sales"
     }
   ],
   "underlyings": {}
