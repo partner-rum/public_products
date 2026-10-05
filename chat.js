@@ -106,15 +106,16 @@
     ".ca-dock-in,.ca-dock-go,.ca-dock-tag{display:none;}" +
     ".ca-dock-lbl{display:block;font-size:14.5px;font-weight:600;line-height:1.15;white-space:nowrap;text-align:left;}" +
     ".ca-dock-lbl small{display:block;margin-top:2px;font-size:11.5px;font-weight:400;line-height:1.2;color:rgba(20,22,28,.68);}}" +
-    /* — панель: СВЕТЛАЯ, в тон строке, и СБОКУ — шторка справа во всю высоту, чтобы страница
-         слева оставалась видна (Руслан: «почему он чёрный открывается? пусть открывается сбоку,
-         иначе мешает смотреть на экран»). На телефоне — на весь экран. — */
+    /* — панель: СВЕТЛАЯ, в тон строке («почему он чёрный открывается?»), и СБОКУ — небольшое
+         окно справа внизу, не по центру («пусть открывается сбоку, иначе мешает смотреть»). — */
     // visibility:hidden в закрытом состоянии убирает содержимое панели из табуляции
     // и из дерева скринридера (opacity+pointer-events этого не делали — A.6).
-    ".ca-panel{position:fixed;top:0;right:0;bottom:0;z-index:301;width:420px;max-width:100vw;background:#ECEEF2;color:#14161C;color-scheme:light;border-left:1px solid rgba(20,22,28,.12);box-shadow:-24px 0 60px rgba(0,0,0,.45);display:flex;flex-direction:column;overflow:hidden;font-family:'Onest',system-ui,sans-serif;opacity:0;visibility:hidden;transform:translateX(28px);transition:opacity .22s,transform .28s cubic-bezier(.16,1,.3,1),visibility 0s linear .28s;pointer-events:none;}" +
-    ".ca-panel.on{opacity:1;visibility:visible;transform:none;pointer-events:auto;transition:opacity .22s,transform .28s cubic-bezier(.16,1,.3,1),visibility 0s;}" +
-    ".ca-head{display:flex;align-items:center;gap:11px;padding:13px 16px;border-bottom:1px solid rgba(20,22,28,.1);flex:none;background:#E3E6EC;}" +
-    ".ca-ava{width:38px;height:38px;border-radius:10px;background:#14161C;display:flex;align-items:center;justify-content:center;flex:none;}" +
+    // Небольшое окно в правом нижнем углу (Руслан: «сделай маленькую, она всё мешает смотреть»):
+    // 360×480, страница видна почти целиком.
+    ".ca-panel{position:fixed;right:20px;bottom:20px;z-index:301;width:360px;max-width:calc(100vw - 32px);height:480px;max-height:calc(100dvh - 40px);background:#ECEEF2;color:#14161C;color-scheme:light;border:1px solid rgba(20,22,28,.12);border-radius:16px;box-shadow:0 20px 50px rgba(0,0,0,.5);display:flex;flex-direction:column;overflow:hidden;font-family:'Onest',system-ui,sans-serif;opacity:0;visibility:hidden;transform:translateY(14px) scale(.98);transform-origin:bottom right;transition:opacity .2s,transform .22s cubic-bezier(.16,1,.3,1),visibility 0s linear .22s;pointer-events:none;}" +
+    ".ca-panel.on{opacity:1;visibility:visible;transform:none;pointer-events:auto;transition:opacity .2s,transform .22s cubic-bezier(.16,1,.3,1),visibility 0s;}" +
+    ".ca-head{display:flex;align-items:center;gap:10px;padding:9px 10px 9px 14px;border-bottom:1px solid rgba(20,22,28,.1);flex:none;background:#E3E6EC;}" +
+    ".ca-ava{width:32px;height:32px;border-radius:9px;background:#14161C;display:flex;align-items:center;justify-content:center;flex:none;}" +
     ".ca-ttl-row{display:flex;align-items:center;gap:7px;}" +
     ".ca-ttl{font-family:'Rubik','Onest',sans-serif;font-weight:600;font-size:14.5px;color:#14161C;}" +
     ".ca-chip{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#2A56B0;background:rgba(42,86,176,.1);border:1px solid rgba(42,86,176,.35);border-radius:5px;padding:2px 6px;}" +
@@ -127,8 +128,8 @@
     ".ca-dock-go:focus-visible,.ca-x:focus-visible,.ca-send:focus-visible,.ca-discuss:focus-visible,.ca-sug button:focus-visible{outline:2px solid #EE7D1B;outline-offset:3px;}" +
     ".ca-in:focus-visible,.ca-lead input:focus-visible{outline:2px solid #EE7D1B;outline-offset:1px;}" +
     /* — лента сообщений — */
-    ".ca-log{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;}" +
-    ".ca-msg{max-width:86%;font-size:13.5px;line-height:1.55;padding:9px 13px;border-radius:14px;white-space:pre-wrap;word-wrap:break-word;}" +
+    ".ca-log{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;}" +
+    ".ca-msg{max-width:88%;font-size:13px;line-height:1.55;padding:9px 13px;border-radius:14px;white-space:pre-wrap;word-wrap:break-word;}" +
     ".ca-msg.u{align-self:flex-end;background:#EE7D1B;color:#0C0A08;border-bottom-right-radius:5px;}" +
     ".ca-msg.a{align-self:flex-start;background:#F8F9FB;color:#14161C;border:1px solid rgba(20,22,28,.08);border-bottom-left-radius:5px;}" +
     // оранжевый витрины на светлом не держит контраст для текста — ссылки темнее (4,6:1)
@@ -136,7 +137,7 @@
     ".ca-msg.a b{color:#14161C;font-weight:600;}" +
     /* — подсказки-вопросы — */
     ".ca-sug{display:flex;flex-direction:column;gap:8px;align-items:flex-start;}" +
-    ".ca-sug button{border:1px solid rgba(20,22,28,.14);background:#F8F9FB;color:rgba(20,22,28,.86);border-radius:12px;padding:12px 14px;font-family:inherit;font-size:12.5px;line-height:1.4;cursor:pointer;text-align:left;transition:border-color .15s,color .15s,background .15s;}" +
+    ".ca-sug button{border:1px solid rgba(20,22,28,.14);background:#F8F9FB;color:rgba(20,22,28,.86);border-radius:12px;padding:10px 12px;min-height:44px;font-family:inherit;font-size:12.5px;line-height:1.4;cursor:pointer;text-align:left;transition:border-color .15s,color .15s,background .15s;}" +
     ".ca-sug button:hover{border-color:rgba(238,125,27,.7);color:#14161C;background:#FFF6EE;}" +
     ".ca-sug button svg{flex:none;margin-right:8px;vertical-align:-1px;}" +
     /* — «думает»: мигающий блок-курсор терминала + бегущая полоса; фразы меняются
@@ -151,7 +152,7 @@
     "@keyframes caScan{0%{transform:translateX(-100%);}100%{transform:translateX(265%);}}" +
     "@media(prefers-reduced-motion:reduce){.ca-typing .cur,.ca-typing .tb::after{animation:none;}.ca-typing .tb::after{width:100%;opacity:.5;}}" +
     /* — низ — */
-    ".ca-foot{flex:none;border-top:1px solid rgba(20,22,28,.1);padding:10px 12px;background:#E3E6EC;}" +
+    ".ca-foot{flex:none;border-top:1px solid rgba(20,22,28,.1);padding:8px 10px;background:#E3E6EC;}" +
     ".ca-row{display:flex;gap:8px;align-items:flex-end;}" +
     ".ca-in{flex:1;resize:none;max-height:96px;background:#F8F9FB;border:1px solid rgba(20,22,28,.16);border-radius:12px;color:#14161C;font-family:inherit;font-size:16px;line-height:1.4;padding:9px 12px;outline:none;}" +
     ".ca-in::placeholder{color:rgba(20,22,28,.52);}" +
@@ -160,9 +161,9 @@
     ".ca-send{flex:none;width:44px;height:44px;border:0;border-radius:11px;background:#EE7D1B;color:#0C0A08;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;}" +
     ".ca-send:hover{background:#F58E33;}.ca-send:disabled{opacity:.4;cursor:default;}" +
     ".ca-send svg{width:17px;height:17px;}" +
-    ".ca-note{margin:7px 2px 0;font-size:12px;line-height:1.45;color:rgba(20,22,28,.6);text-align:center;}" +
+    ".ca-note{margin:6px 2px 0;font-size:11px;line-height:1.45;color:rgba(20,22,28,.6);text-align:center;}" +
     /* — кнопка и форма «Обсудить с Румбергом» — */
-    ".ca-discuss{width:100%;margin-bottom:8px;background:none;border:1px solid rgba(238,125,27,.6);color:#B4580B;border-radius:11px;padding:14px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:background .15s,border-color .15s;}" +
+    ".ca-discuss{width:100%;margin-bottom:8px;background:none;border:1px solid rgba(238,125,27,.6);color:#B4580B;border-radius:11px;padding:0 14px;min-height:44px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:background .15s,border-color .15s;}" +
     ".ca-discuss:hover{background:#FFF1E4;border-color:#EE7D1B;}" +
     ".ca-discuss svg{width:15px;height:15px;}" +
     ".ca-lead{align-self:stretch;background:#FFF4EA;border:1px solid rgba(238,125,27,.4);border-radius:14px;padding:13px 14px;display:flex;flex-direction:column;gap:8px;}" +
@@ -173,7 +174,7 @@
     ".ca-lead-send{background:#EE7D1B;color:#0C0A08;border:0;border-radius:10px;padding:9px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;}" +
     ".ca-lead-send:hover{background:#F58E33;}.ca-lead-send:disabled{opacity:.5;cursor:default;}" +
     ".ca-lead-ok{font-size:13px;line-height:1.55;color:#14161C;}.ca-lead-ok a{color:#B4580B;}" +
-    "@media(max-width:480px){.ca-panel{width:100vw;border-left:0;}}" +
+    "@media(max-width:480px){.ca-panel{right:8px;left:8px;bottom:8px;width:auto;max-width:none;height:min(560px,calc(100dvh - 16px));}}" +
     /* — оговорка про CALL/PUT внутри чата — тише обычной реплики: пунктирная рамка без заливки — */
     ".ca-msg.a.n{max-width:92%;background:none;border:1px dashed rgba(20,22,28,.24);color:rgba(20,22,28,.68);font-size:12.5px;line-height:1.5;}" +
     "@media(prefers-reduced-motion:reduce){.ca-panel{transition:none;}}";
