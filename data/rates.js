@@ -3,7 +3,7 @@
 // Источники: ЦБ (ключевая, RUONIA), MOEX ISS (RUSFAR, БПИФы, ОФЗ),
 // Финуслуги (вклады и накопительные счета — витрина МосБиржи).
 window.RATES = {
-  "updated": "2026-10-05 13:13",
+  "updated": "2026-10-05 13:30",
   "cbr": {
     "key": {
       "rate": 14.0,
@@ -92,7 +92,7 @@ window.RATES = {
     {
       "id": "TMON",
       "name": "Т-Капитал Денежный рынок",
-      "price": 165.51,
+      "price": 165.5,
       "ter": 1.15,
       "rate": 12.61
     }
@@ -103,28 +103,28 @@ window.RATES = {
       "name": "ОФЗ 26226",
       "maturity": "2026-10-07",
       "years": 0.01,
-      "rate": 4.92
+      "rate": 5.44
     },
     {
       "id": "SU26207RMFS9",
       "name": "ОФЗ 26207",
       "maturity": "2027-02-03",
       "years": 0.33,
-      "rate": 10.59
+      "rate": 10.31
     },
     {
       "id": "SU26232RMFS7",
       "name": "ОФЗ 26232",
       "maturity": "2027-10-06",
       "years": 1.0,
-      "rate": 12.45
+      "rate": 12.57
     },
     {
       "id": "SU26212RMFS9",
       "name": "ОФЗ 26212",
       "maturity": "2028-01-19",
       "years": 1.29,
-      "rate": 13.76
+      "rate": 13.74
     }
   ],
   "deposits": [
@@ -578,6 +578,22 @@ window.RATES = {
     },
     {
       "bank": "Банк ПСБ",
+      "name": "Сильная ставка",
+      "rate": 14.0,
+      "kind": "deposit",
+      "termMonths": 9,
+      "daysFrom": 91,
+      "daysTo": 731,
+      "minAmount": 50000,
+      "url": "https://finuslugi.ru/vklady/promsvyazbank_silnaya_stavka",
+      "promo": false,
+      "floating": false,
+      "refill": false,
+      "capitalization": false,
+      "feature": "Повышенная ставка для новых денег"
+    },
+    {
+      "bank": "Банк ПСБ",
       "name": "Вклад в Победу",
       "rate": 14.0,
       "kind": "deposit",
@@ -853,6 +869,22 @@ window.RATES = {
       "name": "Мой доход",
       "rate": 13.5,
       "kind": "deposit",
+      "termMonths": 9,
+      "daysFrom": 91,
+      "daysTo": 731,
+      "minAmount": 50000,
+      "url": "https://finuslugi.ru/vklady/promsvyazbank_moj_dohod",
+      "promo": false,
+      "floating": false,
+      "refill": true,
+      "capitalization": false,
+      "feature": null
+    },
+    {
+      "bank": "Банк ПСБ",
+      "name": "Мой доход",
+      "rate": 13.5,
+      "kind": "deposit",
       "termMonths": 12,
       "daysFrom": 91,
       "daysTo": 731,
@@ -910,6 +942,22 @@ window.RATES = {
       "floating": false,
       "refill": true,
       "capitalization": true,
+      "feature": null
+    },
+    {
+      "bank": "ДОМ.РФ Банк",
+      "name": "Мой дом (% в конце срока)",
+      "rate": 12.9,
+      "kind": "deposit",
+      "termMonths": 9,
+      "daysFrom": 61,
+      "daysTo": 1100,
+      "minAmount": 1500000,
+      "url": "https://finuslugi.ru/vklady/domrf_moj_dom_procenty_v_konce_sroka",
+      "promo": false,
+      "floating": false,
+      "refill": false,
+      "capitalization": false,
       "feature": null
     },
     {
