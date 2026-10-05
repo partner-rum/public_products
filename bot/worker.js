@@ -1517,7 +1517,7 @@ async function handleChat(request, env, cors, ctx) {
   if (env.CHAT_LOG_CHAT_ID && reply) {
     const q = messages[messages.length - 1].content.slice(0, 600);
     const fairs = priced.filter((o) => o.ok).map((o) =>
-      o.ticker + " " + o.type + (o.cap != null ? " " + o.strike + "–" + o.cap : " " + o.strike) + " " + o.tenor +
+      o.ticker + " " + o.type + " " + o.strike + " " + o.tenor +
       ": прайсер " + priceNum(o.fair) + "%, клиенту " + priceNum(o.quote) + "%");
     const logP = tg(env, "sendMessage", {
       chat_id: env.CHAT_LOG_CHAT_ID, parse_mode: "HTML", disable_web_page_preview: true,
@@ -1683,13 +1683,15 @@ const PRICE_UNLISTED_TIMEOUT_MS = 25000;  // тикер не из справоч
 const PRICE_CACHE_MS = 10 * 60 * 1000;
 const PRICE_DAYS_MIN = 7, PRICE_DAYS_MAX = 5 * 366;
 const PRICE_CACHE = new Map();      // условия + дата → готовый ответ; живёт в изоляте
+const PRICE_ONLY_TEXT = "В чате сейчас считаются только обычные CALL и PUT на один актив. " +
+  "Колл-спред и другие структуры посчитает менеджер — нажмите «Обсудить с Румбергом».";
 
 const PRICE_TOOL = {
   type: "function",
   function: {
     name: "price_warrant",
-    description: "Посчитать индикативную цену варранта для клиента: CALL, PUT или колл-спред на один базовый актив. " +
-      "Ответ с ценой клиенту соберёт сервер.",
+    description: "Посчитать индикативную цену опциона для клиента: ТОЛЬКО обычный CALL или PUT на один базовый актив. " +
+      "Колл-спреды и любые другие продукты этим инструментом не считаются. Ответ с ценой клиенту соберёт сервер.",
     parameters: {
       type: "object",
       properties: {
@@ -1698,7 +1700,6 @@ const PRICE_TOOL = {
         option_type: { type: "string", enum: ["call", "put"], description: "call — на рост, put — на падение." },
         tenor: { type: "string", description: "Срок: '2Y', '18M', '6M', '90D' или дата экспирации YYYY-MM-DD." },
         strike_pct: { type: "number", description: "Страйк в % от текущей цены актива. По умолчанию 100." },
-        cap_pct: { type: "number", description: "Только колл-спред: потолок в % от текущей цены, выше страйка." },
       },
       required: ["underlying", "option_type", "tenor"],
     },
@@ -1707,14 +1708,14 @@ const PRICE_TOOL = {
 
 const PRICING_PROMPT = `
 
-=== РАСЧЁТ ВАРРАНТОВ (инструмент price_warrant) ===
-Ты умеешь считать индикативную цену варрантов: CALL, PUT и колл-спред на ОДИН базовый актив. Когда клиент просит посчитать, запрайсить, оценить или узнать цену колла, пута, опциона, варранта или колл-спреда на конкретный актив — вызови price_warrant. Ответ с ценой клиенту соберёт сервер: сам цену не называй и не придумывай.
+=== РАСЧЁТ ОПЦИОНОВ (инструмент price_warrant) ===
+Ты считаешь цену ТОЛЬКО ДВУХ продуктов: обычный колл-опцион (CALL) и обычный пут-опцион (PUT) на ОДИН базовый актив. Больше ты не прайсишь НИЧЕГО.
+Когда клиент просит посчитать, запрайсить, оценить или узнать цену колла или пута (колл-опциона, пут-опциона, CALL, PUT, варранта на рост или на падение) на конкретный актив — вызови price_warrant. Ответ с ценой клиенту соберёт сервер: сам цену не называй и не придумывай.
 - Тикер передавай как на бирже (SBER, GAZP, LKOH, YDEX, NVDA). Не знаешь тикер — передай название компании как есть.
 - Срок обязателен. Не назван — спроси срок и инструмент не вызывай. «2 года» → '2Y', «18 месяцев» → '18M', «полгода» → '6M'.
 - Страйк по умолчанию 100% (на уровне текущей цены). «Страйк 110», «на 10% выше рынка» → strike_pct 110.
-- Колл-спред: «колл-спред 100–150», «колл с потолком 150%» → strike_pct 100, cap_pct 150. Только для CALL.
 - Клиент меняет условия прошлого расчёта («а на 3 года?», «а страйк 110?») — вызови инструмент снова, остальные условия возьми из прошлого расчёта.
-- Автоколлы, защиту капитала, дисконтные облигации, бустеры и корзины из нескольких активов ты не считаешь: скажи об этом, предложи похожий продукт из каталога или менеджера.`;
+- ВСЁ ОСТАЛЬНОЕ НЕ СЧИТАЕШЬ И ИНСТРУМЕНТ НЕ ВЫЗЫВАЕШЬ: колл-спреды, опционы с потолком, корзины и опционы на несколько активов, автоколлы, защиту капитала, дисконтные облигации, бустеры, реверс-конвертиблы, купонные варранты и любые другие структуры. На такую просьбу ответь, что в чате сейчас считаются только CALL и PUT на один актив, и предложи похожий продукт из каталога или кнопку «Обсудить с Румбергом» — посчитает менеджер. Цифр по таким продуктам не называй, кроме тех, что есть в каталоге.`;
 
 function pricerEnabled(env) {
   return !!((env.PRICER_MCP_URL || "").trim() && (env.PRICER_MCP_KEY || "").trim());
@@ -1803,10 +1804,6 @@ function priceTenor(raw) {
 function priceNum(x, digits) {
   return new Intl.NumberFormat("ru-RU", { maximumFractionDigits: digits == null ? 2 : digits }).format(x);
 }
-function priceDate(iso) {
-  const m = String(iso || "").match(/^(\d{4})-(\d{2})-(\d{2})/);
-  return m ? m[3] + "." + m[2] + "." + m[1] : "";
-}
 const PRICE_CCY = { RUB: "₽", USD: "$", EUR: "€", CNY: "¥" };
 
 // Маржа и округление: котировка = цена прайсера / (1 − 0,2), вверх до шага доски.
@@ -1843,11 +1840,9 @@ async function priceWarrant(a, env, who) {
   }
   const strike = a.strike_pct == null || a.strike_pct === "" ? 100 : Number(a.strike_pct);
   if (!isFinite(strike) || strike < 20 || strike > 300) return fail("Страйк считаю в пределах 20–300% от текущей цены актива. Уточните страйк.");
-  let cap = a.cap_pct == null || a.cap_pct === "" ? null : Number(a.cap_pct);
-  if (cap != null) {
-    if (type !== "call") return fail("Потолок выплаты бывает только у колл-спреда. Для PUT уберите потолок.");
-    if (!isFinite(cap) || cap <= strike || cap > 1000) return fail("У колл-спреда потолок должен быть выше страйка. Уточните уровни, например 100–150%.");
-  }
+  // В чате считаем ТОЛЬКО обычные CALL и PUT (решение Руслана 05.10.2026). Потолок —
+  // это уже колл-спред: даже если модель его передала, сервер не считает.
+  if (a.cap_pct != null && a.cap_pct !== "") return fail(PRICE_ONLY_TEXT);
 
   // Актив: тикер как есть; название компании — через справочник прайсера (1,4 тыс.
   // инструментов, ответ из кэша, без похода в рыночные данные).
@@ -1882,7 +1877,7 @@ async function priceWarrant(a, env, who) {
     // тикер есть — считаем без имени
   }
 
-  const key = [mskDate().key, ticker, type, tenor.expiry, strike, cap].join("|");
+  const key = [mskDate().key, ticker, type, tenor.expiry, strike].join("|");
   const hit = PRICE_CACHE.get(key);
   if (hit && Date.now() - hit.at < PRICE_CACHE_MS) return hit.out;
 
@@ -1890,7 +1885,6 @@ async function priceWarrant(a, env, who) {
     underlying: ticker, option_type: type, expiry: tenor.expiry, strike, wrapper: "warrant",
     outputs: ["PV"], context: { user_id: who },
   };
-  if (cap != null) args.cap = cap;
   let res;
   try {
     // Тикера нет в справочнике (IBM, IONQ…) — прайсер всё равно ищет его в рыночных
@@ -1912,7 +1906,7 @@ async function priceWarrant(a, env, who) {
     if (code === "unknown_ticker" || code === "market_data_missing") {
       return fail("По активу " + ticker + " нет рыночных данных — посчитать не могу. Проверьте тикер.");
     }
-    if (code === "invalid_term") return fail("С такими условиями посчитать не получилось. Проверьте срок, страйк и потолок.");
+    if (code === "invalid_term") return fail("С такими условиями посчитать не получилось. Проверьте срок и страйк.");
     return fail("Расчёт сейчас недоступен. Попробуйте позже или нажмите «Обсудить с Румбергом» — посчитает менеджер.");
   }
   if (sc.status === "needs_input") {
@@ -1934,42 +1928,30 @@ async function priceWarrant(a, env, who) {
   const sign = PRICE_CCY[ccy] || ccy;
   const spot = Number((md.spots || {})[ticker]);
   const kAbs = Number(t.strike_abs) || (isFinite(spot) ? spot * strike / 100 : NaN);
-  const capAbs = Number(t.cap_abs) || (cap != null && isFinite(spot) ? spot * cap / 100 : NaN);
-  const expiry = priceDate((t.schedule || {}).maturity_date);
-  const asOf = priceDate(t.pricing_date || md.pricing_date) || priceDate(mskDate().key);
   const asset = name ? name + " (" + ticker + ")" : ticker;
-  if (cap != null && q >= cap - strike) {
-    return fail("У колл-спреда " + priceNum(strike) + "–" + priceNum(cap) + " на " + asset +
-      " котировка вышла не ниже максимальной выплаты — такой спред не имеет смысла. Попробуйте потолок выше или страйк дальше от рынка.");
-  }
 
-  const head = cap != null ? "Колл-спред " + priceNum(strike) + "–" + priceNum(cap)
-    : (type === "call" ? "CALL " : "PUT ") + priceNum(strike);
+  // Конкретных дат (экспирации, даты расчёта) клиенту не показываем — слово Руслана
+  // 05.10.2026; срок назван словами в заголовке.
+  const head = (type === "call" ? "CALL " : "PUT ") + priceNum(strike);
   const lines = [
     "**" + head + " · " + asset + " · " + tenor.label + "**",
     "Премия: **" + priceNum(q) + "% номинала** — индикативно",
     "• Страйк: " + priceNum(strike) + "% от текущей цены" + (isFinite(kAbs) ? " — " + priceNum(kAbs) + " " + sign : ""),
   ];
-  if (cap != null) {
-    lines.push("• Потолок: " + priceNum(cap) + "%" + (isFinite(capAbs) ? " — " + priceNum(capAbs) + " " + sign : ""));
-  }
-  if (expiry) lines.push("• Экспирация: " + expiry);
   lines.push(type === "put"
     ? "• Выплата: падение актива ниже страйка, в % номинала"
-    : cap != null
-      ? "• Выплата: рост актива выше страйка, но не больше " + priceNum(cap - strike) + "% номинала"
-      : "• Выплата: рост актива выше страйка, в % номинала");
+    : "• Выплата: рост актива выше страйка, в % номинала");
   const be = type === "put" ? strike - q : strike + q;
   lines.push("• Безубыток: актив " + (type === "put" ? "ниже " : "выше ") + priceNum(be) + "% от текущей цены");
   lines.push("• Риск ограничен уплаченной премией");
-  const out = { ok: true, text: lines.join("\n"), asOf, fair: pv, quote: q, ticker, type, tenor: tenor.expiry, strike, cap };
+  const out = { ok: true, text: lines.join("\n"), fair: pv, quote: q, ticker, type, tenor: tenor.expiry, strike };
   PRICE_CACHE.set(key, { at: Date.now(), out });
   if (PRICE_CACHE.size > 300) PRICE_CACHE.delete(PRICE_CACHE.keys().next().value);
   return out;
 }
 
-function priceFooter(asOf, partnerMode) {
-  return "Котировка рассчитана " + (asOf ? "на " + asOf + " " : "") + "по рыночным данным прайсера Rumberg и действует на момент расчёта. " +
+function priceFooter(partnerMode) {
+  return "Котировка рассчитана по текущим рыночным данным прайсера Rumberg и действует на момент расчёта. " +
     (partnerMode
       ? "Чтобы зафиксировать цену для клиента, напишите своему менеджеру Rumberg."
       : "Чтобы зафиксировать цену и обсудить сделку, нажмите «Обсудить с Румбергом» — заявка уйдёт менеджеру.") +
@@ -1998,8 +1980,7 @@ async function chatWithPricing(system, messages, env, opts) {
     try { a = JSON.parse(c.function.arguments || "{}"); } catch { /* пустые аргументы → честный отказ */ }
     return priceWarrant(a, env, opts.who || "site-chat");
   }));
-  const okOne = outs.find((o) => o.ok);
-  const reply = outs.map((o) => o.text).join("\n\n") + (okOne ? "\n\n" + priceFooter(okOne.asOf, opts.partnerMode) : "");
+  const reply = outs.map((o) => o.text).join("\n\n") + (outs.some((o) => o.ok) ? "\n\n" + priceFooter(opts.partnerMode) : "");
   return { reply, priced: outs };
 }
 
