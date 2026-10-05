@@ -118,7 +118,6 @@
     ".ca-ava{width:32px;height:32px;border-radius:9px;background:#14161C;display:flex;align-items:center;justify-content:center;flex:none;}" +
     ".ca-ttl-row{display:flex;align-items:center;gap:7px;}" +
     ".ca-ttl{font-family:'Rubik','Onest',sans-serif;font-weight:600;font-size:14.5px;color:#14161C;}" +
-    ".ca-chip{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#2A56B0;background:rgba(42,86,176,.1);border:1px solid rgba(42,86,176,.35);border-radius:5px;padding:2px 6px;}" +
     ".ca-sub{font-size:12px;color:rgba(20,22,28,.62);margin-top:1px;}" +
     ".ca-x{margin-left:auto;width:44px;height:44px;border:0;background:none;color:rgba(20,22,28,.55);font-size:20px;line-height:1;cursor:pointer;border-radius:8px;flex:none;}" +
     ".ca-x:hover{color:#14161C;background:rgba(20,22,28,.07);}" +
@@ -496,7 +495,7 @@
     panel.innerHTML =
       '<div class="ca-head">' +
         '<span class="ca-ava">' + ICON_STAR_SM + '</span>' +
-        '<div><div class="ca-ttl-row"><span class="ca-ttl">AI-ассистент</span><span class="ca-chip">beta</span></div>' +
+        '<div><div class="ca-ttl-row"><span class="ca-ttl">AI-ассистент</span></div>' +
         '<div class="ca-sub">Rumberg · структурные продукты</div></div>' +
         '<button class="ca-x" aria-label="Закрыть">&times;</button></div>' +
       '<div class="ca-log" role="log" aria-live="polite" aria-label="Диалог с ассистентом"></div>' +
