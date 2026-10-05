@@ -1,8 +1,8 @@
 // Файл сгенерирован update_site.py — руками не править (перезапишется при следующем запуске).
 // Продукты с "src": "sales" добавлены через админку и сохраняются при перегенерации.
-// Обновлено: 2026-09-18
+// Обновлено: 2026-10-05
 window.SITE_DATA = {
-  "updated": "2026-09-18",
+  "updated": "2026-10-05",
   "instruments": [
     {
       "id": "RCD-OFZ248-K100-1Y",
@@ -1969,6 +1969,23 @@ window.SITE_DATA = {
       "quote": 9.45,
       "chg": 0,
       "minNom": 1000000,
+      "src": "sales"
+    },
+    {
+      "id": "w-srednyaya-dinamika-korziny-05102027-s",
+      "type": "warrant",
+      "structure": "call",
+      "name": "Газпром/Лукойл/Мечел/Озон/Полюс/ВК",
+      "underlying": "Средняя динамика корзины",
+      "cls": "Акции РФ",
+      "tenor": "1 год",
+      "expiry": "05.10.2027",
+      "currency": "RUB",
+      "spot": 100,
+      "strike": 100,
+      "quote": 25.5,
+      "chg": 0,
+      "minNom": 30000000,
       "src": "sales"
     }
   ],
