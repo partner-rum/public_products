@@ -261,6 +261,10 @@
         <li><b>RC+DC (реверс-конвертибл с условным купоном)</b> — купон вводится ЗА СРОК,
           а не в процентах годовых: у выпуска одна дата оценки и одна выплата. Ниже страйка
           купона нет вовсе, и это главное отличие от обычного реверс-конвертибла.</li>
+        <li><b>Продукт на корзину</b> (варрант, купонный варрант, защита, RC) — блок «Корзина»: тикеры
+          и режим. <b>Worst-of</b> — всё по худшей бумаге, <b>по средней</b> — по среднему изменению бумаг
+          (в прайсере basket_type average), веса по желанию. Режим пишите и в названии:
+          «CALL 100 · среднее по корзине · 1 год», состав корзины — в «Базовый актив».</li>
         <li><b>Выпуск уже заведён на странице «На размещении»?</b> Возьмите его во втором поле —
           форма подставит название, актив, срок, цену и параметры выплаты. Останется дописать то,
           чего у размещения нет: класс актива, дату оценки и минимальный номинал.</li>
@@ -366,8 +370,9 @@
       <!-- Автоколл и бустер есть на доске (2 и 4 позиции), но завести их через
            форму было нельзя — оба типа отсутствовали в списке. -->
       <div id="b-autocall" style="display:none">
-        <div class="hint-box">Все барьеры — в % ОТ СТАРТА базового актива. Корзина worst-of:
-          перечислите тикеры через запятую, выплата считается по худшей бумаге.</div>
+        <div class="hint-box">Все барьеры — в % ОТ СТАРТА базового актива. Корзина у автоколла — только worst-of:
+          перечислите тикеры через запятую, купон и отзыв считаются по худшей бумаге. Автоколл на среднее
+          по корзине витрина пока не описывает — такой продукт напишите Руслану.</div>
         <label><span class="k">Корзина (тикеры через запятую) <b>*</b></span><input name="basket" placeholder="NVDA, AMD, INTC" maxlength="80"></label>
         <div class="row">
           <label><span class="k">Купон, % годовых <b>*</b></span><input name="couponPa" type="number" step="0.5" placeholder="20"></label>
@@ -386,14 +391,13 @@
       <div id="b-revconv" style="display:none">
         <div class="hint-box">Покупка по номиналу, купон БЕЗУСЛОВНЫЙ — платится при любом уровне актива.
           Страйк — в % ОТ СТАРТА базового актива: на нём и выше на погашении возвращается 100% номинала,
-          ниже тело считается по перформансу ОТ СТРАЙКА. Корзина нужна только для worst-of; для одной бумаги оставьте пустой.</div>
+          ниже тело считается по перформансу ОТ СТРАЙКА. Корзина — в блоке «Корзина» ниже; для одной бумаги его не трогайте.</div>
         <div class="row3">
           <label><span class="k">Купон, % годовых <b>*</b></span><input name="rcCouponPa" type="number" step="0.5" placeholder="22"></label>
           <label><span class="k">Страйк, % <b>*</b></span><input name="rcStrike" type="number" step="1" value="100" placeholder="100"></label>
           <label><span class="k">Выплат в году</span><input name="rcObsPerYear" type="number" step="1" placeholder="4"></label>
         </div>
         <div class="row">
-          <label><span class="k">Корзина worst-of (тикеры через запятую)</span><input name="rcBasket" placeholder="оставьте пустым для одной бумаги" maxlength="80"></label>
           <label><span class="k">Валюта расчётов</span><input name="rcSettle" placeholder="RUB" maxlength="8"></label>
         </div>
       </div>
@@ -411,9 +415,26 @@
           <label><span class="k">Купон за срок, % номинала <b>*</b></span><input name="couponPct" type="number" step="0.1" placeholder="28.5"></label>
         </div>
         <div class="row">
-          <label><span class="k">Корзина worst-of (тикеры через запятую)</span><input name="rcdBasket" placeholder="оставьте пустым для одной бумаги" maxlength="80"></label>
           <label><span class="k">Валюта расчётов</span><input name="rcdSettle" placeholder="RUB" maxlength="8"></label>
         </div>
+      </div>
+      <!-- Корзина — общая для варранта, купонного варранта, защиты капитала и обоих
+           реверс-конвертиблов. До 05.10.2026 корзину знали только RC (и только
+           worst-of), а у варранта и защиты поля не было вовсе: продукт прайсера
+           call_on_basket с basket_type average завести было нельзя. Режим и веса —
+           как в прайсере: веса бывают только у корзины по средней. -->
+      <div id="b-basket" style="display:none">
+        <div class="hint-box">Заполняйте, только если продукт на НЕСКОЛЬКО бумаг; для одной бумаги оставьте пустым.
+          <b>Worst-of</b> — все условия по худшей бумаге корзины. <b>По средней</b> — по среднему изменению бумаг
+          (в прайсере это basket_type average). Веса — в процентах, по порядку тикеров, в сумме 100; пусто — равные.
+          Режим должен стоять и в названии: «худшая из корзины» или «среднее по корзине» — форма это проверит.</div>
+        <div class="row">
+          <label><span class="k">Корзина (тикеры через запятую)</span><input name="bkTickers" placeholder="PLZL, SBER, LKOH" maxlength="80"></label>
+          <label><span class="k">Расчёт по корзине</span>
+            <select name="bkMode"><option value="wo">Worst-of — по худшей бумаге</option><option value="avg">По средней — среднее изменение бумаг</option></select>
+          </label>
+        </div>
+        <label id="l-bkw"><span class="k">Веса бумаг, % (через запятую, по порядку тикеров; пусто = равные)</span><input name="bkWeights" placeholder="40, 30, 30" maxlength="60"></label>
       </div>
       <div id="b-booster" style="display:none">
         <div class="hint-box">Покупка по номиналу. Уровни — в % ОТ СТАРТА базового актива;
@@ -919,7 +940,7 @@
   </main>
 </div>
 
-<script src="admin-digest-derive.js?v=5"></script>
+<script src="admin-digest-derive.js?v=6"></script>
 <script>
 (function () {
   "use strict";
@@ -1248,6 +1269,8 @@
     document.getElementById("b-revconv").style.display = t === "revconv" ? "" : "none";
     document.getElementById("b-rcdigital").style.display = t === "rcdigital" ? "" : "none";
     document.getElementById("b-booster").style.display = t === "booster" ? "" : "none";
+    document.getElementById("b-basket").style.display = BK_TYPES[t] ? "" : "none";
+    bdBasketSync();
     // Вход по номиналу зашит: показывать сейлзу поле котировки — приглашать к ошибке.
     // У автоколла котировка = купон, у бустера = КУ; оба считаются из своих полей.
     document.getElementById("l-quote").style.display = (isProt || t === "autocall" || t === "booster" || t === "revconv" || t === "rcdigital") ? "none" : "";
@@ -1263,6 +1286,17 @@
   }
   fBoard.structure.addEventListener("change", bdWarrantSync);
   bdWarrantSync();
+  // Типы, у которых бывает корзина с выбором режима. Автоколла здесь нет: у него
+  // своё поле корзины и только worst-of.
+  var BK_TYPES = { warrant: 1, digital: 1, protection: 1, revconv: 1, rcdigital: 1 };
+  // Веса спрашиваем только у корзины по средней: у worst-of всё решает худшая
+  // бумага, и вес ни на что не влияет (прайсер их там тоже игнорирует).
+  function bdBasketSync() {
+    var el = document.getElementById("l-bkw");
+    if (el) el.style.display = fBoard.bkMode && fBoard.bkMode.value === "avg" ? "" : "none";
+  }
+  fBoard.bkMode.addEventListener("change", bdBasketSync);
+  bdBasketSync();
   var fPlacement = document.getElementById("f-placement");
   fPlacement.kind.addEventListener("change", function () {
     var coupon = fPlacement.kind.value === "coupon";
@@ -1373,6 +1407,61 @@
   // Дифф правки. Вынесен из submitBoardEdit по той же причине, что и сборка
   // карточки: превью правки — это исходная запись, ДОПОЛНЕННАЯ этим диффом,
   // и собирать её вторым способом значило бы показывать не то, что уедет.
+  // Корзина из формы → { basket, basketMode, basketW } или null (одна бумага).
+  // Бросает исключение с объяснением — его показывают и отправка, и превью.
+  var BK_AVG_RE = /(^|[^а-яё])средн(ее|яя|ей|ему|юю|ий|его|ем)([^а-яё]|$)/i;
+  var BK_WO_RE = /худш|worst/i;
+  function bdBasketRead() {
+    var tk = val(fBoard, "bkTickers").split(/[,;]/).map(function (s) { return s.trim().toUpperCase(); }).filter(Boolean);
+    var mode = val(fBoard, "bkMode") === "avg" ? "avg" : "wo";
+    var wRaw = val(fBoard, "bkWeights");
+    if (!tk.length) {
+      if (mode === "avg" || wRaw) throw new Error("Выбран расчёт по средней или заданы веса, а тикеры корзины не заполнены. Для одной бумаги оставьте блок «Корзина» пустым и режим worst-of.");
+      return null;
+    }
+    if (tk.length === 1) throw new Error("В корзине одна бумага — это не корзина. Оставьте поле пустым, а актив впишите в «Базовый актив».");
+    var seen = {};
+    tk.forEach(function (t) { if (seen[t]) throw new Error("Тикер " + t + " в корзине дважды."); seen[t] = 1; });
+    if (tk.length > 8) throw new Error("В корзине больше 8 бумаг — витрина столько не показывает.");
+    var out = { basket: tk, basketMode: mode };
+    if (mode === "wo") {
+      if (wRaw) throw new Error("Веса бывают только у корзины по средней: у worst-of всё решает худшая бумага. Выберите «По средней» или очистите поле весов.");
+      return out;
+    }
+    if (wRaw) {
+      // Разделитель — запятая или точка с запятой, дробная часть — через точку:
+      // «33,3» иначе не отличить от двух весов.
+      var ws = wRaw.replace(/%/g, "").split(/[,;]/).map(function (s) { return s.trim(); }).filter(Boolean).map(Number);
+      if (ws.length !== tk.length) {
+        throw new Error("Весов " + ws.length + ", а бумаг в корзине " + tk.length + ". Нужен вес на каждую бумагу, по порядку тикеров; дробную часть пишите через точку (33.3).");
+      }
+      if (ws.some(function (x) { return !isFinite(x) || x < 0; })) throw new Error("Веса — неотрицательные числа в процентах.");
+      var sum = ws.reduce(function (s, x) { return s + x; }, 0);
+      if (Math.abs(sum - 100) > 0.5) throw new Error("Веса в сумме дают " + String(Math.round(sum * 100) / 100).replace(".", ",") + "%, а должны 100%.");
+      var equal = ws.every(function (x) { return Math.abs(x - ws[0]) < 1e-9; });
+      if (!equal) out.basketW = ws.map(function (x) { return Math.round(x * 100) / 100; });
+    }
+    return out;
+  }
+  // Worst-of и средняя — разный риск, а клиент читает название. Поэтому режим
+  // обязан стоять в имени и совпадать с полем. Заодно это страховка витрины:
+  // если поле режима потеряется по дороге, она узнает его по названию.
+  function bdBasketNameCheck(it) {
+    var nm = String(it.name || "");
+    var saysAvg = BK_AVG_RE.test(nm), saysWo = BK_WO_RE.test(nm);
+    var on = Array.isArray(it.basket) && it.basket.length > 1;
+    if (!on) {
+      if (saysAvg || saysWo) throw new Error("Название говорит о корзине («" + (saysAvg ? "среднее" : "худшая") + "»), а тикеры корзины не заполнены — заполните блок «Корзина» или поправьте название.");
+      return;
+    }
+    var avg = it.basketMode === "avg";
+    if (avg && saysWo) throw new Error("В названии worst-of («худшая»), а выбран расчёт по средней — поправьте одно из двух.");
+    if (!avg && saysAvg) throw new Error("В названии «среднее», а выбран worst-of — поправьте одно из двух.");
+    if (!saysAvg && !saysWo) {
+      throw new Error("Добавьте в название режим корзины — «" + (avg ? "среднее по корзине" : "худшая из корзины") +
+        "»: клиент читает название, а worst-of и средняя — это разный риск.");
+    }
+  }
   function buildBoardPatch() {
     var patch = { id: bdOrig.id }, changed = [];
     var NUM = { quote: 1, minNom: 1, strike: 1, strike2: 1, participation: 1, protectionPct: 1, cap: 1, startFrom: 1, couponPct: 1 };
@@ -1388,6 +1477,34 @@
       if (NUM[key] && !isFinite(v)) return;
       patch[key] = v; changed.push(fieldLabel(fBoard, k) || k);
     });
+    // Корзина: трогали любое из трёх полей — отправляем набор целиком. Правка на
+    // сервере только ДОПОЛНЯЕТ запись, поэтому «вернуть worst-of» — это явный
+    // basketMode "wo", а «снять веса» — равные веса числами: стереть поле она не умеет.
+    if (BK_TYPES[bdOrig.type] && BK_FIELDS.some(function (k) {
+          return fBoard[k] && String(fBoard[k].value || "").trim() !== (snap[k] || ""); })) {
+      var bkE = bdBasketRead();
+      if (!bkE) {
+        if (Array.isArray(bdOrig.basket) && bdOrig.basket.length > 1) {
+          throw new Error("Убрать корзину через форму нельзя: правка не умеет стирать поля. Снимите продукт и заведите заново.");
+        }
+      } else {
+        patch.basket = bkE.basket;
+        patch.basketMode = bkE.basketMode;
+        if (bkE.basketW) patch.basketW = bkE.basketW;
+        else if (bkE.basketMode === "avg" && Array.isArray(bdOrig.basketW)) {
+          patch.basketW = bkE.basket.map(function () { return Math.round(10000 / bkE.basket.length) / 100; });
+        }
+        changed.push("корзина");
+      }
+    }
+    if (bdOrig && BK_TYPES[bdOrig.type]) {
+      bdBasketNameCheck({
+        name: patch.name != null ? patch.name : bdOrig.name,
+        basket: patch.basket || bdOrig.basket,
+        basketMode: patch.basketMode || bdOrig.basketMode ||
+          (BK_AVG_RE.test(String(bdOrig.name || "")) ? "avg" : "wo")
+      });
+    }
     // Имя на витрине несёт страйк, и после правки они обязаны сойтись: поменять
     // могли любое из двух, поэтому сверяем то, что ПОЛУЧИТСЯ, а не то, что пришло.
     if (bdOrig && (bdOrig.type === "warrant" || bdOrig.type === "digital")) {
@@ -1975,12 +2092,15 @@
   // теряется: цикл ниже ищет элемент по имени ключа — так до сих пор неисправимы
   // формой купон реверс-конвертибла (rcCouponPa) и страйк бустера (bStrike).
   var BD_ALIAS = { wStrike: "strike", wStrike2: "strike2" };
+  // Поля блока «Корзина»: в правку уходят не по одному, а целым набором
+  // basket/basketMode/basketW — см. buildBoardPatch.
+  var BK_FIELDS = ["bkTickers", "bkMode", "bkWeights"];
   // Сравнивать надо со снимком формы, а не с записью: у формы есть умолчания
   // (участие с 0, защита 100), которых в записи варранта нет вовсе — и они
   // попадали в правку как «изменённые», хотя сейлз их не трогал.
   function bdSnapshot() {
     var out = {};
-    BD_KEYS.concat(Object.keys(BD_ALIAS)).forEach(function (k) {
+    BD_KEYS.concat(Object.keys(BD_ALIAS), BK_FIELDS).forEach(function (k) {
       var el = fBoard[k]; if (el) out[k] = String(el.value || "").trim();
     });
     return out;
@@ -2037,8 +2157,15 @@
         var el = fBoard[k];
         if (el && x[RC_MAP[k]] != null) el.value = x[RC_MAP[k]];
       });
-      var el = fBoard.rcBasket;
-      if (el) el.value = Array.isArray(x.basket) ? x.basket.join(", ") : "";
+    }
+    // Корзина: тикеры, режим и веса. Режим берём тем же правилом, что витрина
+    // (S.basketOf в data/lib.js): поле, а без него — слово «среднее» в названии.
+    if (fBoard.bkTickers) {
+      var bkOn = Array.isArray(x.basket) && x.basket.length > 1;
+      var bkAvg = bkOn && x.type !== "autocall" && (x.basketMode === "avg" || (x.basketMode == null && BK_AVG_RE.test(x.name || "")));
+      fBoard.bkTickers.value = bkOn && x.type !== "autocall" ? x.basket.join(", ") : "";
+      fBoard.bkMode.value = bkAvg ? "avg" : "wo";
+      fBoard.bkWeights.value = bkAvg && Array.isArray(x.basketW) ? x.basketW.join(", ") : "";
     }
     // Варрант: структура и страйки лежат в своих полях. Правку этой пары
     // отправляет BD_ALIAS — в отличие от автоколла, бустера и реверс-конвертибла,
@@ -2223,6 +2350,27 @@
         "заполните блок ниже руками.");
     }
 
+    // Корзина размещения. Веса у бумаг («33,3») значат, что уровень корзины считается
+    // по средней — так у «Космических технологий» (три акции по 1/3). Без весов
+    // ставим worst-of. Тикер — после биржи: «Nasdaq: SPCX» → SPCX.
+    var ob = Array.isArray(o.basket) ? o.basket : [];
+    if (ob.length > 1 && BK_TYPES[type] && fBoard.bkTickers) {
+      var obT = ob.map(function (b) { return String(b.ticker || b.t || "").split(":").pop().trim().toUpperCase(); });
+      if (obT.every(Boolean)) {
+        var obW = ob.map(function (b) { return Number(String(b.w == null ? "" : b.w).replace(",", ".")); });
+        var hasW = obW.every(function (x) { return isFinite(x) && x > 0; });
+        var eqW = hasW && obW.every(function (x) { return Math.abs(x - obW[0]) < 0.05; });
+        fBoard.bkTickers.value = obT.join(", ");
+        fBoard.bkMode.value = hasW ? "avg" : "wo";
+        fBoard.bkWeights.value = hasW && !eqW ? obW.join(", ") : "";
+        bdBasketSync();
+        check.push("режим корзины — подставлен «" + (hasW ? "по средней" : "worst-of") + "» по " +
+          (hasW ? "весам бумаг" : "отсутствию весов") + " в записи размещения, сверьте с КУВ; режим допишите и в название");
+      } else {
+        check.push("тикеры корзины — у размещения они заполнены не у всех бумаг");
+      }
+    }
+
     // Тот же выпуск уже мог уехать на доску руками — второй карточки быть не должно.
     var dup = Object.keys(bdItems).map(function (x) { return bdItems[x]; }).filter(function (x) {
       return x && o.reference && bdNorm(x.underlying) === bdNorm(o.reference) && (!type || x.type === type);
@@ -2381,10 +2529,6 @@
         item.spot = 100;
         put(item, "strike", num(fBoard, "strike"));
         put(item, "couponPct", num(fBoard, "couponPct"));
-        // Корзина не обязательна: чаще одна бумага, и пустое поле не должно
-        // превращаться в массив с пустой строкой (как у реверс-конвертибла).
-        var rcdBk = val(fBoard, "rcdBasket").split(",").map(function (s) { return s.trim().toUpperCase(); }).filter(Boolean);
-        if (rcdBk.length > 1) item.basket = rcdBk;
         put(item, "settle", val(fBoard, "rcdSettle"));
       }
       if (type === "autocall") {
@@ -2408,10 +2552,6 @@
         needRange(fBoard, "rcCouponPa", 0.1, 200, "% годовых");
         needRange(fBoard, "rcStrike", 1, 300, "%");
         needRange(fBoard, "rcObsPerYear", 1, 12, "");
-        // Корзина не обязательна: реверс-конвертибл чаще на одну бумагу, и пустое
-        // поле не должно превращаться в массив с пустой строкой.
-        var rcBk = val(fBoard, "rcBasket").split(",").map(function (s) { return s.trim().toUpperCase(); }).filter(Boolean);
-        if (rcBk.length > 1) item.basket = rcBk;
         put(item, "couponPa", num(fBoard, "rcCouponPa"));
         put(item, "strike", num(fBoard, "rcStrike"));
         put(item, "obsPerYear", num(fBoard, "rcObsPerYear"));
@@ -2425,6 +2565,13 @@
         if (item.strike2 != null && item.strike2 <= item.strike) {
           throw new Error("Потолок участия должен быть выше начала участия.");
         }
+      }
+      // Корзина (необязательна: чаще одна бумага). Режим уходит ЯВНО и для worst-of:
+      // так запись не зависит от того, что написано в названии.
+      if (BK_TYPES[type]) {
+        var bkF = bdBasketRead();
+        if (bkF) Object.assign(item, bkF);
+        bdBasketNameCheck(item);
       }
       var pfx = type === "discount" ? "d" : type === "protection" ? "p"
         : type === "autocall" ? "ac" : type === "revconv" ? "rc" : type === "booster" ? "b"

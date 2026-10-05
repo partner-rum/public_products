@@ -282,6 +282,14 @@ function chip(cap, val, sub){
 
   // график
   var c = curve(item, isOffer);
+  /* Корзина доски: по горизонтали не «базовый актив», а худшая бумага (worst-of) или
+     средний уровень корзины (basketMode "avg"). Правило то же, что S.basketOf в data/lib.js. */
+  if (!isOffer && Array.isArray(item.basket) && item.basket.length > 1 && item.type !== "autocall" &&
+      c.xlab === "уровень базового актива") {
+    var bkAvg = item.basketMode === "avg" ||
+      (item.basketMode == null && /(^|[^а-яё])средн(ее|яя|ей|ему|юю|ий|его|ем)([^а-яё]|$)/i.test(item.name || ""));
+    c.xlab = bkAvg ? "средний уровень корзины" : "худшая бумага корзины";
+  }
   document.getElementById("right").innerHTML =
     '<div class="chart"><div class="ct">Профиль выплаты · схематично</div>'+chart(c)+'</div>';
 

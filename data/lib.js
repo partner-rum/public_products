@@ -391,7 +391,9 @@ window.SITE = (function () {
     const yMax = hi + pad * (o.headroom || 1.6);       // запас сверху под подписи меток
     const f = chartFrame({ W: W, H: H, xMin: 100 + mLo, xMax: 100 + mHi, yMin: yMin, yMax: yMax,
       colors: C, padL: o.padL, padR: o.padR, padT: o.padT, padB: o.padB,
-      font: o.font, xCount: o.xCount, yCount: o.yCount });
+      font: o.font, xCount: o.xCount, yCount: o.yCount,
+      // У корзины по горизонтали не «базовый актив», а худшая бумага или средний уровень
+      xLabel: basketOf(r).on ? basketOf(r).xLabel : undefined });
     const x = f.x, y = f.y, R = W - f.R;
     const txt = (tx, ty, fill, anchor, s, size) => '<text x="' + tx.toFixed(1) + '" y="' + ty.toFixed(1) +
       '"' + (anchor ? ' text-anchor="' + anchor + '"' : "") + ' fill="' + fill + '" font-size="' + (size || fs) +
@@ -684,6 +686,78 @@ window.SITE = (function () {
            r.type === "rcdigital";
   }
 
+  // ── Корзина продукта: worst-of или по средней ────────────────────────────
+  // До 05.10.2026 любая корзина на витрине читалась как worst-of: проверка была
+  // одна — «basket длиннее одной бумаги». Прайсер при этом считает и корзину по
+  // СРЕДНЕЙ (call_on_basket с basket_type average, с весами или без), и сейлзы
+  // начали заводить такие продукты — витрина описала бы их чужим, более жёстким
+  // пэйоффом. Теперь режим хранится в записи:
+  //   basketMode: "avg" — уровень корзины = средневзвешенное изменение бумаг;
+  //   basketW: [40, 30, 30] — веса в %, по порядку basket (нет — веса равные);
+  //   поля нет — worst-of, как у всех корзин до этой правки.
+  // Запасной признак — слово «средн» в названии: заявка, прошедшая через воркер
+  // без basketMode в белом списке, поле теряет, а имя «…среднее по корзине…»
+  // остаётся. Клиент читает название, и витрина не должна ему противоречить.
+  // Формулировки — здесь, одни на доску, карточку и one-pager: у одного принципа
+  // на витрине одно имя.
+  function plPapers(n) {
+    const a = n % 10, b = n % 100;
+    return n + " " + ((a === 1 && b !== 11) ? "бумага" : (a >= 2 && a <= 4 && (b < 12 || b > 14)) ? "бумаги" : "бумаг");
+  }
+  function basketOf(r) {
+    const tk = Array.isArray(r && r.basket) ? r.basket.filter(Boolean) : [];
+    const n = tk.length;
+    if (n < 2) return { on: false, avg: false, n: n, tickers: tk };
+    // Автоколл — только worst-of: его купон и отзыв на витрине описаны по худшей
+    // бумаге, и админка режима ему не предлагает.
+    const avg = r.type !== "autocall" && (r.basketMode === "avg" ||
+      (r.basketMode == null && /средн/i.test(String(r.name || ""))));
+    let w = null;
+    if (avg && Array.isArray(r.basketW) && r.basketW.length === n) {
+      const ws = r.basketW.map(Number);
+      const sum = ws.reduce((s, x) => s + x, 0);
+      // Веса, которые не сходятся в 100%, не печатаем: подпись врала бы о структуре.
+      if (ws.every((x) => isFinite(x) && x >= 0) && Math.abs(sum - 100) < 0.6) w = ws;
+    }
+    const equal = !w || w.every((x) => Math.abs(x - w[0]) < 1e-9);
+    const weightsText = equal ? "равные веса" : tk.map((t, i) => t + " " + fmtSmart(w[i]) + "%").join(" · ");
+    const base = { on: true, avg: avg, n: n, tickers: tk, papers: plPapers(n),
+                   weights: equal ? null : w, weightsText: weightsText };
+    if (avg) return Object.assign(base, {
+      tag: "среднее по корзине", badge: "СРЕДНЕЕ ПО КОРЗИНЕ", tile: "по средней",
+      mark: "среднее",
+      nom: "средний уровень корзины", Nom: "Средний уровень корзины",
+      gen: "среднего уровня корзины",
+      short: "корзина в среднем", Short: "Корзина в среднем",
+      grew: "Корзина в среднем выросла", fell: "Корзина в среднем упала", no: "Корзина в среднем не выросла",
+      poss: "её",
+      axis: "средний уровень корзины", axisCaps: "СРЕДНИЙ уровень корзины",
+      by: "по среднему уровню корзины", byShort: "по средней", byCaps: "по СРЕДНЕМУ уровню корзины",
+      xLabel: "Средний уровень корзины, % от старта",
+      principle: "Среднее по корзине — выплата считается по СРЕДНЕМУ изменению бумаг корзины (" +
+        r.underlying + "), " + (equal ? "с равными весами" : "с весами " + weightsText) + ", а не по худшей",
+      desc: "Корзина из " + n + " бумаг: " + r.underlying + ". Уровень корзины — СРЕДНЕЕ изменение бумаг (" +
+        (equal ? "равные веса" : "веса " + weightsText) + "): рост одних бумаг компенсирует падение других, " +
+        "и результат определяет корзина в целом, а не самая слабая бумага."
+    });
+    return Object.assign(base, {
+      tag: "worst-of", badge: "WORST-OF", tile: "worst-of",
+      mark: "худшая",
+      nom: "худшая бумага корзины", Nom: "Худшая бумага корзины",
+      gen: "худшей бумаги корзины",
+      short: "худшая бумага", Short: "Худшая бумага",
+      grew: "Худшая бумага корзины выросла", fell: "Худшая бумага корзины упала", no: "Худшая бумага корзины не выросла",
+      poss: "её",
+      axis: "уровень худшей бумаги корзины", axisCaps: "уровень ХУДШЕЙ бумаги корзины",
+      by: "по худшей бумаге", byShort: "по худшей", byCaps: "по ХУДШЕЙ бумаге",
+      xLabel: "Худшая бумага корзины, % от старта",
+      principle: "Worst-of — выплата считается по ХУДШЕЙ бумаге корзины (" + r.underlying + "), а не по средней",
+      desc: "Корзина из " + n + " бумаг: " + r.underlying +
+        ". Все условия считаются по ХУДШЕЙ из них: результат определяет самая слабая бумага корзины, а не средняя по ней. " +
+        "Именно за этот риск цена входа ниже, чем у продукта на одну бумагу."
+    });
+  }
+
   // Возвращает null, если продукта с таким id нет (снят с витрины, битая ссылка,
   // пустой ?id). Подставлять вместо него первый инструмент каталога НЕЛЬЗЯ:
   // клиент видел бы чужой продукт с настоящей котировкой, считая, что смотрит
@@ -772,6 +846,6 @@ window.SITE = (function () {
     return /S&P|NASDAQ|NVDA|NVIDIA|NBIS|Nebius|BTC|IBIT|GLD|SPY|COPX|CSI|URA|Uranium|Bitcoin|Gold|USD|\$/i.test(n);
   }
 
-  return { esc, TYPES, INSTRUMENTS, PAYOFF, LEGAL, calc, displayName, isAtPar, tenorYears, revconvBreakeven, revconvCoupons, rcdCoupon, findInstrument, instrumentsOfType, underlyingInfo, underlyingLong, isFxSensitive, ccyLabel, nonCallText, history, fmtInt, fmt2, fmt1, fmtSmart, quoteBig, daysTo, chartFrame, niceTicks, payoffChart, discountChart, AXIS_X, AXIS_Y };
+  return { esc, TYPES, INSTRUMENTS, PAYOFF, LEGAL, calc, displayName, isAtPar, basketOf, tenorYears, revconvBreakeven, revconvCoupons, rcdCoupon, findInstrument, instrumentsOfType, underlyingInfo, underlyingLong, isFxSensitive, ccyLabel, nonCallText, history, fmtInt, fmt2, fmt1, fmtSmart, quoteBig, daysTo, chartFrame, niceTicks, payoffChart, discountChart, AXIS_X, AXIS_Y };
 
 })();

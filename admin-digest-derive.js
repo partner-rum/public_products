@@ -503,11 +503,32 @@
     return r;
   }
 
+  // Корзина продукта доски: worst-of или по средней. Правило то же, что S.basketOf
+  // в data/lib.js: поле basketMode, без него — слово «среднее» в названии; автоколл
+  // описан по худшей бумаге своей веткой и сюда не попадает.
+  var BK_AVG_RE = /(^|[^а-яё])средн(ее|яя|ей|ему|юю|ий|его|ем)([^а-яё]|$)/i;
+  function basketText(p) {
+    if (!p || p.type === "autocall" || !Array.isArray(p.basket) || p.basket.length < 2) return null;
+    var avg = p.basketMode === "avg" || (p.basketMode == null && BK_AVG_RE.test(String(p.name || "")));
+    if (!avg) return { upside: "по худшей бумаге корзины", how: "Все условия считаются по худшей бумаге корзины, а не по средней." };
+    var w = Array.isArray(p.basketW) && p.basketW.length === p.basket.length ? p.basketW : null;
+    var eq = !w || w.every(function (x) { return x === w[0]; });
+    var wt = eq ? "равные веса" : p.basket.map(function (t, i) { return t + " " + comma(w[i]) + "%"; }).join(", ");
+    return { upside: "по среднему изменению бумаг корзины (" + wt + ")",
+             how: "Уровень корзины — среднее изменение бумаг (" + wt + "), а не худшая из них." };
+  }
+
   g.deriveDigestIdea = function (product, source) {
     if (!product) return { supported: false, reason: "Продукт не выбран." };
     var r = source === "offering" ? fromOffering(product) : fromBoard(product);
     if (r && r.supported === false) return r;
     r.supported = true;
-    return attachHowPayout(r);
+    r = attachHowPayout(r);
+    var bt = source === "offering" ? null : basketText(product);
+    if (bt) {
+      if (r.p && r.p.upside) r.p.upside += "; " + bt.upside;
+      if (r.how) r.how += " " + bt.how;
+    }
+    return r;
   };
 })(typeof window !== "undefined" ? window : globalThis);

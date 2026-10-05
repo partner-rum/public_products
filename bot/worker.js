@@ -1283,7 +1283,7 @@ async function buildCatalog(env) {
           (p.strike > 100 ? " выше страйка " + p.strike + "%" : "")
         : p.quote != null && "цена " + p.quote + "%";
       lines.push("- [" + p.id + "] " + [p.name, p.underlying && "базовый актив: " + p.underlying,
-        price].filter(Boolean).join(" · "));
+        price, basketNote(p)].filter(Boolean).join(" · "));
     }
   }
   const offers = (off && off.items) || [];
@@ -2423,6 +2423,29 @@ const fiHas = (name, part) => String(name || "").toLowerCase().includes(String(p
 // должно: «Биржа · стакан» из данных иначе читается как два отдельных параметра.
 const fiFlat = (s) => String(s == null ? "" : s).replace(/\s*·\s*/g, ", ").trim();
 
+// Режим корзины продукта доски — то же правило, что S.basketOf в data/lib.js:
+// поле basketMode, а без него слово «среднее» в названии; автоколл — только worst-of.
+const BASKET_AVG_RE = /(^|[^а-яё])средн(ее|яя|ей|ему|юю|ий|его|ем)([^а-яё]|$)/i;
+function basketAvg(p) {
+  if (!p || p.type === "autocall" || !Array.isArray(p.basket) || p.basket.length < 2) return false;
+  return p.basketMode === "avg" || (p.basketMode == null && BASKET_AVG_RE.test(String(p.name || "")));
+}
+function basketWeights(p) {
+  const w = Array.isArray(p.basketW) && p.basketW.length === p.basket.length ? p.basketW : null;
+  if (!w || w.every((x) => x === w[0])) return "равные веса";
+  return p.basket.map((t, i) => t + " " + w[i] + "%").join(", ");
+}
+function basketNote(p) {
+  if (!p || p.type === "autocall" || !Array.isArray(p.basket) || p.basket.length < 2) return "";
+  return basketAvg(p)
+    ? "корзина " + p.basket.join("/") + " ПО СРЕДНЕЙ: выплата по среднему изменению бумаг (" + basketWeights(p) + "), не по худшей"
+    : "корзина " + p.basket.join("/") + " WORST-OF: все условия по худшей бумаге";
+}
+function basketSpec(p) {
+  if (!Array.isArray(p.basket) || p.basket.length < 2) return null;
+  return basketAvg(p) ? "среднее по корзине из " + p.basket.length + " (" + basketWeights(p) + ")" : "worst-of " + p.basket.length;
+}
+
 // Параметры продукта доски — то же, что в паспорте на сайте, но одной строкой.
 // Состав подобран под ФИ: не «за что платит инвестор», а чем ограничен риск.
 function fiSpec(p) {
@@ -2433,6 +2456,7 @@ function fiSpec(p) {
     if (K != null) s.push("страйк " + fiNum(K) + "%" + (K2 ? ", потолок " + fiNum(K2) + "%" : ""));
     if (K != null && K2) s.push("выплата не выше " + fiNum(K2 - K) + "% номинала");
     if (K != null && p.quote != null) s.push("безубыток " + fiNum(K + p.quote) + "%");
+    if (basketSpec(p)) s.push(basketSpec(p));
   } else if (p.type === "discount") {
     if (p.quote != null) s.push("вход " + fiNum(p.quote) + "% номинала");
     s.push("погашение 100%", "без купонов");
@@ -2441,6 +2465,7 @@ function fiSpec(p) {
     s.push("защита " + fiNum(p.protectionPct != null ? p.protectionPct : 100) + "%");
     s.push("участие " + fiNum(Math.round((p.participation || 1) * 100)) + "%" +
       (K > 100 ? " выше " + fiNum(K) + "%" : ""));
+    if (basketSpec(p)) s.push(basketSpec(p));
   } else if (p.type === "autocall") {
     s.push("вход 100% номинала");
     if (p.couponPa != null) s.push("купон " + fiNum(p.couponPa) + "% годовых");
@@ -2454,12 +2479,13 @@ function fiSpec(p) {
     s.push("страйк " + fiNum(p.strike != null ? p.strike : 100) + "%");
     s.push("тело 100% при активе не ниже страйка");
     s.push("ниже страйка — по перформансу от страйка");
-    if (Array.isArray(p.basket) && p.basket.length > 1) s.push("worst-of " + p.basket.length);
+    if (basketSpec(p)) s.push(basketSpec(p));
   } else if (p.type === "digital") {
     if (p.quote != null) s.push("премия " + fiNum(p.quote) + "% номинала");
     if (p.digitalPct != null) s.push("выплата " + fiNum(p.digitalPct) + "% номинала, фиксированная");
     s.push("порог " + fiNum(K != null ? K : 100) + "%");
     s.push("ниже порога выплаты нет");
+    if (basketSpec(p)) s.push(basketSpec(p));
   } else if (p.type === "booster") {
     s.push("вход 100% номинала");
     if (p.ku != null && K != null && K2 != null) {
@@ -2814,7 +2840,11 @@ const SUBMIT_SECTIONS = {
     file: "data/instruments.js",
     // currency: без неё всё, что заводит сейлз, молча становилось рублёвым
     // settle: валюта расчётов автоколла отличается от валюты номинала
-    str: ["id", "type", "structure", "name", "underlying", "cls", "uRef", "tenor", "expiry", "currency", "settle"],
+    // basketMode — режим корзины: "avg" (по средней, как basket_type average в
+    // прайсере) или "wo" (worst-of). Без него в белом списке корзина по средней
+    // уезжала бы на витрину как worst-of — то есть с чужим, более жёстким риском.
+    str: ["id", "type", "structure", "name", "underlying", "cls", "uRef", "tenor", "expiry", "currency", "settle",
+          "basketMode"],
     // ku — коэффициент участия бустера; couponPa/couponBarrier/callBarrier/
     // nonCall/obsPerYear — автоколл. Без них белый список молча выбрасывал
     // параметры, и продукт уезжал на доску пустой оболочкой.
@@ -2964,6 +2994,18 @@ function sanitizeItem(section, raw) {
     if (out.kind === "coupon" && pp.couponPa == null) missing.push("couponPa");
     if (out.kind === "participation" && pp.participationPct == null) missing.push("participationPct");
     return { item: out, missing };
+  }
+  if (section === "board") {
+    if (out.basketMode && out.basketMode !== "avg" && out.basketMode !== "wo") delete out.basketMode;
+    // Веса корзины по средней — проценты по порядку basket. Общая обработка arr
+    // сделала бы из них строки, поэтому своя ветка. Веса не в сумме 100 или при
+    // корзине другой длины не пропускаем: витрина печатает их клиенту.
+    if (Array.isArray(raw.basketW) && out.basketMode !== "wo") {
+      const w = raw.basketW.map(cleanNum).slice(0, 8);
+      const sum = w.reduce((s, x) => s + (x || 0), 0);
+      const lenOk = !out.basket || out.basket.length === w.length;
+      if (w.length > 1 && lenOk && w.every((x) => x != null && x >= 0) && Math.abs(sum - 100) <= 0.6) out.basketW = w;
+    }
   }
   if (out.id) out.id = out.id.toLowerCase().replace(/[^\w.-]+/g, "-").slice(0, 60);
   const missing = cfg.required.filter((k) => out[k] == null || out[k] === "");

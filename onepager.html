@@ -293,7 +293,7 @@
 <div id="deck"></div>
 
 <script src="data/instruments.js?v=fx8"></script>
-<script src="data/lib.js?v=ax8"></script>
+<script src="data/lib.js?v=ax9"></script>
 <script src="data/offerings.js?v=srv19"></script>
 <script src="share.js?v=8"></script>
 <script src="contact.js?v=10"></script>
@@ -437,24 +437,25 @@
   }
   const U = S.underlyingInfo(inst.underlying);
 
-  // Worst-of: продукт на корзину. Шаблон one-pager остаётся стандартным — просто
-  // вместо одного актива подставляется ХУДШАЯ бумага корзины, а сам перечень бумаг
-  // уходит в блок «О корзине». Формулировки слово в слово как на доске и в карточке.
-  const isWO = Array.isArray(inst.basket) && inst.basket.length > 1;
-  const uName = isWO ? "худшей бумаги корзины" : inst.underlying;
-  const uGrew = isWO ? "Худшая бумага корзины выросла" : inst.underlying + " вырос";
-  const uFell = isWO ? "Худшая бумага корзины упала" : inst.underlying + " упал";
-  const uNo = isWO ? "Худшая бумага корзины не выросла" : inst.underlying + " не вырос";
-  const uGrewLow = isWO ? "худшая бумага корзины выросла" : inst.underlying + " вырос";
-  const uGenAsset = isWO ? "худшей бумаги корзины" : "базового актива";
-  const uAxis = isWO ? "уровень худшей бумаги" : "уровень БА";
-  const uPoss = isWO ? "её" : "его";
+  // Продукт на корзину. Шаблон one-pager остаётся стандартным — вместо одного актива
+  // подставляется ХУДШАЯ бумага корзины (worst-of) или её СРЕДНИЙ уровень (basketMode
+  // "avg"), а сам перечень бумаг уходит в блок «О корзине». Формулировки — из
+  // S.basketOf, слово в слово как на доске и в карточке. isWO значит «есть корзина».
+  const BK = S.basketOf(inst);
+  const isWO = BK.on;
+  const lc = (x) => x.charAt(0).toLowerCase() + x.slice(1);
+  const uName = isWO ? BK.gen : inst.underlying;
+  const uNameNom = isWO ? BK.Nom : inst.underlying;        // начало строки сценария
+  const uGrew = isWO ? BK.grew : inst.underlying + " вырос";
+  const uFell = isWO ? BK.fell : inst.underlying + " упал";
+  const uNo = isWO ? BK.no : inst.underlying + " не вырос";
+  const uGrewLow = isWO ? lc(BK.grew) : inst.underlying + " вырос";
+  const uGenAsset = isWO ? BK.gen : "базового актива";
+  // Короче, чем на доске: подпись графика на слайде 540px стоит впритык
+  const uAxis = isWO ? (BK.avg ? "средний уровень корзины" : "уровень худшей бумаги") : "уровень БА";
+  const uPoss = isWO ? BK.poss : "его";
   const woLabel = isWO ? "О корзине · " + inst.underlying : null;
-  const woDesc = isWO
-    ? "Корзина из " + inst.basket.length + " бумаг: " + inst.underlying +
-      ". Все условия считаются по ХУДШЕЙ из них: результат определяет самая слабая бумага корзины, а не средняя по ней. " +
-      "Именно за этот риск цена входа ниже, чем у продукта на одну бумагу."
-    : null;
+  const woDesc = isWO ? BK.desc : null;
   const fxShort = "Расчёт в валюте базового актива — изменение курса рубля к ней не учтено.";
 
   document.title = "One-pager — " + name;
@@ -856,8 +857,8 @@
         [uNo, "выплаты нет — премия потеряна полностью", "−" + S.fmtInt(premiumRub) + " ₽", "var(--down)", "−100% вложенных"]
       ],
       explainer: isCS
-        ? "Колл-спред — CALL с потолком выплаты. Страйк фиксируется по уровню актива в день покупки, рост засчитывается до K₂. Инвестор платит только премию (" + S.fmt2(q) + "% номинала) и получает экспозицию на весь номинал. Если " + (isWO ? "худшая бумага корзины не выросла" : "актив не вырос") + " — теряется только премия."
-        : "CALL-варрант — право на выплату, равную росту " + uGenAsset + " сверх страйка. Инвестор платит только премию (" + S.fmt2(q) + "% номинала) и получает экспозицию на весь номинал без маржин-коллов. Если " + (isWO ? "худшая бумага корзины не выросла" : "актив не вырос") + " — теряется только премия."
+        ? "Колл-спред — CALL с потолком выплаты. Страйк фиксируется по уровню актива в день покупки, рост засчитывается до K₂. Инвестор платит только премию (" + S.fmt2(q) + "% номинала) и получает экспозицию на весь номинал. Если " + (isWO ? lc(BK.no) : "актив не вырос") + " — теряется только премия."
+        : "CALL-варрант — право на выплату, равную росту " + uGenAsset + " сверх страйка. Инвестор платит только премию (" + S.fmt2(q) + "% номинала) и получает экспозицию на весь номинал без маржин-коллов. Если " + (isWO ? lc(BK.no) : "актив не вырос") + " — теряется только премия."
     };
   } else if (inst.type === "digital") {
     const K = inst.strike || 100, pay = inst.digitalPct || 0;
@@ -867,7 +868,7 @@
     const mult = q ? pay / q : 0;
     c = {
       badge: "Купонный варрант · структурная облигация",
-      subtitle: "Фиксированная выплата " + S.fmtSmart(pay) + "% номинала, если " + uName +
+      subtitle: "Фиксированная выплата " + S.fmtSmart(pay) + "% номинала, если " + (isWO ? BK.nom : inst.underlying) +
         " на экспирацию не ниже " + S.fmtSmart(K) + "% начального уровня · срок " + inst.tenor + " · " + S.ccyLabel(inst) + ".",
       underLabel: woLabel, underDesc: woDesc,
       chart: chDigital,
@@ -882,9 +883,9 @@
       // Берём крайние случаи — порог взят и порог не взят: между ними у продукта
       // ничего нет, и промежуточный сценарий нечем заполнить.
       scen: [
-        [uName + " на " + S.fmtSmart(K) + "% и выше", "выплата " + S.fmtInt(payoutRub) + " ₽ — фиксированная",
+        [uNameNom + " на " + S.fmtSmart(K) + "% и выше", "выплата " + S.fmtInt(payoutRub) + " ₽ — фиксированная",
           "+" + S.fmtInt(net) + " ₽", "var(--up)", roiTxt(net, premiumRub)],
-        [uName + " ниже " + S.fmtSmart(K) + "%", "выплаты нет — премия потеряна полностью",
+        [uNameNom + " ниже " + S.fmtSmart(K) + "%", "выплаты нет — премия потеряна полностью",
           "−" + S.fmtInt(premiumRub) + " ₽", "var(--down)", "−100% вложенных"]
       ],
       explainer: "Купонный варрант — право на ФИКСИРОВАННУЮ выплату " + S.fmtSmart(pay) +
@@ -946,18 +947,18 @@
     const bodyPct = S.PAYOFF.revconv(downLvl, K);
     const downRub = nom * bodyPct / 100 + cpnAll;
     const obsTxt = per === 12 ? "ежемесячно" : per === 4 ? "ежеквартально" : per === 2 ? "раз в полгода" : per + " раза в год";
-    const isWOrc = Array.isArray(inst.basket) && inst.basket.length > 1;
-    const uName = isWOrc ? "худшая бумага корзины" : inst.underlying;
-    const uGrewRc = isWOrc ? "Худшая бумага корзины выросла" : inst.underlying + " вырос";
+    const isWOrc = BK.on;
+    const uName = isWOrc ? BK.nom : inst.underlying;
+    const uGrewRc = isWOrc ? BK.grew : inst.underlying + " вырос";
     c = {
       badge: "Реверс-конвертибл · структурная облигация",
       subtitle: "Повышенный купон " + S.fmt2(cpnPa) + "% годовых на " +
-        (isWOrc ? "корзину " + inst.underlying + " по принципу worst-of" : inst.underlying) +
+        (isWOrc ? "корзину " + inst.underlying + (BK.avg ? " по среднему уровню" : " по принципу worst-of") : inst.underlying) +
         " — платится при любом сценарии · страйк " + S.fmtSmart(K) + "% · срок " + inst.tenor + " · " + S.ccyLabel(inst) + ".",
       quoteK: "купон · % годовых · индикативно",
       chart: chRevconv,
-      chartCap: "Полная выплата за срок в % от номинала — тело плюс купоны; по горизонтали — уровень " +
-        (isWOrc ? "худшей бумаги корзины" : "базового актива") + ". Пунктир — тело без купонов: зазор между линиями и есть купон.",
+      chartCap: "Полная выплата за срок в % от номинала — тело плюс купоны; по горизонтали — " +
+        (isWOrc ? BK.axis : "уровень базового актива") + ". Пунктир — тело без купонов: зазор между линиями и есть купон.",
       params: [["Купон", S.fmt2(cpnPa) + "% годовых", true], ["Выплаты", obsTxt, false], ["Страйк", S.fmtSmart(K) + "%", false],
         be != null && be > 0 ? ["Купон покрывает до", S.fmtSmart(be) + "%", false] : ["Участие в росте", "нет", false]],
       exIntro: "Вход по номиналу " + S.fmtInt(nom) + " ₽ (100%) · купон " + S.fmt2(cpnPer) + "% за период = " + S.fmtInt(cpnRub) + " ₽",
@@ -981,18 +982,18 @@
     const bodyPct = S.PAYOFF.rcdigital(downLvl, K, cpn);
     const downRub = nom * bodyPct / 100;
     const nearRub = nom * (K - 1) / K;
-    const isWOrc = Array.isArray(inst.basket) && inst.basket.length > 1;
-    const uName = isWOrc ? "худшая бумага корзины" : inst.underlying;
+    const isWOrc = BK.on;
+    const uName = isWOrc ? BK.nom : inst.underlying;
     c = {
       badge: "Реверс-конвертибл с условным купоном · структурная облигация",
       subtitle: "Купон " + S.fmtSmart(cpn) + "% номинала на " +
-        (isWOrc ? "корзину " + inst.underlying + " по принципу worst-of" : inst.underlying) +
+        (isWOrc ? "корзину " + inst.underlying + (BK.avg ? " по среднему уровню" : " по принципу worst-of") : inst.underlying) +
         " — платится, только если актив на дату оценки не ниже страйка " + S.fmtSmart(K) +
         "% · срок " + inst.tenor + " · " + S.ccyLabel(inst) + ".",
       quoteK: "купон за срок · % номинала · индикативно",
       chart: chRcdigital,
-      chartCap: "Выплата за срок в % от номинала; по горизонтали — уровень " +
-        (isWOrc ? "худшей бумаги корзины" : "базового актива") +
+      chartCap: "Выплата за срок в % от номинала; по горизонтали — " +
+        (isWOrc ? BK.axis : "уровень базового актива") +
         ". Ступенька на страйке и есть купон: он либо платится целиком, либо не платится вовсе.",
       params: [["Купон", S.fmtSmart(cpn) + "% за срок", true],
         ["Условие", "актив ≥ " + S.fmtSmart(K) + "%", false],
@@ -1115,10 +1116,13 @@
   // Если списки разошлись по длине, показываем только тикеры — врать подписями нельзя.
   const bkNames = String(inst.underlying || "").split("/").map(x => x.trim()).filter(Boolean);
   const bkNamed = isWO && bkNames.length === inst.basket.length;
+  // У корзины по средней на чипе ещё и вес бумаги — если веса не равные.
   const basketHTML = !isWO ? "" :
-    '<div class="basket"><div class="bk-lbl">Риск по худшей бумаге</div><div class="bk-row">' +
+    '<div class="basket"><div class="bk-lbl">' + (BK.avg ? "Среднее по корзине" : "Риск по худшей бумаге") +
+    '</div><div class="bk-row">' +
     inst.basket.map(function (tk, i) {
-      return '<span class="bk-chip"><b>' + tk + '</b>' + (bkNamed ? '<i>' + bkNames[i] + '</i>' : '') + '</span>';
+      return '<span class="bk-chip"><b>' + tk + (BK.weights ? " " + S.fmtSmart(BK.weights[i]) + "%" : "") + '</b>' +
+        (bkNamed ? '<i>' + bkNames[i] + '</i>' : '') + '</span>';
     }).join("") + '</div></div>';
   const howHTML =
     '<div class="callout"><div class="lbl">Как устроен продукт</div><div class="expl">' + c.explainer + '</div>' +
