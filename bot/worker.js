@@ -19,6 +19,8 @@
 //   CHAT_BLOCKED_COUNTRIES — (опц.) страны (ISO-2, через запятую), где AI-чат отключён. По умолчанию ПУСТО
 //                            (открыто для всех). Чтобы ограничить — задай "RU" или "RU,BY": тем клиентам
 //                            /chat вернёт region_unavailable, и виджет предложит Telegram.
+//   PRICER_MCP_URL    — (опц.) адрес MCP-сервера прайсера (…/mcp): включает расчёт варрантов в чате.
+//   PRICER_MCP_KEY    — (опц., секрет) bearer-ключ к нему. Без обеих переменных расчёта нет.
 //
 //   --- админка сейлзов (добавление продуктов на сайт) ---
 //   SALES_KEYS      — персональные ключи сейлзов: "andrey:ключ1,polina:ключ2" (секрет)
@@ -1486,9 +1488,22 @@ async function handleChat(request, env, cors, ctx) {
     return streamChat(provider, system, messages, env, cors);
   }
 
-  let reply;
+  // Расчёт варрантов (см. блок «Расчёт варрантов в чате»): только deepseek, только
+  // за гейтом квалинвестора (chat.js шлёт qual:true) или на рабочем столе партнёра.
+  const pricing = provider === "deepseek" && pricerEnabled(env) && (data.qual === true || partnerMode);
+
+  let reply, priced = [];
   try {
-    if (provider === "deepseek") reply = await callDeepSeek(system, messages, env);
+    if (pricing) {
+      const out = await chatWithPricing(system, messages, env, {
+        partnerMode,
+        who: partnerMode ? "site-desk" : "site-chat",
+        limiter: env.CHAT_RATE_LIMIT,
+        ip: request.headers.get("CF-Connecting-IP") || "anon",
+      });
+      reply = out.reply; priced = out.priced;
+    }
+    else if (provider === "deepseek") reply = await callDeepSeek(system, messages, env);
     else if (provider === "claude") reply = await callClaude(system, messages, env);
     else reply = await callYandex(system, messages, env);
   } catch (e) {
@@ -1498,12 +1513,17 @@ async function handleChat(request, env, cors, ctx) {
 
   // Лог диалога (без контактов: вопрос/ответ/страница) — в отдельный тихий TG-чат,
   // если задан CHAT_LOG_CHAT_ID. Не задерживаем ответ клиенту: waitUntil, где доступен.
+  // У расчётов в лог (внутренний) добавляется справедливая цена прайсера — видно наценку.
   if (env.CHAT_LOG_CHAT_ID && reply) {
     const q = messages[messages.length - 1].content.slice(0, 600);
+    const fairs = priced.filter((o) => o.ok).map((o) =>
+      o.ticker + " " + o.type + (o.cap != null ? " " + o.strike + "–" + o.cap : " " + o.strike) + " " + o.tenor +
+      ": прайсер " + priceNum(o.fair) + "%, клиенту " + priceNum(o.quote) + "%");
     const logP = tg(env, "sendMessage", {
       chat_id: env.CHAT_LOG_CHAT_ID, parse_mode: "HTML", disable_web_page_preview: true,
       text: "💬 <b>AI-чат</b>" + (pageTitle ? " · " + esc(pageTitle) : "") +
-        "\n<b>Q:</b> " + esc(q) + "\n<b>A:</b> " + esc(String(reply).slice(0, 500)),
+        "\n<b>Q:</b> " + esc(q) + "\n<b>A:</b> " + esc(String(reply).slice(0, 500)) +
+        (fairs.length ? "\n<b>Расчёт:</b> " + esc(fairs.join("; ")) : ""),
     }).catch(() => {});
     if (ctx && ctx.waitUntil) ctx.waitUntil(logP); else await logP;
   }
@@ -1592,6 +1612,8 @@ async function callDeepSeek(system, messages, env, opts = {}) {
       max_tokens: opts.maxTokens != null ? opts.maxTokens : 800, stream: !!opts.stream,
       // json-режим: модель обязана вернуть валидный JSON (нужен утреннему конвейеру)
       ...(opts.json ? { response_format: { type: "json_object" } } : {}),
+      // инструменты (расчёт варрантов в чате): модель сама решает, звать ли их
+      ...(opts.tools ? { tools: opts.tools, tool_choice: "auto" } : {}),
     }),
   });
   if (opts.stream) return r;   // сырой ответ — его SSE перекладывает streamChat()
@@ -1601,7 +1623,10 @@ async function callDeepSeek(system, messages, env, opts = {}) {
   // json-режим: упор в max_tokens отдаёт недописанный JSON без внешних признаков —
   // сигналим вызывающему, чтобы ретрай знал настоящую причину, а не гадал
   if (opts.json && c && c.finish_reason === "length") throw new Error("upstream_length");
-  return ((c && c.message && c.message.content) || "").trim();
+  const content = ((c && c.message && c.message.content) || "").trim();
+  // raw: вызывающему нужны и вызовы инструментов, не только текст
+  if (opts.raw) return { content, toolCalls: (c && c.message && c.message.tool_calls) || [] };
+  return content;
 }
 
 // Claude (Anthropic) — запасной провайдер (CHAT_PROVIDER=claude) и провайдер постов
@@ -1627,6 +1652,353 @@ async function callClaude(system, messages, env, opts = {}) {
   if (!r.ok) throw new Error("upstream_" + r.status);
   const data = await r.json();
   return (data.content || []).filter((b) => b.type === "text").map((b) => b.text).join("\n").trim();
+}
+
+// ============================================================================
+// Расчёт варрантов в чате (05.10.2026, запрос Руслана: «пишешь „запрайсь колл
+// опцион на Сбер на 2 года" — он прайсит»). Модель только разбирает фразу и
+// вызывает инструмент price_warrant. Цену считает прайсер Rumberg
+// (api.rumberg.ru) через MCP-сервер подрядчика (neurocodelabs/mcp_pricerbackend,
+// его инструмент price_vanilla). Наценку и текст ответа собирает КОД — как в
+// утреннем посте: цифры, которые увидит клиент, модель не пишет.
+//
+// Справедливая цена прайсера (pv_pct) не уходит ни модели, ни клиенту — только
+// котировка с нашей наценкой. Описание сделки от прайсера («Автокол-нота…») и
+// ссылку на терминал не показываем.
+//
+// Включается двумя переменными; без них инструмента нет и чат работает как раньше:
+//   PRICER_MCP_URL — адрес MCP-сервера, напр. https://<хост>/mcp (Streamable HTTP)
+//   PRICER_MCP_KEY — bearer-ключ вызывающего (секрет). На стороне MCP этому
+//                    вызывающему стоит разрешить только vanilla и поставить лимит.
+// Считает только тем, кто прошёл гейт квалинвестора (chat.js шлёт qual:true), и
+// партнёрам на рабочем столе. Только провайдер deepseek (нужны инструменты).
+// ============================================================================
+const PRICE_MARKUP = 0.25;          // наценка на варранты: 25% от премии (решение Руслана 05.10.2026, как Offer деска)
+const PRICE_STEP = 0.25;            // котировка клиенту — вверх до 0,25 п. (шаг доски)
+const PRICE_MAX_CALLS = 3;          // расчётов в одном ответе, не больше
+const PRICE_TIMEOUT_MS = 60000;     // прайсер на прогретом сервере отвечает за 3–6 с
+const PRICE_UNLISTED_TIMEOUT_MS = 25000;  // тикер не из справочника: существующий находится за секунды
+const PRICE_CACHE_MS = 10 * 60 * 1000;
+const PRICE_DAYS_MIN = 7, PRICE_DAYS_MAX = 5 * 366;
+const PRICE_CACHE = new Map();      // условия + дата → готовый ответ; живёт в изоляте
+
+const PRICE_TOOL = {
+  type: "function",
+  function: {
+    name: "price_warrant",
+    description: "Посчитать индикативную цену варранта для клиента: CALL, PUT или колл-спред на один базовый актив. " +
+      "Ответ с ценой клиенту соберёт сервер.",
+    parameters: {
+      type: "object",
+      properties: {
+        underlying: { type: "string", description: "Тикер базового актива, как на бирже: SBER, GAZP, LKOH, YDEX, NVDA. " +
+          "Если клиент назвал компанию словами и тикер неизвестен — название как есть." },
+        option_type: { type: "string", enum: ["call", "put"], description: "call — на рост, put — на падение." },
+        tenor: { type: "string", description: "Срок: '2Y', '18M', '6M', '90D' или дата экспирации YYYY-MM-DD." },
+        strike_pct: { type: "number", description: "Страйк в % от текущей цены актива. По умолчанию 100." },
+        cap_pct: { type: "number", description: "Только колл-спред: потолок в % от текущей цены, выше страйка." },
+      },
+      required: ["underlying", "option_type", "tenor"],
+    },
+  },
+};
+
+const PRICING_PROMPT = `
+
+=== РАСЧЁТ ВАРРАНТОВ (инструмент price_warrant) ===
+Ты умеешь считать индикативную цену варрантов: CALL, PUT и колл-спред на ОДИН базовый актив. Когда клиент просит посчитать, запрайсить, оценить или узнать цену колла, пута, опциона, варранта или колл-спреда на конкретный актив — вызови price_warrant. Ответ с ценой клиенту соберёт сервер: сам цену не называй и не придумывай.
+- Тикер передавай как на бирже (SBER, GAZP, LKOH, YDEX, NVDA). Не знаешь тикер — передай название компании как есть.
+- Срок обязателен. Не назван — спроси срок и инструмент не вызывай. «2 года» → '2Y', «18 месяцев» → '18M', «полгода» → '6M'.
+- Страйк по умолчанию 100% (на уровне текущей цены). «Страйк 110», «на 10% выше рынка» → strike_pct 110.
+- Колл-спред: «колл-спред 100–150», «колл с потолком 150%» → strike_pct 100, cap_pct 150. Только для CALL.
+- Клиент меняет условия прошлого расчёта («а на 3 года?», «а страйк 110?») — вызови инструмент снова, остальные условия возьми из прошлого расчёта.
+- Автоколлы, защиту капитала, дисконтные облигации, бустеры и корзины из нескольких активов ты не считаешь: скажи об этом, предложи похожий продукт из каталога или менеджера.`;
+
+function pricerEnabled(env) {
+  return !!((env.PRICER_MCP_URL || "").trim() && (env.PRICER_MCP_KEY || "").trim());
+}
+
+// MCP Streamable HTTP в stateless-режиме: один POST tools/call без initialize и
+// без сессии. Ответ — SSE-событие (event: message / data: {...}) или обычный
+// JSON, в зависимости от настройки сервера; разбираем оба.
+async function mcpCall(env, name, args, timeoutMs) {
+  const ac = new AbortController();
+  const tm = setTimeout(() => ac.abort(), timeoutMs || PRICE_TIMEOUT_MS);
+  let r, text;
+  try {
+    r = await fetch(env.PRICER_MCP_URL.trim(), {
+      method: "POST",
+      signal: ac.signal,
+      headers: {
+        "Authorization": "Bearer " + env.PRICER_MCP_KEY.trim(),
+        "Content-Type": "application/json",
+        "Accept": "application/json, text/event-stream",
+      },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name, arguments: args } }),
+    });
+    text = await r.text();
+  } catch (e) {
+    throw new Error(e && e.name === "AbortError" ? "pricer_timeout" : "pricer_unreachable");
+  } finally {
+    clearTimeout(tm);
+  }
+  if (r.status === 401 || r.status === 403) throw new Error("pricer_auth");
+  if (!r.ok) throw new Error("pricer_http_" + r.status);
+  const msg = mcpParse(text, r.headers.get("content-type") || "");
+  if (!msg || msg.error || !msg.result) throw new Error("pricer_rpc");
+  return msg.result;   // { content, structuredContent, isError }
+}
+
+function mcpParse(text, ctype) {
+  if (ctype.indexOf("text/event-stream") < 0) {
+    try { return JSON.parse(text); } catch { return null; }
+  }
+  let found = null;
+  for (const ev of String(text).split(/\r?\n\r?\n/)) {
+    const data = ev.split(/\r?\n/).filter((l) => l.startsWith("data:"))
+      .map((l) => l.slice(5).replace(/^ /, "")).join("\n");
+    if (!data) continue;
+    try {
+      const j = JSON.parse(data);
+      if (j && j.id === 1 && (j.result || j.error)) found = j;
+    } catch { /* служебное событие — пропускаем */ }
+  }
+  return found;
+}
+
+// Срок от модели: '2Y', '18M', '90D', '1.5Y' или дата YYYY-MM-DD.
+// Возвращает то, что понимает MCP (expiry), длину в днях и подпись по-русски.
+function priceTenor(raw) {
+  const s = String(raw == null ? "" : raw).trim().toUpperCase().replace(",", ".");
+  const plural = (n, one, few, many) => {
+    const a = Math.abs(n) % 100, b = a % 10;
+    return a > 10 && a < 20 ? many : b === 1 ? one : b >= 2 && b <= 4 ? few : many;
+  };
+  let m = s.match(/^(\d{1,2})\.(\d+)\s*Y$/);
+  if (m) {   // 1.5Y → 18M: дробных лет прайсер не понимает
+    const months = Math.round(parseFloat(m[1] + "." + m[2]) * 12);
+    return priceTenor(months + "M");
+  }
+  m = s.match(/^(\d{1,4})\s*([DMY])$/);
+  if (m) {
+    const n = parseInt(m[1], 10), u = m[2];
+    const days = u === "D" ? n : u === "M" ? Math.round(n * 365 / 12) : n * 365;
+    const label = u === "D" ? n + " " + plural(n, "день", "дня", "дней")
+      : u === "M" ? n + " " + plural(n, "месяц", "месяца", "месяцев")
+      : n + " " + plural(n, "год", "года", "лет");
+    return { expiry: n + u, days, label };
+  }
+  m = s.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (m) {
+    const t = Date.UTC(+m[1], +m[2] - 1, +m[3]);
+    const today = Date.parse(mskDate().key + "T00:00:00Z");
+    if (!isFinite(t)) return null;
+    return { expiry: m[0], days: Math.round((t - today) / 86400000), label: "до " + m[3] + "." + m[2] + "." + m[1] };
+  }
+  return null;
+}
+
+function priceNum(x, digits) {
+  return new Intl.NumberFormat("ru-RU", { maximumFractionDigits: digits == null ? 2 : digits }).format(x);
+}
+function priceDate(iso) {
+  const m = String(iso || "").match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m ? m[3] + "." + m[2] + "." + m[1] : "";
+}
+const PRICE_CCY = { RUB: "₽", USD: "$", EUR: "€", CNY: "¥" };
+
+// Наценка и округление: котировка = премия × (1 + наценка), вверх до шага доски.
+function priceQuote(pv) {
+  return Math.ceil(pv * (1 + PRICE_MARKUP) / PRICE_STEP - 1e-9) * PRICE_STEP;
+}
+
+// Название компании → тикер по ответу справочника. Справочник вперемешку отдаёт
+// акции, облигации и ноты («Газпром» → GAZP и ГазпромКP3 с одинаковым баллом),
+// поэтому берём только биржевые тикеры, а из пары «оригинал / двойник -RM»
+// оставляем оригинал (Tesla → TSLA, а не TSLA-RM). Однозначный лидер — считаем,
+// иначе возвращаем варианты для вопроса клиенту.
+function priceNamePick(rs) {
+  if (rs.status === "resolved" && rs.ticker) return { ticker: rs.ticker, name: rs.name || "", options: [] };
+  const cands = (rs.matches || [])
+    .filter((m) => m && /^[A-Z][A-Z0-9.-]{0,11}$/.test(m.ticker || ""))
+    .sort((x, y) => (y.score || 0) - (x.score || 0));
+  const pool = cands.filter((m) => !(/-RM$/.test(m.ticker) && cands.some((o) => o.ticker === m.ticker.replace(/-RM$/, ""))));
+  const top = pool[0], second = pool[1];
+  if (top && (!second || (top.score || 0) > (second.score || 0))) return { ticker: top.ticker, name: top.name || "", options: [] };
+  return { ticker: "", name: "", options: pool.slice(0, 4).map((m) => m.ticker + (m.name ? " (" + m.name + ")" : "")) };
+}
+
+// Один расчёт. Всегда возвращает текст для клиента: и котировку, и честный отказ.
+// fair — справедливая цена прайсера, ТОЛЬКО для внутреннего лога.
+async function priceWarrant(a, env, who) {
+  const fail = (text) => ({ ok: false, text });
+  const type = String(a.option_type || "").toLowerCase();
+  if (type !== "call" && type !== "put") return fail("Уточните, какой нужен варрант: CALL (на рост) или PUT (на падение).");
+  const tenor = priceTenor(a.tenor);
+  if (!tenor) return fail("Уточните срок варранта — например, 1 год, 18 месяцев или дату экспирации.");
+  if (tenor.days < PRICE_DAYS_MIN || tenor.days > PRICE_DAYS_MAX) {
+    return fail("Срок варранта считаю от недели до 5 лет. Уточните срок.");
+  }
+  const strike = a.strike_pct == null || a.strike_pct === "" ? 100 : Number(a.strike_pct);
+  if (!isFinite(strike) || strike < 20 || strike > 300) return fail("Страйк считаю в пределах 20–300% от текущей цены актива. Уточните страйк.");
+  let cap = a.cap_pct == null || a.cap_pct === "" ? null : Number(a.cap_pct);
+  if (cap != null) {
+    if (type !== "call") return fail("Потолок выплаты бывает только у колл-спреда. Для PUT уберите потолок.");
+    if (!isFinite(cap) || cap <= strike || cap > 1000) return fail("У колл-спреда потолок должен быть выше страйка. Уточните уровни, например 100–150%.");
+  }
+
+  // Актив: тикер как есть; название компании — через справочник прайсера (1,4 тыс.
+  // инструментов, ответ из кэша, без похода в рыночные данные).
+  const rawU = String(a.underlying || "").trim().slice(0, 60);
+  if (!rawU) return fail("Уточните базовый актив — тикер или название компании.");
+  const tickerLike = /^[A-Za-z0-9][A-Za-z0-9._-]{0,19}$/.test(rawU);
+  // Тикер модель передаёт заглавными; «Tesla», «Sber» — это название компании.
+  // Название, которое справочник не узнал, всё же пробуем как тикер («Qbts»).
+  const asName = !tickerLike || rawU !== rawU.toUpperCase() || rawU.length > 8;
+  let ticker = tickerLike ? rawU.toUpperCase() : "", name = "", listed = false;
+  try {
+    const rr = await mcpCall(env, "resolve_ticker", { query: asName ? rawU : ticker, mode: "fast" }, 20000);
+    const rs = rr.structuredContent || {};
+    const exact = (rs.matches || []).find((m) => m && m.ticker === ticker);
+    if (!asName) {
+      if (rs.status === "resolved" && rs.ticker === ticker) { name = rs.name || ""; listed = true; }
+      else if (exact) { name = exact.name || ""; listed = true; }
+    } else {
+      const pick = priceNamePick(rs);
+      // «Ibm» — это тикер IBM, а не биржевой двойник IBM-RM: двойника не подставляем
+      if (pick.ticker && tickerLike && pick.ticker === ticker + "-RM") pick.ticker = "";
+      if (pick.ticker) { ticker = pick.ticker; name = pick.name; listed = true; }
+      else if (exact) { name = exact.name || ""; listed = true; }
+      else if (!tickerLike || (pick.options.length > 1 && !pick.options.some((o) => o.startsWith(ticker + "-RM")))) {
+        return fail(pick.options.length
+          ? "Уточните актив «" + rawU + "»: " + pick.options.join(", ") + "?"
+          : "Не нашёл актив «" + rawU + "». Напишите его тикер — например, SBER или GAZP.");
+      }
+    }
+  } catch (e) {
+    if (!tickerLike) return fail("Не удалось найти актив «" + rawU + "» — справочник прайсера не ответил. Напишите тикер, например SBER.");
+    // тикер есть — считаем без имени
+  }
+
+  const key = [mskDate().key, ticker, type, tenor.expiry, strike, cap].join("|");
+  const hit = PRICE_CACHE.get(key);
+  if (hit && Date.now() - hit.at < PRICE_CACHE_MS) return hit.out;
+
+  const args = {
+    underlying: ticker, option_type: type, expiry: tenor.expiry, strike, wrapper: "warrant",
+    outputs: ["PV"], context: { user_id: who },
+  };
+  if (cap != null) args.cap = cap;
+  let res;
+  try {
+    // Тикера нет в справочнике (IBM, IONQ…) — прайсер всё равно ищет его в рыночных
+    // данных, но несуществующий отвечает отказом только через 45+ с. Ждём меньше.
+    res = await mcpCall(env, "price_vanilla", args, listed ? PRICE_TIMEOUT_MS : PRICE_UNLISTED_TIMEOUT_MS);
+  } catch (e) {
+    const m = String((e && e.message) || e);
+    if (m === "pricer_timeout" && !listed) {
+      return fail("По тикеру " + ticker + " не нашёл рыночных данных. Проверьте тикер — например, SBER, GAZP или NVDA.");
+    }
+    return fail(m === "pricer_timeout"
+      ? "Прайсер не успел посчитать. Попробуйте ещё раз через минуту или нажмите «Обсудить с Румбергом» — посчитает менеджер."
+      : "Расчёт сейчас недоступен. Попробуйте позже или нажмите «Обсудить с Румбергом» — посчитает менеджер.");
+  }
+  const sc = res.structuredContent || {};
+  if (res.isError) {
+    const code = sc.error || "";
+    if (code === "rate_limited") return fail("Слишком много расчётов подряд. Попробуйте через минуту.");
+    if (code === "unknown_ticker" || code === "market_data_missing") {
+      return fail("По активу " + ticker + " нет рыночных данных — посчитать не могу. Проверьте тикер.");
+    }
+    if (code === "invalid_term") return fail("С такими условиями посчитать не получилось. Проверьте срок, страйк и потолок.");
+    return fail("Расчёт сейчас недоступен. Попробуйте позже или нажмите «Обсудить с Румбергом» — посчитает менеджер.");
+  }
+  if (sc.status === "needs_input") {
+    const q = (sc.questions || [])[0] || {};
+    if (q.field === "underlyings") {
+      const cands = (q.options || []).slice(0, 4).map((o) => o.label).filter(Boolean);
+      return fail("По тикеру " + ticker + " нет рыночных данных." + (cands.length ? " Возможно, вы имели в виду: " + cands.join(", ") + "?" : " Проверьте тикер."));
+    }
+    return fail("Для " + ticker + " не удалось определить валюту расчёта автоматически. Нажмите «Обсудить с Румбергом» — посчитает менеджер.");
+  }
+
+  const r = sc.result || {}, t = sc.terms || {}, md = sc.market_data_used || {};
+  const pv = Number(r.pv_pct);
+  if (!(pv > 0)) {
+    return fail("При таких условиях варрант почти ничего не стоит — котировку не даю. Попробуйте страйк ближе к текущей цене.");
+  }
+  const q = priceQuote(pv);
+  const ccy = String(r.currency || t.currency || "RUB");
+  const sign = PRICE_CCY[ccy] || ccy;
+  const spot = Number((md.spots || {})[ticker]);
+  const kAbs = Number(t.strike_abs) || (isFinite(spot) ? spot * strike / 100 : NaN);
+  const capAbs = Number(t.cap_abs) || (cap != null && isFinite(spot) ? spot * cap / 100 : NaN);
+  const expiry = priceDate((t.schedule || {}).maturity_date);
+  const asOf = priceDate(t.pricing_date || md.pricing_date) || priceDate(mskDate().key);
+  const asset = name ? name + " (" + ticker + ")" : ticker;
+  if (cap != null && q >= cap - strike) {
+    return fail("У колл-спреда " + priceNum(strike) + "–" + priceNum(cap) + " на " + asset +
+      " котировка вышла не ниже максимальной выплаты — такой спред не имеет смысла. Попробуйте потолок выше или страйк дальше от рынка.");
+  }
+
+  const head = cap != null ? "Колл-спред " + priceNum(strike) + "–" + priceNum(cap)
+    : (type === "call" ? "CALL " : "PUT ") + priceNum(strike);
+  const lines = [
+    "**" + head + " · " + asset + " · " + tenor.label + "**",
+    "Премия: **" + priceNum(q) + "% номинала** — индикативно",
+    "• Страйк: " + priceNum(strike) + "% от текущей цены" + (isFinite(kAbs) ? " — " + priceNum(kAbs) + " " + sign : ""),
+  ];
+  if (cap != null) {
+    lines.push("• Потолок: " + priceNum(cap) + "%" + (isFinite(capAbs) ? " — " + priceNum(capAbs) + " " + sign : ""));
+  }
+  if (expiry) lines.push("• Экспирация: " + expiry);
+  lines.push(type === "put"
+    ? "• Выплата: падение актива ниже страйка, в % номинала"
+    : cap != null
+      ? "• Выплата: рост актива выше страйка, но не больше " + priceNum(cap - strike) + "% номинала"
+      : "• Выплата: рост актива выше страйка, в % номинала");
+  const be = type === "put" ? strike - q : strike + q;
+  lines.push("• Безубыток: актив " + (type === "put" ? "ниже " : "выше ") + priceNum(be) + "% от текущей цены");
+  lines.push("• Риск ограничен уплаченной премией");
+  const out = { ok: true, text: lines.join("\n"), asOf, fair: pv, quote: q, ticker, type, tenor: tenor.expiry, strike, cap };
+  PRICE_CACHE.set(key, { at: Date.now(), out });
+  if (PRICE_CACHE.size > 300) PRICE_CACHE.delete(PRICE_CACHE.keys().next().value);
+  return out;
+}
+
+function priceFooter(asOf, partnerMode) {
+  return "Котировка рассчитана " + (asOf ? "на " + asOf + " " : "") + "по рыночным данным прайсера Rumberg и действует на момент расчёта. " +
+    (partnerMode
+      ? "Чтобы зафиксировать цену для клиента, напишите своему менеджеру Rumberg."
+      : "Чтобы зафиксировать цену и обсудить сделку, нажмите «Обсудить с Румбергом» — заявка уйдёт менеджеру.") +
+    " Не является индивидуальной инвестиционной рекомендацией.";
+}
+
+// Ход чата с инструментом: модель либо отвечает текстом (как раньше), либо
+// просит расчёт — тогда ответ клиенту целиком собирает код, второго хода модели нет.
+async function chatWithPricing(system, messages, env, opts) {
+  const first = await callDeepSeek(system + PRICING_PROMPT, messages, env, { tools: [PRICE_TOOL], raw: true });
+  const calls = (first.toolCalls || [])
+    .filter((c) => c && c.function && c.function.name === "price_warrant")
+    .slice(0, PRICE_MAX_CALLS);
+  if (!calls.length) return { reply: first.content, priced: [] };
+
+  if (opts.limiter) {
+    try {
+      const rl = await opts.limiter.limit({ key: "price:" + (opts.ip || "anon") });
+      if (rl && rl.success === false) {
+        return { reply: "Слишком много расчётов подряд. Попробуйте через минуту.", priced: [] };
+      }
+    } catch (e) { /* биндинг недоступен — не блокируем */ }
+  }
+  const outs = await Promise.all(calls.map((c) => {
+    let a = {};
+    try { a = JSON.parse(c.function.arguments || "{}"); } catch { /* пустые аргументы → честный отказ */ }
+    return priceWarrant(a, env, opts.who || "site-chat");
+  }));
+  const okOne = outs.find((o) => o.ok);
+  const reply = outs.map((o) => o.text).join("\n\n") + (okOne ? "\n\n" + priceFooter(okOne.asOf, opts.partnerMode) : "");
+  return { reply, priced: outs };
 }
 
 // ============================================================================

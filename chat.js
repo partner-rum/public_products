@@ -321,6 +321,12 @@
         if (pid && pkey) payload.partner = { id: pid, key: pkey };
       } catch (e) {}
     }
+    // Гейт квалинвестора пройден (qualgate.js, ключ so_qual_v1) — воркер разрешит
+    // расчёт варрантов в чате. Без флага ассистент отвечает как раньше. Места те же,
+    // что у seen() в qualgate.js: localStorage, cookie (приватный Safari), sessionStorage.
+    if (document.cookie.indexOf("so_qual_v1=1") !== -1) payload.qual = true;
+    try { if (localStorage.getItem("so_qual_v1") === "1") payload.qual = true; } catch (e) {}
+    try { if (sessionStorage.getItem("so_qual_v1") === "1") payload.qual = true; } catch (e) {}
     fetch(CFG.endpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
