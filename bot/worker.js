@@ -1737,6 +1737,8 @@ const PRICE_TOOL = {
         option_type: { type: "string", enum: ["call", "put"], description: "call — на рост, put — на падение." },
         tenor: { type: "string", description: "Срок: '2Y', '18M', '6M', '90D' или дата экспирации YYYY-MM-DD." },
         strike_pct: { type: "number", description: "Страйк в % от текущей цены актива. По умолчанию 100." },
+        strike_abs: { type: "number", description: "Страйк ценой актива в его валюте, если клиент назвал сумму: " +
+          "«страйк 1500 рублей» → 1500, «страйк 300 долларов» → 300. Тогда strike_pct не передавай." },
       },
       required: ["underlying", "option_type", "tenor"],
     },
@@ -1749,8 +1751,8 @@ const PRICING_PROMPT = `
 Ты считаешь цену ТОЛЬКО ДВУХ продуктов: обычный колл-опцион (CALL) и обычный пут-опцион (PUT) на ОДИН базовый актив. Больше ты не прайсишь НИЧЕГО.
 Когда клиент просит посчитать, запрайсить, оценить или узнать цену колла или пута (колл-опциона, пут-опциона, CALL, PUT, варранта на рост или на падение) на конкретный актив — вызови price_warrant. Ответ с ценой клиенту соберёт сервер: сам цену не называй и не придумывай.
 - Тикер передавай как на бирже (SBER, GAZP, LKOH, YDEX, NVDA). Не знаешь тикер — передай название компании как есть.
-- Срок обязателен. Не назван — спроси срок и инструмент не вызывай. «2 года» → '2Y', «18 месяцев» → '18M', «полгода» → '6M'.
-- Страйк по умолчанию 100% (на уровне текущей цены). «Страйк 110», «на 10% выше рынка» → strike_pct 110.
+- Срок обязателен. Не назван — спроси срок и инструмент не вызывай. Срок НИКОГДА не придумывай и не бери «по умолчанию». «2 года» → '2Y', «18 месяцев» → '18M', «полгода» → '6M'.
+- Страйк по умолчанию 100% (на уровне текущей цены). «Страйк 110», «на 10% выше рынка» → strike_pct 110. Страйк деньгами («страйк 1500 рублей», «страйк 300 $») → strike_abs 1500 / 300, в проценты сам не пересчитывай.
 - Клиент меняет условия прошлого расчёта («а на 3 года?», «а страйк 110?») — вызови инструмент снова, остальные условия возьми из прошлого расчёта.
 - ВСЁ ОСТАЛЬНОЕ НЕ СЧИТАЕШЬ И ИНСТРУМЕНТ НЕ ВЫЗЫВАЕШЬ: колл-спреды, опционы с потолком, корзины и опционы на несколько активов, автоколлы, защиту капитала, дисконтные облигации, бустеры, реверс-конвертиблы, купонные варранты и любые другие структуры. На такую просьбу ответь, что в чате сейчас считаются только CALL и PUT на один актив, и предложи похожий продукт из каталога или кнопку «Обсудить с Румбергом» — посчитает менеджер. Цифр по таким продуктам не называй, кроме тех, что есть в каталоге.`;
 
@@ -1916,8 +1918,13 @@ async function priceWarrant(a, env, who) {
   if (tenor.days < PRICE_DAYS_MIN || tenor.days > PRICE_DAYS_MAX) {
     return fail("Срок варранта считаю от недели до 5 лет. Уточните срок.");
   }
-  const strike = a.strike_pct == null || a.strike_pct === "" ? 100 : Number(a.strike_pct);
-  if (!isFinite(strike) || strike < 20 || strike > 300) return fail("Страйк считаю в пределах 20–300% от текущей цены актива. Уточните страйк.");
+  let strike = a.strike_pct == null || a.strike_pct === "" ? 100 : Number(a.strike_pct);
+  // Страйк деньгами («1500 рублей»): прайсер принимает его сам (strike_abs), а процент от
+  // текущей цены считаем по его же цене спот после расчёта. «Страйк 1500» процентами быть не
+  // может — если модель положила цену в strike_pct, это тоже цена.
+  let strikeAbs = Number(a.strike_abs) > 0 ? Number(a.strike_abs) : null;
+  if (!strikeAbs && isFinite(strike) && strike > 300) { strikeAbs = strike; strike = 100; }
+  if (!strikeAbs && (!isFinite(strike) || strike < 20 || strike > 300)) return fail("Страйк считаю в пределах 20–300% от текущей цены актива. Уточните страйк.");
   // В чате считаем ТОЛЬКО обычные CALL и PUT (решение Руслана 05.10.2026). Потолок —
   // это уже колл-спред: даже если модель его передала, сервер не считает.
   if (a.cap_pct != null && a.cap_pct !== "") return fail(PRICE_ONLY_TEXT);
@@ -1972,7 +1979,7 @@ async function priceWarrant(a, env, who) {
     // тикер есть — считаем без имени
   }
 
-  const key = [mskDate().key, ticker, type, tenor.expiry, strike].join("|");
+  const key = [mskDate().key, ticker, type, tenor.expiry, strikeAbs ? "abs" + strikeAbs : strike].join("|");
   const hit = PRICE_CACHE.get(key);
   if (hit && Date.now() - hit.at < PRICE_CACHE_MS) return hit.out;
 
@@ -1981,6 +1988,7 @@ async function priceWarrant(a, env, who) {
     outputs: ["PV"], context: { user_id: who },
   };
   if (isBond) args.rate_override = await priceBondRate(env);
+  if (strikeAbs) args.strike_abs = strikeAbs;
   let res;
   try {
     // Тикера нет в справочнике (IBM, IONQ…) — прайсер всё равно ищет его в рыночных
@@ -2034,6 +2042,16 @@ async function priceWarrant(a, env, who) {
   }
 
   const r = sc.result || {}, t = sc.terms || {}, md = sc.market_data_used || {};
+  if (strikeAbs) {
+    const sp = Number((md.ref_spots || {})[ticker]) || Number((md.spots || {})[ticker]);
+    if (!(sp > 0)) return fail("Не удалось перевести страйк в проценты от текущей цены. Назовите страйк в процентах — например, 110%.");
+    strike = Math.round(strikeAbs / sp * 1000) / 10;
+    if (strike < 20 || strike > 300) {
+      const c0 = String(r.currency || t.currency || "RUB"), u = isBond ? "% номинала" : " " + (PRICE_CCY[c0] || c0);
+      return fail("Страйк " + priceNum(strikeAbs) + u + " — это " + priceNum(strike, 1) + "% от текущей цены (" + priceNum(sp) + u +
+        "). Считаю страйк в пределах 20–300% от текущей цены — уточните, пожалуйста.");
+    }
+  }
   const pv = Number(r.pv_pct);
   if (!(pv > 0)) {
     return fail("При таких условиях варрант почти ничего не стоит — котировку не даю. Попробуйте страйк ближе к текущей цене.");
@@ -2119,6 +2137,42 @@ function priceFooter(partnerMode) {
 
 // Ход чата с инструментом: модель либо отвечает текстом (как раньше), либо
 // просит расчёт — тогда ответ клиенту целиком собирает код, второго хода модели нет.
+// Проверки, которые модель не держит сама (поймано 05.10.2026 на «запрайсь колл на новатек со
+// страйком 1500 рублей»: модель досчитала срок «1 год», а в другой раз «2 года», и выкинула страйк).
+// 1) Срок: считаем, только если клиент назвал его в своих сообщениях после последнего расчёта
+//    или это уточнение прошлого расчёта («а страйк 110?» — срок берётся из него).
+// 2) Страйк деньгами в тексте клиента — его берём сами, а не из разбора модели.
+// 3) Клиент назвал страйк, а модель его не передала — переспрашиваем, а не считаем от 100%.
+const PRICE_TENOR_RE = /\d+(?:[.,]\d+)?\s*-?\s*(?:год|года|лет|г\.|мес|месяц|месяца|месяцев|нед|недел|дн|день|дня|дней)(?![\p{L}])|\d+\s*[ymwd](?![\p{L}])|(?:^|[^\p{L}])(?:полгода|полугод|полтора|год|годик|квартал|месяц)(?![\p{L}])|\d{4}-\d{2}-\d{2}|\d{1,2}\.\d{1,2}\.\d{2,4}|(?:январ|феврал|март|апрел|ма[йя]|июн|июл|август|сентябр|октябр|ноябр|декабр)/iu;
+const PRICE_HEAD_RE = /^\*\*(?:CALL|PUT) [\d,]+ · /m;
+const PRICE_STRIKE_ABS_RE = /страйк\p{L}*[^\d\n]{0,12}(\d[\d\s]*(?:[.,]\d+)?)\s*(?:руб|р\.|₽|\$|долл|usd|rub|юан|¥|евро|€)/iu;
+const PRICE_STRIKE_ANY_RE = /страйк\p{L}*[^\d\n]{0,12}\d/iu;
+function priceGuard(a, messages) {
+  const recent = [];
+  let follow = false;
+  for (let i = messages.length - 1; i >= 0 && recent.length < 4; i--) {
+    const m = messages[i];
+    if (m.role === "assistant" && PRICE_HEAD_RE.test(String(m.content || ""))) { follow = true; break; }
+    if (m.role === "user") recent.push(String(m.content || ""));
+  }
+  const last = recent[0] || "";
+  const ot = String(a.option_type || "").toLowerCase();
+  if (ot !== "call" && ot !== "put") return { a };   // тип не разобран — priceWarrant спросит про него
+  const isPut = ot === "put";
+  const what = (isPut ? "пут" : "колл") + (a.underlying ? " на " + String(a.underlying).slice(0, 40) : "");
+  if (!follow && !recent.some((t) => PRICE_TENOR_RE.test(t))) {
+    return { ask: "На какой срок посчитать " + what + "? Например, 1 год, 18 месяцев или полгода." };
+  }
+  const m = last.match(PRICE_STRIKE_ABS_RE);
+  if (m) {
+    const n = Number(m[1].replace(/\s+/g, "").replace(",", "."));
+    if (n > 0) { a = { ...a, strike_abs: n }; delete a.strike_pct; }
+  } else if (PRICE_STRIKE_ANY_RE.test(last) && (a.strike_pct == null || a.strike_pct === "") && !(Number(a.strike_abs) > 0)) {
+    return { ask: "Уточните страйк для расчёта: в процентах от текущей цены (например, 110%) или ценой актива (например, 1500 ₽)." };
+  }
+  return { a };
+}
+
 async function chatWithPricing(system, messages, env, opts) {
   const first = await callDeepSeek(system + PRICING_PROMPT, messages, env, { tools: [PRICE_TOOL], raw: true });
   const calls = (first.toolCalls || [])
@@ -2137,7 +2191,9 @@ async function chatWithPricing(system, messages, env, opts) {
   const outs = await Promise.all(calls.map((c) => {
     let a = {};
     try { a = JSON.parse(c.function.arguments || "{}"); } catch { /* пустые аргументы → честный отказ */ }
-    return priceWarrant(a, env, opts.who || "site-chat");
+    const g = priceGuard(a, messages);
+    if (g.ask) return { ok: false, text: g.ask };
+    return priceWarrant(g.a, env, opts.who || "site-chat");
   }));
   // Под каждым удачным расчётом — ссылка на one-pager (chat.js рисует её кнопкой).
   const reply = outs.map((o) => o.text + (o.ok && o.pq ? "\n\n[One-pager для клиента](onepager.html?pq=" + o.pq + ")" : ""))
