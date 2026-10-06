@@ -415,15 +415,16 @@
       spot: 100, tenor: clean(r.tenor), quote: q, minNom: 1000000, chat: true, at: Number(r.at) || 0 };
   }
 
-  // Защита капитала из чата: участие, защита, страйк и потолок — из записи расчёта, цена — номинал.
+  // Защита капитала из чата: цена, участие, защита, страйк и потолок — из записи расчёта.
   function pqProt(r) {
     const part = Number(r.participation), floor = Number(r.protectionPct), k = Number(r.strike);
-    const cap = r.cap == null ? null : Number(r.cap);
+    const cap = r.cap == null ? null : Number(r.cap), q = Number(r.quote);
     if (!(part > 0 && part <= 10) || !(floor >= 70 && floor <= 100) || !(k >= 80 && k <= 150)) return null;
+    if (!(q > 0 && q <= 200)) return null;
     if (cap != null && !(cap > 0 && cap <= 200)) return null;
     return { id: "chat-" + PQ, type: "protection", name: clean(r.name), underlying: clean(r.underlying),
       currency: clean(r.currency) || "RUB", strike: k, spot: 100, participation: part, protectionPct: floor,
-      cap: cap, tenor: clean(r.tenor), quote: 100, minNom: 1000000, chat: true, at: Number(r.at) || 0 };
+      cap: cap, tenor: clean(r.tenor), quote: q, minNom: 1000000, chat: true, at: Number(r.at) || 0 };
   }
 
   function boot(CHAT) {
