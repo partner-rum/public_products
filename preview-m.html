@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Структурные продукты — доход по формуле, известной до сделки</title>
+<title>Превью · Структурные продукты — доход по формуле, известной до сделки</title>
 <meta name="description" content="Rumberg — эмитент структурных продуктов: считаем структуру под задачу клиента или мандат финансового института, выпускаем с ISIN и сопровождаем до погашения.">
-<meta name="robots" content="index, follow">
+<meta name="robots" content="noindex, nofollow">
 <meta name="google-site-verification" content="86GxM_JoSQhGtKGuRdmBVfzQg0hE_g-X0rUGQOPxRmQ">
 <!-- Связываем новый поддомен с известным брендом: сам по себе invest.rumberg.ru
      поисковику ни о чём не говорит, а Rumberg Capital он уже знает по прессе. -->
@@ -16,7 +16,6 @@
 <meta property="og:title" content="Структурные продукты для квалифицированных инвесторов">
 <meta property="og:description" content="Эмитент структурных продуктов. Структура под вашу задачу, выпуск с ISIN, сопровождение до погашения. Параметры, профили выплат и документы.">
 <meta property="og:url" content="https://invest.rumberg.ru/">
-<link rel="canonical" href="https://invest.rumberg.ru/">
 <meta property="og:image" content="https://invest.rumberg.ru/og-cover.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -790,6 +789,19 @@
   }
 </style>
 <script src="metrika.js?v=7" defer></script>
+<script>try{var m={"a":"native","b":"snap","c":"light"}[localStorage.getItem("mx_swipe")||"a"];
+if(m)document.documentElement.setAttribute("data-drag",m)}catch(e){}</script>
+<style>
+  .pv-pills { display:none; }
+  @media (max-width:860px) {
+    .pv-pills { display:flex; position:fixed; left:8px; bottom:calc(80px + env(safe-area-inset-bottom, 0px)); z-index:300; }
+    .pv-pill { display:flex; background:#14161C; border:1px solid rgba(255,255,255,.16); border-radius:20px; padding:3px; gap:1px;
+      font:500 12px/1 "JetBrains Mono", monospace; color:rgba(242,243,247,.64); align-items:center; }
+    .pv-pill span { padding:0 6px 0 8px; }
+    .pv-pill button { font:inherit; color:#F2F3F7; background:transparent; border:0; border-radius:16px; min-height:36px; min-width:36px; padding:0 9px; }
+    .pv-pill button[aria-pressed="true"] { background:#EE7D1B; color:#0C0A08; }
+  }
+</style>
 </head>
 <body>
 
@@ -2244,6 +2256,13 @@
   else setTimeout(go, 1200);
 })();
 </script>
+<div class="pv-pills">
+  <div class="pv-pill" role="group" aria-label="Режим листания (превью)" data-k="mx_swipe" data-def="a"><span>свайп</span>
+    <button type="button" data-m="now">сейчас</button><button type="button" data-m="a">A</button><button type="button" data-m="b">B</button><button type="button" data-m="c">C</button></div>
+</div>
+<script>(function(){[].forEach.call(document.querySelectorAll(".pv-pill"),function(g){var k=g.dataset.k,cur;try{cur=localStorage.getItem(k)}catch(e){}cur=cur||g.dataset.def;
+  [].forEach.call(g.querySelectorAll("button"),function(b){b.setAttribute("aria-pressed",String(b.dataset.m===cur));
+    b.addEventListener("click",function(){try{localStorage.setItem(k,b.dataset.m)}catch(e){} location.reload();});});});})();</script>
 </body>
 
 </html>
