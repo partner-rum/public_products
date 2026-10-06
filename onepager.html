@@ -19,6 +19,17 @@
                        window.innerWidth || Infinity);
     document.documentElement.classList.toggle("narrow", dev < 760);
   })();
+  /* ?pdfgen=1 — служебная копия листа в скрытом окне, из неё телефон собирает PDF
+     (см. pdfgenRun). Метрике она не визит: метрика не грузит счётчик, если скрипт
+     с его адресом уже есть на странице, — кладём такой с типом text/plain,
+     браузер его не скачивает и не исполняет. */
+  if (/[?&]pdfgen=1(&|$)/.test(location.search)) {
+    document.documentElement.classList.add("pdfgen");
+    var mt = document.createElement("script");
+    mt.type = "text/plain";
+    mt.src = "https://mc.yandex.ru/metrika/tag.js?id=110759242";
+    document.head.appendChild(mt);
+  }
 </script>
 <title>One-pager</title>
 <meta name="robots" content="noindex, follow">
@@ -226,6 +237,8 @@
   .gone-slide .g-act a { font-size: 13.5px; font-weight: 600; text-decoration: none; border-radius: 7px; padding: 10px 18px; background: var(--or); color: #1A1206; }
   .gone-slide .g-act a.alt { background: transparent; border: 1px solid #CFD2E4; color: var(--nav); }
 
+  html.pdfgen .toolbar { display: none !important; }
+  html.pdfgen .slide { margin: 0 0 20px; box-shadow: none; }
   @media print {
     @page { size: 10in 5.625in; margin: 0; }
     body { background: #fff; }
@@ -287,7 +300,7 @@
   <span class="tb-hint" style="font-size:12px;color:#8B90A8">Если PDF без цвета — включите «Фоновая графика» в диалоге печати</span>
   <span class="ct-host" id="ct-host" style="margin-right:8px"></span>
   <span class="sh-host" id="sh-host" style="margin-right:4px"></span>
-  <button class="btn-print" onclick="window.print()">Сохранить как PDF</button>
+  <button class="btn-print" id="btn-pdf" type="button">Сохранить как PDF</button>
 </div>
 
 <div id="deck"></div>
@@ -321,6 +334,7 @@
   }
 
   const qs = new URLSearchParams(location.search);
+  const PDFGEN = qs.get("pdfgen") === "1";
 
   // Параметры листа можно переопределить адресом (?part / ?protect / ?cap) —
   // это удобство деска для расчёта под клиента. Но без пометки получался
@@ -1379,6 +1393,84 @@
     document.body.insertBefore(pvb, document.body.firstChild);
   }
   }
+  if (PDFGEN) pdfgenRun();
+  }
+
+  // ── PDF на телефоне (06.10.2026, «при генерации one-pager с телефона — лист
+  // в углу A4, нужно, чтобы подбивал под весь экран»). Печать телефона размер
+  // листа из @page не берёт: iOS печатает на A4 книжной, и слайд 16:9 занимал
+  // верхнюю треть страницы. Поэтому на телефоне PDF собирается здесь же:
+  // служебная копия листа (?pdfgen=1) в скрытом окне шириной 1000px — там
+  // раскладка десктопная, 960×540, — каждый слайд снимается html2canvas в JPEG
+  // и кладётся на свою страницу 10 × 5,625 дюйма, ровно как печать с компьютера.
+  // Готовый файл уходит родительской странице (postMessage), она даёт его
+  // сохранить или отправить. Текст в таком PDF — картинка, не выделяется.
+  function pdfFromJpegs(imgs, W, H, title) {
+    var enc = new TextEncoder(), parts = [], off = 0, offs = [];
+    function push(x) { var b = typeof x === "string" ? enc.encode(x) : x; parts.push(b); off += b.length; }
+    function obj(id, fn) { offs[id] = off; push(id + " 0 obj\n"); fn(); push("\nendobj\n"); }
+    // Заголовок документа — UTF-16BE с меткой порядка байт: иначе кириллица в
+    // свойствах файла превращается в знаки вопроса
+    function pdfText(s) {
+      var h = "FEFF";
+      for (var i = 0; i < s.length; i++) h += ("0000" + s.charCodeAt(i).toString(16)).slice(-4);
+      return "<" + h.toUpperCase() + ">";
+    }
+    var n = imgs.length, kids = [];
+    for (var i = 0; i < n; i++) kids.push((4 + 3 * i) + " 0 R");
+    push("%PDF-1.4\n");
+    push(new Uint8Array([37, 226, 227, 207, 211, 10]));
+    obj(1, function () { push("<< /Type /Catalog /Pages 2 0 R >>"); });
+    obj(2, function () { push("<< /Type /Pages /Kids [" + kids.join(" ") + "] /Count " + n + " >>"); });
+    obj(3, function () { push("<< /Title " + pdfText(title || "One-pager") + " /Producer (Rumberg) >>"); });
+    imgs.forEach(function (im, i) {
+      var pg = 4 + 3 * i, ct = pg + 1, ix = pg + 2;
+      var cmd = "q " + W + " 0 0 " + H + " 0 0 cm /Im0 Do Q";
+      obj(pg, function () {
+        push("<< /Type /Page /Parent 2 0 R /MediaBox [0 0 " + W + " " + H + "] " +
+             "/Resources << /XObject << /Im0 " + ix + " 0 R >> >> /Contents " + ct + " 0 R >>");
+      });
+      obj(ct, function () { push("<< /Length " + cmd.length + " >>\nstream\n" + cmd + "\nendstream"); });
+      obj(ix, function () {
+        push("<< /Type /XObject /Subtype /Image /Width " + im.w + " /Height " + im.h +
+             " /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length " + im.bytes.length + " >>\nstream\n");
+        push(im.bytes);
+        push("\nendstream");
+      });
+    });
+    var size = 4 + 3 * n, xref = off;
+    var x = "xref\n0 " + size + "\n0000000000 65535 f \n";
+    for (var k = 1; k < size; k++) x += ("0000000000" + offs[k]).slice(-10) + " 00000 n \n";
+    push(x + "trailer\n<< /Size " + size + " /Root 1 0 R /Info 3 0 R >>\nstartxref\n" + xref + "\n%%EOF\n");
+    return new Blob(parts, { type: "application/pdf" });
+  }
+
+  function pdfgenRun() {
+    var post = function (m) { try { parent.postMessage(m, location.origin); } catch (e) {} };
+    var slides = Array.prototype.slice.call(document.querySelectorAll("#deck .slide"));
+    if (!slides.length || document.querySelector("#deck .gone-slide")) { post({ type: "op-pdf-err", why: "gone" }); return; }
+    var s = document.createElement("script");
+    s.src = "vendor/html2canvas.min.js?v=1";
+    s.onerror = function () { post({ type: "op-pdf-err", why: "lib" }); };
+    s.onload = function () {
+      (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve())
+        .then(function () {
+          return slides.reduce(function (p, sl) {
+            return p.then(function (acc) {
+              return html2canvas(sl, { scale: 2, logging: false, useCORS: true, backgroundColor: null })
+                .then(function (cv) {
+                  return new Promise(function (res, rej) {
+                    cv.toBlob(function (b) { b ? res({ b: b, w: cv.width, h: cv.height }) : rej(new Error("canvas")); }, "image/jpeg", 0.92);
+                  });
+                })
+                .then(function (r) { return r.b.arrayBuffer().then(function (ab) { acc.push({ bytes: new Uint8Array(ab), w: r.w, h: r.h }); return acc; }); });
+            });
+          }, Promise.resolve([]));
+        })
+        .then(function (imgs) { post({ type: "op-pdf", blob: pdfFromJpegs(imgs, 720, 405, document.title) }); })
+        .catch(function (e) { post({ type: "op-pdf-err", why: String((e && e.message) || e) }); });
+    };
+    document.head.appendChild(s);
   }
 
   if (PQ) {
@@ -1392,6 +1484,63 @@
     }
   } else boot(null);
 
+</script>
+<script>
+  // Кнопка «Сохранить как PDF». Компьютер — печать браузера (лист 10 × 5,625
+  // дюйма из @page, текст векторный). Телефон и планшет — печать размер листа
+  // не берёт, поэтому PDF собирает сама страница (см. pdfgenRun): первое
+  // нажатие готовит файл, второе — отдаёт его в «Поделиться» (сохранить в
+  // Файлы, отправить в Telegram) или скачивает, если делиться файлами браузер
+  // не умеет. Два нажатия, а не одно: браузер телефона пускает «Поделиться»
+  // только прямо из нажатия, а сборка файла занимает секунды.
+  (function () {
+    var btn = document.getElementById("btn-pdf");
+    if (!btn) return;
+    var LABEL = btn.textContent, file = null, busy = false, fr = null, timer = 0;
+    function touchDev() {
+      var narrow = Math.min((window.screen && screen.width) || Infinity, window.innerWidth || Infinity) < 972;
+      return narrow || !!(window.matchMedia && matchMedia("(pointer: coarse)").matches);
+    }
+    function done() { busy = false; clearTimeout(timer); if (fr) { fr.remove(); fr = null; } }
+    function fail() { done(); btn.textContent = "Не получилось — ещё раз"; }
+    function give() {
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        navigator.share({ files: [file], title: file.name.replace(/\.pdf$/, "") }).catch(function () {});
+        return;
+      }
+      var a = document.createElement("a"), u = URL.createObjectURL(file);
+      a.href = u; a.download = file.name; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(u); }, 60000);
+    }
+    window.addEventListener("message", function (e) {
+      if (!fr || e.source !== fr.contentWindow || e.origin !== location.origin) return;
+      var d = e.data || {};
+      if (d.type === "op-pdf" && d.blob) {
+        var name = (document.title || "One-pager").replace(/[\\/:*?"<>|]+/g, " ").trim() + ".pdf";
+        file = new File([d.blob], name, { type: "application/pdf" });
+        done();
+        btn.textContent = "PDF готов — открыть";
+        if (window.ym) try { ym(110759242, "reachGoal", "onepager_pdf_mobile"); } catch (x) {}
+      } else if (d.type === "op-pdf-err") fail();
+    });
+    btn.addEventListener("click", function () {
+      if (!touchDev()) { window.print(); return; }
+      if (file) { give(); return; }
+      if (busy) return;
+      busy = true;
+      btn.textContent = "Готовим PDF…";
+      var u = new URL(location.href);
+      u.searchParams.delete("print"); u.searchParams.delete("debug");
+      u.searchParams.set("pdfgen", "1");
+      fr = document.createElement("iframe");
+      fr.setAttribute("aria-hidden", "true");
+      fr.tabIndex = -1;
+      fr.style.cssText = "position:fixed;left:-12000px;top:0;width:1000px;height:700px;border:0;opacity:0;pointer-events:none";
+      fr.src = u.pathname + u.search;
+      document.body.appendChild(fr);
+      timer = setTimeout(fail, 40000);
+    });
+  })();
 </script>
 </body>
 </html>
