@@ -1645,7 +1645,16 @@
 
   // ── Данные, общие для экранов и оглавления ──
   function instr() { return (window.SITE_DATA && SITE_DATA.instruments) || []; }
-  function offering() { return ((window.OFFERINGS && OFFERINGS.items) || [])[0] || null; }
+  // Выпуски с открытым приёмом заявок. Экран и строка оглавления были сделаны под
+  // ОДИН выпуск ([0]) — когда их стало два («Квантовый скачок» и «Космические
+  // технологии»), второй на телефоне не показывался вовсе (06.10.2026)
+  function offeringsLive() {
+    var all = (window.OFFERINGS && OFFERINGS.items) || [];
+    var live = all.filter(function (o) { return o.status === "live"; });
+    return live.length ? live : all.slice(0, 1);
+  }
+  function offering() { return offeringsLive()[0] || null; }
+  function offDueOf(o) { var m = o && String(o.statusLabel || "").match(/до\s+(\d{2}\.\d{2})(?:\.\d{4})?/); return m ? m[1] : null; }
   // Свежий обзор — не старше трёх дней, как и у колонки «Утро» на десктопе
   function morningAge() {
     var M = window.MORNING || {};
@@ -1686,10 +1695,19 @@
     // «Космические технологии» само по себе ничего не говорит — рядом что это и на сколько.
     var offDue = off && String(off.statusLabel || "").match(/до\s+(\d{2}\.\d{2})(?:\.\d{4})?/);
     var offWhat = /облигац/i.test(String(off && off.kind || "")) ? "облигация" : "выпуск";
+    var offAll = offeringsLive();
     var offMeta = !off ? "новых выпусков сейчас нет"
+      : offAll.length > 1 ? offAll.map(function (o) { return esc(o.name); }).join(" · ")
       : esc(off.name) + " · " + offWhat + (off.tenor ? " на " + esc(off.tenor) : "") +
         (!offDue && off.statusLabel ? " · " + esc(lc(off.statusLabel)) : "");
-    var offHref = off ? "offerings.html#" + encodeURIComponent(off.id) : "offerings.html";
+    // Несколько выпусков — справа ближайший срок, ссылка на весь список
+    if (offAll.length > 1) {
+      var dues = offAll.map(offDueOf).filter(Boolean).sort(function (a, b) {
+        var x = a.split("."), y = b.split("."); return (x[1] + x[0]).localeCompare(y[1] + y[0]);
+      });
+      offDue = dues.length ? [null, dues[0]] : null;
+    }
+    var offHref = !off ? "offerings.html" : offAll.length > 1 ? "offerings.html" : "offerings.html#" + encodeURIComponent(off.id);
 
     // Утро: свежий обзор — рубрики и дата; старше трёх дней честно «последний обзор был …»
     var M = window.MORNING || {}, age = morningAge();
@@ -1783,8 +1801,19 @@
         '<a class="mx-go" href="board.html">Все продукты' + (total ? " · " + total : "") + AR + '</a>'));
     }
 
-    var off = offering();
-    if (off) {
+    var offs = offeringsLive(), off = offs[0];
+    if (offs.length > 1) {
+      // Несколько выпусков — строками, как «Продукты дня»: название и что это,
+      // справа срок приёма заявок
+      out.push(scr("mx-s-o", "На размещении",
+        '<div class="mx-prods">' + offs.map(function (o) {
+          var w = /облигац/i.test(String(o.kind || "")) ? "облигация" : "выпуск", due = offDueOf(o);
+          return '<a href="offerings.html#' + encodeURIComponent(o.id) + '">' +
+            '<span class="pn"><b>' + esc(nb(o.name)) + '</b><span>' + esc(nb(w + (o.tenor ? " на " + o.tenor : ""))) + '</span></span>' +
+            '<span class="pf"><b>' + (due ? "до " + esc(due) : "") + '</b><i>приём заявок</i></span></a>';
+        }).join("") + '</div>' +
+        '<a class="mx-go" href="offerings.html">Все размещения · ' + offs.length + AR + '</a>'));
+    } else if (off) {
       var what = /облигац/i.test(String(off.kind || "")) ? "облигация" : "выпуск";
       out.push(scr("mx-s-o", "На размещении",
         '<p class="mx-big">' + esc(off.name) + '</p>' +
