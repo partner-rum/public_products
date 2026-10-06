@@ -41,6 +41,12 @@ window.OFFERINGS = {
      "file": "docs/kid-sp-1-46-cb-fx-rub.pdf",
      "ext": "PDF",
      "size": "447 КБ"
+    },
+    {
+     "name": "Презентация: Презентация партнёра",
+     "file": "docs/preso-sp-1-46-cb-fx-rub.pdf",
+     "ext": "PDF",
+     "size": "468 КБ"
     }
    ]
   },
