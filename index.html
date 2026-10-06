@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" data-turn="flip">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -625,17 +625,17 @@
        для увеличения остаётся. Обёртка страницы заранее на своём слое: на нём
        композитор везёт доводку экрана, и слой не создаётся заново в начале
        каждой доводки. */
-    html.mx-pg:not([data-drag="native"]) .hero,
-    html.mx-pg:not([data-drag="native"]) #mx-scr > .mx-s { touch-action:pinch-zoom; }
+    html.mx-pg .hero,
+    html.mx-pg #mx-scr > .mx-s { touch-action:pinch-zoom; }
     html.mx-pg .wrap { will-change:transform; }
-    /* ── Переходы между экранами на сравнение (превью, 02.10.2026) ──
-       data-turn на <html> ставит страница превью. stack — следующий экран
-       наезжает на текущий, тот стоит на месте и уходит вглубь; flip — текущий
-       перелистывается вверх вокруг верхнего края, как страница блокнота, и
-       открывает следующий, который ждёт под ним. Привязано к прокрутке: ведёт
-       палец, на отпускании доводит скрипт. Экранам нужен сплошной фон — иначе
-       сквозь верхний просвечивал бы нижний. Окно отсчёта — без шапки (57px). */
-    html[data-turn="stack"] .hero, html[data-turn="stack"] #mx-scr > .mx-s, html[data-turn="stack"] .mx-tail,
+    /* ── Переход между экранами — «листание» (выбор Руслана 06.10.2026 из четырёх,
+       сравнивал на превью: «сейчас», «плавно», «поверх», «листание»). Текущий экран
+       перелистывается вверх вокруг верхнего края, как страница блокнота, и открывает
+       следующий, который ждёт под ним. Привязано к прокрутке: ведёт палец, на
+       отпускании доводит скрипт пружиной. Экранам нужен сплошной фон — иначе сквозь
+       верхний просвечивал бы нижний. Окно отсчёта — без шапки (57px). Атрибут
+       data-turn="flip" стоит на <html> в разметке: он держит специфичность этих правил
+       выше поздних стилей .hero/.mx-s (иначе их padding снял бы поля фона). */
     html[data-turn="flip"] .hero, html[data-turn="flip"] #mx-scr > .mx-s, html[data-turn="flip"] .mx-tail { background:var(--bg, #0B0C10);
       margin-left:-20px; margin-right:-20px; padding-left:20px; padding-right:20px; }
     /* ↑ фон на всю ширину экрана: поля обёртки (20px) иначе остаются фоном страницы,
@@ -643,29 +643,21 @@
     /* Повёрнутая с перспективой страница шире экрана у ближнего края: без обрезки
        по ширине она расширяет страницу вбок, и телефонный браузер отдаляет масштаб —
        шапка и кнопки уезжают. clip, а не hidden: прокручиваемой обёртка не становится */
-    html[data-turn="flip"] .wrap, html[data-turn="stack"] .wrap { overflow-x:clip; }
-    /* «Поверх»: у наезжающего экрана тень сверху, иначе тёмный край на тёмном не виден */
-    html[data-turn="stack"] #mx-scr > .mx-s, html[data-turn="stack"] .mx-tail { box-shadow:0 -10px 24px rgba(0,0,0,.6); }
+    html[data-turn="flip"] .wrap { overflow-x:clip; }
     @supports (animation-timeline: view()) {
       @media (prefers-reduced-motion: no-preference) {
-        html[data-turn="stack"] .hero, html[data-turn="stack"] #mx-scr > .mx-s {
-          transform-origin:50% 0; animation:mx-stack-out linear forwards;
-          animation-timeline:view(block 57px 0px); animation-range:exit 0% exit 100%; }
-        /* Листание: у экрана два участка — пока он входит, он стоит на месте
-           под предыдущим (сдвиг навстречу прокрутке), пока уходит — поворачивается
-           вокруг верхнего края. Заливка у каждого только в свою сторону, иначе
-           одна анимация перебивала бы другую вне своего участка. */
+        /* У экрана два участка — пока он входит, он стоит на месте под предыдущим
+           (сдвиг навстречу прокрутке), пока уходит — поворачивается вокруг верхнего
+           края. Заливка у каждого только в свою сторону, иначе одна анимация
+           перебивала бы другую вне своего участка. */
         html[data-turn="flip"] .hero, html[data-turn="flip"] #mx-scr > .mx-s, html[data-turn="flip"] .mx-tail {
           transform-origin:50% 0; animation:mx-flip-in linear backwards, mx-flip-out linear forwards;
           animation-timeline:view(block 57px 0px), view(block 57px 0px);
           animation-range:entry 0% entry 100%, exit 0% exit 100%; }
         /* хвост длиннее экрана: перелистываться ему некуда — только ждёт под последним */
         html[data-turn="flip"] .mx-tail { animation:mx-flip-in linear backwards; animation-timeline:view(block 57px 0px); animation-range:entry 0% entry 100%; }
-        /* строки внутри открывающейся страницы не «въезжают» — страница уже лежит на месте */
-        html[data-turn="flip"] #mx-scr .mx-s > *, html[data-turn="flip"] .mx-tail > h2, html[data-turn="flip"] .mx-tail .mx-g { animation:none; }
       }
     }
-    @keyframes mx-stack-out { from { transform:none; filter:brightness(1); } to { transform:translateY(100%) scale(.92); filter:brightness(.4); } }
     /* Угол подобран так, чтобы нижний край страницы с перспективой шёл за пальцем:
        четверть пути — 56°, половина — 69°, три четверти — 80° */
     @keyframes mx-flip-out {
@@ -675,17 +667,6 @@
       75%  { transform:translateY(75%)  perspective(2400px) rotateX(80deg); filter:brightness(.6); }
       100% { transform:translateY(100%) perspective(2400px) rotateX(90deg); filter:brightness(.5); } }
     @keyframes mx-flip-in { from { transform:translateY(calc(57px - 100svh)); filter:brightness(.5); } to { transform:none; filter:brightness(1); } }
-    /* Въезд содержимого: пока экран поднимается в кадр, его строки идут чуть
-       быстрее страницы и проявляются. Привязано к прокрутке, а не к времени —
-       движение ведёт палец. Хвост — только заголовок и группы: список целиком
-       выше окна, и он проявлялся бы полэкрана. Нет поддержки — просто без движения. */
-    @supports (animation-timeline: view()) {
-      @media (prefers-reduced-motion: no-preference) {
-        #mx-scr .mx-s > *, .mx-tail > h2, .mx-tail .mx-g {
-          animation:mx-in linear both; animation-timeline:view(); animation-range:entry 35% entry 100%; }
-      }
-    }
-    @keyframes mx-in { from { opacity:.25; transform:translateY(26px); } to { opacity:1; transform:none; } }
     .hero, .mx-s { min-height:calc(100vh - 57px); min-height:calc(100svh - 57px);
       display:flex; flex-direction:column; justify-content:center; }
     .hero { padding:28px 0 40px; }
@@ -1927,39 +1908,19 @@
     var root = document.documentElement, body = document.body, wrap = document.querySelector(".wrap");
     var DUR = 420, BACK = 260;                         // мс: к соседнему экрану / назад на место
     var EASE = "cubic-bezier(0.33, 1, 0.68, 1)";       // 1 − (1 − t)³ — та же кривая, что была у покадровой доводки
-    var IN = "#mx-scr .mx-s > *, .mx-tail > h2, .mx-tail .mx-g";   // строки с въездом (их анимация — в CSS)
+    var SCR = ".hero, #mx-scr > .mx-s, .mx-tail";   // экраны: у них листание, привязанное к прокрутке (CSS)
     var RM = window.matchMedia("(prefers-reduced-motion: reduce)");   // просили меньше движения — экран ставим сразу
     var CAN = !!(wrap && wrap.animate);                // нет Web Animations — доводка по кадрам, как раньше
     var anim = 0, glideA = null, over = [], glideTo = 0;
-    // Режим «палец — браузер» (на сравнение, 02.10.2026): страницу под пальцем
-    // двигает родная прокрутка браузера — без скрипта, с частотой экрана и без
-    // задержки на кадр; скрипт только решает, куда доехать, и доводит. Включается
-    // атрибутом data-drag="native" на <html> (его ставит страница превью); без
-    // атрибута — палец ведёт скрипт, как выбрано 29.09.2026.
-    // Инерцию браузера после отпускания команда «встань сюда» НЕ гасит — Chrome
-    // докатывает её поверх (проверено: 800 → 1012). Гасит запрет прокрутки корня
-    // на время доводки: hold(true) на отпускании, hold(false) по её концу и на
-    // новом касании.
-    var NATIVE = root.getAttribute("data-drag") === "native", frozen = false;
-    function hold(on) { if (on !== frozen) { frozen = on; root.style.overflow = on ? "hidden" : ""; } }
-    // ПЕРЕХОД МЕЖДУ ЭКРАНАМИ — на сравнение (02.10.2026, «гладко, как страницы в
-    // книге на айфоне»). Атрибут data-turn на <html>, его ставит страница превью:
-    //   нет или "now" — как было: ease-out за фиксированное время;
-    //   "smooth" — пружина: экран подхватывает скорость пальца и мягко тормозит
-    //     без перелёта, скорость в момент отпускания не скачет;
-    //   "stack" — пружина + следующий экран наезжает на текущий, тот стоит на
-    //     месте и уходит вглубь;
-    //   "flip" — пружина + текущий экран перелистывается вверх вокруг верхнего
-    //     края, как страница блокнота, и открывает следующий под собой.
-    // Эффекты экранов — анимации, привязанные к прокрутке (CSS), во время
-    // доводки они доезжают тем же приёмом, что и строки с въездом.
-    var TURN = root.getAttribute("data-turn") || "now", SPRING = TURN !== "now";
-    var FX = TURN === "stack" || TURN === "flip";
+    // ПЕРЕХОД МЕЖДУ ЭКРАНАМИ — «листание» (выбор Руслана 06.10.2026): текущий экран
+    // перелистывается вверх, как страница книги, следующий ждёт под ним. Палец ведёт
+    // страницу скриптом (выбор 29.09.2026; режим «палец — браузер» сравнивали и убрали).
+    // Эффект экранов — анимации, привязанные к прокрутке (CSS); во время доводки они
+    // доезжают от снятого вида той же кривой, что и страница.
     var LIN = !!(window.CSS && CSS.supports && CSS.supports("animation-timing-function", "linear(0, 1)"));
-    // Порядок слоёв: «поверх» — каждый следующий выше; «листание» — каждый
-    // следующий ниже, он ждёт под текущим. Герой вне .mx-root, поэтому ему —
-    // номер выше, чем у всей обёртки экранов (у неё z-index 1).
-    if (FX) list.forEach(function (el, i) { el.style.position = "relative"; el.style.zIndex = TURN === "stack" ? i + 1 : list.length - i + 1; });
+    // Порядок слоёв: каждый следующий экран ниже — он ждёт под текущим. Герой вне
+    // .mx-root, поэтому ему — номер выше, чем у всей обёртки экранов (у неё z-index 1).
+    list.forEach(function (el, i) { el.style.position = "relative"; el.style.zIndex = list.length - i + 1; });
     // Пружина без перелёта: остаток пути u(t) = (d + (ω·d − v)·t)·e^(−ω·t),
     // v — скорость пальца в сторону цели, px/мс. Палец быстрее, чем пружина
     // гасит без перелёта (v > ω·d), — жёсткость поднимаем до v/d.
@@ -1989,7 +1950,6 @@
       return window.pageYOffset - ty;
     }
     function drop() {
-      hold(false);
       if (glideA) glideA.cancel();
       over.forEach(function (a) { a.cancel(); });
       glideA = null; over = [];
@@ -2001,25 +1961,25 @@
     function glide(to, dur, v) {
       stop();
       var from = window.pageYOffset, d = to - from;
-      if (Math.abs(d) < 1 || RM.matches) { window.scrollTo(0, to); hold(false); return; }
+      if (Math.abs(d) < 1 || RM.matches) { window.scrollTo(0, to); return; }
       // Короткий путь — короче и время, иначе доводка на 40 px тянется как на весь экран
       dur = Math.round(dur * Math.max(0.35, Math.min(1, Math.abs(d) / (window.innerHeight - pad))));
       var ease = EASE;
-      if (SPRING && LIN) { var sp = spring(Math.abs(d), (v || 0) * (d > 0 ? 1 : -1)); dur = sp.dur; ease = sp.ease; }
+      if (LIN) { var sp = spring(Math.abs(d), (v || 0) * (d > 0 ? 1 : -1)); dur = sp.dur; ease = sp.ease; }
       if (!CAN) {
         var start = 0;
         var frame = function (ts) {
           if (!start) start = ts;
           var t = Math.min(1, (ts - start) / dur), e = 1 - Math.pow(1 - t, 3);
           window.scrollTo(0, from + d * e);
-          if (t < 1) anim = requestAnimationFrame(frame); else { anim = 0; hold(false); }
+          if (t < 1) anim = requestAnimationFrame(frame); else anim = 0;
         };
         anim = requestAnimationFrame(frame);
         return;
       }
-      // Строки с въездом, которые окажутся в кадре по пути: снимаем их вид до прыжка
+      // Экраны, которые окажутся в кадре по пути: снимаем их вид до прыжка
       var lo = Math.min(from, to), hi = Math.max(from, to) + window.innerHeight;
-      var els = Array.prototype.filter.call(document.querySelectorAll(FX ? IN + ", .hero, #mx-scr > .mx-s, .mx-tail" : IN), function (el) {
+      var els = Array.prototype.filter.call(document.querySelectorAll(SCR), function (el) {
         var t = docTop(el); return t < hi && t + el.offsetHeight > lo;
       });
       var was = els.map(function (el) { var cs = getComputedStyle(el); return { opacity: cs.opacity, transform: cs.transform, filter: cs.filter }; });
@@ -2027,9 +1987,9 @@
       glideTo = window.pageYOffset;
       var k = glideTo - from;                          // фактический путь: у края страницы браузер мог упереться
       glideA = wrap.animate([{ transform: "translate3d(0," + k + "px,0)" }, { transform: "translate3d(0,0,0)" }], { duration: dur, easing: ease });
-      glideA.onfinish = function () { glideA = null; over = []; hold(false); if (dots) dots(); };
-      // Конца у ключевых кадров нет — это «как сейчас велит прокрутка»: строка
-      // доезжает от снятого вида к своему, без рывка в конец въезда
+      glideA.onfinish = function () { glideA = null; over = []; if (dots) dots(); };
+      // Конца у ключевых кадров нет — это «как сейчас велит прокрутка»: экран
+      // доезжает от снятого вида к своему, без рывка в конец листания
       over = els.map(function (el, i) {
         return el.animate([{ offset: 0, opacity: was[i].opacity, transform: was[i].transform, filter: was[i].filter }], { duration: dur, easing: ease });
       });
@@ -2049,27 +2009,15 @@
       if (e.touches.length !== 1) return;
       if (root.classList.contains("qg-lock") || body.classList.contains("mx-lock") || foreign(e.target)) return;
       stop();                                          // доводку палец ловит там, где страница видна
-      hold(false);                                     // корень снова прокручивается — палец ведёт браузер
       tp = tops();
       var y = window.pageYOffset;
-      // внутри хвоста — нативная прокрутка; в режиме «палец — браузер» касание
-      // всё равно наше: отпустят его, может быть, уже на экранах
-      if (y > tp[tp.length - 1] + 2 && !NATIVE) return;
+      if (y > tp[tp.length - 1] + 2) return;           // внутри хвоста — нативная прокрутка
       armed = true;
       y0 = lastY = e.touches[0].clientY; lastT = e.timeStamp; s0 = y; base = nearest(tp, y);
     }, { passive: true });
     // Слушатель не пассивный всегда, а решение — внутри: добавленный на лету
     // обработчик браузер может не учесть для уже начатого касания
-    // «Палец — браузер»: слушатель пассивный, страницу двигает сама прокрутка —
-    // скрипт только замеряет скорость пальца для решения на отпускании
-    if (NATIVE) document.addEventListener("touchmove", function (e) {
-      if (!armed || e.touches.length !== 1) return;
-      var y = e.touches[0].clientY, t = e.timeStamp;
-      if (Math.abs(y0 - y) >= 6) moved = true;
-      if (t > lastT) vel = 0.6 * vel + 0.4 * ((lastY - y) / (t - lastT));
-      lastY = y; lastT = t;
-    }, { passive: true });
-    else document.addEventListener("touchmove", function (e) {
+    document.addEventListener("touchmove", function (e) {
       if (!armed) return;
       if (e.touches.length !== 1) { armed = false; return; }
       var y = e.touches[0].clientY, t = e.timeStamp, dy = y0 - y;   // вверх — плюс
@@ -2109,34 +2057,8 @@
       else if (dy < -h * 0.18 || (dy < -12 && vel < -0.35)) target = Math.max(0, base - 1);
       glide(tp[target], target === base ? BACK : DUR, vel);
     }
-    // «Палец — браузер»: отпустили на экранах — инерцию гасим и доводим до экрана
-    // по тем же порогам (18% экрана или быстрый взмах), считая от того экрана, в
-    // котором палец отпустил: за одно касание браузер может провезти и дальше
-    // соседнего. Отпустили в хвосте — инерция едет сама.
-    function endNative() {
-      touching = false;
-      if (!armed) { settle(); return; }
-      armed = false;
-      var last = tp.length - 1;
-      if (!moved && Math.abs(window.pageYOffset - s0) < 1) { settle(); return; }   // тап
-      if (window.pageYOffset > tp[last] + 2) return;
-      hold(true);
-      // Два кадра: запрет доезжает до потока прокрутки, и позиция уже без инерции
-      requestAnimationFrame(function () { requestAnimationFrame(function () {
-        if (touching) return;                            // палец уже снова на экране
-        var p = window.pageYOffset, dy = p - s0, i = 0, target;
-        for (var k = 0; k < tp.length; k++) if (tp[k] <= p + 1) i = k;
-        if (i >= last) target = last;
-        else {
-          var frac = (p - tp[i]) / (tp[i + 1] - tp[i]), fast = Math.abs(dy) > 12 && Math.abs(vel) > 0.35;
-          if (dy > 0 || (dy === 0 && vel > 0)) target = (frac > 0.18 || (fast && vel > 0)) ? i + 1 : i;
-          else target = ((1 - frac) > 0.18 || (fast && vel < 0)) ? i : i + 1;
-        }
-        glide(tp[target], tp[target] === s0 ? BACK : DUR, vel);
-      }); });
-    }
-    document.addEventListener("touchend", NATIVE ? endNative : end, { passive: true });
-    document.addEventListener("touchcancel", NATIVE ? endNative : end, { passive: true });
+    document.addEventListener("touchend", end, { passive: true });
+    document.addEventListener("touchcancel", end, { passive: true });
     window.addEventListener("scroll", function () {
       // Пока экран доезжал, страницу прокрутил кто-то другой (колесо, клавиатура,
       // якорь): сдвиг обёртки снимаем — страница там, куда её поставили
