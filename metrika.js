@@ -65,6 +65,11 @@ ym(110759242, "init", {
     else if (byUtm && !localStorage.getItem("so_ref")) localStorage.setItem("so_ref", byUtm[1].toLowerCase());
     var ref = localStorage.getItem("so_ref");
     if (ref) ym(110759242, "params", { ref: ref });
+    // Открыто из приложения на экране телефона (манифест, display: standalone) —
+    // отдельный параметр визита: так видно, сколько людей поставили витрину на экран
+    if ((window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true) {
+      ym(110759242, "params", { app: "standalone" });
+    }
   } catch (e) {}
 })();
 

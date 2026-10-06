@@ -44,6 +44,11 @@
   if (!hero) return;
 
   var REDUCED = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var STANDALONE = window.matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+  var IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  // Android/Chrome: системный диалог установки откладываем до кнопки в истории
+  var installEv = null;
+  window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); installEv = e; });
   var SEEN_KEY = "so_st_seen", KNOWN_KEY = "so_st_known";
   var DAY = 864e5, NEW_TTL = 14 * DAY;
   var YM = 110759242;
@@ -120,7 +125,7 @@
     // Текст написан руками и живёт здесь; показывается, пока не просмотрена,
     // первым кружком. Устареет — поменять ключ promo:*, и она загорится заново
     G.push({
-      id: "promo", key: "promo:mobile-2026-10", date: "2026-10-06",
+      id: "promo", key: "promo:mobile-2026-10b", date: "2026-10-06",
       label: "С телефона", icon: "phone", tone: "bright",
       slides: [
         { tone: "bright", dur: 3800, kicker: "Новая версия для телефона",
@@ -133,7 +138,16 @@
           title: "Спросите AI — объяснит продукт и посчитает цену",
           text: "One-pager по продукту собирается в PDF прямо с телефона.",
           cta: ["Смотреть продукты", "board.html"] }
-      ]
+      ].concat(STANDALONE ? [] : [
+        // Кадр про установку — только если витрина ещё не открыта как приложение.
+        // Android: кнопка вызывает системный диалог установки (beforeinstallprompt);
+        // iPhone такого события не даёт — подсказываем путь через «Поделиться»
+        { tone: "bright", dur: 6000, kicker: "Как приложение",
+          title: "Добавьте витрину на экран телефона",
+          text: IOS ? "Внизу Safari нажмите «Поделиться», затем «На экран Домой» — витрина откроется как приложение, без адресной строки."
+                    : "Откроется как приложение, без адресной строки. Иконка — на главном экране.",
+          install: true, cta: IOS ? null : ["Установить", "#install"] }
+      ])
     });
 
     // Новое на доске: продукты, которых браузер раньше не видел. Первый визит
@@ -526,7 +540,14 @@
     viewer.addEventListener("click", function (e) {
       if (e.target.closest(".st-x")) { e.preventDefault(); close(); return; }
       var c = e.target.closest(".st-copy"); if (c) { e.preventDefault(); copyLink(c); return; }
-      if (e.target.closest(".st-cta")) goal("story_cta", { story: groups[gi].id, slide: si });
+      var cta = e.target.closest(".st-cta");
+      if (cta && cta.getAttribute("href") === "#install") {
+        e.preventDefault(); goal("story_install");
+        if (installEv) { pause(); installEv.prompt(); installEv.userChoice.then(function () { installEv = null; close(); }, function () { resume(); }); }
+        else { cta.textContent = "Меню браузера → «Установить приложение»"; }   // Chrome не предложил — например, уже стояло
+        return;
+      }
+      if (cta) goal("story_cta", { story: groups[gi].id, slide: si });
     });
   }
   // Один слушатель на модуль, а не на каждое открытие
