@@ -1602,6 +1602,7 @@
   })();
 </script>
 <script src="intro.js?v=6"></script>
+<script src="stories.js?v=9"></script>
 <script src="chat.js?v=24"></script>
 <script src="search.js?v=3"></script>
 <script src="nav-about.js?v=9"></script>
@@ -1775,6 +1776,9 @@
     function glue(s) { return s.replace(/(CALL|PUT|ОФЗ) (\d)/g, "$1 $2"); }
     return { head: glue(head), rest: glue(parts.join(" · ")) };
   }
+  // Истории (stories.js) берут имя продукта и строки ставок отсюда же — одна логика
+  window.soPname = pname;
+  window.soRates = rateRows;
   function screens() {
     var box = document.getElementById("mx-scr");
     if (!box) return;
