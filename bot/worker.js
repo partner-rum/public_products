@@ -1765,6 +1765,12 @@ const PROT_FLOOR_MIN = 70;           // защита ниже 70% — уже н�
 const PROT_PART_MIN = 10, PROT_PART_MAX = 300;   // участие в росте, %
 const PROT_BOND_TEXT = "Защиту капитала на облигации в чате пока не считаю. " +
   "Нажмите «Обсудить с Румбергом» — посчитает менеджер.";
+// Защиту капитала считаем ТОЛЬКО в рублях (решение Руслана 06.10.2026: «пока исходим, что считаем
+// всё в рублях»). Рублёвая структура на актив в другой валюте — это quanto, а у прайсера он сейчас
+// отдаёт опционную часть ≈ 0 при любой модели (NVDA, SPY: участие 1% и 100% стоят одинаково) —
+// такая цена была бы просто ценой облигации. Поэтому такие активы — к менеджеру.
+const PROT_FX_TEXT = "Защиту капитала в чате считаю в рублях, а по активам, которые торгуются в другой валюте " +
+  "(например, акции США), рублёвый расчёт пока недоступен. Нажмите «Обсудить с Румбергом» — посчитает менеджер.";
 const PROT_CAP_RE = /потол\p{L}*|(?:^|[^\p{L}])cap(?![\p{L}])|до\s*\+\s*\d+/iu;
 // Клиент назвал участие или защиту числом, а модель его не передала — переспрашиваем,
 // а не считаем по умолчанию. «Участие в росте от +5%» — это страйк, не участие.
@@ -2134,6 +2140,7 @@ async function priceWarrant(a, env, who, cat, raw) {
       const shown = priceShowTicker(ticker);
       return fail("По активу " + shown + " нет рыночных данных." + (cands.length ? " Возможно, вы имели в виду: " + cands.join(", ") + "?" : " Проверьте тикер."));
     }
+    if (note && /^(quanto|currency|underlying_currencies)$/.test(String(q.field || ""))) return fail(PROT_FX_TEXT);
     return fail("Для " + ticker + " не удалось определить валюту расчёта автоматически. Нажмите «Обсудить с Румбергом» — посчитает менеджер.");
   }
 
@@ -2204,8 +2211,8 @@ async function priceWarrant(a, env, who, cat, raw) {
 // Защита капитала: цену структуры считает прайсер (participation, через priceWarrant с
 // raw-объектом — тот же разбор актива, кэш и честные отказы), клиенту — она плюс маржа
 // 2% в год × срок. Облигации (ОФЗ) не считаем: для них рублёвая кривая прайсера падает
-// (см. priceBondRate), а ставка числом — уже не его кривая. Валюта структуры — валюта актива
-// (долларовый актив — долларовый номинал и долларовая кривая).
+// (см. priceBondRate), а ставка числом — уже не его кривая. Структура только рублёвая
+// (PROT_FX_TEXT): актив в другой валюте прайсер возвращает вопросом про quanto — отказ.
 // Всегда возвращает текст для клиента; log — строка для внутреннего лога.
 async function priceProtection(a, env, who, cat) {
   const fail = (text) => ({ ok: false, text: PRICE_LEAK_RE.test(text) ? PRICE_LEAK_TEXT : text });
@@ -2236,7 +2243,7 @@ async function priceProtection(a, env, who, cat) {
 
   const base = { underlying: a.underlying, option_type: "call", tenor: a.tenor, strike_pct: K };
   const n = await priceWarrant(base, env, who, cat, { tool: "price_participation",
-    args: Object.assign({ participation: part, protection: floor, wrapper: "note" }, cap != null ? { cap: 100 + cap } : {}) });
+    args: Object.assign({ participation: part, protection: floor, wrapper: "note", currency: "RUB" }, cap != null ? { cap: 100 + cap } : {}) });
   if (!n.ok) return n;
   const T = tenor.days / 365;
   const margin = PROT_MARGIN_PA * T;
@@ -2261,7 +2268,7 @@ async function priceProtection(a, env, who, cat) {
   const title = ["Защита капитала", shortName].concat(tags, [tenor.label]).join(" · ");
   const head = ["Защита капитала", asset].concat(tags, [tenor.label]).join(" · ");
   const ccy = String(n.currency || "RUB");
-  const ccyName = { USD: "доллар США", EUR: "евро", CNY: "юань", HKD: "гонконгский доллар" }[ccy] || ccy;
+  if (ccy !== "RUB") return fail(PROT_FX_TEXT);   // страховка: структура только рублёвая
 
   let g = Math.max(30, K - 100 + 20);
   if (cap != null) g = Math.min(g, cap);
@@ -2269,7 +2276,6 @@ async function priceProtection(a, env, who, cat) {
     "**" + head + "**",
     "Цена: **" + priceNum(q) + "% номинала** — индикативно",
   ];
-  if (ccy !== "RUB") lines.push("• Валюта номинала: " + ccyName);
   lines.push(floor >= 100
     ? "• Защита: 100% номинала возвращается на погашение при любом падении актива"
     : "• Защита: не меньше " + pct(floor) + " номинала на погашение");
