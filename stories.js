@@ -21,7 +21,7 @@
    продуктов, которые браузер уже видел, — в so_st_known; первый визит ничего
    новым не считает.
 
-   Ссылка на историю: index.html#story=<new|news|rates> — откроет
+   Ссылка на историю: index.html#story=<promo|new|news|rates> — откроет
    её после входного ролика и гейта квалинвестора (не поверх них).
    Служебное: ?stories=reset — забыть просмотренное. */
 (function () {
@@ -87,6 +87,7 @@
     sun: '<circle cx="12" cy="12" r="3.6"/><path d="M12 3v2.2M12 18.8V21M3 12h2.2M18.8 12H21M5.6 5.6l1.6 1.6M16.8 16.8l1.6 1.6M5.6 18.4l1.6-1.6M16.8 7.2l1.6-1.6"/>',
     pct: '<path d="M6 18L18 6"/><circle cx="7.5" cy="7.5" r="2.5"/><circle cx="16.5" cy="16.5" r="2.5"/>',
     mic: '<rect x="9" y="3.5" width="6" height="10" rx="3"/><path d="M6 11a6 6 0 0 0 12 0M12 17v3.5"/>',
+    phone: '<rect x="7" y="2.5" width="10" height="19" rx="2.2"/><path d="M10.5 5.5h3M11 18.5h2"/>',
     doc: '<path d="M7 3.5h7l4 4V20.5H7z"/><path d="M14 3.5V8h4M9.5 12h5M9.5 15.5h5"/>'
   };
   function icon(n) { return '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + ICON[n] + '</svg>'; }
@@ -114,6 +115,26 @@
     var cat = (window.SITE_DATA && window.SITE_DATA.instruments) || [];
     function byId(id) { for (var i = 0; i < cat.length; i++) if (cat[i].id === id) return cat[i]; return null; }
     var now = Date.now();
+
+    // Яркая короткая история о телефонной версии (просьба Руслана 06.10.2026).
+    // Текст написан руками и живёт здесь; показывается, пока не просмотрена,
+    // первым кружком. Устареет — поменять ключ promo:*, и она загорится заново
+    G.push({
+      id: "promo", key: "promo:mobile-2026-10", date: "2026-10-06",
+      label: "С телефона", icon: "phone", tone: "bright",
+      slides: [
+        { tone: "bright", dur: 3800, kicker: "Новая версия для телефона",
+          title: "Витрина теперь удобно читается с телефона",
+          text: "Главная листается как лента: один свайп — один экран." },
+        { tone: "bright2", dur: 3800, kicker: "Истории",
+          title: "Новое, утро и ставки — в кружках сверху",
+          text: "Новые продукты доски, обзор рынков и лучшие ставки до года. Ссылку клиенту — в один тап." },
+        { tone: "bright3", dur: 4200, kicker: "AI-ассистент и one-pager",
+          title: "Спросите AI — объяснит продукт и посчитает цену",
+          text: "One-pager по продукту собирается в PDF прямо с телефона.",
+          cta: ["Смотреть продукты", "board.html"] }
+      ]
+    });
 
     // Новое на доске: продукты, которых браузер раньше не видел. Первый визит
     // ничего новым не считает (иначе «новыми» были бы все 118). Снятые с доски
@@ -174,7 +195,7 @@
       });
     }
 
-    var ORDER = ["new", "news", "rates"];
+    var ORDER = ["promo", "new", "news", "rates"];
     G.sort(function (a, b) { return ORDER.indexOf(a.id) - ORDER.indexOf(b.id); });
     var seen = seenSet();
     G.forEach(function (g) { g.seen = seen.indexOf(g.key) >= 0; });
@@ -185,6 +206,7 @@
   function plural(n, f) { n = Math.abs(n) % 100; var n1 = n % 10; if (n > 10 && n < 20) return f[2]; if (n1 > 1 && n1 < 5) return f[1]; if (n1 === 1) return f[0]; return f[2]; }
   // Длительность кадра — по объёму текста: 4 с на короткий, до 12 на длинный
   function durOf(s) {
+    if (s.dur) return s.dur;
     var n = [s.title, s.sub, s.text, (s.facts || []).map(function (f) { return f.join(" "); }).join(" "), (s.list || []).join(" ")].join(" ").length;
     return Math.min(12000, Math.max(4000, 3000 + n * 40));
   }
@@ -210,6 +232,23 @@
     ".tn-dawn{background:radial-gradient(120% 90% at 80% 0%,#6B4A16 0%,#22180C 50%,#0B0C10 100%);}",
     ".tn-violet{background:radial-gradient(120% 90% at 20% 10%,#4B3A86 0%,#1A1630 55%,#0B0C10 100%);}",
     ".tn-green{background:radial-gradient(120% 90% at 75% 10%,#1F5A3E 0%,#10241B 55%,#0B0C10 100%);}",
+    // Яркие кадры: сплошной оранжевый семейства витрины, текст тёмный — как на
+    // оранжевых кнопках (#0C0A08); у затемняющего градиента снизу тут нет работы
+    ".tn-bright{background:radial-gradient(130% 100% at 20% 0%,#FFB067 0%,#EE7D1B 45%,#C9580E 100%);}",
+    ".tn-bright2{background:radial-gradient(130% 100% at 85% 10%,#F5B36A 0%,#EE7D1B 50%,#B04E0B 100%);}",
+    ".tn-bright3{background:radial-gradient(130% 100% at 50% 100%,#FFC894 0%,#F58E33 40%,#C9580E 100%);}",
+    ".st-in.tn-bright{color:#0C0A08;}",
+    ".st-card.lit::after{background:linear-gradient(180deg,rgba(0,0,0,.18) 0%,rgba(0,0,0,0) 20%);}",
+    ".st-card.lit,.st-card.lit .st-h,.st-card.lit .st-gn{color:#0C0A08;}",
+    ".st-card.lit .st-k{color:rgba(12,10,8,.72);}",
+    ".st-card.lit .st-p,.st-card.lit .st-sub{color:rgba(12,10,8,.84);}",
+    ".st-card.lit .st-ago{color:rgba(12,10,8,.6);}",
+    ".st-card.lit .st-x{color:#0C0A08;}",
+    ".st-card.lit .st-ava{background:rgba(12,10,8,.9);}",
+    ".st-card.lit .st-star path{fill:#fff;}.st-card.lit .st-star{opacity:.22;}",
+    ".st-card.lit .st-bars i{background:rgba(12,10,8,.22);}.st-card.lit .st-bars b{background:#0C0A08;}",
+    ".st-card.lit .st-cta{background:#0C0A08;color:#F2F3F7;}",
+    ".st-card.lit .st-h{font-size:clamp(30px,9vw,40px);}",
     // просмотр — НИЖЕ гейта квалинвестора (100000) и интро, выше меню (400) и чата
     "html.st-lock,html.st-lock body{overflow:hidden!important;}",
     ".st-v{position:fixed;inset:0;z-index:99000;background:#000;display:flex;align-items:center;justify-content:center;touch-action:none;opacity:0;transition:opacity .2s;}",
@@ -335,7 +374,8 @@
   function render() {
     var g = groups[gi], s = g.slides[si];
     var card = viewer.querySelector(".st-card");
-    card.className = "st-card" + (s.bg ? " ph" : " tn-" + (s.tone || g.tone));
+    var tone = s.tone || g.tone;
+    card.className = "st-card" + (s.bg ? " ph" : " tn-" + tone) + (/^bright/.test(tone) ? " lit" : "");
     card.style.backgroundImage = s.bg ? "linear-gradient(rgba(0,0,0,.05),rgba(0,0,0,.05))," + cssUrl(s.bg) : "";
     card.innerHTML = slideHTML(g, s);
     left = durOf(s);
