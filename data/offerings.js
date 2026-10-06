@@ -28,6 +28,14 @@ window.OFFERINGS = {
    "price": 40,
    "dealers": [
     "АО «Сбербанк КИБ» · Банк ВТБ (ПАО) · АО «ФИНАМ»"
+   ],
+   "docs": [
+    {
+     "name": "Ключевые условия выпуска (КУВ)",
+     "file": "docs/kuv-sp-1-46-cb-fx-rub.pdf",
+     "ext": "PDF",
+     "size": "466 КБ"
+    }
    ]
   },
   {
