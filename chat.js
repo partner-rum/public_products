@@ -105,7 +105,19 @@
     "@media(max-width:860px){.ca-dock{width:auto;max-width:none;height:50px;padding:0 18px 0 14px;gap:9px;cursor:pointer;}" +
     ".ca-dock-in,.ca-dock-go,.ca-dock-tag{display:none;}" +
     ".ca-dock-lbl{display:block;font-size:14.5px;font-weight:600;line-height:1.15;white-space:nowrap;text-align:left;}" +
-    ".ca-dock-lbl small{display:block;margin-top:2px;font-size:11.5px;font-weight:400;line-height:1.2;color:rgba(20,22,28,.68);}}" +
+    ".ca-dock-lbl small{display:block;margin-top:2px;font-size:11.5px;font-weight:400;line-height:1.2;color:rgba(20,22,28,.68);}" +
+    // Телефон: пилюля перекрывала последнюю видимую строку на каждой странице
+    // (на доске — котировку, в выпусках — название). Теперь она уходит вниз при
+    // прокрутке вниз и возвращается при прокрутке вверх; внизу страницы — запас,
+    // чтобы последняя строка не пряталась под ней. Пока на экране нижняя панель
+    // карточки продукта (html.has-mbar), пилюля убрана: поднятая, она ложилась
+    // поверх меню «Поделиться»/«Обсудить». Главную (.mx-snap — экраны
+    // с прилипанием) запасом не трогаем: он сдвинул бы последний экран
+    ".ca-dock{transition:box-shadow .2s,transform .25s cubic-bezier(.16,1,.3,1);}" +
+    ".ca-dock.away{transform:translate(-50%,calc(100% + 40px));}" +
+    "html.has-mbar .ca-dock{transform:translate(-50%,calc(100% + 40px));pointer-events:none;}" +
+    "html.ca-dock-pad:not(.mx-snap) body{padding-bottom:84px;}}" +
+    "@media(max-width:860px) and (prefers-reduced-motion:reduce){.ca-dock{transition:none;}}" +
     /* — панель: СВЕТЛАЯ, в тон строке («почему он чёрный открывается?»), и СБОКУ — небольшое
          окно справа внизу, не по центру («пусть открывается сбоку, иначе мешает смотреть»). — */
     // visibility:hidden в закрытом состоянии убирает содержимое панели из табуляции
@@ -501,6 +513,25 @@
       '<button class="ca-dock-go" type="submit">Спросить' + ICON_ARROW + '</button>';
     var dockIn = dock.querySelector(".ca-dock-in");
     document.documentElement.classList.add("ca-dock-pad");
+
+    // Телефон: прятать пилюлю при прокрутке вниз, показывать при прокрутке вверх
+    // и у самого низа страницы (там её ничто не перекрывает)
+    (function () {
+      var mq = window.matchMedia("(max-width: 860px)");
+      var lastY = window.scrollY || 0, ticking = false;
+      function upd() {
+        ticking = false;
+        var y = window.scrollY || 0, dy = y - lastY;
+        if (!mq.matches) { dock.classList.remove("away"); lastY = y; return; }
+        var nearEnd = y + window.innerHeight >= document.documentElement.scrollHeight - 80;
+        if (y < 120 || nearEnd || dy < -6) dock.classList.remove("away");
+        else if (dy > 6) dock.classList.add("away");
+        if (Math.abs(dy) > 6) lastY = y;
+      }
+      window.addEventListener("scroll", function () {
+        if (!ticking) { ticking = true; requestAnimationFrame(upd); }
+      }, { passive: true });
+    })();
 
     var panel = document.createElement("div");
     panel.className = "ca-panel"; panel.setAttribute("role", "dialog"); panel.setAttribute("aria-label", "AI-ассистент");
