@@ -1551,9 +1551,9 @@ async function handleChat(request, env, cors, ctx) {
   // У расчётов в лог (внутренний) добавляется справедливая цена прайсера — видно наценку.
   if (env.CHAT_LOG_CHAT_ID && reply) {
     const q = messages[messages.length - 1].content.slice(0, 600);
-    const fairs = priced.filter((o) => o.ok).map((o) =>
-      o.ticker + " " + o.type + " " + o.strike + " " + o.tenor +
-      ": прайсер " + priceNum(o.fair) + "%, клиенту " + priceNum(o.quote) + "%");
+    const fairs = priced.filter((o) => o.ok).map((o) => o.log ||
+      (o.ticker + " " + o.type + " " + o.strike + " " + o.tenor +
+      ": прайсер " + priceNum(o.fair) + "%, клиенту " + priceNum(o.quote) + "%"));
     const logP = tg(env, "sendMessage", {
       chat_id: env.CHAT_LOG_CHAT_ID, parse_mode: "HTML", disable_web_page_preview: true,
       text: "💬 <b>AI-чат</b>" + (pageTitle ? " · " + esc(pageTitle) : "") +
@@ -1690,7 +1690,7 @@ async function callClaude(system, messages, env, opts = {}) {
 }
 
 // ============================================================================
-// Расчёт варрантов в чате (05.10.2026, запрос Руслана: «пишешь „запрайсь колл
+// Расчёт варрантов и защиты капитала в чате (05.10.2026, запрос Руслана: «пишешь „запрайсь колл
 // опцион на Сбер на 2 года" — он прайсит»). Модель только разбирает фразу и
 // вызывает инструмент price_warrant. Цену считает прайсер Rumberg
 // (api.rumberg.ru) через MCP-сервер подрядчика (neurocodelabs/mcp_pricerbackend,
@@ -1726,7 +1726,7 @@ const PRICE_UNLISTED_TIMEOUT_MS = 25000;  // тикер не из справоч
 const PRICE_CACHE_MS = 10 * 60 * 1000;
 const PRICE_DAYS_MIN = 7, PRICE_DAYS_MAX = 5 * 366;
 const PRICE_CACHE = new Map();      // условия + дата → готовый ответ; живёт в изоляте
-const PRICE_ONLY_TEXT = "В чате сейчас считаются только обычные CALL и PUT на один актив. " +
+const PRICE_ONLY_TEXT = "В чате сейчас считаются обычные CALL и PUT и облигация с защитой капитала на один актив. " +
   "Колл-спред и другие структуры посчитает менеджер — нажмите «Обсудить с Румбергом».";
 
 const PRICE_TOOL = {
@@ -1752,17 +1752,62 @@ const PRICE_TOOL = {
   },
 };
 
+// ── Защита капитала в чате (06.10.2026, «давай учить AI чат считать структуры с защитой
+// капитала»). Формула — утверждённая 06.08.2026 (CLAUDE.md, «Маржа в ценах»), та же, по
+// которой собраны продукты доски: клиент платит 100% номинала, структура собирается за
+// 100 − 2%·T (наша наценка — 2% годовых × срок), на защиту уходит P / (1 + r)^T, где P —
+// уровень защиты, r — ставка фондирования 14% годовых (сложные проценты); остаток — бюджет
+// на опцион. Участие = бюджет / СПРАВЕДЛИВАЯ цена колла прайсера (без наценки ÷ 0,8 — она
+// уже в 2% годовых), вниз до десятков. С потолком роста опцион — колл-спред: колл на страйке
+// минус колл на уровне 100 + потолок. Сверка с доской: Сбер 2 года — (96 − 76,95) / 23,64 =
+// 80,6% → 80%, на доске P-SBER-2Y стоит 80%.
+const PROT_MARGIN_PA = 2;            // наценка, % номинала в год
+const PROT_FUND_RATE = 14;           // ставка фондирования, % годовых
+const PROT_STEP = 10;                // участие — вниз до десятков
+const PROT_MIN_PART = 10;            // ниже — не показываем: такой продукт клиенту не предлагаем
+const PROT_DAYS_MIN = 182, PROT_DAYS_MAX = 5 * 366;
+const PROT_FLOOR_MIN = 70;           // защита ниже 70% — уже не «защита капитала»
+const PROT_CAP_RE = /потол\p{L}*|(?:^|[^\p{L}])cap(?![\p{L}])|до\s*\+\s*\d+/iu;
+
+const PROT_TOOL = {
+  type: "function",
+  function: {
+    name: "price_protection",
+    description: "Посчитать условия облигации с защитой капитала на ОДИН базовый актив: клиент платит 100% номинала, " +
+      "на погашение получает не меньше уровня защиты и долю роста актива (участие). Ответ клиенту соберёт сервер.",
+    parameters: {
+      type: "object",
+      properties: {
+        underlying: { type: "string", description: "Тикер базового актива, как на бирже: SBER, GAZP, LKOH, YDEX, NVDA. " +
+          "Для ОФЗ — «ОФЗ» и номер выпуска: «ОФЗ 26238». " +
+          "Если клиент назвал компанию словами и тикер неизвестен — название как есть." },
+        tenor: { type: "string", description: "Срок: '2Y', '3Y', '18M' или дата погашения YYYY-MM-DD." },
+        protection_pct: { type: "number", description: "Уровень защиты в % номинала. По умолчанию 100 (полная защита). " +
+          "«Защита 90%» → 90." },
+        strike_pct: { type: "number", description: "С какого уровня актива считается рост, в % от текущей цены. " +
+          "По умолчанию 100. «Рост от +5%» → 105." },
+        cap_pct: { type: "number", description: "Потолок роста актива в процентах, только если клиент его назвал: " +
+          "«до +50%», «с потолком 50%», «потолок 150% от текущей цены» → 50. Без потолка не передавай." },
+      },
+      required: ["underlying", "tenor"],
+    },
+  },
+};
+
 const PRICING_PROMPT = `
 
-=== РАСЧЁТ ОПЦИОНОВ (инструмент price_warrant) ===
-Ты считаешь цену ТОЛЬКО ДВУХ продуктов: обычный колл-опцион (CALL) и обычный пут-опцион (PUT) на ОДИН базовый актив. Больше ты не прайсишь НИЧЕГО.
-Когда клиент просит посчитать, запрайсить, оценить или узнать цену колла или пута (колл-опциона, пут-опциона, CALL, PUT, варранта на рост или на падение) на конкретный актив — вызови price_warrant. Ответ с ценой клиенту соберёт сервер: сам цену не называй и не придумывай.
+=== РАСЧЁТ ПРОДУКТОВ (инструменты price_warrant и price_protection) ===
+Ты считаешь цену ТОЛЬКО ТРЁХ продуктов, все на ОДИН базовый актив: обычный колл-опцион (CALL), обычный пут-опцион (PUT) — инструмент price_warrant — и облигацию с защитой капитала — инструмент price_protection. Больше ты не прайсишь НИЧЕГО.
+Когда клиент просит посчитать, запрайсить, оценить или узнать цену колла или пута (колл-опциона, пут-опциона, CALL, PUT, варранта на рост или на падение) на конкретный актив — вызови price_warrant.
+Когда клиент просит посчитать защиту капитала (облигацию с защитой капитала, «капитал под защитой», «вернуть номинал и участвовать в росте», «какое будет участие») на конкретный актив — вызови price_protection.
+Ответ с ценой клиенту соберёт сервер: сам цену и участие не называй и не придумывай.
 - Тикер передавай как на бирже (SBER, GAZP, LKOH, YDEX, NVDA). Не знаешь тикер — передай название компании как есть.
 - Индекс, фонд и валюта — тоже ОДИН актив, их считаешь: индекс МосБиржи → IMOEX, индекс РТС → RTSI, S&P 500 → SPY, золото → GLD, биткоин → IBIT, юань → CNYRUB. Не отказывай словами «это индекс, а не один актив».
 - Срок обязателен. Не назван — спроси срок и инструмент не вызывай. Срок НИКОГДА не придумывай и не бери «по умолчанию». «2 года» → '2Y', «18 месяцев» → '18M', «полгода» → '6M'.
-- Страйк по умолчанию 100% (на уровне текущей цены). «Страйк 110», «на 10% выше рынка» → strike_pct 110. Страйк деньгами («страйк 1500 рублей», «страйк 300 $») → strike_abs 1500 / 300, в проценты сам не пересчитывай.
-- Клиент меняет условия прошлого расчёта («а на 3 года?», «а страйк 110?») — вызови инструмент снова, остальные условия возьми из прошлого расчёта.
-- ВСЁ ОСТАЛЬНОЕ НЕ СЧИТАЕШЬ И ИНСТРУМЕНТ НЕ ВЫЗЫВАЕШЬ: колл-спреды, опционы с потолком, корзины и опционы на несколько активов, автоколлы, защиту капитала, дисконтные облигации, бустеры, реверс-конвертиблы, купонные варранты и любые другие структуры. На такую просьбу ответь, что в чате сейчас считаются только CALL и PUT на один актив, и предложи похожий продукт из каталога или кнопку «Обсудить с Румбергом» — посчитает менеджер. Цифр по таким продуктам не называй, кроме тех, что есть в каталоге.`;
+- CALL и PUT: страйк по умолчанию 100% (на уровне текущей цены). «Страйк 110», «на 10% выше рынка» → strike_pct 110. Страйк деньгами («страйк 1500 рублей», «страйк 300 $») → strike_abs 1500 / 300, в проценты сам не пересчитывай.
+- Защита капитала: уровень защиты по умолчанию 100% номинала; «защита 90%» → protection_pct 90. Потолок роста передавай, ТОЛЬКО если клиент его назвал: «до +50%», «с потолком 50%» → cap_pct 50. «Участие в росте от +5%» → strike_pct 105.
+- Клиент меняет условия прошлого расчёта («а на 3 года?», «а страйк 110?», «а с потолком +50%?») — вызови тот же инструмент снова, остальные условия возьми из прошлого расчёта.
+- ВСЁ ОСТАЛЬНОЕ НЕ СЧИТАЕШЬ И ИНСТРУМЕНТЫ НЕ ВЫЗЫВАЕШЬ: колл-спреды и опционы с потолком (потолок бывает только у защиты капитала), корзины и продукты на несколько активов, автоколлы, дисконтные облигации, бустеры, реверс-конвертиблы, купонные варранты и любые другие структуры. На такую просьбу ответь, что в чате сейчас считаются CALL, PUT и защита капитала на один актив, и предложи похожий продукт из каталога или кнопку «Обсудить с Румбергом» — посчитает менеджер. Цифр по таким продуктам не называй, кроме тех, что есть в каталоге.`;
 
 function pricerEnabled(env) {
   return !!((env.PRICER_MCP_URL || "").trim() && (env.PRICER_MCP_KEY || "").trim());
@@ -1949,7 +1994,7 @@ function priceNamePick(rs) {
 
 // Один расчёт. Всегда возвращает текст для клиента: и котировку, и честный отказ.
 // fair — справедливая цена прайсера, ТОЛЬКО для внутреннего лога.
-async function priceWarrant(a, env, who, cat) {
+async function priceWarrant(a, env, who, cat, raw) {
   const fail = (text) => ({ ok: false, text: PRICE_LEAK_RE.test(text) ? PRICE_LEAK_TEXT : text });
   const type = String(a.option_type || "").toLowerCase();
   if (type !== "call" && type !== "put") return fail("Уточните, какой нужен варрант: CALL (на рост) или PUT (на падение).");
@@ -2019,7 +2064,7 @@ async function priceWarrant(a, env, who, cat) {
     // тикер есть — считаем без имени
   }
 
-  const key = [mskDate().key, ticker, type, tenor.expiry, strikeAbs ? "abs" + strikeAbs : strike].join("|");
+  const key = [mskDate().key, ticker, type, tenor.expiry, strikeAbs ? "abs" + strikeAbs : strike, raw ? "raw" : ""].join("|");
   const hit = PRICE_CACHE.get(key);
   if (hit && Date.now() - hit.at < PRICE_CACHE_MS) return hit.out;
 
@@ -2093,6 +2138,19 @@ async function priceWarrant(a, env, who, cat) {
     }
   }
   const pv = Number(r.pv_pct);
+  if (raw) {
+    // Защите капитала нужна справедливая цена колла как есть — без наценки ÷ 0,8 и без
+    // порога 1,5%: колл на уровне потолка вправе стоить почти ноль.
+    if (!isFinite(pv) || pv < 0) {
+      return fail("Расчёт сейчас недоступен. Попробуйте позже или нажмите «Обсудить с Румбергом» — посчитает менеджер.");
+    }
+    if (!isBond) name = priceAssetName(ticker, name, cat);
+    const outR = { ok: true, pv, ticker, isBond, name, currency: String(r.currency || t.currency || "RUB"),
+      asset: isBond ? (name || priceShowTicker(ticker)) : (name ? name + " (" + ticker + ")" : ticker) };
+    PRICE_CACHE.set(key, { at: Date.now(), out: outR });
+    if (PRICE_CACHE.size > 300) PRICE_CACHE.delete(PRICE_CACHE.keys().next().value);
+    return outR;
+  }
   if (!(pv > 0)) {
     return fail(PRICE_LOW_TEXT);
   }
@@ -2129,6 +2187,98 @@ async function priceWarrant(a, env, who, cat) {
   });
   PRICE_CACHE.set(key, { at: Date.now(), out });
   if (PRICE_CACHE.size > 300) PRICE_CACHE.delete(PRICE_CACHE.keys().next().value);
+  return out;
+}
+
+// Защита капитала: бюджет по утверждённой формуле, цена опциона — у прайсера (справедливая,
+// через priceWarrant в режиме raw: тот же разбор актива, ОФЗ, кэш и честные отказы).
+// Всегда возвращает текст для клиента; log — строка для внутреннего лога.
+async function priceProtection(a, env, who, cat) {
+  const fail = (text) => ({ ok: false, text: PRICE_LEAK_RE.test(text) ? PRICE_LEAK_TEXT : text });
+  const numOr = (v, d) => (v == null || v === "" ? d : Number(v));
+  const tenor = priceTenor(a.tenor);
+  if (!tenor) return fail("Уточните срок — например, 2 года, 3 года или 18 месяцев.");
+  if (tenor.days < PROT_DAYS_MIN || tenor.days > PROT_DAYS_MAX) {
+    return fail("Защиту капитала считаю на срок от полугода до пяти лет. Уточните срок.");
+  }
+  const floor = numOr(a.protection_pct, 100);
+  if (!isFinite(floor) || floor < PROT_FLOOR_MIN || floor > 100) {
+    return fail("Уровень защиты считаю от 70 до 100% номинала. Уточните, пожалуйста.");
+  }
+  const K = numOr(a.strike_pct, 100);
+  if (!isFinite(K) || K < 80 || K > 150) {
+    return fail("Уровень, с которого считается рост, беру в пределах 80–150% от текущей цены актива. Уточните, пожалуйста.");
+  }
+  let cap = numOr(a.cap_pct, null);
+  if (cap != null) {
+    if (!isFinite(cap) || cap <= 0 || cap > 200) return fail("Потолок роста считаю в пределах до +200%. Уточните потолок — например, до +50%.");
+    if (100 + cap <= K) return fail("Потолок роста должен быть выше уровня, с которого считается рост. Уточните условия.");
+  }
+
+  const T = tenor.days / 365;
+  const struct = 100 - PROT_MARGIN_PA * T;
+  const bond = floor / Math.pow(1 + PROT_FUND_RATE / 100, T);
+  const budget = struct - bond;
+
+  const base = { underlying: a.underlying, option_type: "call", tenor: a.tenor, strike_pct: K };
+  const c1 = await priceWarrant(base, env, who, cat, true);
+  if (!c1.ok) return c1;
+  let opt = c1.pv, c2 = null;
+  if (cap != null) {
+    // Тикер второго колла — уже разобранный: справочник второй раз не нужен
+    c2 = await priceWarrant({ ...base, underlying: c1.ticker, strike_pct: 100 + cap }, env, who, cat, true);
+    if (!c2.ok) return c2;
+    opt = c1.pv - c2.pv;
+  }
+  const low = "При таких условиях участие в росте выходит совсем маленьким — такой продукт в чате не показываем. " +
+    "Попробуйте срок длиннее, защиту ниже полной или потолок роста — либо нажмите «Обсудить с Румбергом», посчитает менеджер.";
+  if (!(budget > 0) || !(opt > 0.01)) return fail(low);
+  const raw = budget / opt * 100;
+  const part = Math.floor(raw / PROT_STEP + 1e-9) * PROT_STEP;
+  if (part < PROT_MIN_PART) return fail(low);
+  if (part > 1000) return fail("С таким узким потолком расчёт в чате не показываю. Нажмите «Обсудить с Румбергом» — посчитает менеджер.");
+
+  const asset = c1.asset, shortName = c1.isBond ? asset : (c1.name || c1.ticker);
+  const pct = (x) => priceNum(x, 1) + "%";
+  const pay = (g) => {   // выплата в % номинала при росте актива на g% — та же формула, что у доски (lib.js)
+    let v = floor + part / 100 * Math.max(100 + g - K, 0);
+    if (cap != null) v = Math.min(v, floor + part / 100 * Math.max(100 + cap - K, 0));
+    return v;
+  };
+  // Имя — как у продуктов доски: «Защита капитала · MU · до +50% · 2 года»
+  const tags = [];
+  if (floor < 100) tags.push("защита " + pct(floor));
+  if (K !== 100) tags.push("рост от " + (K > 100 ? "+" : "−") + pct(Math.abs(K - 100)));
+  if (cap != null) tags.push("до +" + pct(cap));
+  const title = ["Защита капитала", shortName].concat(tags, [tenor.label]).join(" · ");
+  const head = ["Защита капитала", asset].concat(tags, [tenor.label]).join(" · ");
+
+  let g = Math.max(30, K - 100 + 20);
+  if (cap != null) g = Math.min(g, cap);
+  const lines = [
+    "**" + head + "**",
+    "Участие в росте: **" + part + "%** — индикативно",
+    "• Цена: 100% номинала",
+    floor >= 100
+      ? "• Защита: 100% номинала возвращается на погашение при любом падении актива"
+      : "• Защита: не меньше " + pct(floor) + " номинала на погашение — риск ограничен " + pct(100 - floor),
+    "• Доход: " + part + "% роста актива" + (K !== 100 ? " выше " + pct(K) + " от текущей цены" : "") +
+      (cap != null ? ", рост учитывается до +" + pct(cap) + " — максимум " + pct(pay(cap)) + " номинала" : ", без потолка"),
+    "• Пример: актив вырос на " + pct(g) + " — выплата " + pct(pay(g)) + " номинала",
+    "• Купонов нет; риск — кредитное качество эмитента",
+  ];
+  const out = {
+    ok: true, text: lines.join("\n"), ticker: c1.ticker, type: "protection", tenor: tenor.expiry, strike: K,
+    log: c1.ticker + " защита " + floor + "% · K " + K + (cap != null ? " · до +" + cap + "%" : "") + " · " + tenor.expiry +
+      ": опцион " + priceNum(opt) + "% (колл " + priceNum(c1.pv) + (c2 ? " − колл " + priceNum(c2.pv) : "") + ")" +
+      ", бюджет " + priceNum(budget) + "% (100 − " + priceNum(PROT_MARGIN_PA * T) + " − защита " + priceNum(bond) + ")" +
+      ", участие " + priceNum(raw, 1) + "% → " + part + "%",
+  };
+  out.pq = await pqSave(env, {
+    v: 1, type: "protection", participation: part / 100, protectionPct: floor, strike: K, cap,
+    name: title, underlying: asset, ticker: c1.ticker, tenor: tenor.label, quote: 100,
+    currency: c1.currency, isBond: c1.isBond, at: Date.now(),
+  });
   return out;
 }
 
@@ -2186,7 +2336,7 @@ function priceFooter(partnerMode) {
 // 2) Страйк деньгами в тексте клиента — его берём сами, а не из разбора модели.
 // 3) Клиент назвал страйк, а модель его не передала — переспрашиваем, а не считаем от 100%.
 const PRICE_TENOR_RE = /\d+(?:[.,]\d+)?\s*-?\s*(?:год|года|лет|г\.|мес|месяц|месяца|месяцев|нед|недел|дн|день|дня|дней|years?|yrs?|months?|mos?|weeks?|wks?|days?)(?![\p{L}])|(?:^|[^\p{L}])(?:a|one|two|three|four|five|six|half\s+a|1\.5)[\s-]+(?:years?|months?)(?![\p{L}])|\d+\s*[ymwd](?![\p{L}])|(?:^|[^\p{L}])(?:полгода|полугод|полтора|год|годик|квартал|месяц)(?![\p{L}])|\d{4}-\d{2}-\d{2}|\d{1,2}\.\d{1,2}\.\d{2,4}|(?:январ|феврал|март|апрел|ма[йя]|июн|июл|август|сентябр|октябр|ноябр|декабр)/iu;
-const PRICE_HEAD_RE = /^\*\*(?:CALL|PUT) [\d,]+ · /m;
+const PRICE_HEAD_RE = /^\*\*(?:(?:CALL|PUT) [\d,]+|Защита капитала) · /m;
 const PRICE_STRIKE_ABS_RE = /страйк\p{L}*[^\d\n]{0,12}(\d[\d\s]*(?:[.,]\d+)?)\s*(?:руб|р\.|₽|\$|долл|usd|rub|юан|¥|евро|€)/iu;
 const PRICE_STRIKE_ANY_RE = /страйк\p{L}*[^\d\n]{0,12}\d/iu;
 // «в деньгах» (ITM) и «вне денег» (OTM) — это НЕ страйк 100: модель путала их с «на деньгах».
@@ -2221,10 +2371,32 @@ function priceGuard(a, messages) {
   return { a };
 }
 
+// Защита капитала — те же проверки, что у CALL/PUT, без страйка деньгами: срок только
+// названный клиентом (или из прошлого расчёта); назвал потолок, а модель его не передала —
+// переспрашиваем, а не считаем без потолка.
+function priceGuardProt(a, messages) {
+  const recent = [];
+  let follow = false;
+  for (let i = messages.length - 1; i >= 0 && recent.length < 4; i--) {
+    const m = messages[i];
+    if (m.role === "assistant" && PRICE_HEAD_RE.test(String(m.content || ""))) { follow = true; break; }
+    if (m.role === "user") recent.push(String(m.content || ""));
+  }
+  const last = recent[0] || "";
+  if (!follow && !recent.some((t) => PRICE_TENOR_RE.test(t))) {
+    return { ask: "На какой срок посчитать защиту капитала" + (a.underlying ? " на " + String(a.underlying).slice(0, 40) : "") +
+      "? Например, 2 года или 3 года." };
+  }
+  if (PROT_CAP_RE.test(last) && (a.cap_pct == null || a.cap_pct === "")) {
+    return { ask: "Уточните потолок роста: до какого роста актива засчитывается участие — например, до +50%?" };
+  }
+  return { a };
+}
+
 async function chatWithPricing(system, messages, env, opts) {
-  const first = await callDeepSeek(system + PRICING_PROMPT, messages, env, { tools: [PRICE_TOOL], raw: true });
+  const first = await callDeepSeek(system + PRICING_PROMPT, messages, env, { tools: [PRICE_TOOL, PROT_TOOL], raw: true });
   const calls = (first.toolCalls || [])
-    .filter((c) => c && c.function && c.function.name === "price_warrant")
+    .filter((c) => c && c.function && (c.function.name === "price_warrant" || c.function.name === "price_protection"))
     .slice(0, PRICE_MAX_CALLS);
   if (!calls.length) return { reply: first.content, priced: [] };
 
@@ -2239,6 +2411,11 @@ async function chatWithPricing(system, messages, env, opts) {
   const outs = await Promise.all(calls.map((c) => {
     let a = {};
     try { a = JSON.parse(c.function.arguments || "{}"); } catch { /* пустые аргументы → честный отказ */ }
+    if (c.function.name === "price_protection") {
+      const gp = priceGuardProt(a, messages);
+      if (gp.ask) return { ok: false, text: gp.ask };
+      return priceProtection(gp.a, env, opts.who || "site-chat", opts.cat);
+    }
     const g = priceGuard(a, messages);
     if (g.ask) return { ok: false, text: g.ask };
     return priceWarrant(g.a, env, opts.who || "site-chat", opts.cat);

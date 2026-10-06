@@ -392,6 +392,7 @@
   const PQ_API = (location.hostname === "invest.rumberg.ru" ? "/api" : "https://so-leads.ruslan-sabirov.workers.dev") + "/pq";
   const clean = (v) => String(v == null ? "" : v).replace(/[<>&"']/g, "").slice(0, 120);
   function pqItem(r) {
+    if (r && r.type === "protection") return pqProt(r);
     if (!r || r.type !== "warrant" || (r.structure !== "call" && r.structure !== "put")) return null;
     const q = Number(r.quote), k = Number(r.strike);
     if (!(q > 0 && q < 100) || !(k >= 20 && k <= 300)) return null;
@@ -412,6 +413,17 @@
     return { id: "chat-" + PQ, type: "warrant", structure: r.structure, name: name,
       underlying: und, currency: clean(r.currency) || "RUB", strike: k, strike2: null,
       spot: 100, tenor: clean(r.tenor), quote: q, minNom: 1000000, chat: true, at: Number(r.at) || 0 };
+  }
+
+  // Защита капитала из чата: участие, защита, страйк и потолок — из записи расчёта, цена — номинал.
+  function pqProt(r) {
+    const part = Number(r.participation), floor = Number(r.protectionPct), k = Number(r.strike);
+    const cap = r.cap == null ? null : Number(r.cap);
+    if (!(part > 0 && part <= 10) || !(floor >= 70 && floor <= 100) || !(k >= 80 && k <= 150)) return null;
+    if (cap != null && !(cap > 0 && cap <= 200)) return null;
+    return { id: "chat-" + PQ, type: "protection", name: clean(r.name), underlying: clean(r.underlying),
+      currency: clean(r.currency) || "RUB", strike: k, spot: 100, participation: part, protectionPct: floor,
+      cap: cap, tenor: clean(r.tenor), quote: 100, minNom: 1000000, chat: true, at: Number(r.at) || 0 };
   }
 
   function boot(CHAT) {
