@@ -632,11 +632,9 @@
        атрибута всё как было. snap — родное прилипание браузера: страницу и её инерцию
        ведёт сам телефон, экран встаёт по началу. Хвост длиннее экрана — внутри него
        прокрутка свободная (так прилипание устроено по стандарту). */
-    html[data-drag="snap"] { scroll-snap-type:y mandatory; }
-    html[data-drag="snap"] .hero, html[data-drag="snap"] #mx-scr > .mx-s, html[data-drag="snap"] .mx-tail { scroll-snap-align:start; }
-    /* Без затемнения при перевороте: filter на весь экран пересчитывается каждый кадр —
-       самая дорогая часть листания. !important перебивает значение из анимации. */
-    html[data-drag] .hero, html[data-drag] #mx-scr > .mx-s, html[data-drag] .mx-tail { filter:none !important; }
+    html[data-drag="snap"], html[data-drag="reels"] { scroll-snap-type:y mandatory; }
+    html[data-drag="snap"] .hero, html[data-drag="snap"] #mx-scr > .mx-s, html[data-drag="snap"] .mx-tail,
+    html[data-drag="reels"] .hero, html[data-drag="reels"] #mx-scr > .mx-s, html[data-drag="reels"] .mx-tail { scroll-snap-align:start; scroll-snap-stop:always; }
     html.mx-pg .wrap { will-change:transform; }
     /* ── Переход между экранами — «листание» (выбор Руслана 06.10.2026 из четырёх,
        сравнивал на превью: «сейчас», «плавно», «поверх», «листание»). Текущий экран
@@ -666,8 +664,22 @@
           animation-range:entry 0% entry 100%, exit 0% exit 100%; }
         /* хвост длиннее экрана: перелистываться ему некуда — только ждёт под последним */
         html[data-turn="flip"] .mx-tail { animation:mx-flip-in linear backwards; animation-timeline:view(block 57px 0px); animation-range:entry 0% entry 100%; }
+        /* Режимы превью: те же движения, но БЕЗ затемнения — анимируется только
+           transform, который браузер целиком отдаёт видеокарте. Перебивать filter через
+           !important нельзя: анимацию с перебитым свойством браузер с видеокарты снимает. */
+        html[data-drag] .hero, html[data-drag] #mx-scr > .mx-s { animation-name:mx-flip-in2, mx-flip-out2; }
+        html[data-drag] .mx-tail { animation-name:mx-flip-in2; }
+        /* reels — без эффекта вовсе: экраны просто едут, как лента Reels */
+        html[data-drag="reels"] .hero, html[data-drag="reels"] #mx-scr > .mx-s, html[data-drag="reels"] .mx-tail { animation:none; }
       }
     }
+    @keyframes mx-flip-out2 {
+      0%   { transform:translateY(0)    perspective(2400px) rotateX(0deg); }
+      25%  { transform:translateY(25%)  perspective(2400px) rotateX(56deg); }
+      50%  { transform:translateY(50%)  perspective(2400px) rotateX(69deg); }
+      75%  { transform:translateY(75%)  perspective(2400px) rotateX(80deg); }
+      100% { transform:translateY(100%) perspective(2400px) rotateX(90deg); } }
+    @keyframes mx-flip-in2 { from { transform:translateY(calc(57px - 100svh)); } to { transform:none; } }
     /* Угол подобран так, чтобы нижний край страницы с перспективой шёл за пальцем:
        четверть пути — 56°, половина — 69°, три четверти — 80° */
     @keyframes mx-flip-out {
@@ -2017,7 +2029,10 @@
       // Конца у ключевых кадров нет — это «как сейчас велит прокрутка»: экран
       // доезжает от снятого вида к своему, без рывка в конец листания
       over = els.map(function (el, i) {
-        return el.animate([{ offset: 0, opacity: was[i].opacity, transform: was[i].transform, filter: was[i].filter }], { duration: dur, easing: ease });
+        var kf = { offset: 0, transform: was[i].transform };
+        if (was[i].opacity !== "1") kf.opacity = was[i].opacity;
+        if (was[i].filter !== "none") kf.filter = was[i].filter;
+        return el.animate([kf], { duration: dur, easing: ease });
       });
     }
     // Касание внутри шапки, меню, панели чата, любого прокручиваемого блока — не наше
@@ -2165,8 +2180,12 @@
     if (list.length >= 2) {
       var pad = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 57;
       var dots = track(list, pad);
-      // snap (превью): страницу ведёт родное прилипание браузера, своё листание не нужно
-      if (document.documentElement.getAttribute("data-drag") !== "snap") paging(list, pad, dots);
+      // snap/reels (превью): страницу ведёт родное прилипание браузера, своё листание не
+      // нужно; для листания нужен только порядок слоёв — следующий экран ждёт под текущим
+      var dm = document.documentElement.getAttribute("data-drag");
+      if (dm === "snap" || dm === "reels")
+        list.forEach(function (el, i) { el.style.position = "relative"; el.style.zIndex = list.length - i + 1; });
+      else paging(list, pad, dots);
     }
 
     var nav = document.querySelector(".nav"), wrap = document.querySelector(".wrap");
