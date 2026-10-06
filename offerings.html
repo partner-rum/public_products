@@ -76,7 +76,9 @@
   .item .r1 { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
   .item .nm { font-size: 14px; font-weight: 600; line-height: 1.25; }
   .item .pr { font-family: var(--f-mono); font-size: 13px; color: var(--fc); white-space: nowrap; }
-  .item .r2 { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-top: 5px; }
+  /* Подпись актива длинная («Корзина из 4 акций …»), и рядом со статусом она
+     ломалась в четыре строки — статус встаёт отдельной строкой под ней. */
+  .item .r2 { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; margin-top: 5px; }
   .item .sub { font-size: 12px; color: var(--hushed); }
   .item .st { font-family: var(--f-mono); font-size: 11px; color: var(--faint); white-space: nowrap; display: inline-flex; align-items: center; gap: 5px; }
   .item .st .dot { width: 7px; height: 7px; border-radius: 50%; }
@@ -242,6 +244,13 @@
      горизонтальный скролл на ширину полосы прокрутки.  */
   .panel.landing { padding: 0; border: none; background: transparent; }
   .layout.solo.lnd { margin-top: 12px; }
+  /* Выпусков больше одного — на телефоне лендинг открывается поверх списка.
+     Прозрачная панель пропускала сквозь себя шапку и подвал страницы, поэтому
+     у оверлея свой фон; «К списку» прилипает к верху — страница длинная. */
+  @media (max-width: 920px) {
+    .panel.landing.open { background: var(--canvas); padding: 10px 16px 112px; }
+    .panel.landing.open .panel-close { position: sticky; top: 10px; z-index: 6; background: rgba(11,12,16,0.82); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+  }
   .lnd-head h1 { font-size: 19px; color: var(--hushed); font-weight: 400; }
   .lnd-head .intro { display: none; }
 
@@ -286,6 +295,49 @@
   .lh-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; margin: 28px 0 0; }
   .lh-cta .ct-btn { min-height: 44px; }
   .lh-cta .o-doc-btn { background: rgba(11,12,16,0.55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); min-height: 44px; }
+
+  /* Широкий герой (hero.wide): у выпуска нет ролика, но есть горизонтальная
+     иллюстрация с пустым полем слева под текст — она идёт во весь кадр без
+     размытия, а текст стоит на её тёмной половине. Медленный наезд снимается
+     при prefers-reduced-motion. На телефоне картинка — полоса над текстом:
+     во весь фон она легла бы прямо под строки. */
+  .lh.wide { min-height: 470px; display: flex; align-items: center; }
+  .lh.wide .lh-bg img { transform: none; filter: none; opacity: 1; object-position: 100% 34%; transform-origin: 100% 30%; animation: lh-drift 26s cubic-bezier(.2,.6,.3,1) both; }
+  @keyframes lh-drift { from { transform: scale(1.07); } to { transform: scale(1); } }
+  .lh.wide .lh-scrim { background:
+      linear-gradient(to right, rgba(7,8,11,0.9) 0%, rgba(7,8,11,0.66) 36%, rgba(7,8,11,0.12) 66%, rgba(7,8,11,0) 100%),
+      linear-gradient(to top, rgba(7,8,11,0.7) 0%, rgba(7,8,11,0) 34%); }
+  .lh.wide .lh-grid { width: 100%; grid-template-columns: minmax(0, 620px); padding: 48px 42px; }
+  .lh.wide .lh-name { font-size: 62px; }
+  .lh-stat { margin-bottom: 20px; }
+  .lh-stat .badge.live { background: rgba(11,12,16,0.62); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); border: 1px solid rgba(238,125,27,0.5); }
+  .lh-stat .badge.live .dot { background: var(--solar); box-shadow: 0 0 0 0 rgba(238,125,27,0.6); animation: lh-ping 2.4s ease-out 3; }
+  @keyframes lh-ping { 0% { box-shadow: 0 0 0 0 rgba(238,125,27,0.6); } 70%, 100% { box-shadow: 0 0 0 9px rgba(238,125,27,0); } }
+  @media (prefers-reduced-motion: reduce) {
+    .lh.wide .lh-bg img, .lh-stat .badge.live .dot { animation: none; }
+  }
+
+  /* Полоса состава корзины (basketStrip): веса НЕравные, и это главное про
+     корзину — ширина отрезка равна весу, цвет — технологический подход.
+     На телефоне подписи под узкими отрезками не помещаются, поэтому там
+     полоса без подписей и список строками. */
+  .bstrip { margin-top: 30px; }
+  .bs-row { display: flex; gap: 5px; }
+  .bs-c { min-width: 0; }
+  .bs-c i { display: block; height: 10px; border-radius: 3px; background: var(--c); box-shadow: 0 0 22px -2px var(--c); transform-origin: 0 50%; }
+  .bstrip.anim .bs-c i { transform: scaleX(0); transition: transform .9s cubic-bezier(.2,.7,.2,1); }
+  .bstrip.anim.in .bs-c i { transform: none; }
+  .bstrip.anim.in .bs-c:nth-child(2) i { transition-delay: .08s; }
+  .bstrip.anim.in .bs-c:nth-child(3) i { transition-delay: .16s; }
+  .bstrip.anim.in .bs-c:nth-child(4) i { transition-delay: .24s; }
+  .bs-w { display: block; margin-top: 13px; font-family: var(--f-mono); font-size: 26px; font-weight: 500; letter-spacing: -0.02em; line-height: 1; color: var(--ink); }
+  .bs-n { display: block; margin-top: 7px; font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .bs-list { display: none; }
+  .bs-leg { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border-soft); font-size: 12.5px; color: var(--hushed); }
+  .bs-leg span { display: inline-flex; align-items: center; gap: 7px; }
+  .bs-leg i, .bs-list i, .btbl .bsec i { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
+  .bs-leg b { font-family: var(--f-mono); font-weight: 500; color: var(--ink); }
+  .btbl .bsec i { display: inline-block; margin-right: 8px; vertical-align: 1px; }
 
   /* ── Разделы ───────────────────────────────────────────────────────────── */
   .ls { margin-top: 44px; }
@@ -417,6 +469,12 @@
   @media (max-width: 1023px) {
     .lh-grid { grid-template-columns: minmax(0, 1fr) 250px; gap: 24px; padding: 26px; }
     .lh-name { font-size: 42px; }
+    .lh.wide { min-height: 420px; }
+    .lh.wide .lh-grid { grid-template-columns: minmax(0, 560px); padding: 36px 30px; }
+    .lh.wide .lh-name { font-size: 48px; }
+    .lh.wide .lh-scrim { background:
+      linear-gradient(to right, rgba(7,8,11,0.92) 0%, rgba(7,8,11,0.74) 46%, rgba(7,8,11,0.2) 78%, rgba(7,8,11,0.05) 100%),
+      linear-gradient(to top, rgba(7,8,11,0.7) 0%, rgba(7,8,11,0) 34%); }
     .why, .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 28px; }
     .wh + .wh { border-left: none; padding-left: 0; margin-left: 0; }
     .spec { grid-template-columns: 186px minmax(0, 1fr); }
@@ -439,6 +497,23 @@
     .fd-h { order: 2; }
     .lh-name { font-size: 32px; }
     .lh-lead { font-size: 16px; }
+    /* Широкий герой на телефоне: картинка — полоса сверху, кадр приближен к
+       правому краю, где стоит сам квантовый компьютер; текст ниже на тёмном. */
+    .lh.wide { display: block; min-height: 0; }
+    .lh.wide .lh-bg { position: relative; height: 230px; }
+    .lh.wide .lh-bg img { object-position: 100% 0; transform-origin: 100% 0; transform: scale(1.75); animation: none; }
+    .lh.wide .lh-scrim { bottom: auto; height: 230px; background: linear-gradient(to bottom, rgba(7,8,11,0) 45%, #07080B 100%), linear-gradient(to right, rgba(7,8,11,0.55), rgba(7,8,11,0) 60%); }
+    .lh.wide .lh-grid { padding: 0 16px 22px; margin-top: -54px; }
+    .lh.wide .lh-name { font-size: 36px; }
+    .bs-row { gap: 3px; }
+    .bs-c .bs-w, .bs-c .bs-n { display: none; }
+    .bs-list { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; margin: 16px 0 0; padding: 0; list-style: none; }
+    .bs-list li { display: grid; grid-template-columns: 8px minmax(0, 1fr); column-gap: 9px; align-items: baseline; align-content: start; }
+    .bs-list i { align-self: center; }
+    .bs-list b { font-family: var(--f-mono); font-size: 20px; font-weight: 500; }
+    .bs-list .n { grid-column: 2; font-size: 14px; font-weight: 600; }
+    .bs-list .s { grid-column: 2; font-size: 12px; color: var(--hushed); }
+    .bs-leg { display: none; }
     .lh-cta .o-doc-btn { font-size: 12.5px; padding: 8px 10px; }
     .ls { margin-top: 32px; }
     .ls-h { font-size: 22px; }
@@ -493,7 +568,7 @@
   <div class="layout">
     <aside class="aside">
       <div class="filters" id="filters"></div>
-      <div class="list" id="list"><!-- seo:start --><div class="seo-pre"><p>Выпуски Rumberg на размещении: параметры, документы и порядок подачи заявок.</p><h2>На размещении</h2><ul><li>Космические технологии, Биржевая структурная облигация · колл-спред 100–200%, базовый актив — Корзина из 3 акций космической отрасли (в USD), срок 3 года, ISIN RU000A10B9Y3, Приём заявок до 08.10.2026.</li></ul></div><!-- seo:end --></div>
+      <div class="list" id="list"><!-- seo:start --><div class="seo-pre"><p>Выпуски Rumberg на размещении: параметры, документы и порядок подачи заявок.</p><h2>На размещении</h2><ul><li>Квантовый скачок, Биржевая структурная облигация · колл-спред 100–200%, базовый актив — Корзина из 4 акций квантовых компаний (в USD), срок 3 года, ISIN RU000A10BZ51, Приём заявок до 16.10.2026.</li><li>Космические технологии, Биржевая структурная облигация · колл-спред 100–200%, базовый актив — Корзина из 3 акций космической отрасли (в USD), срок 3 года, ISIN RU000A10B9Y3, Приём заявок до 08.10.2026.</li></ul></div><!-- seo:end --></div>
     </aside>
     <div class="panel" id="panel"><button class="panel-close" id="close">← К списку</button><div id="panel-body"></div></div>
   </div>
@@ -511,7 +586,7 @@
   </div>
 </footer>
 
-<script src="data/offerings.js?v=srv22"></script>
+<script src="data/offerings.js?v=srv23"></script>
 <script src="data/harden.js?v=1"></script>
 <script src="share.js?v=8"></script>
 <script src="contact.js?v=10"></script>
@@ -966,6 +1041,43 @@
       '<div class="sr' + (r[3] ? ' ' + r[3] : '') + '"><dt>' + r[0] + '</dt>' +
       '<dd' + (r[2] ? ' class="' + r[2] + '"' : '') + '>' + r[1] + '</dd></div>').join("") + '</dl>';
   }
+  // Вес бумаги в данных — строка («40», «33,3»).
+  function wNum(w) { var v = Number(String(w == null ? "" : w).replace(",", ".")); return isFinite(v) ? v : 0; }
+  // Цвет направления (o.sectors[].c) по его названию у бумаги корзины.
+  function sectorCol(o, name) {
+    var s = (o.sectors || []).find(x => x.name === name);
+    return s && /^#[0-9a-f]{3,8}$/i.test(String(s.c || "")) ? s.c : "";
+  }
+  // Полоса состава корзины (o.basketStrip): отрезок на бумагу шириной в её вес,
+  // цвет — направление. Включается флагом, чтобы не менять вид выпусков, где
+  // веса равные и полоса ничего не сообщает.
+  function basketStrip(o) {
+    if (!o.basketStrip || !o.basket || !o.basket.length) return "";
+    var col = b => sectorCol(o, b.sector) || "rgba(242,243,247,0.5)";
+    var alt = "Состав корзины: " + o.basket.map(b => b.name + " " + b.w + "%").join(", ");
+    var cells = o.basket.map(b => '<div class="bs-c" style="flex:' + wNum(b.w) + ' 1 0;--c:' + col(b) + '"><i></i>' +
+      '<span class="bs-w">' + esc(b.w) + '%</span><span class="bs-n">' + esc(b.name) + '</span>' +
+      '</div>').join("");
+    var list = '<ul class="bs-list">' + o.basket.map(b => '<li style="--c:' + col(b) + '"><i></i><b>' + esc(b.w) + '%</b>' +
+      '<span class="n">' + esc(b.name) + '</span>' + (b.sector ? '<span class="s">' + esc(b.sector) + '</span>' : '') + '</li>').join("") + '</ul>';
+    var leg = (o.sectors || []).filter(s => sectorCol(o, s.name)).map(s =>
+      '<span style="--c:' + s.c + '"><i></i>' + esc(s.name) + (s.w != null ? ' <b>' + esc(s.w) + '%</b>' : '') + '</span>').join("");
+    return '<div class="bstrip anim" id="bstrip"><div class="ls-k">Состав корзины</div>' +
+      '<div class="bs-row" role="img" aria-label="' + esc(alt) + '">' + cells + '</div>' + list +
+      (leg ? '<div class="bs-leg">' + leg + '</div>' : '') + '</div>';
+  }
+  // Отрезки полосы вырастают, когда она попадает в кадр. Без IntersectionObserver
+  // и при reduced-motion — сразу в конечном виде.
+  function stripWire() {
+    var el = document.getElementById("bstrip");
+    if (!el) return;
+    var calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (calm || !("IntersectionObserver" in window)) { el.classList.remove("anim"); return; }
+    var io = new IntersectionObserver(function (es) {
+      es.forEach(function (e) { if (e.isIntersecting) { el.classList.add("in"); io.disconnect(); } });
+    }, { threshold: 0.4 });
+    io.observe(el);
+  }
   // Свёрнутый раздел деталей: строка-заголовок с подсказкой, содержимое за тапом.
   function fold(title, hint, inner) {
     return '<details class="fd"><summary><span class="fd-t">' + esc(title) + '</span>' +
@@ -995,10 +1107,15 @@
         '</div>'
       : (o.hero && o.hero.poster
           ? '<div class="lh-media still">' + lhBadge + '<img src="' + esc(o.hero.poster) + '" alt="" aria-hidden="true"></div>' : '');
-    var hero = '<section class="lh">' +
+    // Широкий герой: ролика нет, а иллюстрация горизонтальная — она идёт во весь
+    // кадр, рамки 9:16 справа нет, и бейдж приёма заявок встаёт над названием.
+    var wide = !o.video && !!(o.hero && o.hero.poster && o.hero.wide);
+    if (wide) media = '';
+    var hero = '<section class="lh' + (wide ? ' wide' : '') + '">' +
       (o.hero && o.hero.poster ? '<div class="lh-bg"><img src="' + esc(o.hero.poster) + '" alt="" aria-hidden="true"></div>' : '') +
       '<div class="lh-scrim"></div>' +
       '<div class="lh-grid"><div class="lh-in">' +
+        (wide ? '<div class="lh-stat"><span class="badge live"><span class="dot"></span>' + (esc(o.statusLabel) || "Идёт размещение") + '</span></div>' : '') +
         '<div class="lh-kick">' + esc(o.kind) +
           (o.partner ? '<span class="sep">·</span><span>' + esc(o.partner.note || "совместно с") + ' ' +
             (o.partner.url ? '<a href="' + esc(o.partner.url) + '" target="_blank" rel="noopener">' + esc(o.partner.name) + ' ↗</a>' : esc(o.partner.name)) + '</span>' : '') +
@@ -1013,18 +1130,18 @@
     var whySec = (o.why && o.why.length)
       ? sec("Зачем", "", '<div class="why">' + o.why.map(w =>
           '<div class="wh"><div class="n">' + esc(w.n) + '</div><div class="t">' + esc(w.t) + '</div><div class="d">' + esc(w.d) + '</div></div>').join("") +
-          '</div>' + (o.whySrc ? '<p class="src">' + esc(o.whySrc) + '</p>' : ''))
+          '</div>' + basketStrip(o) + (o.whySrc ? '<p class="src">' + esc(o.whySrc) + '</p>' : ''))
       : "";
 
     // ── УСЛОВИЯ: шесть фактов крупно. Шестой — про ноль, и он стоит в одном ряду
     //    с остальными, а не сноской.
     var facts = [
-      [ fmt2(price) + '%', 'цена входа', 'от номинала: ' + RUB(inv) + ' ₽ за бумагу', 'hi' ],
+      [ fmt2(price) + '%', 'цена входа', 'от номинала: ' + RUB(inv) + ' ₽ за бумагу', 'hi' ],
       [ fmt2(cap) + '%', 'потолок выплаты', 'от номинала: до ' + fmt2(Math.round((100 + capMax) / 10) / 10) + '× на вложенное*', 'hi' ],
       [ tenorTxt(o.tenor), 'срок', 'погашение ' + esc(o.maturity) ],
       [ esc(o.placement || ""), (o.placementLabel || 'приём заявок'), esc(o.venue || "") + (o.minBuy ? ', ' + esc(o.minBuy) : '') ],
       [ esc(o.isin || ""), 'ISIN', 'у любого брокера — по этому коду' ],
-      [ '0 ₽', 'если корзина не выросла', 'выплаты нет, вложенные ' + RUB(inv) + ' ₽ теряются', 'loss' ],
+      [ '0 ₽', 'если корзина не выросла', 'выплаты нет, вложенные ' + RUB(inv) + ' ₽ теряются', 'loss' ],
     ];
     var termsSec = sec("Условия", "",
       '<div class="facts">' + facts.map(f => '<div class="fc' + (f[3] ? ' ' + f[3] : '') + '"><div class="v">' + f[0] + '</div>' +
@@ -1054,19 +1171,24 @@
       var rows = o.basket.map(b => '<tr>' +
         '<th scope="row" class="bnm">' + esc(b.name) + (b.full ? '<span class="bfull">' + esc(b.full) + '</span>' : '') + '</th>' +
         '<td class="btk">' + (b.quote ? '<a href="' + esc(b.quote) + '" target="_blank" rel="noopener">' + esc(b.ticker) + ' ↗</a>' : esc(b.ticker)) + '</td>' +
-        '<td class="bsec">' + esc(b.sector || "") + '</td>' +
-        '<td class="bw">' + b.w + '%</td></tr>').join("");
+        '<td class="bsec">' + (sectorCol(o, b.sector) ? '<i style="--c:' + sectorCol(o, b.sector) + '"></i>' : '') + esc(b.sector || "") + '</td>' +
+        '<td class="bw">' + esc(b.w) + '%</td></tr>').join("");
+      // Подпись о весах — из данных: «равные веса» стояли текстом и у корзины
+      // 40/30/20/10 сообщали бы неправду.
+      var ws = o.basket.map(b => wNum(b.w)), eq = ws.every(v => Math.abs(v - ws[0]) < 0.5);
       basketFold = fold("Состав корзины", o.basket.map(b => b.name).join(", "),
         '<table class="btbl"><thead><tr><th scope="col">Компания</th><th scope="col">Тикер</th>' +
         '<th scope="col">Направление</th><th scope="col">Вес</th></tr></thead><tbody>' + rows + '</tbody></table>' +
-        '<p class="src">Уровень корзины — среднее изменение акций корзины с равными весами; веса зафиксированы в условиях выпуска. ' +
+        '<p class="src">' + (eq
+          ? 'Уровень корзины — среднее изменение акций корзины с равными весами; веса зафиксированы в условиях выпуска. '
+          : 'Уровень корзины — взвешенное среднее изменение акций: каждая входит со своим весом из таблицы, веса зафиксированы в условиях выпуска. ') +
         'Тикеры и биржи — из ключевых условий выпуска, направления — из презентации ' + (o.partner ? esc(o.partner.name) : "партнёра") + '.</p>');
     }
 
     var allTerms = spec([
       [ "Инструмент", esc(o.kind) ],
       [ "Базовый актив", esc(o.reference) ],
-      [ "Цена размещения", fmt2(price) + '% номинала — ' + RUB(inv) + ' ₽ за бумагу' ],
+      [ "Цена размещения", fmt2(price) + '% номинала — ' + RUB(inv) + ' ₽ за бумагу' ],
       [ "Номинал", RUB(o.nominal) + " " + esc(o.currency) ],
       [ "Максимальная выплата", fmt2(cap) + '% номинала' ],
       [ "Срок", tenorTxt(o.tenor) ],
@@ -1148,7 +1270,7 @@
     if (ctHost3 && window.Contact) {
       Contact.attach(ctHost3, { title: o.name, url: location.origin + "/offerings#" + o.id, id: o.id, label: "Обсудить выпуск" });
     }
-    if (lnd) { csMount(o); heroWire(o); }
+    if (lnd) { csMount(o); heroWire(o); stripWire(); }
     document.querySelectorAll(".item").forEach(el => { var on = el.getAttribute("data-id") === id; el.classList.toggle("active", on); if (on) el.setAttribute("aria-current", "true"); else el.removeAttribute("aria-current"); });
     history.replaceState(null, "", "#" + id);
     if (fromUser && window.matchMedia("(max-width: 920px)").matches) panel.classList.add("open");
