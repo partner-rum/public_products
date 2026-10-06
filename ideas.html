@@ -86,6 +86,9 @@
   .ev:hover { border-color:rgba(255,255,255,.24); color:var(--ink) }
   .ev b { color:var(--ink); font-weight:600 }
   .ev .dot { width:7px; height:7px; border-radius:50%; background:var(--up); flex:none }
+  /* текст — одним элементом: в inline-flex «Тема вебинара», дата и название
+     вставали тремя колонками и на телефоне сжимались до 2–3 слов в строке */
+  .ev > span:last-child { min-width:0; line-height:1.45 }
   .lchips { display:flex; flex-wrap:wrap; gap:10px; margin-top:26px }
   .lchip { display:inline-flex; align-items:center; gap:9px; padding:8px 15px;
     border:1px solid var(--border); border-radius:999px; background:var(--card);
@@ -1299,8 +1302,8 @@
       return '<div class="fact"><div class="v">' + esc(f.v) + '</div><div class="k">' + esc(f.k) + '</div></div>';
     }).join("");
     var ev = iss.eventId
-      ? '<a class="ev" href="events.html#' + esc(iss.eventId) + '"><span class="dot"></span>' +
-        'Тема вебинара <b>' + humanShort(iss.eventDate) + '</b> — ' + esc(iss.eventTitle) + ' &nbsp;→</a>'
+      ? '<a class="ev" href="events.html#' + esc(iss.eventId) + '"><span class="dot"></span><span>' +
+        'Тема вебинара <b>' + humanShort(iss.eventDate) + '</b> — ' + esc(iss.eventTitle) + ' &nbsp;→</span></a>'
       : "";
     // Раздел cta с флагом top дублируется в шапку: срок и кнопка — на первом
     // экране, а в конце страницы блок остаётся для дочитавших
@@ -1399,9 +1402,9 @@
         : "";
 
       var ev = iss.eventId
-        ? '<a class="ev" href="events.html#' + esc(iss.eventId) + '"><span class="dot"></span>' +
+        ? '<a class="ev" href="events.html#' + esc(iss.eventId) + '"><span class="dot"></span><span>' +
           'Тема вебинара <b>' + humanShort(iss.eventDate) + '</b> — ' + esc(iss.eventTitle) +
-          ' &nbsp;→</a>'
+          ' &nbsp;→</span></a>'
         : "";
 
       box.innerHTML =

@@ -224,7 +224,8 @@
     details.more summary { min-height: 44px; }
     .panel { display: none; }
     .panel.open { display: block; position: fixed; inset: 0; z-index: 40; border-radius: 0; overflow-y: auto; }
-    .panel-close { display: inline-flex; align-items: center; gap: 7px; margin-bottom: 14px; background: none; border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font-family: var(--f-body); font-size: 13px; cursor: pointer; }
+    /* color обязателен: <button> не наследует цвет, и надпись была системной тёмной по тёмному */
+    .panel-close { display: inline-flex; align-items: center; gap: 7px; margin-bottom: 14px; background: none; border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font-family: var(--f-body); font-size: 13px; cursor: pointer; color: var(--ink); }
   }
   @media (max-width: 860px) {
     .nav-in { height: auto; flex-wrap: wrap; padding: 12px 20px; row-gap: 10px; }

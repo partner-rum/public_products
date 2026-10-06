@@ -278,7 +278,8 @@
        давал паразитный горизонтальный скролл от закрытых absolute-попапов на 320px).
        На мобиле вертикально скроллит .panel-wrap. */
     .panel { max-height: none; overflow: visible; }
-    .panel-close { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 12px; border: 1px solid var(--border); background: var(--card); border-radius: 6px; padding: 8px 14px; font-family: var(--f-body); font-size: 13.5px; cursor: pointer; }
+    /* color обязателен: <button> не наследует цвет, и надпись была системной тёмной по тёмному */
+    .panel-close { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 12px; border: 1px solid var(--border); background: var(--card); border-radius: 6px; padding: 8px 14px; font-family: var(--f-body); font-size: 13.5px; cursor: pointer; color: var(--ink); }
     .metrics { grid-template-columns: repeat(2, 1fr); }
     .scenario { grid-template-columns: 1fr; gap: 3px; }
     .scenario .r { text-align: left; }

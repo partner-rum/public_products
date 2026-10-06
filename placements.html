@@ -169,7 +169,8 @@
     /* .panel не свой скролл-контекст: overflow-y:auto давал overflow-x:auto и
        паразитный горизонтальный скролл от закрытых absolute-попапов. */
     .panel { max-height: none; overflow: visible; }
-    .panel-close { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 12px; border: 1px solid var(--border); background: var(--card); border-radius: 6px; padding: 8px 14px; font-family: var(--f-body); font-size: 13.5px; cursor: pointer; }
+    /* color обязателен: <button> не наследует цвет, и надпись была системной тёмной по тёмному */
+    .panel-close { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 12px; border: 1px solid var(--border); background: var(--card); border-radius: 6px; padding: 8px 14px; font-family: var(--f-body); font-size: 13.5px; cursor: pointer; color: var(--ink); }
   }
   @media (max-width: 860px) {
     .nav-in { height: auto; flex-wrap: wrap; padding: 12px 20px; row-gap: 10px; }

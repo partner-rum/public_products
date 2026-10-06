@@ -1235,6 +1235,7 @@
     animate(pf.parentNode);
   }
 
+  function PHONE() { return window.matchMedia("(max-width: 900px)").matches; }
   function select(id, fromUser) {
     if (ORDER.indexOf(id) < 0) id = ORDER[0];
     current = id;
@@ -1262,7 +1263,10 @@
       // Скринридеру: содержимое статьи сменилось (фокус остаётся на нажатой кнопке)
       document.getElementById("announce").textContent = "Раздел: " + nameOf(id);
       var top = document.getElementById("content").getBoundingClientRect().top + window.scrollY - 78;
-      if (window.scrollY > top) window.scrollTo({ top: top, behavior: REDUCED ? "auto" : "smooth" });
+      // На телефоне статья стоит ПОД оглавлением: тап по пункту менял текст
+      // ниже экрана, и казалось, что ничего не произошло, — едем к самой статье
+      if (PHONE()) top = art.getBoundingClientRect().top + window.scrollY - 70;
+      if (window.scrollY > top || PHONE()) window.scrollTo({ top: top, behavior: REDUCED ? "auto" : "smooth" });
     }
   }
 
@@ -1283,6 +1287,16 @@
 
   var hash = decodeURIComponent(location.hash.slice(1));
   select(ORDER.indexOf(hash) >= 0 ? hash : "bond", false);
+  // Ссылка на статью (about.html#discount) на телефоне открывалась вводным
+  // текстом и оглавлением на два экрана — сразу показываем саму статью.
+  // Дважды: после шрифтов высота оглавления над статьёй меняется
+  if (ORDER.indexOf(hash) >= 0 && PHONE()) {
+    var toArt = function () {
+      window.scrollTo(0, art.getBoundingClientRect().top + window.scrollY - 70);
+    };
+    toArt();
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(toArt);
+  }
 
   var u = (window.SITE_DATA || {}).updated;
   if (u) document.getElementById("updated").textContent = u.split("-").reverse().join(".");
