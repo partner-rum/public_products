@@ -229,7 +229,42 @@
     var s = document.createElement("style");
     s.id = "sf-css";
     s.textContent = [
-      ".sf{position:relative;flex:1 1 220px;max-width:340px;min-width:0;margin-left:14px;}",
+      // Поле свёрнуто в кнопку-лупу на ВСЕХ ширинах и раскрывается по нажатию
+      // (или по «/»). Повод — 06.10.2026: поле стояло в одном ряду с логотипом,
+      // пилюлей «Сотрудничество» и шестью пунктами меню и на 1024–1440px
+      // сжималось до «Прод» или до нуля, а соседние пункты наезжали на его рамку.
+      // На десктопе раскрытое поле ложится поверх правой части шапки, на
+      // телефоне — второй строкой под ней.
+      ".sf{display:none;position:relative;min-width:0;}",
+      ".nav-in.sf-open .sf{display:block;}",
+      ".sf-btn{flex:none;display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;",
+      "  box-sizing:border-box;padding:0;border-radius:9px;border:1px solid rgba(255,255,255,.13);",
+      "  background:rgba(255,255,255,.05);color:#F2F3F7;cursor:pointer;transition:border-color .18s,background .18s;}",
+      ".sf-btn:hover{border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.08);}",
+      ".sf-btn svg{display:block;}",
+      ".nav-in.sf-open .sf-btn{border-color:rgba(238,125,27,.55);}",
+      // Пункты меню — всегда в одну строку: «Лучшие ставки» в две ломало высоту шапки
+      ".nav-in .topnav a{white-space:nowrap;}",
+      // Первая ступень ужатия — без подписи; дальше fit() теснит меню
+      // инлайн-стилями от собственных отступов страницы
+      ".nav-in.nf1 .brand-tag{display:none!important;}",
+      // Главная и ресёрч: кнопки справа в одну строку; при нехватке места
+      // сначала остаётся иконка у «Личного кабинета», потом у Telegram
+      ".nav-in .nav-cta a{white-space:nowrap;}",
+      ".nav-in.nf2 .nav-cta .gh-lbl,.nav-in.nf3 .nav-cta .tg-lbl{display:none;}",
+      ".nav-in .nav-cta .btn-solar{white-space:nowrap;}",
+      "@media (min-width:901px){",
+      "  .nav-in{position:relative;}",
+      "  .nav-in.sf-open .sf{position:absolute;top:50%;transform:translateY(-50%);right:var(--sf-r,44px);",
+      "    width:min(520px,calc(100% - 2*var(--sf-r,44px)));z-index:60;}",
+      "  .nav-in.sf-open .sf-in{background:#14161C;box-shadow:0 0 0 6px #0B0C10,0 10px 30px rgba(0,0,0,.5);}",
+      "}",
+      // Главная на 861–900px ещё рисует десктопный ряд — поле поверх, как на десктопе
+      "@media (min-width:861px) and (max-width:900px){",
+      "  .nav-in.sf-ext{position:relative;}",
+      "  .nav-in.sf-ext.sf-open .sf{position:absolute;top:50%;transform:translateY(-50%);right:var(--sf-r,20px);",
+      "    width:min(520px,calc(100% - 2*var(--sf-r,20px)));z-index:60;flex:none;}",
+      "}",
       ".sf-in{width:100%;height:36px;box-sizing:border-box;background:rgba(255,255,255,.05);",
       "  border:1px solid rgba(255,255,255,.13);border-radius:9px;color:#F2F3F7;",
       "  font-family:'Onest',system-ui,sans-serif;font-size:13.5px;padding:0 12px 0 34px;",
@@ -272,12 +307,23 @@
       // Тач-цель ≥44px и панель во всю ширину экрана: на телефоне выпадашка
       // шириной с поле (220px) была бы нечитаемой, а имена продуктов длинные
       "@media (max-width:900px){",
-      // Шапке нужен перенос, иначе поле делит строку с логотипом и кнопкой
-      // «Доска» и получает 99px из 375 — замер на iPhone-ширине. Часть страниц
-      // (доска, библиотека) переносит шапку сама с 860px; здесь поднимаем порог
-      // до 900 и снимаем фиксированную высоту, иначе вторая строка вылезает
-      "  .nav-in{flex-wrap:wrap!important;height:auto!important;padding-top:10px;padding-bottom:10px;}",
-      "  .sf{order:9;flex:1 1 100%;max-width:none;margin:8px 0 0;}",
+      // Телефон: шапка в одну строку 57px, как на главной, — звезда и имя
+      // слева, лупа и меню справа. Было 118–165px в три ряда (логотип; меню
+      // с «Доской»; поле поиска) — пятая часть экрана. «Доска» живёт в меню.
+      // Главная (.sf-ext) строит свою мобильную шапку сама — её не трогаем.
+      "  .nav-in:not(.sf-ext){flex-wrap:nowrap!important;height:57px!important;min-height:57px;",
+      "    padding-top:0!important;padding-bottom:0!important;row-gap:0!important;}",
+      "  .nav-in:not(.sf-ext) .topnav{margin-left:auto!important;width:auto!important;gap:2px!important;}",
+      "  .nav-in:not(.sf-ext) .topnav .btn-solar{display:none!important;}",
+      "  .nav-in:not(.sf-ext) .nav-cta{margin-left:auto;}",
+      "  .nav-in:not(.sf-ext) .sf-btn,.nav-in:not(.sf-ext) .nav-burger{width:44px;height:44px;border:0;background:transparent;}",
+      "  .nav-in .sf-btn svg{width:20px;height:20px;}",
+      "  .nav-in .sf-btn{order:1;}.nav-in .nav-burger{order:2;}",
+      "  .nav-in.sf-open:not(.sf-ext){flex-wrap:wrap!important;height:auto!important;padding-bottom:10px!important;}",
+      "  .nav-in.sf-open .sf{order:9;flex:1 1 100%;max-width:none;margin:0;}",
+      // Главная: прежнее поведение — свои кнопки .mx-btns раскрывают поле второй строкой
+      "  .nav-in.sf-ext{flex-wrap:wrap!important;height:auto!important;padding-top:10px;padding-bottom:10px;}",
+      "  .nav-in.sf-ext .sf{order:9;flex:1 1 100%;max-width:none;margin:8px 0 0;}",
       "  .sf-in{height:44px;font-size:15px;}",     // 16px не ставим: iOS зумит поле, но 15 уже не зумит на нашей вёрстке
       "  .sf-panel{min-width:0;}",
       "  .sf-copy{padding:11px 12px;}",
@@ -304,12 +350,28 @@
         'placeholder="Продукт, тикер, ISIN…">' +
       '<div class="sf-panel" id="sf-panel" role="listbox" aria-label="Результаты поиска"></div>';
 
-    // Ставим сразу после логотипа: слева от пунктов меню, а не в их конце —
-    // так поле не уезжает за бургер на промежуточных ширинах
-    var brand = navIn.querySelector(".brand") || navIn.firstElementChild;
-    var after = navIn.querySelector(".nav-about") || brand;
-    if (after && after.parentNode === navIn) after.insertAdjacentElement("afterend", box);
-    else navIn.appendChild(box);
+    // Поле — в конце строки: на десктопе оно раскрывается поверх шапки
+    // (position:absolute), на телефоне уходит второй строкой (order:9).
+    // Кнопка-лупа — перед «Доской»: в .topnav на внутренних страницах,
+    // в .nav-cta на главной и в ресёрче.
+    navIn.appendChild(box);
+    var sbtn = document.createElement("button");
+    sbtn.type = "button";
+    sbtn.className = "sf-btn";
+    sbtn.setAttribute("aria-label", "Поиск: продукт, тикер, ISIN");
+    sbtn.setAttribute("aria-expanded", "false");
+    sbtn.title = "Поиск ( / )";
+    sbtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">' +
+      '<circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.6"/>' +
+      '<path d="M11 11 L14.5 14.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
+    var host = navIn.querySelector(".topnav") || navIn.querySelector(".nav-cta") || navIn;
+    var cta = host.querySelector(".btn-solar");
+    if (cta && cta.parentNode === host) host.insertBefore(sbtn, cta);
+    else if (host === navIn) navIn.insertBefore(sbtn, box);
+    else host.appendChild(sbtn);
+    // Главная строит мобильную шапку сама (свои лупа и меню) — пометка,
+    // чтобы наши мобильные правила её не трогали
+    if (navIn.querySelector(".mx-btns")) navIn.classList.add("sf-ext");
 
     var input = box.querySelector(".sf-in");
     var panel = box.querySelector(".sf-panel");
@@ -317,6 +379,31 @@
 
     function open() { box.classList.add("open"); input.setAttribute("aria-expanded", "true"); }
     function close() { box.classList.remove("open"); input.setAttribute("aria-expanded", "false"); cur = -1; }
+
+    // Раскрыть/свернуть поле целиком (кнопка-лупа, «/», Escape, клик мимо)
+    function reveal() {
+      navIn.style.setProperty("--sf-r", getComputedStyle(navIn).paddingRight);
+      navIn.classList.add("sf-open");
+      sbtn.setAttribute("aria-expanded", "true");
+      input.focus();
+    }
+    function hide() {
+      close();
+      navIn.classList.remove("sf-open");
+      sbtn.setAttribute("aria-expanded", "false");
+    }
+    sbtn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      if (navIn.classList.contains("sf-open")) hide(); else reveal();
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key !== "/" || e.ctrlKey || e.metaKey || e.altKey) return;
+      var t = e.target, tag = t && t.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || (t && t.isContentEditable)) return;
+      e.preventDefault();
+      reveal();
+    });
+    fitNav(navIn);
 
     function refresh() {
       var q = input.value;
@@ -336,7 +423,7 @@
 
     input.addEventListener("keydown", function (e) {
       var rows = [].slice.call(panel.querySelectorAll(".sf-row"));
-      if (e.key === "Escape") { close(); input.blur(); return; }
+      if (e.key === "Escape") { hide(); input.blur(); sbtn.focus(); return; }
       if (e.key === "ArrowDown" || e.key === "ArrowUp") {
         if (!rows.length) return;
         e.preventDefault();
@@ -364,11 +451,72 @@
       if (row && !e.target.closest(".sf-main")) location.href = row.getAttribute("data-go");
     });
 
-    document.addEventListener("click", function (e) { if (!box.contains(e.target)) close(); });
+    // Клик мимо: пустое поле сворачивается обратно в лупу, с текстом —
+    // только закрывается выдача (набранное не теряется)
+    document.addEventListener("click", function (e) {
+      if (box.contains(e.target) || sbtn.contains(e.target)) return;
+      if (input.value.trim()) close(); else hide();
+    });
 
     if (/[?&]findemo=1/.test(location.search)) {
+      reveal();
       ensureData().then(function () { input.value = "Сбер"; refresh(); });
     }
+  }
+
+  // Шапка должна влезать в одну строку. Ширины шапок у страниц разные
+  // (1080–1340px), а меню свёрстано по-разному (у «Разборов» пункты-плашки
+  // с отступами, у остальных — промежуток 22px), поэтому ужатие подбирается
+  // по факту: снимаем всё, меряем, ужимаем по ступеням, пока ряд не влезет.
+  // Ступень 1 — без подписи «Инвестиционные решения»; 2–4 — промежутки и
+  // отступы пунктов меню в долю от исходных, на 3–4 ещё и кегль мельче.
+  function fitNav(navIn) {
+    var topnav = navIn.querySelector(".topnav");
+    var links = topnav ? [].slice.call(topnav.querySelectorAll("a:not(.btn-solar)")) : [];
+    var K = [1, 1, 0.65, 0.45, 0.3], FS = [0, 0, 0, 13.5, 13];
+    var base = null;
+    function over() { return navIn.scrollWidth > navIn.clientWidth; }
+    function reset() {
+      navIn.classList.remove("nf1", "nf2", "nf3");
+      if (!topnav) return;
+      topnav.style.gap = "";
+      links.forEach(function (a) { a.style.paddingLeft = a.style.paddingRight = a.style.fontSize = ""; });
+    }
+    function apply(k) {
+      if (k >= 1) navIn.classList.add("nf1");
+      if (k >= 2) navIn.classList.add("nf2");
+      if (k >= 3) navIn.classList.add("nf3");
+      if (!topnav || k < 2) return;
+      topnav.style.gap = (base.gap * K[k]).toFixed(1) + "px";
+      links.forEach(function (a) {
+        a.style.paddingLeft = a.style.paddingRight = (base.pad * K[k]).toFixed(1) + "px";
+        if (FS[k]) a.style.fontSize = FS[k] + "px";
+      });
+    }
+    function fit() {
+      // У «Разборов» на пунктах меню transition на всё (.16s): без снятия
+      // замер видел бы старые отступы посреди анимации и ужимал до упора
+      links.forEach(function (a) { a.style.transition = "none"; });
+      reset();
+      if (window.innerWidth > 900) squeeze();
+      void navIn.offsetWidth;
+      requestAnimationFrame(function () { links.forEach(function (a) { a.style.transition = ""; }); });
+    }
+    function squeeze() {
+      if (topnav && !base) {
+        var cs = getComputedStyle(topnav), ls = links[0] ? getComputedStyle(links[0]) : null;
+        base = { gap: parseFloat(cs.columnGap || cs.gap) || 0, pad: ls ? parseFloat(ls.paddingLeft) || 0 : 0 };
+      }
+      for (var k = 1; k < K.length && over(); k++) { reset(); apply(k); }
+    }
+    var raf = 0;
+    function later() { cancelAnimationFrame(raf); raf = requestAnimationFrame(fit); }
+    fit();
+    // Пилюлю «Сотрудничество» ставит nav-about.js, шрифты догружаются — меряем ещё раз
+    setTimeout(fit, 0);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
+    window.addEventListener("load", fit);
+    window.addEventListener("resize", later);
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", mount);
