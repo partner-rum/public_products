@@ -476,7 +476,7 @@ window.DF = (function () {
 
   const CSS = '.df-detail{}' +
     '.df-hypo{margin:0 0 22px;padding:16px 20px;background:rgba(255,255,255,0.05);border-radius:10px;font-size:16.5px;line-height:1.55;color:var(--ink);text-wrap:pretty}' +
-    '.df-hypo .k{display:block;font-family:var(--f-mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,0.60);margin-bottom:7px}' +
+    '.df-hypo .k{display:block;font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,0.60);margin-bottom:7px}' +
     '.df-grid{display:grid;grid-template-columns:1.5fr 1fr;gap:30px;align-items:start}' +
     '.df-block{margin-bottom:20px}' +
     '.df-block .k{font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,0.60);margin-bottom:9px}' +
@@ -492,13 +492,13 @@ window.DF = (function () {
     '.df-param .v{font-family:var(--f-mono);font-size:13.5px;text-align:right}' +
     '.df-fx{padding:9px 12px;border-left:3px solid var(--down);background:rgba(238,125,27,0.12);border-radius:0 7px 7px 0;font-size:11.5px;line-height:1.45;color:#E7B98D}' +
     '.df-sell{margin:0 0 20px;padding:14px 18px;background:rgba(238,125,27,0.10);border-left:3px solid var(--solar);border-radius:0 10px 10px 0}' +
-    '.df-sell .k{display:block;font-family:var(--f-mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--solar);margin-bottom:6px}' +
+    '.df-sell .k{display:block;font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--solar);margin-bottom:6px}' +
     '.df-sell p{margin:0;font-size:14.5px;line-height:1.55;color:var(--ink);text-wrap:pretty}' +
     '.df-earn{margin:0 0 14px;padding:14px 18px;background:rgba(85,192,138,0.10);border-left:3px solid var(--up);border-radius:0 10px 10px 0}' +
-    '.df-earn .k{display:block;font-family:var(--f-mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--up);margin-bottom:6px}' +
+    '.df-earn .k{display:block;font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--up);margin-bottom:6px}' +
     '.df-earn p{margin:0;font-size:14.5px;line-height:1.55;color:var(--ink);text-wrap:pretty}' +
     '.df-risk{margin-top:0;padding:14px 18px;background:rgba(224,112,90,0.12);border-left:3px solid #E0705A;border-radius:0 10px 10px 0}' +
-    '.df-risk .k{display:block;font-family:var(--f-mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:#E0705A;margin-bottom:6px}' +
+    '.df-risk .k{display:block;font-family:var(--f-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#E0705A;margin-bottom:6px}' +
     '.df-risk p{margin:0;font-size:13.5px;line-height:1.5;color:rgba(242,243,247,0.82);text-wrap:pretty}' +
     '.df-params{display:flex;flex-direction:column;gap:8px}' +
     '.df-block p.concl{margin-top:12px;color:var(--ink)}' +

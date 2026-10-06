@@ -277,7 +277,7 @@
       "  box-shadow:0 18px 48px rgba(0,0,0,.55);overflow:hidden;display:none;",
       "  max-height:min(70vh,520px);overflow-y:auto;}",
       ".sf.open .sf-panel{display:block;}",
-      ".sf-cap{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.13em;",
+      ".sf-cap{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.13em;",
       "  text-transform:uppercase;color:rgba(242,243,247,.45);padding:11px 14px 6px;}",
       ".sf-row{display:flex;align-items:center;gap:10px;padding:7px 10px 7px 14px;",
       "  border-top:1px solid rgba(255,255,255,.05);}",

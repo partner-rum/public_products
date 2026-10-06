@@ -45,11 +45,11 @@
   .wrap { position:relative; z-index:1; max-width:var(--shell); margin:0 auto; padding:0 44px; }
 
   .head { padding:52px 0 26px; border-bottom:1px solid var(--line); }
-  .kicker { font-family:var(--m); font-size:10.5px; letter-spacing:.17em; text-transform:uppercase; color:var(--dim); }
+  .kicker { font-family:var(--m); font-size:11px; letter-spacing:.17em; text-transform:uppercase; color:var(--dim); }
   h1 { margin:16px 0 0; font-family:var(--display); font-size:clamp(30px,4vw,46px); font-weight:600; line-height:1.06; letter-spacing:-0.022em; }
   h1 .lm { color:var(--solar); }
   .head .sub { margin:16px 0 0; font-size:15px; line-height:1.6; color:var(--mut); max-width:620px; }
-  .head .meta { margin-top:18px; display:flex; gap:22px; flex-wrap:wrap; font-family:var(--m); font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--dim); }
+  .head .meta { margin-top:18px; display:flex; gap:22px; flex-wrap:wrap; font-family:var(--m); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--dim); }
   .head .meta b { color:var(--mut); font-weight:500; }
 
   /* ── Переключатель выпусков (архив), как в дайджесте ── */
@@ -58,7 +58,7 @@
     color:var(--tx); border-radius:9px; padding:10px 14px; font-family:inherit; font-size:13px; cursor:pointer;
     transition:border-color .2s, background .2s; }
   .pick-btn:hover { border-color:rgba(255,255,255,0.26); background:rgba(255,255,255,0.06); }
-  .pick-btn .lbl { font-family:var(--m); font-size:9px; letter-spacing:.16em; text-transform:uppercase; color:var(--dim); }
+  .pick-btn .lbl { font-family:var(--m); font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--dim); }
   .pick-btn .cur { font-weight:600; }
   .pick-btn .cv { transition:transform .22s var(--ease); color:var(--dim); }
   .pick.open .cv { transform:rotate(180deg); }
@@ -67,7 +67,7 @@
     background:#1B1D26; border:1px solid var(--line); border-radius:12px; padding:6px; box-shadow:0 18px 44px rgba(0,0,0,0.58);
     opacity:0; visibility:hidden; transform:translateY(-4px); transition:opacity .18s ease, transform .18s var(--ease), visibility 0s linear .18s; }
   .pick.open .pick-menu { opacity:1; visibility:visible; transform:none; transition:opacity .18s ease, transform .18s var(--ease), visibility 0s; }
-  .pick-mh { font-family:var(--m); font-size:9px; letter-spacing:.16em; text-transform:uppercase; color:var(--dim); padding:8px 10px 6px; }
+  .pick-mh { font-family:var(--m); font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--dim); padding:8px 10px 6px; }
   .pick-i { display:block; width:100%; text-align:left; background:none; border:none; border-radius:8px; padding:10px 11px;
     cursor:pointer; font-family:inherit; color:var(--tx); }
   .pick-i:hover { background:rgba(255,255,255,0.06); }
@@ -75,12 +75,12 @@
   .pick-i .d { display:flex; align-items:baseline; gap:10px; }
   .pick-i .t { font-size:13.5px; font-weight:600; }
   .pick-i.active .t { color:var(--solar); }
-  .pick-i .c { margin-left:auto; font-family:var(--m); font-size:9.5px; color:var(--dim); white-space:nowrap; }
+  .pick-i .c { margin-left:auto; font-family:var(--m); font-size:11px; color:var(--dim); white-space:nowrap; }
   .pick-i .s { display:block; font-size:11.5px; line-height:1.45; color:var(--dim); margin-top:4px; }
 
   /* Фильтр по рубрикам собирается из записей ВЫБРАННОГО выпуска */
   .chips { display:flex; gap:8px; flex-wrap:wrap; padding:20px 0 0; }
-  .chip { font-family:var(--m); font-size:10.5px; letter-spacing:.06em; padding:7px 13px; border:1px solid var(--line);
+  .chip { font-family:var(--m); font-size:11px; letter-spacing:.06em; padding:7px 13px; border:1px solid var(--line);
     border-radius:20px; color:var(--mut); background:transparent; cursor:pointer; transition:border-color .2s, background .2s, color .2s; }
   .chip:hover { border-color:rgba(255,255,255,0.24); color:var(--tx); }
   .chip.on { background:var(--solar); border-color:var(--solar); color:#0C0A08; font-weight:600; }
@@ -89,9 +89,9 @@
   .rs { padding:34px 0 32px; border-bottom:1px solid var(--line); scroll-margin-top:76px; }
   .rs:last-of-type { border-bottom:0; }
   .rs .top { display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; }
-  .rs .rub { font-family:var(--m); font-size:9.5px; letter-spacing:.17em; text-transform:uppercase; color:var(--solar); }
-  .rs .dt { font-family:var(--m); font-size:9.5px; letter-spacing:.1em; color:var(--dim); }
-  .rs .anchor { margin-left:auto; font-family:var(--m); font-size:9.5px; letter-spacing:.1em; color:var(--dim);
+  .rs .rub { font-family:var(--m); font-size:11px; letter-spacing:.17em; text-transform:uppercase; color:var(--solar); }
+  .rs .dt { font-family:var(--m); font-size:11px; letter-spacing:.1em; color:var(--dim); }
+  .rs .anchor { margin-left:auto; font-family:var(--m); font-size:11px; letter-spacing:.1em; color:var(--dim);
     opacity:0; transition:opacity .2s, color .2s; }
   .rs:hover .anchor { opacity:1; }
   .rs .anchor:hover { color:var(--solar); }
@@ -107,7 +107,7 @@
 
   /* Продукты под идею */
   .prods { margin-top:24px; }
-  .prods .cap { font-family:var(--m); font-size:9.5px; letter-spacing:.17em; text-transform:uppercase; color:var(--dim);
+  .prods .cap { font-family:var(--m); font-size:11px; letter-spacing:.17em; text-transform:uppercase; color:var(--dim);
     padding-bottom:10px; border-bottom:1px solid var(--rule-soft); }
   .pr { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px 20px; align-items:baseline;
     padding:14px 14px 15px; margin:0 -14px; border-radius:9px; border-left:2px solid transparent;
@@ -118,9 +118,9 @@
   .pr:hover .nm { color:var(--solar); }
   .pr .q { font-family:var(--m); font-size:14.5px; font-weight:500; color:var(--solar); white-space:nowrap;
     font-variant-numeric:tabular-nums; text-align:right; }
-  .pr .q i { display:block; font-style:normal; font-size:8.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--dim); margin-top:3px; }
+  .pr .q i { display:block; font-style:normal; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--dim); margin-top:3px; }
   .pr .why { grid-column:1 / -1; font-size:13px; line-height:1.6; color:var(--mut); max-width:760px; }
-  .pr .par { grid-column:1 / -1; font-family:var(--m); font-size:10px; letter-spacing:.05em; color:var(--dim); }
+  .pr .par { grid-column:1 / -1; font-family:var(--m); font-size:11px; letter-spacing:.05em; color:var(--dim); }
   .pr.gone { opacity:.5; }
   .pr.gone:hover { background:none; border-left-color:transparent; }
   .pr.gone .nm:hover { color:inherit; }
@@ -207,7 +207,7 @@
 
 <script src="data/instruments.js?v=fx7"></script>
 <script src="data/lib.js?v=ax9"></script>
-<script src="data/research.js?v=2"></script>
+<script src="data/research.js?v=3"></script>
 <script>
   (function () {
     var ISSUES = (window.RESEARCH && RESEARCH.issues) || [];
@@ -357,7 +357,7 @@
 
       // Продукт был на доске, но снят: запись ресерча остаётся читаемой
       return '<div class="pr gone"><span class="nm">' + esc(p.name || p.id || "—") + '</span>' +
-        '<span class="q" style="color:var(--dim);font-size:10px">снят с доски</span>' + why + '</div>';
+        '<span class="q" style="color:var(--dim);font-size:11px">снят с доски</span>' + why + '</div>';
     }
 
     function render() {
@@ -413,7 +413,7 @@
   })();
 </script>
 <script src="chat.js?v=24"></script>
-<script src="search.js?v=2"></script>
+<script src="search.js?v=3"></script>
 <script src="nav-about.js?v=9"></script>
 <script src="qualgate.js?v=6"></script>
 </body>
