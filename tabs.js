@@ -88,10 +88,26 @@
       if (/корзин/i.test(u + r.name)) return "◇";
       return (u.replace(/[^A-Za-zА-Яа-яЁё0-9 ]/g, "").split(" ")[0] || "?").slice(0, 4).toUpperCase();
     }
+    // Сумма входа — сколько денег нужно, чтобы купить минимальный номинал. У варранта
+    // и купонного варранта платится премия (котировка — % от номинала), у дисконтной —
+    // цена; остальные покупаются по номиналу. Округляем ВВЕРХ: «от» не должно занижать
+    function entryRub(r) {
+      var nom = Number(r.minNom);
+      if (!(nom > 0)) return 0;
+      var pct = r.type === "warrant" || r.type === "digital" || r.type === "discount" ? Number(r.quote) : 100;
+      return pct > 0 ? nom * pct / 100 : 0;
+    }
+    function fromRub(v) {
+      if (!(v > 0)) return "";
+      if (v >= 1e6) return "от\u00a0" + String(Math.ceil(v / 1e5) / 10).replace(".", ",") + "\u00a0млн\u00a0₽";
+      return "от\u00a0" + Math.ceil(v / 1000) + "\u00a0тыс\u00a0₽";
+    }
+    // Сумма входа — всегда своей строкой под активом и сроком: в одном месте у каждой
+    // строки, список читается столбиком (в строку с активом она то влезала, то переносилась)
     function prodRow(r) {
-      var f = figure(r), nm = pname(r), c = CLS[r.cls] || ["#5A6070", "#3C4150"], tk = tick(r);
+      var f = figure(r), nm = pname(r), c = CLS[r.cls] || ["#5A6070", "#3C4150"], tk = tick(r), sum = fromRub(entryRub(r));
       return '<li><a class="tg-row" href="instrument.html?id=' + encodeURIComponent(r.id) + '"><span class="tg-av" aria-hidden="true" style="background:linear-gradient(160deg,' + c[0] + "," + c[1] + ")" + (tk.length > 3 ? ";font-size:11.5px" : "") + '">' + esc(tk) + "</span>" +
-        '<span class="tg-tx"><span class="tg-nm">' + esc(nm.head) + '</span><span class="tg-sb">' + esc(nm.rest) + "</span></span>" +
+        '<span class="tg-tx"><span class="tg-nm">' + esc(nm.head) + '</span><span class="tg-sb">' + esc(nm.rest) + (sum ? '<span class="tg-in">' + sum + "</span>" : "") + "</span></span>" +
         '<span class="tg-fig"><b>' + esc(f.v) + "</b><small>" + esc(f.n) + "</small></span></a></li>";
     }
 
@@ -143,14 +159,16 @@
     function prodList(limit) {
       var budget = limit || Infinity, used = 0;
       var q = S.prod.q.trim().toLowerCase();
+      var cl = S.prod.cls || "all";
       var list = INSTR.filter(function (r) {
-        return (S.prod.type === "all" || r.type === S.prod.type) && (!q || (r.name + " " + r.underlying + " " + r.cls).toLowerCase().indexOf(q) >= 0);
+        return (S.prod.type === "all" || r.type === S.prod.type) && (cl === "all" || r.cls === cl) &&
+          (!q || (r.name + " " + r.underlying + " " + r.cls + " " + clsLabel(r.cls)).toLowerCase().indexOf(q) >= 0);
       });
       lastCount = list.length;
       if (!INSTR.length) return '<p class="tg-note">Не удалось загрузить продукты — обновите страницу.</p>';
       if (!list.length) return '<p class="tg-note">Ничего не нашлось. Попробуйте «Сбер», «ОФЗ» или «защита».</p>';
       var out = "";
-      if (S.prod.type === "all" && !q) {
+      if (S.prod.type === "all" && cl === "all" && !q) {
         var day = ((window.MORNING || {}).products || []).map(function (id) { return BY[id]; }).filter(Boolean);
         if (day.length) { out += '<h2 class="tg-cap">Продукты дня</h2><ul class="tg-list">' + day.map(prodRow).join("") + "</ul>"; used += day.length; }
       }
@@ -164,12 +182,32 @@
       if (used >= budget && budget < list.length) return out;
       return out + '<p class="tg-note">Котировки индикативные. Сравнение и фильтры — на <a href="board.html">полной доске</a>.</p>';
     }
+    // Класс базового актива — так клиент и ищет: «на Сбер», «на золото», «на Китай».
+    // Тип выплаты (варрант, автоколл) — наш язык, он вторым рядом и группами списка
+    var CLS_ORDER = ["Акции РФ", "Акции США", "Облигации", "Индекс", "Товары", "Крипто", "Валюта"];
+    function clsLabel(k) {
+      if (k === "Индекс") return "Индексы";
+      if (k === "Товары") return INSTR.every(function (r) { return r.cls !== "Товары" || /золот/i.test(r.underlying || ""); }) ? "Золото" : "Сырьё";
+      return k || "";
+    }
+    function chipRow(label, attr, cur, items) {
+      return '<div class="tg-chips" role="group" aria-label="' + label + '">' + items.filter(function (c) { return c[2] || c[0] === cur || c[0] === "all"; })
+        .map(function (c) { return '<button type="button" ' + attr + '="' + esc(c[0]) + '" aria-pressed="' + (cur === c[0]) + '">' + esc(c[1]) + "<em>" + c[2] + "</em></button>"; }).join("") + "</div>";
+    }
     function viewProd() {
-      var counts = {}; INSTR.forEach(function (r) { counts[r.type] = (counts[r.type] || 0) + 1; });
-      var chips = '<div class="tg-chips" role="group" aria-label="Тип продукта">' + [["all", "Все", INSTR.length]].concat(ORDER.filter(function (t) { return counts[t]; }).map(function (t) { return [t, TYPE[t], counts[t]]; }))
-        .map(function (c) { return '<button type="button" data-type="' + c[0] + '" aria-pressed="' + (S.prod.type === c[0]) + '">' + esc(c[1]) + "<em>" + c[2] + "</em></button>"; }).join("") + "</div>";
-      return frame("Продукты", '<label class="tg-srch">' + svg("search", 18) + '<input id="tg-q" type="search" placeholder="Сбер, ОФЗ, золото…" value="' + esc(S.prod.q) + '" enterkeyhint="search" aria-label="Поиск продуктов"></label>' + chips) +
-        '<div class="tg-pad" id="tg-plist">' + prodList(LIMIT) + "</div>";
+      var cl = S.prod.cls || "all";
+      // Счётчики одного ряда — с учётом выбора в другом: число на кнопке = сколько откроется
+      var byCls = {}, byType = {}, nType = 0, nCls = 0;
+      INSTR.forEach(function (r) {
+        if (S.prod.type === "all" || r.type === S.prod.type) { byCls[r.cls] = (byCls[r.cls] || 0) + 1; nType++; }
+        if (cl === "all" || r.cls === cl) { byType[r.type] = (byType[r.type] || 0) + 1; nCls++; }
+      });
+      var classes = CLS_ORDER.concat(Object.keys(byCls).filter(function (k) { return CLS_ORDER.indexOf(k) < 0; }));
+      var assets = chipRow("Базовый актив", "data-cls", cl, [["all", "Все активы", nType]].concat(classes.map(function (k) { return [k, clsLabel(k), byCls[k] || 0]; })));
+      var types = chipRow("Тип продукта", "data-type", S.prod.type, [["all", "Все типы", nCls]].concat(ORDER.map(function (t) { return [t, TYPE[t], byType[t] || 0]; })));
+      return frame("Продукты", '<label class="tg-srch">' + svg("search", 18) + '<input id="tg-q" type="search" placeholder="Сбер, ОФЗ, золото…" value="' + esc(S.prod.q) + '" enterkeyhint="search" aria-label="Поиск продуктов"></label>' + assets,
+        '<p class="tg-sub">Оформляем под клиента через менеджера. Сумма входа — в\u00a0каждой строке.</p>') +
+        '<div class="tg-pad"><div class="tg-types">' + types + '</div><div id="tg-plist">' + prodList(LIMIT) + "</div></div>";
     }
 
     // Подгрузка файлов данных, которых на главной нет: один раз, по первому открытию раздела
@@ -243,7 +281,10 @@
           return '<li><a class="tg-row" href="placements.html#' + esc(p.isin) + '"><span class="tg-tx"><span class="tg-nm">' + esc(p.name) + '</span><span class="tg-sb">' + esc(p.isin) + " · " + (live ? "до " + dmy(p.maturity) : "погашен") + '</span></span><span class="tg-fig' + (bid ? " tg-g" : "") + '"><b>' + (bid ? fq(p.bid) + "%" : "—") + "</b><small>" + (bid ? "Bid" : "нет котировки") + "</small></span></a></li>";
         }).join("") + '</ul><p class="tg-note">Bid индикативный. Документы КУВ и КИД — в карточке выпуска.</p>';
       }
-      return frame("Выпуски", seg("iss", "Какие выпуски", [["live", "На размещении"], ["done", "Размещённые"]])) + '<div class="tg-pad">' + body + "</div>";
+      var sub = S.iss.seg === "live"
+        ? "Уже на Мосбирже: покупка у\u00a0вашего брокера по\u00a0ISIN."
+        : "Выпущенные облигации: индикативный Bid и\u00a0документы — в\u00a0карточке.";
+      return frame("Выпуски", seg("iss", "Какие выпуски", [["live", "На размещении"], ["done", "Размещённые"]]), '<p class="tg-sub">' + sub + "</p>") + '<div class="tg-pad">' + body + "</div>";
     }
 
     // Группа строк-ссылок как в настройках iOS: [адрес, заголовок, иконка, цвет, подпись?, вкладка?]
@@ -299,7 +340,7 @@
       var y0 = window.scrollY, target = keepScroll ? y0 : (y || 0);
       // Неполный список — только когда смотрим сверху весь каталог: при возврате
       // на сохранённую прокрутку нужен целиком, иначе некуда встать
-      var partial = S.cur === "prod" && !target && !S.prod.q && S.prod.type === "all";
+      var partial = S.cur === "prod" && !target && !S.prod.q && S.prod.type === "all" && (S.prod.cls || "all") === "all";
       LIMIT = partial ? 22 : 0;
       var html = VIEWS[S.cur]();
       LIMIT = 0;
@@ -344,6 +385,14 @@
       if (heroObs) heroObs.disconnect();
       // Высоту строки навигации читаем в следующем кадре: чтение сразу после вставки
       // заставляло браузер рассчитать всю страницу посреди скрипта
+      // Выбранная кнопка в ряду фильтров — всегда на виду: ряд листается вбок, и выбор
+      // «Золото» иначе оставался за правым краем. Читаем раскладку в кадре, не посреди скрипта
+      requestAnimationFrame(function () {
+        [].forEach.call(app.querySelectorAll(".tg-chips"), function (row) {
+          var on = row.querySelector('[aria-pressed="true"]');
+          if (on && on.offsetLeft + on.offsetWidth > row.clientWidth + row.scrollLeft) row.scrollLeft = on.offsetLeft - 16;
+        });
+      });
       // На вводной имя раздела в строку не выводим — там и так «✦ Rumberg»
       if ("IntersectionObserver" in window && h && nv && S.cur !== "home") requestAnimationFrame(function () {
         if (app.firstChild !== v) return;
@@ -385,7 +434,9 @@
       var b = e.target.closest("[data-seg]");
       if (b) { var p = b.getAttribute("data-seg").split(":"); S[p[0]].seg = p[1]; render(true); save(); return; }
       var c = e.target.closest("[data-type]");
-      if (c) { S.prod.type = c.getAttribute("data-type"); render(true); save(); }
+      if (c) { S.prod.type = c.getAttribute("data-type"); render(true); save(); return; }
+      var k = e.target.closest("[data-cls]");
+      if (k) { S.prod.cls = k.getAttribute("data-cls"); render(true); save(); }
     });
     nav.addEventListener("click", function (e) { var b = e.target.closest("button[data-t]"); if (b) go(b.getAttribute("data-t")); });
     window.addEventListener("pagehide", save);

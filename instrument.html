@@ -128,6 +128,22 @@
   .calc-o .k { font-size: 11px; color: var(--faint); margin-top: 3px; }
   .calc-note { margin-top: 11px; font-size: 11.5px; line-height: 1.45; color: var(--faint); }
   .disclaimer { margin-top: 20px; font-size: 12px; line-height: 1.5; color: var(--faint); }
+  /* «Как купить»: три шага от интереса до покупки — те же, что в «Как проходит сделка»
+     на company.html, словами клиента. Внизу — сумма входа и кнопка заявки */
+  .buy { list-style: none; margin: 14px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); }
+  .buy li { padding: 0 22px; border-left: 1px solid var(--border-soft); }
+  .buy li:first-child { padding-left: 0; border-left: 0; }
+  .buy .n { display: block; margin-bottom: 8px; font-family: var(--f-mono); font-size: 12px; color: var(--solar-l); }
+  .buy b { display: block; margin-bottom: 6px; font-family: var(--display); font-size: 16px; font-weight: 600; }
+  .buy p { margin: 0; font-size: 13.5px; line-height: 1.55; color: var(--hushed); }
+  .buy-foot { display: flex; align-items: center; justify-content: space-between; gap: 14px 18px; flex-wrap: wrap; margin-top: 22px; padding-top: 20px; border-top: 1px solid var(--border-soft); }
+  .buy-sum { font-size: 14px; line-height: 1.5; color: var(--hushed); }
+  .buy-sum b { color: var(--ink); font-family: var(--f-mono); font-weight: 500; white-space: nowrap; }
+  @media (max-width: 760px) {
+    .buy { grid-template-columns: 1fr; }
+    .buy li { padding: 14px 0 0; margin-top: 14px; border-left: 0; border-top: 1px solid var(--border-soft); }
+    .buy li:first-child { padding-top: 0; margin-top: 0; border-top: 0; }
+  }
 
   /* Экран «продукта нет»: снят с витрины, битая или устаревшая ссылка */
   .gone { max-width: 560px; margin: 72px auto 0; text-align: center; }
@@ -279,6 +295,16 @@
     <h2>Как устроен продукт</h2>
     <div class="explainer" id="explainer"></div>
     <div class="facts" id="facts"></div>
+  </div>
+
+  <div class="section" id="buy">
+    <h2>Как купить</h2>
+    <ol class="buy">
+      <li><span class="n">01</span><b>Напишите нам</b><p>Кнопкой «Обсудить продукт» или в&nbsp;Telegram: сумма и&nbsp;срок, остальное подскажем.</p></li>
+      <li><span class="n">02</span><b>Зафиксируем условия</b><p>Котировка на витрине индикативная: точные параметры и&nbsp;даты пришлём перед сделкой.</p></li>
+      <li><span class="n">03</span><b>Купите у своего брокера</b><p>Продукт выпускается облигацией с&nbsp;ISIN, КУВ и&nbsp;КИД&nbsp;— её покупают на брокерский счёт. Нужен статус квалифицированного инвестора.</p></li>
+    </ol>
+    <div class="buy-foot"><span class="buy-sum" id="buy-sum"></span><span class="ct-host" id="ct-host-b"></span></div>
   </div>
 
   <div class="disclaimer" id="disclaimer"></div>
@@ -833,6 +859,21 @@
   // заявку в группу продаж на продукт, которого ещё нет, а «Поделиться» дала бы
   // ссылку /p/<id>.html, которая появится только после одобрения.
   if (window.Contact && !PREVIEW) Contact.attach(document.getElementById("ct-host"), { title: S.displayName(inst), url: location.href, id: inst.id });
+  // «Как купить»: сумма входа по текущей котировке — та же, что «от … ₽» в списке на главной
+  (function () {
+    const host = document.getElementById("buy-sum");
+    const nom = Number(inst.minNom);
+    if (host && nom > 0) {
+      const byPrice = inst.type === "warrant" || inst.type === "digital" || inst.type === "discount";
+      const pct = byPrice ? Number(inst.quote) : 100;
+      if (pct > 0) {
+        const sum = Math.ceil(nom * pct / 100);
+        host.innerHTML = "Сумма входа по текущей котировке — <b>" + S.fmtInt(sum) + "\u00a0₽</b>" +
+          (byPrice ? ": " + (inst.type === "discount" ? "цена " : "премия ") + S.fmt2(pct) + "% от номинала " + S.fmtInt(nom) + "\u00a0₽" : ": покупка по номиналу");
+      }
+    }
+    if (window.Contact && !PREVIEW) Contact.attach(document.getElementById("ct-host-b"), { title: S.displayName(inst), url: location.href, id: inst.id });
+  })();
   // «Поделиться» отдаёт /p/<id> — лёгкую страницу с персональным og-превью (как на доске),
   // чтобы сейлз, скопировавший адрес из карточки, слал не обезличенную обложку (A.7).
   if (window.Share && !PREVIEW) {

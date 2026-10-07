@@ -852,7 +852,11 @@
     .tg-av { flex: none; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-family: 'Rubik', sans-serif; font-weight: 600; font-size: 13.5px; }
     .tg-tx { flex: 1; min-width: 0; }
     .tg-nm { display: block; font-size: 15.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .tg-sb { display: block; margin-top: 2px; font-size: 13.5px; color: var(--tg-mut); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    /* Подпись строки — до двух строк: на узком экране сумма входа уходит второй строкой, а не под многоточие */
+    .tg-sb { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; margin-top: 2px; font-size: 13.5px; line-height: 1.35; color: var(--tg-mut); }
+    .tg-in { display: block; white-space: nowrap; }
+    .tg-sub { margin: 6px 0 0; font-size: 14px; line-height: 1.45; color: var(--tg-mut); }
+    .tg-types .tg-chips { margin-top: 2px; }
     .tg-fig { flex: none; text-align: right; }
     .tg-fig b { display: block; font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 500; }
     .tg-fig small { display: block; font-size: 11px; color: var(--tg-faint); margin-top: 1px; }
@@ -2165,7 +2169,7 @@
   else setTimeout(start, 1200);
 })();
 </script>
-<script src="tabs.js?v=3"></script>
+<script src="tabs.js?v=4"></script>
 </body>
 
 </html>
