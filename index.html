@@ -793,11 +793,11 @@
     /* Заливка над строкой: встроенный браузер Telegram рисует страницу и под своей
        свёрнутой панелью — без неё список проезжал бы над заголовком */
     .tg-nav::before { content: ""; position: absolute; left: 0; right: 0; bottom: 100%; height: 100vh; background: #0B0C10; pointer-events: none; }
-    .tg-brand { display: flex; align-items: center; gap: 6px; font-family: 'Rubik', sans-serif; font-weight: 600; font-size: 15px; color: var(--tg-mut); transition: opacity .18s; }
+    .tg-brand { display: flex; align-items: center; gap: 6px; min-height: 44px; font-family: 'Rubik', sans-serif; font-weight: 600; font-size: 15px; color: var(--tg-mut) !important; transition: opacity .18s; -webkit-tap-highlight-color: transparent; }
     .tg-brand i { font-style: normal; color: #EE7D1B; }
     .tg-mini { position: absolute; left: 0; right: 0; bottom: 0; height: var(--tg-nav); display: flex; align-items: center; justify-content: center; font-family: 'Rubik', sans-serif; font-size: 17px; font-weight: 600; opacity: 0; transition: opacity .18s; pointer-events: none; }
     .tg-v.tg-sc .tg-mini { opacity: 1; }
-    .tg-v.tg-sc .tg-brand { opacity: 0; }
+    .tg-v.tg-sc .tg-brand { opacity: 0; pointer-events: none; }
     .tg-hero { padding: 2px 16px 4px; }
     .tg-app h1, .tg-app .tg-h1 { margin: 0; font-family: 'Rubik', sans-serif; font-size: 30px; font-weight: 600; letter-spacing: -.01em; line-height: 1.15; max-width: none; }
     .tg-stories { min-height: 94px; margin: 6px -16px 0; }
@@ -821,6 +821,23 @@
     .tg-chips button::before { content: ""; position: absolute; inset: -4px -3px; }
     .tg-chips button[aria-pressed="true"] { background: var(--tg-ink); border-color: var(--tg-ink); color: #0B0C10; font-weight: 500; }
     .tg-chips button em { font-style: normal; opacity: .6; margin-left: 4px; }
+
+    /* Вводная: истории → кто мы → в продукты → разделы. Текст — первый экран главной до вкладок */
+    .tg-home .tg-hero { padding: 0 16px 6px; }
+    .tg-home .tg-stories { margin: 2px -16px 12px; }
+    .tg-home .tg-hero h1, .tg-home .tg-h1 { font-size: clamp(26px, calc(9.4vw - 4px), 30px); line-height: 1.13; }
+    .tg-lead { margin: 12px 0 0; font-size: 16px; line-height: 1.5; color: var(--tg-mut); }
+    .tg-cta { display: flex; align-items: center; justify-content: center; gap: 8px; height: 52px; margin-top: 22px; border-radius: 14px; background: #EE7D1B; color: #0C0A08 !important; font-size: 16px; font-weight: 600; -webkit-tap-highlight-color: transparent; }
+    .tg-cta .n { font-weight: 500; opacity: .7; }
+    .tg-cta:active { background: #F58E33; }
+    .tg-co { display: block; margin-top: 6px; padding: 10px 0; -webkit-tap-highlight-color: transparent; }
+    .tg-co .t { display: inline-flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 500; }
+    .tg-co .t svg { color: var(--tg-faint); }
+    .tg-co .s { display: block; margin-top: 3px; font-size: 13px; line-height: 1.4; color: var(--tg-mut); }
+    .tg-home .tg-pad .tg-cap { margin-top: 10px; }
+    .tg-t2 { display: block; min-width: 0; padding: 10px 0; }
+    .tg-t2 b { display: block; font-size: 16px; font-weight: 500; }
+    .tg-t2 small { display: block; margin-top: 2px; font-size: 13px; line-height: 1.35; color: var(--tg-mut); }
 
     .tg-pad { padding: 4px 16px 20px; }
     .tg-cap { margin: 18px 0 6px; font-family: 'Onest', sans-serif; font-size: 13px; font-weight: 500; color: var(--tg-faint); }
@@ -881,8 +898,8 @@
 <!-- Телефон: каркас вкладок (tabs.js наполняет). Виден только при html.tg-on и ширине ≤860px;
      стоит первым, чтобы первая отрисовка не ждала данных и скриптов -->
 <div class="tg-app" id="tg-app">
-  <div class="tg-main" id="tg-main" role="main"><div class="tg-v"><div class="tg-nav"><span class="tg-brand"><i aria-hidden="true">✦</i>Rumberg</span><span class="tg-mini" aria-hidden="true">Продукты</span></div><div class="tg-hero"><div class="tg-h1" role="heading" aria-level="1">Продукты</div><div class="tg-stories"></div></div><div class="tg-ctl"><label class="tg-srch"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.5-4.5"/></svg><input type="search" placeholder="Сбер, ОФЗ, золото…" aria-label="Поиск продуктов"></label><div class="tg-chips"></div></div><div class="tg-pad"><p class="tg-wait">Загружаю продукты…</p></div></div></div>
-  <nav class="tg-tb" id="tg-tb" aria-label="Разделы"><button type="button" data-t="prod" aria-current="page"><svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2.5"/><path d="M4 9.5h16M9.5 9.5V20"/></svg><span>Продукты</span></button><button type="button" data-t="mkt"><svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 12.5h4l2.5-6 4 11 2.5-5h4"/></svg><span>Рынок</span></button><button type="button" data-t="ai"><svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l1.9 5.6L19.5 11l-5.6 1.9L12 18.5l-1.9-5.6L4.5 11l5.6-1.9z"/></svg><span>AI</span></button><button type="button" data-t="iss"><svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c3 2 4.5 5.5 4.5 9.5L12 17l-4.5-4.5C7.5 8.5 9 5 12 3z"/><path d="M7.5 12.5 5 15l2 2M16.5 12.5 19 15l-2 2M10 20h4"/></svg><span>Выпуски</span></button><button type="button" data-t="more"><svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="18" cy="12" r="1.6"/></svg><span>Ещё</span></button></nav>
+  <div class="tg-main" id="tg-main" role="main"><div class="tg-v tg-home" data-v="home"><div class="tg-nav"><a class="tg-brand" href="index.html" data-go="home" aria-label="Rumberg — на вводную"><i aria-hidden="true">✦</i>Rumberg</a><span class="tg-mini" aria-hidden="true"></span></div><div class="tg-hero"><div class="tg-stories"></div><div class="tg-h1" role="heading" aria-level="1">Rumberg выпускает структурные облигации для квалифицированных инвесторов.</div><p class="tg-lead">Формула выплаты известна до сделки&nbsp;— её можно посчитать на&nbsp;своей сумме заранее.</p><a class="tg-cta" href="board.html" data-go="prod">Смотреть продукты<span class="n" id="tg-n"></span><svg width="16" height="16" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a><a class="tg-co" href="partners.html"><span class="t">Сотрудничество<svg width="16" height="16" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="s">для финансовых институтов и агентов</span></a></div><div class="tg-pad"></div></div></div>
+  <nav class="tg-tb" id="tg-tb" aria-label="Разделы"><button type="button" data-t="home" aria-current="page"><svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11 12 4.5l8 6.5"/><path d="M6.5 9.5v10h11v-10"/><path d="M10 19.5v-5h4v5"/></svg><span>Главная</span></button><button type="button" data-t="prod"><svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2.5"/><path d="M4 9.5h16M9.5 9.5V20"/></svg><span>Продукты</span></button><button type="button" data-t="mkt"><svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 12.5h4l2.5-6 4 11 2.5-5h4"/></svg><span>Рынок</span></button><button type="button" data-t="ai"><svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l1.9 5.6L19.5 11l-5.6 1.9L12 18.5l-1.9-5.6L4.5 11l5.6-1.9z"/></svg><span>AI</span></button><button type="button" data-t="iss"><svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c3 2 4.5 5.5 4.5 9.5L12 17l-4.5-4.5C7.5 8.5 9 5 12 3z"/><path d="M7.5 12.5 5 15l2 2M16.5 12.5 19 15l-2 2M10 20h4"/></svg><span>Выпуски</span></button></nav>
   <p class="tg-vh" aria-live="polite" id="tg-live"></p>
 </div>
 
@@ -2143,7 +2160,7 @@
   else setTimeout(start, 1200);
 })();
 </script>
-<script src="tabs.js?v=1"></script>
+<script src="tabs.js?v=2"></script>
 </body>
 
 </html>
