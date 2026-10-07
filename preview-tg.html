@@ -8,8 +8,8 @@
 <title>Превью · Rumberg с вкладками</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
-<link href="fonts/fonts.css?v=1" rel="stylesheet">
-<script src="metrika.js?v=8" defer></script>
+<link href="fonts/fonts.css?v=2" rel="stylesheet">
+<script src="metrika.js?v=9" defer></script>
 <style>
 :root{
   --bg:#0B0C10; --card:#14161C; --card2:#1B1E25; --seg-on:#2A2E37; --bar:#0E0F14;
@@ -114,6 +114,8 @@ li:last-child>.row{border-bottom:0}
 .tb button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:none;border:0;padding:0;
   color:rgba(242,243,247,.56);font-size:11px;font-weight:500;-webkit-tap-highlight-color:transparent;cursor:pointer}
 .tb button[aria-current]{color:var(--acc)}
+a,button,label{-webkit-tap-highlight-color:transparent}
+@media (hover:none){a:active,button:active{opacity:.7}}
 .tb :focus-visible,.row:focus-visible,.card:focus-visible,.grp a:focus-visible,.seg button:focus-visible,.chips button:focus-visible,.more-btn:focus-visible{outline:2px solid var(--acc);outline-offset:-2px;border-radius:10px}
 
 /* Ассистент — во всю площадь над вкладками, как обычный раздел */
@@ -383,6 +385,7 @@ li:last-child>.row{border-bottom:0}
   });
   nav.addEventListener("click", function (e) { var b = e.target.closest("button[data-t]"); if (b) go(b.getAttribute("data-t")); });
   window.addEventListener("pagehide", save);
+  document.addEventListener("touchstart", function () {}, { passive: true });   // :active на iOS
 
   // Закрыли ассистента крестиком — подсветка возвращается к разделу
   var mo = new MutationObserver(function () {

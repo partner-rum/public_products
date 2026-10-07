@@ -945,7 +945,7 @@ HTML = T("""<!DOCTYPE html>
 <meta property="og:image:alt" content="Rumberg — структурные продукты">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#0B0C10">
-<link href="fonts/fonts.css?v=1" rel="stylesheet">
+<link href="fonts/fonts.css?v=2" rel="stylesheet">
 <style>$css</style>
 <script src="metrika.js?v=2" defer></script>
 </head>

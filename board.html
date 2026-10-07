@@ -25,7 +25,7 @@
 <meta property="og:image:alt" content="Rumberg — структурные продукты">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#0B0C10">
-<link href="fonts/fonts.css?v=1" rel="stylesheet">
+<link href="fonts/fonts.css?v=2" rel="stylesheet">
 <style>
   :root {
     --canvas: #0B0C10; --card: #14161C; --panel-2: #191B22; --tile: rgba(255,255,255,0.045);
@@ -311,7 +311,7 @@
     .item { min-height: 48px; }
   }
 </style>
-<script src="metrika.js?v=8" defer></script>
+<script src="metrika.js?v=9" defer></script>
 </head>
 <body>
 
@@ -1610,8 +1610,12 @@
         // таймер не тикал вхолостую, и возобновляем при возврате на вкладку.
         function startRot() { if (timer) return; timer = setInterval(function () { spans[k].classList.remove("on"); k = (k + 1) % spans.length; spans[k].classList.add("on"); }, 3600); }
         function stopRot() { if (timer) { clearInterval(timer); timer = null; } }
-        startRot();
-        document.addEventListener("visibilitychange", function () { document.hidden ? stopRot() : startRot(); });
+        // На телефоне полоса скрыта (≤900) — фразы там не меняем вовсе
+        var TK_HIDE = window.matchMedia("(max-width: 900px)");
+        function syncRot() { (document.hidden || TK_HIDE.matches) ? stopRot() : startRot(); }
+        syncRot();
+        document.addEventListener("visibilitychange", syncRot);
+        if (TK_HIDE.addEventListener) TK_HIDE.addEventListener("change", syncRot);
       }
     }
 
@@ -1632,9 +1636,14 @@
     var rw = 0;
     window.addEventListener("resize", function () { clearTimeout(rw); rw = setTimeout(function () { size(); draw(); }, 150); });
     if (reduce) return;
-    // Полоса скрыта на телефоне (display:none) — там волну не перерисовываем:
-    // цикл каждый кадр строил путь из ~170 точек впустую, мешая прокрутке
-    (function fr() { if (svg.clientWidth) { phase -= 0.018; draw(); } requestAnimationFrame(fr); })();
+    // Полоса скрыта на телефоне (≤900) — там цикл не запускаем вовсе. Раньше он
+    // крутился и каждый кадр читал svg.clientWidth, а это чтение заставляло
+    // браузер пересчитывать раскладку: открытие продукта на телефоне шло 0,29 с
+    var WAVE_HIDE = window.matchMedia("(max-width: 900px)"), waving = false;
+    function fr() { if (WAVE_HIDE.matches) { waving = false; return; } phase -= 0.018; draw(); requestAnimationFrame(fr); }
+    function wave() { if (waving || WAVE_HIDE.matches) return; waving = true; size(); requestAnimationFrame(fr); }
+    if (WAVE_HIDE.addEventListener) WAVE_HIDE.addEventListener("change", wave);
+    wave();
   })();
 </script>
 <script src="chat.js?v=24"></script>

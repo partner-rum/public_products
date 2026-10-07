@@ -59,7 +59,7 @@ TITLE = "Варрант<br>«Ультрадоходный»"
 DATE = "25 марта 2025"
 
 HEAD = """<!doctype html><html lang="ru"><head><meta charset="utf-8">
-<link href="fonts/fonts.css?v=1" rel="stylesheet">
+<link href="fonts/fonts.css?v=2" rel="stylesheet">
 <style>
   :root{--bg:#0B0C10;--card:#14161C;--ink:#F2F3F7;--mut:rgba(242,243,247,.68);
         --faint:rgba(242,243,247,.52);--line:rgba(255,255,255,.11);

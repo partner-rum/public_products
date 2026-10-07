@@ -71,7 +71,7 @@ TEMPLATE = r"""<!DOCTYPE html>
 <head>
 <meta charset="utf-8">
 <title>og product</title>
-<link href="fonts/fonts.css?v=1" rel="stylesheet">
+<link href="fonts/fonts.css?v=2" rel="stylesheet">
 <script src="data/instruments.js"></script>
 <script src="data/offerings.js"></script>
 <style>

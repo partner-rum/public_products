@@ -29,7 +29,7 @@
 <meta property="og:image:alt" content="Rumberg — разборы тем и компаний">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#0B0C10">
-<link href="fonts/fonts.css?v=1" rel="stylesheet">
+<link href="fonts/fonts.css?v=2" rel="stylesheet">
 <style>
   :root {
     --canvas:#0B0C10; --card:#14161C; --ink:#F2F3F7; --hushed:rgba(242,243,247,.64);
@@ -668,6 +668,11 @@
     html { scroll-behavior:auto }
     .pill, .pcard, .lchip, .topnav a, tbody tr, .ev { transition:none }
   }
+  /* Телефон: разбор — 18 000 px. Разделы ниже экрана браузер рассчитывает,
+     только когда до них дошла прокрутка */
+  @media (max-width: 900px) {
+    section.sec { content-visibility: auto; contain-intrinsic-size: auto 1200px; }
+  }
 </style>
 </head>
 <body>
@@ -712,7 +717,7 @@
   </div>
 </footer>
 
-<script src="metrika.js?v=8" defer></script>
+<script src="metrika.js?v=9" defer></script>
 <script src="data/ideas.js"></script>
 <script src="data/instruments.js"></script>
 <script>

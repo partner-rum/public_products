@@ -313,6 +313,9 @@
       // (в обычном браузере её видно только при оттягивании страницы вниз — тот же фон)
       // Хлебные крошки «Главная / Раздел»: ссылка была 17px в высоту — не попасть пальцем
       "  .crumbs a{display:inline-flex;align-items:center;min-height:44px;}",
+      // Сплошная шапка вместо размытия: blur под липкой шапкой пересчитывается каждый
+      // кадр прокрутки — самая дорогая отрисовка на телефоне (на главной сняли раньше)
+      "  header.nav{background:#0B0C10!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;}",
       "  header.nav::before{content:'';position:absolute;left:0;right:0;bottom:100%;height:100vh;background:#0B0C10;pointer-events:none;}",
       // Телефон: шапка в одну строку 57px, как на главной, — звезда и имя
       // слева, лупа и меню справа. Было 118–165px в три ряда (логотип; меню
@@ -331,10 +334,18 @@
       // Главная: прежнее поведение — свои кнопки .mx-btns раскрывают поле второй строкой
       "  .nav-in.sf-ext{flex-wrap:wrap!important;height:auto!important;padding-top:10px;padding-bottom:10px;}",
       "  .nav-in.sf-ext .sf{order:9;flex:1 1 100%;max-width:none;margin:8px 0 0;}",
-      "  .sf-in{height:44px;font-size:15px;}",     // 16px не ставим: iOS зумит поле, но 15 уже не зумит на нашей вёрстке
+      // 16px — минимум: при шрифте поля меньше 16px iPhone увеличивает страницу при
+      // фокусе, и её потом приходится уменьшать пальцами (было 15 — увеличивал)
+      "  .sf-in{height:44px;font-size:16px;}",
       "  .sf-panel{min-width:0;}",
       "  .sf-copy{padding:11px 12px;}",
       "  .sf-row{padding:9px 10px 9px 14px;}",
+      "}",
+      // Нажатие на телефоне: вместо синей вспышки Android — лёгкое затемнение самого
+      // элемента. Своей обратной связи на нажатие на страницах не было вовсе
+      "@media (hover:none) and (pointer:coarse){",
+      "  a,button,summary,label,[role=button],[role=tab]{-webkit-tap-highlight-color:transparent;}",
+      "  a:active,button:active,summary:active,[role=button]:active,[role=tab]:active{opacity:.7;transition:none;}",
       "}",
       "@media (prefers-reduced-motion:reduce){.sf-in,.sf-copy{transition:none;}}"
     ].join("");
@@ -500,7 +511,11 @@
         if (FS[k]) a.style.fontSize = FS[k] + "px";
       });
     }
+    var PHONE = window.matchMedia && window.matchMedia("(max-width: 900px)");
     function fit() {
+      // Телефон: шапка в одну строку задана стилями, подгонять нечего. Замер
+      // (offsetWidth) заставлял браузер пересчитывать раскладку 4 раза за загрузку
+      if (PHONE && PHONE.matches) { if (navIn.className.indexOf("nf") >= 0) reset(); return; }
       // У «Разборов» на пунктах меню transition на всё (.16s): без снятия
       // замер видел бы старые отступы посреди анимации и ужимал до упора
       links.forEach(function (a) { a.style.transition = "none"; });
@@ -525,6 +540,10 @@
     window.addEventListener("load", fit);
     window.addEventListener("resize", later);
   }
+
+  // Safari на iOS включает :active только при наличии обработчика касаний —
+  // пустой пассивный слушатель прокрутку не тормозит
+  document.addEventListener("touchstart", function () {}, { passive: true });
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", mount);
   else mount();

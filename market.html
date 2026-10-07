@@ -29,7 +29,7 @@
 <meta property="og:image:alt" content="Rumberg — структурные продукты">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#0B0C10">
-<link href="fonts/fonts.css?v=1" rel="stylesheet">
+<link href="fonts/fonts.css?v=2" rel="stylesheet">
 <style>
   :root {
     --canvas: #0B0C10; --card: #14161C;
@@ -132,8 +132,12 @@
     .gloss summary { min-height: 44px; }
     .endcta a { min-height: 44px; }
   }
+  /* Содержимое статьи вставляет скрипт в конце страницы. Пока его нет, подвал
+     стоял сразу под заголовком, а потом уезжал вниз на всю статью — сдвиг 0,51
+     при норме 0,1. Место держим заранее: сдвиг уходит за пределы экрана */
+  #article:empty { min-height: 160vh; }
 </style>
-<script src="metrika.js?v=8" defer></script>
+<script src="metrika.js?v=9" defer></script>
 </head>
 <body>
 
@@ -220,8 +224,9 @@
     scope.querySelectorAll(".pf").forEach(function (pf) {
       pf.classList.remove("grown");
       if (REDUCED) { pf.classList.add("grown"); return; }
-      pf.getBoundingClientRect();
-      requestAnimationFrame(function () { pf.classList.add("grown"); });
+      // Два кадра вместо принудительного расчёта (getBoundingClientRect): тот заставлял
+      // браузер посчитать всю страницу посреди скрипта — подвисание до 0,6 с на телефоне
+      requestAnimationFrame(function () { requestAnimationFrame(function () { pf.classList.add("grown"); }); });
     });
   }
 

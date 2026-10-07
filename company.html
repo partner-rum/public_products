@@ -25,8 +25,8 @@
 <meta property="og:image:alt" content="Rumberg — структурные продукты">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#0B0C10">
-<link href="fonts/fonts.css?v=1" rel="stylesheet">
-<script src="metrika.js?v=8" defer></script>
+<link href="fonts/fonts.css?v=2" rel="stylesheet">
+<script src="metrika.js?v=9" defer></script>
 <style>
   :root {
     --canvas: #0B0C10; --card: #14161C;
@@ -172,7 +172,7 @@
   .ob-star { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); }
   .ob-star svg { display: block; filter: drop-shadow(0 0 12px rgba(238,125,27,0.45)); }
   .orb-lab { position: absolute; transform: translate(-50%,-50%); z-index: 2; font-family: var(--f-mono); font-size: 11px; letter-spacing: .09em; text-transform: uppercase; background: var(--card); border: 1px solid var(--border-soft); border-radius: 999px; padding: 2px 8px; white-space: nowrap; }
-  .od { position: absolute; width: 10px; height: 10px; margin: -5px; border-radius: 50%; cursor: pointer; }
+  .od { position: absolute; left: 0; top: 0; width: 10px; height: 10px; margin: -5px; border-radius: 50%; cursor: pointer; will-change: transform; }
   .od::after { content: ""; position: absolute; inset: -6px; border-radius: 50%; }
   .ob-tip { position: absolute; z-index: 3; background: #191C23; border: 1px solid var(--border); border-radius: 7px; padding: 4px 9px; font-family: var(--f-mono); font-size: 11px; color: var(--ink); pointer-events: none; opacity: 0; transition: opacity .15s; white-space: nowrap; transform: translate(-50%, -135%); }
   .ob-leg .st { margin-bottom: 15px; }
@@ -507,19 +507,31 @@
           r.lab.style.top = (H / 2 - R * r.g.r) + "px";
         });
       }
-      obSize();
-      addEventListener("resize", obSize);
-      var ot0 = performance.now();
-      (function oframe(t) {
-        var odt = Math.min(0.05, (t - ot0) / 1000); ot0 = t;
+      // Точки двигаются через transform, а не left/top: left/top каждый кадр
+      // заставлял браузер пересчитывать раскладку страницы. И крутятся только
+      // пока блок на экране — раньше цикл шёл вечно, даже когда его не видно,
+      // и при «уменьшить движение» перерисовывал неподвижные точки
+      function place() {
         odots.forEach(function (o) {
-          if (!paused && !RM) o.a += o.g.sp * odt * 6.28;
           var x = W / 2 + Math.cos(o.a) * R * o.g.r, y = H / 2 + Math.sin(o.a) * R * o.g.r;
-          o.el.style.left = x + "px"; o.el.style.top = y + "px";
+          o.el.style.transform = "translate(" + x.toFixed(1) + "px," + y.toFixed(1) + "px)";
           if (tip.dataset.n === o.nm) { tip.style.left = x + "px"; tip.style.top = y + "px"; }
         });
+      }
+      obSize(); place();
+      addEventListener("resize", function () { obSize(); place(); });
+      var ot0 = 0, orun = false;
+      function oframe(t) {
+        if (!orun) return;
+        var odt = Math.min(0.05, (t - ot0) / 1000); ot0 = t;
+        if (!paused) odots.forEach(function (o) { o.a += o.g.sp * odt * 6.28; });
+        place();
         requestAnimationFrame(oframe);
-      })(ot0);
+      }
+      function ostart() { if (orun || RM) return; orun = true; ot0 = performance.now(); requestAnimationFrame(oframe); }
+      function ostop() { orun = false; }
+      if ("IntersectionObserver" in window) new IntersectionObserver(function (es) { es[0].isIntersecting ? ostart() : ostop(); }).observe(ob);
+      else ostart();
     })();
   </script>
 

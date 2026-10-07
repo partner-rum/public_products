@@ -31,7 +31,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#0B0C10">
 <meta name="format-detection" content="telephone=no">
-<link href="fonts/fonts.css?v=1" rel="stylesheet">
+<link href="fonts/fonts.css?v=2" rel="stylesheet">
 <style>
   /* ══════════ ПАЛИТРА И ОСНОВА — как на проде ══════════ */
   :root {
@@ -751,7 +751,7 @@
     .mx-dots i { transition:none; }
   }
 </style>
-<script src="metrika.js?v=8" defer></script>
+<script src="metrika.js?v=9" defer></script>
 </head>
 <body>
 
@@ -1993,8 +1993,21 @@
       window.dispatchEvent(new Event("so-lazy"));   // телефонное оглавление дописывает дату
     });
   }
-  if ("requestIdleCallback" in window) requestIdleCallback(go, { timeout: 2500 });
-  else setTimeout(go, 1200);
+  var started = false;
+  function start() { if (!started) { started = true; go(); } }
+  // На телефоне даты нужны только в списке разделов в самом низу (и в меню):
+  // 133 КБ грузим, когда до списка остаётся около экрана или открыли меню.
+  // Большинство уходит раньше — им этот вес не нужен
+  var tail = document.getElementById("mx-idx");
+  if (window.matchMedia("(max-width: 860px)").matches && tail && "IntersectionObserver" in window) {
+    var io = new IntersectionObserver(function (es) { if (es[0].isIntersecting) { io.disconnect(); start(); } }, { rootMargin: "900px 0px" });
+    // Наблюдение включаем после load: до сборки телефонных экранов список стоит
+    // под героем, и наблюдатель сразу считал его «у экрана» — файлы грузились всегда
+    var arm = function () { requestAnimationFrame(function () { io.observe(tail); }); };
+    if (document.readyState === "complete") arm(); else window.addEventListener("load", arm);
+    document.addEventListener("click", function (e) { if (e.target.closest && e.target.closest(".mx-mbtn")) start(); }, true);
+  } else if ("requestIdleCallback" in window) requestIdleCallback(start, { timeout: 2500 });
+  else setTimeout(start, 1200);
 })();
 </script>
 <script src="tabbar.js?v=1"></script>
