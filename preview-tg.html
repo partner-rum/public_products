@@ -9,50 +9,62 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
 <link href="fonts/fonts.css?v=1" rel="stylesheet">
+<script src="metrika.js?v=8" defer></script>
 <style>
 :root{
-  --bg:#0B0C10; --card:#14161C; --card2:#1B1E25; --ink:#F2F3F7; --mut:rgba(242,243,247,.6); --faint:rgba(242,243,247,.38);
-  --line:rgba(255,255,255,.08); --acc:#EE7D1B; --green:#55C08A; --blue:#4F86E6;
-  --tab:62px; --safe:env(safe-area-inset-bottom);
+  --bg:#0B0C10; --card:#14161C; --card2:#1B1E25; --seg-on:#2A2E37; --bar:#0E0F14;
+  --ink:#F2F3F7; --mut:rgba(242,243,247,.64); --faint:rgba(242,243,247,.56);
+  --line:rgba(255,255,255,.08); --acc:#EE7D1B; --green:#55C08A; --on-ink:#0B0C10;
+  --tab:62px; --nav:48px; --safe-b:env(safe-area-inset-bottom); --safe-t:env(safe-area-inset-top);
 }
 *{box-sizing:border-box}
 html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'Onest',system-ui,sans-serif;-webkit-text-size-adjust:100%}
-body{padding-bottom:calc(var(--tab) + var(--safe))}
+body{padding-bottom:calc(var(--tab) + var(--safe-b))}
 a{color:inherit;text-decoration:none}
 button{font-family:inherit;color:inherit}
 .app{max-width:560px;margin:0 auto;min-height:100svh}
 [hidden]{display:none!important}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
-/* Экран раздела: крупный заголовок сверху, под ним — переключатель и содержимое */
+/* Раздел: строка навигации (липкая) → крупный заголовок (уезжает) → панель управления (липкая).
+   Как в iOS: когда крупный заголовок ушёл под строку, его имя проявляется в ней мелко. */
 .v{animation:vin .22s cubic-bezier(.16,1,.3,1)}
 @keyframes vin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.v{animation:none}}
-.top{position:sticky;top:0;z-index:20;background:rgba(11,12,16,.96);padding:14px 16px 10px;border-bottom:1px solid transparent;transition:border-color .2s}
-.top.sc{border-bottom-color:var(--line)}
-.ttl{display:flex;align-items:center;gap:10px}
-.ttl h1{margin:0;flex:1;font-family:'Rubik',sans-serif;font-size:30px;font-weight:600;letter-spacing:-.01em;line-height:1.1}
-.ttl .sub{font-size:13px;color:var(--faint)}
-.brand{display:flex;align-items:center;gap:6px;font-family:'Rubik',sans-serif;font-weight:600;font-size:14px;color:var(--mut);margin-bottom:4px}
-.brand i{font-style:normal;color:var(--acc)}
-.srch{margin-top:10px;display:flex;align-items:center;gap:8px;height:40px;padding:0 12px;border-radius:12px;background:var(--card2);color:var(--faint)}
-.srch input{flex:1;min-width:0;border:0;outline:0;background:none;color:var(--ink);font:inherit;font-size:16px}
+.nav{position:sticky;top:0;z-index:21;height:calc(var(--nav) + var(--safe-t));padding:var(--safe-t) 16px 0;display:flex;align-items:center;background:var(--bg)}
+.nav .brand{display:flex;align-items:center;gap:6px;font-family:'Rubik',sans-serif;font-weight:600;font-size:15px;color:var(--mut);transition:opacity .18s}
+.nav .brand i{font-style:normal;color:var(--acc)}
+.nav .mini{position:absolute;left:0;right:0;bottom:0;height:var(--nav);display:flex;align-items:center;justify-content:center;font-family:'Rubik',sans-serif;font-size:17px;font-weight:600;opacity:0;transition:opacity .18s;pointer-events:none}
+.v.sc .nav .mini{opacity:1}
+.v.sc .nav .brand{opacity:0}
+.hero{padding:2px 16px 4px}
+.hero h1{margin:0;font-family:'Rubik',sans-serif;font-size:30px;font-weight:600;letter-spacing:-.01em;line-height:1.15}
+.ctl{position:sticky;top:calc(var(--nav) + var(--safe-t));z-index:20;background:var(--bg);padding:6px 16px 8px;border-bottom:1px solid transparent;transition:border-color .2s}
+.ctl:empty{display:none}
+.v.sc .ctl{border-bottom-color:var(--line)}
+.v.sc .nav{box-shadow:none}
+.srch{display:flex;align-items:center;gap:8px;height:44px;padding:0 12px;border-radius:12px;background:var(--card2);color:var(--faint);cursor:text}
+.srch:focus-within{outline:2px solid var(--acc);outline-offset:-2px}
+.srch input{flex:1;min-width:0;height:100%;border:0;outline:0;background:none;color:var(--ink);font:inherit;font-size:16px}
 .srch input::placeholder{color:var(--faint)}
-.seg{margin-top:10px;display:flex;gap:4px;padding:3px;border-radius:12px;background:var(--card2)}
-.seg button{flex:1;height:34px;border:0;border-radius:9px;background:none;color:var(--mut);font-size:14px;font-weight:500;cursor:pointer}
-.seg button.on{background:#2A2E37;color:var(--ink)}
-.chips{margin:10px -16px 0;padding:0 16px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.seg{display:flex;gap:4px;padding:3px;border-radius:12px;background:var(--card2)}
+.seg button{position:relative;flex:1;height:38px;border:0;border-radius:9px;background:none;color:var(--mut);font-size:14px;font-weight:500;cursor:pointer}
+.seg button::before{content:"";position:absolute;inset:-3px 0}
+.seg button[aria-pressed="true"]{background:var(--seg-on);color:var(--ink)}
+.chips{margin:8px -16px 0;padding:4px 16px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
 .chips::-webkit-scrollbar{display:none}
-.chips button{flex:none;height:32px;padding:0 12px;border-radius:16px;border:1px solid var(--line);background:none;color:var(--mut);font-size:13.5px;cursor:pointer}
-.chips button.on{background:var(--ink);border-color:var(--ink);color:#0B0C10;font-weight:500}
-.chips button em{font-style:normal;opacity:.55;margin-left:4px}
+.chips button{position:relative;flex:none;height:36px;padding:0 13px;border-radius:18px;border:1px solid var(--line);background:none;color:var(--mut);font-size:14px;cursor:pointer}
+.chips button::before{content:"";position:absolute;inset:-4px -3px}
+.chips button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--on-ink);font-weight:500}
+.chips button em{font-style:normal;opacity:.6;margin-left:4px}
 
-.pad{padding:6px 16px 20px}
-.cap{margin:18px 0 8px;font-size:13px;font-weight:500;color:var(--faint);text-transform:none}
+.pad{padding:4px 16px 20px}
+.cap{margin:18px 0 6px;font-family:'Onest',sans-serif;font-size:13px;font-weight:500;color:var(--faint)}
 .list{list-style:none;margin:0;padding:0}
 
 /* Строка продукта */
 .row{display:flex;align-items:center;gap:12px;min-height:64px;padding:8px 0;border-bottom:1px solid var(--line)}
-.row:last-child{border-bottom:0}
+li:last-child>.row{border-bottom:0}
 .row:active{opacity:.7}
 .av{flex:none;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;color:#fff;font-family:'Rubik',sans-serif;font-weight:600;font-size:13.5px}
 .tx{flex:1;min-width:0}
@@ -66,59 +78,58 @@ button{font-family:inherit;color:inherit}
 /* Карточки */
 .card{display:block;background:var(--card);border-radius:16px;padding:14px 16px;margin-bottom:10px}
 .card .rb{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--acc)}
-.card h3{margin:6px 0 6px;font-family:'Rubik',sans-serif;font-size:18px;font-weight:600;line-height:1.25}
+.card h2{margin:6px 0;font-family:'Rubik',sans-serif;font-size:18px;font-weight:600;line-height:1.25}
 .card p{margin:0;font-size:14.5px;line-height:1.5;color:var(--mut)}
 .card .go{display:inline-block;margin-top:10px;font-size:13.5px;color:var(--acc)}
-.meta{font-size:13px;color:var(--faint)}
+.meta{margin:6px 0 10px;font-size:13px;color:var(--faint)}
 .tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
 .tile{background:var(--card);border-radius:14px;padding:12px 14px}
 .tile b{display:block;font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:500}
 .tile span{display:block;margin-top:2px;font-size:12.5px;color:var(--mut)}
-.off{position:relative;overflow:hidden}
 .off .st{display:inline-block;padding:3px 9px;border-radius:10px;background:rgba(85,192,138,.15);color:#9ADDBB;font-size:12px;font-weight:500}
 .off .nums{display:flex;gap:18px;margin-top:10px}
 .off .nums b{display:block;font-family:'JetBrains Mono',monospace;font-size:17px}
 .off .nums span{font-size:11.5px;color:var(--faint)}
 .note{margin:14px 0 0;font-size:12px;line-height:1.5;color:var(--faint)}
+.note a{color:var(--acc)}
 .more-btn{display:block;margin-top:12px;height:44px;line-height:44px;text-align:center;border-radius:12px;background:var(--card2);font-size:14.5px;font-weight:500}
+.wait{padding:28px 0;text-align:center;color:var(--faint);font-size:14px}
 
 /* Ещё: как «Настройки» */
-.grp{margin:0 0 16px;border-radius:14px;background:var(--card);overflow:hidden}
+.grp{margin:8px 0 16px;border-radius:14px;background:var(--card);overflow:hidden}
 .grp a{display:flex;align-items:center;gap:12px;min-height:50px;padding-left:12px}
 .grp a:active{background:rgba(255,255,255,.05)}
 .grp .ic{flex:none;width:30px;height:30px;border-radius:8px;display:grid;place-items:center;color:#fff}
 .grp .tt{flex:1;min-width:0;align-self:stretch;display:flex;align-items:center;gap:8px;padding-right:12px;border-bottom:1px solid var(--line);font-size:16px}
 .grp a:last-child .tt{border-bottom:0}
 .grp .tt span{flex:1}
-.grp .tt em{font-style:normal;color:var(--faint);font-size:13.5px}
 .chev{color:var(--faint);flex:none}
 
 /* Нижняя панель */
-.tb{position:fixed;left:0;right:0;bottom:0;z-index:400;height:calc(var(--tab) + var(--safe));padding-bottom:var(--safe);display:flex;
-  background:#0E0F14;border-top:1px solid rgba(255,255,255,.08)}
+.tb{position:fixed;left:0;right:0;bottom:0;z-index:400;height:calc(var(--tab) + var(--safe-b));padding-bottom:var(--safe-b);display:flex;
+  background:var(--bar);border-top:1px solid var(--line)}
 .tb button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:none;border:0;padding:0;
-  color:rgba(242,243,247,.5);font-size:11px;font-weight:500;-webkit-tap-highlight-color:transparent;cursor:pointer}
-.tb button.on{color:var(--acc)}
-.tb :focus-visible,.row:focus-visible,.grp a:focus-visible,.seg button:focus-visible,.chips button:focus-visible{outline:2px solid var(--acc);outline-offset:-2px;border-radius:10px}
+  color:rgba(242,243,247,.56);font-size:11px;font-weight:500;-webkit-tap-highlight-color:transparent;cursor:pointer}
+.tb button[aria-current]{color:var(--acc)}
+.tb :focus-visible,.row:focus-visible,.card:focus-visible,.grp a:focus-visible,.seg button:focus-visible,.chips button:focus-visible,.more-btn:focus-visible{outline:2px solid var(--acc);outline-offset:-2px;border-radius:10px}
 
 /* Ассистент — во всю площадь над вкладками, как обычный раздел */
 .ca-dock{display:none!important}
-.ca-panel{left:0!important;right:0!important;top:0!important;bottom:calc(var(--tab) + var(--safe))!important;width:auto!important;max-width:560px!important;margin:0 auto!important;
+.ca-panel{left:0!important;right:0!important;top:var(--safe-t)!important;bottom:calc(var(--tab) + var(--safe-b))!important;width:auto!important;max-width:560px!important;margin:0 auto!important;
   height:auto!important;max-height:none!important;border-radius:0!important;border:0!important;box-shadow:none!important;transform:none!important}
 @media (min-width:600px){ .app{border-left:1px solid var(--line);border-right:1px solid var(--line)} .tb{max-width:560px;margin:0 auto} }
 </style>
 </head>
 <body>
-<div class="app" id="app"></div>
+<main class="app" id="app"></main>
 <nav class="tb" aria-label="Разделы"></nav>
+<p class="vh" aria-live="polite" id="live"></p>
 
 <script src="data/instruments.js"></script>
 <script src="data/morning.js"></script>
 <script src="data/rates.js"></script>
 <script src="data/offerings.js"></script>
 <script src="data/placements.js"></script>
-<script src="data/digest.js"></script>
-<script src="data/ideas.js"></script>
 <script src="data/events.js"></script>
 <script>
 (function () {
@@ -126,7 +137,8 @@ button{font-family:inherit;color:inherit}
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
   function fq(v) { var n = Math.round(Number(v) * 100) / 100; return String(n).replace(".", ","); }
   function dmy(iso) { var m = String(iso || "").match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? m[3] + "." + m[2] + "." + m[1] : String(iso || ""); }
-  var TODAY = new Date().toISOString().slice(0, 10);
+  // «Сегодня» — по Москве: по UTC с полуночи до трёх часов ночи вебинар дня числился бы вчерашним
+  var TODAY = new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10);
 
   var IC = {
     grid: '<rect x="4" y="4" width="16" height="16" rx="2.5"/><path d="M4 9.5h16M9.5 9.5V20"/>',
@@ -142,13 +154,13 @@ button{font-family:inherit;color:inherit}
     bld: '<path d="M4.5 20.5h15M6.5 20.5v-12l5.5-4 5.5 4v12M10 20.5v-5h4v5"/>',
     help: '<circle cx="12" cy="12" r="8"/><path d="M9.8 9.5a2.3 2.3 0 1 1 3.2 2.1c-.6.3-1 .8-1 1.5v.4M12 16.8v.2"/>',
     tg: '<path d="m20 5-16 6.2 5 1.8 1.8 5.5 2.8-3.2 4.4 3.2z"/><path d="m9 13 7-5"/>',
-    cam: '<rect x="3.5" y="6.5" width="12" height="11" rx="2"/><path d="m15.5 10.5 5-3v9l-5-3"/>',
     chart: '<path d="M4.5 19.5h15"/><path d="M7 16v-4M11 16V8M15 16v-6M19 16V5"/>'
   };
   function svg(k, w) { return '<svg viewBox="0 0 24 24" width="' + (w || 24) + '" height="' + (w || 24) + '" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + IC[k] + '</svg>'; }
   var CHEV = '<svg class="chev" width="8" height="13" viewBox="0 0 8 13" fill="none" aria-hidden="true"><path d="M1.5 1.5 6.5 6.5 1.5 11.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
-  // ── Продукты: та же цифра и то же имя, что на главной ──
+  // ── Продукты. figure() и pname() — копия логики главной (index.html); при переносе
+  //    на главную брать оттуда (window.soFigure / window.soPname), а эти удалить. ──
   var INSTR = (window.SITE_DATA && SITE_DATA.instruments) || [];
   var BY = {}; INSTR.forEach(function (r) { BY[r.id] = r; });
   function figure(r) {
@@ -182,48 +194,69 @@ button{font-family:inherit;color:inherit}
   }
   function prodRow(r) {
     var f = figure(r), nm = pname(r), c = CLS[r.cls] || ["#5A6070", "#3C4150"], tk = tick(r);
-    return '<li><a class="row" href="instrument.html?id=' + encodeURIComponent(r.id) + '"><span class="av" style="background:linear-gradient(160deg,' + c[0] + "," + c[1] + ")" + (tk.length > 3 ? ";font-size:11.5px" : "") + '">' + esc(tk) + "</span>" +
+    return '<li><a class="row" href="instrument.html?id=' + encodeURIComponent(r.id) + '"><span class="av" aria-hidden="true" style="background:linear-gradient(160deg,' + c[0] + "," + c[1] + ")" + (tk.length > 3 ? ";font-size:11.5px" : "") + '">' + esc(tk) + "</span>" +
       '<span class="tx"><span class="nm">' + esc(nm.head) + '</span><span class="sb">' + esc(nm.rest) + "</span></span>" +
       '<span class="fig"><b>' + esc(f.v) + "</b><small>" + esc(f.n) + "</small></span></a></li>";
   }
   var ORDER = ["warrant", "protection", "digital", "autocall", "booster", "discount", "revconv", "rcdigital"];
 
-  // ── Разделы ──
-  var S = { prod: { type: "all", q: "" }, mkt: { seg: "morning" }, iss: { seg: "live" } };
+  // ── Состояние: вкладка, переключатели, фильтр, поиск и прокрутка каждой вкладки.
+  //    Живёт в sessionStorage, поэтому «Назад» из карточки продукта возвращает туда же. ──
+  var KEY = "so_tabs_v1";
+  var S = { cur: "prod", prod: { type: "all", q: "" }, mkt: { seg: "morning" }, iss: { seg: "live" }, y: {} };
+  try { var saved = JSON.parse(sessionStorage.getItem(KEY) || "null"); if (saved && saved.prod) S = Object.assign(S, saved); } catch (e) {}
+  function save() { try { S.y[S.cur] = window.scrollY; sessionStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
 
-  function head(title, extra, sub) {
-    return '<div class="top"><div class="brand"><i>✦</i>Rumberg</div><div class="ttl"><h1>' + esc(title) + "</h1>" + (sub ? '<span class="sub">' + esc(sub) + "</span>" : "") + "</div>" + (extra || "") + "</div>";
+  function frame(title, ctl) {
+    return '<div class="nav"><span class="brand"><i aria-hidden="true">✦</i>Rumberg</span><span class="mini" aria-hidden="true">' + esc(title) + "</span></div>" +
+      '<div class="hero"><h1>' + esc(title) + "</h1></div>" +
+      '<div class="ctl">' + (ctl || "") + "</div>";
   }
-  function seg(key, opts) {
-    return '<div class="seg" role="tablist">' + opts.map(function (o) {
-      return '<button type="button" role="tab" data-seg="' + key + ":" + o[0] + '" aria-selected="' + (S[key].seg === o[0]) + '"' + (S[key].seg === o[0] ? ' class="on"' : "") + ">" + o[1] + "</button>";
+  function seg(key, label, opts) {
+    return '<div class="seg" role="group" aria-label="' + esc(label) + '">' + opts.map(function (o) {
+      return '<button type="button" data-seg="' + key + ":" + o[0] + '" aria-pressed="' + (S[key].seg === o[0]) + '">' + o[1] + "</button>";
     }).join("") + "</div>";
   }
 
   function viewProd() {
     var counts = {}; INSTR.forEach(function (r) { counts[r.type] = (counts[r.type] || 0) + 1; });
-    var chips = '<div class="chips">' + [["all", "Все", INSTR.length]].concat(ORDER.filter(function (t) { return counts[t]; }).map(function (t) { return [t, TYPE[t], counts[t]]; }))
-      .map(function (c) { return '<button type="button" data-type="' + c[0] + '"' + (S.prod.type === c[0] ? ' class="on"' : "") + ">" + esc(c[1]) + "<em>" + c[2] + "</em></button>"; }).join("") + "</div>";
-    return head("Продукты", '<label class="srch">' + svg("search", 18) + '<input id="pq" type="search" placeholder="Сбер, ОФЗ, золото…" value="' + esc(S.prod.q) + '" enterkeyhint="search" aria-label="Поиск продуктов"></label>' + chips) +
+    var chips = '<div class="chips" role="group" aria-label="Тип продукта">' + [["all", "Все", INSTR.length]].concat(ORDER.filter(function (t) { return counts[t]; }).map(function (t) { return [t, TYPE[t], counts[t]]; }))
+      .map(function (c) { return '<button type="button" data-type="' + c[0] + '" aria-pressed="' + (S.prod.type === c[0]) + '">' + esc(c[1]) + "<em>" + c[2] + "</em></button>"; }).join("") + "</div>";
+    return frame("Продукты", '<label class="srch">' + svg("search", 18) + '<input id="pq" type="search" placeholder="Сбер, ОФЗ, золото…" value="' + esc(S.prod.q) + '" enterkeyhint="search" aria-label="Поиск продуктов"></label>' + chips) +
       '<div class="pad" id="plist">' + prodList() + "</div>";
   }
+  var lastCount = null;
   function prodList() {
     var q = S.prod.q.trim().toLowerCase();
     var list = INSTR.filter(function (r) {
       return (S.prod.type === "all" || r.type === S.prod.type) && (!q || (r.name + " " + r.underlying + " " + r.cls).toLowerCase().indexOf(q) >= 0);
     });
-    if (!list.length) return '<p class="note">Ничего не нашлось.</p>';
+    lastCount = list.length;
+    if (!list.length) return '<p class="note">Ничего не нашлось. Попробуйте «Сбер», «ОФЗ» или «защита».</p>';
     var out = "";
     if (S.prod.type === "all" && !q) {
       var day = ((window.MORNING || {}).products || []).map(function (id) { return BY[id]; }).filter(Boolean);
-      if (day.length) out += '<div class="cap">Продукты дня</div><ul class="list">' + day.map(prodRow).join("") + "</ul>";
+      if (day.length) out += '<h2 class="cap">Продукты дня</h2><ul class="list">' + day.map(prodRow).join("") + "</ul>";
     }
     ORDER.forEach(function (t) {
       var g = list.filter(function (r) { return r.type === t; });
       if (!g.length) return;
-      out += '<div class="cap">' + esc(TYPE[t]) + " · " + g.length + '</div><ul class="list">' + g.map(prodRow).join("") + "</ul>";
+      out += '<h2 class="cap">' + esc(TYPE[t]) + " · " + g.length + '</h2><ul class="list">' + g.map(prodRow).join("") + "</ul>";
     });
-    return out + '<p class="note">Котировки индикативные. Сравнение и фильтры — на <a href="board.html" style="color:var(--acc)">полной доске</a>.</p>';
+    return out + '<p class="note">Котировки индикативные. Сравнение и фильтры — на <a href="board.html">полной доске</a>.</p>';
+  }
+
+  // Дайджест и разборы — 460 КБ, нужны только в «Рынок → Идеи»: грузим при первом открытии
+  var lazy = { state: 0 };
+  function loadIdeas() {
+    if (lazy.state) return;
+    lazy.state = 1;
+    var left = 2;
+    ["data/digest.js", "data/ideas.js"].forEach(function (src) {
+      var s = document.createElement("script"); s.src = src;
+      s.onload = s.onerror = function () { if (--left === 0) { lazy.state = 2; if (S.cur === "mkt" && S.mkt.seg === "ideas") render(true); } };
+      document.body.appendChild(s);
+    });
   }
 
   function viewMkt() {
@@ -232,13 +265,13 @@ button{font-family:inherit;color:inherit}
       var M = window.MORNING || {};
       body += '<p class="meta">Обзор от ' + esc(dmy(M.date)) + "</p>";
       (M.news || []).forEach(function (n) {
-        body += '<a class="card" href="' + esc(n.link || "research.html") + '"><span class="rb">' + esc(n.rubric) + "</span><h3>" + esc(n.title) + "</h3><p>" + esc(n.body) + '</p><span class="go">Разбор →</span></a>';
+        body += '<a class="card" href="' + esc(n.link || "research.html") + '"><span class="rb">' + esc(n.rubric) + "</span><h2>" + esc(n.title) + "</h2><p>" + esc(n.body) + '</p><span class="go" aria-hidden="true">Разбор →</span></a>';
       });
       var day = (M.products || []).map(function (id) { return BY[id]; }).filter(Boolean);
-      if (day.length) body += '<div class="cap">Продукты под обзор</div><ul class="list">' + day.map(prodRow).join("") + "</ul>";
+      if (day.length) body += '<h2 class="cap">Продукты под обзор</h2><ul class="list">' + day.map(prodRow).join("") + "</ul>";
     } else if (S.mkt.seg === "rates") {
       var R = window.RATES || {}, c = R.cbr || {};
-      function best(l) { return (l || []).reduce(function (a, x) { return !a || x.rate > a.rate ? x : a; }, null); }
+      var best = function (l) { return (l || []).reduce(function (a, x) { return !a || x.rate > a.rate ? x : a; }, null); };
       var deps = (R.deposits || []).filter(function (d) { return (d.termMonths || 0) <= 12 && !d.promo; });
       var rows = [];
       var sav = best(deps.filter(function (d) { return /saving/i.test(d.kind); })), dep = best(deps.filter(function (d) { return d.kind === "deposit"; }));
@@ -248,21 +281,25 @@ button{font-family:inherit;color:inherit}
       if (fund) rows.push(["Фонд денежного рынка", fund.name, fund.rate, "https://www.moex.com/ru/issue.aspx?code=" + fund.id]);
       if (ofz) rows.push(["Короткие ОФЗ", ofz.name, ofz.rate, "https://www.moex.com/ru/issue.aspx?code=" + ofz.id]);
       body += '<div class="tiles"><div class="tile"><b>' + fq(c.key && c.key.rate) + '%</b><span>ключевая ставка</span></div><div class="tile"><b>' + fq(c.ruonia && c.ruonia.rate) + "%</b><span>RUONIA</span></div></div>";
-      body += '<div class="cap">Лучшее на срок до года</div><ul class="list">' + rows.map(function (r) {
+      body += '<h2 class="cap">Лучшее на срок до года</h2><ul class="list">' + rows.map(function (r) {
         return '<li><a class="row" href="' + esc(r[3]) + '" target="_blank" rel="noopener"><span class="tx"><span class="nm">' + esc(r[0]) + '</span><span class="sb">' + esc(r[1]) + '</span></span><span class="fig g"><b>' + fq(r[2]) + "%</b><small>годовых</small></span></a></li>";
       }).join("") + "</ul>";
       body += '<a class="more-btn" href="screener.html">Все ставки по срокам</a><p class="note">Обновлено ' + esc(String(R.updated || "").replace(/^(\d{4})-(\d{2})-(\d{2})/, "$3.$2")) + ". Источники: ЦБ, Мосбиржа, Финуслуги.</p>";
     } else {
-      var D = window.DIGEST_ARCHIVE && DIGEST_ARCHIVE.issues && DIGEST_ARCHIVE.issues[0];
-      var I = window.IDEAS && IDEAS.issues && IDEAS.issues[0];
       var E = (window.EVENTS && EVENTS.items) || [];
       var nx = E.filter(function (e) { return e.date >= TODAY; }).sort(function (a, b) { return a.date < b.date ? -1 : 1; })[0];
-      if (nx) body += '<a class="card" href="events.html"><span class="rb">Вебинар · ' + esc(dmy(nx.date)) + (nx.timeMsk ? " · " + esc(nx.timeMsk) + " МСК" : "") + "</span><h3>" + esc(nx.title) + '</h3><span class="go">Записаться →</span></a>';
-      if (D) body += '<a class="card" href="digest.html"><span class="rb">Дайджест · ' + esc(D.date) + "</span><h3>Идеи недели</h3><p>" + esc(String(D.summary || "").split(", ").slice(0, 4).join(", ")) + '</p><span class="go">Открыть →</span></a>';
-      if (I) body += '<a class="card" href="ideas.html"><span class="rb">Разбор · ' + esc(dmy(I.date)) + "</span><h3>" + esc(I.title) + "</h3><p>" + esc(String(I.sub || "").slice(0, 180)) + '…</p><span class="go">Читать →</span></a>';
-      if (!nx) { var last = E.slice().sort(function (a, b) { return a.date < b.date ? 1 : -1; })[0]; if (last) body += '<a class="card" href="events.html"><span class="rb">Прошедший вебинар</span><h3>' + esc(last.title) + '</h3><span class="go">' + (last.recordingUrl ? "Смотреть запись →" : "Подробнее →") + "</span></a>"; }
+      if (nx) body += '<a class="card" href="events.html"><span class="rb">Вебинар · ' + esc(dmy(nx.date)) + (nx.timeMsk ? " · " + esc(nx.timeMsk) + " МСК" : "") + "</span><h2>" + esc(nx.title) + '</h2><span class="go" aria-hidden="true">Записаться →</span></a>';
+      if (lazy.state < 2) { loadIdeas(); body += '<p class="wait">Загружаю дайджест и разборы…</p>'; }
+      else {
+        var D = window.DIGEST_ARCHIVE && DIGEST_ARCHIVE.issues && DIGEST_ARCHIVE.issues[0];
+        var I = window.IDEAS && IDEAS.issues && IDEAS.issues[0];
+        if (D) body += '<a class="card" href="digest.html"><span class="rb">Дайджест · ' + esc(D.date) + "</span><h2>Идеи недели</h2><p>" + esc(String(D.summary || "").split(", ").slice(0, 4).join(", ")) + '</p><span class="go" aria-hidden="true">Открыть →</span></a>';
+        if (I) body += '<a class="card" href="ideas.html"><span class="rb">Разбор · ' + esc(dmy(I.date)) + "</span><h2>" + esc(I.title) + "</h2><p>" + esc(String(I.sub || "").slice(0, 180)) + '…</p><span class="go" aria-hidden="true">Читать →</span></a>';
+        if (!D && !I) body += '<p class="note">Не удалось загрузить дайджест и разборы. Обновите страницу.</p>';
+      }
+      if (!nx) { var last = E.slice().sort(function (a, b) { return a.date < b.date ? 1 : -1; })[0]; if (last) body += '<a class="card" href="events.html"><span class="rb">Прошедший вебинар</span><h2>' + esc(last.title) + '</h2><span class="go" aria-hidden="true">' + (last.recordingUrl ? "Смотреть запись →" : "Подробнее →") + "</span></a>"; }
     }
-    return head("Рынок", seg("mkt", [["morning", "Утро"], ["rates", "Ставки"], ["ideas", "Идеи"]])) + '<div class="pad">' + body + "</div>";
+    return frame("Рынок", seg("mkt", "Раздел рынка", [["morning", "Утро"], ["rates", "Ставки"], ["ideas", "Идеи"]])) + '<div class="pad">' + body + "</div>";
   }
 
   function viewIss() {
@@ -271,8 +308,8 @@ button{font-family:inherit;color:inherit}
       var O = ((window.OFFERINGS || {}).items || []).filter(function (o) { return o.status === "live" || o.status === "upcoming"; });
       if (!O.length) body = '<p class="note">Сейчас открытых размещений нет.</p>';
       O.forEach(function (o) {
-        body += '<a class="card off" href="offerings.html#' + esc(o.id) + '"><span class="st">' + esc(o.statusLabel || "") + "</span><h3>" + esc(o.name) + "</h3><p>" + esc(o.lead || o.kind || "") + "</p>" +
-          '<div class="nums">' + (o.price != null ? "<div><b>" + fq(o.price) + "%</b><span>цена</span></div>" : "") + (o.tenor ? "<div><b>" + esc(o.tenor) + "</b><span>срок</span></div>" : "") + (o.nominal ? "<div><b>" + Number(o.nominal).toLocaleString("ru-RU") + " ₽</b><span>номинал</span></div>" : "") + '</div><span class="go">Подробнее →</span></a>';
+        body += '<a class="card off" href="offerings.html#' + esc(o.id) + '"><span class="st">' + esc(o.statusLabel || "") + "</span><h2>" + esc(o.name) + "</h2><p>" + esc(o.lead || o.kind || "") + "</p>" +
+          '<div class="nums">' + (o.price != null ? "<div><b>" + fq(o.price) + "%</b><span>цена</span></div>" : "") + (o.tenor ? "<div><b>" + esc(o.tenor) + "</b><span>срок</span></div>" : "") + (o.nominal ? "<div><b>" + Number(o.nominal).toLocaleString("ru-RU") + " ₽</b><span>номинал</span></div>" : "") + '</div><span class="go" aria-hidden="true">Подробнее →</span></a>';
       });
     } else {
       var P = ((window.PLACEMENTS_DATA || {}).issues || []).slice().sort(function (a, b) { return a.issueStart < b.issueStart ? 1 : -1; });
@@ -281,17 +318,17 @@ button{font-family:inherit;color:inherit}
         return '<li><a class="row" href="placements.html#' + esc(p.isin) + '"><span class="tx"><span class="nm">' + esc(p.name) + '</span><span class="sb">' + esc(p.isin) + " · " + (live ? "до " + dmy(p.maturity) : "погашен") + '</span></span><span class="fig' + (bid ? " g" : "") + '"><b>' + (bid ? fq(p.bid) + "%" : "—") + "</b><small>" + (bid ? "Bid" : "нет котировки") + "</small></span></a></li>";
       }).join("") + '</ul><p class="note">Bid индикативный. Документы КУВ и КИД — в карточке выпуска.</p>';
     }
-    return head("Выпуски", seg("iss", [["live", "На размещении"], ["done", "Размещённые"]])) + '<div class="pad">' + body + "</div>";
+    return frame("Выпуски", seg("iss", "Какие выпуски", [["live", "На размещении"], ["done", "Размещённые"]])) + '<div class="pad">' + body + "</div>";
   }
 
   function viewMore() {
     function g(items) {
       return '<div class="grp">' + items.map(function (it) {
         var ext = /^https?:/.test(it[0]) ? ' target="_blank" rel="noopener"' : "";
-        return '<a href="' + it[0] + '"' + ext + '><span class="ic" style="background:' + it[3] + '">' + svg(it[2], 18) + '</span><span class="tt"><span>' + esc(it[1]) + "</span>" + CHEV + "</span></a>";
+        return '<a href="' + it[0] + '"' + ext + '><span class="ic" aria-hidden="true" style="background:' + it[3] + '">' + svg(it[2], 18) + '</span><span class="tt"><span>' + esc(it[1]) + "</span>" + CHEV + "</span></a>";
       }).join("") + "</div>";
     }
-    return head("Ещё") + '<div class="pad">' +
+    return frame("Ещё") + '<div class="pad">' +
       g([["about.html", "Библиотека", "book", "#E07B3A"], ["map.html", "Карта продуктов", "map", "#8E7CC3"], ["market.html", "Рынок структурных облигаций", "chart", "#4F86E6"], ["guide.html", "Как пользоваться", "help", "#5A6070"]]) +
       g([["partners.html", "Сотрудничество", "hand", "#D9A23A"], ["me.html", "Кабинет партнёра", "user", "#3D6FD8"], ["company.html", "О компании", "bld", "#5A6070"]]) +
       g([["https://t.me/+NHbVOoUI5IBkN2Uy", "Telegram-группа", "tg", "#2AABEE"]]) +
@@ -300,43 +337,51 @@ button{font-family:inherit;color:inherit}
 
   var VIEWS = { prod: viewProd, mkt: viewMkt, iss: viewIss, more: viewMore };
   var TABS = [["prod", "Продукты", "grid"], ["mkt", "Рынок", "pulse"], ["ai", "AI", "star"], ["iss", "Выпуски", "rocket"], ["more", "Ещё", "more"]];
-  var cur = null, aiOn = false;
+  var aiOn = false;
   var app = document.getElementById("app"), nav = document.querySelector(".tb");
 
   function tabs() {
     nav.innerHTML = TABS.map(function (t) {
-      var on = aiOn ? t[0] === "ai" : t[0] === cur;
-      return '<button type="button" data-t="' + t[0] + '"' + (on ? ' class="on" aria-current="page"' : "") + ">" + svg(t[2], 25) + "<span>" + t[1] + "</span></button>";
+      var on = aiOn ? t[0] === "ai" : t[0] === S.cur;
+      return '<button type="button" data-t="' + t[0] + '"' + (on ? ' aria-current="page"' : "") + ">" + svg(t[2], 25) + "<span>" + t[1] + "</span></button>";
     }).join("");
   }
-  function render(keepScroll) {
-    var y = window.scrollY;
-    app.innerHTML = '<div class="v">' + VIEWS[cur]() + "</div>";
-    if (!keepScroll) window.scrollTo(0, 0); else window.scrollTo(0, y);
-    wire();
+  var heroObs = null;
+  function render(keepScroll, y) {
+    var y0 = window.scrollY;
+    app.innerHTML = '<div class="v">' + VIEWS[S.cur]() + "</div>";
+    window.scrollTo(0, keepScroll ? y0 : (y || 0));
+    var pq = document.getElementById("pq");
+    if (pq) pq.addEventListener("input", function () {
+      S.prod.q = pq.value; document.getElementById("plist").innerHTML = prodList(); save();
+      document.getElementById("live").textContent = lastCount ? "Найдено: " + lastCount : "Ничего не нашлось";
+    });
+    // Крупный заголовок ушёл под строку навигации — показываем мелкое имя раздела
+    var v = app.firstChild, h = v.querySelector(".hero");
+    if (heroObs) heroObs.disconnect();
+    if ("IntersectionObserver" in window && h) {
+      heroObs = new IntersectionObserver(function (es) { v.classList.toggle("sc", !es[0].isIntersecting); }, { rootMargin: "-" + (v.querySelector(".nav").offsetHeight + 1) + "px 0px 0px 0px" });
+      heroObs.observe(h);
+    }
   }
-  function go(t, push) {
+  function go(t) {
     if (t === "ai") { if (window.Chat && Chat.open) { Chat.open(); aiOn = true; tabs(); } return; }
     if (aiOn && window.Chat && Chat.close) { Chat.close(); aiOn = false; }
-    if (t === cur) { window.scrollTo({ top: 0, behavior: "smooth" }); tabs(); return; }
-    cur = t;
-    if (push) history.replaceState(null, "", "#" + t);
-    render(); tabs();
-  }
-  function wire() {
-    var pq = document.getElementById("pq");
-    if (pq) pq.addEventListener("input", function () { S.prod.q = pq.value; document.getElementById("plist").innerHTML = prodList(); });
+    if (t === S.cur) { window.scrollTo({ top: 0, behavior: "smooth" }); tabs(); return; }   // повторный тап — наверх, как в Telegram
+    save();
+    S.cur = t;
+    render(false, S.y[t] || 0); tabs(); save();
   }
   app.addEventListener("click", function (e) {
     var b = e.target.closest("[data-seg]");
-    if (b) { var p = b.getAttribute("data-seg").split(":"); S[p[0]].seg = p[1]; render(true); return; }
+    if (b) { var p = b.getAttribute("data-seg").split(":"); S[p[0]].seg = p[1]; render(true); save(); return; }
     var c = e.target.closest("[data-type]");
-    if (c) { S.prod.type = c.getAttribute("data-type"); render(true); }
+    if (c) { S.prod.type = c.getAttribute("data-type"); render(true); save(); }
   });
-  nav.addEventListener("click", function (e) { var b = e.target.closest("button[data-t]"); if (b) go(b.getAttribute("data-t"), true); });
-  window.addEventListener("scroll", function () { var t = document.querySelector(".top"); if (t) t.classList.toggle("sc", window.scrollY > 4); }, { passive: true });
+  nav.addEventListener("click", function (e) { var b = e.target.closest("button[data-t]"); if (b) go(b.getAttribute("data-t")); });
+  window.addEventListener("pagehide", save);
 
-  // Закрыли ассистента крестиком — подсветка вкладки возвращается к разделу
+  // Закрыли ассистента крестиком — подсветка возвращается к разделу
   var mo = new MutationObserver(function () {
     var p = document.querySelector(".ca-panel"); if (!p) return;
     var on = p.classList.contains("on");
@@ -345,9 +390,12 @@ button{font-family:inherit;color:inherit}
   window.addEventListener("load", function () { var p = document.querySelector(".ca-panel"); if (p) mo.observe(p, { attributes: true, attributeFilter: ["class"] }); });
 
   var h0 = (location.hash || "").slice(1);
-  go(VIEWS[h0] ? h0 : "prod", false);
+  if (VIEWS[h0]) S.cur = h0;
+  if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+  render(false, S.y[S.cur] || 0); tabs();
 })();
 </script>
 <script src="chat.js?v=24"></script>
+<script src="qualgate.js?v=6"></script>
 </body>
 </html>
