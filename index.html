@@ -752,8 +752,139 @@
   }
 </style>
 <script src="metrika.js?v=10" defer></script>
+<script>
+/* Телефон (≤860px): главная — вкладки «как в Telegram» (tabs.js). Класс ставим до
+   первой отрисовки, чтобы не мелькала прежняя главная. Поисковым роботам — прежняя
+   страница целиком (тот же список, что в qualgate.js). */
+(function () {
+  try {
+    window.SO_TG = !/googlebot|google-inspectiontool|bingbot|yandex(?:bot|mobilebot|renderresourcesbot)|duckduckbot|applebot/i.test(navigator.userAgent || "");
+    if (window.SO_TG && window.matchMedia("(max-width: 860px)").matches) document.documentElement.classList.add("tg-on");
+  } catch (e) {}
+})();
+</script>
+<style>
+  /* ══════════ ТЕЛЕФОН: ВКЛАДКИ (tabs.js) ══════════
+     Всё — под html.tg-on и только до 860px: на десктопе этой разметки не видно,
+     а прежняя главная (герой, экраны, колонки) на телефоне скрыта целиком. */
+  .tg-app { display: none; }
+  @media (max-width: 860px) {
+    html.tg-on body > .bg-market, html.tg-on body > .skip, html.tg-on body > header.nav, html.tg-on body > .wrap,
+    html.tg-on .ca-dock, html.tg-on .st-sp { display: none !important; }
+    html.tg-on body::before, html.tg-on body::after { display: none; }
+    html.tg-on { scroll-padding-top: 0; }
+    html.tg-on body { padding-bottom: calc(62px + env(safe-area-inset-bottom)); }
+    html.tg-on .tg-app { display: block; }
+
+    .tg-app { --tg-card:#14161C; --tg-card2:#1B1E25; --tg-seg:#2A2E37; --tg-bar:#0E0F14; --tg-ink:#F2F3F7;
+      --tg-mut:rgba(242,243,247,.64); --tg-faint:rgba(242,243,247,.56); --tg-line:rgba(255,255,255,.08);
+      --tg-nav:48px; --tg-tab:62px; --tg-st:env(safe-area-inset-top); --tg-sb:env(safe-area-inset-bottom);
+      position: relative; z-index: 1; color: var(--tg-ink); font-family: 'Onest', system-ui, sans-serif; }
+    .tg-app a { color: inherit; text-decoration: none; }
+    .tg-main { max-width: 560px; margin: 0 auto; min-height: 100svh; }
+    .tg-vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+    /* Строка навигации (липкая) → крупный заголовок (уезжает) → панель управления (липкая).
+       Ушёл заголовок под строку — его имя проявляется в ней мелко, как в iOS */
+    /* Появление — только при смене раздела: каркас из разметки виден сразу, без вспышки */
+    .tg-v.tg-anim { animation: tg-in .22s cubic-bezier(.16,1,.3,1); }
+    @keyframes tg-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    .tg-nav { position: sticky; top: 0; z-index: 21; height: calc(var(--tg-nav) + var(--tg-st)); padding: var(--tg-st) 16px 0; display: flex; align-items: center; background: #0B0C10; }
+    /* Заливка над строкой: встроенный браузер Telegram рисует страницу и под своей
+       свёрнутой панелью — без неё список проезжал бы над заголовком */
+    .tg-nav::before { content: ""; position: absolute; left: 0; right: 0; bottom: 100%; height: 100vh; background: #0B0C10; pointer-events: none; }
+    .tg-brand { display: flex; align-items: center; gap: 6px; font-family: 'Rubik', sans-serif; font-weight: 600; font-size: 15px; color: var(--tg-mut); transition: opacity .18s; }
+    .tg-brand i { font-style: normal; color: #EE7D1B; }
+    .tg-mini { position: absolute; left: 0; right: 0; bottom: 0; height: var(--tg-nav); display: flex; align-items: center; justify-content: center; font-family: 'Rubik', sans-serif; font-size: 17px; font-weight: 600; opacity: 0; transition: opacity .18s; pointer-events: none; }
+    .tg-v.tg-sc .tg-mini { opacity: 1; }
+    .tg-v.tg-sc .tg-brand { opacity: 0; }
+    .tg-hero { padding: 2px 16px 4px; }
+    .tg-app h1, .tg-app .tg-h1 { margin: 0; font-family: 'Rubik', sans-serif; font-size: 30px; font-weight: 600; letter-spacing: -.01em; line-height: 1.15; max-width: none; }
+    .tg-stories { min-height: 94px; margin: 6px -16px 0; }
+    .tg-stories.tg-empty { min-height: 0; }
+    .tg-stories .st-row { margin: 0; padding: 4px 16px 8px; }
+    .tg-stories .st-row > .st-c:first-child { margin-left: 0; }
+    .tg-ctl { position: sticky; top: calc(var(--tg-nav) + var(--tg-st)); z-index: 20; background: #0B0C10; padding: 6px 16px 8px; border-bottom: 1px solid transparent; transition: border-color .2s; }
+    .tg-ctl:empty { display: none; }
+    .tg-v.tg-sc .tg-ctl { border-bottom-color: var(--tg-line); }
+    .tg-srch { display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 12px; border-radius: 12px; background: var(--tg-card2); color: var(--tg-faint); cursor: text; }
+    .tg-srch:focus-within { outline: 2px solid #EE7D1B; outline-offset: -2px; }
+    .tg-srch input { flex: 1; min-width: 0; height: 100%; border: 0; outline: 0; background: none; color: var(--tg-ink); font: inherit; font-size: 16px; }
+    .tg-srch input::placeholder { color: var(--tg-faint); }
+    .tg-seg { display: flex; gap: 4px; padding: 3px; border-radius: 12px; background: var(--tg-card2); }
+    .tg-seg button { position: relative; flex: 1; height: 38px; border: 0; border-radius: 9px; background: none; color: var(--tg-mut); font-family: inherit; font-size: 14px; font-weight: 500; cursor: pointer; }
+    .tg-seg button::before { content: ""; position: absolute; inset: -3px 0; }
+    .tg-seg button[aria-pressed="true"] { background: var(--tg-seg); color: var(--tg-ink); }
+    .tg-chips { margin: 8px -16px 0; padding: 4px 16px; min-height: 44px; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+    .tg-chips::-webkit-scrollbar { display: none; }
+    .tg-chips button { position: relative; flex: none; height: 36px; padding: 0 13px; border-radius: 18px; border: 1px solid var(--tg-line); background: none; color: var(--tg-mut); font-family: inherit; font-size: 14px; cursor: pointer; }
+    .tg-chips button::before { content: ""; position: absolute; inset: -4px -3px; }
+    .tg-chips button[aria-pressed="true"] { background: var(--tg-ink); border-color: var(--tg-ink); color: #0B0C10; font-weight: 500; }
+    .tg-chips button em { font-style: normal; opacity: .6; margin-left: 4px; }
+
+    .tg-pad { padding: 4px 16px 20px; }
+    .tg-cap { margin: 18px 0 6px; font-family: 'Onest', sans-serif; font-size: 13px; font-weight: 500; color: var(--tg-faint); }
+    .tg-list { list-style: none; margin: 0; padding: 0; }
+    .tg-row { display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 8px 0; border-bottom: 1px solid var(--tg-line); }
+    .tg-list li:last-child > .tg-row { border-bottom: 0; }
+    .tg-av { flex: none; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-family: 'Rubik', sans-serif; font-weight: 600; font-size: 13.5px; }
+    .tg-tx { flex: 1; min-width: 0; }
+    .tg-nm { display: block; font-size: 15.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tg-sb { display: block; margin-top: 2px; font-size: 13.5px; color: var(--tg-mut); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tg-fig { flex: none; text-align: right; }
+    .tg-fig b { display: block; font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 500; }
+    .tg-fig small { display: block; font-size: 11px; color: var(--tg-faint); margin-top: 1px; }
+    .tg-fig.tg-g b { color: #55C08A; }
+
+    .tg-card { display: block; background: var(--tg-card); border-radius: 16px; padding: 14px 16px; margin-bottom: 10px; }
+    .tg-rb { font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: #EE7D1B; }
+    .tg-card h2 { margin: 6px 0; font-family: 'Rubik', sans-serif; font-size: 18px; font-weight: 600; line-height: 1.25; }
+    .tg-card p { margin: 0; font-size: 14.5px; line-height: 1.5; color: var(--tg-mut); }
+    .tg-go { display: inline-block; margin-top: 10px; font-size: 13.5px; color: #EE7D1B; }
+    .tg-meta { margin: 6px 0 10px; font-size: 13px; color: var(--tg-faint); }
+    .tg-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px; }
+    .tg-tile { background: var(--tg-card); border-radius: 14px; padding: 12px 14px; }
+    .tg-tile b { display: block; font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 500; }
+    .tg-tile span { display: block; margin-top: 2px; font-size: 12.5px; color: var(--tg-mut); }
+    .tg-stat { display: inline-block; padding: 3px 9px; border-radius: 10px; background: rgba(85,192,138,.15); color: #9ADDBB; font-size: 12px; font-weight: 500; }
+    .tg-nums { display: flex; gap: 18px; margin-top: 10px; }
+    .tg-nums b { display: block; font-family: 'JetBrains Mono', monospace; font-size: 17px; }
+    .tg-nums span { font-size: 11.5px; color: var(--tg-faint); }
+    .tg-note { margin: 14px 0 0; font-size: 12px; line-height: 1.5; color: var(--tg-faint); }
+    .tg-note a { color: #EE7D1B; }
+    .tg-more { display: block; margin-top: 12px; height: 44px; line-height: 44px; text-align: center; border-radius: 12px; background: var(--tg-card2); font-size: 14.5px; font-weight: 500; }
+    .tg-wait { padding: 28px 0; text-align: center; color: var(--tg-faint); font-size: 14px; }
+    .tg-grp { margin: 8px 0 16px; border-radius: 14px; background: var(--tg-card); overflow: hidden; }
+    .tg-grp a { display: flex; align-items: center; gap: 12px; min-height: 50px; padding-left: 12px; }
+    .tg-ic { flex: none; width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; color: #fff; }
+    .tg-tt { flex: 1; min-width: 0; align-self: stretch; display: flex; align-items: center; gap: 8px; padding-right: 12px; border-bottom: 1px solid var(--tg-line); font-size: 16px; }
+    .tg-grp a:last-child .tg-tt { border-bottom: 0; }
+    .tg-tt span { flex: 1; }
+    .tg-chev { color: var(--tg-faint); flex: none; }
+
+    /* Нижняя панель вкладок */
+    .tg-tb { position: fixed; left: 0; right: 0; bottom: 0; z-index: 400; height: calc(var(--tg-tab) + var(--tg-sb)); padding-bottom: var(--tg-sb); display: flex; background: var(--tg-bar); border-top: 1px solid var(--tg-line); }
+    .tg-tb button { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; background: none; border: 0; padding: 0; color: rgba(242,243,247,.56); font-family: inherit; font-size: 11px; font-weight: 500; -webkit-tap-highlight-color: transparent; cursor: pointer; }
+    .tg-tb button[aria-current] { color: #EE7D1B; }
+    .tg-app :focus-visible { outline: 2px solid #EE7D1B; outline-offset: -2px; border-radius: 10px; }
+
+    /* Ассистент — во всю площадь над вкладками, как обычный раздел */
+    html.tg-on .ca-panel { left: 0 !important; right: 0 !important; top: env(safe-area-inset-top) !important; bottom: calc(62px + env(safe-area-inset-bottom)) !important;
+      width: auto !important; max-width: 560px !important; margin: 0 auto !important; height: auto !important; max-height: none !important;
+      border-radius: 0 !important; border: 0 !important; box-shadow: none !important; transform: none !important; }
+    @media (min-width: 600px) { .tg-main { border-left: 1px solid var(--tg-line); border-right: 1px solid var(--tg-line); } .tg-tb { max-width: 560px; margin: 0 auto; } }
+    @media (prefers-reduced-motion: reduce) { .tg-v.tg-anim { animation: none; } }
+  }
+</style>
 </head>
 <body>
+<!-- Телефон: каркас вкладок (tabs.js наполняет). Виден только при html.tg-on и ширине ≤860px;
+     стоит первым, чтобы первая отрисовка не ждала данных и скриптов -->
+<div class="tg-app" id="tg-app">
+  <div class="tg-main" id="tg-main" role="main"><div class="tg-v"><div class="tg-nav"><span class="tg-brand"><i aria-hidden="true">✦</i>Rumberg</span><span class="tg-mini" aria-hidden="true">Продукты</span></div><div class="tg-hero"><div class="tg-h1" role="heading" aria-level="1">Продукты</div><div class="tg-stories"></div></div><div class="tg-ctl"><label class="tg-srch"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.5-4.5"/></svg><input type="search" placeholder="Сбер, ОФЗ, золото…" aria-label="Поиск продуктов"></label><div class="tg-chips"></div></div><div class="tg-pad"><p class="tg-wait">Загружаю продукты…</p></div></div></div>
+  <nav class="tg-tb" id="tg-tb" aria-label="Разделы"><button type="button" data-t="prod" aria-current="page"><svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2.5"/><path d="M4 9.5h16M9.5 9.5V20"/></svg><span>Продукты</span></button><button type="button" data-t="mkt"><svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 12.5h4l2.5-6 4 11 2.5-5h4"/></svg><span>Рынок</span></button><button type="button" data-t="ai"><svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l1.9 5.6L19.5 11l-5.6 1.9L12 18.5l-1.9-5.6L4.5 11l5.6-1.9z"/></svg><span>AI</span></button><button type="button" data-t="iss"><svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c3 2 4.5 5.5 4.5 9.5L12 17l-4.5-4.5C7.5 8.5 9 5 12 3z"/><path d="M7.5 12.5 5 15l2 2M16.5 12.5 19 15l-2 2M10 20h4"/></svg><span>Выпуски</span></button><button type="button" data-t="more"><svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="6" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="18" cy="12" r="1.6"/></svg><span>Ещё</span></button></nav>
+  <p class="tg-vh" aria-live="polite" id="tg-live"></p>
+</div>
 
 <div class="bg-market" aria-hidden="true"><svg id="market" aria-hidden="true" role="presentation" focusable="false" viewBox="0 0 1440 640" preserveAspectRatio="xMidYMid slice"></svg></div>
 
@@ -1609,7 +1740,7 @@
   })();
 </script>
 <script src="intro.js?v=6"></script>
-<script src="stories.js?v=11"></script>
+<script src="stories.js?v=12"></script>
 <script src="chat.js?v=24"></script>
 <script src="search.js?v=6"></script>
 <script src="nav-about.js?v=9"></script>
@@ -1951,7 +2082,9 @@
     });
   }
 
-  function tryBuild() { if (MQ.matches) build(); }
+  // Людям на телефоне — вкладки (tabs.js, window.SO_TG); экраны собираются только для
+  // поисковых роботов: им остаётся прежняя страница с героем, как до вкладок
+  function tryBuild() { if (MQ.matches && !window.SO_TG) build(); }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", tryBuild);
   else tryBuild();
   // Поворот экрана и переход через контрольную точку: строим при первом попадании
@@ -2010,7 +2143,7 @@
   else setTimeout(start, 1200);
 })();
 </script>
-<script src="tabbar.js?v=1"></script>
+<script src="tabs.js?v=1"></script>
 </body>
 
 </html>
