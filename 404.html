@@ -83,6 +83,13 @@
     h1 { font-size: 25px; }
   }
 
+  /* Телефон: шапка в одну строку 57px, как на остальных страницах; разделы — кнопками ниже */
+  @media (max-width: 900px) {
+    .nav-in { height: 57px; }
+    .topnav { display: none; }
+    .btn { min-height: 44px; }
+    .links a { display: inline-flex; align-items: center; min-height: 44px; }
+  }
 </style>
 <script src="/metrika.js?v=8" defer></script>
 </head>

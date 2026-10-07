@@ -32,7 +32,7 @@
 <style>
   :root {
     --canvas: #0B0C10; --card: #14161C; --panel-2: #191B22; --tile: rgba(255,255,255,0.045);
-    --ink: #F2F3F7; --hushed: rgba(242,243,247,0.64); --faint: rgba(242,243,247,0.44);
+    --ink: #F2F3F7; --hushed: rgba(242,243,247,0.64); --faint: rgba(242,243,247,0.58);
     --border: rgba(255,255,255,0.11); --border-soft: rgba(255,255,255,0.07);
     --solar: #EE7D1B; --solar-l: #F58E33; --up: #55C08A;
     --f-body: 'Onest', system-ui, sans-serif; --f-mono: 'JetBrains Mono', Consolas, monospace;
@@ -174,6 +174,8 @@
     .modal { padding: 24px; }
   }
   @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+  /* Тач-цели ≥44px на телефоне: ссылки «Материал», «Запись» под встречами были 31 */
+  @media (max-width: 900px) { .lnk { display: inline-flex; align-items: center; min-height: 44px; } }
 </style>
 </head>
 <body>
@@ -472,7 +474,7 @@
   });
 })();
 </script>
-<script src="search.js?v=4"></script>
+<script src="search.js?v=5"></script>
 <script src="nav-about.js?v=9" defer></script>
 <script src="tabbar.js?v=1"></script>
 </body>

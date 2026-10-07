@@ -186,7 +186,7 @@
         <li><b>Прайсинг под ваш мандат.</b> Базовый актив, срок и профиль выплаты — ваши. Считаем и присылаем индикативные параметры: участие, купон или премию.</li>
         <li><b>Выпуск с ISIN, КУВ и КИД.</b> Бумага покупается у вашего брокера в обычном режиме — отдельной инфраструктуры не нужно.</li>
         <li><b>Сопровождение до погашения.</b> Индикативный Bid по обращающимся выпускам, переоценка и документы по каждому выпуску.</li>
-        <li><b>Готовые цены на витрине.</b> 112 инструментов на 31 базовый актив — можно посмотреть уровни, не отправляя запрос.</li>
+        <li><b>Готовые цены на витрине.</b> <span data-n="instr">118</span> <span data-w="instr">инструментов</span> на <span data-n="ua">34</span> <span data-w="ua1">базовых актива</span> — можно посмотреть уровни, не отправляя запрос.</li>
       </ul>
       <div class="trk-h">С чего начать</div>
       <ol class="trk-s">
@@ -235,8 +235,8 @@
   <div class="nums">
     <div class="nm"><div class="v">62</div><div class="k">выпуска за два года, первый — апрель 2024</div></div>
     <div class="nm"><div class="v">≈30 млрд ₽</div><div class="k">объём выпущенных продуктов</div></div>
-    <div class="nm"><div class="v">112</div><div class="k">инструментов с ценами на доске прямо сейчас</div></div>
-    <div class="nm"><div class="v">31</div><div class="k">базовый актив: от ОФЗ и акций РФ до биткоин-ETF и урана</div></div>
+    <div class="nm"><div class="v" data-n="instr">118</div><div class="k"><span data-w="instr">инструментов</span> с ценами на доске прямо сейчас</div></div>
+    <div class="nm"><div class="v" data-n="ua">34</div><div class="k"><span data-w="ua">базовых актива</span>: от ОФЗ и акций РФ до биткоин-ETF и урана</div></div>
   </div>
 
   <div class="cap">Частые вопросы</div>
@@ -267,9 +267,27 @@
   <span><a href="company.html">О компании</a></span>
 </footer>
 
+<script src="data/instruments.js"></script>
+<script>
+  // Цифры «сколько на доске» раньше стояли руками и отстали (112 и 31 при 118 и 34).
+  // Теперь считаются из того же файла, что рисует доску; без данных остаются запасные
+  (function () {
+    var it = (window.SITE_DATA && SITE_DATA.instruments) || [];
+    if (!it.length) return;
+    var n = { instr: it.length, ua: new Set(it.map(function (i) { return i.underlying; })).size };
+    function pl(k, one, few, many) { var a = k % 100, b = k % 10; return a > 10 && a < 20 ? many : b === 1 ? one : b > 1 && b < 5 ? few : many; }
+    var w = {
+      instr: pl(n.instr, "инструмент", "инструмента", "инструментов"),
+      ua: pl(n.ua, "базовый актив", "базовых актива", "базовых активов"),
+      ua1: pl(n.ua, "базовый актив", "базовых активах", "базовых активах")
+    };
+    document.querySelectorAll("[data-n]").forEach(function (e) { e.textContent = n[e.getAttribute("data-n")]; });
+    document.querySelectorAll("[data-w]").forEach(function (e) { e.textContent = w[e.getAttribute("data-w")]; });
+  })();
+</script>
 <script src="contact.js?v=10"></script>
 <script src="chat.js?v=24"></script>
-<script src="search.js?v=4"></script>
+<script src="search.js?v=5"></script>
 <script src="nav-about.js?v=9"></script>
 <script>
   (function () {

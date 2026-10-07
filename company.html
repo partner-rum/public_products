@@ -215,6 +215,8 @@
     .bz-roles { grid-template-columns: minmax(0,1fr); gap: 16px; }
     .bz-go { min-height: 44px; align-items: center; }
   }
+  /* Тач-цели ≥44px на телефоне: вкладки примеров были 30 */
+  @media (max-width: 900px) { .px-tab { min-height: 44px; } }
 </style>
 </head>
 <body>
@@ -648,7 +650,7 @@
 </script>
 <script src="chat.js?v=24"></script>
 <script src="qualgate.js?v=6"></script>
-<script src="search.js?v=4"></script>
+<script src="search.js?v=5"></script>
 <script src="nav-about.js?v=9"></script>
 <script src="contact.js?v=10"></script>
 <script>

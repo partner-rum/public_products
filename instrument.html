@@ -179,6 +179,10 @@
     body { background: #fff; }
     .panel, .section, .metric { border: 1px solid #CFCFCF; box-shadow: none; }
   }
+  /* Тач-цели ≥44px на телефоне: «Поделиться» было 35, «Скачать one-pager» 37, поле суммы 39 */
+  @media (max-width: 760px) {
+    .sh-btn, .btn-pdf, .calc-input { min-height: 44px !important; }
+  }
 </style>
 <script src="metrika.js?v=8" defer></script>
 </head>
@@ -988,7 +992,7 @@
   }
 </script>
 <script src="chat.js?v=24"></script>
-<script src="search.js?v=4"></script>
+<script src="search.js?v=5"></script>
 <script src="nav-about.js?v=9"></script>
 <script src="qualgate.js?v=6"></script>
 <script src="tabbar.js?v=1"></script>

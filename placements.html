@@ -287,7 +287,30 @@
   const openGroups = new Set();
   let groupsInited = false;
 
-  const assetOf = i => i.basket.map(b => b.n).join(", ");
+  // Имена активов приходят из бэкофиса как есть («Currency Pair CNY/RUB», «iShares
+  // Bitcoin Trust ETF») — рядом с «ОФЗ 26238» и «Сбербанк» список читался выгрузкой.
+  // Показываем человеческое имя; поиск находит и по нему, и по исходному
+  const NICE = {
+    "Currency Pair CNY/RUB": "Юань (CNY/RUB)",
+    "Currency Pair USD/RUB": "Доллар (USD/RUB)",
+    "CSI 300 Index": "Индекс CSI 300",
+    "iShares Bitcoin Trust ETF": "Биткоин (фонд IBIT)",
+    "SPDR S&P 500 ETF Trust": "S&P 500 (фонд SPY)",
+    "SPDR Gold Shares (GLD)": "Золото (фонд GLD)",
+    "Global X Uranium ETF": "Уран (фонд URA)",
+    "Index RSP 42 Enregy AI": "Индекс RSP 42 Energy AI",
+    "Index AI RSP 30": "Индекс AI RSP 30",
+    "Rumberg Pre-IPO Index 1": "Индекс Rumberg Pre-IPO",
+    "Rumberg Natural Gas": "Индекс Rumberg Natural Gas",
+    "Денежное обязательство Контрольного лица": "Кредитный риск контрольного лица",
+    "МКПАО \"Хэдхантер\"": "HeadHunter",
+    "Татнефть (ао)": "Татнефть",
+    "Корпоративный центр ИКС 5": "X5",
+    "МосБиржа": "Мосбиржа"
+  };
+  const nice = n => NICE[n] || n;
+  const assetOf = i => i.basket.map(b => nice(b.n)).join(", ");
+  const assetRaw = i => i.basket.map(b => b.n).join(", ");
   const CCY_SIGN = c => ({ RUB: "₽", USD: "$", EUR: "€", CNY: "¥" }[c] || c || "");
 
   // Единственным агрегатом был счётчик «выпусков: 53», и он же противоречил
@@ -349,7 +372,7 @@
       let mid = "";
       if (b.f0 != null) mid = "фиксинг " + fmtN(b.f0) + (b.px != null ? " → " + fmtN(b.px) + (b.pxTime ? " (" + fmtD(b.pxTime) + ")" : "") : "");
       const perf = b.perfPct != null ? '<span style="color:' + perfColor(b.perfPct) + ';font-weight:600;font-family:var(--f-mono);font-size:12.5px">' + fmtPerf(b.perfPct) + '</span>' : "";
-      return '<div class="asset-line"><b>' + b.n + '</b><span class="fx-note">' + mid + '</span>' + perf + '</div>';
+      return '<div class="asset-line"><b>' + nice(b.n) + '</b><span class="fx-note">' + mid + '</span>' + perf + '</div>';
     }).join("");
     const pay = [];
     if (i.kind === "coupon") {
@@ -429,7 +452,7 @@
     return issues.filter(i =>
       (kind === "all" || i.kind === kind) &&
       (showMatured || !i.matured) &&
-      (!needle || (i.serial + " " + i.isin + " " + assetOf(i)).toLowerCase().includes(needle)));
+      (!needle || (i.serial + " " + i.isin + " " + assetOf(i) + " " + assetRaw(i)).toLowerCase().includes(needle)));
   }
 
   // Вторая ссылка placements.html#<ISIN> в уже открытую вкладку меняла адрес,
@@ -647,7 +670,7 @@
   if (selected) select(selected, !!hash);
 </script>
 <script src="chat.js?v=24"></script>
-<script src="search.js?v=4"></script>
+<script src="search.js?v=5"></script>
 <script src="nav-about.js?v=9"></script>
 <script src="qualgate.js?v=6"></script>
 <script src="tabbar.js?v=1"></script>

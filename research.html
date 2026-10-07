@@ -160,6 +160,8 @@
     .btn-tg .tg-lbl { display:none; }
     .btn-tg { padding:8px 10px; }
   }
+  /* Тач-цели ≥44px на телефоне: чипсы рубрик были 30, выбор выпуска 39 */
+  @media (max-width: 900px) { .chip { min-height: 44px; display: inline-flex; align-items: center; } .pick-btn { min-height: 44px; } }
 </style>
 <script src="metrika.js?v=8" defer></script>
 </head>
@@ -214,7 +216,7 @@
 
 <script src="data/instruments.js?v=fx7"></script>
 <script src="data/lib.js?v=ax9"></script>
-<script src="data/research.js?v=4"></script>
+<script src="data/research.js?v=5"></script>
 <script>
   (function () {
     var ISSUES = (window.RESEARCH && RESEARCH.issues) || [];
@@ -420,7 +422,7 @@
   })();
 </script>
 <script src="chat.js?v=24"></script>
-<script src="search.js?v=4"></script>
+<script src="search.js?v=5"></script>
 <script src="nav-about.js?v=9"></script>
 <script src="qualgate.js?v=6"></script>
 <script src="tabbar.js?v=1"></script>

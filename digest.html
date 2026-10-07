@@ -130,6 +130,8 @@
     .topnav { margin-left: 0; width: 100%; gap: 16px; font-size: 13.5px; }
   }
   @media print { .nav, .crumbs, .pick, .nextprev { display: none !important; } body { background: #fff; } .toc { display: none; } .layout { grid-template-columns: 1fr; } }
+  /* Тач-цели ≥44px на телефоне: выбор выпуска было 36, «Скачать дайджест», «Печатная версия» и «Поделиться» 35 */
+  @media (max-width: 900px) { .pick-btn, .btn-dl, .btn-print, .sh-btn { min-height: 44px !important; } }
 </style>
 <script src="metrika.js?v=8" defer></script>
 </head>
@@ -354,7 +356,7 @@
   }
 </script>
 <script src="chat.js?v=24"></script>
-<script src="search.js?v=4"></script>
+<script src="search.js?v=5"></script>
 <script src="nav-about.js?v=9"></script>
 <script src="qualgate.js?v=6"></script>
 <script src="tabbar.js?v=1"></script>

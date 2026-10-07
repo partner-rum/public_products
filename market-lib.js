@@ -78,6 +78,7 @@
 .mk-chips{display:flex;flex-wrap:wrap;gap:6px}\
 .mk-chips button{font-family:var(--f-mono);font-size:12.5px;color:var(--hushed);background:rgba(255,255,255,.06);border:1px solid transparent;border-radius:8px;padding:6px 11px;cursor:pointer;transition:background .15s,color .15s}\
 .mk-chips button:hover{background:rgba(255,255,255,.1);color:var(--ink)}\
+@media(max-width:900px){.mk-chips button{min-height:44px;min-width:56px}}\
 .mk-chips button.on{background:rgba(238,125,27,.16);color:var(--solar);border-color:rgba(238,125,27,.4);font-weight:600}\
 .mk-kpi{display:grid;grid-template-columns:repeat(4,1fr);gap:12px 14px;margin:16px 0 4px}\
 .mk-kpi .k{font-family:var(--f-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}\
