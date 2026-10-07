@@ -24,7 +24,13 @@
      до вкладок они тоже стояли над заголовком первого экрана;
    — вводная — первая вкладка «Главная» (вариант A из двух показанных; B — вводная
      без своей вкладки — отклонён), туда же уехали пункты прежней вкладки «Ещё»;
-     тап по «✦ Rumberg» в любой вкладке тоже возвращает на неё. */
+     тап по «✦ Rumberg» в любой вкладке тоже возвращает на неё;
+   — «НАЗАД» (07.10.2026, Руслан: «заходишь куда-то, хочешь вернуться обратно —
+     показываешь тап назад»): каждая смена раздела — запись в истории браузера
+     (раздел, глубина, откуда пришли). В строке навигации раздела слева «‹ Главная»
+     (или имя раздела, откуда пришли) — шаг назад; системный «назад» (жест iOS,
+     кнопка Android) идёт по тем же записям и с сайта не уводит, пока есть куда
+     вернуться внутри главной. Открытый чат — тоже запись: «назад» его закрывает. */
 (function () {
   "use strict";
   var MQ = window.matchMedia && window.matchMedia("(max-width: 860px)");
@@ -99,14 +105,30 @@
     try { NAVT = ((performance.getEntriesByType && performance.getEntriesByType("navigation")[0]) || {}).type || ""; } catch (e) {}
     if (NAVT === "navigate" || !S.cur) { S.cur = "home"; S.y.home = 0; }
     function save() { try { S.y[S.cur] = window.scrollY; sessionStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+    // Запись истории, на которой стоим: глубина внутри главной и раздел, откуда пришли
+    var H = { d: 0, from: null };
+    var TITLE = { home: "Главная", prod: "Продукты", mkt: "Рынок", iss: "Выпуски" };
+    function hist(st, replace) {
+      try { history[replace ? "replaceState" : "pushState"](st, "", location.pathname + location.search + (st.tg === "home" ? "" : "#" + st.tg)); } catch (e) {}
+      H.d = st.d || 0; H.from = st.from || null;
+    }
 
     function frame(title, ctl, extra) {
       return navRow(title) +
         '<div class="tg-hero"><h1>' + esc(title) + "</h1>" + (extra || "") + "</div>" +
         '<div class="tg-ctl">' + (ctl || "") + "</div>";
     }
+    var CHEV_L = '<svg width="11" height="18" viewBox="0 0 11 18" fill="none" aria-hidden="true"><path d="M9 1.5 1.8 9 9 16.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
     function navRow(mini) {
-      return '<div class="tg-nav"><a class="tg-brand" href="index.html" data-go="home" aria-label="Rumberg — на вводную"><i aria-hidden="true">✦</i>Rumberg</a><span class="tg-mini" aria-hidden="true">' + esc(mini || "") + "</span></div>";
+      var left;
+      if (S.cur === "home") left = '<a class="tg-brand" href="index.html" data-go="home" aria-label="Rumberg — на вводную"><i aria-hidden="true">✦</i>Rumberg</a>';
+      else {
+        // Пришли сюда внутри главной — подписываем, куда вернёт; открыли раздел
+        // по ссылке (#iss) — возвращаем на вводную
+        var to = H.d > 0 && TITLE[H.from] && H.from !== S.cur ? TITLE[H.from] : "Главная";
+        left = '<button type="button" class="tg-back" data-tgback aria-label="Назад: ' + to + '">' + CHEV_L + "<span>" + to + "</span></button>";
+      }
+      return '<div class="tg-nav">' + left + '<span class="tg-mini" aria-hidden="true">' + esc(mini || "") + "</span></div>";
     }
     function seg(key, label, opts) {
       return '<div class="tg-seg" role="group" aria-label="' + esc(label) + '">' + opts.map(function (o) {
@@ -330,14 +352,34 @@
       });
     }
     function go(t) {
-      if (t === "ai") { if (window.Chat && Chat.open) { Chat.open(); aiOn = true; tabs(); } return; }
-      if (aiOn && window.Chat && Chat.close) { Chat.close(); aiOn = false; }
-      if (t === S.cur) { window.scrollTo({ top: 0, behavior: "smooth" }); tabs(); return; }   // повторный тап — наверх, как в Telegram
+      if (t === "ai") {
+        if (window.Chat && Chat.open) { Chat.open(); aiOn = true; tabs(); if (!(history.state || {}).ai) hist({ tg: S.cur, d: H.d + 1, from: S.cur, ai: 1 }); }
+        return;
+      }
+      var inAi = aiOn && !!(history.state || {}).ai;
+      if (aiOn && window.Chat && Chat.close) { aiOn = false; Chat.close(); }
+      if (t === S.cur) {                                   // повторный тап — наверх, как в Telegram
+        if (inAi) history.back();                          // чат закрыли своей же вкладкой — его запись снимаем
+        window.scrollTo({ top: 0, behavior: "smooth" }); tabs(); return;
+      }
       save();
+      // Из открытого чата запись чата ЗАМЕНЯЕМ разделом: иначе «назад» из раздела снова открывал бы чат
+      hist({ tg: t, d: inAi ? H.d : H.d + 1, from: S.cur }, inAi);
       S.cur = t;
       render(false, S.y[t] || 0, true); tabs(); save();
     }
+    // Шаг назад: есть запись внутри главной — по истории, иначе (раздел открыт по ссылке) — на вводную
+    function back() { if (H.d > 0) history.back(); else go("home"); }
+    window.addEventListener("popstate", function (e) {
+      var st = e.state;
+      if (!st || !st.tg || !VIEWS[st.tg]) return;          // чужие записи (истории stories.js) — не наши
+      if (!st.ai && aiOn && window.Chat && Chat.close) { aiOn = false; Chat.close(); tabs(); }
+      if (st.ai && !aiOn && window.Chat && Chat.open) { aiOn = true; Chat.open(); tabs(); }
+      H.d = st.d || 0; H.from = st.from || null;
+      if (st.tg !== S.cur) { save(); S.cur = st.tg; render(false, S.y[st.tg] || 0, true); tabs(); save(); }
+    });
     app.addEventListener("click", function (e) {
+      if (e.target.closest("[data-tgback]")) { back(); return; }
       var to = e.target.closest("[data-go]");
       if (to) { e.preventDefault(); go(to.getAttribute("data-go")); return; }
       var b = e.target.closest("[data-seg]");
@@ -351,15 +393,30 @@
     // Закрыли ассистента крестиком — подсветка возвращается к разделу
     function watchChat() {
       var p = document.querySelector(".ca-panel"); if (!p) return;
-      new MutationObserver(function () { var on = p.classList.contains("ca-on") || p.classList.contains("on"); if (on !== aiOn) { aiOn = on; tabs(); } })
+      new MutationObserver(function () {
+        var on = p.classList.contains("ca-on") || p.classList.contains("on");
+        if (on === aiOn) return;
+        aiOn = on; tabs();
+        var inAi = !!(history.state || {}).ai;
+        if (on && !inAi) hist({ tg: S.cur, d: H.d + 1, from: S.cur, ai: 1 });   // открыли не вкладкой — «назад» закроет
+        if (!on && inAi) history.back();                                           // закрыли крестиком — запись чата снимаем
+      })
         .observe(p, { attributes: true, attributeFilter: ["class"] });
     }
     if (document.readyState === "complete") watchChat(); else window.addEventListener("load", watchChat);
 
-    var h0 = (location.hash || "").slice(1);
-    if (VIEWS[h0]) S.cur = h0;
-    if (S.cur === "more") S.cur = "home";   // «Ещё» теперь внизу вводной: старые ссылки #more и сохранённое состояние
-    if (!VIEWS[S.cur]) S.cur = "home";
+    // «Назад»/«вперёд» на страницу главной — раздел и глубина берутся из записи истории
+    // (она точнее сохранённой вкладки: человек мог уйти с главной из другого раздела)
+    var st0 = history.state;
+    if (st0 && st0.tg && VIEWS[st0.tg] && NAVT !== "navigate") { S.cur = st0.tg; H.d = st0.d || 0; H.from = st0.from || null; }
+    else {
+      var h0 = (location.hash || "").slice(1);
+      if (VIEWS[h0]) S.cur = h0;
+      if (S.cur === "more") S.cur = "home";   // «Ещё» теперь внизу вводной: старые ссылки #more и сохранённое состояние
+      if (!VIEWS[S.cur]) S.cur = "home";
+    }
+    // Адрес не трогаем (якорь #story= истории читают позже), меняем только данные записи
+    try { history.replaceState({ tg: S.cur, d: H.d, from: H.from }, ""); } catch (e) {}
     if ("scrollRestoration" in history) history.scrollRestoration = "manual";
     render(false, S.y[S.cur] || 0); tabs();
   }

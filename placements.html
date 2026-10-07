@@ -668,9 +668,12 @@
   // Deep-link по #isin — на мобиле раскрываем полноэкранный паспорт (fromUser=true),
   // иначе вместо конкретного выпуска показывается весь список.
   if (selected) select(selected, !!hash);
+  // Открыли выпуск по ссылке с другой страницы сайта — кнопка возвращает туда
+  // (search.js подпишет «← Выпуски» и сделает шаг назад)
+  if (selected && hash) document.getElementById("panel-close").setAttribute("data-back", "← {}");
 </script>
 <script src="chat.js?v=24"></script>
-<script src="search.js?v=6"></script>
+<script src="search.js?v=7"></script>
 <script src="nav-about.js?v=9"></script>
 <script src="qualgate.js?v=6"></script>
 </body>

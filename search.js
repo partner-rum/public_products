@@ -347,7 +347,11 @@
       "  a,button,summary,label,[role=button],[role=tab]{-webkit-tap-highlight-color:transparent;}",
       "  a:active,button:active,summary:active,[role=button]:active,[role=tab]:active{opacity:.7;transition:none;}",
       "}",
-      "@media (prefers-reduced-motion:reduce){.sf-in,.sf-copy{transition:none;}}"
+      "@media (prefers-reduced-motion:reduce){.sf-in,.sf-copy{transition:none;}}",
+      // «‹» — шаг назад на телефоне, слева от логотипа (только если пришли с нашего сайта)
+      ".sf-back{display:none;}",
+      "@media (max-width:900px){.nav-in .sf-back{display:inline-flex;align-items:center;justify-content:center;flex:none;",
+      "  width:36px;height:44px;margin-left:-12px;margin-right:2px;color:#EE7D1B;text-decoration:none;}}"
     ].join("");
     document.head.appendChild(s);
   }
@@ -390,6 +394,7 @@
     // Главная строит мобильную шапку сама (свои лупа и меню) — пометка,
     // чтобы наши мобильные правила её не трогали
     if (navIn.querySelector(".mx-btns")) navIn.classList.add("sf-ext");
+    mountBack(navIn);
 
     var input = box.querySelector(".sf-in");
     var panel = box.querySelector(".sf-panel");
@@ -539,6 +544,70 @@
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
     window.addEventListener("load", fit);
     window.addEventListener("resize", later);
+  }
+
+  // ── «Назад» на телефоне (07.10.2026, Руслан: «заходишь куда-то, хочешь вернуться
+  // обратно — показываешь тап назад»). Пришли с другой страницы нашего сайта — слева в
+  // шапке стрелка «‹»: шаг назад по истории браузера, туда же и на то же место (главная
+  // помнит вкладку и прокрутку). Пришли извне — стрелки нет: «назад» там — уже не мы.
+  // Страницы, где кнопка возврата уже была, помечают её data-back="шаблон с {}":
+  // ей подписываем, куда вернёт («← Продукты»), и вешаем тот же шаг; стрелку в шапке
+  // тогда не ставим — двух «назад» на одном экране быть не должно. data-back-mq —
+  // ширина, на которой кнопка работает возвратом (в карточке на десктопе это крошки).
+  var BACK_NAMES = { "": "Главная", "index.html": "Главная", "board.html": "Продукты",
+    "offerings.html": "Размещения", "placements.html": "Выпуски", "research.html": "Обзор",
+    "screener.html": "Ставки", "about.html": "Библиотека", "digest.html": "Дайджест",
+    "ideas.html": "Разборы", "events.html": "События", "partners.html": "Сотрудничество",
+    "company.html": "О компании", "guide.html": "Путеводитель", "map.html": "Карта", "market.html": "Рынок" };
+  var TAB_NAMES = { home: "Главная", prod: "Продукты", mkt: "Рынок", iss: "Выпуски" };
+  function backFrom() {
+    try {
+      if (!document.referrer || history.length < 2) return null;
+      var u = new URL(document.referrer);
+      if (u.origin !== location.origin || u.pathname + u.search === location.pathname + location.search) return null;
+      var page = u.pathname.split("/").pop();
+      var name = BACK_NAMES[page] || "Назад";
+      if (page === "" || page === "index.html") {     // с главной — имя вкладки, где человек был
+        try { var t = (JSON.parse(sessionStorage.getItem("so_tabs_v1") || "null") || {}).cur; if (TAB_NAMES[t]) name = TAB_NAMES[t]; } catch (e) {}
+      }
+      return { name: name };
+    } catch (e) { return null; }
+  }
+  function goBack(fallback) {
+    // Страховка: если история назад не увела (ни ухода со страницы, ни popstate) —
+    // идём по обычной ссылке
+    var moved = false;
+    function m() { moved = true; }
+    window.addEventListener("pagehide", m, { once: true });
+    window.addEventListener("popstate", m, { once: true });
+    history.back();
+    setTimeout(function () { if (!moved && !document.hidden) location.href = fallback || "index.html"; }, 800);
+  }
+  function mountBack(navIn) {
+    if (navIn.classList.contains("sf-ext") || navIn.querySelector(".sf-back")) return;   // главная — у вкладок свой «назад»
+    var from = backFrom();
+    if (!from) return;
+    var own = false;
+    [].forEach.call(document.querySelectorAll("[data-back]"), function (el) {
+      var mq = el.getAttribute("data-back-mq");
+      if (mq && !(window.matchMedia && window.matchMedia(mq).matches)) return;
+      own = true;
+      el.classList.add("sf-backed");
+      el.textContent = (el.getAttribute("data-back") || "{}").replace("{}", from.name);
+      el.setAttribute("aria-label", from.name === "Назад" ? "Назад" : "Назад: " + from.name);
+      el.addEventListener("click", function (e) {
+        e.preventDefault(); e.stopImmediatePropagation();
+        goBack(el.getAttribute("href") || "index.html");
+      }, true);
+    });
+    if (own) return;
+    var a = document.createElement("a");
+    a.className = "sf-back";
+    a.href = "index.html";
+    a.setAttribute("aria-label", from.name === "Назад" ? "Назад" : "Назад: " + from.name);
+    a.innerHTML = '<svg width="11" height="18" viewBox="0 0 11 18" fill="none" aria-hidden="true"><path d="M9 1.5 1.8 9 9 16.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    a.addEventListener("click", function (e) { e.preventDefault(); goBack("index.html"); });
+    navIn.insertBefore(a, navIn.firstChild);
   }
 
   // Safari на iOS включает :active только при наличии обработчика касаний —

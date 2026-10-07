@@ -798,6 +798,11 @@
     .tg-mini { position: absolute; left: 0; right: 0; bottom: 0; height: var(--tg-nav); display: flex; align-items: center; justify-content: center; font-family: 'Rubik', sans-serif; font-size: 17px; font-weight: 600; opacity: 0; transition: opacity .18s; pointer-events: none; }
     .tg-v.tg-sc .tg-mini { opacity: 1; }
     .tg-v.tg-sc .tg-brand { opacity: 0; pointer-events: none; }
+    /* «‹ Главная» — шаг назад в разделах. Остаётся видимой и при прокрутке, как в iOS:
+       по центру строки тогда проявляется имя раздела */
+    .tg-back { position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin-left: -4px; padding: 0 12px 0 4px;
+      border: 0; background: none; color: #EE7D1B; font-family: 'Onest', sans-serif; font-size: 16px; font-weight: 500; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .tg-back svg { flex: none; }
     .tg-hero { padding: 2px 16px 4px; }
     .tg-app h1, .tg-app .tg-h1 { margin: 0; font-family: 'Rubik', sans-serif; font-size: 30px; font-weight: 600; letter-spacing: -.01em; line-height: 1.15; max-width: none; }
     .tg-stories { min-height: 94px; margin: 6px -16px 0; }
@@ -1759,7 +1764,7 @@
 <script src="intro.js?v=6"></script>
 <script src="stories.js?v=12"></script>
 <script src="chat.js?v=24"></script>
-<script src="search.js?v=6"></script>
+<script src="search.js?v=7"></script>
 <script src="nav-about.js?v=9"></script>
 <script src="qualgate.js?v=6"></script>
 <script>
@@ -2160,7 +2165,7 @@
   else setTimeout(start, 1200);
 })();
 </script>
-<script src="tabs.js?v=2"></script>
+<script src="tabs.js?v=3"></script>
 </body>
 
 </html>
