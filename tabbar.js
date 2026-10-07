@@ -10,6 +10,15 @@
    многостраничный, мгновенного переключения, как в Telegram, здесь нет. */
 (function () {
   "use strict";
+  // ПРЕВЬЮ: на сайте панель выключена и включается только у того, кто открыл
+  // ссылку с ?tabbar=1 (запоминается в этом браузере); ?tabbar=0 — выключить.
+  // Обычные посетители её не видят. После решения Руслана флаг убрать.
+  try {
+    var qp = new URLSearchParams(location.search).get("tabbar");
+    if (qp === "1") localStorage.setItem("so_tb_preview", "1");
+    if (qp === "0") localStorage.removeItem("so_tb_preview");
+    if (localStorage.getItem("so_tb_preview") !== "1") return;
+  } catch (e) { return; }
   var MQ = window.matchMedia && window.matchMedia("(max-width: 860px)");
   if (!MQ) return;
   if (MQ.matches) init();
