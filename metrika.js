@@ -10,10 +10,15 @@
   // короче двух секунд не считаются. Всё, что страницы шлют в ym() раньше (init,
   // параметры визита, цели), копится в очереди выше и уходит, когда счётчик загрузится.
   // Метка so_ref и маячок /hit ниже работают сразу — они от Метрики не зависят.
+  // Две секунды считаем от ОТКРЫТИЯ страницы (performance.now — время с начала
+  // перехода), а не от запуска этого файла: он подключён с defer и на медленной сети
+  // выполняется только через ~1 с, и счётчик стартовал бы на третьей секунде
+  var wait = 2000;
+  try { wait = Math.max(0, 2000 - Math.round(performance.now())); } catch (x) {}
   setTimeout(function () {
     for (var j = 0; j < document.scripts.length; j++) { if (document.scripts[j].src === r) { return; } }
     k = e.createElement(t), a = e.getElementsByTagName(t)[0], k.async = 1, k.src = r, a.parentNode.insertBefore(k, a);
-  }, 2000);
+  }, wait);
 })(window, document, "script", "https://mc.yandex.ru/metrika/tag.js?id=110759242", "ym");
 
 // СТРАНИЦЫ БЕЗ ЗАПИСИ ЭКРАНА.
