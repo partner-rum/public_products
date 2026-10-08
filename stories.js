@@ -338,6 +338,11 @@
     }).join("");
   }
   paintRow();
+  // Строки ставок и имя продукта главная отдаёт функциями ниже по странице (window.soRates,
+  // window.soPname): этот файл стоит раньше, и при первой отрисовке их ещё нет. Раньше ряд
+  // перерисовывало событие so-lazy (ленивая подгрузка дайджеста), но с 07.10.2026 на телефоне
+  // её нет до прокрутки — и кружок «Ставки» пропадал. Перерисовываем, когда страница разобрана
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", function () { if (!viewer) paintRow(); });
   window.addEventListener("so-lazy", function () { if (!viewer) paintRow(); });
   row.addEventListener("click", function (e) {
     var b = e.target.closest ? e.target.closest(".st-c") : null;

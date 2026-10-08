@@ -358,7 +358,12 @@
   .prow b { font-weight:500; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   /* В узкой колонке «Актуальные продукты» усечение съедало срок — там переносим */
   #mprod .prow { align-items:flex-start; }
-  #mprod .prow b { white-space:normal; overflow:visible; text-overflow:clip; line-height:1.35; }
+  #mprod .prow b { white-space:normal; overflow:visible; text-overflow:clip; line-height:1.35; overflow-wrap:break-word; }
+  /* Метка цифры переносится (08.10.2026): «купон за срок» одной строкой занимала полколонки,
+     имени оставалось ~30 px, и слово «Условный» вылезало под цифру. Цифра с меткой — не шире
+     4,5rem; слово длиннее строки имени переносится внутри неё, а не наезжает на цифру */
+  #mprod .prow .q { max-width:4.5rem; }
+  #mprod .prow .q i { white-space:normal; }
   .prow .q { margin-left:auto; font-family:var(--m); font-size:0.75rem; color:var(--solar); font-weight:500; white-space:nowrap; font-variant-numeric:tabular-nums; }
   /* В «Актуальных продуктах» теперь пять позиций РАЗНЫХ типов, и цифра у каждой
      значит своё: премия, цена, участие, купон. Пока в колонке стояли три варранта,
@@ -1770,7 +1775,7 @@
   })();
 </script>
 <script src="intro.js?v=6"></script>
-<script src="stories.js?v=12"></script>
+<script src="stories.js?v=13"></script>
 <script src="chat.js?v=24"></script>
 <script src="search.js?v=8"></script>
 <script src="nav-about.js?v=9"></script>
