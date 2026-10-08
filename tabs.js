@@ -30,7 +30,12 @@
      (раздел, глубина, откуда пришли). В строке навигации раздела слева «‹ Главная»
      (или имя раздела, откуда пришли) — шаг назад; системный «назад» (жест iOS,
      кнопка Android) идёт по тем же записям и с сайта не уводит, пока есть куда
-     вернуться внутри главной. Открытый чат — тоже запись: «назад» его закрывает. */
+     вернуться внутри главной. Открытый чат — тоже запись: «назад» его закрывает;
+   — ПОИСК ПО ISIN (08.10.2026, Руслан: «не могу вбить в поиске ISIN размещённых
+     выпусков и найти выпуск»): во вкладке «Выпуски» своя строка поиска — ISIN, серия,
+     название или актив, ищет сразу в обоих списках (на размещении и размещённые);
+     поиск «Продуктов» тоже находит выпуски — по ISIN, серии и названию. ISIN с
+     кириллическими буквами-двойниками (А, В, Е, К, М…) приводится к латинице. */
 (function () {
   "use strict";
   var MQ = window.matchMedia && window.matchMedia("(max-width: 860px)");
@@ -111,9 +116,59 @@
         '<span class="tg-fig"><b>' + esc(f.v) + "</b><small>" + esc(f.n) + "</small></span></a></li>";
     }
 
+    // ── Выпуски: на размещении и размещённые ──
+    function liveOffers() { return ((window.OFFERINGS || {}).items || []).filter(function (o) { return !o.hidden && (o.status === "live" || o.status === "upcoming"); }); }
+    function plReady() { return !!window.PLACEMENTS_DATA; }
+    function low(s) { return String(s || "").toLowerCase().replace(/ё/g, "е"); }
+    // ISIN копируют из документов, где латиница бывает набрана русскими буквами-двойниками
+    // («RU000А10ВZ51» с кириллическими А и В): двойников приводим к латинице, пробелы убираем
+    var LAT = { "а": "a", "в": "b", "е": "e", "к": "k", "м": "m", "н": "h", "о": "o", "р": "p", "с": "c", "т": "t", "у": "y", "х": "x" };
+    function isinKey(s) { return low(s).replace(/\s+/g, "").replace(/[авекмнорстух]/g, function (c) { return LAT[c]; }); }
+    // Активы размещённых выпусков приходят из бэкофиса как есть («SPDR Gold Shares (GLD)»):
+    // ищем и по человеческому имени. Та же таблица, что NICE в placements.html, — правишь
+    // одну, правь вторую
+    var NICE = {
+      "Currency Pair CNY/RUB": "Юань (CNY/RUB)", "Currency Pair USD/RUB": "Доллар (USD/RUB)",
+      "CSI 300 Index": "Индекс CSI 300", "iShares Bitcoin Trust ETF": "Биткоин (фонд IBIT)",
+      "SPDR S&P 500 ETF Trust": "S&P 500 (фонд SPY)", "SPDR Gold Shares (GLD)": "Золото (фонд GLD)",
+      "Global X Uranium ETF": "Уран (фонд URA)", "Index RSP 42 Enregy AI": "Индекс RSP 42 Energy AI",
+      "Index AI RSP 30": "Индекс AI RSP 30", "Rumberg Pre-IPO Index 1": "Индекс Rumberg Pre-IPO",
+      "Rumberg Natural Gas": "Индекс Rumberg Natural Gas", "Денежное обязательство Контрольного лица": "Кредитный риск контрольного лица",
+      "МКПАО \"Хэдхантер\"": "HeadHunter", "Татнефть (ао)": "Татнефть", "Корпоративный центр ИКС 5": "X5", "МосБиржа": "Мосбиржа"
+    };
+    // q — как набрали. full — ещё и по активам корзины (вкладка «Выпуски»); в «Продуктах» —
+    // только ISIN, серия и название, иначе «26238» дописывал бы к продуктам на эту ОФЗ ещё и
+    // все размещённые выпуски на неё (на 08.10.2026 их 18). По ISIN ищем, когда в запросе
+    // есть и буквы, и цифры, от четырёх знаков: «26238» — номер ОФЗ, а не кусок ISIN
+    function issFind(q, full) {
+      var t = low(q).trim(), k = isinKey(q);
+      if (t.length < 2) return { off: [], pl: [], n: 0 };
+      var byIsin = k.length >= 4 && /^[a-z0-9]+$/.test(k) && /\d/.test(k) && /[a-z]/.test(k);
+      function hit(isin, words) { return (byIsin && isinKey(isin).indexOf(k) >= 0) || low(words.join(" ")).indexOf(t) >= 0; }
+      var off = liveOffers().filter(function (o) {
+        return hit(o.isin, [o.serial, o.name].concat(full ? [o.reference].concat((o.basket || []).map(function (b) { return [b.name, b.full, b.ticker].join(" "); })) : []));
+      });
+      var pl = ((window.PLACEMENTS_DATA || {}).issues || []).filter(function (x) {
+        return hit(x.isin, [x.serial, x.name].concat(full ? (x.basket || []).map(function (b) { return b.n + " " + (NICE[b.n] || ""); }) : []));
+      }).sort(function (a, b) { return a.issueStart < b.issueStart ? 1 : -1; });
+      return { off: off, pl: pl, n: off.length + pl.length };
+    }
+    function plRow(x) {
+      var live = x.maturity >= TODAY, bid = live && x.bid != null;
+      return '<li><a class="tg-row" href="placements.html#' + esc(x.isin) + '"><span class="tg-tx"><span class="tg-nm">' + esc(x.name) + '</span><span class="tg-sb"><span class="tg-isn">' + esc(x.isin) + "</span> · " + (live ? "до " + dmy(x.maturity) : "погашен") + '</span></span><span class="tg-fig' + (bid ? " tg-g" : "") + '"><b>' + (bid ? fq(x.bid) + "%" : "—") + "</b><small>" + (bid ? "Bid" : "нет котировки") + "</small></span></a></li>";
+    }
+    function offRow(o) {
+      return '<li><a class="tg-row" href="offerings.html#' + esc(o.id) + '"><span class="tg-tx"><span class="tg-nm">' + esc(o.name) + '</span><span class="tg-sb">' + (o.isin ? '<span class="tg-isn">' + esc(o.isin) + "</span>" : esc(o.serial || "")) + (o.statusLabel ? '<span class="tg-in">' + esc(o.statusLabel) + "</span>" : "") + "</span></span>" +
+        (o.price != null ? '<span class="tg-fig"><b>' + fq(o.price) + "%</b><small>цена</small></span>" : "") + "</a></li>";
+    }
+    function issGroups(f) {
+      return (f.off.length ? '<h2 class="tg-cap">На размещении · ' + f.off.length + '</h2><ul class="tg-list">' + f.off.map(offRow).join("") + "</ul>" : "") +
+        (f.pl.length ? '<h2 class="tg-cap">Размещённые выпуски · ' + f.pl.length + '</h2><ul class="tg-list">' + f.pl.map(plRow).join("") + "</ul>" : "");
+    }
+
     // ── Состояние: живёт в sessionStorage, «Назад» из карточки возвращает туда же ──
     var KEY = "so_tabs_v1";
-    var S = { cur: "home", prod: { type: "all", q: "" }, mkt: { seg: "morning" }, iss: { seg: "live" }, y: {} };
+    var S = { cur: "home", prod: { type: "all", q: "" }, mkt: { seg: "morning" }, iss: { seg: "live", q: "" }, y: {} };
     try { var saved = JSON.parse(sessionStorage.getItem(KEY) || "null"); if (saved && saved.prod) S = Object.assign(S, saved); } catch (e) {}
     // Пришли по ссылке или набрали адрес — вводная. «Назад» из карточки и обновление
     // страницы (back_forward / reload) возвращают в ту вкладку и на то место, где был
@@ -164,9 +219,13 @@
         return (S.prod.type === "all" || r.type === S.prod.type) && (cl === "all" || r.cls === cl) &&
           (!q || (r.name + " " + r.underlying + " " + r.cls + " " + clsLabel(r.cls)).toLowerCase().indexOf(q) >= 0);
       });
-      lastCount = list.length;
-      if (!INSTR.length) return '<p class="tg-note">Не удалось загрузить продукты — обновите страницу.</p>';
-      if (!list.length) return '<p class="tg-note">Ничего не нашлось. Попробуйте «Сбер», «ОФЗ» или «защита».</p>';
+      // Выпуски — по ISIN, серии и названию: клиент присылает ISIN, и набрать его в этом же
+      // поиске так же естественно, как «Сбер». Фильтры актива и типа — про продукты доски
+      var iss = q.length >= 2 ? issFind(S.prod.q, false) : { off: [], pl: [], n: 0 };
+      var plWait = q.length >= 2 && !need("pl", ["data/placements.js"], plReady, issRefresh) && LAZY.pl !== 2;
+      lastCount = list.length + iss.n;
+      if (!INSTR.length && !iss.n) return '<p class="tg-note">Не удалось загрузить продукты — обновите страницу.</p>';
+      if (!list.length && !iss.n) return plWait ? '<p class="tg-wait">Ищу среди выпусков…</p>' : '<p class="tg-note">Ничего не нашлось. Попробуйте «Сбер», «ОФЗ», «защита» или ISIN выпуска.</p>';
       var out = "";
       if (S.prod.type === "all" && cl === "all" && !q) {
         var day = ((window.MORNING || {}).products || []).map(function (id) { return BY[id]; }).filter(Boolean);
@@ -180,7 +239,7 @@
         out += '<h2 class="tg-cap">' + esc(TYPE[t]) + " · " + g.length + '</h2><ul class="tg-list">' + part.map(prodRow).join("") + "</ul>";
       });
       if (used >= budget && budget < list.length) return out;
-      return out + '<p class="tg-note">Котировки индикативные. Сравнение и фильтры — на <a href="board.html">полной доске</a>.</p>';
+      return out + issGroups(iss) + '<p class="tg-note">Котировки индикативные. Сравнение и фильтры — на <a href="board.html">полной доске</a>.</p>';
     }
     // Класс базового актива — так клиент и ищет: «на Сбер», «на золото», «на Китай».
     // Тип выплаты (варрант, автоколл) — наш язык, он вторым рядом и группами списка
@@ -205,21 +264,23 @@
       var classes = CLS_ORDER.concat(Object.keys(byCls).filter(function (k) { return CLS_ORDER.indexOf(k) < 0; }));
       var assets = chipRow("Базовый актив", "data-cls", cl, [["all", "Все активы", nType]].concat(classes.map(function (k) { return [k, clsLabel(k), byCls[k] || 0]; })));
       var types = chipRow("Тип продукта", "data-type", S.prod.type, [["all", "Все типы", nCls]].concat(ORDER.map(function (t) { return [t, TYPE[t], byType[t] || 0]; })));
-      return frame("Продукты", '<label class="tg-srch">' + svg("search", 18) + '<input id="tg-q" type="search" placeholder="Сбер, ОФЗ, золото…" value="' + esc(S.prod.q) + '" enterkeyhint="search" aria-label="Поиск продуктов"></label>' + assets,
+      return frame("Продукты", '<label class="tg-srch">' + svg("search", 18) + '<input id="tg-q" type="search" placeholder="Сбер, ОФЗ, золото, ISIN…" value="' + esc(S.prod.q) + '" enterkeyhint="search" aria-label="Поиск продуктов и выпусков"></label>' + assets,
         '<p class="tg-sub">Оформляем под клиента через менеджера. Сумма входа — в\u00a0каждой строке.</p>') +
         '<div class="tg-pad"><div class="tg-types">' + types + '</div><div id="tg-plist">' + prodList(LIMIT) + "</div></div>";
     }
 
-    // Подгрузка файлов данных, которых на главной нет: один раз, по первому открытию раздела
+    // Подгрузка файлов данных, которых на главной нет: один раз, по первому открытию раздела.
+    // done — обновить только список, а не весь вид: иначе поле поиска пересоздавалось бы
+    // посреди набора, и клавиатура телефона закрывалась
     var LAZY = {};
-    function need(key, srcs, ready) {
+    function need(key, srcs, ready, done) {
       if (ready()) return true;
       if (!LAZY[key]) {
         LAZY[key] = 1;
         var left = srcs.length;
         srcs.forEach(function (src) {
           var s = document.createElement("script"); s.src = src;
-          s.onload = s.onerror = function () { if (--left === 0) { LAZY[key] = 2; render(true); } };
+          s.onload = s.onerror = function () { if (--left === 0) { LAZY[key] = 2; if (done) done(); else render(true); } };
           document.body.appendChild(s);
         });
       }
@@ -263,28 +324,50 @@
       return frame("Рынок", seg("mkt", "Раздел рынка", [["morning", "Утро"], ["rates", "Ставки"], ["ideas", "Идеи"]])) + '<div class="tg-pad">' + body + "</div>";
     }
 
-    function viewIss() {
-      var body = "";
+    // Выпуски: строка поиска над переключателем. С набранным запросом ищем сразу в обоих
+    // списках (ISIN приходит без пометки «на размещении» или «уже выпущен»), а переключатель
+    // и подпись под заголовком прячем: к выдаче они не относятся
+    var lastIss = -1;
+    function issBody() {
+      var q = (S.iss.q || "").trim();
+      if (q) {
+        lastIss = -1;
+        if (low(q).length < 2) return '<p class="tg-note">Наберите хотя бы два знака: ISIN, серию выпуска или актив.</p>';
+        var f = issFind(q, true), out = issGroups(f);
+        lastIss = f.n;
+        if (f.pl.length) out += '<p class="tg-note">Bid индикативный. Документы КУВ и КИД — в карточке выпуска.</p>';
+        if (!plReady()) out += LAZY.pl === 2 ? '<p class="tg-note">Не удалось загрузить размещённые выпуски — обновите страницу.</p>' : '<p class="tg-wait">Ищу среди размещённых выпусков…</p>';
+        return out || '<p class="tg-note">Ничего не нашлось. ISIN — 12 знаков, начинается с RU. Ещё можно искать по серии («СП-2-90») или активу («ОФЗ 26238», «золото»).</p>';
+      }
       if (S.iss.seg === "live") {
-        var O = ((window.OFFERINGS || {}).items || []).filter(function (o) { return o.status === "live" || o.status === "upcoming"; });
-        if (!O.length) body = '<p class="tg-note">Сейчас открытых размещений нет.</p>';
+        var O = liveOffers(), body = O.length ? "" : '<p class="tg-note">Сейчас открытых размещений нет.</p>';
         O.forEach(function (o) {
-          body += '<a class="tg-card tg-off" href="offerings.html#' + esc(o.id) + '"><span class="tg-stat">' + esc(o.statusLabel || "") + "</span><h2>" + esc(o.name) + "</h2><p>" + esc(o.lead || o.kind || "") + "</p>" +
+          body += '<a class="tg-card tg-off" href="offerings.html#' + esc(o.id) + '"><span class="tg-stat">' + esc(o.statusLabel || "") + "</span><h2>" + esc(o.name) + "</h2>" + (o.isin ? '<p class="tg-isin">ISIN ' + esc(o.isin) + "</p>" : "") + "<p>" + esc(o.lead || o.kind || "") + "</p>" +
             '<div class="tg-nums">' + (o.price != null ? "<div><b>" + fq(o.price) + "%</b><span>цена</span></div>" : "") + (o.tenor ? "<div><b>" + esc(o.tenor) + "</b><span>срок</span></div>" : "") + (o.nominal ? "<div><b>" + Number(o.nominal).toLocaleString("ru-RU") + " ₽</b><span>номинал</span></div>" : "") + '</div><span class="tg-go" aria-hidden="true">Подробнее →</span></a>';
         });
-      } else if (!need("pl", ["data/placements.js"], function () { return !!window.PLACEMENTS_DATA; })) {
-        body = LAZY.pl === 2 ? '<p class="tg-note">Не удалось загрузить выпуски. Обновите страницу.</p>' : '<p class="tg-wait">Загружаю выпуски…</p>';
-      } else {
-        var P = (PLACEMENTS_DATA.issues || []).slice().sort(function (a, b) { return a.issueStart < b.issueStart ? 1 : -1; });
-        body = '<ul class="tg-list">' + P.map(function (p) {
-          var live = p.maturity >= TODAY, bid = live && p.bid != null;
-          return '<li><a class="tg-row" href="placements.html#' + esc(p.isin) + '"><span class="tg-tx"><span class="tg-nm">' + esc(p.name) + '</span><span class="tg-sb">' + esc(p.isin) + " · " + (live ? "до " + dmy(p.maturity) : "погашен") + '</span></span><span class="tg-fig' + (bid ? " tg-g" : "") + '"><b>' + (bid ? fq(p.bid) + "%" : "—") + "</b><small>" + (bid ? "Bid" : "нет котировки") + "</small></span></a></li>";
-        }).join("") + '</ul><p class="tg-note">Bid индикативный. Документы КУВ и КИД — в карточке выпуска.</p>';
+        return body;
       }
+      if (!plReady()) return LAZY.pl === 2 ? '<p class="tg-note">Не удалось загрузить выпуски. Обновите страницу.</p>' : '<p class="tg-wait">Загружаю выпуски…</p>';
+      var P = (PLACEMENTS_DATA.issues || []).slice().sort(function (a, b) { return a.issueStart < b.issueStart ? 1 : -1; });
+      return '<ul class="tg-list">' + P.map(plRow).join("") + '</ul><p class="tg-note">Bid индикативный. Документы КУВ и КИД — в карточке выпуска.</p>';
+    }
+    function viewIss() {
+      // Размещённые грузим сразу при открытии вкладки, а не по второму переключателю: поиск
+      // ищет в обоих списках, и файл должен быть на месте к первому набранному знаку
+      need("pl", ["data/placements.js"], plReady, issRefresh);
+      var on = !!(S.iss.q || "").trim();
       var sub = S.iss.seg === "live"
-        ? "Уже на Мосбирже: покупка у\u00a0вашего брокера по\u00a0ISIN."
-        : "Выпущенные облигации: индикативный Bid и\u00a0документы — в\u00a0карточке.";
-      return frame("Выпуски", seg("iss", "Какие выпуски", [["live", "На размещении"], ["done", "Размещённые"]]), '<p class="tg-sub">' + sub + "</p>") + '<div class="tg-pad">' + body + "</div>";
+        ? "Уже на Мосбирже: покупка у вашего брокера по ISIN."
+        : "Выпущенные облигации: индикативный Bid и документы — в карточке.";
+      var ctl = '<label class="tg-srch">' + svg("search", 18) + '<input id="tg-iq" type="search" placeholder="ISIN, серия или актив…" value="' + esc(S.iss.q || "") + '" enterkeyhint="search" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="Поиск выпусков: ISIN, серия или актив"></label>' +
+        '<div id="tg-isg"' + (on ? " hidden" : "") + ">" + seg("iss", "Какие выпуски", [["live", "На размещении"], ["done", "Размещённые"]]) + "</div>";
+      return frame("Выпуски", ctl, '<p class="tg-sub" id="tg-isub"' + (on ? " hidden" : "") + ">" + sub + "</p>") + '<div class="tg-pad" id="tg-ilist">' + issBody() + "</div>";
+    }
+    // Размещённые доехали — обновляем только списки, поля поиска не трогаем
+    function issRefresh() {
+      var il = document.getElementById("tg-ilist"), pl = document.getElementById("tg-plist");
+      if (il) il.innerHTML = issBody();
+      if (pl && S.prod.q.trim()) pl.innerHTML = prodList();
     }
 
     // Группа строк-ссылок как в настройках iOS: [адрес, заголовок, иконка, цвет, подпись?, вкладка?]
@@ -379,6 +462,19 @@
       if (q) q.addEventListener("input", function () {
         S.prod.q = q.value; document.getElementById("tg-plist").innerHTML = prodList(); save();
         document.getElementById("tg-live").textContent = lastCount ? "Найдено: " + lastCount : "Ничего не нашлось";
+      });
+      var iq = document.getElementById("tg-iq");
+      if (iq) iq.addEventListener("input", function () {
+        S.iss.q = iq.value; save();
+        var on = !!iq.value.trim();
+        document.getElementById("tg-isg").hidden = on;
+        document.getElementById("tg-isub").hidden = on;
+        document.getElementById("tg-ilist").innerHTML = issBody();
+        document.getElementById("tg-live").textContent = !on ? "" : lastIss > 0 ? "Найдено: " + lastIss : lastIss === 0 ? "Ничего не нашлось" : "";
+      });
+      // «Найти» на клавиатуре телефона прячет клавиатуру: иначе выдачу закрывает она сама
+      [q, iq].forEach(function (el) {
+        if (el) el.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); el.blur(); } });
       });
       // Крупный заголовок ушёл под строку навигации — показываем мелкое имя раздела
       var v = app.firstChild, h = v.querySelector(".tg-hero"), nv = v.querySelector(".tg-nav");

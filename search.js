@@ -12,6 +12,11 @@
    иначе каждая страница витрины тащила бы data/instruments.js (75 КБ) и
    data/placements.js (51 КБ) ради поля, в которое обычно не пишут.
 
+   ISIN (08.10.2026, Руслан: «не могу вбить в поиске ISIN и найти размещённый выпуск»):
+   ищутся и выпуски «На размещении» (data/offerings.js), не только размещённые; ISIN
+   с кириллическими буквами-двойниками латиницы приводится к латинице; Enter, когда
+   нашлись одни выпуски, открывает первый из них, а не пустую доску.
+
    Подключение: <script src="search.js?v=1"></script> перед </body>.
    Демо: ?findemo=1 — открыть выдачу сразу, без набора. */
 (function () {
@@ -20,7 +25,7 @@
   var LIMIT = 8;                       // строк в выдаче; больше — уже список, а не подсказка
   var MINQ = 2;                        // короче двух знаков ищет всё подряд
   var loaded = false, loading = null;
-  var items = [], issues = [];
+  var items = [], issues = [], offers = [];
 
   // ── Данные ────────────────────────────────────────────────────────────────
   function loadScript(src) {
@@ -39,9 +44,11 @@
     var need = [];
     if (!window.SITE_DATA) need.push(loadScript("data/instruments.js"));
     if (!window.PLACEMENTS_DATA) need.push(loadScript("data/placements.js"));
+    if (!window.OFFERINGS) need.push(loadScript("data/offerings.js"));
     loading = Promise.all(need).then(function () {
       items = ((window.SITE_DATA || {}).instruments) || [];
       issues = ((window.PLACEMENTS_DATA || {}).issues) || [];
+      offers = (((window.OFFERINGS || {}).items) || []).filter(function (o) { return !o.hidden; });
       loaded = true;
     });
     return loading;
@@ -60,6 +67,19 @@
     return /[\s·(/,-]/.test(h.charAt(at - 1)) ? 2 : 1;
   }
 
+  // ISIN копируют из документов, где латиница бывает набрана русскими буквами-двойниками
+  // («RU000А10ВZ51» с кириллическими А и В): двойников приводим к латинице, пробелы убираем.
+  // По ISIN ищем, когда в запросе есть и буквы, и цифры, от четырёх знаков: «26238» —
+  // номер ОФЗ, а не кусок ISIN
+  var LAT = { "а": "a", "в": "b", "е": "e", "к": "k", "м": "m", "н": "h", "о": "o", "р": "p", "с": "c", "т": "t", "у": "y", "х": "x" };
+  function isinKey(s) { return norm(s).replace(/\s+/g, "").replace(/[авекмнорстух]/g, function (c) { return LAT[c]; }); }
+  function hitIsin(isin, q) {
+    var k = isinKey(q);
+    if (k.length < 4 || !/^[a-z0-9]+$/.test(k) || !/\d/.test(k) || !/[a-z]/.test(k)) return 0;
+    var at = isinKey(isin).indexOf(k);
+    return at < 0 ? 0 : at === 0 ? 3 : 1;
+  }
+
   // Вес поля важнее веса позиции. Иначе по запросу «сбер» наверх выходили
   // корзины worst-of, где Сбербанк — одна из трёх бумаг, а прямой продукт
   // «CALL 100 · Сбербанк» падал на пятое место: сейлзу нужно ровно наоборот.
@@ -75,15 +95,22 @@
   }
   function scoreIssue(i, q) {
     var nm = Math.max(hit(i.serial, q), hit(i.name, q)) * 10;
-    var is = hit(i.isin, q) * 6;
+    var is = hitIsin(i.isin, q) * 6;
     var bk = (i.basket || []).reduce(function (m, x) { return Math.max(m, hit(x.n, q)); }, 0) * 2;
     return nm + is + bk;
+  }
+  // Выпуск на размещении: те же веса, что у размещённого; в корзине — имя, полное имя и тикер
+  function scoreOffer(o, q) {
+    var nm = Math.max(hit(o.serial, q), hit(o.name, q)) * 10;
+    var is = hitIsin(o.isin, q) * 6;
+    var bk = (o.basket || []).reduce(function (m, x) { return Math.max(m, hit(x.name, q), hit(x.full, q), hit(x.ticker, q)); }, 0);
+    return nm + is + Math.max(bk, hit(o.reference, q)) * 2;
   }
 
   function find(q) {
     q = norm(q).trim();
-    if (q.length < MINQ) return { prod: [], iss: [], total: 0, prodTotal: 0, issTotal: 0 };
-    var prod = [], iss = [];
+    if (q.length < MINQ) return { prod: [], iss: [], off: [], total: 0, prodTotal: 0, issTotal: 0, offTotal: 0 };
+    var prod = [], iss = [], off = [];
     items.forEach(function (r) {
       var s = scoreProduct(r, q);
       if (s > 0) prod.push({ r: r, s: s });
@@ -92,16 +119,23 @@
       var s = scoreIssue(i, q);
       if (s > 0) iss.push({ r: i, s: s });
     });
+    offers.forEach(function (o) {
+      var s = scoreOffer(o, q);
+      if (s > 0) off.push({ r: o, s: s });
+    });
     prod.sort(function (a, b) { return b.s - a.s; });
     iss.sort(function (a, b) { return b.s - a.s; });
-    var total = prod.length + iss.length;
-    // Места делим, а не отдаём первому: иначе продукты забирали все восемь строк
-    // и размещённые выпуски не показывались вообще, хотя нашлись
+    off.sort(function (a, b) { return b.s - a.s; });
+    var total = prod.length + iss.length + off.length;
+    // Выпусков на размещении — единицы, и это то, что продаётся прямо сейчас: места им — в
+    // первую очередь (не больше трёх). Остальные делим, а не отдаём первому: иначе продукты
+    // забирали все восемь строк и размещённые выпуски не показывались вообще, хотя нашлись
+    var oTake = Math.min(off.length, 3), room = LIMIT - oTake;
     var pn = prod.length, inum = iss.length;
-    var pTake = inum ? Math.min(pn, Math.max(LIMIT - Math.min(inum, 3), 5)) : Math.min(pn, LIMIT);
-    var iTake = Math.min(inum, LIMIT - pTake);
-    return { prod: prod.slice(0, pTake), iss: iss.slice(0, iTake),
-             total: total, prodTotal: pn, issTotal: inum };
+    var pTake = inum ? Math.min(pn, Math.max(room - Math.min(inum, 3), Math.min(5, room))) : Math.min(pn, room);
+    var iTake = Math.min(inum, room - pTake);
+    return { prod: prod.slice(0, pTake), iss: iss.slice(0, iTake), off: off.slice(0, oTake),
+             total: total, prodTotal: pn, issTotal: inum, offTotal: off.length };
   }
 
   // ── Персональная ссылка: та же механика, что в колонке «Актуальные продукты»
@@ -191,6 +225,17 @@
     '</div>';
   }
 
+  function rowOffer(x) {
+    var o = x.r, href = "offerings.html#" + encodeURIComponent(o.id);
+    return '<div class="sf-row" role="option" data-go="' + esc(href) + '">' +
+      '<a class="sf-main" href="' + esc(href) + '" tabindex="-1">' +
+        '<span class="sf-nm">' + esc(o.name) + '</span>' +
+        '<span class="sf-sub">' + esc([o.isin, o.statusLabel].filter(Boolean).join(" · ")) + '</span>' +
+      '</a>' +
+      (o.price != null ? '<span class="sf-q">' + esc(money(o.price, "%")) + '</span>' : '') +
+    '</div>';
+  }
+
   function render(panel, q, res) {
     if (norm(q).trim().length < MINQ) {
       panel.innerHTML = '<div class="sf-hint">Название, тикер, базовый актив или ISIN — от двух знаков</div>';
@@ -198,12 +243,15 @@
     }
     if (!res.total) {
       panel.innerHTML = '<div class="sf-hint">Ничего не нашлось. ' +
-        'Попробуйте тикер или базовый актив — например «Сбер», «NVDA», «ОФЗ».</div>';
+        'Попробуйте тикер, базовый актив или ISIN выпуска — например «Сбер», «NVDA», «ОФЗ».</div>';
       return;
     }
     var html = "";
     if (res.prod.length) {
       html += '<div class="sf-cap">Продукты доски</div>' + res.prod.map(rowProduct).join("");
+    }
+    if (res.off && res.off.length) {
+      html += '<div class="sf-cap">На размещении</div>' + res.off.map(rowOffer).join("");
     }
     if (res.iss.length) {
       html += '<div class="sf-cap">Размещённые выпуски</div>' + res.iss.map(rowIssue).join("");
@@ -219,6 +267,9 @@
     if (res.issTotal > res.iss.length) {
       html += '<a class="sf-all" href="placements.html?q=' + encodeURIComponent(q.trim()) + '">' +
         'Ещё ' + (res.issTotal - res.iss.length) + ' в размещённых выпусках →</a>';
+    }
+    if (res.off && res.offTotal > res.off.length) {
+      html += '<a class="sf-all" href="offerings.html">Ещё ' + (res.offTotal - res.off.length) + ' на размещении →</a>';
     }
     panel.innerHTML = html;
   }
@@ -430,7 +481,7 @@
 
     function refresh() {
       var q = input.value;
-      render(panel, q, loaded ? find(q) : { prod: [], iss: [], total: 0 });
+      render(panel, q, loaded ? find(q) : { prod: [], iss: [], off: [], total: 0 });
       cur = -1;
       open();
     }
@@ -460,9 +511,12 @@
       }
       if (e.key === "Enter") {
         // Выбранная строка — туда; ничего не выбрано — на доску с этим запросом,
-        // чтобы Enter никогда не был «ничего не произошло»
+        // чтобы Enter никогда не был «ничего не произошло». Нашлись одни выпуски
+        // (набрали ISIN) — к первому из них: на доске выпусков нет, она была бы пустой
         if (cur >= 0 && rows[cur]) { location.href = rows[cur].getAttribute("data-go"); return; }
         var q = input.value.trim();
+        var res = loaded && q.length >= MINQ ? find(q) : null;
+        if (res && !res.prodTotal && rows.length) { location.href = rows[0].getAttribute("data-go"); return; }
         if (q.length >= MINQ) location.href = "board.html?q=" + encodeURIComponent(q);
       }
     });

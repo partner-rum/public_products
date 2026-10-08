@@ -447,12 +447,20 @@
       ]) + '</div>' + docsHTML;
   }
 
+  // ISIN из документов бывает набран кириллическими буквами-двойниками латиницы (А, В, Е,
+  // К, М, Н, О, Р, С, Т, У, Х): приводим их к латинице — так же ищет поиск в шапке.
+  // Погашенный выпуск по своему ISIN находится и при выключенном «погашенные»: человек
+  // набрал конкретный номер, и «ничего не найдено» было бы неправдой
+  const LAT = { "а": "a", "в": "b", "е": "e", "к": "k", "м": "m", "н": "h", "о": "o", "р": "p", "с": "c", "т": "t", "у": "y", "х": "x" };
+  const isinKey = s => String(s || "").toLowerCase().replace(/\s+/g, "").replace(/[авекмнорстух]/g, c => LAT[c]);
   function filtered() {
-    const needle = q.trim().toLowerCase();
+    const needle = q.trim().toLowerCase(), nk = isinKey(q);
+    const byIsin = nk.length >= 4 && /^[a-z0-9]+$/.test(nk) && /\d/.test(nk) && /[a-z]/.test(nk);
+    const isinHit = i => byIsin && isinKey(i.isin).includes(nk);
     return issues.filter(i =>
       (kind === "all" || i.kind === kind) &&
-      (showMatured || !i.matured) &&
-      (!needle || (i.serial + " " + i.isin + " " + assetOf(i) + " " + assetRaw(i)).toLowerCase().includes(needle)));
+      (showMatured || !i.matured || isinHit(i)) &&
+      (!needle || (i.serial + " " + i.isin + " " + assetOf(i) + " " + assetRaw(i)).toLowerCase().includes(needle) || isinHit(i)));
   }
 
   // Вторая ссылка placements.html#<ISIN> в уже открытую вкладку меняла адрес,
@@ -673,7 +681,7 @@
   if (selected && hash) document.getElementById("panel-close").setAttribute("data-back", "← {}");
 </script>
 <script src="chat.js?v=24"></script>
-<script src="search.js?v=7"></script>
+<script src="search.js?v=8"></script>
 <script src="nav-about.js?v=9"></script>
 <script src="qualgate.js?v=6"></script>
 </body>
