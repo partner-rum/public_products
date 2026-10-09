@@ -245,8 +245,24 @@
     .ab-fav[aria-pressed="true"] { color: var(--solar); }
     .ab-fav svg { display: block; }
 
-    h1 { font-size: 26px; }
+    h1 { font-size: 26px; font-weight: 600; letter-spacing: -.01em; }
     .head { margin-bottom: 18px; }
+    .badge { font-family: var(--f-body); font-size: 11.5px; font-weight: 600; letter-spacing: .04em; padding: 4px 10px; border-radius: 999px; }
+    .subtitle { font-size: 14.5px; line-height: 1.45; }
+    .grid { gap: 10px; }
+    .panel, .section { padding: 16px 16px 18px; border: 0; border-radius: 16px; }
+    .section { margin-top: 10px; }
+    .section h2 { margin: 0 0 8px; font-family: var(--f-body); font-size: 13px; font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--faint); }
+    .chart-title { font-size: 16px; }
+    .chart-head { margin-bottom: 10px; }
+    .tabs { background: rgba(255,255,255,.05); }
+    .metric { border: 0; border-radius: 14px; }
+    .calc { border: 0; background: rgba(255,255,255,.04); border-radius: 14px; }
+    .calc-o { border: 0; }
+    .facts { gap: 16px 24px; margin-top: 16px; padding-top: 16px; }
+    .fact .k { font-size: 12px; text-transform: none; letter-spacing: 0; }
+    .scenario { padding: 12px 0; }
+    .intro { margin: 4px 0 4px; }
     .quote-block { margin-top: 14px; }
     /* Ряд квадратных действий: «Обсудить» — оранжевая, остальные — тёмные плитки */
     .actions { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 16px; }
@@ -288,6 +304,7 @@
   }
   @media (max-width: 360px) {
     .calc-out { grid-template-columns: 1fr; }
+    .metric .v { font-size: 13.5px; }
     .actions .ct-btn, .actions .sh-btn, .actions .btn-pdf { font-size: 11.5px; padding-left: 2px; padding-right: 2px; }
     .mbar .mb-fig small { font-size: 11.5px; }
     .mbar #ct-host-m .ct-btn { padding: 0 14px; }
@@ -346,9 +363,9 @@
           </svg>
           <span class="lbl-l">Скачать one-pager (PDF)</span><span class="lbl-s">One-pager</span>
         </a>
-        <button type="button" class="btn-pdf btn-secondary btn-ai" id="ask-ai">
+        <button type="button" class="btn-pdf btn-secondary btn-ai" id="ask-ai" aria-label="Спросить AI об этом продукте">
           <svg width="22" height="22" viewBox="0 0 26 26" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>
-          Спросить AI
+          <span class="lbl-l">Спросить AI</span><span class="lbl-s">Спросить</span>
         </button>
       </div>
     </div>
@@ -584,6 +601,7 @@
     ov.innerHTML = '<i class="scrub-line"></i><i class="scrub-dot"></i><span class="scrub-tip"></span>';
     el.appendChild(ov);
     const line = ov.children[0], dot = ov.children[1], tip = ov.children[2];
+    const buLabels = [].filter.call(el.querySelectorAll("text"), (t) => /^б\/у/.test(t.textContent));
     scrubSet = function (m) {
       const k = el.clientWidth / g.W, v = S.calc.pct(inst, m), px = g.x(100 + m) * k, py = g.y(v) * k;
       line.style.left = px + "px"; line.style.top = g.T * k + "px"; line.style.height = (g.H - g.T - g.B) * k + "px";
@@ -592,6 +610,11 @@
       const w = tip.offsetWidth, cw = el.clientWidth;
       tip.style.left = Math.max(w / 2 + 2, Math.min(cw - w / 2 - 2, px)) + "px";
       tip.style.top = (py - 40 > 0 ? py - 40 : py + 14) + "px";
+      const er = el.getBoundingClientRect();
+      buLabels.forEach((t) => {
+        const b = t.getBoundingClientRect(), cx = b.left + b.width / 2 - er.left, cy = b.top + b.height / 2 - er.top;
+        t.style.opacity = Math.abs(cx - px) < 44 && Math.abs(cy - py) < 28 ? ".22" : "";
+      });
     };
     let drag = false;
     function at(e) {
@@ -1138,7 +1161,7 @@
   content.metrics = content.metrics.filter(m => !(m[0] === "Изм. за день" && !inst.chg));
 
   document.getElementById("metrics").innerHTML = content.metrics.map(m =>
-    '<div class="metric' + (String(m[1]).replace(/<[^>]*>/g, "").length > 15 || String(m[0]).length > 22 ? " wide" : "") + '"><span class="k">' + m[0] + '</span><span class="v">' + m[1] + '</span></div>').join("");
+    '<div class="metric' + (String(m[1]).replace(/<[^>]*>/g, "").length > 17 || String(m[0]).length > 22 ? " wide" : "") + '"><span class="k">' + m[0] + '</span><span class="v">' + m[1] + '</span></div>').join("");
 
   document.getElementById("example-intro").textContent = content.exampleIntro;
   document.getElementById("scenarios").innerHTML = content.scenarios.map(s =>

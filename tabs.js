@@ -141,8 +141,12 @@
     }
     // Сумма входа — всегда своей строкой под активом и сроком: в одном месте у каждой
     // строки, список читается столбиком (в строку с активом она то влезала, то переносилась)
+    var ROWS_B = document.documentElement.getAttribute("data-rows") === "b";
     function prodRow(r) {
       var f = figure(r), nm = pname(r), sum = fromRub(entryRub(r));
+      if (ROWS_B) return '<li><a class="tg-row" href="instrument.html?id=' + encodeURIComponent(r.id) + '">' + glyph(r) +
+        '<span class="tg-tx"><span class="tg-nm">' + esc(nm.head) + '</span><span class="tg-sb">' + esc(nm.rest) + "</span></span>" +
+        '<span class="tg-fig"><b>' + esc(f.v) + "</b><small>" + esc(f.n) + "</small>" + (sum ? '<small class="tg-in2">' + sum + "</small>" : "") + "</span></a></li>";
       return '<li><a class="tg-row" href="instrument.html?id=' + encodeURIComponent(r.id) + '">' + glyph(r) +
         '<span class="tg-tx"><span class="tg-nm">' + esc(nm.head) + '</span><span class="tg-sb">' + esc(nm.rest) + (sum ? '<span class="tg-in">' + sum + "</span>" : "") + "</span></span>" +
         '<span class="tg-fig"><b>' + esc(f.v) + "</b><small>" + esc(f.n) + "</small></span></a></li>";
@@ -248,7 +252,11 @@
           '<div class="tg-qz-foot"><button type="button" class="tg-qz-go" data-qz="done">' + (a.c.length ? "Показать " + nProd(total) : "Любые активы · " + nProd(total)) + ARROW + "</button>" +
           '<p class="tg-qz-legal">Подбор — фильтр по условиям, которые вы выбрали, а не рекомендация. Не является индивидуальной инвестиционной рекомендацией.</p></div>';
       }
-      el.innerHTML = '<div class="tg-qz-in">' + head + '<div class="tg-qz-body">' + body + "</div></div>";
+      var crumbs = "";
+      if (st >= 1) crumbs += '<button type="button" data-qz="step:0">' + esc(a.y ? YTXT[a.y] : "срок не важен") + "</button>";
+      if (st >= 2) crumbs += '<button type="button" data-qz="step:1">' + esc(a.g ? GTXT[a.g] : "любая цель") + "</button>";
+      if (crumbs) crumbs = '<div class="tg-qz-crumb" aria-label="Выбрано">' + crumbs + "</div>";
+      el.innerHTML = '<div class="tg-qz-in">' + head + crumbs + '<div class="tg-qz-body">' + body + "</div></div>";
       var f = el.querySelector('.tg-qz-body [aria-pressed="true"]') || el.querySelector(".tg-qz-body button:not([disabled])");
       if (f && f.focus) try { f.focus({ preventScroll: true }); } catch (e) {}
     }
@@ -258,6 +266,7 @@
       var v = b.getAttribute("data-qz"), a = QZ.a;
       if (v === "back") { if (QZ.step) { QZ.step--; qzRender(); } else closeQuiz(false); return; }
       if (v === "done") { finishQuiz(); return; }
+      if (v.indexOf("step:") === 0) { QZ.step = +v.slice(5); qzRender(); return; }
       var k = v.charAt(0), val = v.slice(2);
       function next() { b.setAttribute("aria-pressed", "true"); setTimeout(function () { if (QZ) { QZ.step++; qzRender(); } }, 170); }
       if (k === "y") { a.y = val === "any" ? "" : val; if (a.g && !pickN({ y: a.y, g: a.g })) a.g = ""; next(); }
@@ -566,9 +575,9 @@
         O.forEach(function (o) {
           var hp = o.hero && o.hero.poster;
           var cov = hp ? '<span class="tg-cov"><img src="' + esc(hp) + '" alt="" loading="lazy" decoding="async"' + (o.hero.wide ? "" : ' style="object-position:50% 34%"') + "></span>" : "";
-          body += '<a class="tg-card tg-off' + (cov ? " tg-hasc" : "") + '" href="offerings.html#' + esc(o.id) + '">' + cov + '<span class="tg-stat">' + esc(o.statusLabel || "") + "</span><h2>" + esc(o.name) + "</h2>" + (o.isin ? '<p class="tg-isin">ISIN ' + esc(o.isin) + "</p>" : "") + "<p>" + esc(o.lead || o.kind || "") + "</p>" +
+          body += '<a class="tg-card tg-off' + (cov ? " tg-hasc" : "") + '" href="offerings.html#' + esc(o.id) + '">' + cov + '<span class="tg-stat">' + esc(o.statusLabel || "") + "</span><h2><span>" + esc(o.name) + "</span>" + CHEV + "</h2>" + (o.isin ? '<p class="tg-isin">ISIN ' + esc(o.isin) + "</p>" : "") + "<p>" + esc(o.lead || o.kind || "") + "</p>" +
             '<div class="tg-nums">' + (o.price != null ? "<div><b>" + fq(o.price) + "%</b><span>цена</span></div>" : "") + (o.tenor ? "<div><b>" + esc(o.tenor) + "</b><span>срок</span></div>" : "") + (o.nominal ? "<div><b>" + Number(o.nominal).toLocaleString("ru-RU") + " ₽</b><span>номинал</span></div>" : "") + "</div>" +
-            lifeBar(o) + '<span class="tg-go" aria-hidden="true">Подробнее →</span></a>';
+            lifeBar(o) + "</a>";
         });
         return body;
       }
@@ -597,14 +606,15 @@
     }
 
     // Группа строк-ссылок как в настройках iOS: [адрес, заголовок, иконка, цвет, подпись?, вкладка?, картинка?]
-    // Картинка вместо иконки — обложка размещения (та же, что в «Выпусках»)
+    // Картинка вместо иконки (it[6]) — поддерживается, но на вводной не используется: среди
+    // одинаковых оранжевых знаков тёмная миниатюра обложки читалась пятном (09.10.2026)
     function g(items) {
       return '<div class="tg-grp">' + items.map(function (it) {
         var ext = /^https?:/.test(it[0]) ? ' target="_blank" rel="noopener"' : "";
         var go = it[5] ? ' data-go="' + it[5] + '"' : "";
         var tt = it[4] ? '<span class="tg-t2"><b>' + esc(it[1]) + "</b><small>" + esc(it[4]) + "</small></span>" : "<span>" + esc(it[1]) + "</span>";
         var ic = it[6] ? '<span class="tg-ic tg-ici" aria-hidden="true"><img src="' + esc(it[6]) + '" alt="" loading="lazy" decoding="async"></span>'
-          : '<span class="tg-ic" aria-hidden="true" style="background:' + it[3] + '">' + svg(it[2], 18) + "</span>";
+          : '<span class="tg-ic" aria-hidden="true">' + svg(it[2], 18) + "</span>";
         return '<a href="' + it[0] + '"' + ext + go + ">" + ic + '<span class="tg-tt">' + tt + CHEV + "</span></a>";
       }).join("") + "</div>";
     }
@@ -626,7 +636,7 @@
       var live = ((window.OFFERINGS || {}).items || []).filter(function (o) { return o.status === "live" || o.status === "upcoming"; });
       var rows = [
         ["index.html#mkt", "Рынок", "pulse", "#3D6FD8", "Обзор утра" + (fresh ? " " + dmy(M.date).slice(0, 5) : "") + ", ставки, идеи недели", "mkt"],
-        live.length ? ["index.html#iss", "На размещении", "rocket", "#3FA67A", live[0].name + (live.length > 1 ? " и ещё " + (live.length - 1) : ""), "iss", live[0].hero && live[0].hero.poster]
+        live.length ? ["index.html#iss", "На размещении", "rocket", "#3FA67A", live[0].name + (live.length > 1 ? " и ещё " + (live.length - 1) : ""), "iss"]
                     : ["index.html#iss", "Выпуски", "rocket", "#3FA67A", "Размещённые выпуски и их документы", "iss"],
         ["index.html#ai", "AI-ассистент", "star", "#8E7CC3", "Объяснит продукт, посчитает цену опциона", "ai"],
         ["about.html", "Библиотека", "book", "#E07B3A", "Как устроены структурные продукты"]

@@ -834,17 +834,17 @@
 
     /* Вводная: истории → кто мы → в продукты → разделы. Текст — первый экран главной до вкладок */
     .tg-home .tg-hero { padding: 0 16px 6px; }
-    .tg-home .tg-stories { margin: 2px -16px 12px; }
-    .tg-home .tg-hero h1, .tg-home .tg-h1 { font-size: clamp(26px, calc(9.4vw - 4px), 30px); line-height: 1.13; }
-    .tg-lead { margin: 12px 0 0; font-size: 16px; line-height: 1.5; color: var(--tg-mut); }
-    .tg-cta { display: flex; align-items: center; justify-content: center; gap: 8px; height: 52px; margin-top: 22px; border-radius: 14px; background: #EE7D1B; color: #0C0A08 !important; font-size: 16px; font-weight: 600; -webkit-tap-highlight-color: transparent; }
+    .tg-home .tg-stories { margin: 2px -16px 8px; }
+    .tg-home .tg-hero h1, .tg-home .tg-h1 { font-size: clamp(24px, calc(8.6vw - 4px), 27px); line-height: 1.14; }
+    .tg-lead { margin: 8px 0 0; font-size: 15px; line-height: 1.45; color: var(--tg-mut); }
+    .tg-cta { display: flex; align-items: center; justify-content: center; gap: 8px; height: 50px; margin-top: 14px; border-radius: 14px; background: #EE7D1B; color: #0C0A08 !important; font-size: 16px; font-weight: 600; -webkit-tap-highlight-color: transparent; }
     .tg-cta .n { font-weight: 500; opacity: .7; }
     .tg-cta:active { background: #F58E33; }
-    .tg-co { display: block; margin-top: 6px; padding: 10px 0; -webkit-tap-highlight-color: transparent; }
+    .tg-co { display: block; margin-top: 0; padding: 9px 0; -webkit-tap-highlight-color: transparent; }
     .tg-co .t { display: inline-flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 500; }
     .tg-co .t svg { color: var(--tg-faint); }
     .tg-co .s { display: block; margin-top: 3px; font-size: 13px; line-height: 1.4; color: var(--tg-mut); }
-    .tg-home .tg-pad .tg-cap { margin-top: 10px; }
+    .tg-home .tg-pad .tg-cap { margin-top: 6px; }
     .tg-t2 { display: block; min-width: 0; padding: 10px 0; }
     .tg-t2 b { display: block; font-size: 16px; font-weight: 500; }
     .tg-t2 small { display: block; margin-top: 2px; font-size: 13px; line-height: 1.35; color: var(--tg-mut); }
@@ -865,6 +865,7 @@
     .tg-fig b { display: block; font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 500; }
     .tg-fig small { display: block; font-size: 11px; color: var(--tg-faint); margin-top: 1px; }
     .tg-fig.tg-g b { color: #55C08A; }
+    .tg-fig .tg-in2 { display: block; margin-top: 3px; font-size: 11.5px; color: var(--tg-mut); white-space: nowrap; }
 
     .tg-card { display: block; background: var(--tg-card); border-radius: 16px; padding: 14px 16px; margin-bottom: 10px; }
     .tg-rb { font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: #EE7D1B; }
@@ -890,7 +891,7 @@
     .tg-wait { padding: 28px 0; text-align: center; color: var(--tg-faint); font-size: 14px; }
     .tg-grp { margin: 8px 0 16px; border-radius: 14px; background: var(--tg-card); overflow: hidden; }
     .tg-grp a { display: flex; align-items: center; gap: 12px; min-height: 50px; padding-left: 12px; }
-    .tg-ic { flex: none; width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; color: #fff; }
+    .tg-ic { flex: none; width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center; color: #EE7D1B; background: rgba(238,125,27,.14); }
     .tg-tt { flex: 1; min-width: 0; align-self: stretch; display: flex; align-items: center; gap: 8px; padding-right: 12px; border-bottom: 1px solid var(--tg-line); font-size: 16px; }
     .tg-grp a:last-child .tg-tt { border-bottom: 0; }
     .tg-tt span { flex: 1; }
@@ -918,14 +919,14 @@
     .tg-tb button[data-t="ai"][aria-current] { color: #EE7D1B; }
     .tg-tb button[data-t="ai"][aria-current] .tg-aic { box-shadow: 0 0 0 2px var(--tg-bar), 0 0 0 4px rgba(238,125,27,.55); }
     /* 3. Подбор за 3 вопроса (VibeMove, PowerPeak, Passion Finder): вход на вводной */
-    .tg-pick { display: flex; align-items: center; gap: 12px; width: 100%; margin-top: 10px; padding: 12px 14px 12px 12px; border-radius: 16px;
-      border: 1px solid rgba(238,125,27,.32); background: radial-gradient(130% 160% at 0% 0%, rgba(238,125,27,.17), rgba(238,125,27,0) 62%), var(--tg-card);
+    .tg-pick { display: flex; align-items: center; gap: 12px; width: 100%; margin-top: 6px; padding: 9px 0; border: 0; background: none;
       color: var(--tg-ink); font-family: inherit; text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-    .tg-pick:active { background: radial-gradient(130% 160% at 0% 0%, rgba(238,125,27,.24), rgba(238,125,27,0) 62%), var(--tg-card2); }
-    .tg-pick-ic { flex: none; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: rgba(238,125,27,.16); color: #EE7D1B; }
+    .tg-pick:active { opacity: .7; }
+    .tg-pick-ic { flex: none; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: rgba(238,125,27,.14); color: #EE7D1B; }
+    .tg-pick-ic svg { width: 20px; height: 20px; }
     .tg-pick-t { flex: 1; min-width: 0; }
-    .tg-pick-t b { display: block; font-size: 16px; font-weight: 600; }
-    .tg-pick-t small { display: block; margin-top: 2px; font-size: 13px; color: var(--tg-mut); }
+    .tg-pick-t b { display: block; font-size: 15px; font-weight: 500; }
+    .tg-pick-t small { display: block; margin-top: 2px; font-size: 13px; line-height: 1.4; color: var(--tg-mut); }
     /* строка подбора в «Продуктах» — вместо рядов фильтров */
     .tg-pickbar { display: flex; align-items: center; gap: 2px; margin-top: 8px; padding: 6px 2px 6px 14px; min-height: 58px; border-radius: 14px; background: rgba(238,125,27,.1); border: 1px solid rgba(238,125,27,.3); }
     .tg-pickbar .t { flex: 1; min-width: 0; }
@@ -963,7 +964,10 @@
     .tg-qz-g b { display: block; font-size: 16.5px; font-weight: 600; }
     .tg-qz-g small { display: block; margin-top: 3px; font-size: 13px; line-height: 1.4; color: var(--tg-mut); }
     .tg-qz-g em { flex: none; max-width: 70px; font-style: normal; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.3; color: var(--tg-faint); text-align: right; }
-    .tg-qz-bub { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; padding: 4px 0 8px; }
+    .tg-qz-bub { flex: 1; min-height: 0; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; align-content: center; gap: 8px; padding: 4px 0 8px; }
+    .tg-qz-crumb { display: flex; flex-wrap: wrap; gap: 6px; margin: -10px 0 18px; }
+    .tg-qz-crumb button { display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 0 11px; border-radius: 17px; border: 1px solid rgba(238,125,27,.35); background: rgba(238,125,27,.1); color: #F2A65A; font-family: inherit; font-size: 13px; font-weight: 500; cursor: pointer; }
+    .tg-qz-crumb button svg { opacity: .7; }
     .tg-qz-c { flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 6px; border-radius: 50%; border: 1px solid rgba(255,255,255,.14); background: var(--tg-card2); color: var(--tg-ink); font-family: inherit; cursor: pointer; transition: transform .15s, background .15s; }
     .tg-qz-c b { font-size: 13.5px; font-weight: 600; line-height: 1.15; text-align: center; }
     .tg-qz-c small { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--tg-faint); }
@@ -988,10 +992,55 @@
     .tg-term i { display: block; height: 100%; border-radius: 2px; background: rgba(238,125,27,.75); }
     /* 7. Обложки размещений (Travel, Ronas IT; Furniture, Nixtio) */
     .tg-card.tg-hasc { overflow: hidden; }
-    .tg-cov { display: block; margin: -14px -16px 12px; aspect-ratio: 16 / 9; background: var(--tg-card2); overflow: hidden; }
+    .tg-cov { display: block; margin: -12px -14px 12px; aspect-ratio: 2 / 1; background: var(--tg-card2); overflow: hidden; }
+    .tg-card.tg-off { padding: 12px 14px 14px; }
+    .tg-off h2 { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .tg-off h2 .tg-chev { color: #EE7D1B; }
+    .tg-off > p:not(.tg-isin) { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+    .tg-off .tg-nums { margin-top: 8px; }
+    .tg-off .tg-life { margin-top: 10px; }
     .tg-cov img { display: block; width: 100%; height: 100%; object-fit: cover; }
     .tg-ici { overflow: hidden; background: var(--tg-card2); }
     .tg-ici img { display: block; width: 100%; height: 100%; object-fit: cover; }
+    /* 8. Вкладка AI в тёмной палитре витрины — вариант для сравнения со светлой (стенд: html[data-ai=dark]).
+       Перебивает стили chat.js специфичностью, сам chat.js не трогаем */
+    html.tg-on[data-ai="dark"] .ca-panel { background: #0B0C10; color: #F2F3F7; color-scheme: dark; }
+    html.tg-on[data-ai="dark"] .ca-head { background: #0B0C10; border-bottom-color: rgba(255,255,255,.08); }
+    html.tg-on[data-ai="dark"] .ca-ava { background: #14161C; box-shadow: 0 0 0 1px rgba(255,255,255,.08); }
+    html.tg-on[data-ai="dark"] .ca-ttl { color: #F2F3F7; }
+    html.tg-on[data-ai="dark"] .ca-sub { color: rgba(242,243,247,.56); }
+    html.tg-on[data-ai="dark"] .ca-x { color: rgba(242,243,247,.56); }
+    html.tg-on[data-ai="dark"] .ca-x:hover { color: #F2F3F7; background: rgba(255,255,255,.06); }
+    html.tg-on[data-ai="dark"] .ca-msg.a { background: #14161C; color: #F2F3F7; border-color: rgba(255,255,255,.08); }
+    html.tg-on[data-ai="dark"] .ca-msg.a a { color: #F58E33; }
+    html.tg-on[data-ai="dark"] .ca-msg.a b { color: #F2F3F7; }
+    html.tg-on[data-ai="dark"] .ca-msg.a a.ca-op { background: rgba(238,125,27,.12); color: #F58E33; border-color: rgba(238,125,27,.55); }
+    html.tg-on[data-ai="dark"] .ca-msg.a.n { border-color: rgba(255,255,255,.22); color: rgba(242,243,247,.64); }
+    html.tg-on[data-ai="dark"] .ca-sug button { background: #14161C; color: rgba(242,243,247,.86); border-color: rgba(255,255,255,.1); }
+    html.tg-on[data-ai="dark"] .ca-typing { background: #14161C; border-color: rgba(255,255,255,.08); color: rgba(242,243,247,.56); }
+    html.tg-on[data-ai="dark"] .ca-typing .tb { background: rgba(255,255,255,.1); }
+    html.tg-on[data-ai="dark"] .ca-foot { background: #0B0C10; border-top-color: rgba(255,255,255,.08); }
+    html.tg-on[data-ai="dark"] .ca-in { background: #14161C; color: #F2F3F7; border-color: rgba(255,255,255,.14); }
+    html.tg-on[data-ai="dark"] .ca-in::placeholder { color: rgba(242,243,247,.5); }
+    html.tg-on[data-ai="dark"] .ca-note { color: rgba(242,243,247,.5); }
+    html.tg-on[data-ai="dark"] .ca-discuss { color: #F58E33; border-color: rgba(238,125,27,.55); }
+    html.tg-on[data-ai="dark"] .ca-discuss:hover { background: rgba(238,125,27,.1); }
+    html.tg-on[data-ai="dark"] .ca-lead { background: rgba(238,125,27,.1); border-color: rgba(238,125,27,.35); }
+    html.tg-on[data-ai="dark"] .ca-lead-t, html.tg-on[data-ai="dark"] .ca-lead-ok { color: #F2F3F7; }
+    html.tg-on[data-ai="dark"] .ca-lead-ok a { color: #F58E33; }
+    html.tg-on[data-ai="dark"] .ca-lead input { background: #14161C; color: #F2F3F7; border-color: rgba(255,255,255,.16); }
+    html.tg-on[data-ai="dark"] .ca-hero-star { background: #14161C; box-shadow: 0 0 0 1px rgba(255,255,255,.08), 0 12px 30px rgba(238,125,27,.22); }
+    html.tg-on[data-ai="dark"] .ca-hero-q { color: #F2F3F7; }
+    html.tg-on[data-ai="dark"] .ca-hero-ty { color: rgba(242,243,247,.6); }
+    html.tg-on[data-ai="dark"] .ca-card { background: #14161C; color: #F2F3F7; border-color: rgba(255,255,255,.08); }
+    html.tg-on[data-ai="dark"] .ca-card:hover, html.tg-on[data-ai="dark"] .ca-card:active { background: #1B1E25; border-color: rgba(238,125,27,.6); }
+    html.tg-on[data-ai="dark"] .ca-card-ic { background: rgba(238,125,27,.14); color: #EE7D1B; }
+    html.tg-on[data-ai="dark"] .ca-card-t small { color: rgba(242,243,247,.6); }
+    html.tg-on[data-ai="dark"] .ca-pp-k { color: rgba(242,243,247,.5); }
+    html.tg-on[data-ai="dark"] .ca-chip { background: #14161C; color: #F2F3F7; border-color: rgba(255,255,255,.14); }
+    html.tg-on[data-ai="dark"] .ca-chip[aria-expanded=true] { background: rgba(238,125,27,.14); border-color: #EE7D1B; }
+    html.tg-on[data-ai="dark"] .ca-pp-opts button { background: rgba(238,125,27,.14); color: #F58E33; border-color: rgba(238,125,27,.5); }
+    html.tg-on[data-ai="dark"] .ca-pp-opts button[aria-current] { background: #14161C; color: rgba(242,243,247,.45); border-color: rgba(255,255,255,.1); }
     @media (prefers-reduced-motion: reduce) { .tg-qz-body { animation: none; } .tg-qz-c { transition: none; } }
     @media (min-width: 600px) { .tg-main { border-left: 1px solid var(--tg-line); border-right: 1px solid var(--tg-line); } .tg-tb { max-width: 560px; margin: 0 auto; } }
     @media (prefers-reduced-motion: reduce) { .tg-v.tg-anim { animation: none; } }
@@ -2264,7 +2313,7 @@
   else setTimeout(start, 1200);
 })();
 </script>
-<script src="tabs.js?v=6"></script>
+<script src="tabs.js?v=7"></script>
 </body>
 
 </html>
