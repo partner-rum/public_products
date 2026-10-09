@@ -6,7 +6,9 @@
    чтобы ассистента было видно сразу (слово Руслана). На телефоне строка — пилюля «Спросить AI»
    без поля. Оговорка «считаю только CALL и PUT» — внутри открытого чата, не на заставке.
    Бэкенд: Cloudflare Worker /chat → DeepSeek (ключи — секреты Cloudflare, не в репо).
-   Подключение: <script src="chat.js?v=21"></script> перед </body>. Без зависимостей. */
+   Подключение: <script src="chat.js?v=25"></script> перед </body>. Без зависимостей.
+   Приёмы с Dribbble (09.10.2026): на телефоне пустой чат — вопрос «Чем помочь?» и три умения
+   карточками у поля ввода; под ответом с ценой — чипы условий, тап пересчитывает. */
 (function () {
   "use strict";
 
@@ -193,6 +195,37 @@
     "@media(max-width:480px){.ca-panel{right:8px;left:8px;bottom:8px;width:auto;max-width:none;height:min(560px,calc(100dvh - 16px));}}" +
     /* — оговорка про CALL/PUT внутри чата — тише обычной реплики: пунктирная рамка без заливки — */
     ".ca-msg.a.n{max-width:92%;background:none;border:1px dashed rgba(20,22,28,.24);color:rgba(20,22,28,.68);font-size:12.5px;line-height:1.5;}" +
+    /* — телефон, пустой чат: вопрос и три умения у большого пальца (Dribbble: Document Scanner
+         и AI Assistant от Nixtio). Вместо приветствия в пять строк и пунктирной оговорки — */
+    ".ca-hero{flex:1;display:flex;flex-direction:column;justify-content:space-between;gap:16px;min-height:100%;}" +
+    ".ca-hero-top{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:18px 8px 4px;}" +
+    ".ca-hero-star{width:58px;height:58px;border-radius:17px;background:#14161C;display:grid;place-items:center;box-shadow:0 12px 30px rgba(238,125,27,.28);}" +
+    ".ca-hero-q{margin:16px 0 0;font-family:'Rubik','Onest',sans-serif;font-size:30px;font-weight:600;line-height:1.15;letter-spacing:-.01em;color:#14161C;}" +
+    ".ca-hero-ty{margin:10px 0 0;min-height:1.5em;font-size:14.5px;line-height:1.5;color:rgba(20,22,28,.62);}" +
+    ".ca-hero-ty i{font-style:normal;color:#EE7D1B;animation:caCaret 1s steps(1) infinite;}" +
+    ".ca-cards{display:flex;flex-direction:column;gap:8px;}" +
+    ".ca-card{display:flex;align-items:center;gap:12px;width:100%;min-height:66px;padding:10px 14px 10px 10px;border:1px solid rgba(20,22,28,.1);border-radius:16px;background:#F8F9FB;color:#14161C;text-align:left;font-family:inherit;cursor:pointer;transition:border-color .15s,background .15s;}" +
+    ".ca-card:hover,.ca-card:active{border-color:rgba(238,125,27,.7);background:#FFF6EE;}" +
+    ".ca-card:focus-visible{outline:2px solid #EE7D1B;outline-offset:2px;}" +
+    ".ca-card-ic{flex:none;width:42px;height:42px;border-radius:12px;background:#14161C;color:#EE7D1B;display:grid;place-items:center;}" +
+    ".ca-card-t{flex:1;min-width:0;}" +
+    ".ca-card-t b{display:block;font-size:15px;font-weight:600;line-height:1.25;}" +
+    ".ca-card-t small{display:block;margin-top:2px;font-size:12.5px;line-height:1.35;color:rgba(20,22,28,.6);}" +
+    "@media(prefers-reduced-motion:reduce){.ca-hero-ty i{animation:none;}}" +
+    /* — условия расчёта чипами под ответом с ценой (Dribbble: PowerPeak, «AI Workout Builder» —
+         из свободного текста AI выделяет параметры чипами) — */
+    ".ca-pp{align-self:flex-start;max-width:96%;margin-top:-2px;}" +
+    ".ca-pp-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px;}" +
+    ".ca-pp-k{font-size:12px;color:rgba(20,22,28,.55);margin-right:2px;}" +
+    ".ca-chip{display:inline-flex;align-items:center;gap:5px;min-height:40px;padding:0 12px;border-radius:20px;border:1px solid rgba(20,22,28,.16);background:#F8F9FB;color:#14161C;font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:border-color .15s,background .15s;}" +
+    ".ca-chip:hover{border-color:rgba(238,125,27,.7);}" +
+    ".ca-chip[aria-expanded=true]{border-color:#EE7D1B;background:#FFF1E4;}" +
+    ".ca-chip svg{flex:none;opacity:.6;}" +
+    ".ca-pp-opts{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}" +
+    ".ca-pp-opts[hidden]{display:none;}" +
+    ".ca-pp-opts button{min-height:40px;padding:0 14px;border-radius:11px;border:1px solid rgba(238,125,27,.55);background:#FFF4EA;color:#B4580B;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;}" +
+    ".ca-pp-opts button[aria-current]{border-color:rgba(20,22,28,.14);background:#F8F9FB;color:rgba(20,22,28,.45);cursor:default;}" +
+    ".ca-chip:focus-visible,.ca-pp-opts button:focus-visible{outline:2px solid #EE7D1B;outline-offset:2px;}" +
     "@media(prefers-reduced-motion:reduce){.ca-panel{transition:none;}}";
 
   function inject() {
@@ -236,11 +269,145 @@
         '<a class="ca-op" href="$2" target="_blank" rel="noopener">' + ICON_DOC + '$1</a>');
   }
 
+  // ── Телефон, пустой чат (Dribbble: Document Scanner и AI Assistant от Nixtio) ─────────
+  // Крупно «Чем помочь?», под ним по буквам печатается, что ассистент умеет, а три умения —
+  // карточками у поля ввода, под большим пальцем. Тап по карточке задаёт её пример сразу.
+  // Только телефон и только пустой диалог: на компьютере окно маленькое, там прежний вид;
+  // начатый на другой странице диалог показывается как был. Стол партнёра — со своими текстами
+  function heroMode() {
+    return !SETUP.desk && !OWN_SUG && !(typeof SETUP.greeting === "string" && SETUP.greeting) &&
+      !!(window.matchMedia && window.matchMedia("(max-width: 860px)").matches);
+  }
+  var IC_BOOK = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4.5h5.5a2 2 0 0 1 2 2V20a1.5 1.5 0 0 0-1.5-1.5H5zM19 4.5h-5.5a2 2 0 0 0-2 2V20a1.5 1.5 0 0 1 1.5-1.5H19z"/></svg>';
+  var IC_PAY = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 18H10L19.5 6"/><path d="M3.5 13.5H20.5" stroke-dasharray="2 3" opacity=".55"/></svg>';
+  var IC_FIND = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.5-4.5"/></svg>';
+  var IC_STAR_HERO = '<svg width="28" height="28" viewBox="0 0 26 26" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>';
+  var CARDS = [
+    { t: "Объяснить продукт", s: "«Чем автоколл отличается от защиты капитала?»", q: EXAMPLES[0], ic: IC_BOOK },
+    { t: "Посчитать цену", s: "CALL, PUT и защита капитала на один актив · «колл на Сбербанк на 2 года»", q: EXAMPLES[1], ic: IC_PAY, qual: true },
+    { t: "Найти на сайте", s: "«Где посмотреть размещённые выпуски?»", q: EXAMPLES[2], ic: IC_FIND }
+  ];
+  var TYPED = ["Объясню, как устроен автоколл", "Посчитаю колл на Сбербанк на 2 года", "Подскажу, где размещённые выпуски"];
+  function escA(t) { return esc(t).replace(/"/g, "&quot;"); }
+  function typeLoop(el) {
+    if (!el) return;
+    var list = TYPED.filter(function (t, i) { return i !== 1 || qualOk(); }), idx = 0;
+    if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) { el.textContent = list[0]; return; }
+    (function word() {
+      if (!el.isConnected) return;
+      var t = list[idx], i = 0;
+      (function step() {
+        if (!el.isConnected) return;
+        el.textContent = t.slice(0, ++i);
+        if (i < t.length) setTimeout(step, 36 + Math.random() * 30);
+        else setTimeout(function () { idx = (idx + 1) % list.length; word(); }, 1900);
+      })();
+    })();
+  }
+  function showHero() {
+    var box = document.createElement("div");
+    box.className = "ca-hero";
+    box.innerHTML = '<div class="ca-hero-top"><span class="ca-hero-star" aria-hidden="true">' + IC_STAR_HERO + '</span><h2 class="ca-hero-q">Чем помочь?</h2>' +
+      '<p class="ca-hero-ty" aria-hidden="true"><span></span><i>▍</i></p></div>' +
+      '<div class="ca-cards">' + CARDS.filter(function (c) { return !c.qual || qualOk(); }).map(function (c) {
+        return '<button type="button" class="ca-card" data-q="' + escA(c.q) + '"><span class="ca-card-ic" aria-hidden="true">' + c.ic +
+          '</span><span class="ca-card-t"><b>' + c.t + "</b><small>" + esc(c.s) + "</small></span></button>";
+      }).join("") + "</div>";
+    els.log.appendChild(box);
+    els.hero = box;
+    box.addEventListener("click", function (e) {
+      var b = e.target.closest && e.target.closest(".ca-card");
+      if (!b || busy || locked) return;
+      goal("chat_card");
+      els.input.value = b.getAttribute("data-q");
+      send();
+    });
+    typeLoop(box.querySelector(".ca-hero-ty span"));
+  }
+
+  // ── Условия расчёта чипами (Dribbble: PowerPeak, «AI Workout Builder») ───────────
+  // Под ответом с ценой — что можно поменять: срок, страйк (или уровень защиты), колл ⇄ пут.
+  // Тап — пересчёт без набора текста: уходит обычным сообщением, тем же путём, что вопрос
+  // клиента (воркер видит в нём и срок, и страйк — его проверки срока и страйка не обходятся).
+  // Разбираем строку-заголовок ответа: её собирает код воркера (priceWarrant / priceProtection),
+  // а не модель, поэтому формат стабилен. Меняется заголовок там — правь шаблоны здесь
+  var RE_W = /^\*\*(CALL|PUT) ([\d,]+) · (.+?) · ([^·*\n]+)\*\*$/m;
+  var RE_P = /^\*\*Защита капитала · ([^*\n]+)\*\*$/m;
+  var TEN_W = ["6 месяцев", "1 год", "2 года", "3 года"], TEN_P = ["1 год", "2 года", "3 года", "5 лет"];
+  var STR_W = ["90", "100", "110", "120"], FLR_P = ["100", "90", "80"];
+  var CHEV_D = '<svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true"><path d="M2 3.5 5 6.5l3-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  function pctS(v) { return String(v).replace(".", ","); }
+  function priceParams(text) {
+    var m = RE_W.exec(text || "");
+    if (m) return { kind: "w", type: m[1], strike: m[2].replace(",", "."), asset: m[3], tenor: m[4].trim() };
+    m = RE_P.exec(text || "");
+    if (!m) return null;
+    var parts = m[1].split(" · "), p = { kind: "p", asset: parts[0], tenor: parts[parts.length - 1].trim(), floor: "100", from: "", cap: "" };
+    parts.slice(1, -1).forEach(function (t) {
+      var x;
+      if ((x = /^защита ([\d,]+)%$/.exec(t))) p.floor = x[1].replace(",", ".");
+      else if ((x = /^рост от ([+−-][\d,]+)%$/.exec(t))) p.from = x[1];
+      else if ((x = /^до \+([\d,]+)%$/.exec(t))) p.cap = x[1].replace(",", ".");
+    });
+    return p;
+  }
+  function askText(p) {
+    if (p.kind === "w") return "Посчитай " + (p.type === "PUT" ? "пут" : "колл") + " со страйком " + pctS(p.strike) + "% на " + p.asset + " на " + p.tenor;
+    return "Посчитай защиту капитала на " + p.asset + " на " + p.tenor + (p.floor !== "100" ? ", защита " + pctS(p.floor) + "%" : "") +
+      (p.from ? ", рост считается от " + p.from + "%" : "") + (p.cap ? ", потолок роста до +" + pctS(p.cap) + "%" : "");
+  }
+  function paramChips(text) {
+    var p = priceParams(text);
+    if (!p) return;
+    var row = '<span class="ca-pp-k">Пересчитать:</span>';
+    if (p.kind === "w") row += '<button type="button" class="ca-chip" data-pp="type">' + (p.type === "PUT" ? "колл вместо пута" : "пут вместо колла") + "</button>" +
+      '<button type="button" class="ca-chip" data-pp="strike" aria-expanded="false">страйк ' + pctS(p.strike) + "%" + CHEV_D + "</button>";
+    else row += '<button type="button" class="ca-chip" data-pp="floor" aria-expanded="false">защита ' + pctS(p.floor) + "%" + CHEV_D + "</button>";
+    row += '<button type="button" class="ca-chip" data-pp="tenor" aria-expanded="false">' + esc(p.tenor) + CHEV_D + "</button>";
+    var box = document.createElement("div");
+    box.className = "ca-pp";
+    box.innerHTML = '<div class="ca-pp-row" role="group" aria-label="Пересчитать с другими условиями">' + row + '</div><div class="ca-pp-opts" hidden></div>';
+    box._p = p;
+    els.log.appendChild(box);
+  }
+  function ppAsk(p) {
+    if (busy || locked) return;
+    goal("chat_chip");
+    els.input.value = askText(p);
+    send();
+  }
+  function ppClick(c) {
+    var box = c.closest(".ca-pp"), p = box && box._p, k = c.getAttribute("data-pp");
+    if (!p || busy || locked) return;
+    if (k === "type") { ppAsk(Object.assign({}, p, { type: p.type === "PUT" ? "CALL" : "PUT" })); return; }
+    var opts = box.querySelector(".ca-pp-opts"), was = c.getAttribute("aria-expanded") === "true";
+    [].forEach.call(box.querySelectorAll("[aria-expanded]"), function (x) { x.setAttribute("aria-expanded", "false"); });
+    if (was) { opts.hidden = true; return; }
+    var list = k === "tenor" ? (p.kind === "w" ? TEN_W : TEN_P) : k === "strike" ? STR_W : FLR_P;
+    var cur = k === "tenor" ? p.tenor : k === "strike" ? p.strike : p.floor;
+    opts.innerHTML = list.map(function (v) {
+      var lbl = k === "tenor" ? v : (k === "strike" ? "страйк " : "защита ") + v + "%";
+      return '<button type="button" data-ppv="' + k + ":" + escA(v) + '"' + (v === cur ? ' aria-current="true" disabled' : "") + ">" + esc(lbl) + "</button>";
+    }).join("");
+    opts.hidden = false;
+    c.setAttribute("aria-expanded", "true");
+    els.log.scrollTop = els.log.scrollHeight;
+  }
+  function ppPick(o) {
+    var box = o.closest(".ca-pp"), p = box && box._p, v = o.getAttribute("data-ppv"), i = v.indexOf(":");
+    if (!p) return;
+    var k = v.slice(0, i), val = v.slice(i + 1), q = Object.assign({}, p);
+    q[k] = val;
+    box.querySelector(".ca-pp-opts").hidden = true;
+    ppAsk(q);
+  }
+
   function addMsg(role, text) {
     var d = document.createElement("div");
     d.className = "ca-msg " + (role === "user" ? "u" : "a");
     d.innerHTML = role === "user" ? esc(text) : fmt(text);
     els.log.appendChild(d);
+    if (role !== "user" && text) paramChips(text);
     els.log.scrollTop = els.log.scrollHeight;
     return d;
   }
@@ -369,6 +536,9 @@
     if (!text) return;
     els.input.value = ""; els.input.style.height = "auto";
     if (els.sug) { els.sug.remove(); els.sug = null; }
+    if (els.hero) { els.hero.remove(); els.hero = null; }
+    [].forEach.call(els.log.querySelectorAll(".ca-pp-opts"), function (o) { o.hidden = true; });
+    [].forEach.call(els.log.querySelectorAll(".ca-chip[aria-expanded]"), function (c) { c.setAttribute("aria-expanded", "false"); });
     msgs.push({ role: "user", content: text });
     saveChat();
     addMsg("user", text);
@@ -560,6 +730,11 @@
     function open() {
       panel.classList.add("on"); dock.classList.add("hide");
       if (qualOk()) els.input.placeholder = "Ваш вопрос…";   // длинная подсказка на телефоне рвалась в две строки
+      if (!opened && !msgs.length && heroMode()) {
+        opened = true;
+        showHero();
+        goal("chat_open");
+      }
       if (!opened) {
         opened = true;
         addMsg("assistant", greeting());
@@ -575,7 +750,7 @@
         }
         goal("chat_open");
       }
-      setTimeout(function () { els.input.focus(); }, 150);
+      setTimeout(function () { if (!els.hero) els.input.focus(); }, 150);
     }
     function close() { panel.classList.remove("on"); dock.classList.remove("hide"); }
 
@@ -608,6 +783,10 @@
     els.log.addEventListener("click", function (e) {
       var a = e.target.closest && e.target.closest("a.ca-op");
       if (a) goal("chat_onepager");
+      var c = e.target.closest && e.target.closest("[data-pp]");
+      if (c) ppClick(c);
+      var o = e.target.closest && e.target.closest("[data-ppv]");
+      if (o) ppPick(o);
     });
     els.input.addEventListener("keydown", function (e) {
       if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }

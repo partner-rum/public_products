@@ -202,6 +202,96 @@
   @media (max-width: 760px) {
     .sh-btn, .btn-pdf, .calc-input { min-height: 44px !important; }
   }
+  /* ══ ПРИЁМЫ С DRIBBBLE (09.10.2026, «делай 1-10, покажи локально») ══
+     1. Выплата пальцем по графику (Crypto Trading от Nixtio — бегунок со значением в точке):
+        палец или мышь по графику двигает ползунок калькулятора, и наоборот — один расчёт, два входа.
+     2. Телефон: карточка — экран приложения (Travel от Ronas IT, Fintech Banking от Conceptzilla):
+        сверху «‹ назад · ☆», под ценой — ряд квадратных действий, параметры сеткой, снизу
+        закреплённая панель «цифра · сумма входа · Обсудить». Шапка сайта (лупа, меню) здесь
+        не нужна: карточка — экран внутри витрины, из неё возвращаются назад */
+  #chart { position: relative; touch-action: pan-y; -webkit-user-select: none; user-select: none; }
+  #chart.scr { cursor: ew-resize; }
+  .scrub { position: absolute; inset: 0; pointer-events: none; }
+  .scrub-line { position: absolute; width: 0; border-left: 1.5px dashed rgba(238,125,27,.85); }
+  .scrub-dot { position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: #EE7D1B; box-shadow: 0 0 0 5px rgba(238,125,27,.22); }
+  .scrub-tip { position: absolute; transform: translateX(-50%); white-space: nowrap; padding: 4px 9px; border-radius: 8px; background: #EE7D1B; color: #0C0A08; font-family: var(--f-mono); font-size: 12px; font-weight: 600; box-shadow: 0 6px 16px rgba(0,0,0,.35); }
+  .scrub-hint { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 12.5px; line-height: 1.4; color: var(--faint); }
+  .scrub-hint svg { flex: none; color: var(--solar); }
+  .appbar, .btn-ai, .lbl-s { display: none; }
+  .fav-toast { position: fixed; left: 50%; bottom: calc(92px + env(safe-area-inset-bottom)); z-index: 300; transform: translate(-50%, 8px); opacity: 0; pointer-events: none;
+    padding: 10px 16px; border-radius: 12px; background: #F2F3F7; color: #0B0C10; font-size: 13.5px; font-weight: 500; white-space: nowrap; box-shadow: 0 10px 30px rgba(0,0,0,.45); transition: opacity .2s, transform .2s; }
+  .fav-toast.on { opacity: 1; transform: translate(-50%, 0); }
+  @media (max-width: 760px) {
+    header.nav, .crumbs { display: none; }
+    html .ca-dock { display: none !important; }        /* ассистент — плиткой «Спросить AI» под ценой */
+    .wrap { padding-top: 6px; }
+    .appbar { display: flex; position: sticky; top: 0; z-index: 30; align-items: center; gap: 4px;
+      height: calc(52px + env(safe-area-inset-top)); padding: env(safe-area-inset-top) 4px 0 14px; background: #0B0C10; border-bottom: 1px solid transparent; transition: border-color .2s; }
+    .appbar::before { content: ""; position: absolute; left: 0; right: 0; bottom: 100%; height: 100vh; background: #0B0C10; pointer-events: none; }
+    .appbar.sc { border-bottom-color: var(--border-soft); }
+    .appbar.pv { position: relative; }
+    .ab-left { flex: none; max-width: 42%; min-width: 0; display: flex; align-items: center; }
+    .ab-brand { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-family: var(--display); font-size: 15px; font-weight: 600; color: var(--hushed); }
+    .ab-brand i { font-style: normal; color: var(--solar); }
+    .appbar #crumb-board { display: none; }
+    .appbar #crumb-board.sf-backed { display: inline-flex; align-items: center; gap: 7px; min-height: 44px; padding-right: 8px; color: var(--solar); font-size: 16px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .appbar #crumb-board.sf-backed::before { content: ""; flex: none; width: 10px; height: 17px; background: currentColor;
+      -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 11 18'%3E%3Cpath d='M9 1.5 1.8 9 9 16.5' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+      mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 11 18'%3E%3Cpath d='M9 1.5 1.8 9 9 16.5' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat; }
+    .appbar:has(#crumb-board.sf-backed) .ab-brand { display: none; }
+    .ab-mini { flex: 1; min-width: 0; padding: 0 6px; text-align: center; font-family: var(--display); font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0; transition: opacity .18s; }
+    .appbar.sc .ab-mini { opacity: 1; }
+    .ab-fav { flex: none; margin-left: auto; width: 46px; height: 46px; display: grid; place-items: center; border: 0; border-radius: 12px; background: none; color: var(--hushed); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .ab-fav[aria-pressed="true"] { color: var(--solar); }
+    .ab-fav svg { display: block; }
+
+    h1 { font-size: 26px; }
+    .head { margin-bottom: 18px; }
+    .quote-block { margin-top: 14px; }
+    /* Ряд квадратных действий: «Обсудить» — оранжевая, остальные — тёмные плитки */
+    .actions { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 16px; }
+    .actions .ct-host, .actions .sh-host { display: block; min-width: 0; }
+    .actions .ct, .actions .sh { display: flex; width: 100%; }
+    .actions .ct-btn, .actions .sh-btn, .actions .btn-pdf { width: 100%; height: 76px; min-height: 76px !important; margin: 0; padding: 10px 4px 9px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px;
+      border-radius: 14px; font-size: 12.5px; font-weight: 600; line-height: 1.15; text-align: center; }
+    .actions .ct-btn svg, .actions .sh-btn svg, .actions .btn-pdf svg { width: 22px; height: 22px; }
+    .actions .sh-btn, .actions .btn-pdf { background: var(--card) !important; border: 1px solid var(--border-soft); color: var(--ink) !important; }
+    .actions #ct-host { order: 1; } .actions #onepager-link { order: 2; } .actions #sh-host { order: 3; } .actions .btn-ai { order: 4; display: flex; }
+    .actions .ct-menu { left: 0; }
+    .lbl-l { display: none; } .lbl-s { display: inline; }
+    /* Параметры — сеткой в два столбца, длинные — во всю ширину */
+    .metrics { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-auto-flow: row dense; gap: 8px; min-width: 0; }
+    .metric { flex-direction: column; align-items: flex-start; justify-content: flex-start; gap: 4px; padding: 11px 13px; }
+    .metric .k { font-size: 12px; color: var(--faint); }
+    .metric .v { text-align: left; font-size: 14px; }
+    .metric.wide { grid-column: 1 / -1; }
+    /* Калькулятор — внутри блока графика, сразу под ним. Блок графика — ячейка сетки .grid, и
+       min-content калькулятора (две колонки с nowrap-цифрами) распирал колонку до 355px на 360:
+       ячейкам сетки — min-width:0, колонкам калькулятора — minmax(0, 1fr) */
+    .grid > * { min-width: 0; }
+    .calc-out { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+    .panel .calc { margin-top: 12px; }
+    /* Плитки результата: семизначные суммы («1 180 000 ₽») не влезали в половину ширины на 360 —
+       кегль от ширины окна чуть меньше, поля уже; на 320 плитки одна под другой */
+    .calc-o { padding: 11px 11px; }
+    .calc-o .v { font-size: clamp(14px, 4.2vw, 19px); letter-spacing: -.01em; }
+    /* Нижняя панель: цифра продукта и сумма входа · поделиться · обсудить */
+    .mbar { background: #0B0C10; }
+    .mbar .mb-fig { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+    .mbar .mb-fig b { font-family: var(--f-mono); font-size: 18px; font-weight: 500; line-height: 1.2; }
+    .mbar .mb-fig small { margin-top: 1px; font-size: 12px; color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .mbar > span#sh-host-m, .mbar > span#ct-host-m { flex: none; }
+    .mbar #sh-host-m .sh, .mbar #ct-host-m .ct { width: auto; }
+    .mbar #sh-host-m .sh-btn { width: 46px; min-height: 46px; padding: 0; justify-content: center; gap: 0; font-size: 0; }
+    .mbar #sh-host-m .sh-btn svg { width: 20px; height: 20px; }
+    .mbar #ct-host-m .ct-btn { width: auto; padding: 0 18px; }
+  }
+  @media (max-width: 360px) {
+    .calc-out { grid-template-columns: 1fr; }
+    .actions .ct-btn, .actions .sh-btn, .actions .btn-pdf { font-size: 11.5px; padding-left: 2px; padding-right: 2px; }
+    .mbar .mb-fig small { font-size: 11.5px; }
+    .mbar #ct-host-m .ct-btn { padding: 0 14px; }
+  }
 </style>
 <script src="metrika.js?v=10" defer></script>
 </head>
@@ -254,8 +344,12 @@
             <path d="M7 1 V9 M7 9 L4 6 M7 9 L10 6" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
             <path d="M2 12 H12" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round"/>
           </svg>
-          Скачать one-pager (PDF)
+          <span class="lbl-l">Скачать one-pager (PDF)</span><span class="lbl-s">One-pager</span>
         </a>
+        <button type="button" class="btn-pdf btn-secondary btn-ai" id="ask-ai">
+          <svg width="22" height="22" viewBox="0 0 26 26" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>
+          Спросить AI
+        </button>
       </div>
     </div>
     <div class="quote-block">
@@ -402,6 +496,8 @@
   const t = S.TYPES[inst.type];
   const U = S.underlyingInfo(inst.underlying);
   let mode = "payoff";
+  let scrubSet = null;   // поставить бегунок графика на ход актива (move, %) — задаёт mountScrub
+  const PHONE = window.matchMedia("(max-width: 760px)").matches;
 
   document.title = S.displayName(inst) + " — " + t.title;
 
@@ -460,6 +556,62 @@
     ? { W: 380, H: 280, colors: C, padL: 50, padR: 14, padT: 18, padB: 46, font: 13, xCount: 3, yCount: 3 }
     : { W: W, H: H, colors: C, padL: 60, padR: 28, padT: 22, padB: 50 });
   const chartPayoff = () => (inst.type === "discount" ? S.discountChart(inst, chOpt()) : S.payoffChart(inst, chOpt()));
+
+  // ── 1. Выплата пальцем по графику (Dribbble, 09.10.2026) ────────────────────────
+  // Геометрия — та же, что у payoffChart в data/lib.js: рамка chartFrame, X — ход актива по
+  // границам S.calc.move, Y — от данных с запасом 14% и 1,6 сверху. Правишь там — правь здесь
+  function chartGeo() {
+    const o = chOpt(), rg = S.calc.move(inst);
+    if (!rg || inst.type === "discount") return null;
+    const base = inst.type === "warrant" ? 0 : inst.type === "digital" ? (inst.floorPct || 0) : 100;
+    let lo = Infinity, hi = -Infinity;
+    for (let i = 0; i <= 240; i++) { const v = S.calc.pct(inst, rg.min + (rg.max - rg.min) * i / 240); if (v < lo) lo = v; if (v > hi) hi = v; }
+    const pad = Math.max(6, (hi - lo) * 0.14);
+    const yMin = Math.max(0, Math.min(lo, base) - pad), yMax = hi + pad * 1.6;
+    const L = o.padL, R = o.padR, T = o.padT, B = o.padB, W = o.W, H = o.H;
+    return { W, H, T, B, rg,
+      x: (lvl) => L + ((lvl - (100 + rg.min)) / (rg.max - rg.min)) * (W - L - R),
+      move: (px) => rg.min + ((px - L) / (W - L - R)) * (rg.max - rg.min),
+      y: (v) => H - B - ((v - yMin) / (yMax - yMin)) * (H - T - B) };
+  }
+  function mountScrub() {
+    const el = document.getElementById("chart"), g = chartGeo();
+    scrubSet = null;
+    if (!g || inst.quote == null) return;
+    el.classList.add("scr");
+    const ov = document.createElement("div");
+    ov.className = "scrub"; ov.setAttribute("aria-hidden", "true");
+    ov.innerHTML = '<i class="scrub-line"></i><i class="scrub-dot"></i><span class="scrub-tip"></span>';
+    el.appendChild(ov);
+    const line = ov.children[0], dot = ov.children[1], tip = ov.children[2];
+    scrubSet = function (m) {
+      const k = el.clientWidth / g.W, v = S.calc.pct(inst, m), px = g.x(100 + m) * k, py = g.y(v) * k;
+      line.style.left = px + "px"; line.style.top = g.T * k + "px"; line.style.height = (g.H - g.T - g.B) * k + "px";
+      dot.style.left = px + "px"; dot.style.top = py + "px";
+      tip.textContent = (m >= 0 ? "+" : "−") + Math.abs(m) + "% → " + S.fmtSmart(Math.round(v * 10) / 10) + "% ном.";
+      const w = tip.offsetWidth, cw = el.clientWidth;
+      tip.style.left = Math.max(w / 2 + 2, Math.min(cw - w / 2 - 2, px)) + "px";
+      tip.style.top = (py - 40 > 0 ? py - 40 : py + 14) + "px";
+    };
+    let drag = false;
+    function at(e) {
+      const r = el.getBoundingClientRect(), k = r.width / g.W;
+      const m = Math.max(g.rg.min, Math.min(g.rg.max, Math.round(g.move((e.clientX - r.left) / k))));
+      const mv = document.getElementById("calc-move");
+      if (mv) { mv.value = m; mv.dispatchEvent(new Event("input")); } else scrubSet(m);
+    }
+    el.onpointerdown = (e) => {
+      if (mode !== "payoff" || !scrubSet) return;
+      drag = true;
+      try { el.setPointerCapture(e.pointerId); } catch (x) {}
+      at(e);
+      const h = document.getElementById("scrub-hint"); if (h) h.style.opacity = ".55";
+    };
+    el.onpointermove = (e) => { if (drag) at(e); };
+    el.onpointerup = el.onpointercancel = () => { drag = false; };
+    const mv = document.getElementById("calc-move");
+    scrubSet(mv ? +mv.value : g.rg.val);
+  }
 
   // --- Контент по типу продукта ---
   const nom = inst.minNom;
@@ -849,6 +1001,52 @@
   boardLink.textContent = t.title;
   boardLink.href = "board.html?type=" + inst.type;
   document.getElementById("crumb-id").textContent = S.displayName(inst);
+  // ── 2. Телефон: карточка — экран приложения (Dribbble, 09.10.2026) ─────────────
+  // Сверху «‹ назад · ☆»: «назад» — та же кнопка крошек (#crumb-board), search.js подписывает
+  // её, куда вернёт, если пришли с нашего сайта; пришли по ссылке извне — вместо неё «✦ Rumberg».
+  // ☆ кладёт продукт в «Избранное» (localStorage so_fav) — список наверху «Продуктов» на главной
+  if (PHONE) {
+    const STAR_O = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3.6l2.55 5.2 5.75.84-4.16 4.05.98 5.72L12 16.7l-5.12 2.7.98-5.72L3.7 9.64l5.75-.84z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>';
+    const STAR_F = STAR_O.replace("<path ", '<path fill="currentColor" ');
+    const bar = document.createElement("div");
+    bar.className = "appbar" + (PREVIEW ? " pv" : "");
+    bar.innerHTML = '<div class="ab-left"><a class="ab-brand" href="index.html" aria-label="Rumberg — на главную"><i aria-hidden="true">✦</i>Rumberg</a></div>' +
+      '<div class="ab-mini" aria-hidden="true"></div>' +
+      (PREVIEW ? "" : '<button type="button" class="ab-fav" aria-pressed="false" aria-label="Добавить в избранное">' + STAR_O + "</button>");
+    document.body.insertBefore(bar, document.body.firstChild);
+    bar.querySelector(".ab-left").appendChild(boardLink);
+    bar.querySelector(".ab-mini").textContent = S.displayName(inst);
+    if (window.IntersectionObserver) new IntersectionObserver(function (es) { bar.classList.toggle("sc", !es[0].isIntersecting); },
+      { rootMargin: "-56px 0px 0px 0px" }).observe(document.getElementById("title"));
+    // Цифра — над рядом действий, сразу под названием
+    const act = document.querySelector(".actions");
+    act.parentNode.insertBefore(document.querySelector(".quote-block"), act);
+    const favBtn = bar.querySelector(".ab-fav");
+    if (favBtn) {
+      const KEY = "so_fav";
+      const favs = () => { try { const a = JSON.parse(localStorage.getItem(KEY) || "[]"); return Array.isArray(a) ? a : []; } catch (e) { return []; } };
+      const setFav = (on) => { favBtn.setAttribute("aria-pressed", String(on)); favBtn.setAttribute("aria-label", on ? "Убрать из избранного" : "Добавить в избранное"); favBtn.innerHTML = on ? STAR_F : STAR_O; };
+      let toast = null;
+      const say = (t) => {
+        if (!toast) { toast = document.createElement("div"); toast.className = "fav-toast"; toast.setAttribute("role", "status"); document.body.appendChild(toast); }
+        toast.textContent = t; toast.classList.add("on");
+        clearTimeout(say.t); say.t = setTimeout(() => toast.classList.remove("on"), 2200);
+      };
+      setFav(favs().indexOf(inst.id) >= 0);
+      favBtn.addEventListener("click", function () {
+        const on = favs().indexOf(inst.id) < 0;
+        const a = favs().filter((x) => x !== inst.id);
+        if (on) a.unshift(inst.id);
+        try { localStorage.setItem(KEY, JSON.stringify(a.slice(0, 50))); } catch (e) {}
+        setFav(on);
+        say(on ? "В избранном — наверху «Продуктов»" : "Убрано из избранного");
+      });
+    }
+  }
+  // «Спросить AI» — про этот продукт: ассистент видит адрес страницы и отвечает по его карточке
+  document.getElementById("ask-ai").addEventListener("click", function () {
+    if (window.Chat && Chat.ask) Chat.ask("Объясните простыми словами, как работает этот продукт и в чём его риск");
+  });
   document.getElementById("title").textContent = S.displayName(inst);
   // В превью one-pager открываем тоже превью: продукта ещё нет в каталоге, и
   // обычная ссылка по id привела бы на экран «продукт снят с витрины».
@@ -858,7 +1056,7 @@
   // В превью обе кнопки НЕ вешаем. «Обсудить продукт» отправила бы настоящую
   // заявку в группу продаж на продукт, которого ещё нет, а «Поделиться» дала бы
   // ссылку /p/<id>.html, которая появится только после одобрения.
-  if (window.Contact && !PREVIEW) Contact.attach(document.getElementById("ct-host"), { title: S.displayName(inst), url: location.href, id: inst.id });
+  if (window.Contact && !PREVIEW) Contact.attach(document.getElementById("ct-host"), { title: S.displayName(inst), url: location.href, id: inst.id, label: PHONE ? "Обсудить" : undefined });
   // «Как купить»: сумма входа по текущей котировке — та же, что «от … ₽» в списке на главной
   (function () {
     const host = document.getElementById("buy-sum");
@@ -889,7 +1087,17 @@
       window.matchMedia("(max-width: 760px)").matches) {
     var mbar = document.createElement("div");
     mbar.className = "mbar";
-    mbar.innerHTML = '<span id="ct-host-m"></span><span id="sh-host-m"></span>';
+    // Цифра — та же, что в строке списка на главной (figure() в index.html): у защиты — участие,
+    // у купонных — купон, у варранта — премия; рядом сумма входа, как «от 305 тыс ₽» в списке
+    const fq = (n) => S.fmt2(n), fg = inst.type === "protection" ? (inst.participation != null ? [Math.round(inst.participation * 100) + "%", "участие"] : [(inst.protectionPct || 100) + "%", "защита"])
+      : inst.type === "booster" ? [Math.round(inst.ku || inst.quote) + "%", "коэффициент"]
+      : (inst.type === "autocall" || inst.type === "revconv") ? [fq(inst.couponPa != null ? inst.couponPa : inst.quote) + "% г.", "купон"]
+      : inst.type === "rcdigital" ? [fq(inst.couponPct != null ? inst.couponPct : inst.quote) + "%", "купон за срок"]
+      : inst.type === "discount" ? [fq(inst.quote) + "%", "цена"] : [fq(inst.quote) + "%", "премия"];
+    const nom0 = Number(inst.minNom), byP = inst.type === "warrant" || inst.type === "digital" || inst.type === "discount";
+    const ent = nom0 > 0 ? nom0 * (byP ? Number(inst.quote) : 100) / 100 : 0;
+    const entT = ent >= 1e6 ? "от\u00a0" + String(Math.ceil(ent / 1e5) / 10).replace(".", ",") + "\u00a0млн\u00a0₽" : ent > 0 ? "от\u00a0" + Math.ceil(ent / 1000) + "\u00a0тыс\u00a0₽" : "";
+    mbar.innerHTML = '<span class="mb-fig"><b>' + fg[0] + "</b><small>" + fg[1] + (entT ? " · " + entT : "") + '</small></span><span id="sh-host-m"></span><span id="ct-host-m"></span>';
     document.body.appendChild(mbar);
     Contact.attach(document.getElementById("ct-host-m"), { title: S.displayName(inst), url: location.href, id: inst.id, label: "Обсудить" });
     Share.attach(document.getElementById("sh-host-m"), { url: new URL("p/" + encodeURIComponent(inst.id), location.href).href, title: S.displayName(inst), name: S.displayName(inst), pitch: content.subtitle, params: (content.metrics || []) });
@@ -930,7 +1138,7 @@
   content.metrics = content.metrics.filter(m => !(m[0] === "Изм. за день" && !inst.chg));
 
   document.getElementById("metrics").innerHTML = content.metrics.map(m =>
-    '<div class="metric"><span class="k">' + m[0] + '</span><span class="v">' + m[1] + '</span></div>').join("");
+    '<div class="metric' + (String(m[1]).replace(/<[^>]*>/g, "").length > 15 || String(m[0]).length > 22 ? " wide" : "") + '"><span class="k">' + m[0] + '</span><span class="v">' + m[1] + '</span></div>').join("");
 
   document.getElementById("example-intro").textContent = content.exampleIntro;
   document.getElementById("scenarios").innerHTML = content.scenarios.map(s =>
@@ -993,6 +1201,7 @@
       const m = move ? +move.value : 0;
       if (mvOut) mvOut.textContent = (m >= 0 ? "+" : "") + m + "%";
       const payout = nominal * S.calc.pct(inst, m) / 100, net = payout - amount;
+      if (scrubSet && mode === "payoff") scrubSet(m);
       payoutEl.textContent = S.fmtInt(Math.round(payout)) + " ₽";
       netEl.textContent = (net >= 0 ? "+" : "−") + S.fmtInt(Math.round(Math.abs(net))) + " ₽";
       netEl.style.color = net >= 0 ? "var(--up)" : "var(--loss)";
@@ -1013,6 +1222,18 @@
   }
   if (inst.quote != null) { document.getElementById("calc-mount").innerHTML = calcInner(inst); wireCalc(inst); }
   else document.getElementById("calc-section").style.display = "none";
+  if (inst.quote != null && S.calc.move(inst) && inst.type !== "discount") {
+    const hint = document.createElement("div");
+    hint.className = "scrub-hint"; hint.id = "scrub-hint";
+    hint.innerHTML = '<svg width="22" height="12" viewBox="0 0 22 12" fill="none" aria-hidden="true"><path d="M6 1 1 6l5 5M16 1l5 5-5 5M1 6h20" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+      (PHONE ? "Ведите пальцем по графику — расчёт на вашу сумму ниже" : "Ведите по графику — выплата пересчитается в калькуляторе");
+    document.getElementById("chart").insertAdjacentElement("afterend", hint);
+    // Телефон: калькулятор переезжает в блок графика — один блок вместо двух
+    if (PHONE) {
+      document.querySelector(".grid .panel").insertBefore(document.getElementById("calc-mount"), document.getElementById("chart-caption"));
+      document.getElementById("calc-section").style.display = "none";
+    }
+  }
 
   function setMode(m) {
     mode = m;
@@ -1025,6 +1246,9 @@
     // SVG без текстовой альтернативы (WCAG 1.1.1) → контейнер role=img + подпись
     const chartEl = document.getElementById("chart");
     chartEl.innerHTML = m === "payoff" ? content.payoff() : chartUnderlying();
+    chartEl.classList.remove("scr");
+    if (m === "payoff") mountScrub(); else scrubSet = null;
+    const sh = document.getElementById("scrub-hint"); if (sh) sh.hidden = !(m === "payoff" && scrubSet);
     chartEl.setAttribute("role", "img");
     chartEl.setAttribute("aria-label", (m === "payoff" ? "Диаграмма выплат. " : "График базового актива. ") + cap);
   }
@@ -1035,7 +1259,7 @@
   setMode("payoff");
   }
 </script>
-<script src="chat.js?v=24"></script>
+<script src="chat.js?v=25"></script>
 <script src="search.js?v=8"></script>
 <script src="nav-about.js?v=9"></script>
 <script src="qualgate.js?v=6"></script>

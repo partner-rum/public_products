@@ -854,7 +854,6 @@
     .tg-list { list-style: none; margin: 0; padding: 0; }
     .tg-row { display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 8px 0; border-bottom: 1px solid var(--tg-line); }
     .tg-list li:last-child > .tg-row { border-bottom: 0; }
-    .tg-av { flex: none; width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-family: 'Rubik', sans-serif; font-weight: 600; font-size: 13.5px; }
     .tg-tx { flex: 1; min-width: 0; }
     .tg-nm { display: block; font-size: 15.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     /* Подпись строки — до двух строк: на узком экране сумма входа уходит второй строкой, а не под многоточие */
@@ -907,6 +906,93 @@
     html.tg-on .ca-panel { left: 0 !important; right: 0 !important; top: env(safe-area-inset-top) !important; bottom: calc(62px + env(safe-area-inset-bottom)) !important;
       width: auto !important; max-width: 560px !important; margin: 0 auto !important; height: auto !important; max-height: none !important;
       border-radius: 0 !important; border: 0 !important; box-shadow: none !important; transform: none !important; }
+    /* ══ ПРИЁМЫ С DRIBBBLE (09.10.2026, «делай 1-10, покажи локально») ══ */
+    /* 10. Заголовок вводной в два тона: кто мы — ярко, для кого — тише (Furniture, Nixtio) */
+    .tg-h1b { color: rgba(242,243,247,.5); }
+    /* 8. Значок строки продукта — форма выплаты: та же функция выплат, что большие графики */
+    .tg-gl { flex: none; width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; }
+    .tg-gl svg { display: block; }
+    /* 9. AI — оранжевой плиткой в центре нижней панели (Food Tracking, Nixtio) */
+    .tg-tb .tg-aic { display: grid; place-items: center; width: 50px; height: 30px; border-radius: 11px; background: #EE7D1B; color: #0C0A08; box-shadow: 0 6px 18px rgba(238,125,27,.3); }
+    .tg-tb button[data-t="ai"] { color: rgba(242,243,247,.84); }
+    .tg-tb button[data-t="ai"][aria-current] { color: #EE7D1B; }
+    .tg-tb button[data-t="ai"][aria-current] .tg-aic { box-shadow: 0 0 0 2px var(--tg-bar), 0 0 0 4px rgba(238,125,27,.55); }
+    /* 3. Подбор за 3 вопроса (VibeMove, PowerPeak, Passion Finder): вход на вводной */
+    .tg-pick { display: flex; align-items: center; gap: 12px; width: 100%; margin-top: 10px; padding: 12px 14px 12px 12px; border-radius: 16px;
+      border: 1px solid rgba(238,125,27,.32); background: radial-gradient(130% 160% at 0% 0%, rgba(238,125,27,.17), rgba(238,125,27,0) 62%), var(--tg-card);
+      color: var(--tg-ink); font-family: inherit; text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .tg-pick:active { background: radial-gradient(130% 160% at 0% 0%, rgba(238,125,27,.24), rgba(238,125,27,0) 62%), var(--tg-card2); }
+    .tg-pick-ic { flex: none; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: rgba(238,125,27,.16); color: #EE7D1B; }
+    .tg-pick-t { flex: 1; min-width: 0; }
+    .tg-pick-t b { display: block; font-size: 16px; font-weight: 600; }
+    .tg-pick-t small { display: block; margin-top: 2px; font-size: 13px; color: var(--tg-mut); }
+    /* строка подбора в «Продуктах» — вместо рядов фильтров */
+    .tg-pickbar { display: flex; align-items: center; gap: 2px; margin-top: 8px; padding: 6px 2px 6px 14px; min-height: 58px; border-radius: 14px; background: rgba(238,125,27,.1); border: 1px solid rgba(238,125,27,.3); }
+    .tg-pickbar .t { flex: 1; min-width: 0; }
+    .tg-pickbar b { display: block; font-size: 15px; font-weight: 600; }
+    .tg-pickbar small { display: block; margin-top: 1px; font-size: 12.5px; line-height: 1.35; color: var(--tg-mut); }
+    .tg-pickbtn { flex: none; min-height: 44px; padding: 0 8px; border: 0; background: none; color: #EE7D1B; font-family: inherit; font-size: 14.5px; font-weight: 600; cursor: pointer; }
+    .tg-pickx { flex: none; width: 44px; height: 44px; border: 0; background: none; color: var(--tg-mut); display: grid; place-items: center; cursor: pointer; }
+    /* опрос — во весь экран: один вопрос на экран, прогресс тремя штрихами */
+    html.tg-qz-on, html.tg-qz-on body { overflow: hidden; }
+    .tg-qz { position: fixed; inset: 0; z-index: 600; overflow-y: auto; background: #0B0C10; -webkit-overflow-scrolling: touch; }
+    .tg-qz-in { max-width: 560px; min-height: 100%; margin: 0 auto; padding: calc(env(safe-area-inset-top) + 4px) 16px calc(env(safe-area-inset-bottom) + 20px); display: flex; flex-direction: column;
+      background: radial-gradient(120% 55% at 50% 0%, rgba(238,125,27,.1), rgba(238,125,27,0) 70%); }
+    .tg-qz-top { display: flex; align-items: center; gap: 8px; height: 48px; }
+    .tg-qz-b { width: 44px; height: 44px; margin-left: -10px; display: grid; place-items: center; border: 0; background: none; color: var(--tg-ink); cursor: pointer; }
+    .tg-qz-n { font-size: 14px; color: var(--tg-mut); }
+    .tg-qz-bar { display: flex; gap: 6px; margin: 2px 0 26px; }
+    .tg-qz-bar i { flex: 1; height: 4px; border-radius: 2px; background: rgba(255,255,255,.12); }
+    .tg-qz-bar i.on { background: #EE7D1B; }
+    .tg-qz-body { flex: 1; display: flex; flex-direction: column; animation: tg-in .24s cubic-bezier(.16,1,.3,1); }
+    .tg-qz-q { margin: 0; font-family: 'Rubik', sans-serif; font-size: 28px; font-weight: 600; line-height: 1.18; letter-spacing: -.01em; }
+    .tg-qz-h { margin: 10px 0 22px; font-size: 15px; line-height: 1.5; color: var(--tg-mut); }
+    .tg-qz-ys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .tg-qz-y { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 152px; padding: 14px 6px; border-radius: 18px; border: 1px solid var(--tg-line); background: var(--tg-card); color: var(--tg-ink); font-family: inherit; cursor: pointer; }
+    .tg-qz-y b { font-family: 'Rubik', sans-serif; font-size: 46px; font-weight: 600; line-height: 1; }
+    .tg-qz-y span { font-size: 13px; color: var(--tg-mut); text-align: center; line-height: 1.3; }
+    .tg-qz-y small { margin-top: 6px; font-size: 12px; color: var(--tg-faint); }
+    .tg-qz-y[aria-pressed="true"], .tg-qz-g[aria-pressed="true"] { border-color: #EE7D1B; background: rgba(238,125,27,.12); box-shadow: 0 0 0 1px #EE7D1B inset, 0 10px 30px rgba(238,125,27,.14); }
+    .tg-qz-y[aria-pressed="true"] b { color: #EE7D1B; }
+    .tg-qz-y:disabled, .tg-qz-g:disabled { opacity: .4; cursor: default; }
+    .tg-qz-skip { align-self: center; min-height: 44px; margin-top: 14px; padding: 0 14px; border: 0; background: none; color: var(--tg-mut); font-family: inherit; font-size: 14.5px; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+    .tg-qz-gs { display: flex; flex-direction: column; gap: 10px; }
+    .tg-qz-g { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 84px; padding: 12px 14px; border-radius: 18px; border: 1px solid var(--tg-line); background: var(--tg-card); color: var(--tg-ink); font-family: inherit; text-align: left; cursor: pointer; }
+    .tg-qz-gi { flex: none; width: 46px; height: 46px; border-radius: 13px; display: grid; place-items: center; }
+    .tg-qz-g .t { flex: 1; min-width: 0; }
+    .tg-qz-g b { display: block; font-size: 16.5px; font-weight: 600; }
+    .tg-qz-g small { display: block; margin-top: 3px; font-size: 13px; line-height: 1.4; color: var(--tg-mut); }
+    .tg-qz-g em { flex: none; max-width: 70px; font-style: normal; font-family: 'JetBrains Mono', monospace; font-size: 13px; line-height: 1.3; color: var(--tg-faint); text-align: right; }
+    .tg-qz-bub { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; padding: 4px 0 8px; }
+    .tg-qz-c { flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 6px; border-radius: 50%; border: 1px solid rgba(255,255,255,.14); background: var(--tg-card2); color: var(--tg-ink); font-family: inherit; cursor: pointer; transition: transform .15s, background .15s; }
+    .tg-qz-c b { font-size: 13.5px; font-weight: 600; line-height: 1.15; text-align: center; }
+    .tg-qz-c small { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--tg-faint); }
+    .tg-qz-c[aria-pressed="true"] { background: #EE7D1B; border-color: #EE7D1B; color: #0C0A08; }
+    .tg-qz-c[aria-pressed="true"] small { color: rgba(12,10,8,.7); }
+    .tg-qz-c:active { transform: scale(.96); }
+    .tg-qz-foot { margin-top: auto; padding-top: 18px; }
+    .tg-qz-go { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; height: 54px; border: 0; border-radius: 14px; background: #EE7D1B; color: #0C0A08; font-family: inherit; font-size: 16px; font-weight: 600; cursor: pointer; }
+    .tg-qz-legal { margin: 12px 0 0; font-size: 12px; line-height: 1.5; color: var(--tg-faint); text-align: center; }
+    /* 6. Выпуски: полоса жизненного цикла (Packsy) и срок до погашения вместо пустого Bid */
+    .tg-life { margin-top: 12px; }
+    .tg-life-t { position: relative; height: 16px; }
+    .tg-life-l { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .tg-life-t i { position: absolute; top: 50%; width: 8px; height: 8px; margin: -4px 0 0 -4px; border-radius: 50%; background: var(--tg-card); border: 1.5px solid rgba(255,255,255,.3); box-sizing: border-box; }
+    .tg-life-t i.d { background: #EE7D1B; border-color: #EE7D1B; }
+    .tg-life-t b { position: absolute; top: 50%; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: #EE7D1B; box-shadow: 0 0 0 4px rgba(238,125,27,.22); }
+    .tg-life-k { display: flex; justify-content: space-between; gap: 10px; margin-top: 6px; font-size: 12.5px; line-height: 1.35; color: var(--tg-faint); }
+    .tg-life-k .now { color: #F2A65A; }
+    .tg-life-k span:last-child { text-align: right; white-space: nowrap; }
+    .tg-fig.tg-tm b { font-family: 'Onest', sans-serif; font-weight: 600; font-size: 15px; white-space: nowrap; }
+    .tg-term { display: block; height: 3px; max-width: 200px; margin-top: 7px; border-radius: 2px; background: rgba(255,255,255,.08); overflow: hidden; }
+    .tg-term i { display: block; height: 100%; border-radius: 2px; background: rgba(238,125,27,.75); }
+    /* 7. Обложки размещений (Travel, Ronas IT; Furniture, Nixtio) */
+    .tg-card.tg-hasc { overflow: hidden; }
+    .tg-cov { display: block; margin: -14px -16px 12px; aspect-ratio: 16 / 9; background: var(--tg-card2); overflow: hidden; }
+    .tg-cov img { display: block; width: 100%; height: 100%; object-fit: cover; }
+    .tg-ici { overflow: hidden; background: var(--tg-card2); }
+    .tg-ici img { display: block; width: 100%; height: 100%; object-fit: cover; }
+    @media (prefers-reduced-motion: reduce) { .tg-qz-body { animation: none; } .tg-qz-c { transition: none; } }
     @media (min-width: 600px) { .tg-main { border-left: 1px solid var(--tg-line); border-right: 1px solid var(--tg-line); } .tg-tb { max-width: 560px; margin: 0 auto; } }
     @media (prefers-reduced-motion: reduce) { .tg-v.tg-anim { animation: none; } }
   }
@@ -916,8 +1002,8 @@
 <!-- Телефон: каркас вкладок (tabs.js наполняет). Виден только при html.tg-on и ширине ≤860px;
      стоит первым, чтобы первая отрисовка не ждала данных и скриптов -->
 <div class="tg-app" id="tg-app">
-  <div class="tg-main" id="tg-main" role="main"><div class="tg-v tg-home" data-v="home"><div class="tg-nav"><a class="tg-brand" href="index.html" data-go="home" aria-label="Rumberg — на вводную"><i aria-hidden="true">✦</i>Rumberg</a><span class="tg-mini" aria-hidden="true"></span></div><div class="tg-hero"><div class="tg-stories"></div><div class="tg-h1" role="heading" aria-level="1">Rumberg выпускает структурные облигации для квалифицированных инвесторов.</div><p class="tg-lead">Формула выплаты известна до сделки&nbsp;— её можно посчитать на&nbsp;своей сумме заранее.</p><a class="tg-cta" href="board.html" data-go="prod">Смотреть продукты<span class="n" id="tg-n"></span><svg width="16" height="16" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a><a class="tg-co" href="partners.html"><span class="t">Сотрудничество<svg width="16" height="16" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="s">для финансовых институтов и агентов</span></a></div><div class="tg-pad"></div></div></div>
-  <nav class="tg-tb" id="tg-tb" aria-label="Разделы"><button type="button" data-t="home" aria-current="page"><svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11 12 4.5l8 6.5"/><path d="M6.5 9.5v10h11v-10"/><path d="M10 19.5v-5h4v5"/></svg><span>Главная</span></button><button type="button" data-t="prod"><svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2.5"/><path d="M4 9.5h16M9.5 9.5V20"/></svg><span>Продукты</span></button><button type="button" data-t="mkt"><svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 12.5h4l2.5-6 4 11 2.5-5h4"/></svg><span>Рынок</span></button><button type="button" data-t="ai"><svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.5l1.9 5.6L19.5 11l-5.6 1.9L12 18.5l-1.9-5.6L4.5 11l5.6-1.9z"/></svg><span>AI</span></button><button type="button" data-t="iss"><svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c3 2 4.5 5.5 4.5 9.5L12 17l-4.5-4.5C7.5 8.5 9 5 12 3z"/><path d="M7.5 12.5 5 15l2 2M16.5 12.5 19 15l-2 2M10 20h4"/></svg><span>Выпуски</span></button></nav>
+  <div class="tg-main" id="tg-main" role="main"><div class="tg-v tg-home" data-v="home"><div class="tg-nav"><a class="tg-brand" href="index.html" data-go="home" aria-label="Rumberg — на вводную"><i aria-hidden="true">✦</i>Rumberg</a><span class="tg-mini" aria-hidden="true"></span></div><div class="tg-hero"><div class="tg-stories"></div><div class="tg-h1" role="heading" aria-level="1">Rumberg выпускает структурные облигации <span class="tg-h1b">для квалифицированных инвесторов.</span></div><p class="tg-lead">Формула выплаты известна до сделки&nbsp;— её можно посчитать на&nbsp;своей сумме заранее.</p><a class="tg-cta" href="board.html" data-go="prod">Смотреть продукты<span class="n" id="tg-n"></span><svg width="16" height="16" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a><button type="button" class="tg-pick" data-quiz><span class="tg-pick-ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h9M18 7h1M5 17h3M12 17h7"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></span><span class="tg-pick-t"><b>Не знаете, что выбрать?</b><small>Подберём продукты за 3 вопроса</small></span><svg class="tg-chev" width="8" height="13" viewBox="0 0 8 13" fill="none" aria-hidden="true"><path d="M1.5 1.5 6.5 6.5 1.5 11.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button><a class="tg-co" href="partners.html"><span class="t">Сотрудничество<svg width="16" height="16" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="s">для финансовых институтов и агентов</span></a></div><div class="tg-pad"></div></div></div>
+  <nav class="tg-tb" id="tg-tb" aria-label="Разделы"><button type="button" data-t="home" aria-current="page"><svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11 12 4.5l8 6.5"/><path d="M6.5 9.5v10h11v-10"/><path d="M10 19.5v-5h4v5"/></svg><span>Главная</span></button><button type="button" data-t="prod"><svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2.5"/><path d="M4 9.5h16M9.5 9.5V20"/></svg><span>Продукты</span></button><button type="button" data-t="ai"><span class="tg-aic"><svg viewBox="0 0 26 26" width="19" height="19" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="currentColor"/></svg></span><span>AI</span></button><button type="button" data-t="mkt"><svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 12.5h4l2.5-6 4 11 2.5-5h4"/></svg><span>Рынок</span></button><button type="button" data-t="iss"><svg viewBox="0 0 24 24" width="25" height="25" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c3 2 4.5 5.5 4.5 9.5L12 17l-4.5-4.5C7.5 8.5 9 5 12 3z"/><path d="M7.5 12.5 5 15l2 2M16.5 12.5 19 15l-2 2M10 20h4"/></svg><span>Выпуски</span></button></nav>
   <p class="tg-vh" aria-live="polite" id="tg-live"></p>
 </div>
 
@@ -1776,7 +1862,7 @@
 </script>
 <script src="intro.js?v=6"></script>
 <script src="stories.js?v=13"></script>
-<script src="chat.js?v=24"></script>
+<script src="chat.js?v=25"></script>
 <script src="search.js?v=8"></script>
 <script src="nav-about.js?v=9"></script>
 <script src="qualgate.js?v=6"></script>
@@ -2178,7 +2264,7 @@
   else setTimeout(start, 1200);
 })();
 </script>
-<script src="tabs.js?v=5"></script>
+<script src="tabs.js?v=6"></script>
 </body>
 
 </html>
