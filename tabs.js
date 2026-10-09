@@ -520,7 +520,7 @@
     // Он лежит вне git: ежеминутная синхронизация сайта стёрла бы его из каталога витрины,
     // поэтому у него свой адрес /live/. Сигналов «покупать / продавать», текстов постов
     // целиком и целей брокеров в файле нет намеренно: витрина эмитента не даёт
-    // рекомендаций по чужим бумагам. Новости — заголовок одной фразой и ссылка на пост
+    // рекомендаций по чужим бумагам. Новости — заголовок одной фразой, канал и время, без ссылок
     var SV = null, SVST = 0;            // 0 — не грузили, 1 — грузим, 2 — не вышло, 3 — есть
     function needSv(done) {
       if (SVST === 3) return true;
@@ -617,15 +617,15 @@
       if (t.key && t.key.rate) tl.push(tile(fq(t.key.rate) + "%", "ключевая", t.key.next ? "заседание " + dmy(t.key.next).slice(0, 5) : "", 0));
       if (tl.length) out += '<div class="tg-tiles tg-t3">' + tl.join("") + "</div>";
 
-      // Главное за сутки: заголовок, канал, время; ссылка ведёт на пост в Telegram.
+      // Главное за сутки: заголовок, канал, время. Ссылок на посты нет — решение Руслана 09.10.2026.
       // Названа бумага, на которую у нас есть продукты, — под новостью переход к ним
-      var news = (d.news || []).filter(function (n) { return /^https:\/\/t\.me\//.test(n.url || "") && n.t; });
+      var news = (d.news || []).filter(function (n) { return n.t; });
       if (news.length) out += '<h2 class="tg-cap">Главное за сутки</h2><ul class="tg-list tg-news">' + news.map(function (n) {
         var seen = {}, links = (n.tickers || []).map(function (k) { return tkMap()[k]; })
           .filter(function (x) { if (!x || !x.n || seen[x.name]) return false; seen[x.name] = 1; return true; })
           .slice(0, 2).map(function (x) { return prodLink(x, "tg-np"); }).join("");
-        return '<li><a class="tg-nw" href="' + esc(n.url) + '" target="_blank" rel="noopener"><span class="m">' + esc(n.ch) + " · " + esc(when(n.time)) +
-          '</span><span class="t">' + esc(n.t) + "</span></a>" + (links ? '<div class="tg-nps">' + links + "</div>" : "") + "</li>";
+        return '<li><div class="tg-nw"><span class="m">' + esc(n.ch) + " · " + esc(when(n.time)) +
+          '</span><span class="t">' + esc(n.t) + "</span></div>" + (links ? '<div class="tg-nps">' + links + "</div>" : "") + "</li>";
       }).join("") + "</ul>";
 
       // Ближайшие дивиденды: факт из календаря отсечек, без оценок
@@ -641,7 +641,7 @@
       }).join("") + "</ul>";
 
       return out + '<p class="tg-note">Источники: ' + esc((d.src || []).join(", ")) + ". Котировки Мосбиржи — с задержкой до 15 минут. " +
-        "Новости — заголовки публичных Telegram-каналов со ссылкой на оригинал, отобраны автоматически. " +
+        "Новости — заголовки публичных Telegram-каналов, отобраны автоматически. " +
         "Не является индивидуальной инвестиционной рекомендацией.</p>";
     }
 
