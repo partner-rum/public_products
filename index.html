@@ -889,6 +889,43 @@
     .tg-note a { color: #EE7D1B; }
     .tg-more { display: block; margin-top: 12px; height: 44px; line-height: 44px; text-align: center; border-radius: 12px; background: var(--tg-card2); font-size: 14.5px; font-weight: 500; }
     .tg-wait { padding: 28px 0; text-align: center; color: var(--tg-faint); font-size: 14px; }
+    /* Сводка рынка — первый раздел вкладки «Рынок» (09.10.2026) */
+    .tg-meta.tg-old { color: #E0A24A; }
+    .tg-mood { padding: 14px 16px 4px; }
+    .tg-mv { display: flex; align-items: baseline; gap: 8px; margin-top: 8px; }
+    .tg-mv b { font-family: 'JetBrains Mono', monospace; font-size: 40px; font-weight: 500; line-height: 1; }
+    .tg-mv small { font-size: 13px; color: var(--tg-faint); }
+    .tg-mv em { margin-left: auto; font-style: normal; font-family: 'Rubik', sans-serif; font-size: 19px; font-weight: 600; }
+    .tg-scale { position: relative; height: 6px; margin: 16px 0 6px; border-radius: 3px; background: linear-gradient(90deg, #E0705A, rgba(242,243,247,.32) 50%, #55C08A); }
+    .tg-scale i { position: absolute; top: 50%; width: 16px; height: 16px; margin: -8px 0 0 -8px; border-radius: 50%; background: #F2F3F7; border: 3px solid var(--tg-card); }
+    .tg-scl { display: flex; justify-content: space-between; font-size: 12px; color: var(--tg-faint); }
+    .tg-parts { margin-top: 4px; }
+    .tg-parts summary { display: flex; align-items: center; gap: 6px; min-height: 44px; font-size: 14px; font-weight: 500; color: #EE7D1B; cursor: pointer; list-style: none; -webkit-tap-highlight-color: transparent; }
+    .tg-parts summary::-webkit-details-marker { display: none; }
+    .tg-parts summary::after { content: ""; width: 7px; height: 7px; margin-top: -3px; border: solid currentColor; border-width: 0 1.8px 1.8px 0; transform: rotate(45deg); transition: transform .2s; }
+    .tg-parts[open] summary::after { margin-top: 3px; transform: rotate(-135deg); }
+    .tg-part { display: grid; grid-template-columns: minmax(0, 1fr) 72px 26px; align-items: center; column-gap: 10px; padding: 8px 0; border-top: 1px solid var(--tg-line); }
+    .tg-part .k { font-size: 14px; }
+    .tg-part .bar { height: 4px; border-radius: 2px; background: var(--tg-card2); overflow: hidden; }
+    .tg-part .bar i { display: block; height: 100%; border-radius: 2px; }
+    .tg-part b { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500; text-align: right; }
+    .tg-part small { grid-column: 1 / -1; margin-top: 2px; font-size: 12.5px; line-height: 1.35; color: var(--tg-mut); }
+    .tg-parts p { margin: 4px 0 12px; font-size: 12px; line-height: 1.45; color: var(--tg-faint); }
+    .tg-tiles.tg-t3 { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 0; }
+    .tg-t3 .tg-tile { padding: 10px 10px 11px; min-width: 0; }
+    .tg-t3 .tg-tile b { font-size: 17px; white-space: nowrap; }
+    .tg-tile .tg-ch { font-size: 12px; color: var(--tg-faint); white-space: nowrap; }
+    .tg-tile .tg-ch.up { color: #55C08A; }
+    .tg-tile .tg-ch.dn { color: #E0705A; }
+    .tg-news > li { padding: 10px 0 12px; border-bottom: 1px solid var(--tg-line); }
+    .tg-news > li:last-child { border-bottom: 0; }
+    .tg-nw { display: block; -webkit-tap-highlight-color: transparent; }
+    .tg-nw .m { display: block; font-size: 12.5px; color: var(--tg-faint); }
+    .tg-nw .t { display: block; margin-top: 3px; font-size: 15px; line-height: 1.42; }
+    .tg-nps { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .tg-np { position: relative; display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 12px; border-radius: 18px; background: var(--tg-card2); color: #EE7D1B !important; font-size: 13.5px; font-weight: 500; -webkit-tap-highlight-color: transparent; }
+    .tg-np::before { content: ""; position: absolute; inset: -4px 0; }
+    .tg-dp { display: block; margin-top: 3px; font-size: 13px; font-weight: 500; color: #EE7D1B; }
     .tg-grp { margin: 8px 0 16px; border-radius: 14px; background: var(--tg-card); overflow: hidden; }
     .tg-grp a { display: flex; align-items: center; gap: 12px; min-height: 50px; padding-left: 12px; }
     .tg-ic { flex: none; width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center; color: #EE7D1B; background: rgba(238,125,27,.14); }
@@ -2313,7 +2350,7 @@
   else setTimeout(start, 1200);
 })();
 </script>
-<script src="tabs.js?v=7"></script>
+<script src="tabs.js?v=8"></script>
 </body>
 
 </html>

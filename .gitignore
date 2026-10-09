@@ -97,3 +97,6 @@ fx_cbr.json
 # В git идёт лишь шифротекст data/quotes.enc
 make_quotes.py
 .quotes_key
+
+# Сводка рынка: live/svodka.json собирает сервер раз в 10 минут, в git не идёт
+/live/

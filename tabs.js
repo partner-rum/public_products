@@ -382,7 +382,7 @@
 
     // ── Состояние: живёт в sessionStorage, «Назад» из карточки возвращает туда же ──
     var KEY = "so_tabs_v1";
-    var S = { cur: "home", prod: { type: "all", q: "" }, mkt: { seg: "morning" }, iss: { seg: "live", q: "" }, y: {} };
+    var S = { cur: "home", prod: { type: "all", q: "" }, mkt: { seg: "sum" }, iss: { seg: "live", q: "" }, y: {} };
     try { var saved = JSON.parse(sessionStorage.getItem(KEY) || "null"); if (saved && saved.prod) S = Object.assign(S, saved); } catch (e) {}
     // Пришли по ссылке или набрали адрес — вводная. «Назад» из карточки и обновление
     // страницы (back_forward / reload) возвращают в ту вкладку и на то место, где был
@@ -515,9 +515,140 @@
       return false;
     }
 
-    function viewMkt() {
+    // ── Сводка рынка (09.10.2026): настроение, главное за сутки, ближайшие дивиденды ──
+    // Файл live/svodka.json (~3 КБ) собирает сервер из монитора рынка раз в 10 минут.
+    // Он лежит вне git: ежеминутная синхронизация сайта стёрла бы его из каталога витрины,
+    // поэтому у него свой адрес /live/. Сигналов «покупать / продавать», текстов постов
+    // целиком и целей брокеров в файле нет намеренно: витрина эмитента не даёт
+    // рекомендаций по чужим бумагам. Новости — заголовок одной фразой и ссылка на пост
+    var SV = null, SVST = 0;            // 0 — не грузили, 1 — грузим, 2 — не вышло, 3 — есть
+    function needSv(done) {
+      if (SVST === 3) return true;
+      if (!SVST && window.fetch) {
+        SVST = 1;
+        fetch("live/svodka.json", { cache: "no-cache" })
+          .then(function (r) { if (!r.ok) throw new Error(String(r.status)); return r.json(); })
+          .then(function (d) { SV = d; SVST = 3; }, function () { SVST = 2; })
+          .then(function () { if (done) done(); });
+      }
+      if (!window.fetch) SVST = 2;
+      return false;
+    }
+    // Файл доехал: перерисовываем только тело раздела и подпись строки «Рынок» на вводной
+    function svDone() {
+      var b = S.cur === "mkt" && S.mkt.seg === "sum" && document.getElementById("tg-mbody");
+      if (b) b.innerHTML = mktBody();
+      var sub = S.cur === "home" && app.querySelector('a[data-go="mkt"] small');
+      if (sub) sub.textContent = mktSub();
+    }
+    function svAge() { var t = Date.parse((SV || {}).updated || ""); return isFinite(t) ? (Date.now() - t) / 36e5 : Infinity; }
+    function mktSub() {
+      var M = window.MORNING || {}, fresh = daysAgo(M.date) <= 3;
+      var mood = SV && SV.mood && SV.mood.label && svAge() < 72 ? "Настроение: " + SV.mood.label.toLowerCase() + " · " : "";
+      return mood + (mood ? "обзор утра" : "Обзор утра") + (fresh ? " " + dmy(M.date).slice(0, 5) : "") + ", ставки, идеи";
+    }
+    // Время по Москве из строки ISO: сегодня — «09:50», вчера — «вчера 22:56», раньше — «07.10 18:25»
+    function when(iso) {
+      var s = String(iso || ""), dd = s.slice(0, 10), hm = s.slice(11, 16);
+      if (dd === TODAY) return hm;
+      var y = new Date(Date.parse(TODAY) - 864e5).toISOString().slice(0, 10);
+      return (dd === y ? "вчера " : dmy(dd).slice(0, 5) + " ") + hm;
+    }
+    function grp(v, d) { return Number(v).toLocaleString("ru-RU", { minimumFractionDigits: d, maximumFractionDigits: d }); }
+    function pct(v) { var n = Number(v); return isFinite(n) ? (n > 0 ? "+" : n < 0 ? "−" : "") + fq(Math.abs(n)) + "%" : ""; }
+    function moodC(v, bar) { return v < 40 ? "#E0705A" : v < 60 ? (bar ? "rgba(242,243,247,.5)" : "#F2F3F7") : "#55C08A"; }
+    // «12.10.2026» → «12.10» и → «2026-10-12»
+    function ddm(s) { return String(s || "").slice(0, 5); }
+    function isoOf(s) { var m = String(s || "").match(/^(\d{2})\.(\d{2})\.(\d{4})$/); return m ? m[3] + "-" + m[2] + "-" + m[1] : ""; }
+
+    // Тикер Мосбиржи → продукты доски на эту бумагу (акции РФ, включая корзины).
+    // Число на кнопке совпадает с тем, что откроет «Продукты»: тот же класс и то же имя в поиске
+    var TK = null;
+    function tkMap() {
+      if (TK) return TK;
+      TK = {};
+      INSTR.forEach(function (r) {
+        var m = /^(.+?)\s*\(([A-Z]{1,6})\)$/.exec(r.underlying || "");
+        if (m && r.cls === "Акции РФ") TK[m[2]] = { name: m[1], n: 0 };
+      });
+      Object.keys(TK).forEach(function (t) {
+        var q = TK[t].name.toLowerCase();
+        TK[t].n = INSTR.filter(function (r) {
+          return r.cls === "Акции РФ" && (r.name + " " + r.underlying + " " + r.cls).toLowerCase().indexOf(q) >= 0;
+        }).length;
+      });
+      return TK;
+    }
+    function prodLink(x, cls) {
+      return '<a class="' + cls + '" href="board.html?q=' + encodeURIComponent(x.name) + '" data-pq="' + esc(x.name) + '">Продукты на ' + esc(x.name) + " · " + x.n + ARROW + "</a>";
+    }
+
+    function svBody() {
+      if (!needSv(svDone)) {
+        return SVST === 2 ? '<p class="tg-note">Сводка сейчас недоступна. Обзор утра и ставки — в соседних разделах.</p>'
+          : '<p class="tg-wait">Загружаю сводку…</p>';
+      }
+      var d = SV || {}, age = svAge(), out = "";
+      if (!(age < 72)) return '<p class="tg-note">Сводка временно не обновляется. Обзор утра и ставки — в соседних разделах.</p>';
+      out += '<p class="tg-meta' + (age > 6 ? " tg-old" : "") + '">' + (age > 6 ? "Данные от " : "Обновлено ") + esc(when(d.updated)) + "</p>";
+
+      // Настроение: число, слово, шкала; из чего сложилось — по тапу
+      var m = d.mood;
+      if (m && isFinite(m.score)) {
+        var c = moodC(m.score), sc = Math.max(0, Math.min(100, m.score));
+        out += '<div class="tg-card tg-mood"><span class="tg-rb">Настроение рынка</span>' +
+          '<div class="tg-mv"><b style="color:' + c + '">' + sc + '</b><small>из 100</small><em style="color:' + c + '">' + esc(m.label) + "</em></div>" +
+          '<div class="tg-scale" aria-hidden="true"><i style="left:' + sc + '%"></i></div>' +
+          '<div class="tg-scl" aria-hidden="true"><span>страх</span><span>жадность</span></div>' +
+          '<details class="tg-parts"><summary>Из чего складывается</summary>' + (m.parts || []).map(function (p) {
+            var v = Math.max(0, Math.min(100, Number(p.v) || 0));
+            return '<div class="tg-part"><span class="k">' + esc(p.k) + '</span><span class="bar" aria-hidden="true"><i style="width:' + v + "%;background:" + moodC(v, 1) + '"></i></span><b>' + v + "</b><small>" + esc(p.d) + "</small></div>";
+          }).join("") + "<p>Сводный индекс из пяти частей, пересчитывается автоматически. Это не прогноз и не рекомендация.</p></details></div>";
+      }
+
+      // Три цифры дня
+      var t = d.top || {}, tl = [];
+      function tile(v, k, sub, dir) {
+        var cl = dir > 0 ? " up" : dir < 0 ? " dn" : "";
+        return '<div class="tg-tile"><b>' + v + "</b><span>" + k + '</span><span class="tg-ch' + cl + '">' + sub + "</span></div>";
+      }
+      if (t.imoex && t.imoex.v) tl.push(tile(grp(t.imoex.v, 0), "IMOEX", pct(t.imoex.d) + " за день", Number(t.imoex.d)));
+      if (t.usd && t.usd.v) tl.push(tile(grp(t.usd.v, 2) + " ₽", "доллар", pct(t.usd.d) + " за день", 0));
+      if (t.key && t.key.rate) tl.push(tile(fq(t.key.rate) + "%", "ключевая", t.key.next ? "заседание " + dmy(t.key.next).slice(0, 5) : "", 0));
+      if (tl.length) out += '<div class="tg-tiles tg-t3">' + tl.join("") + "</div>";
+
+      // Главное за сутки: заголовок, канал, время; ссылка ведёт на пост в Telegram.
+      // Названа бумага, на которую у нас есть продукты, — под новостью переход к ним
+      var news = (d.news || []).filter(function (n) { return /^https:\/\/t\.me\//.test(n.url || "") && n.t; });
+      if (news.length) out += '<h2 class="tg-cap">Главное за сутки</h2><ul class="tg-list tg-news">' + news.map(function (n) {
+        var seen = {}, links = (n.tickers || []).map(function (k) { return tkMap()[k]; })
+          .filter(function (x) { if (!x || !x.n || seen[x.name]) return false; seen[x.name] = 1; return true; })
+          .slice(0, 2).map(function (x) { return prodLink(x, "tg-np"); }).join("");
+        return '<li><a class="tg-nw" href="' + esc(n.url) + '" target="_blank" rel="noopener"><span class="m">' + esc(n.ch) + " · " + esc(when(n.time)) +
+          '</span><span class="t">' + esc(n.t) + "</span></a>" + (links ? '<div class="tg-nps">' + links + "</div>" : "") + "</li>";
+      }).join("") + "</ul>";
+
+      // Ближайшие дивиденды: факт из календаря отсечек, без оценок
+      var divs = d.divs || [];
+      if (divs.length) out += '<h2 class="tg-cap">Ближайшие дивиденды</h2><ul class="tg-list">' + divs.map(function (v) {
+        var x = tkMap()[v.t], buy = isoOf(v.buy);
+        var sub = "Отсечка " + ddm(v.cut) + ", последний день покупки — " + (buy === TODAY ? "сегодня" : ddm(v.buy));
+        var inner = '<span class="tg-tx"><span class="tg-nm">' + esc(v.n) + '</span><span class="tg-sb">' + esc(sub) + "</span>" +
+          (x && x.n ? '<span class="tg-dp">Продукты на ' + esc(x.name) + " · " + x.n + "</span>" : "") + "</span>" +
+          '<span class="tg-fig"><b>' + grp(v.d, 2) + " ₽</b><small>" + (v.y != null ? fq(v.y) + "% к цене" : "на акцию") + "</small></span>";
+        return "<li>" + (x && x.n ? '<a class="tg-row" href="board.html?q=' + encodeURIComponent(x.name) + '" data-pq="' + esc(x.name) + '">' + inner + "</a>"
+          : '<div class="tg-row">' + inner + "</div>") + "</li>";
+      }).join("") + "</ul>";
+
+      return out + '<p class="tg-note">Источники: ' + esc((d.src || []).join(", ")) + ". Котировки Мосбиржи — с задержкой до 15 минут. " +
+        "Новости — заголовки публичных Telegram-каналов со ссылкой на оригинал, отобраны автоматически. " +
+        "Не является индивидуальной инвестиционной рекомендацией.</p>";
+    }
+
+    function mktBody() {
       var body = "";
-      if (S.mkt.seg === "morning") {
+      if (S.mkt.seg === "sum") body = svBody();
+      else if (S.mkt.seg === "morning") {
         var M = window.MORNING || {};
         body += '<p class="tg-meta">Обзор от ' + esc(dmy(M.date)) + "</p>";
         (M.news || []).forEach(function (n) {
@@ -549,7 +680,11 @@
         }
         if (!nx) { var last = E.slice().sort(function (a, b) { return a.date < b.date ? 1 : -1; })[0]; if (last) body += '<a class="tg-card" href="events.html"><span class="tg-rb">Прошедший вебинар</span><h2>' + esc(last.title) + '</h2><span class="tg-go" aria-hidden="true">' + (last.recordingUrl ? "Смотреть запись →" : "Подробнее →") + "</span></a>"; }
       }
-      return frame("Рынок", seg("mkt", "Раздел рынка", [["morning", "Утро"], ["rates", "Ставки"], ["ideas", "Идеи"]])) + '<div class="tg-pad">' + body + "</div>";
+      return body;
+    }
+    function viewMkt() {
+      return frame("Рынок", seg("mkt", "Раздел рынка", [["sum", "Сводка"], ["morning", "Утро"], ["rates", "Ставки"], ["ideas", "Идеи"]])) +
+        '<div class="tg-pad" id="tg-mbody">' + mktBody() + "</div>";
     }
 
     // Выпуски: строка поиска над переключателем. С набранным запросом ищем сразу в обоих
@@ -635,7 +770,7 @@
       var M = window.MORNING || {}, fresh = daysAgo(M.date) <= 3;
       var live = ((window.OFFERINGS || {}).items || []).filter(function (o) { return o.status === "live" || o.status === "upcoming"; });
       var rows = [
-        ["index.html#mkt", "Рынок", "pulse", "#3D6FD8", "Обзор утра" + (fresh ? " " + dmy(M.date).slice(0, 5) : "") + ", ставки, идеи недели", "mkt"],
+        ["index.html#mkt", "Рынок", "pulse", "#3D6FD8", mktSub(), "mkt"],
         live.length ? ["index.html#iss", "На размещении", "rocket", "#3FA67A", live[0].name + (live.length > 1 ? " и ещё " + (live.length - 1) : ""), "iss"]
                     : ["index.html#iss", "Выпуски", "rocket", "#3FA67A", "Размещённые выпуски и их документы", "iss"],
         ["index.html#ai", "AI-ассистент", "star", "#8E7CC3", "Объяснит продукт, посчитает цену опциона", "ai"],
@@ -777,6 +912,9 @@
       if (e.target.closest("[data-tgback]")) { back(); return; }
       if (e.target.closest("[data-quiz]")) { e.preventDefault(); openQuiz(); return; }
       if (e.target.closest("[data-unpick]")) { e.preventDefault(); S.prod.pick = null; render(true); save(); return; }
+      // Продукты на бумагу из сводки: открываем «Продукты» с поиском по ней
+      var pq = e.target.closest("[data-pq]");
+      if (pq) { e.preventDefault(); S.prod.q = pq.getAttribute("data-pq"); S.prod.cls = "Акции РФ"; S.prod.type = "all"; S.prod.pick = null; S.y.prod = 0; go("prod"); return; }
       var to = e.target.closest("[data-go]");
       if (to) { e.preventDefault(); go(to.getAttribute("data-go")); return; }
       var b = e.target.closest("[data-seg]");
@@ -819,5 +957,7 @@
     try { history.replaceState({ tg: S.cur, d: H.d, from: H.from }, ""); } catch (e) {}
     if ("scrollRestoration" in history) history.scrollRestoration = "manual";
     render(false, S.y[S.cur] || 0); tabs();
+    // Сводка (~3 КБ) — после первой отрисовки: на вводной она дописывает настроение в строку «Рынок»
+    idle(function () { needSv(svDone); });
   }
 })();
