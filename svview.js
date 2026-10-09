@@ -26,15 +26,7 @@
     ".sv-meta.sv-old, .sv-meta.sv-old b { color: #E0A24A; }",
     ".sv-card { background: var(--sv-card); border-radius: 18px; padding: 14px 16px; }",
     ".sv-rb { display: block; font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--sv-or); }",
-    /* Настроение: полоса */
-    ".sv-mv { display: flex; align-items: baseline; gap: 8px; margin-top: 6px; }",
-    ".sv-mv b { font-family: 'Rubik', sans-serif; font-weight: 600; font-size: 44px; line-height: 1; }",
-    ".sv-mv small { font-size: 13.5px; color: var(--sv-faint); }",
-    ".sv-mv em { margin-left: auto; font-style: normal; font-family: 'Rubik', sans-serif; font-weight: 600; font-size: 20px; }",
-    ".sv-scale { position: relative; height: 6px; margin: 14px 0 6px; border-radius: 3px; background: linear-gradient(90deg, #E0705A, rgba(242,243,247,.32) 50%, #55C08A); }",
-    ".sv-scale i { position: absolute; top: 50%; width: 16px; height: 16px; margin: -8px 0 0 -8px; border-radius: 50%; background: var(--sv-ink); border: 3px solid var(--sv-card); }",
-    ".sv-scl { display: flex; justify-content: space-between; font-size: 12px; color: var(--sv-faint); }",
-    /* Настроение: спидометр */
+    /* Настроение — спидометр (вариант D, выбор Руслана 09.10.2026) */
     ".sv-gw { display: flex; align-items: center; gap: 14px; margin-top: 4px; }",
     ".sv-gs { flex: none; width: 148px; height: 86px; }",
     ".sv-gs text { font-family: 'Rubik', sans-serif; font-weight: 600; }",
@@ -58,24 +50,12 @@
     ".sv-pl { display: inline-block; padding: 2px 7px; border-radius: 7px; background: rgba(242,243,247,.08); color: var(--sv-mut); font-style: normal; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 500; white-space: nowrap; }",
     ".sv-pl.up { background: rgba(85,192,138,.14); color: #7FD3A7; }",
     ".sv-pl.dn { background: rgba(224,112,90,.15); color: #EE9A87; }",
-    /* Котировки списком */
-    ".sv-ql { margin-top: 10px; padding-top: 4px; padding-bottom: 4px; }",
-    ".sv-qr { display: grid; grid-template-columns: minmax(0, 1fr) 62px auto; align-items: center; column-gap: 12px; min-height: 56px; padding: 6px 0; border-top: 1px solid var(--sv-line); }",
-    ".sv-qr:first-child { border-top: 0; }",
-    ".sv-qr.sv-qw { border-top-color: rgba(255,255,255,.16); }",
-    ".sv-qn { min-width: 0; }",
-    ".sv-qn b { display: block; font-size: 15.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }",
-    ".sv-qn small { display: block; margin-top: 1px; font-size: 12.5px; color: var(--sv-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }",
-    ".sv-qv { text-align: right; }",
-    ".sv-qv b { display: block; margin-bottom: 2px; font-family: 'JetBrains Mono', monospace; font-size: 17px; font-weight: 500; white-space: nowrap; }",
-    ".sv-qv small { display: block; font-size: 12.5px; color: var(--sv-faint); white-space: nowrap; }",
-    ".sv-sp { display: block; width: 62px; height: 26px; }",
-    /* Котировки плитками */
+    /* Котировки плитками: IMOEX, доллар, S&P 500, Nasdaq; ключевая ставка — полосой под ними */
     ".sv-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }",
     ".sv-tile { position: relative; min-width: 0; background: var(--sv-card); border-radius: 16px; padding: 12px 14px 13px; }",
     ".sv-tile > span { display: block; font-size: 13px; color: var(--sv-mut); }",
     ".sv-tile > b { display: block; margin: 4px 0 6px; font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 500; white-space: nowrap; }",
-    ".sv-tile .sv-sp { position: absolute; top: 12px; right: 12px; width: 52px; height: 20px; }",
+    ".sv-sp { position: absolute; top: 12px; right: 12px; display: block; width: 52px; height: 20px; }",
     ".sv-tile small { margin-left: 6px; font-size: 12px; color: var(--sv-faint); white-space: nowrap; }",
     ".sv-key { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; margin-top: 8px; padding: 12px 14px; background: var(--sv-card); border-radius: 16px; font-size: 14px; color: var(--sv-mut); }",
     ".sv-key b { font-family: 'JetBrains Mono', monospace; font-size: 17px; font-weight: 500; color: var(--sv-ink); }",
@@ -132,7 +112,7 @@
     ".sv-src[open] summary::after { margin-top: 3px; transform: rotate(-135deg); }",
     ".sv-src p { margin: 0 0 6px; font-size: 12.5px; line-height: 1.5; color: var(--sv-faint); }",
     /* 320 px: «85,36 ₽» и «27 346» в плитках */
-    "@media (max-width: 350px) { .sv-tile > b { font-size: 19px; } .sv-qr { column-gap: 8px; grid-template-columns: minmax(0, 1fr) 50px auto; } .sv-sp { width: 50px; }",
+    "@media (max-width: 350px) { .sv-tile > b { font-size: 19px; } .sv-sp { width: 44px; }",
     "  .sv-gw { gap: 10px; } .sv-gs { width: 120px; height: 70px; } .sv-gl em { font-size: 19px; } }"
   ].join("\n");
 
@@ -173,16 +153,12 @@
     if (!isFinite(n)) return "";
     return '<i class="sv-pl' + (flat ? "" : n > 0 ? " up" : n < 0 ? " dn" : "") + '">' + pct(n) + "</i>";
   }
-  function opt(k, def) {
-    var v = document.documentElement.getAttribute("data-sv" + k);
-    return v || def;
-  }
 
-  // Линия IMOEX за месяц: ряд закрытий плюс текущее значение (s у сервера с 09.10.2026).
-  // Нет ряда — нет линии, место под неё в строке остаётся пустым, цифры не съезжают
+  // Линия IMOEX за месяц в углу плитки: ряд закрытий плюс текущее значение (top.imoex.s, сервер
+  // отдаёт с 09.10.2026). Нет ряда — нет линии
   function spark(s) {
     var a = (s || []).map(Number).filter(isFinite);
-    if (a.length < 5) return '<span class="sv-sp" aria-hidden="true"></span>';
+    if (a.length < 5) return "";
     var W = 62, H = 26, mn = Math.min.apply(null, a), mx = Math.max.apply(null, a), r = mx - mn || 1;
     var pts = a.map(function (v, i) { return [i * W / (a.length - 1), 2 + (H - 4) * (1 - (v - mn) / r)]; });
     var line = pts.map(function (p, i) { return (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1); }).join(" ");
@@ -202,21 +178,15 @@
 
   function mood(m) {
     if (!(m && isFinite(m.score))) return "";
-    var c = moodC(m.score), sc = Math.max(0, Math.min(100, Math.round(m.score))), top;
-    if (opt("g", "bar") === "gauge") {
-      // Спидометр: дуга от «страха» к «жадности», метка на значении, число в центре
-      var th = Math.PI * (1 - sc / 100), x = 74 + 60 * Math.cos(th), y = 78 - 60 * Math.sin(th);
-      top = '<div class="sv-gw"><svg class="sv-gs" viewBox="0 0 148 86" aria-hidden="true">' +
+    var c = moodC(m.score), sc = Math.max(0, Math.min(100, Math.round(m.score)));
+    // Спидометр: дуга от «страха» к «жадности», метка на значении, число в центре
+    var th = Math.PI * (1 - sc / 100), x = 74 + 60 * Math.cos(th), y = 78 - 60 * Math.sin(th);
+    var top = '<div class="sv-gw"><svg class="sv-gs" viewBox="0 0 148 86" aria-hidden="true">' +
         '<defs><linearGradient id="sv-gg" x1="0" x2="1"><stop offset="0" stop-color="#E0705A"/><stop offset=".5" stop-color="#F2F3F7" stop-opacity=".32"/><stop offset="1" stop-color="#55C08A"/></linearGradient></defs>' +
         '<path d="M14 78 A60 60 0 0 1 134 78" fill="none" stroke="url(#sv-gg)" stroke-width="11" stroke-linecap="round"/>' +
         '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="8" fill="#F2F3F7" stroke="#14161C" stroke-width="3"/>' +
         '<text x="74" y="76" text-anchor="middle" font-size="34" fill="' + c + '">' + sc + "</text></svg>" +
         '<div class="sv-gl"><em style="color:' + c + '">' + esc(m.label) + "</em><small>" + sc + " из 100 — от страха к жадности</small></div></div>";
-    } else {
-      top = '<div class="sv-mv"><b style="color:' + c + '">' + sc + '</b><small>из 100</small><em style="color:' + c + '">' + esc(m.label) + "</em></div>" +
-        '<div class="sv-scale" aria-hidden="true"><i style="left:' + sc + '%"></i></div>' +
-        '<div class="sv-scl" aria-hidden="true"><span>страх</span><span>жадность</span></div>';
-    }
     return '<section class="sv-card sv-mood" aria-label="Настроение рынка: ' + sc + " из 100, " + esc(m.label) + '"><span class="sv-rb">Настроение рынка</span>' + top +
       '<details class="sv-parts"><summary>Из чего складывается</summary>' + (m.parts || []).map(function (p) {
         var v = Math.max(0, Math.min(100, Number(p.v) || 0));
@@ -224,39 +194,25 @@
       }).join("") + "<p>Сводный индекс из пяти частей, пересчитывается автоматически. Это не прогноз и не рекомендация.</p></details></section>";
   }
 
-  // Котировки: Россия (IMOEX, доллар, ключевая), под чертой — Нью-Йорк (S&P 500, Nasdaq).
-  // Дата торгов в Нью-Йорке совпадает с московским «сегодня» — изменение за день, иначе подпись
-  // «закрытие ДД.ММ»
+  // Котировки: плитки IMOEX, доллар, S&P 500, Nasdaq и полоса ключевой ставки. Дата торгов в
+  // Нью-Йорке не совпадает с московским «сегодня» — под изменением «закрытие ДД.ММ»
   function quotes(d) {
-    var t = d.top || {}, w = d.world || {}, rows = [];
-    if (t.imoex && t.imoex.v) rows.push({ n: "IMOEX", s: t.imoex.m != null ? "за месяц " + pct(t.imoex.m) : "индекс Мосбиржи", v: grp(t.imoex.v, 0), d: t.imoex.d, sp: t.imoex.s });
-    if (t.usd && t.usd.v) rows.push({ n: "Доллар", s: "USD/RUB, Мосбиржа", v: grp(t.usd.v, 2) + " ₽", d: t.usd.d, flat: 1 });
-    var key = t.key && t.key.rate ? { n: "Ключевая ставка", s: "Банк России", v: fq(t.key.rate) + "%", note: t.key.next ? "заседание " + dm(t.key.next) : "" } : null;
-    var wr = [];
+    var t = d.top || {}, w = d.world || {}, tl = [];
+    function tile(n, v, ch, flat, sp, sub) {
+      return '<div class="sv-tile"><span>' + esc(n) + "</span>" + (sp ? spark(sp) : "") + "<b>" + v + "</b>" + pill(ch, flat) +
+        (sub ? "<small>" + esc(sub) + "</small>" : "") + "</div>";
+    }
+    if (t.imoex && t.imoex.v) tl.push(tile("IMOEX", grp(t.imoex.v, 0), t.imoex.d, 0, t.imoex.s));
+    // Доллар — без цвета: рост курса не «хорошо» и не «плохо»
+    if (t.usd && t.usd.v) tl.push(tile("Доллар", grp(t.usd.v, 2) + " ₽", t.usd.d, 1));
     (w.idx || []).forEach(function (x) {
       if (!x || !x.v) return;
       var dd = String(x.date || "");
-      wr.push({ n: x.k, s: "США" + (dd && dd !== TODAY ? " · закрытие " + dm(dd) : ""), v: grp(x.v, 0), d: x.d });
+      tl.push(tile(x.k, grp(x.v, 0), x.d, 0, null, dd && dd !== TODAY ? "закрытие " + dm(dd) : ""));
     });
-    if (!rows.length && !key && !wr.length) return "";
-
-    if (opt("q", "list") === "tiles") {
-      var tl = rows.concat(wr).map(function (r) {
-        return '<div class="sv-tile"><span>' + esc(r.n) + "</span>" + (r.sp ? spark(r.sp) : "") + "<b>" + r.v + "</b>" + pill(r.d, r.flat) +
-          (r.s.indexOf("закрытие") >= 0 ? "<small>" + esc(r.s.split(" · ")[1]) + "</small>" : "") + "</div>";
-      }).join("");
-      return (tl ? '<div class="sv-tiles">' + tl + "</div>" : "") +
-        (key ? '<div class="sv-key"><span>Ключевая ставка</span><b>' + key.v + "</b>" + (key.note ? "<small>" + esc(key.note) + "</small>" : "") + "</div>" : "");
-    }
-    function row(r, cls) {
-      return '<div class="sv-qr' + (cls || "") + '"><span class="sv-qn"><b>' + esc(r.n) + "</b><small>" + esc(r.s) + "</small></span>" +
-        (r.sp ? spark(r.sp) : '<span class="sv-sp" aria-hidden="true"></span>') +
-        '<span class="sv-qv"><b>' + r.v + "</b>" + (r.note != null ? "<small>" + esc(r.note) + "</small>" : pill(r.d, r.flat)) + "</span></div>";
-    }
-    var out = rows.map(function (r) { return row(r); });
-    if (key) out.push(row(key));
-    wr.forEach(function (r, i) { out.push(row(r, i ? "" : " sv-qw")); });
-    return '<section class="sv-card sv-ql" aria-label="Котировки">' + out.join("") + "</section>";
+    var key = t.key && t.key.rate ? '<div class="sv-key"><span>Ключевая ставка</span><b>' + fq(t.key.rate) + "%</b>" +
+      (t.key.next ? "<small>заседание " + esc(dm(t.key.next)) + "</small>" : "") + "</div>" : "";
+    return (tl.length ? '<div class="sv-tiles" role="group" aria-label="Котировки">' + tl.join("") + "</div>" : "") + key;
   }
 
   function newsItem(n, o, en) {
@@ -342,12 +298,4 @@
 
   window.SvView = { html: html };
 
-  // Стенд вариантов — только локально, в прод не попадает (файл _svstand.js под .gitignore)
-  if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) {
-    try {
-      document.documentElement.setAttribute("data-svq", localStorage.getItem("sv_stand_q") || "list");
-      document.documentElement.setAttribute("data-svg", localStorage.getItem("sv_stand_g") || "bar");
-    } catch (e) {}
-    var sc = document.createElement("script"); sc.src = "_svstand.js"; document.head.appendChild(sc);
-  }
 })();
