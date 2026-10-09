@@ -301,6 +301,20 @@
     .mbar #sh-host-m .sh-btn { width: 46px; min-height: 46px; padding: 0; justify-content: center; gap: 0; font-size: 0; }
     .mbar #sh-host-m .sh-btn svg { width: 20px; height: 20px; }
     .mbar #ct-host-m .ct-btn { width: auto; padding: 0 18px; }
+    /* Окна кнопок панели — от её правого края: «Обсудить» стоит у правого края и раскрывалось
+       вправо за экран, «Поделиться» стоит в середине и уезжало влево. Держит их сама панель */
+    .mbar #sh-host-m .sh, .mbar #ct-host-m .ct { position: static; }
+    .mbar #sh-host-m .sh-menu, .mbar #ct-host-m .ct-menu { left: auto; right: 16px; top: auto; bottom: calc(100% + 10px); }
+    /* «Ссылка скопирована» из панели — над ней, а не под ней за краем экрана */
+    .mbar #sh-host-m .sh-toast { left: auto; right: 16px; top: auto; bottom: calc(100% + 10px); }
+    /* Плитка «Поделиться» третья в ряду: её окно (238 px) от правого края плитки на 320 уходило
+       за левый край экрана — держит его правый край всего ряда плиток */
+    .actions { position: relative; }
+    .actions #sh-host .sh { position: static; }
+    .actions #sh-host .sh-menu, .actions #sh-host .sh-toast { left: auto; right: 0; }
+    /* «Обсудить продукт» в «Как купить» стоит с отступом 36 px: закрытое окно шириной 296 выпирало
+       за правый край на 320 и делало страницу шире экрана */
+    #ct-host-b .ct-menu { max-width: calc(100vw - 52px); }
   }
   @media (max-width: 360px) {
     .calc-out { grid-template-columns: 1fr; }
@@ -1286,6 +1300,6 @@
 <script src="search.js?v=8"></script>
 <script src="nav-about.js?v=9"></script>
 <script src="qualgate.js?v=6"></script>
-<script src="ptr.js?v=1" defer></script>
+<script src="ptr.js?v=2" defer></script>
 </body>
 </html>

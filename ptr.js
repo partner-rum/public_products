@@ -7,12 +7,18 @@
    есть, но после него не видно, что что-то произошло: страница та же, без отметки.
 
    Как работает. Страница прокручена до верха → тянем вниз → из-под шапки выезжает
-   пилюля со звездой: кольцо вокруг звезды заполняется по мере натяжения, «Потяните,
+   пилюля со звездой; кольцо вокруг звезды заполняется по мере натяжения, «Потяните,
    чтобы обновить» → «Отпустите, чтобы обновить». Отпустили — «Обновляем…»: сначала
    короткий запрос к сайту мимо кэша, и только если сайт ответил — перезагрузка. Нет
    сети или сайт молчит — страница остаётся как была, и пилюля так и говорит (иначе
    в метро браузер показал бы свою страницу ошибки вместо витрины). После любой
    перезагрузки — нашей или кнопкой браузера — «✓ Страница обновлена · 14:52».
+
+   Плавность (v2, Руслан: «работает, только лагает»). Пилюля больше НЕ ездит за пальцем
+   покадрово: на iPhone requestAnimationFrame идёт с частотой 60 Гц, а родная прокрутка —
+   120, и всё, что двигает скрипт, рядом с ней дёргается. Теперь выезд, уход, «щелчок»
+   звезды и вертушка — CSS-переходы на собственных слоях, их рисует сам телефон; скрипт
+   по ходу жеста меняет только заполнение кольца (перерисовка значка 28×28).
 
    Родное «потянуть» гасится, чтобы не было двух индикаторов и двух перезагрузок:
    • движок Chrome (Android, его WebView, встроенный браузер Telegram на Android) —
@@ -31,7 +37,7 @@
    выпусках, выпуск на размещении. Там жест работает, когда слой прокручен до верха,
    а после перезагрузки якорь открывает тот же выпуск.
 
-   Подключение: <script src="ptr.js?v=1" defer></script> перед </body>. В админке
+   Подключение: <script src="ptr.js?v=2" defer></script> перед </body>. В админке
    модуля нет намеренно — там формы, случайный жест стёр бы набранное. */
 (function () {
   "use strict";
@@ -41,10 +47,9 @@
   var root = document.documentElement;
   var ua = navigator.userAgent || "";
   var IOS = /iP(hone|ad|od)/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
-  var REDUCE = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  var SLOP = 6;          // px пальца до того, как пилюля тронется
+  var SLOP = 6;          // px пальца до того, как жест считается
+  var SHOW = 14;         // px натяжения, после которых выезжает пилюля (короткий рывок её не дёргает)
   var ARM = 84;          // px натяжения до «Отпустите»
-  var HIDE = -58, REST = 10;
   var C = 75.4;          // длина кольца, 2π·12
   var FLAG = "so_ptr";
   var LAYERS = ".panel-wrap.open, .panel.open";
@@ -60,27 +65,26 @@
       "box-sizing:border-box;border-radius:999px;background:#1B1E25;border:1px solid rgba(255,255,255,.09);" +
       "box-shadow:0 12px 28px -10px rgba(0,0,0,.75);color:rgba(242,243,247,.72);" +
       "font:500 14px/1 'Onest',system-ui,-apple-system,sans-serif;letter-spacing:0;white-space:nowrap;" +
-      "transform:translate(-50%," + HIDE + "px);opacity:0;-webkit-tap-highlight-color:transparent}" +
+      "transform:translate(-50%,-58px);opacity:0;will-change:transform,opacity;" +
+      "transition:transform .3s cubic-bezier(.16,1,.3,1),opacity .2s;-webkit-tap-highlight-color:transparent}" +
+    ".ptr.vis{transform:translate(-50%,10px);opacity:1}" +
     ".ptr.on{pointer-events:auto}" +
-    ".ptr.anim{transition:transform .28s cubic-bezier(.16,1,.3,1),opacity .2s}" +
     ".ptr.armed,.ptr.busy,.ptr.ok,.ptr.err{color:#F2F3F7}" +
-    ".ptr svg{display:block;flex:none;width:28px;height:28px;overflow:visible}" +
-    ".ptr-sc{transform-origin:14px 14px;opacity:.62;transition:transform .2s cubic-bezier(.34,1.56,.64,1),opacity .15s}" +
-    ".ptr.armed .ptr-sc{transform:scale(1.2);opacity:1}" +
-    ".ptr.busy .ptr-sc{opacity:1}" +
-    ".ptr-st,.ptr-rg{transform-origin:14px 14px}" +
-    ".ptr.busy .ptr-rg{animation:ptr-spin .8s linear infinite}" +
+    ".ptr-ic{position:relative;flex:none;width:28px;height:28px}" +
+    ".ptr-ic svg{position:absolute;left:0;top:0;width:28px;height:28px;overflow:visible}" +
+    ".ptr-ring,.ptr-star{will-change:transform}" +
+    ".ptr-star{opacity:.62;transition:transform .22s cubic-bezier(.34,1.56,.64,1),opacity .15s}" +
+    ".ptr.armed .ptr-star{transform:scale(1.2);opacity:1}" +
+    ".ptr.busy .ptr-star{opacity:1}" +
+    ".ptr.busy .ptr-ring{animation:ptr-spin .8s linear infinite}" +
     "@keyframes ptr-spin{to{transform:rotate(360deg)}}" +
-    ".ptr-ok,.ptr-er{display:none}" +
-    ".ptr.ok .ptr-ok,.ptr.err .ptr-er{display:inline}" +
-    ".ptr.ok .ptr-sc,.ptr.err .ptr-sc,.ptr.ok .ptr-rg,.ptr.err .ptr-rg{display:none}" +
+    ".ptr-mark,.ptr-ok,.ptr-er{display:none}" +
+    ".ptr.ok .ptr-mark,.ptr.err .ptr-mark,.ptr.ok .ptr-ok,.ptr.err .ptr-er{display:block}" +
+    ".ptr.ok .ptr-star,.ptr.err .ptr-star,.ptr.ok .ptr-pr,.ptr.err .ptr-pr{display:none}" +
     ".ptr.ok .ptr-tr{stroke:rgba(85,192,138,.38)}" +
     ".ptr.err .ptr-tr{stroke:rgba(224,112,90,.38)}" +
     ".ptr-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}" +
-    "@media (prefers-reduced-motion:reduce){.ptr.busy .ptr-rg{animation:none}.ptr.anim{transition:opacity .2s}}";
-
-  var clip = null, pill = null, ring = null, star = null, text = null, live = null;
-  var T = null, busy = false, shown = false, raf = 0, hideTimer = 0;
+    "@media (prefers-reduced-motion:reduce){.ptr{transition:opacity .2s}.ptr.busy .ptr-ring{animation:none}.ptr-star{transition:opacity .15s}}";
 
   // Стили — сразу: overscroll-behavior обязан действовать уже на первом касании, иначе
   // первое же «потянуть» на Android запустит и родное обновление. Пилюля — по требованию
@@ -88,23 +92,27 @@
   st.textContent = css;
   document.head.appendChild(st);
 
+  var clip = null, pill = null, ring = null, text = null, live = null;
+  var T = null, busy = false, raf = 0, hideTimer = 0;
+
   function mount() {
     if (clip) return;
     clip = document.createElement("div");
     clip.className = "ptr-clip";
     clip.innerHTML =
-      '<div class="ptr" aria-hidden="true"><svg viewBox="0 0 28 28">' +
-        '<circle class="ptr-tr" cx="14" cy="14" r="12" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="2"/>' +
-        '<g class="ptr-rg"><circle class="ptr-pr" cx="14" cy="14" r="12" fill="none" stroke="#EE7D1B" stroke-width="2" stroke-linecap="round"' +
-          ' stroke-dasharray="' + C + '" stroke-dashoffset="' + C + '" transform="rotate(-90 14 14)"/></g>' +
-        '<g class="ptr-sc"><g class="ptr-st"><path d="' + STAR + '" fill="#EE7D1B" transform="translate(14 14) scale(.5) translate(-13 -13)"/></g></g>' +
-        '<path class="ptr-ok" d="M9.2 14.4l3.1 3.1 6.5-6.6" fill="none" stroke="#55C08A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>' +
-        '<g class="ptr-er" fill="#E0705A"><rect x="13" y="7.5" width="2" height="8.5" rx="1"/><circle cx="14" cy="19.6" r="1.3"/></g>' +
-      '</svg><span class="ptr-t"></span></div><span class="ptr-sr" role="status" aria-live="polite"></span>';
+      '<div class="ptr" aria-hidden="true"><span class="ptr-ic">' +
+        '<svg class="ptr-ring" viewBox="0 0 28 28">' +
+          '<circle class="ptr-tr" cx="14" cy="14" r="12" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="2"/>' +
+          '<circle class="ptr-pr" cx="14" cy="14" r="12" fill="none" stroke="#EE7D1B" stroke-width="2" stroke-linecap="round"' +
+            ' stroke-dasharray="' + C + '" stroke-dashoffset="' + C + '" transform="rotate(-90 14 14)"/></svg>' +
+        '<svg class="ptr-star" viewBox="0 0 28 28"><path d="' + STAR + '" fill="#EE7D1B" transform="translate(14 14) scale(.5) translate(-13 -13)"/></svg>' +
+        '<svg class="ptr-mark" viewBox="0 0 28 28">' +
+          '<path class="ptr-ok" d="M9.2 14.4l3.1 3.1 6.5-6.6" fill="none" stroke="#55C08A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>' +
+          '<g class="ptr-er" fill="#E0705A"><rect x="13" y="7.5" width="2" height="8.5" rx="1"/><circle cx="14" cy="19.6" r="1.3"/></g></svg>' +
+      '</span><span class="ptr-t"></span></div><span class="ptr-sr" role="status" aria-live="polite"></span>';
     document.body.appendChild(clip);
     pill = clip.firstChild;
     ring = pill.querySelector(".ptr-pr");
-    star = pill.querySelector(".ptr-st");
     text = pill.querySelector(".ptr-t");
     live = clip.lastChild;
     pill.addEventListener("click", function () { if (!busy) hide(); });
@@ -130,27 +138,16 @@
     clip.style.top = top > 0 ? Math.round(top) + "px" : "env(safe-area-inset-top, 0px)";
   }
 
-  function set(state, msg) {
+  // Состояние пилюли — набор классов; положение и прозрачность берёт CSS-переход
+  function set(state, msg, vis) {
     clearTimeout(hideTimer);
-    pill.className = "ptr" + (state ? " " + state : "");
+    pill.className = "ptr" + (state ? " " + state : "") + (vis ? " vis" : "");
     text.textContent = msg;
   }
-  function pos(y, o, anim) {
-    pill.classList.toggle("anim", !!anim);
-    pill.style.transform = "translate(-50%," + y.toFixed(1) + "px)";
-    pill.style.opacity = o;
-  }
-  function hide() {
-    if (!shown) return;
-    shown = false;
-    pill.classList.remove("on");
-    pos(HIDE, "0", true);
-  }
+  function hide() { if (pill) pill.classList.remove("vis", "on"); }
   function say(state, msg, ms) {
-    set(state + " on", msg);
+    set(state + " on", msg, true);
     live.textContent = msg;
-    pos(REST, "1", true);
-    shown = true;
     hideTimer = setTimeout(hide, ms);
   }
 
@@ -183,7 +180,7 @@
     var layer = scrollerOf(e.target);
     if (!layer || !atTop(layer)) return;
     var t = e.touches[0];
-    T = { x0: t.clientX, y0: t.clientY, dir: 0, d: 0, layer: layer, armed: false };
+    T = { x0: t.clientX, y0: t.clientY, dir: 0, d: 0, layer: layer, vis: false, armed: false };
   }
   // Направление — по первым пикселям: вниз — наше, вверх или вбок — не наше
   function decide(t) {
@@ -192,10 +189,8 @@
     if (dy > 2 && dy > Math.abs(dx) * 1.2) {
       T.dir = 1;
       mount(); place(T.layer);
-      set("", "Потяните, чтобы обновить");
-      ring.style.strokeDashoffset = C; star.style.transform = "";
-      pos(HIDE, "0", false);
-      shown = true;
+      set("", "Потяните, чтобы обновить", false);
+      ring.style.strokeDashoffset = C;
     } else if (dy < -1 || Math.abs(dx) > 6) T.dir = -1;
   }
   function onMove(e) {
@@ -229,15 +224,13 @@
     if (was) hide();
   }
 
+  // По ходу жеста скрипт трогает только кольцо и классы; всё движение — CSS
   function paint() {
     raf = 0;
     if (!T || T.dir !== 1) return;
-    var d = T.d, p = Math.min(1, d / ARM), arm = d >= ARM;
-    var y = HIDE + (REST - HIDE) * (1 - (1 - p) * (1 - p));
-    if (d > ARM) y += 26 * (1 - Math.exp(-(d - ARM) / 90));
-    pos(y, Math.min(1, d / 32).toFixed(3), false);
-    ring.style.strokeDashoffset = (C * (1 - p)).toFixed(2);
-    if (!REDUCE) star.style.transform = "rotate(" + (d * 2.2).toFixed(1) + "deg)";
+    var d = T.d, vis = d >= SHOW, arm = d >= ARM;
+    ring.style.strokeDashoffset = (C * (1 - Math.min(1, d / ARM))).toFixed(2);
+    if (vis !== T.vis) { T.vis = vis; pill.classList.toggle("vis", vis); }
     if (arm !== T.armed) {
       T.armed = arm;
       pill.classList.toggle("armed", arm);
@@ -247,28 +240,25 @@
   }
 
   // ── Обновление: сначала спросить сайт, потом перезагрузиться ──────────────
+  // Пока новая страница не нарисовалась, браузер держит старую — «Обновляем…» видно
+  // до самой смены картинки, искусственная пауза не нужна
   function refresh() {
     busy = true;
-    set("busy", "Обновляем…");
+    set("busy", "Обновляем…", true);
     ring.style.strokeDashoffset = (C * 0.72).toFixed(2);
-    star.style.transform = "";
-    pos(REST, "1", true);
-    var t0 = Date.now();
     probe(function (ok, why) {
       if (!ok) {
         busy = false;
         say("err", why === "net" ? "Нет сети — оставили как было" : "Сайт не ответил — повторите", 3200);
         return;
       }
-      setTimeout(function () {
-        try { sessionStorage.setItem(FLAG, String(Date.now())); } catch (x) {}
-        // Доска и выпуски пишут в адрес якорь выбранного выпуска, а на телефоне якорь при
-        // загрузке открывает его паспорт поверх списка. Смотрели список — списком и вернёмся
-        if (location.hash && innerWidth <= 920 && document.querySelector(".panel-wrap, #panel.panel") && !openLayer()) {
-          try { history.replaceState(history.state, "", location.pathname + location.search); } catch (x) {}
-        }
-        location.reload();
-      }, Math.max(0, 320 - (Date.now() - t0)));   // «Обновляем…» не мелькает, даже если сайт ответил мгновенно
+      try { sessionStorage.setItem(FLAG, String(Date.now())); } catch (x) {}
+      // Доска и выпуски пишут в адрес якорь выбранного выпуска, а на телефоне якорь при
+      // загрузке открывает его паспорт поверх списка. Смотрели список — списком и вернёмся
+      if (location.hash && innerWidth <= 920 && document.querySelector(".panel-wrap, #panel.panel") && !openLayer()) {
+        try { history.replaceState(history.state, "", location.pathname + location.search); } catch (x) {}
+      }
+      location.reload();
     });
   }
   function probe(cb) {
@@ -294,8 +284,7 @@
       if (busy || T) return;
       // Паспорт, открытый якорем, лежит поверх шапки — тогда пилюля у его верхнего края
       mount(); place(openLayer() || root);
-      set("ok", "");
-      pos(REDUCE ? REST : HIDE, "0", false);
+      set("ok", "", false);
       void pill.offsetWidth;   // исходное положение — до перехода, иначе пилюля появится без выезда
       say("ok", "Страница обновлена · " + hh + ":" + mm, 2800);
     }, 160);
@@ -322,7 +311,7 @@
   window.addEventListener("pageshow", function (e) {
     if (!e.persisted) return;
     busy = false; T = null;
-    if (pill) { set("", ""); pos(HIDE, "0", false); shown = false; }
+    if (pill) set("", "", false);
     top = null; syncTop();
   });
   syncTop();
