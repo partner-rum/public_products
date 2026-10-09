@@ -1,0 +1,1268 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Rumberg">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Инструмент</title>
+<meta name="description" content="Карточка инструмента: котировка, диаграмма выплат, пример расчёта и условия.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Rumberg">
+<meta property="og:locale" content="ru_RU">
+<meta property="og:title" content="Структурный продукт — Rumberg">
+<meta property="og:description" content="Карточка инструмента: профиль выплаты, пример расчёта, параметры и документы.">
+<meta property="og:url" content="https://invest.rumberg.ru/instrument.html">
+<meta property="og:image" content="https://invest.rumberg.ru/og-cover.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Rumberg — структурные продукты">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0B0C10">
+<link href="fonts/fonts.css?v=2" rel="stylesheet">
+<style>
+  :root {
+    --canvas: #0B0C10; --card: #14161C; --panel-2: #191B22; --tile: rgba(255,255,255,0.045);
+    --black: #1A1919;
+    --ink: #F2F3F7; --hushed: rgba(242,243,247,0.64); --faint: rgba(242,243,247,0.56);
+    --border: rgba(255,255,255,0.11); --border-soft: rgba(255,255,255,0.07);
+    --solar: #EE7D1B; --solar-l: #F58E33;
+    --spruce: #5E9B82; --steel: #4F86E6; --amber: #E0A24A;
+    --up: #55C08A; --down: #E0705A; --loss: #E0705A;
+    --f-body: 'Onest', system-ui, sans-serif;
+    --f-mono: 'JetBrains Mono', Consolas, monospace;
+    --display: 'Rubik', 'Onest', system-ui, sans-serif;
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--canvas); color: var(--ink); font-family: var(--f-body); -webkit-font-smoothing: antialiased; }
+  a { text-decoration: none; color: inherit; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 44px 64px; }
+
+  .nav { position: sticky; top: 0; z-index: 20; background: rgba(11,12,16,0.82); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); }
+  .nav-in { max-width: 1080px; margin: 0 auto; padding: 0 44px; height: 62px; display: flex; align-items: center; gap: 12px; }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand-name { font-size: 14.5px; font-weight: 600; }
+  /* Подписи-дескриптора здесь нет ни на какой ширине: ряд шапки у карточки
+     самый длинный на витрине и переполнялся на 27px даже на 1440
+     (замер 18.09.2026). Имя компании при этом видно всегда. */
+  .brand-tag { display: none; }
+  .topnav { margin-left: auto; display: flex; align-items: center; gap: 22px; font-size: 14px; font-weight: 500; }
+  .topnav a { color: var(--hushed); transition: color .2s; }
+  .topnav a:hover { color: var(--ink); }
+  .topnav a[aria-current="page"] { color: var(--ink); font-weight: 600; }
+  .btn-solar { background: var(--solar); color: #0C0A08 !important; border-radius: 6px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 7px; transition: background .3s ease-in-out; }
+  .btn-solar:hover { background: var(--solar-l); }
+
+  .crumbs { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--hushed); padding: 26px 0 28px; }
+  .crumbs a:hover { color: var(--ink); }
+  .crumbs .sep { color: var(--faint); }
+  .crumbs .here { color: var(--ink); font-weight: 500; }
+
+  .head { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; flex-wrap: wrap; margin-bottom: 30px; }
+  .title-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
+  h1 { margin: 0; font-family: var(--display); font-size: 28px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1; }
+  .badge { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink); background: rgba(255,255,255,0.08); border-radius: 6px; padding: 4px 9px; }
+  .subtitle { font-size: 14px; color: var(--hushed); }
+  .btn-pdf { margin-top: 14px; display: inline-flex; align-items: center; gap: 8px; background: var(--solar); color: var(--ink); border-radius: 6px; padding: 9px 16px; font-size: 13.5px; font-weight: 500; transition: background .3s ease-in-out; }
+  .btn-pdf:hover { background: var(--solar-l); }
+  .btn-pdf svg { display: block; }
+  .actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
+  .actions .btn-pdf { margin-top: 0; }
+  .btn-secondary { background: transparent !important; color: var(--ink) !important; border: 1px solid var(--border); font-weight: 500; }
+  .btn-secondary:hover { background: rgba(255,255,255,0.06) !important; }
+  .btn-secondary svg path { stroke: var(--ink) !important; }
+  /* Содержимое блока котировки выравниваем по ЛЕВОМУ краю: при переносе шапки
+     (узкий экран) блок падает под подзаголовок, и flex-end оставлял число
+     висеть посередине строки вместо левого края страницы. */
+  .quote-block { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+  .quote-big { font-family: var(--f-mono); font-size: 36px; font-weight: 500; letter-spacing: -0.02em; }
+  .quote-big .q-dec { font-size: 0.6em; }
+  .quote-sub { font-size: 12.5px; color: var(--faint); }
+  .quote-chg { font-size: 14px; font-weight: 600; }
+
+  .grid { display: grid; grid-template-columns: 1.55fr 1fr; gap: 20px; align-items: stretch; }
+  .panel { background: var(--card); border: 1px solid var(--border-soft); border-radius: 14px; padding: 22px 24px; }
+  .chart-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
+  .chart-title { font-size: 15px; font-weight: 600; color: var(--ink); }
+  .tabs { display: flex; gap: 4px; background: rgba(255,255,255,0.06); border-radius: 10px; padding: 4px; }
+  .tab { border: none; border-radius: 7px; padding: 6px 16px; font-size: 13px; font-weight: 500; cursor: pointer; background: transparent; color: var(--hushed); font-family: var(--f-body); }
+  .tab.active { font-weight: 600; background: #262A33; color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,0.35); }
+  .chart-caption { margin-top: 16px; font-size: 12.5px; line-height: 1.5; color: var(--faint); }
+
+  .metrics { display: flex; flex-direction: column; gap: 10px; }
+  .metric { background: var(--card); border: 1px solid var(--border-soft); border-radius: 12px; padding: 13px 17px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .metric .k { font-size: 13.5px; color: var(--hushed); }
+  .metric .v { font-family: var(--f-mono); font-size: 14.5px; text-align: right; }
+
+  .section { margin-top: 20px; background: var(--card); border: 1px solid var(--border-soft); border-radius: 14px; padding: 26px 28px; }
+  .section h2 { margin: 0 0 6px; font-family: var(--f-mono); font-size: 11px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--hushed); }
+  .intro { font-size: 14px; color: var(--hushed); margin: 10px 0 8px; }
+  .scenario { display: grid; grid-template-columns: 1.4fr 1.2fr 0.8fr; gap: 16px; align-items: center; padding: 14px 0; border-top: 1px solid rgba(255,255,255,0.07); }
+  .scenario .l { font-size: 14.5px; font-weight: 600; }
+  .scenario .d { font-size: 13.5px; color: var(--hushed); }
+  .scenario .r { text-align: right; font-family: var(--f-mono); font-size: 15px; }
+  .explainer { font-size: 14.5px; line-height: 1.68; color: var(--hushed); max-width: 760px; text-wrap: pretty; margin: 12px 0 0; }
+  .facts { display: flex; gap: 28px; flex-wrap: wrap; margin-top: 22px; padding-top: 22px; border-top: 1px solid rgba(255,255,255,0.07); }
+  .fact { display: flex; flex-direction: column; gap: 5px; min-width: 150px; max-width: 220px; }
+  .fact .k { font-size: 11px; color: var(--faint); text-transform: uppercase; letter-spacing: 0.06em; }
+  .fact .v { font-size: 14px; line-height: 1.45; }
+
+  /* Калькулятор выплаты — перенесён с доски, чтобы клиент по ссылке мог прикинуть сам */
+  .calc { background: var(--tile); border: 1px solid var(--border-soft); border-radius: 10px; padding: 15px 16px; }
+  .calc-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 13px; }
+  .calc-l { font-size: 13px; color: var(--hushed); }
+  .calc-l b { color: var(--ink); font-family: var(--f-mono); font-weight: 500; }
+  .calc-input { width: 150px; background: var(--card); border: 1px solid var(--border); border-radius: 7px; padding: 8px 11px; color: var(--ink); font-family: var(--f-mono); font-size: 16px; text-align: right; }
+  .calc-input:focus { outline: 2px solid var(--solar); outline-offset: 1px; }
+  .calc-range { flex: 1; max-width: 58%; accent-color: var(--solar); cursor: pointer; }
+  .calc-out { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 2px; }
+  .calc-o { background: var(--card); border: 1px solid var(--border-soft); border-radius: 8px; padding: 11px 13px; }
+  .calc-o .v { font-family: var(--f-mono); font-size: 19px; font-weight: 600; letter-spacing: -0.01em; }
+  .calc-o .k { font-size: 11px; color: var(--faint); margin-top: 3px; }
+  .calc-note { margin-top: 11px; font-size: 11.5px; line-height: 1.45; color: var(--faint); }
+  .disclaimer { margin-top: 20px; font-size: 12px; line-height: 1.5; color: var(--faint); }
+  /* «Как купить»: три шага от интереса до покупки — те же, что в «Как проходит сделка»
+     на company.html, словами клиента. Внизу — сумма входа и кнопка заявки */
+  .buy { list-style: none; margin: 14px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); }
+  .buy li { padding: 0 22px; border-left: 1px solid var(--border-soft); }
+  .buy li:first-child { padding-left: 0; border-left: 0; }
+  .buy .n { display: block; margin-bottom: 8px; font-family: var(--f-mono); font-size: 12px; color: var(--solar-l); }
+  .buy b { display: block; margin-bottom: 6px; font-family: var(--display); font-size: 16px; font-weight: 600; }
+  .buy p { margin: 0; font-size: 13.5px; line-height: 1.55; color: var(--hushed); }
+  .buy-foot { display: flex; align-items: center; justify-content: space-between; gap: 14px 18px; flex-wrap: wrap; margin-top: 22px; padding-top: 20px; border-top: 1px solid var(--border-soft); }
+  .buy-sum { font-size: 14px; line-height: 1.5; color: var(--hushed); }
+  .buy-sum b { color: var(--ink); font-family: var(--f-mono); font-weight: 500; white-space: nowrap; }
+  @media (max-width: 760px) {
+    .buy { grid-template-columns: 1fr; }
+    .buy li { padding: 14px 0 0; margin-top: 14px; border-left: 0; border-top: 1px solid var(--border-soft); }
+    .buy li:first-child { padding-top: 0; margin-top: 0; border-top: 0; }
+  }
+
+  /* Экран «продукта нет»: снят с витрины, битая или устаревшая ссылка */
+  .gone { max-width: 560px; margin: 72px auto 0; text-align: center; }
+  .gone-k { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--solar); }
+  .gone h1 { margin: 14px 0 0; }
+  .gone p { margin: 14px 0 0; font-size: 14.5px; line-height: 1.65; color: var(--hushed); text-wrap: pretty; }
+  .gone-act { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 26px; }
+  .gone-act a { padding: 10px 17px; font-size: 13.5px; font-weight: 500; }
+
+  @media (max-width: 900px) {
+    .wrap { padding: 0 20px 48px; }
+    .gone { margin-top: 44px; }
+    .nav-in { height: auto; flex-wrap: wrap; padding: 12px 20px; row-gap: 10px; }
+    .topnav { margin-left: 0; width: 100%; gap: 16px; font-size: 13.5px; }
+    .grid { grid-template-columns: 1fr; }
+    .scenario { grid-template-columns: 1fr; gap: 4px; }
+    .scenario .r { text-align: left; }
+  }
+  /* ── Телефон (≤760px) ─────────────────────────────────────────────────────
+     Крошки в три строки → одна ссылка «← Доска»; сумма в калькуляторе не рвётся
+     («400 000» / «₽»); длинное описание свёрнуто под «Подробнее»; когда кнопки
+     под заголовком уходят за экран, снизу появляется панель с теми же действиями */
+  .mbar { display: none; }
+  .x-more { display: none; }
+  @media (max-width: 760px) {
+    .crumbs { padding: 4px 0 2px; gap: 0; }
+    .crumbs > a:first-child, .crumbs .sep, .crumbs .here { display: none; }
+    .crumbs #crumb-board { display: inline-flex; align-items: center; min-height: 44px; color: var(--ink); }
+    .crumbs #crumb-board::before { content: "← "; white-space: pre; color: var(--hushed); }
+    /* Пришли с нашего сайта — это шаг назад (search.js): вид как у «‹ Главная» во вкладках */
+    .crumbs #crumb-board.sf-backed { color: #EE7D1B; font-size: 15px; font-weight: 500; }
+    .crumbs #crumb-board.sf-backed::before { color: #EE7D1B; }
+    .calc-o .v { white-space: nowrap; font-size: clamp(15px, 4.6vw, 19px); }
+    .explainer.fold { max-height: 9.5em; overflow: hidden; -webkit-mask-image: linear-gradient(#000 60%, transparent); mask-image: linear-gradient(#000 60%, transparent); }
+    .x-more { display: inline-flex; align-items: center; min-height: 44px; margin-top: 2px; padding: 0; border: 0; background: none; color: var(--solar-l, #F58E33); font-family: var(--f-body); font-size: 14px; font-weight: 600; cursor: pointer; }
+    .mbar { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 250; gap: 10px; align-items: center;
+      padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); background: rgba(11,12,16,.96);
+      border-top: 1px solid var(--border); transform: translateY(110%); transition: transform .22s cubic-bezier(.16,1,.3,1); }
+    .mbar.on { transform: none; }
+    .mbar > span { flex: 1 1 0; min-width: 0; }
+    .mbar .ct, .mbar .sh { width: 100%; }
+    .mbar .ct-btn, .mbar .sh-btn { width: 100%; justify-content: center; min-height: 46px; }
+    /* меню панели открываются вверх: снизу места нет */
+    .mbar .ct-menu, .mbar .sh-menu { top: auto; bottom: calc(100% + 10px); }
+    .mbar .sh-menu { right: 0; left: auto; }
+    .wrap { padding-bottom: 96px; }
+  }
+  @media (max-width: 760px) and (prefers-reduced-motion: reduce) { .mbar { transition: none; } }
+  @media print {
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    .nav, .tabs, .crumbs { display: none !important; }
+    body { background: #fff; }
+    .panel, .section, .metric { border: 1px solid #CFCFCF; box-shadow: none; }
+  }
+  /* Тач-цели ≥44px на телефоне: «Поделиться» было 35, «Скачать one-pager» 37, поле суммы 39 */
+  @media (max-width: 760px) {
+    .sh-btn, .btn-pdf, .calc-input { min-height: 44px !important; }
+  }
+  /* ══ ПРИЁМЫ С DRIBBBLE (09.10.2026, «делай 1-10, покажи локально») ══
+     1. Выплата пальцем по графику (Crypto Trading от Nixtio — бегунок со значением в точке):
+        палец или мышь по графику двигает ползунок калькулятора, и наоборот — один расчёт, два входа.
+     2. Телефон: карточка — экран приложения (Travel от Ronas IT, Fintech Banking от Conceptzilla):
+        сверху «‹ назад · ☆», под ценой — ряд квадратных действий, параметры сеткой, снизу
+        закреплённая панель «цифра · сумма входа · Обсудить». Шапка сайта (лупа, меню) здесь
+        не нужна: карточка — экран внутри витрины, из неё возвращаются назад */
+  #chart { position: relative; touch-action: pan-y; -webkit-user-select: none; user-select: none; }
+  #chart.scr { cursor: ew-resize; }
+  .scrub { position: absolute; inset: 0; pointer-events: none; }
+  .scrub-line { position: absolute; width: 0; border-left: 1.5px dashed rgba(238,125,27,.85); }
+  .scrub-dot { position: absolute; width: 14px; height: 14px; margin: -7px 0 0 -7px; border-radius: 50%; background: #EE7D1B; box-shadow: 0 0 0 5px rgba(238,125,27,.22); }
+  .scrub-tip { position: absolute; transform: translateX(-50%); white-space: nowrap; padding: 4px 9px; border-radius: 8px; background: #EE7D1B; color: #0C0A08; font-family: var(--f-mono); font-size: 12px; font-weight: 600; box-shadow: 0 6px 16px rgba(0,0,0,.35); }
+  .scrub-hint { display: flex; align-items: center; gap: 8px; margin-top: 10px; font-size: 12.5px; line-height: 1.4; color: var(--faint); }
+  .scrub-hint svg { flex: none; color: var(--solar); }
+  .appbar, .btn-ai, .lbl-s { display: none; }
+  .fav-toast { position: fixed; left: 50%; bottom: calc(92px + env(safe-area-inset-bottom)); z-index: 300; transform: translate(-50%, 8px); opacity: 0; pointer-events: none;
+    padding: 10px 16px; border-radius: 12px; background: #F2F3F7; color: #0B0C10; font-size: 13.5px; font-weight: 500; white-space: nowrap; box-shadow: 0 10px 30px rgba(0,0,0,.45); transition: opacity .2s, transform .2s; }
+  .fav-toast.on { opacity: 1; transform: translate(-50%, 0); }
+  @media (max-width: 760px) {
+    header.nav, .crumbs { display: none; }
+    html .ca-dock { display: none !important; }        /* ассистент — плиткой «Спросить AI» под ценой */
+    .wrap { padding-top: 6px; }
+    .appbar { display: flex; position: sticky; top: 0; z-index: 30; align-items: center; gap: 4px;
+      height: calc(52px + env(safe-area-inset-top)); padding: env(safe-area-inset-top) 4px 0 14px; background: #0B0C10; border-bottom: 1px solid transparent; transition: border-color .2s; }
+    .appbar::before { content: ""; position: absolute; left: 0; right: 0; bottom: 100%; height: 100vh; background: #0B0C10; pointer-events: none; }
+    .appbar.sc { border-bottom-color: var(--border-soft); }
+    .appbar.pv { position: relative; }
+    .ab-left { flex: none; max-width: 42%; min-width: 0; display: flex; align-items: center; }
+    .ab-brand { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-family: var(--display); font-size: 15px; font-weight: 600; color: var(--hushed); }
+    .ab-brand i { font-style: normal; color: var(--solar); }
+    .appbar #crumb-board { display: none; }
+    .appbar #crumb-board.sf-backed { display: inline-flex; align-items: center; gap: 7px; min-height: 44px; padding-right: 8px; color: var(--solar); font-size: 16px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .appbar #crumb-board.sf-backed::before { content: ""; flex: none; width: 10px; height: 17px; background: currentColor;
+      -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 11 18'%3E%3Cpath d='M9 1.5 1.8 9 9 16.5' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+      mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 11 18'%3E%3Cpath d='M9 1.5 1.8 9 9 16.5' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat; }
+    .appbar:has(#crumb-board.sf-backed) .ab-brand { display: none; }
+    .ab-mini { flex: 1; min-width: 0; padding: 0 6px; text-align: center; font-family: var(--display); font-size: 15px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0; transition: opacity .18s; }
+    .appbar.sc .ab-mini { opacity: 1; }
+    .ab-fav { flex: none; margin-left: auto; width: 46px; height: 46px; display: grid; place-items: center; border: 0; border-radius: 12px; background: none; color: var(--hushed); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .ab-fav[aria-pressed="true"] { color: var(--solar); }
+    .ab-fav svg { display: block; }
+
+    h1 { font-size: 26px; }
+    .head { margin-bottom: 18px; }
+    .quote-block { margin-top: 14px; }
+    /* Ряд квадратных действий: «Обсудить» — оранжевая, остальные — тёмные плитки */
+    .actions { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 16px; }
+    .actions .ct-host, .actions .sh-host { display: block; min-width: 0; }
+    .actions .ct, .actions .sh { display: flex; width: 100%; }
+    .actions .ct-btn, .actions .sh-btn, .actions .btn-pdf { width: 100%; height: 76px; min-height: 76px !important; margin: 0; padding: 10px 4px 9px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px;
+      border-radius: 14px; font-size: 12.5px; font-weight: 600; line-height: 1.15; text-align: center; }
+    .actions .ct-btn svg, .actions .sh-btn svg, .actions .btn-pdf svg { width: 22px; height: 22px; }
+    .actions .sh-btn, .actions .btn-pdf { background: var(--card) !important; border: 1px solid var(--border-soft); color: var(--ink) !important; }
+    .actions #ct-host { order: 1; } .actions #onepager-link { order: 2; } .actions #sh-host { order: 3; } .actions .btn-ai { order: 4; display: flex; }
+    .actions .ct-menu { left: 0; }
+    .lbl-l { display: none; } .lbl-s { display: inline; }
+    /* Параметры — сеткой в два столбца, длинные — во всю ширину */
+    .metrics { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-auto-flow: row dense; gap: 8px; min-width: 0; }
+    .metric { flex-direction: column; align-items: flex-start; justify-content: flex-start; gap: 4px; padding: 11px 13px; }
+    .metric .k { font-size: 12px; color: var(--faint); }
+    .metric .v { text-align: left; font-size: 14px; }
+    .metric.wide { grid-column: 1 / -1; }
+    /* Калькулятор — внутри блока графика, сразу под ним. Блок графика — ячейка сетки .grid, и
+       min-content калькулятора (две колонки с nowrap-цифрами) распирал колонку до 355px на 360:
+       ячейкам сетки — min-width:0, колонкам калькулятора — minmax(0, 1fr) */
+    .grid > * { min-width: 0; }
+    .calc-out { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+    .panel .calc { margin-top: 12px; }
+    /* Плитки результата: семизначные суммы («1 180 000 ₽») не влезали в половину ширины на 360 —
+       кегль от ширины окна чуть меньше, поля уже; на 320 плитки одна под другой */
+    .calc-o { padding: 11px 11px; }
+    .calc-o .v { font-size: clamp(14px, 4.2vw, 19px); letter-spacing: -.01em; }
+    /* Нижняя панель: цифра продукта и сумма входа · поделиться · обсудить */
+    .mbar { background: #0B0C10; }
+    .mbar .mb-fig { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
+    .mbar .mb-fig b { font-family: var(--f-mono); font-size: 18px; font-weight: 500; line-height: 1.2; }
+    .mbar .mb-fig small { margin-top: 1px; font-size: 12px; color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .mbar > span#sh-host-m, .mbar > span#ct-host-m { flex: none; }
+    .mbar #sh-host-m .sh, .mbar #ct-host-m .ct { width: auto; }
+    .mbar #sh-host-m .sh-btn { width: 46px; min-height: 46px; padding: 0; justify-content: center; gap: 0; font-size: 0; }
+    .mbar #sh-host-m .sh-btn svg { width: 20px; height: 20px; }
+    .mbar #ct-host-m .ct-btn { width: auto; padding: 0 18px; }
+  }
+  @media (max-width: 360px) {
+    .calc-out { grid-template-columns: 1fr; }
+    .actions .ct-btn, .actions .sh-btn, .actions .btn-pdf { font-size: 11.5px; padding-left: 2px; padding-right: 2px; }
+    .mbar .mb-fig small { font-size: 11.5px; }
+    .mbar #ct-host-m .ct-btn { padding: 0 14px; }
+  }
+</style>
+<script src="metrika.js?v=10" defer></script>
+</head>
+<body>
+
+<header class="nav">
+  <div class="nav-in">
+    <a class="brand" href="index.html" aria-label="На главную">
+      <svg width="22" height="22" viewBox="0 0 26 26" fill="none" aria-hidden="true">
+        <path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/>
+      </svg>
+      <span class="brand-name">Rumberg</span><span class="brand-tag">Инвестиционные решения</span>
+    </a>
+    <nav class="topnav">
+      <a href="screener.html">Лучшие ставки</a>
+      <a href="ideas.html">Разборы</a>
+      <a href="digest.html">Дайджест</a>
+      <a href="offerings.html">Размещения</a>
+      <a href="placements.html">Выпуски</a>
+      <a href="about.html">Библиотека</a>
+      <a class="btn-solar" href="board.html?type=warrant">Доска
+        <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="crumbs">
+    <a href="index.html">Главная</a>
+    <span class="sep">/</span>
+    <a href="#" id="crumb-board" data-back="{}" data-back-mq="(max-width: 760px)"></a>
+    <span class="sep">/</span>
+    <span class="here" id="crumb-id"></span>
+  </div>
+
+  <div class="head">
+    <div>
+      <div class="title-row">
+        <h1 id="title"></h1>
+        <span class="badge" id="badge"></span>
+      </div>
+      <div class="subtitle" id="subtitle"></div>
+      <div class="actions">
+        <span class="ct-host" id="ct-host"></span>
+        <span class="sh-host" id="sh-host"></span>
+        <a class="btn-pdf btn-secondary" id="onepager-link" href="#">
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <path d="M7 1 V9 M7 9 L4 6 M7 9 L10 6" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M2 12 H12" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+          <span class="lbl-l">Скачать one-pager (PDF)</span><span class="lbl-s">One-pager</span>
+        </a>
+        <button type="button" class="btn-pdf btn-secondary btn-ai" id="ask-ai">
+          <svg width="22" height="22" viewBox="0 0 26 26" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>
+          Спросить AI
+        </button>
+      </div>
+    </div>
+    <div class="quote-block">
+      <div class="quote-big" id="quote"></div>
+      <div class="quote-sub" id="quote-sub">котировка · индикативно · % от номинала</div>
+      <div class="quote-chg" id="quote-chg"></div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="panel">
+      <div class="chart-head">
+        <div class="chart-title" id="chart-title"></div>
+        <div class="tabs" role="tablist" aria-label="Вид графика">
+          <button class="tab active" id="tab-payoff" type="button" role="tab" aria-selected="true">Выплата</button>
+          <button class="tab" id="tab-under" type="button" role="tab" aria-selected="false">Базовый актив</button>
+        </div>
+      </div>
+      <div id="chart"></div>
+      <div class="chart-caption" id="chart-caption"></div>
+    </div>
+    <div class="metrics" id="metrics"></div>
+  </div>
+
+  <div class="section" id="calc-section">
+    <h2>Калькулятор выплаты</h2>
+    <div class="calc" id="calc-mount"></div>
+  </div>
+
+  <div class="section">
+    <h2>Пример расчёта</h2>
+    <div class="intro" id="example-intro"></div>
+    <div id="scenarios"></div>
+  </div>
+
+  <div class="section">
+    <h2>Как устроен продукт</h2>
+    <div class="explainer" id="explainer"></div>
+    <div class="facts" id="facts"></div>
+  </div>
+
+  <div class="section" id="buy">
+    <h2>Как купить</h2>
+    <ol class="buy">
+      <li><span class="n">01</span><b>Напишите нам</b><p>Кнопкой «Обсудить продукт» или в&nbsp;Telegram: сумма и&nbsp;срок, остальное подскажем.</p></li>
+      <li><span class="n">02</span><b>Зафиксируем условия</b><p>Котировка на витрине индикативная: точные параметры и&nbsp;даты пришлём перед сделкой.</p></li>
+      <li><span class="n">03</span><b>Купите у своего брокера</b><p>Продукт выпускается облигацией с&nbsp;ISIN, КУВ и&nbsp;КИД&nbsp;— её покупают на брокерский счёт. Нужен статус квалифицированного инвестора.</p></li>
+    </ol>
+    <div class="buy-foot"><span class="buy-sum" id="buy-sum"></span><span class="ct-host" id="ct-host-b"></span></div>
+  </div>
+
+  <div class="disclaimer" id="disclaimer"></div>
+
+</div>
+
+<script src="data/instruments.js?v=fx8"></script>
+<script src="data/lib.js?v=ax9"></script>
+<script src="data/harden.js?v=1"></script>
+<script src="contact.js?v=10"></script>
+<script src="share.js?v=8"></script>
+<script src="intro.js?v=6"></script>
+<script>
+  const S = window.SITE;
+
+  // ── Превью продукта ДО отправки на одобрение ────────────────────────────────
+  // Продукт доски проходит через ✅ Руслана, то есть до одобрения его нет ни в
+  // каталоге, ни на сервере. Поэтому кнопка «Посмотреть превью» в админке кладёт
+  // собранную форму в localStorage и открывает эту страницу с ?preview=1 — сейлз
+  // видит НАСТОЯЩУЮ карточку, а не пересказ полей в форме. Тот же приём, что у
+  // черновика дайджеста (digest.html?draft=1).
+  // localStorage, а не sessionStorage: вкладка открывается с rel="noopener", и
+  // sessionStorage в неё не наследуется. Срок 30 минут — чтобы забытый черновик
+  // не открывался «превью» через неделю.
+  // КОПИЯ ЭТОГО БЛОКА ЕСТЬ В onepager.html (страницы самодостаточны, общего
+  // layout-а у проекта нет) — правишь здесь, правь и там.
+  const PREVIEW_KEY = "so_bd_preview", PREVIEW_TTL = 30 * 60 * 1000;
+  function readPreview() {
+    if (new URLSearchParams(location.search).get("preview") !== "1") return null;
+    try {
+      const raw = JSON.parse(localStorage.getItem(PREVIEW_KEY) || "null");
+      if (!raw || !raw.item || !raw.item.type || Date.now() - raw.ts > PREVIEW_TTL) return null;
+      return raw.item;
+    } catch (e) { return null; }
+  }
+  const PREVIEW = readPreview();
+
+  const inst = PREVIEW || S.findInstrument(new URLSearchParams(location.search).get("id"));
+
+  // Продукта с таким id в каталоге нет — показываем честный экран и НЕ рендерим
+  // карточку. Раньше findInstrument молча возвращал первый инструмент каталога:
+  // клиент по устаревшей ссылке видел чужой продукт с настоящей котировкой.
+  // Открыли превью, а черновика в хранилище уже нет (прошло полчаса, другой браузер,
+  // очищенные данные). Общий текст «продукт снят с витрины» тут сбивал бы с толку:
+  // сейлз решил бы, что сломал форму. Говорим, что произошло на самом деле.
+  const PREVIEW_STALE = new URLSearchParams(location.search).get("preview") === "1" && !PREVIEW;
+
+  // Канонический адрес и индексация. Раньше в <head> стоял статический canonical на
+  // instrument.html БЕЗ id, а без id страница рисует «Продукт снят с витрины» — все
+  // карточки говорили Google, что их главная версия — пустой экран. Теперь canonical
+  // ставится здесь, с id из каталога (метка ?ref= и прочие параметры в него не
+  // попадают); экраны без продукта и превью черновика закрыты noindex. Google берёт
+  // вставленные скриптом canonical и robots при отрисовке — лишь бы canonical был на
+  // странице один, поэтому в <head> его больше нет. Тот же адрес карточки стоит
+  // canonical-ом у шеллов p/<id>.html (make_product_pages.py и productShell в воркере).
+  (function () {
+    if (false) {
+      const l = document.createElement("link");
+      l.rel = "canonical";
+      l.href = "https://invest.rumberg.ru/instrument.html?id=" + encodeURIComponent(inst.id);
+      document.head.appendChild(l);
+    } else {
+      const m = document.createElement("meta");
+      m.name = "robots";
+      m.content = "noindex";
+      document.head.appendChild(m);
+    }
+  })();
+
+  if (!inst) {
+    document.title = PREVIEW_STALE ? "Превью устарело — Rumberg" : "Продукт снят с витрины — Rumberg";
+    document.querySelector(".wrap").innerHTML = PREVIEW_STALE
+      ? '<div class="gone">' +
+          '<div class="gone-k">превью устарело</div>' +
+          '<h1>Черновик продукта не найден</h1>' +
+          '<p>Превью живёт полчаса и только в том браузере, где его открыли. ' +
+          'Вернитесь в админку на вкладку «Текущий продукт» и нажмите «Посмотреть превью» ещё раз — ' +
+          'форма не потеряна. На сайт при этом ничего не отправлялось.</p>' +
+          '<div class="gone-act">' +
+            '<a class="btn-solar" href="admin.html">Открыть админку</a>' +
+            '<a class="btn-solar btn-secondary" href="board.html">Открыть доску</a>' +
+          '</div>' +
+        '</div>'
+      : '<div class="gone">' +
+        '<div class="gone-k">ссылка устарела</div>' +
+        '<h1>Продукт снят с витрины</h1>' +
+        '<p>Этого продукта больше нет в каталоге: условия могли измениться, а выпуск — уже разместиться. ' +
+        'Актуальные инструменты с котировками собраны на доске. Если нужен именно этот — напишите, подберём аналог.</p>' +
+        '<div class="gone-act">' +
+          '<a class="btn-solar" href="board.html">Открыть доску</a>' +
+          '<a class="btn-solar btn-secondary" href="https://t.me/Rumberb_Sales_Team_bot" target="_blank" rel="noopener">Написать в Telegram</a>' +
+        '</div>' +
+      '</div>';
+  } else {
+  const t = S.TYPES[inst.type];
+  const U = S.underlyingInfo(inst.underlying);
+  let mode = "payoff";
+  let scrubSet = null;   // поставить бегунок графика на ход актива (move, %) — задаёт mountScrub
+  const PHONE = window.matchMedia("(max-width: 760px)").matches;
+
+  document.title = S.displayName(inst) + " — " + t.title;
+
+  // --- Графики (SVG строками) ---
+  const W = 620, H = 300, PAD = 28;
+  const MONO = 'font-family="JetBrains Mono, monospace"';
+  const C = { line: "#E7E9F0", gold: "#EE7D1B", grid: "rgba(255,255,255,0.09)", axis: "rgba(255,255,255,0.17)", lab: "rgba(255,255,255,0.46)", lab2: "rgba(255,255,255,0.68)", quote: "#E7E9F0" };
+
+  function chartUnderlying() {
+    const data = U.history;
+    const PADL = 60, PADR = 28, PADT = 26, PADB = 42;
+    const min = Math.min(...data), max = Math.max(...data), rng = (max - min) || 1;
+    const x = i => PADL + (i / (data.length - 1)) * (W - PADL - PADR);
+    const y = v => PADT + (1 - (v - min) / rng) * (H - PADT - PADB);
+    const pts = data.map((v, i) => [x(i), y(v)]);
+    const line = pts.map((p, i) => (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1)).join(" ");
+    const area = line + " L" + x(data.length - 1).toFixed(1) + " " + (H - PADB) + " L" + PADL + " " + (H - PADB) + " Z";
+    // Сетка + подписи оси OY (значение актива)
+    let grid = "";
+    for (let g = 0; g <= 3; g++) {
+      const val = max - (g / 3) * (max - min);
+      const gy = y(val);
+      grid += '<line x1="' + PADL + '" y1="' + gy.toFixed(1) + '" x2="' + (W - PADR) + '" y2="' + gy.toFixed(1) + '" stroke="' + C.grid + '" stroke-width="1"/>' +
+        '<text x="' + (PADL - 8) + '" y="' + (gy + 4).toFixed(1) + '" text-anchor="end" fill="' + C.lab + '" font-size="11" ' + MONO + '>' + S.fmtSmart(val) + '</text>';
+    }
+    // Подписи оси OX (месяцы, последняя точка — текущий месяц)
+    const MONTHS = ["янв", "фев", "мар", "апр", "май", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"];
+    const now = new Date();
+    let xlab = "";
+    for (let i = 0; i < data.length; i++) {
+      if ((data.length - 1 - i) % 2) continue;
+      const d = new Date(now.getFullYear(), now.getMonth() - (data.length - 1 - i), 1);
+      xlab += '<text x="' + x(i).toFixed(1) + '" y="' + (H - PADB + 20) + '" text-anchor="middle" fill="' + C.lab + '" font-size="11" ' + MONO + '>' + MONTHS[d.getMonth()] + '</text>';
+    }
+    const axes = '<line x1="' + PADL + '" y1="' + (H - PADB) + '" x2="' + (W - PADR) + '" y2="' + (H - PADB) + '" stroke="' + C.axis + '" stroke-width="1"/>' +
+      '<line x1="' + PADL + '" y1="' + PADT + '" x2="' + PADL + '" y2="' + (H - PADB) + '" stroke="' + C.axis + '" stroke-width="1"/>' +
+      '<text x="' + (PADL - 8) + '" y="14" text-anchor="end" fill="' + C.lab + '" font-size="11" ' + MONO + '>' + (U.unit || "") + '</text>';
+    const last = pts[pts.length - 1];
+    const label = inst.uRef || (S.fmtSmart(data[data.length - 1]) + (U.unit ? " " + U.unit : ""));
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="display:block">' + grid + axes + xlab +
+      '<defs><linearGradient id="fillu" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0%" stop-color="' + C.quote + '" stop-opacity="0.14"/><stop offset="100%" stop-color="' + C.quote + '" stop-opacity="0"/></linearGradient></defs>' +
+      '<path d="' + area + '" fill="url(#fillu)"/>' +
+      '<path d="' + line + '" fill="none" stroke="' + C.quote + '" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>' +
+      '<circle cx="' + last[0] + '" cy="' + last[1] + '" r="4.5" fill="' + C.quote + '"/>' +
+      '<text x="' + (W - PADR) + '" y="' + (last[1] - 12) + '" text-anchor="end" fill="' + C.quote + '" font-size="12" ' + MONO + '>' + label + '</text>' +
+      '</svg>';
+  }
+
+  // Графики выплат — общие с доской, живут в data/lib.js. Пока копия была
+  // на каждой странице, оси у типов продуктов назывались по-своему и нуля
+  // на них не было видно (правка по фидбеку 10.08.2026).
+  // На узком экране viewBox уже, поэтому кегль подписей задаём крупнее: иначе
+  // 11px внутри 620-й системы координат сжимаются до нечитаемых ~5px.
+  const chOpt = () => (window.innerWidth < 620
+    ? { W: 380, H: 280, colors: C, padL: 50, padR: 14, padT: 18, padB: 46, font: 13, xCount: 3, yCount: 3 }
+    : { W: W, H: H, colors: C, padL: 60, padR: 28, padT: 22, padB: 50 });
+  const chartPayoff = () => (inst.type === "discount" ? S.discountChart(inst, chOpt()) : S.payoffChart(inst, chOpt()));
+
+  // ── 1. Выплата пальцем по графику (Dribbble, 09.10.2026) ────────────────────────
+  // Геометрия — та же, что у payoffChart в data/lib.js: рамка chartFrame, X — ход актива по
+  // границам S.calc.move, Y — от данных с запасом 14% и 1,6 сверху. Правишь там — правь здесь
+  function chartGeo() {
+    const o = chOpt(), rg = S.calc.move(inst);
+    if (!rg || inst.type === "discount") return null;
+    const base = inst.type === "warrant" ? 0 : inst.type === "digital" ? (inst.floorPct || 0) : 100;
+    let lo = Infinity, hi = -Infinity;
+    for (let i = 0; i <= 240; i++) { const v = S.calc.pct(inst, rg.min + (rg.max - rg.min) * i / 240); if (v < lo) lo = v; if (v > hi) hi = v; }
+    const pad = Math.max(6, (hi - lo) * 0.14);
+    const yMin = Math.max(0, Math.min(lo, base) - pad), yMax = hi + pad * 1.6;
+    const L = o.padL, R = o.padR, T = o.padT, B = o.padB, W = o.W, H = o.H;
+    return { W, H, T, B, rg,
+      x: (lvl) => L + ((lvl - (100 + rg.min)) / (rg.max - rg.min)) * (W - L - R),
+      move: (px) => rg.min + ((px - L) / (W - L - R)) * (rg.max - rg.min),
+      y: (v) => H - B - ((v - yMin) / (yMax - yMin)) * (H - T - B) };
+  }
+  function mountScrub() {
+    const el = document.getElementById("chart"), g = chartGeo();
+    scrubSet = null;
+    if (!g || inst.quote == null) return;
+    el.classList.add("scr");
+    const ov = document.createElement("div");
+    ov.className = "scrub"; ov.setAttribute("aria-hidden", "true");
+    ov.innerHTML = '<i class="scrub-line"></i><i class="scrub-dot"></i><span class="scrub-tip"></span>';
+    el.appendChild(ov);
+    const line = ov.children[0], dot = ov.children[1], tip = ov.children[2];
+    scrubSet = function (m) {
+      const k = el.clientWidth / g.W, v = S.calc.pct(inst, m), px = g.x(100 + m) * k, py = g.y(v) * k;
+      line.style.left = px + "px"; line.style.top = g.T * k + "px"; line.style.height = (g.H - g.T - g.B) * k + "px";
+      dot.style.left = px + "px"; dot.style.top = py + "px";
+      tip.textContent = (m >= 0 ? "+" : "−") + Math.abs(m) + "% → " + S.fmtSmart(Math.round(v * 10) / 10) + "% ном.";
+      const w = tip.offsetWidth, cw = el.clientWidth;
+      tip.style.left = Math.max(w / 2 + 2, Math.min(cw - w / 2 - 2, px)) + "px";
+      tip.style.top = (py - 40 > 0 ? py - 40 : py + 14) + "px";
+    };
+    let drag = false;
+    function at(e) {
+      const r = el.getBoundingClientRect(), k = r.width / g.W;
+      const m = Math.max(g.rg.min, Math.min(g.rg.max, Math.round(g.move((e.clientX - r.left) / k))));
+      const mv = document.getElementById("calc-move");
+      if (mv) { mv.value = m; mv.dispatchEvent(new Event("input")); } else scrubSet(m);
+    }
+    el.onpointerdown = (e) => {
+      if (mode !== "payoff" || !scrubSet) return;
+      drag = true;
+      try { el.setPointerCapture(e.pointerId); } catch (x) {}
+      at(e);
+      const h = document.getElementById("scrub-hint"); if (h) h.style.opacity = ".55";
+    };
+    el.onpointermove = (e) => { if (drag) at(e); };
+    el.onpointerup = el.onpointercancel = () => { drag = false; };
+    const mv = document.getElementById("calc-move");
+    scrubSet(mv ? +mv.value : g.rg.val);
+  }
+
+  // --- Контент по типу продукта ---
+  const nom = inst.minNom;
+  let content = {};
+
+  // Продукт на корзину: расчёт по ХУДШЕЙ бумаге (worst-of) или по СРЕДНЕМУ уровню
+  // корзины (basketMode "avg"). Формулировки — из S.basketOf, общие с доской и
+  // one-pager: одно имя одного принципа на всей витрине. isWO значит «есть корзина».
+  const BK = S.basketOf(inst);
+  const isWO = BK.on;
+  const lc = (x) => x.charAt(0).toLowerCase() + x.slice(1);
+  const uGrew = isWO ? BK.grew : inst.underlying + " вырос";
+  const uFell = isWO ? BK.fell : inst.underlying + " упал";
+  const uNo = isWO ? BK.no : inst.underlying + " не вырос";
+  const uNom = isWO ? BK.nom : "базовый актив";
+  const uGen = isWO ? BK.gen : "базового актива";
+  const uAxis = isWO ? BK.axisCaps : "уровень БА";
+  const woBadge = isWO ? " · " + BK.tag : "";
+  const woFact = ["Принцип", BK.principle];
+  // Строка «Корзина» в параметрах: состав, режим и — у средней — веса
+  const woMetric = (what) => ["Корзина", inst.underlying + " · " + what + " " + BK.byShort +
+    (BK.avg ? " · " + BK.weightsText : "")];
+
+  if (inst.type === "warrant") {
+    const isCS = inst.structure === "cs";
+    const K = inst.strike, K2 = inst.strike2;
+    const spot = inst.spot || 100;
+    const strikeTxt = S.fmtSmart(K) + "% — уровень базового актива в день покупки" + (K > 100 ? " (на " + S.fmtSmart(K - 100) + "% выше)" : "");
+    const premiumRub = nom * inst.quote / 100;
+    const upPct = Math.max(16, Math.ceil((inst.quote + 6) / 5) * 5);
+    const payout1 = nom * S.PAYOFF.pct(spot * (1 + upPct / 100), K, K2) / 100;
+    const net1 = payout1 - premiumRub;
+    const capPct = isCS ? (K2 - K) : 0;
+    const capRub = nom * capPct / 100;
+    const chgSign = inst.chg > 0 ? "+" : inst.chg < 0 ? "−" : "";
+    const wMetrics = [
+      ["Котировка (премия)", S.fmt2(inst.quote) + "%"],
+      ["Изм. за день", chgSign + S.fmt1(Math.abs(inst.chg)) + " п.п."],
+      ["Страйк (K)", S.fmtSmart(K) + "% нач. уровня"]
+    ];
+    if (isCS) wMetrics.push(["Потолок (K₂)", S.fmtSmart(K2) + "% · выплата ≤ " + S.fmtSmart(capPct) + "%"]);
+    wMetrics.push(["Срок", inst.tenor]);
+    if (inst.expiry) wMetrics.push(["Экспирация", inst.expiry]);
+    wMetrics.push(["Валюта", inst.currency || "RUB"]);
+    if (isWO) wMetrics.push(woMetric("выплата"));
+    if (inst.uRef) wMetrics.push([inst.underlying + " сегодня", inst.uRef]);
+    wMetrics.push(["Мин. номинал", S.fmtInt(nom) + " ₽"]);
+    const wScen = [
+      [uGrew + " на " + upPct + "%", "Выплата " + S.fmtInt(payout1) + " ₽", (net1 >= 0 ? "+" : "−") + S.fmtInt(Math.abs(net1)) + " ₽", net1 >= 0 ? "var(--up)" : "var(--loss)"]
+    ];
+    if (isCS) {
+      const capNet = capRub - premiumRub;
+      wScen.push([uGrew + " на 70% — выше потолка", "Выплата " + S.fmtInt(capRub) + " ₽ — максимум", (capNet >= 0 ? "+" : "−") + S.fmtInt(Math.abs(capNet)) + " ₽", capNet >= 0 ? "var(--up)" : "var(--loss)"]);
+    }
+    wScen.push([uNo, "Выплаты нет", "−" + S.fmtInt(premiumRub) + " ₽", "var(--loss)"]);
+    const wFacts = isWO ? [woFact, ["Страйк", strikeTxt]] : [["Страйк", strikeTxt]];
+    if (isCS) wFacts.push(["Потолок", "K₂ = " + S.fmtSmart(K2) + "%: выплата не выше " + S.fmtSmart(capPct) + "% номинала"]);
+    wFacts.push(
+      ["Котировка", "В процентах от номинала"],
+      ["Стиль", "Европейский — выплата на дату экспирации"],
+      ["Максимальный убыток", "Уплаченная премия"],
+      ["Мин. номинал", S.fmtInt(nom) + " ₽"]
+    );
+    content = {
+      badge: (isCS ? "КОЛЛ-СПРЕД · варрант" : "CALL · варрант") + woBadge,
+      subtitle: (isCS ? "Колл-спред на рост: " : "Варрант на рост: ") + (isWO ? "корзина " : "") + inst.underlying +
+        (isWO ? " — " + (BK.avg ? "по среднему уровню" : BK.by) : "") + " · Срок " + inst.tenor,
+      explainer: isCS
+        ? "Колл-спред — CALL с потолком выплаты. Страйк K фиксируется по уровню базового актива в день покупки (100%), рост засчитывается до K₂ = " + S.fmtSmart(K2) + "%: максимальная выплата — " + S.fmtSmart(capPct) + "% номинала. За счёт этого ограничения премия ниже, чем у обычного CALL. Если актив не вырос — выплаты нет, потеря ограничена премией."
+        : "CALL-варрант — право на выплату при росте базового актива выше страйка. Страйк: " + strikeTxt + ". Если на экспирацию актив выше страйка, выплата растёт вместе с ним. Если роста до страйка нет — выплаты нет, потеря ограничена премией.",
+      payoff: chartPayoff,
+      payoffCaption: isCS
+        ? "Выплата на экспирацию в % от номинала; " + uAxis + " — в % от начального. Выше K₂ выплата не растёт: максимум " + S.fmtSmart(capPct) + "%. Пунктир — премия; б/у — безубыточность."
+        : "Выплата на экспирацию в % от номинала; " + uAxis + " — в % от начального. Пунктир — уплаченная премия; б/у — точка безубыточности.",
+      metrics: wMetrics,
+      exampleIntro: "Номинал " + S.fmtInt(nom) + " ₽ · премия " + S.fmt2(inst.quote) + "% = " + S.fmtInt(premiumRub) + " ₽",
+      scenarios: wScen,
+      facts: wFacts
+    };
+  } else if (inst.type === "digital") {
+    const K = inst.strike || 100, pay = inst.digitalPct || 0;
+    const premiumRub = nom * inst.quote / 100;
+    const payoutRub = nom * pay / 100;
+    const net = payoutRub - premiumRub;
+    const mult = inst.quote ? pay / inst.quote : 0;
+    const chgSign = inst.chg > 0 ? "+" : inst.chg < 0 ? "−" : "";
+    const strikeTxt = S.fmtSmart(K) + "% — уровень базового актива в день покупки" + (K > 100 ? " (на " + S.fmtSmart(K - 100) + "% выше)" : "");
+    const dMetrics = [
+      ["Котировка (премия)", S.fmt2(inst.quote) + "%"],
+      ["Изм. за день", chgSign + S.fmt1(Math.abs(inst.chg)) + " п.п."],
+      ["Страйк (K)", S.fmtSmart(K) + "% нач. уровня"],
+      ["Выплата при срабатывании", S.fmtSmart(pay) + "% номинала — фиксированная"],
+      ["Срок", inst.tenor]
+    ];
+    if (inst.expiry) dMetrics.push(["Экспирация", inst.expiry]);
+    dMetrics.push(["Валюта", inst.currency || "RUB"]);
+    if (isWO) dMetrics.push(woMetric("условие"));
+    if (inst.uRef) dMetrics.push([inst.underlying + " сегодня", inst.uRef]);
+    dMetrics.push(["Мин. номинал", S.fmtInt(nom) + " ₽"]);
+    content = {
+      badge: "КУПОННЫЙ ВАРРАНТ" + woBadge,
+      subtitle: "Фиксированная выплата " + S.fmtSmart(pay) + "% номинала при уровне " + (isWO ? (BK.avg ? "корзины в среднем" : BK.gen) : inst.underlying) +
+        " не ниже " + S.fmtSmart(K) + "% · Срок " + inst.tenor,
+      explainer: "Купонный варрант — право на ФИКСИРОВАННУЮ выплату, если базовый актив на экспирацию оказался на страйке или выше. Страйк: " + strikeTxt + ". " +
+        "Выплата " + S.fmtSmart(pay) + "% номинала не зависит от того, насколько актив вырос: и на уровне " + S.fmtSmart(K) + "%, и на 150% от старта платится одно и то же — этим купонный варрант и отличается от обычного CALL, где выплата растёт вместе с активом. " +
+        "Промежуточных значений у продукта нет: порог либо взят, либо не взят. Ниже страйка выплаты нет, потеря ограничена премией" +
+        (mult > 1 ? "; при срабатывании выплата больше премии в " + S.fmt1(mult) + " раза." : "."),
+      payoff: chartPayoff,
+      payoffCaption: "Выплата на экспирацию в % от номинала; " + uAxis + " — в % от начального. Линия плоская по обе стороны страйка: между нулём и " +
+        S.fmtSmart(pay) + "% продукт ничего не платит. Пунктир — уплаченная премия.",
+      metrics: dMetrics,
+      exampleIntro: "Номинал " + S.fmtInt(nom) + " ₽ · премия " + S.fmt2(inst.quote) + "% = " + S.fmtInt(premiumRub) + " ₽",
+      scenarios: [
+        [uGrew + " на " + S.fmtSmart(K - 100 + 10) + "% — выше страйка", "Выплата " + S.fmtInt(payoutRub) + " ₽", "+" + S.fmtInt(net) + " ₽", "var(--up)"],
+        [(isWO ? BK.Short : "Базовый актив") + " на уровне " + S.fmtSmart(K) + "% — ровно страйк", "Выплата " + S.fmtInt(payoutRub) + " ₽ — порог взят", "+" + S.fmtInt(net) + " ₽", "var(--up)"],
+        [(isWO ? BK.Short : "Базовый актив") + " на уровне " + S.fmtSmart(K - 0.5) + "% — чуть ниже страйка", "Выплаты нет", "−" + S.fmtInt(premiumRub) + " ₽", "var(--loss)"]
+      ],
+      facts: (isWO ? [woFact] : []).concat([
+        ["Страйк", strikeTxt],
+        ["Выплата", S.fmtSmart(pay) + "% номинала — одна и та же на страйке и выше"],
+        ["Зона частичной выплаты", "Нет — либо " + S.fmtSmart(pay) + "%, либо ноль"],
+        ["Котировка", "Премия в процентах от номинала"],
+        ["Стиль", "Европейский — уровень смотрят только на дату экспирации"],
+        ["Максимальный убыток", "Уплаченная премия"],
+        ["Мин. номинал", S.fmtInt(nom) + " ₽"]
+      ])
+    };
+  } else if (inst.type === "discount") {
+    const buyRub = nom * inst.quote / 100;
+    content = {
+      badge: "облигация",
+      subtitle: "Дисконтная облигация · Погашение " + inst.expiry + " · Выплата 100% номинала",
+      explainer: (inst.about ? inst.about + " " : "") + "Облигация покупается дешевле номинала — сегодня по " + S.fmt2(inst.quote) + "% от него. На дату погашения выплачивается полный номинал, 100% (если по контрольному лицу не наступит кредитное событие). Весь доход — это дисконт: разница между ценой покупки и номиналом, известная в день сделки. Купонов нет.",
+      payoff: chartPayoff,
+      payoffCaption: "Покупка дешевле номинала, погашение по 100%. Доход — разница, зафиксированная в момент покупки.",
+      metrics: [
+        ["Котировка", S.fmt2(inst.quote) + "%"],
+        ["Изм. за день", (inst.chg > 0 ? "+" : "−") + S.fmt1(Math.abs(inst.chg)) + " п.п."],
+        ["Выплата на погашение", "100%"],
+        ["Погашение", inst.expiry],
+        ["Осталось", S.daysTo(inst.expiry) + " дн."],
+        ["Мин. номинал", S.fmtInt(nom) + " ₽"]
+      ],
+      exampleIntro: "Номинал " + S.fmtInt(nom) + " ₽ · покупка по " + S.fmt2(inst.quote) + "% = " + S.fmtInt(buyRub) + " ₽",
+      scenarios: [
+        ["Дождались погашения " + inst.expiry, "Выплата " + S.fmtInt(nom) + " ₽ — 100% номинала", "+" + S.fmtInt(nom - buyRub) + " ₽", "var(--up)"],
+        ["Продали раньше срока", "По текущей рыночной цене", "по рынку", "rgba(255,255,255,0.60)"]
+      ],
+      facts: [
+        ["Котировка", "В процентах от номинала"],
+        ["Доход", "Дисконт: номинал минус цена покупки"],
+        ["Купоны", "Нет — весь доход в дисконте"],
+        ["Риск", "Кредитное качество эмитента"],
+        ["Мин. номинал", S.fmtInt(nom) + " ₽"]
+      ]
+    };
+  } else if (inst.type === "autocall") {
+    const cpnPa = inst.couponPa != null ? inst.couponPa : inst.quote;
+    const prot = inst.protectionPct || 65, cpnB = inst.couponBarrier || prot, call = inst.callBarrier || 120;
+    const per = inst.obsPerYear || 4, nonCall = inst.nonCall || 0;
+    const cpnPer = cpnPa / per, cpnRub = nom * cpnPer / 100;
+    const yrs = parseFloat(String(inst.tenor).replace(",", ".")) || 3;
+    const holdRub = nom * (1 + cpnPa / 100 * yrs);
+    const downLvl = Math.max(10, prot - 20), downRub = nom * downLvl / 100;
+    const obsTxt = per === 4 ? "ежеквартально" : per + " раза в год";
+    content = {
+      badge: "автоколл · worst-of",
+      subtitle: "Автоколл · корзина " + inst.underlying + " · условный купон " + S.fmt2(cpnPa) + "% годовых",
+      explainer: "Автоколл — облигация с условным купоном на корзину из " + (inst.basket ? inst.basket.length : 3) + " акций по принципу worst-of: все условия считаются по худшей бумаге корзины. " +
+        "На каждую дату наблюдения (" + obsTxt + ") проверяются два уровня. Если худшая бумага не ниже " + S.fmtSmart(cpnB) + "% начального уровня — начисляется купон " + S.fmt2(cpnPer) + "% номинала за период. " +
+        "Если все бумаги не ниже " + S.fmtSmart(call) + "% — выпуск гасится досрочно: инвестор получает номинал и купон." +
+        (nonCall ? " " + S.nonCallText(nonCall) + " досрочный отзыв невозможен." : "") +
+        " На погашении номинал возвращается полностью, пока худшая бумага не ниже " + S.fmtSmart(prot) + "%; ниже этого уровня выплата считается по её перформансу — возможна потеря части или всей суммы." +
+        (inst.settle && inst.settle !== inst.currency ? " Экономика продукта считается в " + inst.currency + ", денежные расчёты идут в рублях." : ""),
+      payoff: chartPayoff,
+      payoffCaption: "Возврат номинала на погашении в % от него; по горизонтали — уровень худшей бумаги корзины в % от начального. Купоны здесь не показаны: они начисляются отдельно на датах наблюдения.",
+      metrics: [
+        ["Купон", S.fmt2(cpnPa) + "% годовых · индикативно"],
+        ["Купонный барьер", S.fmtSmart(cpnB) + "%"],
+        ["Барьер автоотзыва", S.fmtSmart(call) + "%"],
+        ["Защита на погашении", S.fmtSmart(prot) + "%"],
+        ["Наблюдения", obsTxt.charAt(0).toUpperCase() + obsTxt.slice(1)],
+        ["Срок", inst.tenor],
+        ["Валюта", S.ccyLabel(inst)],
+        ["Мин. номинал", S.fmtInt(nom) + " ₽"]
+      ],
+      exampleIntro: "Вход по номиналу " + S.fmtInt(nom) + " ₽ (100%) · купон " + S.fmt2(cpnPer) + "% за период = " + S.fmtInt(cpnRub) + " ₽",
+      scenarios: [
+        ["Автоотзыв: все бумаги выше " + S.fmtSmart(call) + "%", "Досрочное погашение — номинал и купон", "+" + S.fmtInt(cpnRub) + " ₽ за период", "var(--up)"],
+        ["Корзина выше " + S.fmtSmart(cpnB) + "% весь срок", "Купоны за " + inst.tenor + " и номинал: " + S.fmtInt(holdRub) + " ₽", "+" + S.fmtInt(holdRub - nom) + " ₽", "var(--up)"],
+        ["Худшая бумага ниже " + S.fmtSmart(cpnB) + "% на дату наблюдения", "Купон за этот период не начисляется", "0 ₽", "rgba(242,243,247,0.60)"],
+        ["На погашении худшая бумага на " + downLvl + "%", "Выплата по перформансу: " + S.fmtInt(downRub) + " ₽", "−" + S.fmtInt(nom - downRub) + " ₽", "var(--loss)"]
+      ],
+      facts: [
+        ["Принцип", "Worst-of — все условия по худшей бумаге корзины"],
+        ["Купон", "Условный: " + S.fmt2(cpnPa) + "% годовых при worst-of ≥ " + S.fmtSmart(cpnB) + "%"],
+        ["Автоотзыв", "При worst-of ≥ " + S.fmtSmart(call) + "% на дату наблюдения" + (nonCall ? ", начиная с " + (nonCall + 1) + "-й" : "")],
+        ["Защита", S.fmtSmart(prot) + "% номинала на погашении (европейский барьер)"],
+        ["Риск", "Ниже барьера — выплата по перформансу худшей бумаги"],
+        ["Мин. номинал", S.fmtInt(nom) + " ₽"]
+      ]
+    };
+  } else if (inst.type === "revconv") {
+    const cpnPa = inst.couponPa != null ? inst.couponPa : inst.quote;
+    const K = inst.strike || 100, per = inst.obsPerYear || 4;
+    const cpnPer = cpnPa / per, cpnRub = nom * cpnPer / 100;
+    const yrs = S.tenorYears(inst) || 1;
+    const cpnAll = nom * cpnPa / 100 * yrs;
+    const holdRub = nom + cpnAll;
+    const be = S.revconvBreakeven(inst);
+    // Сценарий просадки — ниже точки, где купон её перекрывает: иначе таблица
+    // показывала бы одни плюсы и прятала настоящий риск продукта.
+    const downLvl = Math.max(10, Math.round((be != null && be > 0 ? be : K - 30) - 15));
+    const bodyPct = S.PAYOFF.revconv(downLvl, K);
+    const downRub = nom * bodyPct / 100 + cpnAll;
+    const obsTxt = per === 12 ? "ежемесячно" : per === 4 ? "ежеквартально" : per === 2 ? "раз в полгода" : per + " раза в год";
+    content = {
+      badge: "реверс-конвертибл" + woBadge,
+      subtitle: "Реверс-конвертибл · " + inst.underlying + " · купон " + S.fmt2(cpnPa) + "% годовых · страйк " + S.fmtSmart(K) + "%",
+      explainer: "Купон " + S.fmt2(cpnPa) + "% годовых выплачивается " + obsTxt + " и не зависит от того, где стоит " + uNom +
+        " — это плата за принятый по нему риск. На погашении, если " + uNom + " не ниже страйка " + S.fmtSmart(K) +
+        "% начального уровня, возвращается 100% номинала; в росте выше страйка выпуск не участвует. Ниже страйка тело считается по перформансу ОТ СТРАЙКА: " +
+        "падение до " + S.fmtSmart(K / 2) + "% даст половину номинала." +
+        (K < 100 ? " Страйк ниже старта даёт запас " + S.fmtSmart(100 - K) + " п.п.: пока актив не потерял столько, тело не трогается." : "") +
+        " Расчёт денежный — бумаги не поставляются, но экономически это то же самое, как если бы актив был куплен по страйку и остался в портфеле." +
+        (be != null && be > 0 ? " Купоны за весь срок покрывают просадку тела примерно до уровня " + S.fmtSmart(be) + "%." : ""),
+      payoff: chartPayoff,
+      payoffCaption: "Полная выплата за срок в % от номинала: тело плюс купоны; по горизонтали — " + uAxis + " в % от начального. " +
+        "Пунктир — тело без купонов, зазор между линиями и есть купон" +
+        (be != null && be > 0 ? "; точка б/у — уровень, ниже которого купоны перестают покрывать просадку тела." : "."),
+      metrics: [
+        ["Купон", S.fmt2(cpnPa) + "% годовых · индикативно"],
+        ["Выплаты купона", obsTxt.charAt(0).toUpperCase() + obsTxt.slice(1)],
+        ["Страйк", S.fmtSmart(K) + "% начального уровня"],
+        ["Тело на погашении", "100% при активе не ниже страйка"],
+        ["Срок", inst.tenor]
+      ].concat(isWO ? [woMetric("условия")] : [], [["Мин. номинал", S.fmtInt(nom) + " ₽"]]),
+      exampleIntro: "Вход по номиналу " + S.fmtInt(nom) + " ₽ (100%) · купон " + S.fmt2(cpnPer) + "% за период = " + S.fmtInt(cpnRub) + " ₽",
+      scenarios: [
+        [(isWO ? BK.Nom : inst.underlying) + " на " + S.fmtSmart(K) + "% и выше",
+          "Номинал и купоны за " + inst.tenor + ": " + S.fmtInt(holdRub) + " ₽", "+" + S.fmtInt(cpnAll) + " ₽", "var(--up)"],
+        [uGrew + " на 40%", "Тело всё равно 100% — рост не участвует: " + S.fmtInt(holdRub) + " ₽", "+" + S.fmtInt(cpnAll) + " ₽", "var(--up)"],
+        ["На погашении " + (isWO ? BK.short : "актив") + " на " + downLvl + "%",
+          "Тело " + S.fmt1(bodyPct) + "% плюс купоны: " + S.fmtInt(downRub) + " ₽",
+          (downRub >= nom ? "+" : "−") + S.fmtInt(Math.abs(downRub - nom)) + " ₽", downRub >= nom ? "var(--up)" : "var(--loss)"]
+      ],
+      facts: (isWO ? [woFact] : []).concat([
+        ["Купон", "Безусловный: " + S.fmt2(cpnPa) + "% годовых при любом уровне актива"],
+        ["Участие в росте", "Нет — выше страйка выплата тела не растёт"],
+        ["Риск", "Ниже страйка " + S.fmtSmart(K) + "% — тело по перформансу от страйка"],
+        ["Расчёт", "Денежный — бумаги не поставляются"],
+        ["Мин. номинал", S.fmtInt(nom) + " ₽"]
+      ])
+    };
+  } else if (inst.type === "rcdigital") {
+    const K = inst.strike || 100, cpn = S.rcdCoupon(inst);
+    const cpnRub = nom * cpn / 100, holdRub = nom + cpnRub;
+    // Сценарий просадки берём заведомо НИЖЕ страйка: в нём купона нет вовсе, и
+    // именно этим тип отличается от обычного реверс-конвертибла.
+    const downLvl = Math.max(10, Math.round(K - 20));
+    const bodyPct = S.PAYOFF.rcdigital(downLvl, K, cpn);
+    const downRub = nom * bodyPct / 100;
+    const nearRub = nom * (K - 1) / K;
+    content = {
+      badge: "условный купон" + woBadge,
+      subtitle: "Реверс-конвертибл с условным купоном · " + inst.underlying + " · купон " +
+        S.fmtSmart(cpn) + "% за срок · страйк " + S.fmtSmart(K) + "%",
+      explainer: "Купон " + S.fmtSmart(cpn) + "% номинала выплачивается ОДИН раз, на дату оценки, и только если " +
+        uNom + " не ниже страйка " + S.fmtSmart(K) + "% начального уровня. Насколько именно актив выше — не важно: " +
+        "выплата одна и та же на страйке и вдвое выше него, в росте выпуск не участвует. " +
+        "Если актив оказался ниже страйка, купона нет вовсе, а номинал возвращается по перформансу ОТ СТРАЙКА: " +
+        "падение до " + S.fmtSmart(K / 2) + "% даст половину номинала." +
+        (K < 100 ? " Страйк ниже старта даёт запас " + S.fmtSmart(100 - K) + " п.п.: пока актив не потерял столько, условие купона выполняется." : "") +
+        " Расчёт денежный, бумаги не поставляются.",
+      payoff: chartPayoff,
+      payoffCaption: "Выплата за срок в % от номинала; по горизонтали — " + uAxis + " в % от начального. " +
+        "Ступенька на страйке и есть купон: он либо платится целиком, либо не платится вовсе.",
+      metrics: [
+        ["Купон", S.fmtSmart(cpn) + "% номинала за срок · индикативно"],
+        ["Условие купона", uNom.charAt(0).toUpperCase() + uNom.slice(1) + " не ниже " + S.fmtSmart(K) + "% на дату оценки"],
+        ["Страйк", S.fmtSmart(K) + "% начального уровня"],
+        ["Выплаты", "Одна, на дату оценки. Досрочного отзыва нет"],
+        ["Срок", inst.tenor]
+      ].concat(isWO ? [woMetric("условия")] : [], [["Мин. номинал", S.fmtInt(nom) + " ₽"]]),
+      exampleIntro: "Вход по номиналу " + S.fmtInt(nom) + " ₽ (100%) · купон " + S.fmtSmart(cpn) +
+        "% = " + S.fmtInt(cpnRub) + " ₽ одной выплатой",
+      scenarios: [
+        [(isWO ? BK.Nom : inst.underlying) + " на " + S.fmtSmart(K) + "% и выше",
+          "Номинал и купон: " + S.fmtInt(holdRub) + " ₽", "+" + S.fmtInt(cpnRub) + " ₽", "var(--up)"],
+        [uGrew + " на 40%", "Выплата та же — рост не участвует: " + S.fmtInt(holdRub) + " ₽",
+          "+" + S.fmtInt(cpnRub) + " ₽", "var(--up)"],
+        [(isWO ? BK.Short : "Актив") + " на " + S.fmtSmart(K - 1) + "% — чуть ниже страйка",
+          "Купона нет вовсе, номинал по перформансу: " + S.fmtInt(nearRub) + " ₽",
+          "−" + S.fmtInt(nom - nearRub) + " ₽ и купон потерян", "var(--loss)"],
+        ["На дату оценки " + (isWO ? BK.short : "актив") + " на " + downLvl + "%",
+          "Выплата " + S.fmt1(bodyPct) + "% номинала: " + S.fmtInt(downRub) + " ₽",
+          "−" + S.fmtInt(nom - downRub) + " ₽", "var(--loss)"]
+      ],
+      facts: (isWO ? [woFact] : []).concat([
+        ["Купон", "Условный: " + S.fmtSmart(cpn) + "% номинала при активе не ниже страйка"],
+        ["Участие в росте", "Нет — выше страйка выплата не растёт"],
+        ["Безубыток", "Страйк " + S.fmtSmart(K) + "%: ниже него купона нет и номинал уменьшается"],
+        ["Расчёт", "Денежный — бумаги не поставляются"],
+        ["Мин. номинал", S.fmtInt(nom) + " ₽"]
+      ])
+    };
+  } else if (inst.type === "booster") {
+    const K = inst.strike || 100, K2 = inst.strike2 || 110, ku = (inst.ku || 175) / 100;
+    const capPay = K + ku * (K2 - K), maxUp = capPay - 100, kuS = Math.round(ku * 100) + "%";
+    const bandUp = S.fmtSmart(K2 - 100);
+    const upFull = nom * capPay / 100, up5 = nom * (100 + ku * 5) / 100, downRub = nom * 0.8;
+    content = {
+      badge: "бустер · усиленный рост",
+      subtitle: "Бустер · " + inst.underlying + " · рост ×" + kuS + " до потолка, участие в падении 1:1",
+      explainer: "Бустер даёт усиленное участие в росте базового актива: рост внутри диапазона " + S.fmtSmart(K) + "–" + S.fmtSmart(K2) + "% засчитывается с коэффициентом " + kuS + " — например, при росте актива на " + bandUp + "% выплата достигает максимума +" + S.fmt1(maxUp) + "% к номиналу. Выше диапазона выплата не растёт (потолок). Если актив падает, инвестор участвует в падении один к одному, как если бы держал сам актив. Купонов нет; результат — на дату погашения.",
+      payoff: chartPayoff,
+      payoffCaption: "Слева от старта — падение 1:1; справа — рост ×" + kuS + " внутри диапазона " + S.fmtSmart(K) + "–" + S.fmtSmart(K2) + "% до потолка +" + S.fmt1(maxUp) + "%.",
+      metrics: [
+        ["Коэффициент участия", kuS],
+        ["Диапазон роста", S.fmtSmart(K) + "–" + S.fmtSmart(K2) + "%"],
+        ["Макс. выплата", "+" + S.fmt1(maxUp) + "%"],
+        ["Участие в падении", "1:1"],
+        ["Срок", inst.tenor],
+        ["Мин. номинал", S.fmtInt(nom) + " ₽"]
+      ],
+      exampleIntro: "Вход по номиналу " + S.fmtInt(nom) + " ₽ (100%) · базовый актив " + inst.underlying,
+      scenarios: [
+        [inst.underlying + " вырос на " + bandUp + "% и выше", "Выплата " + S.fmtInt(upFull) + " ₽ — потолок", "+" + S.fmtInt(upFull - nom) + " ₽", "var(--up)"],
+        [inst.underlying + " вырос на 5%", "Выплата " + S.fmtInt(up5) + " ₽ (рост ×" + kuS + ")", "+" + S.fmtInt(up5 - nom) + " ₽", "var(--up)"],
+        [inst.underlying + " упал на 20%", "Выплата " + S.fmtInt(downRub) + " ₽ — падение 1:1", "−" + S.fmtInt(nom - downRub) + " ₽", "var(--loss)"]
+      ],
+      facts: [
+        ["Рост", "×" + kuS + " внутри диапазона до потолка +" + S.fmt1(maxUp) + "%"],
+        ["Падение", "Участие 1:1, как в самом активе"],
+        ["Купоны", "Нет — результат на дату погашения"],
+        ["Риск", "Полное участие в падении базового актива"],
+        ["Мин. номинал", S.fmtInt(nom) + " ₽"]
+      ]
+    };
+  } else {
+    const entryRub = nom * inst.quote / 100;
+    const protK = inst.strike || 100;                       // страйк опциона, % от начального уровня
+    const protOff = protK - 100;
+    const upPct = protOff + 20;
+    const payoutUp = nom * S.calc.pct(inst, upPct) / 100;   // calc.pct учитывает страйк
+    const partS = Math.round(inst.participation * 100) + "%";
+    content = {
+      badge: "облигация · защита капитала" + woBadge,
+      subtitle: "Облигация с защитой капитала · " + (isWO ? "корзина " : "") + inst.underlying +
+        (isWO ? " — участие " + (BK.avg ? "по среднему уровню" : BK.by) : "") + " · срок " + inst.tenor +
+        (protOff > 0 ? " · участие с роста +" + S.fmtSmart(protOff) + "%" : ""),
+      explainer: "Облигация возвращает 100% номинала при любом сценарии — рыночного убытка нет. " +
+        (protOff > 0
+          ? "Сверху выплачивается " + partS + " роста " + uGen + ", который он покажет ВЫШЕ страйка " + S.fmtSmart(protK) + "% начального уровня: первые " + S.fmtSmart(protOff) + "% роста в выплату не идут."
+          : "Если " + uNom + " на дату погашения выше начального уровня S₀, дополнительно выплачивается " + partS + " роста " + uGen + ".") +
+        " Если " + (isWO ? lc(BK.fell) : "актив упал") + " — вы получаете номинал целиком. Купонов нет; результат определяется на дату погашения.",
+      payoff: chartPayoff,
+      payoffCaption: "Выплата на погашение в % от номинала" + (isWO ? " (" + BK.by + ")" : "") +
+        ": не ниже 100% при любом сценарии, выше " +
+        (protOff > 0 ? "страйка " + S.fmtSmart(protK) + "%" : "S₀") + " — участие в росте.",
+      metrics: [
+        ["Цена входа", S.fmt2(inst.quote) + "% ном."],
+        ["Защита капитала", S.fmtSmart(inst.protectionPct != null ? inst.protectionPct : 100) + "%"],
+        ["Участие в росте", partS],
+        ["Страйк опциона", S.fmtSmart(protK) + "%"],
+        ["Срок", inst.tenor],
+        ["Валюта", S.ccyLabel(inst)]
+      ].concat(isWO ? [woMetric("участие")] : [], [["Мин. номинал", S.fmtInt(nom) + " ₽"]]),
+      exampleIntro: "Номинал " + S.fmtInt(nom) + " ₽ · вход по " + S.fmt2(inst.quote) + "% = " + S.fmtInt(entryRub) + " ₽",
+      scenarios: [
+        [uGrew + " на " + S.fmtSmart(upPct) + "%", "Выплата " + S.fmtInt(payoutUp) + " ₽ — 100% + участие", "+" + S.fmtInt(payoutUp - entryRub) + " ₽", "var(--up)"],
+        [uFell + " на 15%", "Сработала защита: выплата " + S.fmtInt(nom) + " ₽", "0 ₽", "rgba(242,243,247,0.60)"]
+      ],
+      facts: (isWO ? [woFact] : []).concat([
+        ["Защита", "100% номинала при любом сценарии"],
+        ["Участие", partS + " роста" + (protOff > 0 ? " выше страйка " + S.fmtSmart(protK) + "%" : " базового актива") + ", без потолка"],
+        ["Купоны", "Нет — результат на дату погашения"],
+        ["Стиль", "Европейский — выплата на дату погашения"],
+        ["Риск", "Кредитный риск эмитента облигации"],
+        ["Мин. номинал", S.fmtInt(nom) + " ₽"]
+      ])
+    };
+  }
+
+  // --- Рендер ---
+  const boardLink = document.getElementById("crumb-board");
+  boardLink.textContent = t.title;
+  boardLink.href = "board.html?type=" + inst.type;
+  document.getElementById("crumb-id").textContent = S.displayName(inst);
+  // ── 2. Телефон: карточка — экран приложения (Dribbble, 09.10.2026) ─────────────
+  // Сверху «‹ назад · ☆»: «назад» — та же кнопка крошек (#crumb-board), search.js подписывает
+  // её, куда вернёт, если пришли с нашего сайта; пришли по ссылке извне — вместо неё «✦ Rumberg».
+  // ☆ кладёт продукт в «Избранное» (localStorage so_fav) — список наверху «Продуктов» на главной
+  if (PHONE) {
+    const STAR_O = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3.6l2.55 5.2 5.75.84-4.16 4.05.98 5.72L12 16.7l-5.12 2.7.98-5.72L3.7 9.64l5.75-.84z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>';
+    const STAR_F = STAR_O.replace("<path ", '<path fill="currentColor" ');
+    const bar = document.createElement("div");
+    bar.className = "appbar" + (PREVIEW ? " pv" : "");
+    bar.innerHTML = '<div class="ab-left"><a class="ab-brand" href="preview-dw.html" aria-label="Rumberg — на главную превью"><i aria-hidden="true">✦</i>Rumberg</a></div>' +
+      '<div class="ab-mini" aria-hidden="true"></div>' +
+      (PREVIEW ? "" : '<button type="button" class="ab-fav" aria-pressed="false" aria-label="Добавить в избранное">' + STAR_O + "</button>");
+    document.body.insertBefore(bar, document.body.firstChild);
+    bar.querySelector(".ab-left").appendChild(boardLink);
+    bar.querySelector(".ab-mini").textContent = S.displayName(inst);
+    if (window.IntersectionObserver) new IntersectionObserver(function (es) { bar.classList.toggle("sc", !es[0].isIntersecting); },
+      { rootMargin: "-56px 0px 0px 0px" }).observe(document.getElementById("title"));
+    // Цифра — над рядом действий, сразу под названием
+    const act = document.querySelector(".actions");
+    act.parentNode.insertBefore(document.querySelector(".quote-block"), act);
+    const favBtn = bar.querySelector(".ab-fav");
+    if (favBtn) {
+      const KEY = "so_fav";
+      const favs = () => { try { const a = JSON.parse(localStorage.getItem(KEY) || "[]"); return Array.isArray(a) ? a : []; } catch (e) { return []; } };
+      const setFav = (on) => { favBtn.setAttribute("aria-pressed", String(on)); favBtn.setAttribute("aria-label", on ? "Убрать из избранного" : "Добавить в избранное"); favBtn.innerHTML = on ? STAR_F : STAR_O; };
+      let toast = null;
+      const say = (t) => {
+        if (!toast) { toast = document.createElement("div"); toast.className = "fav-toast"; toast.setAttribute("role", "status"); document.body.appendChild(toast); }
+        toast.textContent = t; toast.classList.add("on");
+        clearTimeout(say.t); say.t = setTimeout(() => toast.classList.remove("on"), 2200);
+      };
+      setFav(favs().indexOf(inst.id) >= 0);
+      favBtn.addEventListener("click", function () {
+        const on = favs().indexOf(inst.id) < 0;
+        const a = favs().filter((x) => x !== inst.id);
+        if (on) a.unshift(inst.id);
+        try { localStorage.setItem(KEY, JSON.stringify(a.slice(0, 50))); } catch (e) {}
+        setFav(on);
+        say(on ? "В избранном — наверху «Продуктов»" : "Убрано из избранного");
+      });
+    }
+  }
+  // «Спросить AI» — про этот продукт: ассистент видит адрес страницы и отвечает по его карточке
+  document.getElementById("ask-ai").addEventListener("click", function () {
+    if (window.Chat && Chat.ask) Chat.ask("Объясните простыми словами, как работает этот продукт и в чём его риск");
+  });
+  document.getElementById("title").textContent = S.displayName(inst);
+  // В превью one-pager открываем тоже превью: продукта ещё нет в каталоге, и
+  // обычная ссылка по id привела бы на экран «продукт снят с витрины».
+  document.getElementById("onepager-link").href = PREVIEW
+    ? "onepager.html?preview=1&print=1"
+    : "onepager.html?id=" + encodeURIComponent(inst.id) + "&print=1";
+  // В превью обе кнопки НЕ вешаем. «Обсудить продукт» отправила бы настоящую
+  // заявку в группу продаж на продукт, которого ещё нет, а «Поделиться» дала бы
+  // ссылку /p/<id>.html, которая появится только после одобрения.
+  if (window.Contact && !PREVIEW) Contact.attach(document.getElementById("ct-host"), { title: S.displayName(inst), url: location.href, id: inst.id, label: PHONE ? "Обсудить" : undefined });
+  // «Как купить»: сумма входа по текущей котировке — та же, что «от … ₽» в списке на главной
+  (function () {
+    const host = document.getElementById("buy-sum");
+    const nom = Number(inst.minNom);
+    if (host && nom > 0) {
+      const byPrice = inst.type === "warrant" || inst.type === "digital" || inst.type === "discount";
+      const pct = byPrice ? Number(inst.quote) : 100;
+      if (pct > 0) {
+        const sum = Math.ceil(nom * pct / 100);
+        host.innerHTML = "Сумма входа по текущей котировке — <b>" + S.fmtInt(sum) + "\u00a0₽</b>" +
+          (byPrice ? ": " + (inst.type === "discount" ? "цена " : "премия ") + S.fmt2(pct) + "% от номинала " + S.fmtInt(nom) + "\u00a0₽" : ": покупка по номиналу");
+      }
+    }
+    if (window.Contact && !PREVIEW) Contact.attach(document.getElementById("ct-host-b"), { title: S.displayName(inst), url: location.href, id: inst.id });
+  })();
+  // «Поделиться» отдаёт /p/<id> — лёгкую страницу с персональным og-превью (как на доске),
+  // чтобы сейлз, скопировавший адрес из карточки, слал не обезличенную обложку (A.7).
+  if (window.Share && !PREVIEW) {
+    var prodUrl = new URL("p/" + encodeURIComponent(inst.id), location.href).href;
+    Share.attach(document.getElementById("sh-host"), { url: prodUrl, title: S.displayName(inst), name: S.displayName(inst), pitch: content.subtitle, params: (content.metrics || []) });
+  }
+  // Телефон: нижняя панель «Обсудить · Поделиться». Главный сценарий сейлза —
+  // отправить продукт клиенту, а кнопки под заголовком уезжают за экран уже на
+  // графике. Панель — второй экземпляр тех же кнопок (свои меню открываются
+  // вверх), показывается, только когда верхние кнопки не видны; пока она на
+  // экране, html.has-mbar убирает строку AI-ассистента (chat.js)
+  if (!PREVIEW && window.Contact && window.Share && window.IntersectionObserver &&
+      window.matchMedia("(max-width: 760px)").matches) {
+    var mbar = document.createElement("div");
+    mbar.className = "mbar";
+    // Цифра — та же, что в строке списка на главной (figure() в index.html): у защиты — участие,
+    // у купонных — купон, у варранта — премия; рядом сумма входа, как «от 305 тыс ₽» в списке
+    const fq = (n) => S.fmt2(n), fg = inst.type === "protection" ? (inst.participation != null ? [Math.round(inst.participation * 100) + "%", "участие"] : [(inst.protectionPct || 100) + "%", "защита"])
+      : inst.type === "booster" ? [Math.round(inst.ku || inst.quote) + "%", "коэффициент"]
+      : (inst.type === "autocall" || inst.type === "revconv") ? [fq(inst.couponPa != null ? inst.couponPa : inst.quote) + "% г.", "купон"]
+      : inst.type === "rcdigital" ? [fq(inst.couponPct != null ? inst.couponPct : inst.quote) + "%", "купон за срок"]
+      : inst.type === "discount" ? [fq(inst.quote) + "%", "цена"] : [fq(inst.quote) + "%", "премия"];
+    const nom0 = Number(inst.minNom), byP = inst.type === "warrant" || inst.type === "digital" || inst.type === "discount";
+    const ent = nom0 > 0 ? nom0 * (byP ? Number(inst.quote) : 100) / 100 : 0;
+    const entT = ent >= 1e6 ? "от\u00a0" + String(Math.ceil(ent / 1e5) / 10).replace(".", ",") + "\u00a0млн\u00a0₽" : ent > 0 ? "от\u00a0" + Math.ceil(ent / 1000) + "\u00a0тыс\u00a0₽" : "";
+    mbar.innerHTML = '<span class="mb-fig"><b>' + fg[0] + "</b><small>" + fg[1] + (entT ? " · " + entT : "") + '</small></span><span id="sh-host-m"></span><span id="ct-host-m"></span>';
+    document.body.appendChild(mbar);
+    Contact.attach(document.getElementById("ct-host-m"), { title: S.displayName(inst), url: location.href, id: inst.id, label: "Обсудить" });
+    Share.attach(document.getElementById("sh-host-m"), { url: new URL("p/" + encodeURIComponent(inst.id), location.href).href, title: S.displayName(inst), name: S.displayName(inst), pitch: content.subtitle, params: (content.metrics || []) });
+    new IntersectionObserver(function (es) {
+      var show = !es[0].isIntersecting && es[0].boundingClientRect.top < 0;
+      mbar.classList.toggle("on", show);
+      document.documentElement.classList.toggle("has-mbar", show);
+      if (!show) mbar.querySelectorAll(".ct.open,.sh.open").forEach(function (x) { x.classList.remove("open"); });
+    }).observe(document.querySelector(".actions"));
+  }
+  if (PREVIEW) {
+    document.title = "ПРЕВЬЮ · " + document.title;
+    var pvb = document.createElement("div");
+    pvb.textContent = "ПРЕВЬЮ ПРОДУКТА · на сайт не отправлено. Так карточку увидит клиент после одобрения. " +
+      "«Обсудить продукт» и «Поделиться» здесь выключены — заявка ушла бы на несуществующий продукт.";
+    pvb.style.cssText = "position:sticky;top:0;z-index:99999;background:#EE7D1B;color:#0C0A08;font-weight:600;" +
+      "text-align:center;padding:9px 16px;font-size:13px;line-height:1.45;font-family:var(--f-body,system-ui)";
+    document.body.insertBefore(pvb, document.body.firstChild);
+  }
+  document.getElementById("badge").textContent = content.badge;
+  document.getElementById("subtitle").textContent = content.subtitle;
+  document.getElementById("quote").innerHTML = S.quoteBig(inst.quote);
+  document.getElementById("quote-sub").textContent = inst.type === "booster" ? "коэффициент участия · индикативно"
+    : (inst.type === "autocall" || inst.type === "revconv") ? "купон · % годовых · индикативно"
+    : inst.type === "rcdigital" ? "купон за срок · % номинала · индикативно"
+    : "котировка · индикативно · % от номинала · " + (inst.currency || "RUB");
+  // «Изменение за день» дублируется в шапке (quote-chg) и в метриках. У всех
+  // инструментов chg===0 (рынок в котировках не отражаем), а на дисконтных 2-я
+  // ветка знака печатала «−0,0 п.п.» — минус на нуле. Пока данных о дневном
+  // движении нет, дневную дельту не показываем вовсе — честнее пустого поля.
+  const chgEl = document.getElementById("quote-chg");
+  if (inst.chg) {
+    chgEl.textContent = (inst.chg > 0 ? "+" : "−") + S.fmt1(Math.abs(inst.chg)) + " п.п. сегодня";
+    chgEl.style.color = inst.chg > 0 ? "var(--up)" : "var(--loss)";
+  } else {
+    chgEl.style.display = "none";
+  }
+  content.metrics = content.metrics.filter(m => !(m[0] === "Изм. за день" && !inst.chg));
+
+  document.getElementById("metrics").innerHTML = content.metrics.map(m =>
+    '<div class="metric' + (String(m[1]).replace(/<[^>]*>/g, "").length > 15 || String(m[0]).length > 22 ? " wide" : "") + '"><span class="k">' + m[0] + '</span><span class="v">' + m[1] + '</span></div>').join("");
+
+  document.getElementById("example-intro").textContent = content.exampleIntro;
+  document.getElementById("scenarios").innerHTML = content.scenarios.map(s =>
+    '<div class="scenario"><div class="l">' + s[0] + '</div><div class="d">' + s[1] + '</div><div class="r" style="color:' + s[3] + '">' + s[2] + '</div></div>').join("") +
+    (S.isFxSensitive(S.esc(inst.underlying)) ? '<div style="margin-top:12px;padding:9px 13px;border-left:3px solid #EE7D1B;background:rgba(238,125,27,0.12);border-radius:0 7px 7px 0;font-size:12.5px;line-height:1.5;color:#E7B98D">' + S.LEGAL.fx + '</div>' : '');
+
+  document.getElementById("explainer").textContent = content.explainer;
+  // Телефон: описание на два экрана сворачиваем под «Подробнее»
+  (function () {
+    var ex = document.getElementById("explainer");
+    if (!window.matchMedia("(max-width: 760px)").matches) return;
+    ex.classList.add("fold");
+    if (ex.scrollHeight <= ex.clientHeight + 4) { ex.classList.remove("fold"); return; }
+    var more = document.createElement("button");
+    more.type = "button"; more.className = "x-more"; more.textContent = "Подробнее";
+    more.setAttribute("aria-expanded", "false");
+    more.addEventListener("click", function () {
+      var open = ex.classList.toggle("fold") === false;
+      more.textContent = open ? "Свернуть" : "Подробнее";
+      more.setAttribute("aria-expanded", String(open));
+    });
+    ex.insertAdjacentElement("afterend", more);
+  })();
+  document.getElementById("facts").innerHTML = content.facts.map(f =>
+    '<div class="fact"><div class="k">' + f[0] + '</div><div class="v">' + f[1] + '</div></div>').join("");
+
+  // Дисклеймер: на эту страницу ведут ВСЕ шаринг-ссылки (p/<id> → instrument.html),
+  // а юридической оговорки тут не было — она приходила только из подвала чат-виджета.
+  document.getElementById("disclaimer").textContent =
+    S.LEGAL.iir + " Котировки индикативны. Пример расчёта иллюстративный, без учёта комиссий и налогов. Продукт доступен только квалифицированным инвесторам.";
+
+  // --- Калькулятор выплаты (математика — в data/lib.js S.calc, общая с доской) ---
+  function calcInner(inst) {
+    const nom0 = inst.minNom || 1000000;
+    const atPar = S.isAtPar(inst);   // вход по номиналу, не по премии (общий предикат в lib.js)
+    const price0 = atPar ? nom0 : Math.round(nom0 * inst.quote / 100), cfg = S.calc.move(inst);
+    const bk = S.basketOf(inst);
+    const slider = cfg ? '<div class="calc-row"><label class="calc-l">' + S.esc(bk.on ? bk.Nom : inst.underlying) + ': <b id="calc-mv"></b></label>' +
+      '<input class="calc-range" id="calc-move" type="range" min="' + cfg.min + '" max="' + cfg.max + '" value="' + cfg.val + '" step="1" aria-label="Сценарий по базовому активу"></div>' : '';
+    return '<div class="calc-row"><label class="calc-l" for="calc-amt">Сумма вложения, ₽</label>' +
+        '<input class="calc-input" id="calc-amt" type="number" inputmode="numeric" min="0" max="1000000000" step="1000" value="' + price0 + '"></div>' +
+      slider +
+      '<div class="calc-out"><div class="calc-o"><div class="v" id="calc-payout"></div><div class="k">выплата при погашении</div></div>' +
+        '<div class="calc-o"><div class="v" id="calc-net"></div><div class="k">результат</div></div></div>' +
+      '<div class="calc-note" id="calc-note"></div>';
+  }
+  function wireCalc(inst) {
+    const amt = document.getElementById("calc-amt"); if (!amt) return;
+    const move = document.getElementById("calc-move"), mvOut = document.getElementById("calc-mv");
+    const payoutEl = document.getElementById("calc-payout"), netEl = document.getElementById("calc-net"), noteEl = document.getElementById("calc-note");
+    const prot = inst.protectionPct || 100;
+    const MAX_AMT = 1e9;
+    function run() {
+      // Клемп суммы: отрицательное → 0, свыше 1 млрд → 1 млрд, мусор/экспонента → 0.
+      const raw = parseFloat(amt.value);
+      let amount = raw, clampNote = "";
+      if (!isFinite(amount) || amount < 0) { amount = 0; if (raw < 0) clampNote = "Сумма не может быть отрицательной. "; }
+      else if (amount > MAX_AMT) { amount = MAX_AMT; clampNote = "Максимум для расчёта — 1 млрд ₽. "; }
+      const nominal = S.isAtPar(inst) ? amount : (inst.quote ? amount * 100 / inst.quote : 0);
+      const m = move ? +move.value : 0;
+      if (mvOut) mvOut.textContent = (m >= 0 ? "+" : "") + m + "%";
+      const payout = nominal * S.calc.pct(inst, m) / 100, net = payout - amount;
+      if (scrubSet && mode === "payoff") scrubSet(m);
+      payoutEl.textContent = S.fmtInt(Math.round(payout)) + " ₽";
+      netEl.textContent = (net >= 0 ? "+" : "−") + S.fmtInt(Math.round(Math.abs(net))) + " ₽";
+      netEl.style.color = net >= 0 ? "var(--up)" : "var(--loss)";
+      const be = S.calc.breakeven(inst);
+      const bk = S.basketOf(inst), uCalc = bk.on ? bk.gen : inst.underlying;
+      if (inst.type === "warrant") noteEl.textContent = clampNote + "Экспозиция на номинал " + S.fmtInt(Math.round(nominal)) + " ₽ за премию = сумму вложения. Безубыток — при росте " + uCalc + " примерно на +" + S.fmtSmart(be) + "%; ниже — выплата не покрывает премию.";
+      else if (inst.type === "protection") noteEl.textContent = clampNote + "Номинал " + S.fmtInt(Math.round(nominal)) + " ₽. Защита " + prot + "%: при падении возвращается " + prot + "% номинала.";
+      else if (inst.type === "booster") noteEl.textContent = clampNote + "Вложение = номинал " + S.fmtInt(Math.round(nominal)) + " ₽. Рост ×КУ внутри диапазона до потолка; при падении — участие 1:1, как в самом активе.";
+      else if (inst.type === "rcdigital") noteEl.textContent = clampNote + "Вложение = номинал " + S.fmtInt(Math.round(nominal)) + " ₽. Показана выплата за срок. На страйке " + S.fmtSmart(inst.strike || 100) + "% и выше — номинал плюс купон " + S.fmtSmart(S.rcdCoupon(inst)) + "%; ниже страйка купона нет вовсе, а номинал считается по перформансу от страйка.";
+      else if (inst.type === "revconv") noteEl.textContent = clampNote + "Вложение = номинал " + S.fmtInt(Math.round(nominal)) + " ₽. Показана полная выплата за срок — тело плюс купоны, они начисляются независимо от уровня актива. На страйке " + S.fmtSmart(inst.strike || 100) + "% и выше тело возвращается целиком, ниже — по перформансу от страйка.";
+      else if (inst.type === "digital") noteEl.textContent = clampNote + "Экспозиция на номинал " + S.fmtInt(Math.round(nominal)) + " ₽ за премию = сумму вложения. Выплата фиксированная: " + S.fmtSmart(inst.digitalPct || 0) + "% номинала, если " + (bk.on ? bk.nom : inst.underlying) + " на экспирацию не ниже " + S.fmtSmart(inst.strike || 100) + "% начального уровня. Насколько именно актив выше — на выплату не влияет; ниже страйка выплаты нет, премия теряется целиком.";
+      else if (inst.type === "autocall") noteEl.textContent = clampNote + "Вложение = номинал " + S.fmtInt(Math.round(nominal)) + " ₽. Показан возврат ТЕЛА на погашении по худшей бумаге корзины — БЕЗ купонов: они начисляются отдельно на датах наблюдения. Выше " + S.fmtSmart(inst.protectionPct || 65) + "% возвращается весь номинал.";
+      else noteEl.textContent = clampNote + "Номинал " + S.fmtInt(Math.round(nominal)) + " ₽. При погашении — 100% номинала (если нет кредитного события). Доход зафиксирован дисконтом.";
+    }
+    amt.addEventListener("input", run);
+    if (move) move.addEventListener("input", run);
+    run();
+  }
+  if (inst.quote != null) { document.getElementById("calc-mount").innerHTML = calcInner(inst); wireCalc(inst); }
+  else document.getElementById("calc-section").style.display = "none";
+  if (inst.quote != null && S.calc.move(inst) && inst.type !== "discount") {
+    const hint = document.createElement("div");
+    hint.className = "scrub-hint"; hint.id = "scrub-hint";
+    hint.innerHTML = '<svg width="22" height="12" viewBox="0 0 22 12" fill="none" aria-hidden="true"><path d="M6 1 1 6l5 5M16 1l5 5-5 5M1 6h20" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+      (PHONE ? "Ведите пальцем по графику — расчёт на вашу сумму ниже" : "Ведите по графику — выплата пересчитается в калькуляторе");
+    document.getElementById("chart").insertAdjacentElement("afterend", hint);
+    // Телефон: калькулятор переезжает в блок графика — один блок вместо двух
+    if (PHONE) {
+      document.querySelector(".grid .panel").insertBefore(document.getElementById("calc-mount"), document.getElementById("chart-caption"));
+      document.getElementById("calc-section").style.display = "none";
+    }
+  }
+
+  function setMode(m) {
+    mode = m;
+    const tp = document.getElementById("tab-payoff"), tu = document.getElementById("tab-under");
+    tp.className = "tab" + (m === "payoff" ? " active" : ""); tp.setAttribute("aria-selected", m === "payoff");
+    tu.className = "tab" + (m === "under" ? " active" : ""); tu.setAttribute("aria-selected", m === "under");
+    document.getElementById("chart-title").textContent = m === "payoff" ? "Диаграмма выплат" : "Базовый актив — " + inst.underlying;
+    const cap = m === "payoff" ? content.payoffCaption : U.desc + " Динамика за 12 месяцев; данные — демо.";
+    document.getElementById("chart-caption").textContent = cap;
+    // SVG без текстовой альтернативы (WCAG 1.1.1) → контейнер role=img + подпись
+    const chartEl = document.getElementById("chart");
+    chartEl.innerHTML = m === "payoff" ? content.payoff() : chartUnderlying();
+    chartEl.classList.remove("scr");
+    if (m === "payoff") mountScrub(); else scrubSet = null;
+    const sh = document.getElementById("scrub-hint"); if (sh) sh.hidden = !(m === "payoff" && scrubSet);
+    chartEl.setAttribute("role", "img");
+    chartEl.setAttribute("aria-label", (m === "payoff" ? "Диаграмма выплат. " : "График базового актива. ") + cap);
+  }
+  // Вкладки графика: слушатели, а не inline onclick — setMode живёт внутри блока
+  document.getElementById("tab-payoff").addEventListener("click", () => setMode("payoff"));
+  document.getElementById("tab-under").addEventListener("click", () => setMode("under"));
+  if (!U) document.querySelector(".tabs").style.display = "none";
+  setMode("payoff");
+  }
+</script>
+<script src="chat-dw.js?v=1"></script>
+<script src="search.js?v=8"></script>
+<script src="nav-about.js?v=9"></script>
+<script src="qualgate.js?v=6"></script>
+</body>
+</html>
