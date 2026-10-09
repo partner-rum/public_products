@@ -525,14 +525,20 @@
     var SV = null, SVST = 0;            // 0 — не грузили, 1 — грузим, 2 — не вышло, 3 — есть
     function needSv(done) {
       if (SVST === 3) return true;
-      if (!SVST && window.fetch) {
+      if (!SVST && window.fetch && window.Promise) {
         SVST = 1;
-        fetch("live/svodka.json", { cache: "no-cache" })
-          .then(function (r) { if (!r.ok) throw new Error(String(r.status)); return r.json(); })
-          .then(function (d) { SV = d; SVST = 3; }, function () { SVST = 2; })
+        // Вид сводки — общий модуль svview.js (тот же, что у страницы /svodka); грузится вместе с данными
+        var js = window.SvView ? Promise.resolve() : new Promise(function (ok, no) {
+          var sc = document.createElement("script");
+          sc.src = "svview.js?v=1"; sc.onload = ok; sc.onerror = no;
+          document.head.appendChild(sc);
+        });
+        Promise.all([fetch("live/svodka.json", { cache: "no-cache" })
+          .then(function (r) { if (!r.ok) throw new Error(String(r.status)); return r.json(); }), js])
+          .then(function (r) { SV = r[0]; SVST = 3; }, function () { SVST = 2; })
           .then(function () { if (done) done(); });
       }
-      if (!window.fetch) SVST = 2;
+      if (!window.fetch || !window.Promise) SVST = 2;
       return false;
     }
     // Файл доехал: перерисовываем только тело раздела и подпись строки «Рынок» на вводной
@@ -548,20 +554,6 @@
       var mood = SV && SV.mood && SV.mood.label && svAge() < 72 ? "Настроение: " + SV.mood.label.toLowerCase() + " · " : "";
       return mood + (mood ? "обзор утра" : "Обзор утра") + (fresh ? " " + dmy(M.date).slice(0, 5) : "") + ", ставки, идеи";
     }
-    // Время по Москве из строки ISO: сегодня — «09:50», вчера — «вчера 22:56», раньше — «07.10 18:25»
-    function when(iso) {
-      var s = String(iso || ""), dd = s.slice(0, 10), hm = s.slice(11, 16);
-      if (dd === TODAY) return hm;
-      var y = new Date(Date.parse(TODAY) - 864e5).toISOString().slice(0, 10);
-      return (dd === y ? "вчера " : dmy(dd).slice(0, 5) + " ") + hm;
-    }
-    function grp(v, d) { return Number(v).toLocaleString("ru-RU", { minimumFractionDigits: d, maximumFractionDigits: d }); }
-    function pct(v) { var n = Number(v); return isFinite(n) ? (n > 0 ? "+" : n < 0 ? "−" : "") + fq(Math.abs(n)) + "%" : ""; }
-    function moodC(v, bar) { return v < 40 ? "#E0705A" : v < 60 ? (bar ? "rgba(242,243,247,.5)" : "#F2F3F7") : "#55C08A"; }
-    // «12.10.2026» → «12.10» и → «2026-10-12»
-    function ddm(s) { return String(s || "").slice(0, 5); }
-    function isoOf(s) { var m = String(s || "").match(/^(\d{2})\.(\d{2})\.(\d{4})$/); return m ? m[3] + "-" + m[2] + "-" + m[1] : ""; }
-
     // Тикер Мосбиржи → продукты доски на эту бумагу (акции РФ, включая корзины).
     // Число на кнопке совпадает с тем, что откроет «Продукты»: тот же класс и то же имя в поиске
     var TK = null;
@@ -580,94 +572,23 @@
       });
       return TK;
     }
-    function prodLink(x, cls) {
-      return '<a class="' + cls + '" href="board.html?q=' + encodeURIComponent(x.name) + '" data-pq="' + esc(x.name) + '">Продукты на ' + esc(x.name) + " · " + x.n + ARROW + "</a>";
-    }
-
     function svBody() {
       if (!needSv(svDone)) {
         return SVST === 2 ? '<p class="tg-note">Сводка сейчас недоступна. Обзор утра и ставки — в соседних разделах.</p>'
           : '<p class="tg-wait">Загружаю сводку…</p>';
       }
-      var d = SV || {}, age = svAge(), out = "";
-      if (!(age < 72)) return '<p class="tg-note">Сводка временно не обновляется. Обзор утра и ставки — в соседних разделах.</p>';
-      out += '<p class="tg-meta' + (age > 6 ? " tg-old" : "") + '">' + (age > 6 ? "Данные от " : "Обновлено ") + esc(when(d.updated)) + "</p>";
-
-      // Настроение: число, слово, шкала; из чего сложилось — по тапу
-      var m = d.mood;
-      if (m && isFinite(m.score)) {
-        var c = moodC(m.score), sc = Math.max(0, Math.min(100, m.score));
-        out += '<div class="tg-card tg-mood"><span class="tg-rb">Настроение рынка</span>' +
-          '<div class="tg-mv"><b style="color:' + c + '">' + sc + '</b><small>из 100</small><em style="color:' + c + '">' + esc(m.label) + "</em></div>" +
-          '<div class="tg-scale" aria-hidden="true"><i style="left:' + sc + '%"></i></div>' +
-          '<div class="tg-scl" aria-hidden="true"><span>страх</span><span>жадность</span></div>' +
-          '<details class="tg-parts"><summary>Из чего складывается</summary>' + (m.parts || []).map(function (p) {
-            var v = Math.max(0, Math.min(100, Number(p.v) || 0));
-            return '<div class="tg-part"><span class="k">' + esc(p.k) + '</span><span class="bar" aria-hidden="true"><i style="width:' + v + "%;background:" + moodC(v, 1) + '"></i></span><b>' + v + "</b><small>" + esc(p.d) + "</small></div>";
-          }).join("") + "<p>Сводный индекс из пяти частей, пересчитывается автоматически. Это не прогноз и не рекомендация.</p></details></div>";
-      }
-
-      // Три цифры дня
-      var t = d.top || {}, tl = [];
-      function tile(v, k, sub, dir) {
-        var cl = dir > 0 ? " up" : dir < 0 ? " dn" : "";
-        return '<div class="tg-tile"><b>' + v + "</b><span>" + k + '</span><span class="tg-ch' + cl + '">' + sub + "</span></div>";
-      }
-      if (t.imoex && t.imoex.v) tl.push(tile(grp(t.imoex.v, 0), "IMOEX", pct(t.imoex.d) + " за день", Number(t.imoex.d)));
-      if (t.usd && t.usd.v) tl.push(tile(grp(t.usd.v, 2) + " ₽", "доллар", pct(t.usd.d) + " за день", 0));
-      if (t.key && t.key.rate) tl.push(tile(fq(t.key.rate) + "%", "ключевая", t.key.next ? "заседание " + dmy(t.key.next).slice(0, 5) : "", 0));
-      if (tl.length) out += '<div class="tg-tiles tg-t3">' + tl.join("") + "</div>";
-
-      // Мировые индексы (слово Руслана 09.10.2026). Дата — день торгов в Нью-Йорке: пока он
-      // совпадает с московским «сегодня», пишем «за день», иначе — дату закрытия
-      var w = d.world || {}, wl = [];
-      (w.idx || []).forEach(function (x) {
-        if (!x || !x.v) return;
-        var dd = String(x.date || "");
-        wl.push(tile(grp(x.v, 0), esc(x.k), pct(x.d) + (dd === TODAY ? " за день" : dd ? " · " + dmy(dd).slice(0, 5) : ""), Number(x.d)));
+      if (!(svAge() < 72)) return '<p class="tg-note">Сводка временно не обновляется. Обзор утра и ставки — в соседних разделах.</p>';
+      // Отрисовка — svview.js. Отсюда — только то, что есть у главной: переходы к продуктам на бумаги
+      // из новостей и дивидендов. Ни ссылок на посты, ни названий каналов — решение Руслана 09.10.2026
+      return SvView.html(SV, {
+        share: "Картинка и ссылка для клиента",
+        prod: function (tks) {
+          var seen = {};
+          return tks.map(function (k) { return tkMap()[k]; })
+            .filter(function (x) { if (!x || !x.n || seen[x.name]) return false; seen[x.name] = 1; return true; });
+        },
+        divProd: function (t) { return tkMap()[t] || null; }
       });
-      if (wl.length) out += '<div class="tg-tiles tg-t2">' + wl.join("") + "</div>";
-
-      // Карточка дня: картинка со сводкой и ссылка с меткой — сейлзу отправить клиенту
-      out += '<button type="button" class="tg-shr" data-svshare><span class="ic">' + svg("share", 20) + '</span><span class="tx"><b>Поделиться сводкой</b>' +
-        "<small>Картинка и ссылка для клиента</small></span>" + CHEV + "</button>";
-
-      // Главное за сутки: время и заголовок. Ни ссылок на посты, ни названий каналов — решение Руслана 09.10.2026.
-      // Названа бумага, на которую у нас есть продукты, — под новостью переход к ним
-      var news = (d.news || []).filter(function (n) { return n.t; });
-      if (news.length) out += '<h2 class="tg-cap">Главное за сутки</h2><ul class="tg-list tg-news">' + news.map(function (n) {
-        var seen = {}, links = (n.tickers || []).map(function (k) { return tkMap()[k]; })
-          .filter(function (x) { if (!x || !x.n || seen[x.name]) return false; seen[x.name] = 1; return true; })
-          .slice(0, 2).map(function (x) { return prodLink(x, "tg-np"); }).join("");
-        return '<li><div class="tg-nw"><span class="m">' + esc(when(n.time)) +
-          '</span><span class="t">' + esc(n.t) + "</span></div>" + (links ? '<div class="tg-nps">' + links + "</div>" : "") + "</li>";
-      }).join("") + "</ul>";
-
-      // Заголовки мировых деловых СМИ по-английски, пересказанные своими словами. Сборщик молчит
-      // больше суток — список не показываем: вчерашние «главные» новости хуже пустого места
-      var wAge = (Date.now() - Date.parse(w.updated || "")) / 36e5;
-      var wn = wAge < 24 ? (w.news || []).filter(function (n) { return n.t; }) : [];
-      if (wn.length) out += '<h2 class="tg-cap">Global headlines</h2><ul class="tg-list tg-news">' + wn.map(function (n) {
-        return '<li><div class="tg-nw"><span class="m">' + esc(when(n.time)) + '</span><span class="t" lang="en">' + esc(n.t) + "</span></div></li>";
-      }).join("") + "</ul>";
-
-      // Ближайшие дивиденды: факт из календаря отсечек, без оценок
-      var divs = d.divs || [];
-      if (divs.length) out += '<h2 class="tg-cap">Ближайшие дивиденды</h2><ul class="tg-list">' + divs.map(function (v) {
-        var x = tkMap()[v.t], buy = isoOf(v.buy);
-        var sub = "Отсечка " + ddm(v.cut) + ", последний день покупки — " + (buy === TODAY ? "сегодня" : ddm(v.buy));
-        var inner = '<span class="tg-tx"><span class="tg-nm">' + esc(v.n) + '</span><span class="tg-sb">' + esc(sub) + "</span>" +
-          (x && x.n ? '<span class="tg-dp">Продукты на ' + esc(x.name) + " · " + x.n + "</span>" : "") + "</span>" +
-          '<span class="tg-fig"><b>' + grp(v.d, 2) + " ₽</b><small>" + (v.y != null ? fq(v.y) + "% к цене" : "на акцию") + "</small></span>";
-        return "<li>" + (x && x.n ? '<a class="tg-row" href="board.html?q=' + encodeURIComponent(x.name) + '" data-pq="' + esc(x.name) + '">' + inner + "</a>"
-          : '<div class="tg-row">' + inner + "</div>") + "</li>";
-      }).join("") + "</ul>";
-
-      return out + '<p class="tg-note">Источники: ' + esc((d.src || []).join(", ")) + ". Котировки Мосбиржи — с задержкой до 15 минут. " +
-        (wl.length ? "Мировые индексы — CNBC. " : "") +
-        "Новости — заголовки публичных Telegram-каналов" + (wn.length ? " и англоязычных деловых СМИ" : "") +
-        ", отобраны и пересказаны автоматически. " +
-        "Не является индивидуальной инвестиционной рекомендацией.</p>";
     }
 
     // Карточка дня для клиента — модуль svcard.js, общий со страницей /svodka (09.10.2026).

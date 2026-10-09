@@ -25,8 +25,8 @@
   og-теги с картинкой свежих цифр подставляет nginx из /live/og.inc (SSI): ссылка без
   картинки сама разворачивается в Telegram карточкой. Локально (python http.server) SSI
   нет — комментарий-вставка просто остаётся комментарием.
-  Отрисовка повторяет svBody() из tabs.js без переходов к продуктам: правишь вид там —
-  проверь здесь.
+  Отрисовка — общий модуль svview.js (тот же, что во вкладке «Рынок» на главной):
+  правишь вид сводки — правь там.
 -->
 <style>
   :root { --bg:#0B0C10; --card:#14161C; --card2:#1B1E25; --ink:#F2F3F7; --mut:rgba(242,243,247,.64); --faint:rgba(242,243,247,.5);
@@ -45,68 +45,10 @@
   .to:hover { color: var(--ink); }
   main { max-width: 680px; margin: 0 auto; padding: 22px 16px 40px; }
   h1 { margin: 0; font-family: 'Rubik', sans-serif; font-weight: 600; font-size: clamp(30px, 8vw, 40px); line-height: 1.1; letter-spacing: -.01em; }
-  .meta { margin: 8px 0 18px; font-size: 14px; color: var(--mut); }
-  .meta.old { color: #E0A24A; }
-  .card { background: var(--card); border-radius: 18px; padding: 16px 18px; }
-  .rb { display: block; font-size: 12.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--or); }
-  .mv { display: flex; align-items: baseline; gap: 8px; margin-top: 6px; }
-  .mv b { font-family: 'Rubik', sans-serif; font-weight: 600; font-size: 48px; line-height: 1; }
-  .mv small { font-size: 14px; color: var(--mut); }
-  .mv em { margin-left: auto; font-style: normal; font-family: 'Rubik', sans-serif; font-weight: 600; font-size: 22px; }
-  .scale { position: relative; height: 6px; margin: 16px 0 6px; border-radius: 3px; background: linear-gradient(90deg, #E0705A, rgba(242,243,247,.32) 50%, #55C08A); }
-  .scale i { position: absolute; top: 50%; width: 16px; height: 16px; margin: -8px 0 0 -8px; border-radius: 50%; background: var(--ink); border: 3px solid var(--card); }
-  .scl { display: flex; justify-content: space-between; font-size: 12px; color: var(--faint); }
-  details { margin-top: 10px; }
-  summary { display: flex; align-items: center; min-height: 44px; font-size: 14.5px; font-weight: 500; color: var(--or); cursor: pointer; list-style: none; }
-  summary::-webkit-details-marker { display: none; }
-  summary::after { content: ""; width: 7px; height: 7px; margin-left: 8px; border-right: 1.6px solid currentColor; border-bottom: 1.6px solid currentColor; transform: rotate(45deg) translateY(-2px); }
-  details[open] summary::after { transform: rotate(-135deg) translateY(-2px); }
-  .part { display: grid; grid-template-columns: minmax(0, 1fr) 90px 30px; align-items: center; gap: 2px 10px; padding: 8px 0; border-top: 1px solid var(--line); font-size: 14px; }
-  .part .bar2 { height: 6px; border-radius: 3px; background: rgba(255,255,255,.08); overflow: hidden; }
-  .part .bar2 i { display: block; height: 100%; border-radius: 3px; }
-  .part b { text-align: right; font-family: 'JetBrains Mono', monospace; font-weight: 500; }
-  .part small { grid-column: 1 / -1; font-size: 12.5px; color: var(--mut); }
-  details p { margin: 10px 0 0; font-size: 12.5px; color: var(--faint); }
-  .tiles { display: grid; gap: 8px; margin-top: 8px; }
-  .t3 { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 10px; }
-  .t2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .tile { min-width: 0; background: var(--card); border-radius: 14px; padding: 11px 12px 12px; }
-  .tile b { display: block; font-family: 'JetBrains Mono', monospace; font-weight: 500; font-size: 17px; white-space: nowrap; }
-  .tile span { display: block; margin-top: 2px; font-size: 12.5px; color: var(--mut); }
-  .tile .ch { font-size: 12px; color: var(--faint); white-space: nowrap; }
-  .tile .ch.up { color: var(--up); } .tile .ch.dn { color: var(--dn); }
-  .share { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 62px; margin: 14px 0 0; padding: 10px 14px; border: 1px solid rgba(238,125,27,.32); border-radius: 14px; background: rgba(238,125,27,.07); color: var(--ink); font-family: inherit; text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-  .share:hover { background: rgba(238,125,27,.12); }
-  .share .ic { flex: none; width: 38px; height: 38px; display: grid; place-items: center; border-radius: 11px; background: var(--or); color: #0C0A08; }
-  .share .tx { flex: 1; min-width: 0; }
-  .share b { display: block; font-size: 15.5px; font-weight: 600; }
-  .share small { display: block; margin-top: 2px; font-size: 13px; color: var(--mut); }
-  h2 { margin: 30px 0 4px; font-size: 14px; font-weight: 500; color: var(--mut); }
-  .news { margin: 0; padding: 0; list-style: none; }
-  .news li { padding: 10px 0 12px; border-bottom: 1px solid var(--line); }
-  .news li:last-child { border-bottom: 0; }
-  .news .m { display: block; font-size: 12.5px; color: var(--faint); }
-  .news .t { display: block; margin-top: 2px; font-size: 16px; line-height: 1.4; }
-  .divs { margin: 0; padding: 0; list-style: none; }
-  .divs li { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
-  .divs li:last-child { border-bottom: 0; }
-  .divs .tx { flex: 1; min-width: 0; }
-  .divs .nm { display: block; font-weight: 600; }
-  .divs .sb { display: block; margin-top: 2px; font-size: 13.5px; color: var(--mut); }
-  .divs .fig { flex: none; text-align: right; }
-  .divs .fig b { display: block; font-family: 'JetBrains Mono', monospace; font-weight: 500; }
-  .divs .fig small { display: block; font-size: 12px; color: var(--mut); }
-  .note { margin: 26px 0 0; font-size: 12.5px; line-height: 1.5; color: var(--faint); }
   .wait { margin: 30px 0; font-size: 15px; color: var(--mut); }
   .foot { max-width: 680px; margin: 0 auto; padding: 18px 16px 40px; border-top: 1px solid var(--line); font-size: 13.5px; color: var(--mut); }
   .foot a { color: var(--or); }
-  /* 320 px: «85,36 ₽» в 17 px шире плитки на 4 px */
-  @media (max-width: 360px) { .t3 .tile { padding: 10px 9px 11px; } .t3 .tile b { font-size: 15px; } }
-  @media (min-width: 900px) {
-    main { padding-top: 36px; }
-    .mv b { font-size: 56px; }
-    .tile b { font-size: 20px; }
-  }
+  @media (min-width: 900px) { main { padding-top: 36px; } }
 </style>
 </head>
 <body>
@@ -119,83 +61,16 @@
   <div id="sv"><p class="wait">Загружаю сводку…</p></div>
 </main>
 <footer class="foot">Rumberg — эмитент структурных облигаций для квалифицированных инвесторов. <a href="/">Витрина продуктов →</a></footer>
+<script src="svview.js?v=1"></script>
 <script>
 (function () {
   "use strict";
   var box = document.getElementById("sv"), SV = null, LOADED = 0;
-  var TODAY = new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10);
-  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
-  function fq(v) { var n = Math.round(Number(v) * 100) / 100; return String(n).replace(".", ","); }
-  function grp(v, d) { return Number(v).toLocaleString("ru-RU", { minimumFractionDigits: d, maximumFractionDigits: d }); }
-  function pct(v) { var n = Number(v); return isFinite(n) ? (n > 0 ? "+" : n < 0 ? "−" : "") + fq(Math.abs(n)) + "%" : ""; }
-  function dm(iso) { var m = String(iso || "").match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? m[3] + "." + m[2] : String(iso || "").slice(0, 5); }
-  function isoOf(s) { var m = String(s || "").match(/^(\d{2})\.(\d{2})\.(\d{4})$/); return m ? m[3] + "-" + m[2] + "-" + m[1] : ""; }
-  function moodC(v, bar) { return v < 40 ? "#E0705A" : v < 60 ? (bar ? "rgba(242,243,247,.5)" : "#F2F3F7") : "#55C08A"; }
-  function when(iso) {
-    var s = String(iso || ""), dd = s.slice(0, 10), hm = s.slice(11, 16);
-    if (dd === TODAY) return hm;
-    var y = new Date(Date.parse(TODAY) - 864e5).toISOString().slice(0, 10);
-    return (dd === y ? "вчера " : dm(dd) + " ") + hm;
-  }
   function age(iso) { var t = Date.parse(iso || ""); return isFinite(t) ? (Date.now() - t) / 36e5 : Infinity; }
-  function tile(v, k, sub, dir) {
-    return '<div class="tile"><b>' + v + "</b><span>" + k + '</span><span class="ch' + (dir > 0 ? " up" : dir < 0 ? " dn" : "") + '">' + sub + "</span></div>";
-  }
 
   function render() {
-    var d = SV || {}, a = age(d.updated), out = "";
-    if (!(a < 72)) { box.innerHTML = '<p class="wait">Сводка временно не обновляется. Загляните чуть позже.</p>'; return; }
-    out += '<p class="meta' + (a > 6 ? " old" : "") + '">' + (a > 6 ? "Данные от " : "Обновлено ") + esc(when(d.updated)) + " · обновляется каждые 5 минут</p>";
-
-    var m = d.mood;
-    if (m && isFinite(m.score)) {
-      var c = moodC(m.score), sc = Math.max(0, Math.min(100, m.score));
-      out += '<div class="card"><span class="rb">Настроение рынка</span>' +
-        '<div class="mv"><b style="color:' + c + '">' + sc + "</b><small>из 100</small><em style=\"color:" + c + '">' + esc(m.label) + "</em></div>" +
-        '<div class="scale" aria-hidden="true"><i style="left:' + sc + '%"></i></div><div class="scl" aria-hidden="true"><span>страх</span><span>жадность</span></div>' +
-        "<details><summary>Из чего складывается</summary>" + (m.parts || []).map(function (p) {
-          var v = Math.max(0, Math.min(100, Number(p.v) || 0));
-          return '<div class="part"><span>' + esc(p.k) + '</span><span class="bar2" aria-hidden="true"><i style="width:' + v + "%;background:" + moodC(v, 1) + '"></i></span><b>' + v + "</b><small>" + esc(p.d) + "</small></div>";
-        }).join("") + "<p>Сводный индекс из пяти частей, пересчитывается автоматически. Это не прогноз и не рекомендация.</p></details></div>";
-    }
-
-    var t = d.top || {}, tl = [];
-    if (t.imoex && t.imoex.v) tl.push(tile(grp(t.imoex.v, 0), "IMOEX", pct(t.imoex.d) + " за день", Number(t.imoex.d)));
-    if (t.usd && t.usd.v) tl.push(tile(grp(t.usd.v, 2) + " ₽", "доллар", pct(t.usd.d) + " за день", 0));
-    if (t.key && t.key.rate) tl.push(tile(fq(t.key.rate) + "%", "ключевая", t.key.next ? "заседание " + dm(t.key.next) : "", 0));
-    if (tl.length) out += '<div class="tiles t3">' + tl.join("") + "</div>";
-    var w = d.world || {}, wl = [];
-    (w.idx || []).forEach(function (x) {
-      if (!x || !x.v) return;
-      var dd = String(x.date || "");
-      wl.push(tile(grp(x.v, 0), esc(x.k), pct(x.d) + (dd === TODAY ? " за день" : dd ? " · " + dm(dd) : ""), Number(x.d)));
-    });
-    if (wl.length) out += '<div class="tiles t2">' + wl.join("") + "</div>";
-
-    out += '<button type="button" class="share" id="share"><span class="ic"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7.5 8.5 12 4l4.5 4.5"/><path d="M5 13.5v5a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5v-5"/></svg></span>' +
-      '<span class="tx"><b>Поделиться сводкой</b><small>Картинка и ссылка — в мессенджер или почту</small></span></button>';
-
-    var news = (d.news || []).filter(function (n) { return n.t; });
-    if (news.length) out += '<h2>Главное за сутки</h2><ul class="news">' + news.map(function (n) {
-      return '<li><span class="m">' + esc(when(n.time)) + '</span><span class="t">' + esc(n.t) + "</span></li>";
-    }).join("") + "</ul>";
-    var wn = age(w.updated) < 24 ? (w.news || []).filter(function (n) { return n.t; }) : [];
-    if (wn.length) out += '<h2>Global headlines</h2><ul class="news">' + wn.map(function (n) {
-      return '<li><span class="m">' + esc(when(n.time)) + '</span><span class="t" lang="en">' + esc(n.t) + "</span></li>";
-    }).join("") + "</ul>";
-
-    var divs = d.divs || [];
-    if (divs.length) out += '<h2>Ближайшие дивиденды</h2><ul class="divs">' + divs.map(function (v) {
-      var buy = isoOf(v.buy);
-      return '<li><span class="tx"><span class="nm">' + esc(v.n) + '</span><span class="sb">Отсечка ' + esc(String(v.cut || "").slice(0, 5)) +
-        ", последний день покупки — " + (buy === TODAY ? "сегодня" : esc(String(v.buy || "").slice(0, 5))) + "</span></span>" +
-        '<span class="fig"><b>' + grp(v.d, 2) + " ₽</b><small>" + (v.y != null ? fq(v.y) + "% к цене" : "на акцию") + "</small></span></li>";
-    }).join("") + "</ul>";
-
-    out += '<p class="note">Источники: ' + esc((d.src || []).join(", ")) + ". Котировки Мосбиржи — с задержкой до 15 минут. " +
-      (wl.length ? "Мировые индексы — CNBC. " : "") + "Новости — заголовки публичных Telegram-каналов" + (wn.length ? " и англоязычных деловых СМИ" : "") +
-      ", отобраны и пересказаны автоматически. Не является индивидуальной инвестиционной рекомендацией.</p>";
-    box.innerHTML = out;
+    if (!(age((SV || {}).updated) < 72)) { box.innerHTML = '<p class="wait">Сводка временно не обновляется. Загляните чуть позже.</p>'; return; }
+    box.innerHTML = SvView.html(SV, { share: "Картинка и ссылка для мессенджера" });
   }
 
   function load() {
@@ -210,7 +85,7 @@
   document.addEventListener("visibilitychange", function () { if (!document.hidden && Date.now() - LOADED > 5 * 60e3) load(); });
 
   box.addEventListener("click", function (e) {
-    var b = e.target.closest("#share"); if (!b || !SV) return;
+    var b = e.target.closest("[data-svshare]"); if (!b || !SV) return;
     if (window.SvCard) { SvCard.open(SV, b); return; }
     var s = document.createElement("script"); s.src = "svcard.js?v=1";
     s.onload = function () { if (window.SvCard) SvCard.open(SV, b); };
