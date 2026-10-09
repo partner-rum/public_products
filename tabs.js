@@ -617,6 +617,16 @@
       if (t.key && t.key.rate) tl.push(tile(fq(t.key.rate) + "%", "ключевая", t.key.next ? "заседание " + dmy(t.key.next).slice(0, 5) : "", 0));
       if (tl.length) out += '<div class="tg-tiles tg-t3">' + tl.join("") + "</div>";
 
+      // Мировые индексы (слово Руслана 09.10.2026). Дата — день торгов в Нью-Йорке: пока он
+      // совпадает с московским «сегодня», пишем «за день», иначе — дату закрытия
+      var w = d.world || {}, wl = [];
+      (w.idx || []).forEach(function (x) {
+        if (!x || !x.v) return;
+        var dd = String(x.date || "");
+        wl.push(tile(grp(x.v, 0), esc(x.k), pct(x.d) + (dd === TODAY ? " за день" : dd ? " · " + dmy(dd).slice(0, 5) : ""), Number(x.d)));
+      });
+      if (wl.length) out += '<div class="tg-tiles tg-t2">' + wl.join("") + "</div>";
+
       // Главное за сутки: время и заголовок. Ни ссылок на посты, ни названий каналов — решение Руслана 09.10.2026.
       // Названа бумага, на которую у нас есть продукты, — под новостью переход к ним
       var news = (d.news || []).filter(function (n) { return n.t; });
@@ -626,6 +636,14 @@
           .slice(0, 2).map(function (x) { return prodLink(x, "tg-np"); }).join("");
         return '<li><div class="tg-nw"><span class="m">' + esc(when(n.time)) +
           '</span><span class="t">' + esc(n.t) + "</span></div>" + (links ? '<div class="tg-nps">' + links + "</div>" : "") + "</li>";
+      }).join("") + "</ul>";
+
+      // Заголовки мировых деловых СМИ по-английски, пересказанные своими словами. Сборщик молчит
+      // больше суток — список не показываем: вчерашние «главные» новости хуже пустого места
+      var wAge = (Date.now() - Date.parse(w.updated || "")) / 36e5;
+      var wn = wAge < 24 ? (w.news || []).filter(function (n) { return n.t; }) : [];
+      if (wn.length) out += '<h2 class="tg-cap">Global headlines</h2><ul class="tg-list tg-news">' + wn.map(function (n) {
+        return '<li><div class="tg-nw"><span class="m">' + esc(when(n.time)) + '</span><span class="t" lang="en">' + esc(n.t) + "</span></div></li>";
       }).join("") + "</ul>";
 
       // Ближайшие дивиденды: факт из календаря отсечек, без оценок
@@ -641,7 +659,9 @@
       }).join("") + "</ul>";
 
       return out + '<p class="tg-note">Источники: ' + esc((d.src || []).join(", ")) + ". Котировки Мосбиржи — с задержкой до 15 минут. " +
-        "Новости — заголовки публичных Telegram-каналов, отобраны автоматически. " +
+        (wl.length ? "Мировые индексы — CNBC. " : "") +
+        "Новости — заголовки публичных Telegram-каналов" + (wn.length ? " и англоязычных деловых СМИ" : "") +
+        ", отобраны и пересказаны автоматически. " +
         "Не является индивидуальной инвестиционной рекомендацией.</p>";
     }
 
