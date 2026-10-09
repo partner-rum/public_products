@@ -77,7 +77,8 @@
       help: '<circle cx="12" cy="12" r="8"/><path d="M9.8 9.5a2.3 2.3 0 1 1 3.2 2.1c-.6.3-1 .8-1 1.5v.4M12 16.8v.2"/>',
       tg: '<path d="m20 5-16 6.2 5 1.8 1.8 5.5 2.8-3.2 4.4 3.2z"/><path d="m9 13 7-5"/>',
       home: '<path d="M4 11 12 4.5l8 6.5"/><path d="M6.5 9.5v10h11v-10"/><path d="M10 19.5v-5h4v5"/>',
-      sliders: '<path d="M5 7h9M18 7h1M5 17h3M12 17h7"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>'
+      sliders: '<path d="M5 7h9M18 7h1M5 17h3M12 17h7"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>',
+      share: '<path d="M12 4v11M7.5 8.5 12 4l4.5 4.5"/><path d="M5 13.5v5a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5v-5"/>'
     };
     // Фирменная звезда — залитая, для плитки AI в центре нижней панели
     var STAR_FILL = '<svg viewBox="0 0 26 26" width="19" height="19" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="currentColor"/></svg>';
@@ -627,6 +628,10 @@
       });
       if (wl.length) out += '<div class="tg-tiles tg-t2">' + wl.join("") + "</div>";
 
+      // Карточка дня: картинка со сводкой и ссылка с меткой — сейлзу отправить клиенту
+      out += '<button type="button" class="tg-shr" data-svshare><span class="ic">' + svg("share", 20) + '</span><span class="tx"><b>Поделиться сводкой</b>' +
+        "<small>Картинка и ссылка для клиента</small></span>" + CHEV + "</button>";
+
       // Главное за сутки: время и заголовок. Ни ссылок на посты, ни названий каналов — решение Руслана 09.10.2026.
       // Названа бумага, на которую у нас есть продукты, — под новостью переход к ним
       var news = (d.news || []).filter(function (n) { return n.t; });
@@ -663,6 +668,292 @@
         "Новости — заголовки публичных Telegram-каналов" + (wn.length ? " и англоязычных деловых СМИ" : "") +
         ", отобраны и пересказаны автоматически. " +
         "Не является индивидуальной инвестиционной рекомендацией.</p>";
+    }
+
+    // ── Карточка дня для клиента (09.10.2026, Руслан: «покажи локально» на идею «Карточка дня») ──
+    // Повод: после MarketTwits пришло 366 новых людей, а сами вернулись трое — у человека нет
+    // повода зайти снова. Карточка даёт сейлзу этот повод каждый день: картинка со сводкой
+    // (настроение, IMOEX, доллар, ключевая, S&P 500, Nasdaq, три заголовка, продукт дня) и
+    // ссылка с его меткой ?ref= — переход клиента по ней подписан его именем.
+    // Картинка рисуется прямо в телефоне из той же сводки, что на экране; на сервер ничего не
+    // уходит. Ширина 1080, высота — по содержимому (заголовки бывают в две и три строки).
+    // Отправка — системное «Поделиться» с файлом; нет его — картинка сохраняется файлом.
+    var CARD = null;   // { url, file, link, text } — собранная карточка, пока открыт лист
+    var MONTHS = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"];
+    function goal(name) { if (window.ym) try { ym(110759242, "reachGoal", name); } catch (e) {} }
+    // Метка: партнёр, вошедший в рабочий стол, — его метка; иначе та, с которой пришли на сайт
+    function refLabel() {
+      try {
+        var v = localStorage.getItem("so_me") || localStorage.getItem("so_ref");
+        return v && /^[\w.-]{1,40}$/.test(v) ? v.toLowerCase() : "";
+      } catch (e) { return ""; }
+    }
+    // Ссылка ведёт сразу в «Рынок» (вкладка открывается по якорю), метка — перед якорем
+    function cardLink(ref) { return "https://invest.rumberg.ru/" + (ref ? "?ref=" + encodeURIComponent(ref) : "") + "#mkt"; }
+
+    function cardData() {
+      var d = SV || {}, t = d.top || {}, w = d.world || {}, s = String(d.updated || "");
+      var row1 = [], row2 = [];
+      if (t.imoex && t.imoex.v) row1.push({ v: grp(t.imoex.v, 0), k: "IMOEX", s: pct(t.imoex.d) + " за день", dir: Number(t.imoex.d) });
+      if (t.usd && t.usd.v) row1.push({ v: grp(t.usd.v, 2) + " ₽", k: "Доллар", s: pct(t.usd.d) + " за день", dir: 0 });
+      if (t.key && t.key.rate) row1.push({ v: fq(t.key.rate) + "%", k: "Ключевая ставка", s: t.key.next ? "заседание " + dmy(t.key.next).slice(0, 5) : "", dir: 0 });
+      (w.idx || []).forEach(function (x) {
+        if (!x || !x.v) return;
+        var dd = String(x.date || "");
+        row2.push({ v: grp(x.v, 0), k: x.k, s: pct(x.d) + (dd === TODAY ? " за день" : dd ? " · " + dmy(dd).slice(0, 5) : ""), dir: Number(x.d) });
+      });
+      var prod = null, M = window.MORNING || {};
+      if (daysAgo(M.date) === 0) {
+        var r = BY[(M.products || [])[0]];
+        if (r) { var f = figure(r), p = pname(r); prod = { head: p.head, rest: p.rest, v: f.v, n: f.n }; }
+      }
+      return {
+        when: /^\d{4}-\d\d-\d\dT\d\d:\d\d/.test(s) ? Number(s.slice(8, 10)) + " " + MONTHS[Number(s.slice(5, 7)) - 1] + " · данные на " + s.slice(11, 16) + " МСК" : "",
+        mood: d.mood && isFinite(d.mood.score) ? d.mood : null,
+        row1: row1, row2: row2,
+        news: (d.news || []).filter(function (n) { return n.t; }).slice(0, 3),
+        prod: prod,
+        src: (d.src || []).join(", ")
+      };
+    }
+
+    // Рисуем в два прохода: первый только считает высоту, второй рисует на холсте этой высоты
+    function paintCard(cv, D) {
+      var W = 1080, P = 72, IN = W - 2 * P;
+      var INK = "#F2F3F7", MUT = "rgba(242,243,247,.64)", FAINT = "rgba(242,243,247,.44)", OR = "#EE7D1B", CARDC = "#14161C", LINE = "rgba(255,255,255,.10)";
+      var R = "'Rubik', sans-serif", O = "'Onest', sans-serif", MO = "'JetBrains Mono', monospace";
+      var c = cv.getContext("2d");
+      function pass(draw) {
+        var y = 0;
+        function font(w, s, f) { c.font = w + " " + s + "px " + f; }
+        function txt(s, x, yy, col, al) { if (!draw) return; c.fillStyle = col; c.textAlign = al || "left"; c.fillText(s, x, yy); }
+        function box(x, yy, w, h, r, col) {
+          if (!draw) return;
+          c.fillStyle = col; c.beginPath(); c.moveTo(x + r, yy);
+          c.arcTo(x + w, yy, x + w, yy + h, r); c.arcTo(x + w, yy + h, x, yy + h, r);
+          c.arcTo(x, yy + h, x, yy, r); c.arcTo(x, yy, x + w, yy, r); c.closePath(); c.fill();
+        }
+        function star(cx, cy, s, col) {
+          if (!draw) return;
+          var k = s / 26, pts = [[13, 1], [15.6, 10.4], [25, 13], [15.6, 15.6], [13, 25], [10.4, 15.6], [1, 13], [10.4, 10.4]];
+          c.fillStyle = col; c.beginPath();
+          pts.forEach(function (p, i) { var px = cx + (p[0] - 13) * k, py = cy + (p[1] - 13) * k; if (i) c.lineTo(px, py); else c.moveTo(px, py); });
+          c.closePath(); c.fill();
+        }
+        function hr(yy) { if (!draw) return; c.fillStyle = LINE; c.fillRect(P, yy, IN, 2); }
+        // Перенос по словам; не влезло в maxL строк — последняя строка с многоточием
+        function wrap(s, maxW, maxL) {
+          var words = String(s).split(/\s+/), lines = [], cur = "";
+          words.forEach(function (wd) {
+            var t = cur ? cur + " " + wd : wd;
+            if (c.measureText(t).width <= maxW || !cur) cur = t; else { lines.push(cur); cur = wd; }
+          });
+          if (cur) lines.push(cur);
+          if (lines.length > maxL) {
+            lines = lines.slice(0, maxL);
+            var last = lines[maxL - 1];
+            while (last && c.measureText(last + "…").width > maxW) last = last.replace(/\s*\S+$/, "");
+            lines[maxL - 1] = (last || lines[maxL - 1]) + "…";
+          }
+          return lines;
+        }
+        // Число не влезает в плитку — уменьшаем кегль, а не обрезаем
+        function fit(s, w, size, f, maxW) { var z = size; font(w, z, f); while (z > 24 && c.measureText(s).width > maxW) { z -= 2; font(w, z, f); } return z; }
+
+        if (draw) {
+          c.fillStyle = "#0B0C10"; c.fillRect(0, 0, W, cv.height);
+          var g = c.createRadialGradient(W * 0.86, 40, 0, W * 0.86, 40, 760);
+          g.addColorStop(0, "rgba(238,125,27,.20)"); g.addColorStop(1, "rgba(238,125,27,0)");
+          c.fillStyle = g; c.fillRect(0, 0, W, 900);
+        }
+        c.textBaseline = "alphabetic";
+
+        // Шапка: звезда и Rumberg, справа адрес витрины
+        y = 108;
+        star(P + 19, y - 15, 38, OR);
+        font(600, 42, R); txt("Rumberg", P + 52, y, INK);
+        font(400, 27, MO); txt("invest.rumberg.ru", W - P, y - 2, MUT, "right");
+
+        // Заголовок и время данных
+        y += 122; font(600, 88, R); txt("Сводка рынка", P, y, INK);
+        if (D.when) { y += 56; font(400, 32, O); txt(D.when, P, y, MUT); }
+
+        // Настроение: число, слово, шкала страх — жадность
+        if (D.mood) {
+          var m = D.mood, sc = Math.max(0, Math.min(100, Number(m.score))), col = moodC(sc);
+          y += 44; var top = y, h = 270;
+          box(P, top, IN, h, 32, CARDC);
+          font(600, 25, O); txt("НАСТРОЕНИЕ РЫНКА", P + 40, top + 62, OR);
+          font(600, 124, R); txt(String(Math.round(sc)), P + 36, top + 172, col);
+          var nw = draw ? c.measureText(String(Math.round(sc))).width : 0;
+          font(400, 32, O); txt("из 100", P + 36 + nw + 18, top + 172, MUT);
+          font(600, 52, R); txt(String(m.label || ""), W - P - 40, top + 166, col, "right");
+          var bx = P + 40, bw = IN - 80, by = top + 198;
+          if (draw) {
+            var gb = c.createLinearGradient(bx, 0, bx + bw, 0);
+            gb.addColorStop(0, "#E0705A"); gb.addColorStop(0.5, "rgba(242,243,247,.34)"); gb.addColorStop(1, "#55C08A");
+            c.fillStyle = gb; box(bx, by, bw, 12, 6, gb);
+            var mx = bx + bw * sc / 100;
+            c.fillStyle = "#0B0C10"; c.beginPath(); c.arc(mx, by + 6, 19, 0, Math.PI * 2); c.fill();
+            c.fillStyle = INK; c.beginPath(); c.arc(mx, by + 6, 14, 0, Math.PI * 2); c.fill();
+          }
+          font(400, 25, O); txt("страх", bx, top + h - 24, FAINT); txt("жадность", bx + bw, top + h - 24, FAINT, "right");
+          y = top + h;
+        }
+
+        // Плитки: Россия в ряд по три, мир — по две
+        function tiles(row) {
+          if (!row.length) return;
+          var gap = 16, n = row.length, tw = (IN - gap * (n - 1)) / n, th = 148;
+          y += 18;
+          row.forEach(function (t, i) {
+            var x = P + i * (tw + gap);
+            box(x, y, tw, th, 26, CARDC);
+            fit(t.v, 500, 44, MO, tw - 56);
+            txt(t.v, x + 28, y + 60, INK);
+            font(400, 26, O); txt(t.k, x + 28, y + 97, MUT);
+            if (t.s) { font(500, 26, O); txt(t.s, x + 28, y + 128, t.dir > 0 ? "#55C08A" : t.dir < 0 ? "#E0705A" : MUT); }
+          });
+          y += th;
+        }
+        tiles(D.row1); tiles(D.row2);
+
+        // Главное за сутки — три заголовка, каждый до трёх строк
+        if (D.news.length) {
+          y += 72; font(600, 40, R); txt("Главное за сутки", P, y, INK);
+          y += 16;
+          D.news.forEach(function (n, i) {
+            if (i) { y += 24; hr(y); }
+            y += 48; font(500, 25, MO); txt(when(n.time), P, y, FAINT);
+            font(500, 34, O);
+            wrap(n.t, IN, 2).forEach(function (ln) { y += 46; txt(ln, P, y, INK); });
+          });
+        }
+
+        // Продукт дня из утреннего обзора — цифра с меткой и «индикативно»
+        if (D.prod) {
+          y += 48; var pt = y, rw = 250, lw = IN - 80 - rw - 20;
+          font(600, 34, R); var hl = wrap(D.prod.head, lw, 2);
+          font(400, 28, O); var rl = D.prod.rest ? wrap(D.prod.rest, lw, 1) : [];
+          var ph = Math.max(82 + hl.length * 44 + rl.length * 38 + 30, 200);
+          box(P, pt, IN, ph, 28, CARDC);
+          if (draw) { c.fillStyle = OR; c.fillRect(P, pt + 28, 6, ph - 56); }
+          font(600, 24, O); txt("НА ВИТРИНЕ СЕГОДНЯ", P + 40, pt + 56, OR);
+          var yy = pt + 56;
+          font(600, 34, R); hl.forEach(function (ln) { yy += 44; txt(ln, P + 40, yy, INK); });
+          font(400, 28, O); rl.forEach(function (ln) { yy += 38; txt(ln, P + 40, yy, MUT); });
+          fit(D.prod.v, 600, 64, R, rw); txt(D.prod.v, W - P - 40, pt + 106, OR, "right");
+          font(400, 25, O);
+          if (D.prod.n) txt(D.prod.n, W - P - 40, pt + 144, MUT, "right");
+          txt("индикативно", W - P - 40, pt + (D.prod.n ? 178 : 144), FAINT, "right");
+          y = pt + ph;
+        }
+
+        // Подвал: куда идти и оговорки
+        y += 52; hr(y);
+        y += 78; font(600, 46, R); txt("invest.rumberg.ru", P, y, OR);
+        font(400, 26, O); txt("обновляется каждые 5 минут", W - P, y - 4, MUT, "right");
+        font(400, 22, O);
+        var legal = (D.src ? "Данные: " + D.src + ". " : "") + "Заголовки отобраны и пересказаны автоматически. Котировки индикативные. " +
+          "Не является индивидуальной инвестиционной рекомендацией.";
+        y += 22;
+        wrap(legal, IN, 4).forEach(function (ln) { y += 32; txt(ln, P, y, FAINT); });
+        return y + 60;
+      }
+      cv.width = W; cv.height = 2400;
+      var Hh = Math.ceil(pass(false));
+      cv.height = Hh; pass(true);
+    }
+
+    function fontsReady() {
+      if (!document.fonts || !document.fonts.load) return Promise.resolve();
+      var all = Promise.all([
+        document.fonts.load("600 88px Rubik", "Сводка рынка Rumberg 0123456789"),
+        document.fonts.load("400 32px Onest", "Главное за сутки invest.rumberg.ru 0123456789"),
+        document.fonts.load("500 36px Onest", "Сбербанк Nasdaq S&P −+%"),
+        document.fonts.load("500 46px 'JetBrains Mono'", "0123456789 ₽%,.:")
+      ]).catch(function () {});
+      return Promise.race([all, new Promise(function (r) { setTimeout(r, 2500); })]);
+    }
+
+    function openCard() {
+      if (document.getElementById("tg-svcard") || !SV) return;
+      var ref = refLabel(), link = cardLink(ref), short = "invest.rumberg.ru" + (ref ? "/?ref=" + ref : "");
+      var el = document.createElement("div");
+      el.className = "tg-qz"; el.id = "tg-svcard";
+      el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", "Сводка для клиента");
+      el.innerHTML = '<div class="tg-qz-in"><div class="tg-qz-top"><button type="button" class="tg-qz-b" data-sc="close" aria-label="Закрыть">' +
+        '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 3l10 10M13 3 3 13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>' +
+        '</button><span class="tg-qz-n">Сводка для клиента</span></div>' +
+        '<div class="tg-scp" id="tg-scp"><span class="w">Рисую карточку…</span></div>' +
+        '<p class="tg-sclk">Ссылка: <b>' + esc(short) + "</b>" + (ref ? " — переходы по ней подписаны вашей меткой" : " — без метки: переходы не будут подписаны вашим именем") + ".</p>" +
+        '<button type="button" class="tg-qz-go" data-sc="send" disabled>Отправить</button>' +
+        '<button type="button" class="tg-scc" data-sc="copy">Скопировать ссылку</button>' +
+        '<p class="tg-scs" id="tg-scs" role="status" aria-live="polite"></p>' +
+        '<p class="tg-qz-legal">Картинка рисуется в телефоне из сводки на эту минуту, ссылка уходит вместе с ней. Можно и удержать картинку пальцем, чтобы сохранить.</p></div>';
+      el.addEventListener("click", cardClick);
+      document.getElementById("tg-app").appendChild(el);
+      document.documentElement.classList.add("tg-sc-on");
+      hist({ tg: S.cur, d: H.d + 1, from: S.cur, sc: 1 });
+      goal("svodka_card_open");
+      var D = cardData();
+      CARD = { link: link, text: "Сводка рынка" + (D.when ? " на " + D.when.split(" · ")[0] : "") + " — настроение, индексы и главное за сутки. Обновляется каждые 5 минут: " + link };
+      fontsReady().then(function () {
+        if (!document.getElementById("tg-svcard")) return;
+        var cv = document.createElement("canvas");
+        paintCard(cv, D);
+        cv.toBlob(function (b) {
+          if (!b || !document.getElementById("tg-svcard")) return;
+          var name = "rumberg-svodka-" + TODAY + ".png";
+          CARD.url = URL.createObjectURL(b);
+          try { CARD.file = new File([b], name, { type: "image/png" }); } catch (e) { CARD.file = null; }
+          CARD.name = name;
+          var box = document.getElementById("tg-scp");
+          box.innerHTML = '<img src="' + CARD.url + '" alt="Сводка рынка Rumberg на сегодня">';
+          var send = el.querySelector('[data-sc="send"]');
+          var canFile = !!(CARD.file && navigator.canShare && navigator.canShare({ files: [CARD.file] }));
+          send.textContent = canFile ? "Отправить" : "Сохранить картинку";
+          send.disabled = false;
+        }, "image/png");
+      });
+    }
+    function closeCard(viaHistory) {
+      var el = document.getElementById("tg-svcard"); if (el) el.remove();
+      document.documentElement.classList.remove("tg-sc-on");
+      if (CARD && CARD.url) URL.revokeObjectURL(CARD.url);
+      var was = !!CARD; CARD = null;
+      if (was && !viaHistory && (history.state || {}).sc) history.back();
+    }
+    function cardSay(s) { var n = document.getElementById("tg-scs"); if (n) n.textContent = s; }
+    function cardSave() {
+      var a = document.createElement("a");
+      a.href = CARD.url; a.download = CARD.name; document.body.appendChild(a); a.click(); a.remove();
+      cardSay("Картинка сохранена — ссылку скопируйте кнопкой ниже");
+    }
+    function cardCopy() {
+      var t = CARD.link;
+      function ok() { cardSay("Ссылка скопирована"); goal("svodka_card_copy"); }
+      function manual() {
+        var n = document.getElementById("tg-scs");
+        if (n) { n.textContent = ""; var i = document.createElement("input"); i.value = t; i.readOnly = true; i.className = "tg-scu"; n.appendChild(i); i.select(); }
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(t).then(ok, function () { legacy() ? ok() : manual(); });
+      else if (legacy()) ok(); else manual();
+      function legacy() {
+        try { var i = document.createElement("textarea"); i.value = t; i.style.position = "fixed"; i.style.opacity = "0"; document.body.appendChild(i); i.select(); var r = document.execCommand("copy"); i.remove(); return r; } catch (e) { return false; }
+      }
+    }
+    function cardClick(e) {
+      var b = e.target.closest("[data-sc]"); if (!b || !CARD) return;
+      var a = b.getAttribute("data-sc");
+      if (a === "close") { closeCard(false); return; }
+      if (a === "copy") { cardCopy(); return; }
+      if (a === "send" && CARD.url) {
+        if (CARD.file && navigator.canShare && navigator.canShare({ files: [CARD.file] })) {
+          navigator.share({ files: [CARD.file], text: CARD.text }).then(function () { goal("svodka_card_send"); cardSay("Отправлено"); },
+            function (err) { if (!err || err.name !== "AbortError") cardSave(); });
+        } else { cardSave(); goal("svodka_card_save"); }
+      }
     }
 
     function mktBody() {
@@ -922,6 +1213,7 @@
     window.addEventListener("popstate", function (e) {
       var st = e.state;
       if (QZ && !(st && st.qz)) closeQuiz(true);           // «назад» из опроса — закрыть опрос
+      if (CARD && !(st && st.sc)) closeCard(true);         // «назад» из карточки дня — закрыть её
       if (!st || !st.tg || !VIEWS[st.tg]) return;          // чужие записи (истории stories.js) — не наши
       if (!st.ai && aiOn && window.Chat && Chat.close) { aiOn = false; Chat.close(); tabs(); }
       if (st.ai && !aiOn && window.Chat && Chat.open) { aiOn = true; Chat.open(); tabs(); }
@@ -931,6 +1223,7 @@
     app.addEventListener("click", function (e) {
       if (e.target.closest("[data-tgback]")) { back(); return; }
       if (e.target.closest("[data-quiz]")) { e.preventDefault(); openQuiz(); return; }
+      if (e.target.closest("[data-svshare]")) { e.preventDefault(); openCard(); return; }
       if (e.target.closest("[data-unpick]")) { e.preventDefault(); S.prod.pick = null; render(true); save(); return; }
       // Продукты на бумагу из сводки: открываем «Продукты» с поиском по ней
       var pq = e.target.closest("[data-pq]");
@@ -946,7 +1239,7 @@
     });
     nav.addEventListener("click", function (e) { var b = e.target.closest("button[data-t]"); if (b) go(b.getAttribute("data-t")); });
     window.addEventListener("pagehide", save);
-    document.addEventListener("keydown", function (e) { if (e.key === "Escape" && QZ) closeQuiz(false); });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape" && QZ) closeQuiz(false); if (e.key === "Escape" && CARD) closeCard(false); });
 
     // Закрыли ассистента крестиком — подсветка возвращается к разделу
     function watchChat() {
