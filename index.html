@@ -1061,6 +1061,31 @@
     .rt-r3 { font-size: 13px; line-height: 1.4; color: var(--tg-faint); }
     .rt-pn { margin: 6px 0 4px; font-size: 13.5px; line-height: 1.5; color: var(--tg-faint); }
     /* <<< rt */
+    /* >>> sv */
+    /* Сводка в том же приёме (12.10.2026): новости и дивиденды — карточками, «все» — читалкой */
+    .sv .sv-h { margin-top: 26px; }
+    .sn-tabs { margin-top: 6px; }
+    .sn-tabs em { margin-left: 6px; font-style: normal; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--tg-faint); }
+    .sn-cd { padding-top: 4px; }
+    .sn-cd .sv-news > li { padding: 11px 0 12px; }
+    .sn-cl { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+    .sd-dates { margin-top: 8px; }
+    .sd-car { margin-top: 10px; align-items: start; }
+    .sd-cd { padding-top: 4px; padding-bottom: 6px; }
+    .sd-cd .sv-dg { margin-top: 10px; }
+    .sn-full .sv-nt { font-size: 17px; line-height: 1.45; }
+    .sn-full > li { padding: 14px 0 15px; }
+    .sm-parts { margin-top: 16px; border-radius: 16px; background: var(--tg-card); padding: 4px 14px; }
+    .sm-p { padding: 12px 0; border-bottom: 1px solid var(--tg-line); }
+    .sm-p:last-child { border-bottom: 0; }
+    .sm-pt { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+    .sm-pt b { font-size: 16px; font-weight: 600; }
+    .sm-pt em { font-style: normal; font-family: 'JetBrains Mono', monospace; font-size: 15px; color: var(--tg-ink); }
+    .sm-pb { display: block; height: 6px; margin-top: 8px; border-radius: 3px; background: var(--tg-card2); overflow: hidden; }
+    .sm-pb i { display: block; height: 100%; border-radius: 3px; }
+    .sm-p p { margin: 8px 0 0; font-size: 14px; line-height: 1.45; color: var(--tg-mut); }
+    .am-rd .sv-mood { margin-top: 4px; }
+    /* <<< sv */
     /* Сводка рынка (вкладка «Рынок») — вид и стили в svview.js, общем со страницей /svodka */
     .tg-grp { margin: 8px 0 16px; border-radius: 14px; background: var(--tg-card); overflow: hidden; }
     .tg-grp a { display: flex; align-items: center; gap: 12px; min-height: 50px; padding-left: 12px; }
@@ -2486,7 +2511,7 @@
   else setTimeout(start, 1200);
 })();
 </script>
-<script src="tabs.js?v=18"></script>
+<script src="tabs.js?v=19"></script>
 <script src="ptr.js?v=2" defer></script>
 </body>
 

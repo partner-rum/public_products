@@ -542,7 +542,7 @@
         // Вид сводки — общий модуль svview.js (тот же, что у страницы /svodka); грузится вместе с данными
         var js = window.SvView ? Promise.resolve() : new Promise(function (ok, no) {
           var sc = document.createElement("script");
-          sc.src = "svview.js?v=3"; sc.onload = ok; sc.onerror = no;
+          sc.src = "svview.js?v=4"; sc.onload = ok; sc.onerror = no;
           document.head.appendChild(sc);
         });
         Promise.all([fetch("live/svodka.json", { cache: "no-cache" })
@@ -705,7 +705,7 @@
       }).join("") + "</div>";
     }
     // Позиция каждой карусели (Утро — am, идеи дайджеста — id, разборы — rv) и открытая читалка
-    var AM_DAY = null, AM_WHY = false, RD = null, CAR = { am: 0, id: 0, rv: 0 };
+    var AM_DAY = null, AM_WHY = false, RD = null, CAR = { am: 0, id: 0, rv: 0, rt: 0, sn: 0, sd: 0 };
     var CHEV_D = '<svg class="am-cv" width="14" height="9" viewBox="0 0 14 9" fill="none" aria-hidden="true"><path d="M1.5 1.5 7 7l5.5-5.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
     function amCur() {
       var all = amIssues(), k = 0;
@@ -776,7 +776,7 @@
       var car = e.target, k = car && car.getAttribute && car.getAttribute("data-car");
       if (!k) return;
       var i = Math.round(car.scrollLeft / carStep(car));
-      if (i !== CAR[k] && i >= 0 && i < car.children.length) { CAR[k] = i; if (k === "am") amTabs(); else if (k === "rt") rtTabs(); }
+      if (i !== CAR[k] && i >= 0 && i < car.children.length) { CAR[k] = i; if (k === "am") amTabs(); else if (k === "rt") rtTabs(); else if (k === "sn" || k === "sd") svTabs(k); }
     }, { capture: true, passive: true });
     function amTo(i) {
       var car = document.getElementById("am-car"); if (!car) return;
@@ -798,11 +798,11 @@
     // Читалка: во весь экран, тема за темой (Утро) или идея за идеей (Идеи). Запись в истории —
     // «назад» её закрывает
     function openRd(k, i) {
-      if (RD || (k === "am" ? !amCur().cur : k === "id" ? !idCur().list.length : !rtPool().length)) return;
+      if (RD || (k === "am" ? !amCur().cur : k === "id" ? !idCur().list.length : k === "rt" ? !rtPool().length : !SV)) return;
       RD = { k: k, i: i };
       var el = document.createElement("div");
       el.className = "tg-qz am-rd"; el.id = "am-rd";
-      el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", k === "am" ? "Разбор утреннего обзора" : k === "id" ? "Идея недели" : "Ставки на срок");
+      el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", k === "am" ? "Разбор утреннего обзора" : k === "id" ? "Идея недели" : k === "rt" ? "Ставки на срок" : "Сводка рынка");
       el.addEventListener("click", rdClick);
       document.getElementById("tg-app").appendChild(el);
       document.documentElement.classList.add("tg-qz-on");
@@ -820,6 +820,7 @@
       var el = document.getElementById("am-rd");
       if (el && RD && RD.k === "id") { idRd(el); return; }
       if (el && RD && RD.k === "rt") { rtRd(el); return; }
+      if (el && RD && (RD.k === "sn" || RD.k === "sm")) { svRd(el); return; }
       var o = amCur();
       if (!el || !RD || !o.cur) return;
       var items = o.cur.items, n = items.length, i = Math.min(RD.i, n - 1), it = items[i];
@@ -1082,7 +1083,7 @@
     function carTo(k, i) {
       var car = document.querySelector('[data-car="' + k + '"]'); if (!car) return;
       CAR[k] = i;
-      if (k === "am") amTabs(); else if (k === "rt") rtTabs();
+      if (k === "am") amTabs(); else if (k === "rt") rtTabs(); else if (k === "sn" || k === "sd") svTabs(k);
       var x = i * carStep(car);
       if (car.scrollTo) car.scrollTo({ left: x, behavior: "smooth" }); else car.scrollLeft = x;
     }
@@ -1175,9 +1176,136 @@
       el.scrollTop = 0;
     }
     // <<< rt
+    // >>> sv
+    // ── Сводка в том же приёме (12.10.2026, Руслан: «покажи как будет выглядеть сводка») ──
+    // Сверху как было — настроение спидометром, плитки котировок, ключевая (svview.js, общий со
+    // страницей /svodka). Ниже то, что раньше шло сплошным списком: новости — вкладками
+    // «Россия · Мир» над карточками (в карточке три главных заголовка, «Все новости» — читалка
+    // со всеми и переходами к продуктам), дивиденды — карточками по дням со строкой дат.
+    // «Из чего складывается» — тоже читалкой. Страница /svodka остаётся прежней
+    function svLists() {
+      var w = SV.world || {}, wt = Date.parse(w.updated || "");
+      var ru = (SV.news || []).filter(function (n) { return n.t; });
+      var en = isFinite(wt) && Date.now() - wt < 24 * 36e5 ? (w.news || []).filter(function (n) { return n.t; }) : [];
+      var out = [];
+      if (ru.length) out.push({ k: "Россия", t: "Главное за сутки — Россия", items: ru, en: false });
+      if (en.length) out.push({ k: "Мир", t: "Главное за сутки — мир", items: en, en: true });
+      return out;
+    }
+    function svProd(tks) {
+      var seen = {};
+      return (tks || []).map(function (k) { return tkMap()[k]; })
+        .filter(function (x) { if (!x || !x.n || seen[x.name]) return false; seen[x.name] = 1; return true; });
+    }
+    function svItem(n, en, full) {
+      var tk = en ? [] : (n.tickers || []).slice(0, 2);
+      var links = full && !en ? svProd(n.tickers).slice(0, 2).map(function (x) {
+        return '<a class="sv-np" href="board.html?q=' + encodeURIComponent(x.name) + '" data-pq="' + esc(x.name) + '">Продукты на ' + esc(x.name) + " · " + x.n + ARROW + "</a>";
+      }).join("") : "";
+      return '<li><div class="sv-nm"><span>' + esc(SvView.part.when(n.time)) + "</span>" + tk.map(function (t) { return '<span class="sv-tkc">' + esc(t) + "</span>"; }).join("") +
+        '</div><p class="sv-nt' + (full ? "" : " sn-cl") + '"' + (en ? ' lang="en"' : "") + ">" + esc(n.t) + "</p>" + (links ? "<div>" + links + "</div>" : "") + "</li>";
+    }
+    function svDivGroups() {
+      var groups = [], by = {};
+      (SV.divs || []).forEach(function (v) {
+        var k = String(v.buy || "") + "|" + String(v.cut || "");
+        if (!by[k]) { by[k] = { buy: String(v.buy || "").replace(/^(\d{2})\.(\d{2})\.(\d{4})$/, "$3-$2-$1"), cut: String(v.cut || "").replace(/^(\d{2})\.(\d{2})\.(\d{4})$/, "$3-$2-$1"), rows: [] }; groups.push(by[k]); }
+        by[k].rows.push(v);
+      });
+      return groups;
+    }
+    function svTabs(k) {
+      var sel = k === "sn" ? ".sn-tabs [data-snto]" : ".sd-dates [data-sdto]";
+      [].forEach.call(document.querySelectorAll(sel), function (b) {
+        var on = +b.getAttribute(k === "sn" ? "data-snto" : "data-sdto") === CAR[k];
+        b.setAttribute(k === "sn" ? "aria-selected" : "aria-pressed", on);
+        if (on && k === "sd" && b.parentNode.scrollTo) b.parentNode.scrollTo({ left: Math.max(0, b.offsetLeft - 40), behavior: "smooth" });
+      });
+    }
+    function svBody2() {
+      if (!needSv(svDone)) {
+        return SVST === 2 ? '<p class="tg-note">Сводка сейчас недоступна. Обзор утра и ставки — в соседних разделах.</p>'
+          : '<p class="tg-wait">Загружаю сводку…</p>';
+      }
+      if (!(svAge() < 72)) return '<p class="tg-note">Сводка временно не обновляется. Обзор утра и ставки — в соседних разделах.</p>';
+      var P = SvView.part;
+      P.inject();
+      var out = '<div class="sv am">' + P.meta(SV) + P.mood(SV.mood, true) + P.quotes(SV) +
+        '<button type="button" class="sv-shr" data-svshare><span class="sv-ic">' + P.SHARE + '</span><span class="sv-tx"><b>Поделиться сводкой</b><small>Картинка и ссылка для клиента</small></span>' + CHEV + "</button>";
+      // Новости: вкладки «Россия · Мир», карточка — три главных, остальное в читалке
+      var L = svLists();
+      if (L.length) {
+        if (CAR.sn >= L.length) CAR.sn = 0;
+        out += '<h2 class="sv-h">Главное за сутки</h2>';
+        if (L.length > 1) out += '<div class="am-tabs sn-tabs" role="tablist" aria-label="Чьи новости">' + L.map(function (l, i) {
+          return '<button type="button" role="tab" data-snto="' + i + '" aria-selected="' + (i === CAR.sn) + '">' + l.k + "<em>" + l.items.length + "</em></button>";
+        }).join("") + "</div>";
+        out += '<div class="am-car sn-car" id="sn-car" data-car="sn">' + L.map(function (l, i) {
+          return '<article class="am-cd sn-cd"><ul class="sv-news">' + l.items.slice(0, 3).map(function (n) { return svItem(n, l.en, false); }).join("") + "</ul>" +
+            '<div class="am-ft"><button type="button" class="am-more" data-snrd="' + i + '">Все новости<small>' + l.items.length + "</small>" + ARROW + "</button></div></article>";
+        }).join("") + "</div>";
+      }
+      // Дивиденды: строка дат и карточки по дням
+      var G = svDivGroups();
+      if (G.length) {
+        if (CAR.sd >= G.length) CAR.sd = 0;
+        out += '<h2 class="sv-h">Дивиденды</h2><p class="sv-hs">Ближайшие отсечки по календарю</p>';
+        out += '<div class="am-dates sd-dates" role="group" aria-label="Последний день покупки">' + G.map(function (g, i) {
+          var d = isoDate(g.buy);
+          return '<button type="button" data-sdto="' + i + '" aria-pressed="' + (i === CAR.sd) + '"><small>' + (g.buy === TODAY ? "сегодня" : d ? WDS[d.getDay()] : "") + "</small><b>" + (d ? d.getDate() : "") + "</b></button>";
+        }).join("") + "</div>";
+        out += '<div class="am-car sd-car" id="sd-car" data-car="sd">' + G.map(function (g) {
+          var b = isoDate(g.buy), c = isoDate(g.cut);
+          var head = g.buy === TODAY ? '<b class="sv-now">Последний день покупки — сегодня</b>'
+            : g.buy < TODAY ? "<b>Последний день покупки прошёл, " + esc(dmy(g.buy).slice(0, 5)) + "</b>"
+            : "<b>Последний день покупки — " + (b ? WDS[b.getDay()] + ", " + b.getDate() + " " + MONG[b.getMonth()] : esc(g.buy)) + "</b>";
+          return '<article class="am-cd sd-cd"><div class="sv-dg">' + head + "<span>отсечка " + (c ? WDS[c.getDay()] + ", " + c.getDate() + " " + MONG[c.getMonth()] : "") + "</span></div>" +
+            '<ul class="sv-divs">' + g.rows.map(function (v) {
+              var x = tkMap()[v.t];
+              var inner = '<span class="sv-dn">' + esc(v.n) + (x && x.n ? "<small>Продукты на " + esc(x.name) + " · " + x.n + "</small>" : "") + "</span>" +
+                '<span class="sv-df"><b>' + P.grp(v.d, 2) + " ₽</b><small>" + (v.y != null ? fq(v.y) + "% к цене" : "на акцию") + "</small></span>";
+              return "<li>" + (x && x.n ? '<a class="sv-dr" href="board.html?q=' + encodeURIComponent(x.name) + '" data-pq="' + esc(x.name) + '">' + inner + "</a>" : '<div class="sv-dr">' + inner + "</div>") + "</li>";
+            }).join("") + "</ul></article>";
+        }).join("") + "</div>";
+      }
+      out += '<p class="sv-note">Не является индивидуальной инвестиционной рекомендацией. Котировки Мосбиржи — с задержкой до 15 минут. Заголовки отобраны и пересказаны автоматически.</p>';
+      if (window.requestAnimationFrame) requestAnimationFrame(function () { carPlace(); svTabs("sd"); });
+      return out + "</div>";
+    }
+    // Читалки сводки: «Все новости» (sn) и «Из чего складывается» (sm)
+    function svRd(el) {
+      var top = '<div class="tg-qz-top"><button type="button" class="tg-qz-b" data-rd="close" aria-label="Закрыть">' +
+        '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 3l10 10M13 3 3 13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>';
+      if (RD.k === "sm") {
+        var m = SV.mood || {};
+        el.innerHTML = '<div class="tg-qz-in sv">' + top + '<span class="tg-qz-n">Сводка</span></div>' +
+          '<div class="tg-qz-body am-rdb"><h2 class="am-rh">Настроение рынка</h2>' + SvView.part.mood(m, "big") +
+          '<div class="sm-parts">' + (m.parts || []).map(function (p) {
+            var v = Math.max(0, Math.min(100, Number(p.v) || 0)), c = v < 40 ? "#E0705A" : v < 60 ? "rgba(242,243,247,.5)" : "#55C08A";
+            return '<div class="sm-p"><div class="sm-pt"><b>' + esc(p.k) + "</b><em>" + v + '</em></div><span class="sm-pb" aria-hidden="true"><i style="width:' + v + "%;background:" + c + '"></i></span><p>' + esc(p.d) + "</p></div>";
+          }).join("") + "</div>" +
+          '<p class="rt-pn">Сводный индекс из пяти частей: тон новостей 30%, импульс IMOEX 25%, ширина рынка 20%, волатильность 15%, облигации 10%. Пересчитывается автоматически каждые пять минут. Это не прогноз и не рекомендация.</p>' +
+          '<button type="button" class="am-nx am-nx-end" data-rd="close"><b>К сводке</b>' + ARROW + "</button></div></div>";
+        el.scrollTop = 0;
+        return;
+      }
+      var L = svLists(), n = L.length;
+      if (!n) { closeRd(false); return; }
+      var i = Math.min(RD.i, n - 1); RD.i = i;
+      var l = L[i], nx = L[i + 1];
+      var bar = L.map(function (x, j) { return "<i" + (j <= i ? ' class="on"' : "") + "></i>"; }).join("");
+      el.innerHTML = '<div class="tg-qz-in sv">' + top + '<span class="tg-qz-n">' + esc(l.k) + " · " + l.items.length + " " + plural(l.items.length, "новость", "новости", "новостей") + "</span>" +
+        (i > 0 ? '<button type="button" class="am-pv" data-rd="prev">' + CHEV_L + "<span>" + esc(L[i - 1].k) + "</span></button>" : "") + "</div>" +
+        (n > 1 ? '<div class="tg-qz-bar" aria-hidden="true">' + bar + "</div>" : "") +
+        '<div class="tg-qz-body am-rdb"><h2 class="am-rh">' + esc(l.t) + '</h2><ul class="sv-news sn-full">' + l.items.map(function (x) { return svItem(x, l.en, true); }).join("") + "</ul>" +
+        (nx ? '<button type="button" class="am-nx" data-rd="next"><small>Дальше</small><b>' + esc(nx.t) + "</b>" + ARROW + "</button>"
+          : '<button type="button" class="am-nx am-nx-end" data-rd="close"><b>К сводке</b>' + ARROW + "</button>") + "</div></div>";
+      el.scrollTop = 0;
+    }
+    // <<< sv
     function mktBody() {
       var body = "";
-      if (S.mkt.seg === "sum") body = svBody();
+      if (S.mkt.seg === "sum") body = svBody2();
       else if (S.mkt.seg === "morning") body = amBody();
       else if (S.mkt.seg === "rates") body = rtBody();
       else body = idBody();
@@ -1435,6 +1563,14 @@
       if (rtm) { RT_SUM = +rtm.getAttribute("data-rtsum"); try { sessionStorage.setItem("so_rt_sum", RT_SUM); } catch (er) {} rtDone(); return; }
       var ptp = e.target.closest("[data-pt]");
       if (ptp) { e.preventDefault(); S.prod.type = ptp.getAttribute("data-pt"); S.prod.cls = "all"; S.prod.q = ""; S.prod.pick = null; S.y.prod = 0; go("prod"); return; }
+      // Сводка: вкладка новостей, «Все новости», «Из чего складывается», день дивидендов
+      var snt = e.target.closest("[data-snto]");
+      if (snt) { carTo("sn", +snt.getAttribute("data-snto")); return; }
+      var snr = e.target.closest("[data-snrd]");
+      if (snr) { openRd("sn", +snr.getAttribute("data-snrd")); return; }
+      if (e.target.closest("[data-smrd]")) { openRd("sm", 0); return; }
+      var sdt = e.target.closest("[data-sdto]");
+      if (sdt) { carTo("sd", +sdt.getAttribute("data-sdto")); return; }
       var amd = e.target.closest("[data-amday]");
       if (amd) { AM_DAY = amd.getAttribute("data-amday") || null; CAR.am = 0; amDone(); return; }
       var amw = e.target.closest("[data-amwhy]");

@@ -35,6 +35,7 @@
     ".sv-gl small { display: block; margin-top: 4px; font-size: 13.5px; line-height: 1.35; color: var(--sv-faint); }",
     /* Из чего складывается */
     ".sv-parts { margin-top: 2px; }",
+    ".sv-pbtn { display: flex; align-items: center; gap: 6px; min-height: 44px; margin-top: 2px; padding: 0; border: 0; background: none; color: var(--sv-or); font: inherit; font-size: 14px; font-weight: 500; cursor: pointer; -webkit-tap-highlight-color: transparent; }",
     ".sv-parts summary { display: flex; align-items: center; gap: 6px; min-height: 44px; font-size: 14px; font-weight: 500; color: var(--sv-or); cursor: pointer; list-style: none; -webkit-tap-highlight-color: transparent; }",
     ".sv-parts summary::-webkit-details-marker { display: none; }",
     ".sv-parts summary::after { content: ''; width: 7px; height: 7px; margin-top: -3px; border: solid currentColor; border-width: 0 1.8px 1.8px 0; transform: rotate(45deg); transition: transform .2s; }",
@@ -176,7 +177,9 @@
     return '<p class="sv-meta"><b>' + esc(day) + "</b> · обновлено в " + esc(s.slice(11, 16)) + "</p>";
   }
 
-  function mood(m) {
+  // btn: true — «Из чего складывается» кнопкой (вкладка «Рынок» открывает читалку), "big" — без
+  // него (сама читалка), иначе — раскрывающийся блок, как на странице /svodka
+  function mood(m, btn) {
     if (!(m && isFinite(m.score))) return "";
     var c = moodC(m.score), sc = Math.max(0, Math.min(100, Math.round(m.score)));
     // Спидометр: дуга от «страха» к «жадности», метка на значении, число в центре
@@ -187,7 +190,10 @@
         '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="8" fill="#F2F3F7" stroke="#14161C" stroke-width="3"/>' +
         '<text x="74" y="76" text-anchor="middle" font-size="34" fill="' + c + '">' + sc + "</text></svg>" +
         '<div class="sv-gl"><em style="color:' + c + '">' + esc(m.label) + "</em><small>" + sc + " из 100 — от страха к жадности</small></div></div>";
-    return '<section class="sv-card sv-mood" aria-label="Настроение рынка: ' + sc + " из 100, " + esc(m.label) + '"><span class="sv-rb">Настроение рынка</span>' + top +
+    var head = '<section class="sv-card sv-mood" aria-label="Настроение рынка: ' + sc + " из 100, " + esc(m.label) + '"><span class="sv-rb">Настроение рынка</span>' + top;
+    if (btn === "big") return head + "</section>";
+    if (btn) return head + '<button type="button" class="sv-pbtn" data-smrd>Из чего складывается' + ARROW + "</button></section>";
+    return head +
       '<details class="sv-parts"><summary>Из чего складывается</summary>' + (m.parts || []).map(function (p) {
         var v = Math.max(0, Math.min(100, Number(p.v) || 0));
         return '<div class="sv-part"><span>' + esc(p.k) + '</span><span class="sv-pb" aria-hidden="true"><i style="width:' + v + "%;background:" + moodC(v, 1) + '"></i></span><b>' + v + "</b><small>" + esc(p.d) + "</small></div>";
@@ -300,6 +306,6 @@
     try { sessionStorage.setItem("so_sv_nw", k); } catch (er) {}
   });
 
-  window.SvView = { html: html };
+  window.SvView = { html: html, part: { meta: meta, mood: mood, quotes: quotes, when: when, grp: grp, inject: inject, SHARE: SHARE } };
 
 })();
