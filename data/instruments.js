@@ -1312,7 +1312,7 @@ window.SITE_DATA = {
       "strike": 100,
       "spot": 100,
       "tenor": "2 года",
-      "quote": 15.5,
+      "quote": 16.5,
       "chg": 0,
       "minNom": 1000000,
       "src": "sales"
