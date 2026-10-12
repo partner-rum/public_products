@@ -149,7 +149,7 @@
   }
   function age(iso) { var t = Date.parse(iso || ""); return isFinite(t) ? (Date.now() - t) / 36e5 : Infinity; }
   function pill(v, flat) {
-    var n = Number(v);
+    var n = v == null || v === "" ? NaN : Number(v);
     if (!isFinite(n)) return "";
     return '<i class="sv-pl' + (flat ? "" : n > 0 ? " up" : n < 0 ? " dn" : "") + '">' + pct(n) + "</i>";
   }

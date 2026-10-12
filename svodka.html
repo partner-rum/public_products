@@ -61,7 +61,7 @@
   <div id="sv"><p class="wait">Загружаю сводку…</p></div>
 </main>
 <footer class="foot">Rumberg — эмитент структурных облигаций для квалифицированных инвесторов. <a href="/">Витрина продуктов →</a></footer>
-<script src="svview.js?v=2"></script>
+<script src="svview.js?v=3"></script>
 <script>
 (function () {
   "use strict";
@@ -87,7 +87,7 @@
   box.addEventListener("click", function (e) {
     var b = e.target.closest("[data-svshare]"); if (!b || !SV) return;
     if (window.SvCard) { SvCard.open(SV, b); return; }
-    var s = document.createElement("script"); s.src = "svcard.js?v=1";
+    var s = document.createElement("script"); s.src = "svcard.js?v=2";
     s.onload = function () { if (window.SvCard) SvCard.open(SV, b); };
     document.head.appendChild(s);
   });

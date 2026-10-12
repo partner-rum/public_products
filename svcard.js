@@ -59,8 +59,8 @@
   function cardData(sv) {
     var d = sv || {}, t = d.top || {}, w = d.world || {}, s = String(d.updated || "");
     var row1 = [], row2 = [];
-    if (t.imoex && t.imoex.v) row1.push({ v: grp(t.imoex.v, 0), k: "IMOEX", s: pct(t.imoex.d) + " за день", dir: Number(t.imoex.d) });
-    if (t.usd && t.usd.v) row1.push({ v: grp(t.usd.v, 2) + " ₽", k: "Доллар", s: pct(t.usd.d) + " за день", dir: 0 });
+    if (t.imoex && t.imoex.v) row1.push({ v: grp(t.imoex.v, 0), k: "IMOEX", s: t.imoex.d != null ? pct(t.imoex.d) + " за день" : "", dir: Number(t.imoex.d) });
+    if (t.usd && t.usd.v) row1.push({ v: grp(t.usd.v, 2) + " ₽", k: "Доллар", s: t.usd.d != null ? pct(t.usd.d) + " за день" : "", dir: 0 });
     if (t.key && t.key.rate) row1.push({ v: fq(t.key.rate) + "%", k: "Ключевая ставка", s: t.key.next ? "заседание " + dm(t.key.next) : "", dir: 0 });
     (w.idx || []).forEach(function (x) {
       if (!x || !x.v) return;

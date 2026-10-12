@@ -523,19 +523,31 @@
     // целиком и целей брокеров в файле нет намеренно: витрина эмитента не даёт
     // рекомендаций по чужим бумагам. Новости — заголовок одной фразой и время, без канала и ссылок
     var SV = null, SVST = 0;            // 0 — не грузили, 1 — грузим, 2 — не вышло, 3 — есть
+    // Сводка на сервере пересобирается раз в 5 минут. Главную держат открытой часами, и раньше вкладка
+    // показывала ту, что загрузилась при открытии (12.10.2026: «почему imoex старый?»). Теперь старше
+    // пяти минут — тихо перезагружаем, на экране остаётся прежняя, пока новая не придёт
+    var SVT = 0, SVRE = false, SV_TTL = 5 * 60e3;
+    function svRefresh(done) {
+      if (SVRE || !window.fetch || Date.now() - SVT < SV_TTL) return;
+      SVRE = true;
+      fetch("live/svodka.json", { cache: "no-cache" })
+        .then(function (r) { if (!r.ok) throw new Error(String(r.status)); return r.json(); })
+        .then(function (d) { SV = d; SVT = Date.now(); if (done) done(); }, function () { SVT = Date.now() - SV_TTL + 60e3; })
+        .then(function () { SVRE = false; });
+    }
     function needSv(done) {
-      if (SVST === 3) return true;
+      if (SVST === 3) { svRefresh(done); return true; }
       if (!SVST && window.fetch && window.Promise) {
         SVST = 1;
         // Вид сводки — общий модуль svview.js (тот же, что у страницы /svodka); грузится вместе с данными
         var js = window.SvView ? Promise.resolve() : new Promise(function (ok, no) {
           var sc = document.createElement("script");
-          sc.src = "svview.js?v=2"; sc.onload = ok; sc.onerror = no;
+          sc.src = "svview.js?v=3"; sc.onload = ok; sc.onerror = no;
           document.head.appendChild(sc);
         });
         Promise.all([fetch("live/svodka.json", { cache: "no-cache" })
           .then(function (r) { if (!r.ok) throw new Error(String(r.status)); return r.json(); }), js])
-          .then(function (r) { SV = r[0]; SVST = 3; }, function () { SVST = 2; })
+          .then(function (r) { SV = r[0]; SVST = 3; SVT = Date.now(); }, function () { SVST = 2; })
           .then(function () { if (done) done(); });
       }
       if (!window.fetch || !window.Promise) SVST = 2;
@@ -544,10 +556,19 @@
     // Файл доехал: перерисовываем только тело раздела и подпись строки «Рынок» на вводной
     function svDone() {
       var b = S.cur === "mkt" && S.mkt.seg === "sum" && document.getElementById("tg-mbody");
-      if (b) b.innerHTML = mktBody();
+      if (b) {
+        // раскрытое «Из чего складывается» после перерисовки остаётся раскрытым
+        var open = !!b.querySelector("details.sv-parts[open]");
+        b.innerHTML = mktBody();
+        var det = open && b.querySelector("details.sv-parts");
+        if (det) det.open = true;
+      }
       var sub = S.cur === "home" && app.querySelector('a[data-go="mkt"] small');
       if (sub) sub.textContent = mktSub();
     }
+    function svWatch() { if (!document.hidden && S.cur === "mkt" && S.mkt.seg === "sum" && SVST === 3) svRefresh(svDone); }
+    setInterval(svWatch, 60e3);
+    document.addEventListener("visibilitychange", svWatch);
     function svAge() { var t = Date.parse((SV || {}).updated || ""); return isFinite(t) ? (Date.now() - t) / 36e5 : Infinity; }
     function mktSub() {
       var M = window.MORNING || {}, fresh = daysAgo(M.date) <= 3;
@@ -597,7 +618,7 @@
       if (!SV) return;
       if (window.SvCard) { SvCard.open(SV, btn); return; }
       var sc = document.createElement("script");
-      sc.src = "svcard.js?v=1";
+      sc.src = "svcard.js?v=2";
       sc.onload = function () { if (window.SvCard) SvCard.open(SV, btn); };
       document.head.appendChild(sc);
     }
