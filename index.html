@@ -1012,6 +1012,55 @@
     .am-rdb > .am-tks { margin-top: 22px; }
     .id-dg { margin: 16px 0 0; font-size: 14.5px; }
     /* <<< id */
+    /* >>> rt */
+    /* Ставки (12.10.2026): сроки вкладками и карточками вбок, сумма — доход в рублях */
+    .rt-marks { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+    .rt-marks div { min-width: 0; padding: 10px 12px; border-radius: 14px; background: var(--tg-card); }
+    .rt-marks b { display: block; font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 500; line-height: 1.2; }
+    .rt-marks span { display: block; margin-top: 3px; font-size: 12px; line-height: 1.3; color: var(--tg-faint); }
+    .rt-sum { display: flex; align-items: center; gap: 6px; margin: 14px -16px 0; padding: 0 16px; overflow-x: auto; scrollbar-width: none; }
+    .rt-sum::-webkit-scrollbar { display: none; }
+    .rt-sum span { flex: none; margin-right: 4px; font-size: 13px; color: var(--tg-faint); }
+    .rt-sum button { position: relative; flex: none; height: 36px; padding: 0 13px; border-radius: 18px; border: 1px solid var(--tg-line); background: none; color: var(--tg-mut); font: inherit; font-size: 14px; cursor: pointer; }
+    .rt-sum button::before { content: ""; position: absolute; inset: -4px 0; }
+    .rt-sum button[aria-pressed="true"] { background: var(--tg-ink); border-color: var(--tg-ink); color: #0B0C10; font-weight: 500; }
+    .rt-tabs { gap: 18px; margin-left: -16px; margin-right: -16px; padding: 0 16px; overflow-x: auto; scrollbar-width: none; border-bottom: 0; box-shadow: inset 0 -1px 0 var(--tg-line); }
+    .rt-tabs::-webkit-scrollbar { display: none; }
+    .rt-tabs button { flex: none; white-space: nowrap; }
+    .rt-best { display: block; margin-top: 10px; color: var(--tg-ink); }
+    .rt-best > b { font-family: 'Rubik', sans-serif; font-size: 40px; font-weight: 600; line-height: 1.05; color: #55C08A; letter-spacing: -.01em; }
+    .rt-best > span { display: block; margin-top: 6px; font-size: 15px; line-height: 1.4; color: var(--tg-mut); }
+    .rt-best strong { color: var(--tg-ink); font-weight: 600; }
+    .rt-inc { display: block; margin-top: 8px; font-style: normal; font-size: 14px; color: var(--tg-faint); }
+    .rt-inc b { font-family: 'JetBrains Mono', monospace; font-weight: 500; color: #9ADDBB; }
+    .rt-fl { display: inline-block; margin-left: 8px; padding: 2px 7px; border-radius: 8px; background: rgba(238,125,27,.15); color: #FFC894; font-size: 11.5px; font-weight: 500; vertical-align: 6px; }
+    .rt-fv { background: rgba(79,134,230,.16); color: #AFC9F6; }
+    .rt-mini { list-style: none; margin: 12px 0 0; padding: 0; border-top: 1px solid var(--tg-line); }
+    .rt-mini a { display: flex; align-items: baseline; gap: 10px; min-height: 40px; padding: 9px 0; border-bottom: 1px solid var(--tg-line); color: var(--tg-ink); }
+    .rt-mini b { flex: none; width: 58px; font-family: 'JetBrains Mono', monospace; font-size: 14.5px; font-weight: 500; color: #9ADDBB; }
+    .rt-mini span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 14px; color: var(--tg-mut); }
+    .tg-app a.am-more { color: #0C0A08; text-decoration: none; }
+    .rt-ourcd .am-h { margin-bottom: 6px; }
+    .rt-our { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 8px 0; border-bottom: 1px solid var(--tg-line); color: var(--tg-ink); }
+    .rt-our span { flex: 1; min-width: 0; }
+    .rt-our b { display: block; font-size: 15.5px; font-weight: 600; }
+    .rt-our small { display: block; margin-top: 2px; font-size: 13px; line-height: 1.35; color: var(--tg-mut); }
+    .rt-our em { flex: none; font-style: normal; font-size: 13.5px; color: var(--tg-faint); text-align: right; }
+    .rt-ourcd .id-sub { margin-bottom: 6px; }
+    /* Читалка срока */
+    .rt-sum-rd { margin-top: -4px; margin-bottom: 8px; }
+    .rt-rows { display: flex; flex-direction: column; }
+    .rt-row { display: flex; flex-direction: column; gap: 3px; padding: 13px 0; border-bottom: 1px solid var(--tg-line); color: var(--tg-ink); }
+    .rt-r1 { display: flex; align-items: baseline; gap: 2px; }
+    .rt-r1 b { font-family: 'JetBrains Mono', monospace; font-size: 19px; font-weight: 500; color: #9ADDBB; }
+    .rt-top .rt-r1 b { color: #55C08A; font-size: 22px; }
+    .rt-r1 .rt-fl { vertical-align: 2px; }
+    .rt-r1 em { margin-left: auto; font-style: normal; font-family: 'JetBrains Mono', monospace; font-size: 13.5px; color: var(--tg-mut); white-space: nowrap; }
+    .rt-r2 { font-size: 15.5px; line-height: 1.4; color: var(--tg-mut); }
+    .rt-r2 strong { color: var(--tg-ink); font-weight: 600; }
+    .rt-r3 { font-size: 13px; line-height: 1.4; color: var(--tg-faint); }
+    .rt-pn { margin: 6px 0 4px; font-size: 13.5px; line-height: 1.5; color: var(--tg-faint); }
+    /* <<< rt */
     /* Сводка рынка (вкладка «Рынок») — вид и стили в svview.js, общем со страницей /svodka */
     .tg-grp { margin: 8px 0 16px; border-radius: 14px; background: var(--tg-card); overflow: hidden; }
     .tg-grp a { display: flex; align-items: center; gap: 12px; min-height: 50px; padding-left: 12px; }
@@ -2437,7 +2486,7 @@
   else setTimeout(start, 1200);
 })();
 </script>
-<script src="tabs.js?v=17"></script>
+<script src="tabs.js?v=18"></script>
 <script src="ptr.js?v=2" defer></script>
 </body>
 

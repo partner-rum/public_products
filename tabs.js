@@ -776,7 +776,7 @@
       var car = e.target, k = car && car.getAttribute && car.getAttribute("data-car");
       if (!k) return;
       var i = Math.round(car.scrollLeft / carStep(car));
-      if (i !== CAR[k] && i >= 0 && i < car.children.length) { CAR[k] = i; if (k === "am") amTabs(); }
+      if (i !== CAR[k] && i >= 0 && i < car.children.length) { CAR[k] = i; if (k === "am") amTabs(); else if (k === "rt") rtTabs(); }
     }, { capture: true, passive: true });
     function amTo(i) {
       var car = document.getElementById("am-car"); if (!car) return;
@@ -798,11 +798,11 @@
     // Читалка: во весь экран, тема за темой (Утро) или идея за идеей (Идеи). Запись в истории —
     // «назад» её закрывает
     function openRd(k, i) {
-      if (RD || (k === "am" ? !amCur().cur : !idCur().list.length)) return;
+      if (RD || (k === "am" ? !amCur().cur : k === "id" ? !idCur().list.length : !rtPool().length)) return;
       RD = { k: k, i: i };
       var el = document.createElement("div");
       el.className = "tg-qz am-rd"; el.id = "am-rd";
-      el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", k === "am" ? "Разбор утреннего обзора" : "Идея недели");
+      el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", k === "am" ? "Разбор утреннего обзора" : k === "id" ? "Идея недели" : "Ставки на срок");
       el.addEventListener("click", rdClick);
       document.getElementById("tg-app").appendChild(el);
       document.documentElement.classList.add("tg-qz-on");
@@ -819,6 +819,7 @@
     function rdRender() {
       var el = document.getElementById("am-rd");
       if (el && RD && RD.k === "id") { idRd(el); return; }
+      if (el && RD && RD.k === "rt") { rtRd(el); return; }
       var o = amCur();
       if (!el || !RD || !o.cur) return;
       var items = o.cur.items, n = items.length, i = Math.min(RD.i, n - 1), it = items[i];
@@ -852,7 +853,8 @@
       if (v === "close") closeRd(false);
       else if (v === "next") { RD.i++; rdRender(); }
       else if (v === "tolist") closeRd(false);
-      else if (v === "tolist") closeRd(false);
+      else if (v.indexOf("sum:") === 0) { RT_SUM = +v.slice(4); try { sessionStorage.setItem("so_rt_sum", RT_SUM); } catch (er) {} rtDone(); }
+      else if (v === "our") { closeRd(false); carTo("rt", RT_B.length); }
       else if (v === "prev") { RD.i = Math.max(0, RD.i - 1); rdRender(); }
       else if (v === "prod") {
         closeRd(false);
@@ -1011,20 +1013,174 @@
       el.scrollTop = 0;
     }
     // <<< id
+    // >>> rt
+    // ── Ставки (12.10.2026, Руслан: «теперь сделаем так же „Ставки“ в рынке») ──
+    // Тот же приём, что у «Утра» и «Идей»: сроки вкладками и карточками вбок (лестница
+    // страницы «Лучшие ставки»: любой день / до 3 / 3–6 / 6–12 месяцев), в карточке — лучшая
+    // ставка крупно и ещё пара предложений; «Все предложения» открывает читалку со всем, что
+    // есть на этот срок; последняя карточка — срок больше года, наши продукты (без процентов:
+    // страница про чужие ставки, наши продукты ими не меряются). Сверху — ориентиры (ключевая,
+    // RUONIA, RUSFAR) и сумма: доход считается в рублях, простыми процентами, как на странице.
+    // Отбор в карточке — тот же, что на screener.html (лучшее каждого типа, одна организация —
+    // один раз, промо — одно и последним): правишь там — сверь здесь
+    var RT_SUMS = [[1e5, "100 тыс"], [5e5, "500 тыс"], [1e6, "1 млн"], [5e6, "5 млн"]];
+    var RT_SUM = 1e6;
+    try { var rts = +sessionStorage.getItem("so_rt_sum"); if (rts > 0) RT_SUM = rts; } catch (e) {}
+    var RT_B = [
+      { k: "Любой день", t: "Снять в любой день", test: function (p) { return p.days <= 1; } },
+      { k: "До 3 мес", t: "До 3 месяцев", test: function (p) { return p.days > 1 && p.days <= 95; } },
+      { k: "3–6 мес", t: "3–6 месяцев", test: function (p) { return p.days > 95 && p.days <= 185; } },
+      { k: "6–12 мес", t: "6–12 месяцев", test: function (p) { return p.days > 185; } }
+    ];
+    var RT_TAG = { dep: "Вклад", sav: "Накопительный счёт", fund: "Фонд денежного рынка", ofz: "ОФЗ" };
+    function rtMoney(v) { return String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g, " ") + " ₽"; }
+    var RTP = null;
+    function rtPool() {
+      if (RTP) return RTP;
+      var R = window.RATES || {}, rows = [];
+      (R.deposits || []).forEach(function (d) {
+        var cond = [];
+        if (d.minAmount >= 1000) cond.push("от " + rtMoney(d.minAmount));
+        if (d.refill) cond.push("пополняемый");
+        if (d.capitalization) cond.push("капитализация");
+        if (d.feature && !(d.floating && /ключев/i.test(d.feature))) cond.push(d.feature);
+        rows.push({ kind: d.kind === "saving" ? "sav" : "dep", prod: d.name, org: d.bank, cond: cond, rate: d.rate,
+          days: d.termMonths > 0 ? Math.round(d.termMonths * 30.44) : 1, term: d.termMonths > 0 ? d.termMonths + " мес" : "",
+          promo: !!d.promo, floating: !!d.floating, url: d.url });
+      });
+      (R.funds || []).forEach(function (f) {
+        rows.push({ kind: "fund", prod: f.name, cond: ["БПИФ " + f.id, "продать можно в любой день"], rate: f.rate, days: 1, term: "",
+          url: "https://www.moex.com/ru/issue.aspx?code=" + f.id });
+      });
+      (R.ofz || []).forEach(function (o) {
+        rows.push({ kind: "ofz", prod: o.name, cond: ["доходность к погашению"], rate: o.rate, days: Math.round(o.years * 365),
+          term: o.years < 1 ? Math.round(o.years * 12) + " мес" : fq(o.years) + " г.", url: "https://www.moex.com/ru/issue.aspx?code=" + o.id });
+      });
+      RTP = rows.filter(function (p) { return p.days <= 370 && isFinite(p.rate); });
+      return RTP;
+    }
+    function rtList(b) { return rtPool().filter(b.test).sort(function (x, y) { return y.rate - x.rate; }); }
+    function rtPick(list) {
+      var plain = list.filter(function (p) { return !p.promo; }), picked = [], seen = {};
+      function take(p) { if (!p || picked.length >= 4) return; var o = p.org || p.prod; if (seen[o]) return; seen[o] = 1; picked.push(p); }
+      ["sav", "dep", "fund", "ofz"].forEach(function (k) { take(plain.filter(function (p) { return p.kind === k; })[0]); });
+      plain.forEach(take);
+      return picked.sort(function (x, y) { return y.rate - x.rate; });
+    }
+    // Доход за срок вклада, у «любого дня» — за месяц. Простые проценты, без налога
+    function rtInc(p) { return RT_SUM * p.rate / 100 * (p.days <= 1 ? 30 : p.days) / 365; }
+    function rtPer(p) { return p.days <= 1 ? "за месяц" : "за " + (p.term || Math.round(p.days / 30.44) + " мес"); }
+    function rtFlags(p) { return (p.promo ? '<span class="rt-fl">★ промо</span>' : "") + (p.floating ? '<span class="rt-fl rt-fv">плав.</span>' : ""); }
+    function rtSumTxt() { for (var i = 0; i < RT_SUMS.length; i++) if (RT_SUMS[i][0] === RT_SUM) return RT_SUMS[i][1]; return rtMoney(RT_SUM); }
+    function rtTabs() {
+      [].forEach.call(document.querySelectorAll(".rt-tabs [data-rtto]"), function (b) {
+        var on = +b.getAttribute("data-rtto") === CAR.rt;
+        b.setAttribute("aria-selected", on);
+        if (on && b.parentNode.scrollTo) b.parentNode.scrollTo({ left: Math.max(0, b.offsetLeft - 40), behavior: "smooth" });
+      });
+    }
+    function carTo(k, i) {
+      var car = document.querySelector('[data-car="' + k + '"]'); if (!car) return;
+      CAR[k] = i;
+      if (k === "am") amTabs(); else if (k === "rt") rtTabs();
+      var x = i * carStep(car);
+      if (car.scrollTo) car.scrollTo({ left: x, behavior: "smooth" }); else car.scrollLeft = x;
+    }
+    function rtDone() {
+      var b = S.cur === "mkt" && S.mkt.seg === "rates" && document.getElementById("tg-mbody");
+      if (b) b.innerHTML = mktBody();
+      if (RD) rdRender();
+    }
+    function rtOur() {
+      var G = [["discount", "Дисконтные облигации", "Цена входа ниже номинала, на погашении — 100%", ["выпуск", "выпуска", "выпусков"]],
+        ["protection", "Защита капитала", "Возврат номинала плюс участие в росте актива", ["продукт", "продукта", "продуктов"]],
+        ["warrant", "Варранты", "Ставка на рост, риск ограничен уплаченной премией", ["инструмент", "инструмента", "инструментов"]]];
+      return G.map(function (g) {
+        var n = INSTR.filter(function (r) { return r.type === g[0]; }).length;
+        return n ? '<a class="rt-our" href="board.html?type=' + g[0] + '" data-pt="' + g[0] + '"><span><b>' + esc(g[1]) + "</b></span><em>" + n + " " + plural(n, g[3][0], g[3][1], g[3][2]) + "</em></a>" : "";
+      }).join("");
+    }
+    function rtBody() {
+      var R = window.RATES, c = (R && R.cbr) || {};
+      if (!R) return '<p class="tg-note">Не удалось загрузить ставки — обновите страницу.</p>';
+      var pool = rtPool();
+      if (!pool.length) return '<p class="tg-note">Ставки ещё обновляются — загляните чуть позже.</p>';
+      var on = (R.rusfar || []).filter(function (x) { return x.days === 1; })[0];
+      var key = SV && SV.top && SV.top.key, nxt = key && key.next ? dmy(key.next).slice(0, 5) : "";
+      var upd = String(R.updated || "").replace(/^(\d{4})-(\d{2})-(\d{2})/, "$3.$2");
+      var out = '<div class="am">';
+      out += '<p class="am-day">Ставки на срок до года<span> · обновлено ' + esc(upd) + "</span></p>";
+      out += '<div class="rt-marks">' +
+        (c.key ? "<div><b>" + fq(c.key.rate) + "%</b><span>ключевая" + (nxt ? " · заседание " + esc(nxt) : "") + "</span></div>" : "") +
+        (c.ruonia ? "<div><b>" + fq(c.ruonia.rate) + "%</b><span>RUONIA</span></div>" : "") +
+        (on ? "<div><b>" + fq(on.rate) + "%</b><span>RUSFAR овернайт</span></div>" : "") + "</div>";
+      out += '<div class="rt-sum" role="group" aria-label="Сумма для расчёта дохода"><span>Сумма</span>' + RT_SUMS.map(function (s) {
+        return '<button type="button" data-rtsum="' + s[0] + '" aria-pressed="' + (s[0] === RT_SUM) + '">' + s[1] + "</button>";
+      }).join("") + "</div>";
+      var n = RT_B.length + 1;
+      if (CAR.rt >= n) CAR.rt = 0;
+      out += '<div class="am-tabs rt-tabs" role="tablist" aria-label="Срок">' + RT_B.map(function (b, i) { return [b.k, i]; }).concat([["1–5 лет", RT_B.length]]).map(function (x) {
+        return '<button type="button" role="tab" data-rtto="' + x[1] + '" aria-selected="' + (x[1] === CAR.rt) + '" aria-controls="rt-c' + x[1] + '">' + x[0] + "</button>";
+      }).join("") + "</div>";
+      out += '<div class="am-car rt-car" id="rt-car" data-car="rt">' + RT_B.map(function (b, i) {
+        var list = rtList(b), pick = rtPick(list), best = pick[0];
+        if (!best) return '<article class="am-cd rt-cd" id="rt-c' + i + '"><div class="am-cdt"><span class="am-rb">' + esc(b.t) + '</span><span class="am-k">' + (i + 1) + " / " + n + '</span></div><p class="am-wait">Предложений на этот срок сейчас нет.</p></article>';
+        return '<article class="am-cd rt-cd" id="rt-c' + i + '" role="tabpanel" aria-label="' + esc(b.t) + '">' +
+          '<div class="am-cdt"><span class="am-rb">' + esc(b.t) + '</span><span class="am-k">' + (i + 1) + " / " + n + "</span></div>" +
+          '<a class="rt-best" href="' + esc(best.url) + '" target="_blank" rel="noopener"><b>' + fq(best.rate) + "%</b>" + rtFlags(best) +
+          "<span><strong>" + esc(best.prod) + "</strong>" + (best.org ? " · " + esc(best.org) : "") + "</span>" +
+          '<em class="rt-inc">' + esc(rtSumTxt()) + " → <b>+" + rtMoney(rtInc(best)) + "</b> " + rtPer(best) + "</em></a>" +
+          '<ul class="rt-mini">' + pick.slice(1, 3).map(function (p) {
+            return '<li><a href="' + esc(p.url) + '" target="_blank" rel="noopener"><b>' + fq(p.rate) + "%</b><span>" + esc(p.prod) + (p.org ? " · " + esc(p.org) : "") + "</span></a></li>";
+          }).join("") + "</ul>" +
+          '<div class="am-ft"><button type="button" class="am-more" data-rtrd="' + i + '">Все предложения<small>' + list.length + "</small>" + ARROW + "</button></div></article>";
+      }).join("") +
+        '<article class="am-cd rt-cd rt-ourcd" id="rt-c' + RT_B.length + '" role="tabpanel" aria-label="Срок больше года">' +
+        '<div class="am-cdt"><span class="am-rb">Срок больше года</span><span class="am-k">' + n + " / " + n + "</span></div>" +
+        '<h2 class="am-h">Наши продукты на 1–5 лет</h2><p class="id-sub">Ставок здесь нет: результат зависит от актива и формулы выплаты</p>' + rtOur() +
+        '<div class="am-ft"><a class="am-more" href="board.html" data-go="prod">Все продукты<small>' + INSTR.length + "</small>" + ARROW + "</a></div></article></div>";
+      out += '<p class="tg-note">Простые проценты годовых, без капитализации и налогов. ★ — промо-ставка при условиях банка, «плав.» — привязана к ключевой. Источники: ЦБ, Мосбиржа, Финуслуги.</p>';
+      out += '<a class="tg-more" href="screener.html">Лестница сроков целиком</a>';
+      if (window.requestAnimationFrame) requestAnimationFrame(function () { carPlace(); rtTabs(); });
+      return out + "</div>";
+    }
+    // Читалка срока: все предложения, доход на выбранную сумму
+    function rtRd(el) {
+      var n = RT_B.length, i = Math.min(RD.i, n - 1); RD.i = i;
+      var b = RT_B[i], list = rtList(b), plain = list.filter(function (p) { return !p.promo; }), promo = list.filter(function (p) { return p.promo; });
+      var bar = RT_B.map(function (x, j) { return "<i" + (j <= i ? ' class="on"' : "") + "></i>"; }).join("");
+      function row(p, j) {
+        return '<a class="rt-row' + (j === 0 && !p.promo ? " rt-top" : "") + '" href="' + esc(p.url) + '" target="_blank" rel="noopener">' +
+          '<span class="rt-r1"><b>' + fq(p.rate) + "%</b>" + rtFlags(p) + '<em>+' + rtMoney(rtInc(p)) + " " + rtPer(p) + "</em></span>" +
+          '<span class="rt-r2"><strong>' + esc(p.prod) + "</strong>" + (p.org ? " · " + esc(p.org) : "") + "</span>" +
+          '<span class="rt-r3">' + esc([RT_TAG[p.kind] + (p.term ? " · " + p.term : "")].concat(p.cond || []).join(" · ")) + "</span></a>";
+      }
+      var nx = RT_B[i + 1];
+      var next = nx ? '<button type="button" class="am-nx" data-rd="next"><small>Дальше</small><b>' + esc(nx.t) + "</b>" + ARROW + "</button>"
+        : '<button type="button" class="am-nx am-nx-end" data-rd="our"><b>Срок больше года — наши продукты</b>' + ARROW + "</button>";
+      el.innerHTML = '<div class="tg-qz-in"><div class="tg-qz-top"><button type="button" class="tg-qz-b" data-rd="close" aria-label="Закрыть">' +
+        '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 3l10 10M13 3 3 13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>' +
+        '<span class="tg-qz-n">Ставки · ' + (i + 1) + " из " + n + "</span>" +
+        (i > 0 ? '<button type="button" class="am-pv" data-rd="prev">' + CHEV_L + "<span>" + esc(RT_B[i - 1].k) + "</span></button>" : "") + "</div>" +
+        '<div class="tg-qz-bar" aria-hidden="true">' + bar + "</div>" +
+        '<div class="tg-qz-body am-rdb"><h2 class="am-rh">' + esc(b.t) + "</h2>" +
+        '<p class="id-rsub">' + list.length + " " + plural(list.length, "предложение", "предложения", "предложений") + " · доход на " + esc(rtSumTxt()) + " ₽ — простыми процентами, без налога</p>" +
+        '<div class="rt-sum rt-sum-rd" role="group" aria-label="Сумма для расчёта дохода"><span>Сумма</span>' + RT_SUMS.map(function (s) {
+          return '<button type="button" data-rd="sum:' + s[0] + '" aria-pressed="' + (s[0] === RT_SUM) + '">' + s[1] + "</button>";
+        }).join("") + "</div>" +
+        '<div class="rt-rows">' + plain.map(row).join("") + "</div>" +
+        (promo.length ? '<h3 class="id-k">Промо-ставки</h3><p class="rt-pn">Действуют при условиях банка: новые деньги, подписка, ограниченный период.</p><div class="rt-rows">' + promo.map(row).join("") + "</div>" : "") +
+        '<p class="rt-pn">Вклады и счета открываются на Финуслугах по ссылке, фонды и ОФЗ покупаются у брокера. Ставки не гарантированы и могут измениться.</p>' +
+        next + "</div></div>";
+      el.scrollTop = 0;
+    }
+    // <<< rt
     function mktBody() {
       var body = "";
       if (S.mkt.seg === "sum") body = svBody();
       else if (S.mkt.seg === "morning") body = amBody();
-      else if (S.mkt.seg === "rates") {
-        var R = window.RATES || {}, c = R.cbr || {};
-        var rows = window.soRates ? window.soRates() : [];
-        body += '<div class="tg-tiles"><div class="tg-tile"><b>' + fq(c.key && c.key.rate) + '%</b><span>ключевая ставка</span></div><div class="tg-tile"><b>' + fq(c.ruonia && c.ruonia.rate) + "%</b><span>RUONIA</span></div></div>";
-        body += '<h2 class="tg-cap">Лучшее на срок до года</h2><ul class="tg-list">' + rows.map(function (r) {
-          var k = String(r.k || ""); k = k.charAt(0).toUpperCase() + k.slice(1);
-          return '<li><a class="tg-row" href="' + esc(r.href) + '" target="_blank" rel="noopener"><span class="tg-tx"><span class="tg-nm">' + esc(k) + '</span><span class="tg-sb">' + esc(r.n) + '</span></span><span class="tg-fig tg-g"><b>' + fq(r.v) + "%</b><small>годовых</small></span></a></li>";
-        }).join("") + "</ul>";
-        body += '<a class="tg-more" href="screener.html">Все ставки по срокам</a><p class="tg-note">Обновлено ' + esc(String(R.updated || "").replace(/^(\d{4})-(\d{2})-(\d{2})/, "$3.$2")) + ". Источники: ЦБ, Мосбиржа, Финуслуги.</p>";
-      } else body = idBody();
+      else if (S.mkt.seg === "rates") body = rtBody();
+      else body = idBody();
       return body;
     }
     function viewMkt() {
@@ -1270,6 +1426,15 @@
       if (idd) { ID_DAY = idd.getAttribute("data-idday") || null; CAR.id = 0; idDone(); return; }
       var idf = e.target.closest("[data-idfam]");
       if (idf) { ID_FAM = idf.getAttribute("data-idfam"); CAR.id = 0; idDone(); return; }
+      // Ставки: срок (вкладка), читалка срока, сумма; продукты по типу — из карточки «больше года»
+      var rtt = e.target.closest("[data-rtto]");
+      if (rtt) { carTo("rt", +rtt.getAttribute("data-rtto")); return; }
+      var rtr = e.target.closest("[data-rtrd]");
+      if (rtr) { openRd("rt", +rtr.getAttribute("data-rtrd")); return; }
+      var rtm = e.target.closest("[data-rtsum]");
+      if (rtm) { RT_SUM = +rtm.getAttribute("data-rtsum"); try { sessionStorage.setItem("so_rt_sum", RT_SUM); } catch (er) {} rtDone(); return; }
+      var ptp = e.target.closest("[data-pt]");
+      if (ptp) { e.preventDefault(); S.prod.type = ptp.getAttribute("data-pt"); S.prod.cls = "all"; S.prod.q = ""; S.prod.pick = null; S.y.prod = 0; go("prod"); return; }
       var amd = e.target.closest("[data-amday]");
       if (amd) { AM_DAY = amd.getAttribute("data-amday") || null; CAR.am = 0; amDone(); return; }
       var amw = e.target.closest("[data-amwhy]");
