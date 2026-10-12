@@ -624,13 +624,16 @@
     }
 
     // >>> am
-    // ── Утро (12.10.2026, Руслан: «вкладку „Утро“ в рынке сейчас читать тяжеловато») ──
+    // ── Утро (12.10.2026, Руслан: «вкладку „Утро“ в рынке сейчас читать тяжеловато» → вариант A
+    // со стенда → «слишком много текста, чуть более интерактивней») ──
     // Было: три серые карточки сплошным текстом и ссылка «Разбор →» на другую страницу.
-    // Стало: текст крупнее и светлее, цифры выделены, полный разбор раскрывается на месте
-    // (тексты из data/research.js — их пишет тот же бот из той же статьи аналитика), у темы —
-    // переходы к продуктам на активы, названные в тексте, у продуктов дня — «почему сейчас»
-    // аналитика, внизу — прошлые обзоры. Первая отрисовка — из data/morning.js (он уже на
-    // странице), разборы (~150 КБ) подгружаются при открытии «Утра»
+    // Стало: на экране одна тема — карточки листаются вбок (родная прокрутка с прилипанием,
+    // без скрипта под пальцем: своё листание на айфоне лагало), над ними вкладки тем; полный
+    // разбор открывается читалкой во весь экран с «Дальше: следующая тема» (тексты из
+    // data/research.js — их пишет тот же бот из той же статьи аналитика); под темой — продукты
+    // на активы из текста — в конце разбора; «почему эти продукты» — по кнопке; прошлые обзоры — строкой дат.
+    // Первая отрисовка — из data/morning.js (он уже на странице), разборы (~150 КБ)
+    // подгружаются при открытии «Утра»
     var WDN = ["воскресенье", "понедельник", "вторник", "среда", "четверг", "пятница", "суббота"];
     var WDZ = ["воскресенье", "понедельник", "вторник", "среду", "четверг", "пятницу", "субботу"];
     var WDS = ["вс", "пн", "вт", "ср", "чт", "пт", "сб"];
@@ -657,6 +660,7 @@
     // Цифры с единицами — светлым и плотнее: по ним и читают обзор («Brent $103», «+2,86%»)
     var AM_NUM = /(\$\s?\d[\d ]*(?:[.,]\d+)?|[+−-]?\d[\d  ]*(?:[.,]\d+)?\s?(?:%|б\.\s?п\.|п\.\s?п\.|п\.(?=[\s,;:)]|$)|млрд|млн|трлн|тыс\.|₽)|\d+,\d+)/g;
     function amText(s) { return esc(s).replace(AM_NUM, '<b class="am-n">$1</b>'); }
+    function amMin(it) { return Math.max(1, Math.round((it.body ? it.body.join(" ") : it.lead).split(/\s+/).length / 170)); }
     // Активы доски, названные в тексте → продукты на них. Число на кнопке = сколько откроет
     // «Продукты» (тот же поиск и класс, что в prodList)
     var AM_ALIAS = { "Сбербанк": "сбер(?!инвест)", "Газпром": "газпром(?![\\s-]*нефт)", "Т-Банк": "т-банк|тинькофф", "ДОМ.РФ": "дом\\.рф",
@@ -696,84 +700,158 @@
       var t = " " + [it.title, it.lead].concat(it.body || []).join(" ") + " ";
       var hit = amAssets().filter(function (a) { return a.re.test(t); }).slice(0, 4);
       if (!hit.length) return "";
-      return '<div class="am-tks"><span>Продукты на активы из текста</span>' + hit.map(function (a) {
+      return '<div class="am-tks"><span>Продукты на активы из этой темы</span>' + hit.map(function (a) {
         return '<a href="board.html?q=' + encodeURIComponent(a.q) + '" data-pq="' + esc(a.q) + '" data-pc="' + esc(a.cls) + '">' + esc(AM_SHOW[a.name] || a.name) + "<em>" + a.n + "</em></a>";
       }).join("") + "</div>";
     }
-    var AM_OPEN = {}, AM_DAY = null;
+    var AM_DAY = null, AM_IDX = 0, AM_WHY = false, RD = null;
     var CHEV_D = '<svg class="am-cv" width="14" height="9" viewBox="0 0 14 9" fill="none" aria-hidden="true"><path d="M1.5 1.5 7 7l5.5-5.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-    // Стенд (только localhost): два варианта подачи на выбор — убрать после решения Руслана
-    var AM_STAND = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
-    function amVar() { var v = "a"; if (AM_STAND) try { v = localStorage.getItem("am_v") || "a"; } catch (e) {} return v === "b" ? "b" : "a"; }
-    function amMore(on, min) { return on ? "Свернуть" + CHEV_D : "Читать разбор · " + min + " мин" + CHEV_D; }
+    function amCur() {
+      var all = amIssues(), k = 0;
+      if (AM_DAY) for (var i = 0; i < all.length; i++) if (all[i].date === AM_DAY) { k = i; break; }
+      return { all: all, k: k, cur: all[k] || null };
+    }
     function amBody() {
       var rs = need("rs", ["data/research.js?v=7"], rsReady, amDone);
-      var all = amIssues(), V = amVar();
-      if (!all.length) return '<p class="tg-note">Утренний обзор выходит по будням — здесь появится первый.</p>';
-      var cur = all[0], k = 0;
-      if (AM_DAY) for (var i = 0; i < all.length; i++) if (all[i].date === AM_DAY) { cur = all[i]; k = i; break; }
-      var d = isoDate(cur.date), age = daysAgo(cur.date);
-      var when = d ? WDZ[d.getDay()] + ", " + d.getDate() + " " + MONG[d.getMonth()] : dmy(cur.date);
-      var words = 0;
-      cur.items.forEach(function (it) { words += (it.body ? it.body.join(" ") : it.lead).split(/\s+/).length; });
-      var n = cur.items.length;
-      var out = '<div class="am am-' + V + '">';
-      if (AM_STAND) out += '<div class="am-stand" role="group" aria-label="Вариант (стенд)"><span>Стенд:</span><button type="button" data-amv="a" aria-pressed="' + (V === "a") + '">A · лента</button><button type="button" data-amv="b" aria-pressed="' + (V === "b") + '">B · заголовки</button></div>';
-      if (k > 0) out += '<button type="button" class="am-back" data-amday="">' + CHEV_L + "<span>К последнему обзору</span></button>";
-      out += '<p class="am-day">' + (k === 0 && age === 0 && d ? esc(WDN[d.getDay()].charAt(0).toUpperCase() + WDN[d.getDay()].slice(1) + ", " + d.getDate() + " " + MONG[d.getMonth()]) : "Обзор за " + esc(when)) +
-        '<span> · ' + n + " " + plural(n, "тема", "темы", "тем") + " · " + Math.max(1, Math.round(words / 170)) + " мин чтения</span></p>";
+      var o = amCur(), cur = o.cur, k = o.k;
+      if (!cur) return '<p class="tg-note">Утренний обзор выходит по будням — здесь появится первый.</p>';
+      var n = cur.items.length, d = isoDate(cur.date), age = daysAgo(cur.date), mins = 0;
+      if (AM_IDX >= n) AM_IDX = 0;
+      cur.items.forEach(function (it) { mins += amMin(it); });
+      var out = '<div class="am">';
+      out += '<p class="am-day">' + (k === 0 && age === 0 && d ? esc(WDN[d.getDay()].charAt(0).toUpperCase() + WDN[d.getDay()].slice(1) + ", " + d.getDate() + " " + MONG[d.getMonth()])
+        : "Обзор за " + esc(d ? WDZ[d.getDay()] + ", " + d.getDate() + " " + MONG[d.getMonth()] : dmy(cur.date))) +
+        '<span> · ' + n + " " + plural(n, "тема", "темы", "тем") + " · " + mins + " мин чтения</span></p>";
       if (k === 0 && age > 3) out += '<p class="tg-note am-old">Свежего обзора пока нет — это последний вышедший.</p>';
-      cur.items.forEach(function (it, i) {
-        var key = cur.date + ":" + i, on = !!AM_OPEN[key], full = it.body;
-        var min = Math.max(1, Math.round((full ? full.join(" ") : it.lead).split(/\s+/).length / 170));
-        var inner = full ? full.map(function (p) { return "<p>" + amText(p) + "</p>"; }).join("")
-          : rs || LAZY.rs === 2 ? '<p class="am-link"><a href="' + esc(it.link) + '">Разбор целиком — на отдельной странице</a></p>' : '<p class="am-wait">Загружаю разбор…</p>';
-        out += '<article class="am-st' + (on ? " am-on" : "") + (full ? " am-hasf" : "") + '" data-amk="' + esc(key) + '" data-min="' + min + '">' +
-          '<span class="am-rb">' + esc(it.rubric) + "</span>" +
-          '<h2 class="am-h"><button type="button" data-amx aria-expanded="' + on + '" aria-controls="am-f' + i + '"><span>' + esc(it.title) + "</span>" + CHEV_D + "</button></h2>" +
-          '<p class="am-ld"' + (V === "b" ? " data-amx" : "") + ">" + amText(it.lead) + "</p>" +
-          '<div class="am-full" id="am-f' + i + '">' + inner + "</div>" +
-          '<button type="button" class="am-more" data-amx aria-expanded="' + on + '">' + amMore(on, min) + "</button>" +
-          amChips(it) + "</article>";
-      });
+      // Прошлые обзоры — строкой дат: сегодня первым
+      if (o.all.length > 1) {
+        out += '<div class="am-dates" role="group" aria-label="Обзоры по дням">' + o.all.slice(0, 8).map(function (x, j) {
+          var xd = isoDate(x.date);
+          return '<button type="button" data-amday="' + (j ? esc(x.date) : "") + '" aria-pressed="' + (j === k) + '" aria-label="Обзор за ' + esc(dmy(x.date)) + '"><small>' +
+            (j === 0 && daysAgo(x.date) === 0 ? "сегодня" : xd ? WDS[xd.getDay()] : "") + "</small><b>" + (xd ? xd.getDate() : "") + "</b></button>";
+        }).join("") + "</div>";
+      }
+      // Темы: вкладки и карточки, листаются вбок
+      out += '<div class="am-tabs" role="tablist" aria-label="Темы обзора">' + cur.items.map(function (it, i) {
+        return '<button type="button" role="tab" data-amto="' + i + '" aria-selected="' + (i === AM_IDX) + '" aria-controls="am-c' + i + '">' + esc(it.rubric) + "</button>";
+      }).join("") + "</div>";
+      out += '<div class="am-car" id="am-car">' + cur.items.map(function (it, i) {
+        return '<article class="am-cd" id="am-c' + i + '" role="tabpanel" aria-label="' + esc(it.rubric) + ", " + (i + 1) + " из " + n + '">' +
+          '<div class="am-cdt"><span class="am-rb">' + esc(it.rubric) + '</span><span class="am-k">' + (i + 1) + " / " + n + "</span></div>" +
+          '<h2 class="am-h">' + esc(it.title) + "</h2>" +
+          '<p class="am-ld">' + amText(it.lead) + "</p>" +
+          '<div class="am-ft"><button type="button" class="am-more" data-amrd="' + i + '">Читать разбор<small>' + amMin(it) + " мин</small>" + ARROW + "</button></div></article>";
+      }).join("") + "</div>";
       // Продукты дня — только у последнего обзора: «почему сейчас» в прошлых выпусках
       // ссылается на тогдашние цены
       if (k === 0) {
         var day = cur.products.map(function (p) { return BY[p.id] ? { r: BY[p.id], why: p.why } : null; }).filter(Boolean);
+        var hasWhy = day.some(function (x) { return x.why; });
         if (day.length) {
-          out += '<h2 class="tg-cap am-cap">Продукты под темы утра</h2><ul class="tg-list am-pl">' + day.map(function (x) {
-            return prodRow(x.r).replace(/<\/li>$/, (x.why ? '<p class="am-why">' + amText(x.why) + "</p>" : "") + "</li>");
-          }).join("") + '</ul><p class="tg-note">Подборка аналитика под темы обзора — не индивидуальная рекомендация. Котировки индикативные.</p>';
+          out += '<div class="am-ph" id="am-ph"><h2 class="tg-cap">Продукты под темы утра</h2>' +
+            (hasWhy ? '<button type="button" class="am-wbtn" data-amwhy aria-pressed="' + AM_WHY + '" aria-controls="am-pl">Почему они' + CHEV_D + "</button>" : "") + "</div>" +
+            '<ul class="tg-list am-pl' + (AM_WHY ? " am-wy" : "") + '" id="am-pl">' + day.map(function (x) {
+              return prodRow(x.r).replace(/<\/li>$/, (x.why ? '<p class="am-why">' + amText(x.why) + "</p>" : "") + "</li>");
+            }).join("") + '</ul><p class="tg-note">Подборка аналитика под темы обзора — не индивидуальная рекомендация. Котировки индикативные.</p>';
         }
-      } else out += '<p class="tg-note">Продукты под темы утра — у последнего обзора: в прошлых выпусках цены уже другие.</p>';
-      // Прошлые обзоры — из разборов
-      var past = all.filter(function (x, j) { return j !== k; }).slice(0, 6);
-      if (past.length && rsReady()) {
-        out += '<h2 class="tg-cap am-cap">' + (k > 0 ? "Другие обзоры" : "Прошлые обзоры") + '</h2><div class="tg-grp am-ar">' + past.map(function (x) {
-          var xd = isoDate(x.date);
-          return '<button type="button" data-amday="' + esc(x.date) + '"><span class="am-ad">' + (xd ? WDS[xd.getDay()] + "<b>" + xd.getDate() + "</b>" + MONG[xd.getMonth()].slice(0, 3) : esc(dmy(x.date))) + '</span><span class="am-as">' +
-            esc(x.items.map(function (it) { return it.title; }).join(" · ")) + "</span>" + CHEV + "</button>";
-        }).join("") + "</div>";
-      } else if (!rs && LAZY.rs !== 2) out += '<p class="am-wait">Загружаю прошлые обзоры…</p>';
+      } else out += '<p class="tg-note am-pastn">Продукты под темы утра — у последнего обзора: в прошлых выпусках цены уже другие.</p>';
+      if (!rs && LAZY.rs !== 2 && o.all.length < 2) out += '<p class="am-wait">Загружаю прошлые обзоры…</p>';
+      if (window.requestAnimationFrame) requestAnimationFrame(amPlace);
       return out + "</div>";
+    }
+    function amStep(car) { var c = car.children; return c.length > 1 ? c[1].offsetLeft - c[0].offsetLeft : car.clientWidth || 1; }
+    // После перерисовки карточки стоят на той теме, где человек был
+    function amPlace() {
+      var car = document.getElementById("am-car"); if (!car) return;
+      car.style.scrollBehavior = "auto"; car.scrollLeft = AM_IDX * amStep(car); car.style.scrollBehavior = "";
+    }
+    function amTabs() {
+      [].forEach.call(document.querySelectorAll(".am-tabs [data-amto]"), function (b) { b.setAttribute("aria-selected", +b.getAttribute("data-amto") === AM_IDX); });
+    }
+    // Листают карточки пальцем — подсвечиваем вкладку (scroll не всплывает, слушаем на захвате)
+    document.addEventListener("scroll", function (e) {
+      var car = e.target;
+      if (!car || car.id !== "am-car") return;
+      var i = Math.round(car.scrollLeft / amStep(car));
+      if (i !== AM_IDX && i >= 0 && i < car.children.length) { AM_IDX = i; amTabs(); }
+    }, { capture: true, passive: true });
+    function amTo(i) {
+      var car = document.getElementById("am-car"); if (!car) return;
+      AM_IDX = i; amTabs();
+      var x = i * amStep(car);
+      if (car.scrollTo) car.scrollTo({ left: x, behavior: "smooth" }); else car.scrollLeft = x;
     }
     function amDone() {
       var b = S.cur === "mkt" && S.mkt.seg === "morning" && document.getElementById("tg-mbody");
       if (b) b.innerHTML = mktBody();
+      if (RD) rdRender();
     }
-    function amToggle(a) {
-      if (!a) return;
-      var key = a.getAttribute("data-amk"), on = !AM_OPEN[key];
-      AM_OPEN[key] = on;
-      a.classList.toggle("am-on", on);
-      [].forEach.call(a.querySelectorAll("button[data-amx]"), function (b) { b.setAttribute("aria-expanded", on); });
-      var mb = a.querySelector(".am-more");
-      if (mb) mb.innerHTML = amMore(on, a.getAttribute("data-min") || 1);
-      // Свернули длинный разбор, начало темы уехало под шапку — возвращаем к заголовку
-      if (!on) {
-        var ctl = document.querySelector(".tg-v .tg-ctl"), top = ctl ? ctl.getBoundingClientRect().bottom : 100;
-        var r = a.getBoundingClientRect();
-        if (r.top < top) window.scrollBy(0, r.top - top - 8);
+    function amWhy(btn) {
+      AM_WHY = !AM_WHY;
+      btn.setAttribute("aria-pressed", AM_WHY);
+      var l = document.getElementById("am-pl"); if (l) l.classList.toggle("am-wy", AM_WHY);
+    }
+
+    // Читалка разбора: во весь экран, тема за темой. Запись в истории — «назад» её закрывает
+    function openRd(i) {
+      if (RD || !amCur().cur) return;
+      RD = { i: i };
+      var el = document.createElement("div");
+      el.className = "tg-qz am-rd"; el.id = "am-rd";
+      el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", "Разбор утреннего обзора");
+      el.addEventListener("click", rdClick);
+      document.getElementById("tg-app").appendChild(el);
+      document.documentElement.classList.add("tg-qz-on");
+      hist({ tg: S.cur, d: H.d + 1, from: S.cur, rd: 1 });
+      rdRender();
+    }
+    function closeRd(viaHistory) {
+      var el = document.getElementById("am-rd"); if (el) el.remove();
+      document.documentElement.classList.remove("tg-qz-on");
+      var was = !!RD; if (RD) AM_IDX = RD.i; RD = null;
+      amTabs(); amPlace();
+      if (was && !viaHistory && (history.state || {}).rd) history.back();
+    }
+    function rdRender() {
+      var el = document.getElementById("am-rd"), o = amCur();
+      if (!el || !RD || !o.cur) return;
+      var items = o.cur.items, n = items.length, i = Math.min(RD.i, n - 1), it = items[i];
+      var bar = items.map(function (x, j) { return "<i" + (j <= i ? ' class="on"' : "") + "></i>"; }).join("");
+      var text = it.body ? it.body.map(function (p) { return "<p>" + amText(p) + "</p>"; }).join("")
+        : "<p>" + amText(it.lead) + "</p>" + (rsReady() || LAZY.rs === 2 ? '<p class="am-link"><a href="' + esc(it.link) + '">Разбор целиком — на отдельной странице</a></p>' : '<p class="am-wait">Загружаю разбор…</p>');
+      var nx = items[i + 1], hasProd = o.k === 0 && o.cur.products.some(function (p) { return BY[p.id]; });
+      var next = nx ? '<button type="button" class="am-nx" data-rd="next"><small>Дальше · ' + esc(nx.rubric) + "</small><b>" + esc(nx.title) + "</b>" + ARROW + "</button>"
+        : '<button type="button" class="am-nx am-nx-end" data-rd="' + (hasProd ? "prod" : "close") + '"><b>' + (hasProd ? "Продукты под темы утра" : "Готово") + "</b>" + ARROW + "</button>";
+      el.innerHTML = '<div class="tg-qz-in"><div class="tg-qz-top"><button type="button" class="tg-qz-b" data-rd="close" aria-label="Закрыть разбор">' +
+        '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 3l10 10M13 3 3 13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>' +
+        '<span class="tg-qz-n">' + esc(it.rubric) + " · " + (i + 1) + " из " + n + "</span>" +
+        (i > 0 ? '<button type="button" class="am-pv" data-rd="prev">' + CHEV_L + "<span>" + esc(items[i - 1].rubric) + "</span></button>" : "") + "</div>" +
+        '<div class="tg-qz-bar" aria-hidden="true">' + bar + "</div>" +
+        '<div class="tg-qz-body am-rdb"><h2 class="am-rh">' + esc(it.title) + '</h2><div class="am-rt">' + text + "</div>" + amChips(it) + next + "</div></div>";
+      el.scrollTop = 0;
+    }
+    function rdClick(e) {
+      var pq = e.target.closest("[data-pq]");
+      if (pq) {
+        // Из читалки — сразу в «Продукты»: запись читалки заменяем разделом, «назад» вернёт в «Рынок»
+        e.preventDefault();
+        closeRd(true); save();
+        S.prod.q = pq.getAttribute("data-pq"); S.prod.cls = pq.getAttribute("data-pc") || "all"; S.prod.type = "all"; S.prod.pick = null; S.y.prod = 0;
+        hist({ tg: "prod", d: H.d, from: "mkt" }, true);
+        S.cur = "prod"; render(false, 0, true); tabs(); save();
+        return;
+      }
+      var b = e.target.closest("[data-rd]"); if (!b || !RD) return;
+      var v = b.getAttribute("data-rd");
+      if (v === "close") closeRd(false);
+      else if (v === "next") { RD.i++; rdRender(); }
+      else if (v === "prev") { RD.i = Math.max(0, RD.i - 1); rdRender(); }
+      else if (v === "prod") {
+        closeRd(false);
+        setTimeout(function () {
+          var ph = document.getElementById("am-ph"), ctl = document.querySelector(".tg-v .tg-ctl");
+          if (ph) window.scrollTo({ top: ph.getBoundingClientRect().top + window.pageYOffset - (ctl ? ctl.getBoundingClientRect().bottom : 100) - 8, behavior: "smooth" });
+        }, 60);
       }
     }
     // <<< am
@@ -1027,6 +1105,7 @@
     window.addEventListener("popstate", function (e) {
       var st = e.state;
       if (QZ && !(st && st.qz)) closeQuiz(true);           // «назад» из опроса — закрыть опрос
+      if (RD && !(st && st.rd)) closeRd(true);             // «назад» из читалки разбора — закрыть её
       if (!st || !st.tg || !VIEWS[st.tg]) return;          // чужие записи (истории stories.js) — не наши
       if (!st.ai && aiOn && window.Chat && Chat.close) { aiOn = false; Chat.close(); tabs(); }
       if (st.ai && !aiOn && window.Chat && Chat.open) { aiOn = true; Chat.open(); tabs(); }
@@ -1038,12 +1117,15 @@
       if (e.target.closest("[data-quiz]")) { e.preventDefault(); openQuiz(); return; }
       var shr = e.target.closest("[data-svshare]");
       if (shr) { e.preventDefault(); openCard(shr); return; }
-      var amx = e.target.closest("[data-amx]");
-      if (amx) { e.preventDefault(); amToggle(amx.closest(".am-st")); return; }
+      // Утро: тема (вкладка), читалка разбора, день обзора, «почему эти продукты»
+      var amt = e.target.closest("[data-amto]");
+      if (amt) { amTo(+amt.getAttribute("data-amto")); return; }
+      var amr = e.target.closest("[data-amrd]");
+      if (amr) { openRd(+amr.getAttribute("data-amrd")); return; }
       var amd = e.target.closest("[data-amday]");
-      if (amd) { AM_DAY = amd.getAttribute("data-amday") || null; amDone(); window.scrollTo(0, 0); return; }
-      var amv = e.target.closest("[data-amv]");
-      if (amv) { try { localStorage.setItem("am_v", amv.getAttribute("data-amv")); } catch (er) {} amDone(); return; }
+      if (amd) { AM_DAY = amd.getAttribute("data-amday") || null; AM_IDX = 0; amDone(); return; }
+      var amw = e.target.closest("[data-amwhy]");
+      if (amw) { amWhy(amw); return; }
       if (e.target.closest("[data-unpick]")) { e.preventDefault(); S.prod.pick = null; render(true); save(); return; }
       // Продукты на бумагу из сводки: открываем «Продукты» с поиском по ней
       var pq = e.target.closest("[data-pq]");
@@ -1059,7 +1141,7 @@
     });
     nav.addEventListener("click", function (e) { var b = e.target.closest("button[data-t]"); if (b) go(b.getAttribute("data-t")); });
     window.addEventListener("pagehide", save);
-    document.addEventListener("keydown", function (e) { if (e.key === "Escape" && QZ) closeQuiz(false); });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape" && QZ) closeQuiz(false); if (e.key === "Escape" && RD) closeRd(false); });
 
     // Закрыли ассистента крестиком — подсветка возвращается к разделу
     function watchChat() {
