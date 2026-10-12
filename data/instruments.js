@@ -1370,6 +1370,27 @@ window.SITE_DATA = {
       "src": "sales"
     },
     {
+      "id": "W-WO3YNL-C100-1028",
+      "type": "warrant",
+      "structure": "call",
+      "name": "CALL 100 · худшая из корзины · 2 года",
+      "underlying": "Яндекс / Новатэк / Лукойл",
+      "basket": [
+        "YDEX",
+        "NVTK",
+        "LKOH"
+      ],
+      "cls": "Акции РФ",
+      "currency": "RUB",
+      "strike": 100,
+      "spot": 100,
+      "tenor": "2 года",
+      "quote": 15.5,
+      "chg": 0,
+      "minNom": 1000000,
+      "src": "sales"
+    },
+    {
       "id": "W-SBER-C100-0827",
       "type": "warrant",
       "structure": "call",
