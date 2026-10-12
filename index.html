@@ -889,6 +889,61 @@
     .tg-note a { color: #EE7D1B; }
     .tg-more { display: block; margin-top: 12px; height: 44px; line-height: 44px; text-align: center; border-radius: 12px; background: var(--tg-card2); font-size: 14.5px; font-weight: 500; }
     .tg-wait { padding: 28px 0; text-align: center; color: var(--tg-faint); font-size: 14px; }
+    /* >>> am */
+    /* Утро (12.10.2026): текст крупнее и светлее, цифры выделены, разбор раскрывается на месте.
+       Варианты: A — лента (тема открыта, внизу «Читать разбор»), B — заголовки карточками
+       (две строки текста, тап раскрывает). Кнопки — с явным color: <button> его не наследует */
+    .am-stand { display: flex; align-items: center; gap: 6px; margin: 8px 0 4px; padding: 6px; border-radius: 12px; border: 1px dashed rgba(238,125,27,.5); font-size: 12px; color: var(--tg-faint); }
+    .am-stand button { height: 32px; padding: 0 10px; border-radius: 8px; border: 0; background: none; color: var(--tg-mut); font: inherit; font-size: 13px; cursor: pointer; }
+    .am-stand button[aria-pressed="true"] { background: var(--tg-seg); color: var(--tg-ink); }
+    .am-back { display: inline-flex; align-items: center; gap: 6px; height: 44px; margin: 2px 0 -4px; padding: 0; border: 0; background: none; color: #EE7D1B; font: inherit; font-size: 15px; font-weight: 500; cursor: pointer; }
+    .am-day { margin: 10px 0 4px; font-size: 15px; font-weight: 600; color: var(--tg-ink); }
+    .am-day span { font-weight: 400; color: var(--tg-faint); }
+    .am-old { margin-top: 4px; }
+    .am-st { padding: 20px 0 18px; border-bottom: 1px solid var(--tg-line); }
+    .am-rb { display: inline-block; font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: #EE7D1B; }
+    .am-h { margin: 6px 0 10px; font-family: 'Rubik', sans-serif; font-size: 22px; font-weight: 600; line-height: 1.22; }
+    .am-h button { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; width: 100%; padding: 0; border: 0; background: none; color: var(--tg-ink); font: inherit; text-align: left; cursor: pointer; }
+    .am-h .am-cv { display: none; flex: none; margin-top: 9px; color: var(--tg-faint); transition: transform .2s; }
+    .am-ld, .am-full p { margin: 0; font-size: 16.5px; line-height: 1.58; color: rgba(242,243,247,.86); }
+    .am-n { color: #FFFFFF; font-weight: 600; white-space: nowrap; }
+    .am-full { display: none; }
+    .am-full p + p { margin-top: 14px; }
+    .am-on.am-hasf .am-ld { display: none; }
+    .am-on .am-full { display: block; animation: am-in .28s ease both; }
+    @keyframes am-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+    .am-on:not(.am-hasf) .am-full { margin-top: 10px; }
+    .am-wait { margin: 10px 0 0; font-size: 14px; color: var(--tg-faint); }
+    .am-link a { color: #EE7D1B; font-size: 15px; }
+    .am-more { display: inline-flex; align-items: center; gap: 8px; height: 44px; margin-top: 14px; padding: 0 16px; border-radius: 22px; border: 0; background: var(--tg-card2); color: var(--tg-ink); font: inherit; font-size: 14.5px; font-weight: 500; cursor: pointer; }
+    .am-more .am-cv { color: var(--tg-faint); transition: transform .2s; }
+    .am-on .am-cv { transform: rotate(180deg); }
+    .am-tks { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 14px; }
+    .am-tks span { flex-basis: 100%; font-size: 12.5px; color: var(--tg-faint); }
+    .am-tks a { position: relative; display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 13px; border-radius: 18px; background: rgba(238,125,27,.13); color: #FFC894; font-size: 14px; font-weight: 500; }
+    .am-tks a::before { content: ""; position: absolute; inset: -4px 0; }
+    .am-tks em { font-style: normal; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: rgba(255,200,148,.7); }
+    .am-cap { margin-top: 26px; }
+    .am-pl li { border-bottom: 1px solid var(--tg-line); }
+    .am-pl li:last-child { border-bottom: 0; }
+    .am-pl .tg-row { border-bottom: 0; min-height: 58px; padding-bottom: 4px; }
+    .am-why { margin: 0 0 12px 54px; padding-left: 10px; border-left: 2px solid rgba(238,125,27,.45); font-size: 14px; line-height: 1.5; color: var(--tg-mut); }
+    .am-why .am-n { color: var(--tg-ink); font-weight: 500; }
+    .am-ar button { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 62px; padding: 8px 12px; border: 0; border-bottom: 1px solid var(--tg-line); background: none; color: var(--tg-ink); font: inherit; text-align: left; cursor: pointer; }
+    .am-ar button:last-child { border-bottom: 0; }
+    .am-ad { flex: none; width: 40px; display: flex; flex-direction: column; align-items: center; font-size: 11px; line-height: 1.15; color: var(--tg-faint); text-transform: lowercase; }
+    .am-ad b { font-family: 'Rubik', sans-serif; font-size: 19px; font-weight: 600; color: var(--tg-ink); }
+    .am-as { flex: 1; min-width: 0; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; font-size: 14px; line-height: 1.4; color: var(--tg-mut); }
+    /* B: заголовки карточками, текст в две строки, тап раскрывает целиком */
+    .am-b .am-st { margin-top: 10px; padding: 14px 16px 16px; border: 0; border-radius: 16px; background: var(--tg-card); }
+    .am-b .am-h { margin: 4px 0 6px; font-size: 19px; }
+    .am-b .am-h .am-cv { display: block; }
+    .am-b .am-ld { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; font-size: 15px; color: var(--tg-mut); cursor: pointer; }
+    .am-b .am-ld .am-n { color: var(--tg-ink); font-weight: 500; }
+    .am-b .am-on:not(.am-hasf) .am-ld { display: block; }
+    .am-b .am-more { display: none; }
+    .am-b .am-st:not(.am-on) .am-tks { display: none; }
+    /* <<< am */
     /* Сводка рынка (вкладка «Рынок») — вид и стили в svview.js, общем со страницей /svodka */
     .tg-grp { margin: 8px 0 16px; border-radius: 14px; background: var(--tg-card); overflow: hidden; }
     .tg-grp a { display: flex; align-items: center; gap: 12px; min-height: 50px; padding-left: 12px; }
@@ -2314,7 +2369,7 @@
   else setTimeout(start, 1200);
 })();
 </script>
-<script src="tabs.js?v=15"></script>
+<script src="tabs.js?v=16"></script>
 <script src="ptr.js?v=2" defer></script>
 </body>
 

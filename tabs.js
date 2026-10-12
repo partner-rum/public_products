@@ -623,18 +623,165 @@
       document.head.appendChild(sc);
     }
 
+    // >>> am
+    // ── Утро (12.10.2026, Руслан: «вкладку „Утро“ в рынке сейчас читать тяжеловато») ──
+    // Было: три серые карточки сплошным текстом и ссылка «Разбор →» на другую страницу.
+    // Стало: текст крупнее и светлее, цифры выделены, полный разбор раскрывается на месте
+    // (тексты из data/research.js — их пишет тот же бот из той же статьи аналитика), у темы —
+    // переходы к продуктам на активы, названные в тексте, у продуктов дня — «почему сейчас»
+    // аналитика, внизу — прошлые обзоры. Первая отрисовка — из data/morning.js (он уже на
+    // странице), разборы (~150 КБ) подгружаются при открытии «Утра»
+    var WDN = ["воскресенье", "понедельник", "вторник", "среда", "четверг", "пятница", "суббота"];
+    var WDZ = ["воскресенье", "понедельник", "вторник", "среду", "четверг", "пятницу", "субботу"];
+    var WDS = ["вс", "пн", "вт", "ср", "чт", "пт", "сб"];
+    var MONG = ["января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря"];
+    function isoDate(iso) { var m = String(iso || "").match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? new Date(+m[1], m[2] - 1, +m[3]) : null; }
+    function rsReady() { return !!(window.RESEARCH && RESEARCH.issues); }
+    // Выпуски обзора: из разборов (там полный текст и «почему сейчас» у продуктов), а если
+    // утренний обзор свежее разборов — он первым, с коротким текстом
+    function amIssues() {
+      var M = window.MORNING || {}, out = [];
+      (rsReady() ? RESEARCH.issues : []).forEach(function (is) {
+        if (!is || !is.date || !is.items || !is.items.length) return;
+        out.push({ date: String(is.date).slice(0, 10), items: is.items.map(function (it) {
+          return { rubric: it.rubric, title: it.title, lead: it.lead || "", body: it.body && it.body.length ? it.body : null, link: "research.html?i=" + encodeURIComponent(is.id || is.date) + (it.id ? "#" + encodeURIComponent(it.id) : "") };
+        }), products: (is.products || []).map(function (p) { return typeof p === "string" ? { id: p } : p; }) });
+      });
+      out.sort(function (a, b) { return a.date < b.date ? 1 : a.date > b.date ? -1 : 0; });
+      if (M.date && (M.news || []).length && (!out.length || M.date > out[0].date)) {
+        out.unshift({ date: M.date, items: M.news.map(function (n) { return { rubric: n.rubric, title: n.title, lead: n.body || "", body: null, link: n.link || "research.html" }; }),
+          products: (M.products || []).map(function (id) { return { id: id }; }) });
+      }
+      return out;
+    }
+    // Цифры с единицами — светлым и плотнее: по ним и читают обзор («Brent $103», «+2,86%»)
+    var AM_NUM = /(\$\s?\d[\d ]*(?:[.,]\d+)?|[+−-]?\d[\d  ]*(?:[.,]\d+)?\s?(?:%|б\.\s?п\.|п\.\s?п\.|п\.(?=[\s,;:)]|$)|млрд|млн|трлн|тыс\.|₽)|\d+,\d+)/g;
+    function amText(s) { return esc(s).replace(AM_NUM, '<b class="am-n">$1</b>'); }
+    // Активы доски, названные в тексте → продукты на них. Число на кнопке = сколько откроет
+    // «Продукты» (тот же поиск и класс, что в prodList)
+    var AM_ALIAS = { "Сбербанк": "сбер(?!инвест)", "Газпром": "газпром(?![\\s-]*нефт)", "Т-Банк": "т-банк|тинькофф", "ДОМ.РФ": "дом\\.рф",
+      "USDRUB": "usdrub|доллар (?:слабеет|дешевеет|укрепля|дорожает|растёт|растет|подешев|подорож)|курс доллара", "CNYRUB": "cnyrub|юан",
+      "Золото": "золот", "Super Micro Computer": "super\\s?micro|smci", "Bitcoin": "биткоин|bitcoin", "S&P 500": "s&p\\s?500", "ОФЗ": "офз" };
+    var AM_SHOW = { "USDRUB": "Доллар", "CNYRUB": "Юань" };
+    var AMA = null;
+    function amAssets() {
+      if (AMA) return AMA;
+      var seen = {};
+      AMA = [];
+      function add(name, cls, q, re) {
+        if (seen[q + "|" + cls]) return;
+        var lq = q.toLowerCase();
+        var n = INSTR.filter(function (r) { return r.cls === cls && (r.name + " " + r.underlying + " " + r.cls + " " + clsLabel(r.cls)).toLowerCase().indexOf(lq) >= 0; }).length;
+        if (!n) return;
+        seen[q + "|" + cls] = 1;
+        AMA.push({ name: name, cls: cls, q: q, n: n, re: new RegExp("(^|[^а-яёa-z])(?:" + re + ")", "i") });
+      }
+      INSTR.forEach(function (r) {
+        var u = String(r.underlying || "");
+        if (/[\/]/.test(u)) return;                              // корзины — по своим бумагам
+        var m = /^(.+?)\s*\(([A-Z.]{1,6})\)$/.exec(u), name = (m ? m[1] : u).trim();
+        if (/^ОФЗ/.test(name)) { add("ОФЗ", r.cls, "ОФЗ", AM_ALIAS["ОФЗ"]); return; }
+        var re = AM_ALIAS[name];
+        if (!re) {
+          var w = name.split(/\s+/)[0];
+          if (/^[A-Za-z]/.test(name)) re = /^(CSI|Hang|S&P)/.test(name) ? name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") : w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+          else re = (name.length > 5 ? name.replace(/[ьаяйоеы]$/i, "") : name).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        }
+        add(name, r.cls, name, re);
+      });
+      AMA.sort(function (a, b) { return b.name.length - a.name.length; });
+      return AMA;
+    }
+    function amChips(it) {
+      var t = " " + [it.title, it.lead].concat(it.body || []).join(" ") + " ";
+      var hit = amAssets().filter(function (a) { return a.re.test(t); }).slice(0, 4);
+      if (!hit.length) return "";
+      return '<div class="am-tks"><span>Продукты на активы из текста</span>' + hit.map(function (a) {
+        return '<a href="board.html?q=' + encodeURIComponent(a.q) + '" data-pq="' + esc(a.q) + '" data-pc="' + esc(a.cls) + '">' + esc(AM_SHOW[a.name] || a.name) + "<em>" + a.n + "</em></a>";
+      }).join("") + "</div>";
+    }
+    var AM_OPEN = {}, AM_DAY = null;
+    var CHEV_D = '<svg class="am-cv" width="14" height="9" viewBox="0 0 14 9" fill="none" aria-hidden="true"><path d="M1.5 1.5 7 7l5.5-5.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    // Стенд (только localhost): два варианта подачи на выбор — убрать после решения Руслана
+    var AM_STAND = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+    function amVar() { var v = "a"; if (AM_STAND) try { v = localStorage.getItem("am_v") || "a"; } catch (e) {} return v === "b" ? "b" : "a"; }
+    function amMore(on, min) { return on ? "Свернуть" + CHEV_D : "Читать разбор · " + min + " мин" + CHEV_D; }
+    function amBody() {
+      var rs = need("rs", ["data/research.js?v=7"], rsReady, amDone);
+      var all = amIssues(), V = amVar();
+      if (!all.length) return '<p class="tg-note">Утренний обзор выходит по будням — здесь появится первый.</p>';
+      var cur = all[0], k = 0;
+      if (AM_DAY) for (var i = 0; i < all.length; i++) if (all[i].date === AM_DAY) { cur = all[i]; k = i; break; }
+      var d = isoDate(cur.date), age = daysAgo(cur.date);
+      var when = d ? WDZ[d.getDay()] + ", " + d.getDate() + " " + MONG[d.getMonth()] : dmy(cur.date);
+      var words = 0;
+      cur.items.forEach(function (it) { words += (it.body ? it.body.join(" ") : it.lead).split(/\s+/).length; });
+      var n = cur.items.length;
+      var out = '<div class="am am-' + V + '">';
+      if (AM_STAND) out += '<div class="am-stand" role="group" aria-label="Вариант (стенд)"><span>Стенд:</span><button type="button" data-amv="a" aria-pressed="' + (V === "a") + '">A · лента</button><button type="button" data-amv="b" aria-pressed="' + (V === "b") + '">B · заголовки</button></div>';
+      if (k > 0) out += '<button type="button" class="am-back" data-amday="">' + CHEV_L + "<span>К последнему обзору</span></button>";
+      out += '<p class="am-day">' + (k === 0 && age === 0 && d ? esc(WDN[d.getDay()].charAt(0).toUpperCase() + WDN[d.getDay()].slice(1) + ", " + d.getDate() + " " + MONG[d.getMonth()]) : "Обзор за " + esc(when)) +
+        '<span> · ' + n + " " + plural(n, "тема", "темы", "тем") + " · " + Math.max(1, Math.round(words / 170)) + " мин чтения</span></p>";
+      if (k === 0 && age > 3) out += '<p class="tg-note am-old">Свежего обзора пока нет — это последний вышедший.</p>';
+      cur.items.forEach(function (it, i) {
+        var key = cur.date + ":" + i, on = !!AM_OPEN[key], full = it.body;
+        var min = Math.max(1, Math.round((full ? full.join(" ") : it.lead).split(/\s+/).length / 170));
+        var inner = full ? full.map(function (p) { return "<p>" + amText(p) + "</p>"; }).join("")
+          : rs || LAZY.rs === 2 ? '<p class="am-link"><a href="' + esc(it.link) + '">Разбор целиком — на отдельной странице</a></p>' : '<p class="am-wait">Загружаю разбор…</p>';
+        out += '<article class="am-st' + (on ? " am-on" : "") + (full ? " am-hasf" : "") + '" data-amk="' + esc(key) + '" data-min="' + min + '">' +
+          '<span class="am-rb">' + esc(it.rubric) + "</span>" +
+          '<h2 class="am-h"><button type="button" data-amx aria-expanded="' + on + '" aria-controls="am-f' + i + '"><span>' + esc(it.title) + "</span>" + CHEV_D + "</button></h2>" +
+          '<p class="am-ld"' + (V === "b" ? " data-amx" : "") + ">" + amText(it.lead) + "</p>" +
+          '<div class="am-full" id="am-f' + i + '">' + inner + "</div>" +
+          '<button type="button" class="am-more" data-amx aria-expanded="' + on + '">' + amMore(on, min) + "</button>" +
+          amChips(it) + "</article>";
+      });
+      // Продукты дня — только у последнего обзора: «почему сейчас» в прошлых выпусках
+      // ссылается на тогдашние цены
+      if (k === 0) {
+        var day = cur.products.map(function (p) { return BY[p.id] ? { r: BY[p.id], why: p.why } : null; }).filter(Boolean);
+        if (day.length) {
+          out += '<h2 class="tg-cap am-cap">Продукты под темы утра</h2><ul class="tg-list am-pl">' + day.map(function (x) {
+            return prodRow(x.r).replace(/<\/li>$/, (x.why ? '<p class="am-why">' + amText(x.why) + "</p>" : "") + "</li>");
+          }).join("") + '</ul><p class="tg-note">Подборка аналитика под темы обзора — не индивидуальная рекомендация. Котировки индикативные.</p>';
+        }
+      } else out += '<p class="tg-note">Продукты под темы утра — у последнего обзора: в прошлых выпусках цены уже другие.</p>';
+      // Прошлые обзоры — из разборов
+      var past = all.filter(function (x, j) { return j !== k; }).slice(0, 6);
+      if (past.length && rsReady()) {
+        out += '<h2 class="tg-cap am-cap">' + (k > 0 ? "Другие обзоры" : "Прошлые обзоры") + '</h2><div class="tg-grp am-ar">' + past.map(function (x) {
+          var xd = isoDate(x.date);
+          return '<button type="button" data-amday="' + esc(x.date) + '"><span class="am-ad">' + (xd ? WDS[xd.getDay()] + "<b>" + xd.getDate() + "</b>" + MONG[xd.getMonth()].slice(0, 3) : esc(dmy(x.date))) + '</span><span class="am-as">' +
+            esc(x.items.map(function (it) { return it.title; }).join(" · ")) + "</span>" + CHEV + "</button>";
+        }).join("") + "</div>";
+      } else if (!rs && LAZY.rs !== 2) out += '<p class="am-wait">Загружаю прошлые обзоры…</p>';
+      return out + "</div>";
+    }
+    function amDone() {
+      var b = S.cur === "mkt" && S.mkt.seg === "morning" && document.getElementById("tg-mbody");
+      if (b) b.innerHTML = mktBody();
+    }
+    function amToggle(a) {
+      if (!a) return;
+      var key = a.getAttribute("data-amk"), on = !AM_OPEN[key];
+      AM_OPEN[key] = on;
+      a.classList.toggle("am-on", on);
+      [].forEach.call(a.querySelectorAll("button[data-amx]"), function (b) { b.setAttribute("aria-expanded", on); });
+      var mb = a.querySelector(".am-more");
+      if (mb) mb.innerHTML = amMore(on, a.getAttribute("data-min") || 1);
+      // Свернули длинный разбор, начало темы уехало под шапку — возвращаем к заголовку
+      if (!on) {
+        var ctl = document.querySelector(".tg-v .tg-ctl"), top = ctl ? ctl.getBoundingClientRect().bottom : 100;
+        var r = a.getBoundingClientRect();
+        if (r.top < top) window.scrollBy(0, r.top - top - 8);
+      }
+    }
+    // <<< am
     function mktBody() {
       var body = "";
       if (S.mkt.seg === "sum") body = svBody();
-      else if (S.mkt.seg === "morning") {
-        var M = window.MORNING || {};
-        body += '<p class="tg-meta">Обзор от ' + esc(dmy(M.date)) + "</p>";
-        (M.news || []).forEach(function (n) {
-          body += '<a class="tg-card" href="' + esc(n.link || "research.html") + '"><span class="tg-rb">' + esc(n.rubric) + "</span><h2>" + esc(n.title) + "</h2><p>" + esc(n.body) + '</p><span class="tg-go" aria-hidden="true">Разбор →</span></a>';
-        });
-        var day = (M.products || []).map(function (id) { return BY[id]; }).filter(Boolean);
-        if (day.length) body += '<h2 class="tg-cap">Продукты под обзор</h2><ul class="tg-list">' + day.map(prodRow).join("") + "</ul>";
-      } else if (S.mkt.seg === "rates") {
+      else if (S.mkt.seg === "morning") body = amBody();
+      else if (S.mkt.seg === "rates") {
         var R = window.RATES || {}, c = R.cbr || {};
         var rows = window.soRates ? window.soRates() : [];
         body += '<div class="tg-tiles"><div class="tg-tile"><b>' + fq(c.key && c.key.rate) + '%</b><span>ключевая ставка</span></div><div class="tg-tile"><b>' + fq(c.ruonia && c.ruonia.rate) + "%</b><span>RUONIA</span></div></div>";
@@ -891,10 +1038,16 @@
       if (e.target.closest("[data-quiz]")) { e.preventDefault(); openQuiz(); return; }
       var shr = e.target.closest("[data-svshare]");
       if (shr) { e.preventDefault(); openCard(shr); return; }
+      var amx = e.target.closest("[data-amx]");
+      if (amx) { e.preventDefault(); amToggle(amx.closest(".am-st")); return; }
+      var amd = e.target.closest("[data-amday]");
+      if (amd) { AM_DAY = amd.getAttribute("data-amday") || null; amDone(); window.scrollTo(0, 0); return; }
+      var amv = e.target.closest("[data-amv]");
+      if (amv) { try { localStorage.setItem("am_v", amv.getAttribute("data-amv")); } catch (er) {} amDone(); return; }
       if (e.target.closest("[data-unpick]")) { e.preventDefault(); S.prod.pick = null; render(true); save(); return; }
       // Продукты на бумагу из сводки: открываем «Продукты» с поиском по ней
       var pq = e.target.closest("[data-pq]");
-      if (pq) { e.preventDefault(); S.prod.q = pq.getAttribute("data-pq"); S.prod.cls = "Акции РФ"; S.prod.type = "all"; S.prod.pick = null; S.y.prod = 0; go("prod"); return; }
+      if (pq) { e.preventDefault(); S.prod.q = pq.getAttribute("data-pq"); S.prod.cls = pq.getAttribute("data-pc") || "Акции РФ"; S.prod.type = "all"; S.prod.pick = null; S.y.prod = 0; go("prod"); return; }
       var to = e.target.closest("[data-go]");
       if (to) { e.preventDefault(); go(to.getAttribute("data-go")); return; }
       var b = e.target.closest("[data-seg]");
