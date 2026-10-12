@@ -672,7 +672,48 @@
   const woMetric = (what) => ["Корзина", inst.underlying + " · " + what + " " + BK.byShort +
     (BK.avg ? " · " + BK.weightsText : "")];
 
-  if (inst.type === "warrant") {
+  if (inst.type === "warrant" && inst.structure === "put") {
+    // PUT — варрант на ПАДЕНИЕ: выплата max(K − S; 0), риск ограничен премией.
+    const K = inst.strike || 100;
+    const spot = inst.spot || 100;
+    const strikeTxt = S.fmtSmart(K) + "% — уровень базового актива в день покупки" + (K < 100 ? " (на " + S.fmtSmart(100 - K) + "% ниже)" : "");
+    const premiumRub = nom * inst.quote / 100;
+    const dnPct = Math.max(16, Math.ceil((inst.quote + 6) / 5) * 5);
+    const payout1 = nom * S.PAYOFF.put(spot * (1 - dnPct / 100), K) / 100;
+    const net1 = payout1 - premiumRub;
+    const chgSign = inst.chg > 0 ? "+" : inst.chg < 0 ? "−" : "";
+    const wMetrics = [
+      ["Котировка (премия)", S.fmt2(inst.quote) + "%"],
+      ["Изм. за день", chgSign + S.fmt1(Math.abs(inst.chg || 0)) + " п.п."],
+      ["Страйк (K)", S.fmtSmart(K) + "% нач. уровня"],
+      ["Срок", inst.tenor]
+    ];
+    if (inst.expiry) wMetrics.push(["Экспирация", inst.expiry]);
+    wMetrics.push(["Валюта", inst.currency || "RUB"]);
+    if (inst.uRef) wMetrics.push([inst.underlying + " сегодня", inst.uRef]);
+    wMetrics.push(["Мин. номинал", S.fmtInt(nom) + " ₽"]);
+    content = {
+      badge: "PUT · варрант",
+      subtitle: "Варрант на падение: " + inst.underlying + " · Срок " + inst.tenor,
+      explainer: "PUT-варрант — право на выплату при падении базового актива ниже страйка. Страйк: " + strikeTxt + ". Если на экспирацию актив ниже страйка, выплата растёт вместе с глубиной падения. Если актив не упал — выплаты нет, потеря ограничена премией. Подходит, чтобы заработать на снижении или застраховать позицию в акции.",
+      payoff: chartPayoff,
+      payoffCaption: "Выплата на экспирацию в % от номинала; уровень БА — в % от начального. Чем ниже актив, тем больше выплата. Пунктир — уплаченная премия; б/у — точка безубыточности.",
+      metrics: wMetrics,
+      exampleIntro: "Номинал " + S.fmtInt(nom) + " ₽ · премия " + S.fmt2(inst.quote) + "% = " + S.fmtInt(premiumRub) + " ₽",
+      scenarios: [
+        [inst.underlying + " упал на " + dnPct + "%", "Выплата " + S.fmtInt(payout1) + " ₽", (net1 >= 0 ? "+" : "−") + S.fmtInt(Math.abs(net1)) + " ₽", net1 >= 0 ? "var(--up)" : "var(--loss)"],
+        [inst.underlying + " не упал", "Выплаты нет", "−" + S.fmtInt(premiumRub) + " ₽", "var(--loss)"]
+      ],
+      facts: [
+        ["Страйк", strikeTxt],
+        ["Котировка", "В процентах от номинала"],
+        ["Стиль", "Европейский — выплата на дату экспирации"],
+        ["Максимальная выплата", S.fmtSmart(K) + "% номинала — если актив обесценится до нуля"],
+        ["Максимальный убыток", "Уплаченная премия"],
+        ["Мин. номинал", S.fmtInt(nom) + " ₽"]
+      ]
+    };
+  } else if (inst.type === "warrant") {
     const isCS = inst.structure === "cs";
     const K = inst.strike, K2 = inst.strike2;
     const spot = inst.spot || 100;
@@ -1244,7 +1285,8 @@
       netEl.style.color = net >= 0 ? "var(--up)" : "var(--loss)";
       const be = S.calc.breakeven(inst);
       const bk = S.basketOf(inst), uCalc = bk.on ? bk.gen : inst.underlying;
-      if (inst.type === "warrant") noteEl.textContent = clampNote + "Экспозиция на номинал " + S.fmtInt(Math.round(nominal)) + " ₽ за премию = сумму вложения. Безубыток — при росте " + uCalc + " примерно на +" + S.fmtSmart(be) + "%; ниже — выплата не покрывает премию.";
+      if (inst.type === "warrant" && inst.structure === "put") noteEl.textContent = clampNote + "Экспозиция на номинал " + S.fmtInt(Math.round(nominal)) + " ₽ за премию = сумму вложения. Безубыток — при падении " + uCalc + " примерно на " + S.fmtSmart(Math.abs(be)) + "%; выше — выплата не покрывает премию.";
+      else if (inst.type === "warrant") noteEl.textContent = clampNote + "Экспозиция на номинал " + S.fmtInt(Math.round(nominal)) + " ₽ за премию = сумму вложения. Безубыток — при росте " + uCalc + " примерно на +" + S.fmtSmart(be) + "%; ниже — выплата не покрывает премию.";
       else if (inst.type === "protection") noteEl.textContent = clampNote + "Номинал " + S.fmtInt(Math.round(nominal)) + " ₽. Защита " + prot + "%: при падении возвращается " + prot + "% номинала.";
       else if (inst.type === "booster") noteEl.textContent = clampNote + "Вложение = номинал " + S.fmtInt(Math.round(nominal)) + " ₽. Рост ×КУ внутри диапазона до потолка; при падении — участие 1:1, как в самом активе.";
       else if (inst.type === "rcdigital") noteEl.textContent = clampNote + "Вложение = номинал " + S.fmtInt(Math.round(nominal)) + " ₽. Показана выплата за срок. На страйке " + S.fmtSmart(inst.strike || 100) + "% и выше — номинал плюс купон " + S.fmtSmart(S.rcdCoupon(inst)) + "%; ниже страйка купона нет вовсе, а номинал считается по перформансу от страйка.";

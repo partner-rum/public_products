@@ -41,7 +41,7 @@ window.SITE = (function () {
       title: "Варранты",
       chip: "Активный",
       chipFg: "#B3801F", chipBg: "#F2E7CF",
-      desc: "CALL и колл-спреды (CS) на акции, индексы, золото и биткоин со сроками 2–3 года. Страйк — 100% или выше уровня базового актива в день покупки. Котировка — премия в процентах от номинала, она же максимальный риск покупателя.",
+      desc: "CALL, PUT и колл-спреды (CS) на акции, индексы, золото и биткоин со сроками 2–3 года. Страйк — 100% или выше уровня базового актива в день покупки. Котировка — премия в процентах от номинала, она же максимальный риск покупателя.",
       paramLabel: "Страйк, %"
     },
     digital: {
@@ -133,6 +133,7 @@ window.SITE = (function () {
           ? "Ном × (" + fmtSmart(floor) + "% + " + pay + "% при S ≥ K)"
           : "Ном × " + pay + "% при S ≥ K; иначе 0";
       }
+      if (r && r.structure === "put") return "Ном × max(K − S; 0)";
       return r && r.structure === "cs" ? "Ном × min(max(S − K; 0); K₂ − K)" : "Ном × max(S − K; 0)";
     },
     // Выплата в % от номинала. S, K, K2 — в % от начального уровня БА.
@@ -142,6 +143,8 @@ window.SITE = (function () {
       if (K2) v = Math.min(v, K2 - K);
       return v;
     },
+    // PUT: max(K − S; 0) — выплата растёт при ПАДЕНИИ актива ниже страйка.
+    put(S, K) { return Math.max(K - S, 0); },
     // Купонный варрант (бинарная выплата): S ≥ K → floor + pay, ниже → floor.
     // floor — что платится ниже страйка: 0 у варрантной формы (клиент платит
     // премию и при недоходе теряет её целиком), 100 у облигации с условным купоном
@@ -193,6 +196,8 @@ window.SITE = (function () {
     // pct(move) = max((100+move) − K; 0); безубыток там, где pct == премия (quote),
     // то есть move = K + quote − 100. Для остальных типов не считаем.
     breakeven(r) {
+      // У PUT безубыток ниже страйка: актив должен упасть на величину премии.
+      if (r.type === "warrant" && r.structure === "put") return (r.strike || 100) - (r.quote || 0) - 100;
       if (r.type === "warrant") return (r.strike || 100) + (r.quote || 0) - 100;
       // Купонный варрант: результат меняется СКАЧКОМ ровно на страйке —
       // премия окупается сразу, как только актив дошёл до K (пока выплата больше
@@ -210,6 +215,13 @@ window.SITE = (function () {
     // СТРОГО выше безубытка (результат неотрицателен уже на старте); потолок —
     // заведомо выше безубытка, поэтому прибыль достижима у любого продукта.
     move(r) {
+      // PUT — зеркало CALL: кадр уходит вниз за безубыток, вправо хватает запаса
+      // показать нулевую полку. Дефолт — круглая точка СТРОГО ниже безубытка.
+      if (r.type === "warrant" && r.structure === "put") {
+        const be = calc.breakeven(r), off = (r.strike || 100) - 100;
+        const val = Math.ceil(be / 5) * 5 - 5;
+        return { min: Math.max(-95, Math.min(val - 20, off - 40)), max: Math.max(30, off + 30), val };
+      }
       if (r.type === "warrant") {
         const cs = r.structure === "cs";
         const be = calc.breakeven(r);
@@ -269,7 +281,10 @@ window.SITE = (function () {
     },
     // Выплата в % от номинала при заданном ходе БА (move, %).
     pct(r, move) {
-      if (r.type === "warrant") { const lvl = (r.spot || 100) * (1 + move / 100); return PAYOFF.pct(lvl, r.strike, r.strike2); }
+      if (r.type === "warrant") {
+        const lvl = (r.spot || 100) * (1 + move / 100);
+        return r.structure === "put" ? PAYOFF.put(lvl, r.strike || 100) : PAYOFF.pct(lvl, r.strike, r.strike2);
+      }
       // Защита капитала: участие начисляется на рост ВЫШЕ страйка опциона (strike, % от
       // начального уровня; 100 = ATM). Раньше страйк игнорировался, и продукт на CALL 105
       // показывал участие уже с нулевого движения.
@@ -439,17 +454,29 @@ window.SITE = (function () {
 
     if (r.type === "warrant") {
       const q = r.quote || 0, be = K + q, cap = r.strike2 ? r.strike2 - K : 0;
-      s += hline(q, C.gold) + txt(f.L + 3, y(q) - 7, C.gold, null, "премия " + fmt1(q) + "%");
+      // У PUT левая половина кадра — наклонная выплата, правая — пустая полка:
+      // подпись премии уводим вправо, иначе линия проходит сквозь текст.
+      s += hline(q, C.gold) + (r.structure === "put"
+        ? txt(R, y(q) - 7, C.gold, "end", "премия " + fmt1(q) + "%")
+        : txt(f.L + 3, y(q) - 7, C.gold, null, "премия " + fmt1(q) + "%"));
       if (r.strike2) {
         s += hline(cap, C.grid, "2 4") +
           diamond(x(r.strike2), y(cap), C.line) +
           txtFit(x(r.strike2), y(cap) - 10, C.lab2, "K₂ " + fmtSmart(r.strike2) + " · макс. " + fmtSmart(cap) + "%");
       }
-      // Страйк подписываем НАД осью и левее ромба: у варранта нулевая выплата лежит
-      // ровно на нижней оси, и подпись под ромбом налезала на деление шкалы.
-      // Слева от страйка выплата плоская — место свободно.
-      s += diamond(x(K), y(0), C.line) + txt(x(K) - 8, y(0) - 9, C.lab2, "end", "K " + fmtSmart(K));
-      if (be >= 100 + mLo && be <= 100 + mHi) {
+      // Страйк подписываем НАД осью со стороны плоской (нулевой) полки: у CALL она
+      // слева от страйка, у PUT — справа. Под ромбом подпись налезала на шкалу.
+      const isPut = r.structure === "put";
+      s += diamond(x(K), y(0), C.line) +
+        txt(x(K) + (isPut ? 8 : -8), y(0) - 9, C.lab2, isPut ? null : "end", "K " + fmtSmart(K));
+      if (isPut) {
+        const pbe = K - q;
+        if (pbe >= 100 + mLo && pbe <= 100 + mHi) {
+          const st = x(pbe) < W * 0.25;
+          s += '<circle cx="' + x(pbe).toFixed(1) + '" cy="' + y(q).toFixed(1) + '" r="4.5" fill="' + C.gold + '"/>' +
+            txt(x(pbe) + (st ? 8 : -8), y(q) + 16, C.gold, st ? null : "end", "б/у " + fmtSmart(pbe));
+        }
+      } else if (be >= 100 + mLo && be <= 100 + mHi) {
         const end = x(be) > W * 0.75;
         s += '<circle cx="' + x(be).toFixed(1) + '" cy="' + y(q).toFixed(1) + '" r="4.5" fill="' + C.gold + '"/>' +
           txt(x(be) + (end ? -8 : 8), y(q) + 16, C.gold, end ? "end" : null, "б/у " + fmtSmart(be));

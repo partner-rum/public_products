@@ -214,6 +214,14 @@ function curve(it, isOffer){
              marks:[["K "+K,K,0],["×"+num(ku)+"%",(K+(K2||110))/2,top/2],["макс +"+num(Math.round(top*10)/10)+"%",(K2||110),top]],
              cap:true, xlab:"уровень базового актива", ylab:"выплата, % ном." };
   }
+  if (it.structure === "put"){
+    /* PUT — зеркало CALL: выплата растёт при падении актива ниже страйка. */
+    var pbe = q != null ? K - q : null;
+    return { pts:[[K-58,58],[K,0],[K+16,0]],
+             marks:[["падение 1:1",K-58,58]].concat(pbe? [["б/у "+num(Math.round(pbe*100)/100),pbe,K-pbe]] : [])
+                    .concat([["K "+K,K,0]]),
+             cap:false, xlab:"уровень базового актива", ylab:"выплата, % ном." };
+  }
   if (it.structure === "cs" && K2){
     var cap = K2 - K;
     return { pts:[[K-14,0],[K,0],[K2,cap],[K2+16,cap]],
@@ -273,7 +281,7 @@ function chip(cap, val, sub){
   // шапка-кикер
   var kick = isOffer
     ? (item.kind || TYPE_KICK[fam] || "Выпуск на размещении")
-    : ((TYPE_KICK[fam]||"Структурный продукт") + (item.structure==="cs" ? " · колл-спред" : (item.structure==="call" ? " · CALL" : "")));
+    : ((TYPE_KICK[fam]||"Структурный продукт") + (item.structure==="cs" ? " · колл-спред" : (item.structure==="call" ? " · CALL" : (item.structure==="put" ? " · PUT" : ""))));
   document.getElementById("kick").textContent = kick;
   document.getElementById("name").textContent = item.name || item.id;
 
