@@ -276,9 +276,12 @@ def render_js(sales_items: list) -> str:
     """Собирает содержимое data/instruments.js: сгенерированные + сейлзовые."""
     gen_ids = {i["id"] for i in INSTRUMENTS}
     extra = [i for i in sales_items if i.get("id") not in gen_ids]
+    # Конкретных дат у продуктов на сайте НЕТ — решение Руслана 12.10.2026: только срок.
+    # Экспирация нужна генератору лишь для id (ММГГ), в файл она не попадает.
+    items = [{k: v for k, v in i.items() if k != "expiry"} for i in INSTRUMENTS + extra]
     payload = {
         "updated": datetime.date.today().isoformat(),
-        "instruments": INSTRUMENTS + extra,
+        "instruments": items,
         "underlyings": UNDERLYINGS_INFO if EMIT_UNDERLYINGS else {},
     }
     return (

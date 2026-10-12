@@ -33,7 +33,6 @@ window.SITE_DATA = {
       "floorPct": 0,
       "spot": 100,
       "tenor": "1,5 года",
-      "expiry": "14.03.2028",
       "quote": 15,
       "chg": 0,
       "minNom": 1000000,
@@ -53,7 +52,6 @@ window.SITE_DATA = {
       "floorPct": 0,
       "spot": 100,
       "tenor": "1 год",
-      "expiry": "06.10.2027",
       "quote": 13.15,
       "chg": 0,
       "minNom": 1000000,
@@ -73,7 +71,6 @@ window.SITE_DATA = {
       "floorPct": 0,
       "spot": 100,
       "tenor": "2 года",
-      "expiry": "06.10.2028",
       "quote": 25.25,
       "chg": 0,
       "minNom": 1000000,
@@ -91,7 +88,6 @@ window.SITE_DATA = {
       "uRef": "52% ном.",
       "spot": 100,
       "tenor": "2 года",
-      "expiry": "21.07.2028",
       "quote": 15,
       "chg": 0,
       "minNom": 1000000
@@ -108,7 +104,6 @@ window.SITE_DATA = {
       "uRef": "52% ном.",
       "spot": 100,
       "tenor": "3 года",
-      "expiry": "20.07.2029",
       "quote": 16,
       "chg": 0,
       "minNom": 1000000
@@ -125,7 +120,6 @@ window.SITE_DATA = {
       "uRef": "52% ном.",
       "spot": 100,
       "tenor": "2 года",
-      "expiry": "21.07.2028",
       "quote": 10,
       "chg": 0,
       "minNom": 1000000
@@ -142,7 +136,6 @@ window.SITE_DATA = {
       "uRef": "52% ном.",
       "spot": 100,
       "tenor": "3 года",
-      "expiry": "20.07.2029",
       "quote": 12,
       "chg": 0,
       "minNom": 1000000
@@ -159,7 +152,6 @@ window.SITE_DATA = {
       "uRef": "$205",
       "spot": 100,
       "tenor": "2 года",
-      "expiry": "21.07.2028",
       "quote": 70.5,
       "chg": 0,
       "minNom": 1000000
@@ -176,7 +168,6 @@ window.SITE_DATA = {
       "uRef": "$205",
       "spot": 100,
       "tenor": "3 года",
-      "expiry": "20.07.2029",
       "quote": 86.5,
       "chg": 0,
       "minNom": 1000000
@@ -194,7 +185,6 @@ window.SITE_DATA = {
       "uRef": "$205",
       "spot": 100,
       "tenor": "2 года",
-      "expiry": "21.07.2028",
       "quote": 14.25,
       "chg": 0,
       "minNom": 1000000
@@ -212,7 +202,6 @@ window.SITE_DATA = {
       "uRef": "$205",
       "spot": 100,
       "tenor": "3 года",
-      "expiry": "20.07.2029",
       "quote": 22.25,
       "chg": 0,
       "minNom": 1000000
@@ -229,7 +218,6 @@ window.SITE_DATA = {
       "uRef": "$206",
       "spot": 100,
       "tenor": "2 года",
-      "expiry": "21.07.2028",
       "quote": 35.25,
       "chg": 0,
       "minNom": 1000000
@@ -246,7 +234,6 @@ window.SITE_DATA = {
       "uRef": "$206",
       "spot": 100,
       "tenor": "3 года",
-      "expiry": "20.07.2029",
       "quote": 44,
       "chg": 0,
       "minNom": 1000000
@@ -264,7 +251,6 @@ window.SITE_DATA = {
       "uRef": "$206",
       "spot": 100,
       "tenor": "2 года",
-      "expiry": "21.07.2028",
       "quote": 21.75,
       "chg": 0,
       "minNom": 1000000
@@ -282,7 +268,6 @@ window.SITE_DATA = {
       "uRef": "$206",
       "spot": 100,
       "tenor": "3 года",
-      "expiry": "20.07.2029",
       "quote": 25.75,
       "chg": 0,
       "minNom": 1000000
@@ -299,7 +284,6 @@ window.SITE_DATA = {
       "uRef": "$747",
       "spot": 100,
       "tenor": "2 года",
-      "expiry": "21.07.2028",
       "quote": 18.25,
       "chg": 0,
       "minNom": 1000000
@@ -316,7 +300,6 @@ window.SITE_DATA = {
       "uRef": "$747",
       "spot": 100,
       "tenor": "3 года",
-      "expiry": "20.07.2029",
       "quote": 24.25,
       "chg": 0,
       "minNom": 1000000
@@ -333,7 +316,6 @@ window.SITE_DATA = {
       "uRef": "$374",
       "spot": 100,
       "tenor": "2 года",
-      "expiry": "21.07.2028",
       "quote": 21,
       "chg": 0,
       "minNom": 1000000
@@ -350,7 +332,6 @@ window.SITE_DATA = {
       "uRef": "$374",
       "spot": 100,
       "tenor": "3 года",
-      "expiry": "20.07.2029",
       "quote": 30.5,
       "chg": 0,
       "minNom": 1000000
@@ -367,7 +348,6 @@ window.SITE_DATA = {
       "uRef": "$37",
       "spot": 100,
       "tenor": "2 года",
-      "expiry": "21.07.2028",
       "quote": 40,
       "chg": 0,
       "minNom": 1000000
@@ -384,7 +364,6 @@ window.SITE_DATA = {
       "uRef": "$37",
       "spot": 100,
       "tenor": "3 года",
-      "expiry": "20.07.2029",
       "quote": 57,
       "chg": 0,
       "minNom": 1000000
@@ -402,7 +381,6 @@ window.SITE_DATA = {
       "uRef": "$37",
       "spot": 100,
       "tenor": "2 года",
-      "expiry": "21.07.2028",
       "quote": 20,
       "chg": 0,
       "minNom": 1000000
@@ -420,7 +398,6 @@ window.SITE_DATA = {
       "uRef": "$37",
       "spot": 100,
       "tenor": "3 года",
-      "expiry": "20.07.2029",
       "quote": 24.25,
       "chg": 0,
       "minNom": 1000000
@@ -437,7 +414,6 @@ window.SITE_DATA = {
       "uRef": "4 739 пт",
       "spot": 100,
       "tenor": "2 года",
-      "expiry": "21.07.2028",
       "quote": 11.5,
       "chg": 0,
       "minNom": 1000000
@@ -454,7 +430,6 @@ window.SITE_DATA = {
       "uRef": "4 739 пт",
       "spot": 100,
       "tenor": "3 года",
-      "expiry": "20.07.2029",
       "quote": 13,
       "chg": 0,
       "minNom": 1000000
@@ -471,7 +446,6 @@ window.SITE_DATA = {
       "uRef": "25 132 пт",
       "spot": 100,
       "tenor": "2 года",
-      "expiry": "21.07.2028",
       "quote": 17,
       "chg": 0,
       "minNom": 1000000
@@ -488,7 +462,6 @@ window.SITE_DATA = {
       "uRef": "25 132 пт",
       "spot": 100,
       "tenor": "3 года",
-      "expiry": "20.07.2029",
       "quote": 20.25,
       "chg": 0,
       "minNom": 1000000
@@ -505,7 +478,6 @@ window.SITE_DATA = {
       "uRef": "$1 012",
       "spot": 100,
       "tenor": "2 года",
-      "expiry": "19.08.2028",
       "quote": 49.5,
       "chg": 0,
       "minNom": 1000000
@@ -523,7 +495,6 @@ window.SITE_DATA = {
       "uRef": "$1 012",
       "spot": 100,
       "tenor": "2 года",
-      "expiry": "19.08.2028",
       "quote": 17.75,
       "chg": 0,
       "minNom": 1000000
@@ -540,7 +511,6 @@ window.SITE_DATA = {
       "uRef": "$162",
       "spot": 100,
       "tenor": "2 года",
-      "expiry": "19.08.2028",
       "quote": 35.25,
       "chg": 0,
       "minNom": 1000000
@@ -558,7 +528,6 @@ window.SITE_DATA = {
       "uRef": "$162",
       "spot": 100,
       "tenor": "2 года",
-      "expiry": "19.08.2028",
       "quote": 19.5,
       "chg": 0,
       "minNom": 1000000
@@ -575,7 +544,6 @@ window.SITE_DATA = {
       "uRef": "$480",
       "spot": 100,
       "tenor": "2 года",
-      "expiry": "19.08.2028",
       "quote": 61.25,
       "chg": 0,
       "minNom": 1000000
@@ -593,7 +561,6 @@ window.SITE_DATA = {
       "uRef": "$480",
       "spot": 100,
       "tenor": "2 года",
-      "expiry": "19.08.2028",
       "quote": 24.5,
       "chg": 0,
       "minNom": 1000000
@@ -610,7 +577,6 @@ window.SITE_DATA = {
       "uRef": "$38",
       "spot": 100,
       "tenor": "2 года",
-      "expiry": "19.08.2028",
       "quote": 67.75,
       "chg": 0,
       "minNom": 1000000
@@ -628,7 +594,6 @@ window.SITE_DATA = {
       "uRef": "$38",
       "spot": 100,
       "tenor": "2 года",
-      "expiry": "19.08.2028",
       "quote": 23.5,
       "chg": 0,
       "minNom": 1000000
@@ -645,7 +610,6 @@ window.SITE_DATA = {
       "uRef": "$147",
       "spot": 100,
       "tenor": "2 года",
-      "expiry": "19.08.2028",
       "quote": 52,
       "chg": 0,
       "minNom": 1000000
@@ -663,7 +627,6 @@ window.SITE_DATA = {
       "uRef": "$147",
       "spot": 100,
       "tenor": "2 года",
-      "expiry": "19.08.2028",
       "quote": 22.5,
       "chg": 0,
       "minNom": 1000000
@@ -680,7 +643,6 @@ window.SITE_DATA = {
       "uRef": "$1 012",
       "spot": 100,
       "tenor": "3 года",
-      "expiry": "20.08.2029",
       "quote": 62.5,
       "chg": 0,
       "minNom": 1000000
@@ -698,7 +660,6 @@ window.SITE_DATA = {
       "uRef": "$1 012",
       "spot": 100,
       "tenor": "3 года",
-      "expiry": "20.08.2029",
       "quote": 22,
       "chg": 0,
       "minNom": 1000000
@@ -715,7 +676,6 @@ window.SITE_DATA = {
       "uRef": "$162",
       "spot": 100,
       "tenor": "3 года",
-      "expiry": "20.08.2029",
       "quote": 44,
       "chg": 0,
       "minNom": 1000000
@@ -733,7 +693,6 @@ window.SITE_DATA = {
       "uRef": "$162",
       "spot": 100,
       "tenor": "3 года",
-      "expiry": "20.08.2029",
       "quote": 23.25,
       "chg": 0,
       "minNom": 1000000
@@ -750,7 +709,6 @@ window.SITE_DATA = {
       "uRef": "$480",
       "spot": 100,
       "tenor": "3 года",
-      "expiry": "20.08.2029",
       "quote": 76.5,
       "chg": 0,
       "minNom": 1000000
@@ -768,7 +726,6 @@ window.SITE_DATA = {
       "uRef": "$480",
       "spot": 100,
       "tenor": "3 года",
-      "expiry": "20.08.2029",
       "quote": 33.5,
       "chg": 0,
       "minNom": 1000000
@@ -785,7 +742,6 @@ window.SITE_DATA = {
       "uRef": "$38",
       "spot": 100,
       "tenor": "3 года",
-      "expiry": "20.08.2029",
       "quote": 84,
       "chg": 0,
       "minNom": 1000000
@@ -803,7 +759,6 @@ window.SITE_DATA = {
       "uRef": "$38",
       "spot": 100,
       "tenor": "3 года",
-      "expiry": "20.08.2029",
       "quote": 33.25,
       "chg": 0,
       "minNom": 1000000
@@ -820,7 +775,6 @@ window.SITE_DATA = {
       "uRef": "$147",
       "spot": 100,
       "tenor": "3 года",
-      "expiry": "20.08.2029",
       "quote": 64,
       "chg": 0,
       "minNom": 1000000
@@ -838,7 +792,6 @@ window.SITE_DATA = {
       "uRef": "$147",
       "spot": 100,
       "tenor": "3 года",
-      "expiry": "20.08.2029",
       "quote": 28.25,
       "chg": 0,
       "minNom": 1000000
@@ -856,7 +809,6 @@ window.SITE_DATA = {
       "protectionPct": 100,
       "uRef": "$1 012",
       "tenor": "2 года",
-      "expiry": "19.08.2028",
       "quote": 100,
       "chg": 0,
       "minNom": 1000000
@@ -875,7 +827,6 @@ window.SITE_DATA = {
       "cap": 50,
       "uRef": "$1 012",
       "tenor": "2 года",
-      "expiry": "19.08.2028",
       "quote": 100,
       "chg": 0,
       "minNom": 1000000
@@ -893,7 +844,6 @@ window.SITE_DATA = {
       "protectionPct": 100,
       "uRef": "$162",
       "tenor": "2 года",
-      "expiry": "19.08.2028",
       "quote": 100,
       "chg": 0,
       "minNom": 1000000
@@ -912,7 +862,6 @@ window.SITE_DATA = {
       "cap": 50,
       "uRef": "$162",
       "tenor": "2 года",
-      "expiry": "19.08.2028",
       "quote": 100,
       "chg": 0,
       "minNom": 1000000
@@ -930,7 +879,6 @@ window.SITE_DATA = {
       "protectionPct": 100,
       "uRef": "$480",
       "tenor": "2 года",
-      "expiry": "19.08.2028",
       "quote": 100,
       "chg": 0,
       "minNom": 1000000
@@ -949,7 +897,6 @@ window.SITE_DATA = {
       "cap": 50,
       "uRef": "$480",
       "tenor": "2 года",
-      "expiry": "19.08.2028",
       "quote": 100,
       "chg": 0,
       "minNom": 1000000
@@ -967,7 +914,6 @@ window.SITE_DATA = {
       "protectionPct": 100,
       "uRef": "$38",
       "tenor": "2 года",
-      "expiry": "19.08.2028",
       "quote": 100,
       "chg": 0,
       "minNom": 1000000
@@ -986,7 +932,6 @@ window.SITE_DATA = {
       "cap": 50,
       "uRef": "$38",
       "tenor": "2 года",
-      "expiry": "19.08.2028",
       "quote": 100,
       "chg": 0,
       "minNom": 1000000
@@ -1004,7 +949,6 @@ window.SITE_DATA = {
       "protectionPct": 100,
       "uRef": "$147",
       "tenor": "2 года",
-      "expiry": "19.08.2028",
       "quote": 100,
       "chg": 0,
       "minNom": 1000000
@@ -1023,7 +967,6 @@ window.SITE_DATA = {
       "cap": 50,
       "uRef": "$147",
       "tenor": "2 года",
-      "expiry": "19.08.2028",
       "quote": 100,
       "chg": 0,
       "minNom": 1000000
@@ -1041,7 +984,6 @@ window.SITE_DATA = {
       "protectionPct": 100,
       "uRef": "$1 012",
       "tenor": "3 года",
-      "expiry": "20.08.2029",
       "quote": 100,
       "chg": 0,
       "minNom": 1000000
@@ -1060,7 +1002,6 @@ window.SITE_DATA = {
       "cap": 50,
       "uRef": "$1 012",
       "tenor": "3 года",
-      "expiry": "20.08.2029",
       "quote": 100,
       "chg": 0,
       "minNom": 1000000
@@ -1078,7 +1019,6 @@ window.SITE_DATA = {
       "protectionPct": 100,
       "uRef": "$162",
       "tenor": "3 года",
-      "expiry": "20.08.2029",
       "quote": 100,
       "chg": 0,
       "minNom": 1000000
@@ -1097,7 +1037,6 @@ window.SITE_DATA = {
       "cap": 50,
       "uRef": "$162",
       "tenor": "3 года",
-      "expiry": "20.08.2029",
       "quote": 100,
       "chg": 0,
       "minNom": 1000000
@@ -1115,7 +1054,6 @@ window.SITE_DATA = {
       "protectionPct": 100,
       "uRef": "$480",
       "tenor": "3 года",
-      "expiry": "20.08.2029",
       "quote": 100,
       "chg": 0,
       "minNom": 1000000
@@ -1134,7 +1072,6 @@ window.SITE_DATA = {
       "cap": 50,
       "uRef": "$480",
       "tenor": "3 года",
-      "expiry": "20.08.2029",
       "quote": 100,
       "chg": 0,
       "minNom": 1000000
@@ -1152,7 +1089,6 @@ window.SITE_DATA = {
       "protectionPct": 100,
       "uRef": "$38",
       "tenor": "3 года",
-      "expiry": "20.08.2029",
       "quote": 100,
       "chg": 0,
       "minNom": 1000000
@@ -1171,7 +1107,6 @@ window.SITE_DATA = {
       "cap": 50,
       "uRef": "$38",
       "tenor": "3 года",
-      "expiry": "20.08.2029",
       "quote": 100,
       "chg": 0,
       "minNom": 1000000
@@ -1189,7 +1124,6 @@ window.SITE_DATA = {
       "protectionPct": 100,
       "uRef": "$147",
       "tenor": "3 года",
-      "expiry": "20.08.2029",
       "quote": 100,
       "chg": 0,
       "minNom": 1000000
@@ -1208,7 +1142,6 @@ window.SITE_DATA = {
       "cap": 50,
       "uRef": "$147",
       "tenor": "3 года",
-      "expiry": "20.08.2029",
       "quote": 100,
       "chg": 0,
       "minNom": 1000000
@@ -1229,7 +1162,6 @@ window.SITE_DATA = {
       "strike": 100,
       "spot": 100,
       "tenor": "1 год",
-      "expiry": "13.08.2027",
       "quote": 10.75,
       "chg": 0,
       "minNom": 1000000,
@@ -1251,7 +1183,6 @@ window.SITE_DATA = {
       "strike": 100,
       "spot": 100,
       "tenor": "2 года",
-      "expiry": "13.08.2028",
       "quote": 13.75,
       "chg": 0,
       "minNom": 1000000,
@@ -1312,7 +1243,6 @@ window.SITE_DATA = {
       "strike": 100,
       "spot": 100,
       "tenor": "1 год",
-      "expiry": "12.10.2027",
       "quote": 28,
       "chg": 0,
       "minNom": 1000000,
@@ -1329,7 +1259,6 @@ window.SITE_DATA = {
       "strike": 100,
       "spot": 100,
       "tenor": "2 года",
-      "expiry": "12.10.2028",
       "quote": 43,
       "chg": 0,
       "minNom": 1000000,
@@ -1346,7 +1275,6 @@ window.SITE_DATA = {
       "strike": 100,
       "spot": 100,
       "tenor": "1 год",
-      "expiry": "12.10.2027",
       "quote": 11.5,
       "chg": 0,
       "minNom": 1000000,
@@ -1363,7 +1291,6 @@ window.SITE_DATA = {
       "strike": 100,
       "spot": 100,
       "tenor": "2 года",
-      "expiry": "12.10.2028",
       "quote": 14,
       "chg": 0,
       "minNom": 1000000,
@@ -1401,7 +1328,6 @@ window.SITE_DATA = {
       "strike": 100,
       "spot": 100,
       "tenor": "1 год",
-      "expiry": "05.10.2027",
       "quote": 19.25,
       "chg": 0,
       "minNom": 1000000,
@@ -1418,7 +1344,6 @@ window.SITE_DATA = {
       "strike": 100,
       "spot": 100,
       "tenor": "1 год",
-      "expiry": "05.10.2027",
       "quote": 19,
       "chg": 0,
       "minNom": 1000000,
@@ -1435,7 +1360,6 @@ window.SITE_DATA = {
       "strike": 100,
       "spot": 100,
       "tenor": "1 год",
-      "expiry": "05.10.2027",
       "quote": 26,
       "chg": 0,
       "minNom": 1000000,
@@ -1452,7 +1376,6 @@ window.SITE_DATA = {
       "strike": 100,
       "spot": 100,
       "tenor": "2 года",
-      "expiry": "04.10.2028",
       "quote": 29.75,
       "chg": 0,
       "minNom": 1000000,
@@ -1469,7 +1392,6 @@ window.SITE_DATA = {
       "strike": 100,
       "spot": 100,
       "tenor": "2 года",
-      "expiry": "04.10.2028",
       "quote": 28.25,
       "chg": 0,
       "minNom": 1000000,
@@ -1486,7 +1408,6 @@ window.SITE_DATA = {
       "strike": 100,
       "spot": 100,
       "tenor": "2 года",
-      "expiry": "04.10.2028",
       "quote": 41.25,
       "chg": 0,
       "minNom": 1000000,
@@ -1755,7 +1676,6 @@ window.SITE_DATA = {
       "cls": "Облигации",
       "currency": "RUB",
       "tenor": "3 года",
-      "expiry": "27.07.2029",
       "quote": 69,
       "chg": 0,
       "minNom": 1000000,
@@ -1770,7 +1690,6 @@ window.SITE_DATA = {
       "cls": "Облигации",
       "currency": "RUB",
       "tenor": "5 лет",
-      "expiry": "27.07.2031",
       "quote": 55,
       "chg": 0,
       "minNom": 1000000,
@@ -1785,7 +1704,6 @@ window.SITE_DATA = {
       "cls": "Облигации",
       "currency": "RUB",
       "tenor": "3 года",
-      "expiry": "27.07.2029",
       "quote": 70,
       "chg": 0,
       "minNom": 1000000,
@@ -1800,7 +1718,6 @@ window.SITE_DATA = {
       "cls": "Облигации",
       "currency": "RUB",
       "tenor": "5 лет",
-      "expiry": "27.07.2031",
       "quote": 56,
       "chg": 0,
       "minNom": 1000000,
@@ -1815,7 +1732,6 @@ window.SITE_DATA = {
       "cls": "Облигации",
       "currency": "RUB",
       "tenor": "3 года",
-      "expiry": "27.07.2029",
       "quote": 69,
       "chg": 0,
       "minNom": 1000000,
@@ -1830,7 +1746,6 @@ window.SITE_DATA = {
       "cls": "Облигации",
       "currency": "RUB",
       "tenor": "5 лет",
-      "expiry": "27.07.2031",
       "quote": 56,
       "chg": 0,
       "minNom": 1000000,
@@ -1845,7 +1760,6 @@ window.SITE_DATA = {
       "cls": "Облигации",
       "currency": "RUB",
       "tenor": "3 года",
-      "expiry": "27.07.2029",
       "quote": 70,
       "chg": 0,
       "minNom": 1000000,
@@ -1860,7 +1774,6 @@ window.SITE_DATA = {
       "cls": "Облигации",
       "currency": "RUB",
       "tenor": "5 лет",
-      "expiry": "27.07.2031",
       "quote": 57,
       "chg": 0,
       "minNom": 1000000,
@@ -1875,7 +1788,6 @@ window.SITE_DATA = {
       "cls": "Облигации",
       "currency": "RUB",
       "tenor": "3 года",
-      "expiry": "27.07.2029",
       "quote": 70,
       "chg": 0,
       "minNom": 1000000,
@@ -1890,7 +1802,6 @@ window.SITE_DATA = {
       "cls": "Облигации",
       "currency": "RUB",
       "tenor": "5 лет",
-      "expiry": "27.07.2031",
       "quote": 57,
       "chg": 0,
       "minNom": 1000000,
@@ -1908,7 +1819,6 @@ window.SITE_DATA = {
       "strike2": 110,
       "ku": 175,
       "tenor": "9 месяцев",
-      "expiry": "23.04.2027",
       "quote": 175,
       "chg": 0,
       "minNom": 1000000,
@@ -1925,7 +1835,6 @@ window.SITE_DATA = {
       "strike2": 110,
       "ku": 175,
       "tenor": "9 месяцев",
-      "expiry": "23.04.2027",
       "quote": 175,
       "chg": 0,
       "minNom": 1000000,
@@ -1942,7 +1851,6 @@ window.SITE_DATA = {
       "strike2": 110,
       "ku": 200,
       "tenor": "9 месяцев",
-      "expiry": "23.04.2027",
       "quote": 200,
       "chg": 0,
       "minNom": 1000000,
@@ -1959,7 +1867,6 @@ window.SITE_DATA = {
       "strike2": 110,
       "ku": 175,
       "tenor": "9 месяцев",
-      "expiry": "23.04.2027",
       "quote": 175,
       "chg": 0,
       "minNom": 1000000,
@@ -1974,7 +1881,6 @@ window.SITE_DATA = {
       "cls": "Валюта",
       "uRef": "12,65",
       "tenor": "1 год",
-      "expiry": "05.10.2027",
       "spot": 100,
       "strike": 100,
       "quote": 14.25,
@@ -1989,7 +1895,6 @@ window.SITE_DATA = {
       "underlying": "ОФЗ 26238",
       "cls": "Облигации",
       "tenor": "3 года",
-      "expiry": "14.09.2029",
       "currency": "RUB",
       "spot": 100,
       "strike": 100,
@@ -2007,7 +1912,6 @@ window.SITE_DATA = {
       "underlying": "ОФЗ 26248",
       "cls": "Облигации",
       "tenor": "2 года",
-      "expiry": "04.09.2028",
       "currency": "RUB",
       "spot": 100,
       "strike": 100,
@@ -2074,7 +1978,6 @@ window.SITE_DATA = {
       "underlying": "ОФЗ-26254",
       "cls": "Облигации",
       "tenor": "2 года",
-      "expiry": "18.09.2028",
       "currency": "RUB",
       "spot": 100,
       "strike": 100,
@@ -2091,7 +1994,6 @@ window.SITE_DATA = {
       "underlying": "ОФЗ-26254",
       "cls": "Облигации",
       "tenor": "2 года",
-      "expiry": "18.09.2028",
       "currency": "RUB",
       "spot": 100,
       "strike": 105,
@@ -2117,7 +2019,6 @@ window.SITE_DATA = {
       "basketMode": "avg",
       "cls": "Акции РФ",
       "tenor": "1 год",
-      "expiry": "05.10.2027",
       "currency": "RUB",
       "spot": 100,
       "strike": 100,
@@ -2143,7 +2044,6 @@ window.SITE_DATA = {
       "basketMode": "avg",
       "cls": "Акции РФ",
       "tenor": "2 года",
-      "expiry": "05.10.2028",
       "currency": "RUB",
       "spot": 100,
       "strike": 100,
@@ -2166,7 +2066,6 @@ window.SITE_DATA = {
       "basketMode": "avg",
       "cls": "Акции РФ",
       "tenor": "1 год",
-      "expiry": "05.10.2027",
       "currency": "RUB",
       "spot": 100,
       "strike": 100,
@@ -2189,7 +2088,6 @@ window.SITE_DATA = {
       "basketMode": "avg",
       "cls": "Акции РФ",
       "tenor": "2 года",
-      "expiry": "05.10.2028",
       "currency": "RUB",
       "spot": 100,
       "strike": 100,

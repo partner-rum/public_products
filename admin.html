@@ -320,7 +320,7 @@
 
     <div class="grp"><div class="gt">Условия</div>
       <div class="row3">
-        <label><span class="k">Экспирация <b>*</b></span><input name="expiry" placeholder="18.12.2027" maxlength="10"></label>
+        <label><span class="k">Экспирация <b>*</b> <i style="font-style:normal;opacity:.6">— только для id, на сайте не показывается</i></span><input name="expiry" placeholder="18.12.2027" maxlength="10"></label>
         <label id="l-quote"><span class="k">Котировка, % ном. <b>*</b></span><input name="quote" type="number" step="0.01" placeholder="96.80"></label>
         <label><span class="k">Мин. номинал, ₽</span><input name="minNom" type="number" value="1000000"></label>
       </div>
@@ -1548,7 +1548,6 @@
       return;
     }
     try {
-      if (patch.expiry) needDate(fBoard, "expiry");
       if (patch.quote != null) needRange(fBoard, "quote", 0.01, 200, "% номинала");
     } catch (err) { msgEl.className = "msg err"; msgEl.textContent = err.message; return; }
 
@@ -2088,7 +2087,7 @@
   var bdItems = {};            // id -> исходная запись с сайта
   var bdOrig = null;           // запись, которую сейчас правим
   var bdSnap = null;           // снимок ФОРМЫ сразу после предзаполнения
-  var BD_KEYS = ["type", "name", "underlying", "cls", "tenor", "expiry", "currency", "about",
+  var BD_KEYS = ["type", "name", "underlying", "cls", "tenor", "currency", "about",
      "quote", "minNom", "strike", "strike2", "participation", "protectionPct", "cap", "startFrom",
      // couponPct — купон RC+условного: единственный параметр этого типа, и без
      // него правка формой не могла бы изменить главное число продукта
@@ -2585,6 +2584,8 @@
         : type === "autocall" ? "ac" : type === "revconv" ? "rc" : type === "booster" ? "b"
         : type === "digital" ? "dg" : type === "rcdigital" ? "rcd" : "w";
       item.id = pfx + "-" + slug(item.underlying) + "-" + slug(item.expiry).replace(/\./g, "") + "-s";
+      // Конкретных дат у продуктов на сайте нет (решение Руслана 12.10.2026) — только срок
+      delete item.expiry;
       return item;
   }
 

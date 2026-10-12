@@ -688,7 +688,6 @@
       ["Страйк (K)", S.fmtSmart(K) + "% нач. уровня"],
       ["Срок", inst.tenor]
     ];
-    if (inst.expiry) wMetrics.push(["Экспирация", inst.expiry]);
     wMetrics.push(["Валюта", inst.currency || "RUB"]);
     if (inst.uRef) wMetrics.push([inst.underlying + " сегодня", inst.uRef]);
     wMetrics.push(["Мин. номинал", S.fmtInt(nom) + " ₽"]);
@@ -732,7 +731,6 @@
     ];
     if (isCS) wMetrics.push(["Потолок (K₂)", S.fmtSmart(K2) + "% · выплата ≤ " + S.fmtSmart(capPct) + "%"]);
     wMetrics.push(["Срок", inst.tenor]);
-    if (inst.expiry) wMetrics.push(["Экспирация", inst.expiry]);
     wMetrics.push(["Валюта", inst.currency || "RUB"]);
     if (isWO) wMetrics.push(woMetric("выплата"));
     if (inst.uRef) wMetrics.push([inst.underlying + " сегодня", inst.uRef]);
@@ -784,7 +782,6 @@
       ["Выплата при срабатывании", S.fmtSmart(pay) + "% номинала — фиксированная"],
       ["Срок", inst.tenor]
     ];
-    if (inst.expiry) dMetrics.push(["Экспирация", inst.expiry]);
     dMetrics.push(["Валюта", inst.currency || "RUB"]);
     if (isWO) dMetrics.push(woMetric("условие"));
     if (inst.uRef) dMetrics.push([inst.underlying + " сегодня", inst.uRef]);
@@ -821,7 +818,7 @@
     const buyRub = nom * inst.quote / 100;
     content = {
       badge: "облигация",
-      subtitle: "Дисконтная облигация · Погашение " + inst.expiry + " · Выплата 100% номинала",
+      subtitle: "Дисконтная облигация · Срок " + inst.tenor + " · Выплата 100% номинала",
       explainer: (inst.about ? inst.about + " " : "") + "Облигация покупается дешевле номинала — сегодня по " + S.fmt2(inst.quote) + "% от него. На дату погашения выплачивается полный номинал, 100% (если по контрольному лицу не наступит кредитное событие). Весь доход — это дисконт: разница между ценой покупки и номиналом, известная в день сделки. Купонов нет.",
       payoff: chartPayoff,
       payoffCaption: "Покупка дешевле номинала, погашение по 100%. Доход — разница, зафиксированная в момент покупки.",
@@ -829,13 +826,12 @@
         ["Котировка", S.fmt2(inst.quote) + "%"],
         ["Изм. за день", (inst.chg > 0 ? "+" : "−") + S.fmt1(Math.abs(inst.chg)) + " п.п."],
         ["Выплата на погашение", "100%"],
-        ["Погашение", inst.expiry],
-        ["Осталось", S.daysTo(inst.expiry) + " дн."],
+        ["Срок", inst.tenor],
         ["Мин. номинал", S.fmtInt(nom) + " ₽"]
       ],
       exampleIntro: "Номинал " + S.fmtInt(nom) + " ₽ · покупка по " + S.fmt2(inst.quote) + "% = " + S.fmtInt(buyRub) + " ₽",
       scenarios: [
-        ["Дождались погашения " + inst.expiry, "Выплата " + S.fmtInt(nom) + " ₽ — 100% номинала", "+" + S.fmtInt(nom - buyRub) + " ₽", "var(--up)"],
+        ["Дождались погашения", "Выплата " + S.fmtInt(nom) + " ₽ — 100% номинала", "+" + S.fmtInt(nom - buyRub) + " ₽", "var(--up)"],
         ["Продали раньше срока", "По текущей рыночной цене", "по рынку", "rgba(255,255,255,0.60)"]
       ],
       facts: [
