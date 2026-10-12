@@ -696,15 +696,16 @@
       AMA.sort(function (a, b) { return b.name.length - a.name.length; });
       return AMA;
     }
-    function amChips(it) {
+    function amChips(it, cap) {
       var t = " " + [it.title, it.lead].concat(it.body || []).join(" ") + " ";
       var hit = amAssets().filter(function (a) { return a.re.test(t); }).slice(0, 4);
       if (!hit.length) return "";
-      return '<div class="am-tks"><span>Продукты на активы из этой темы</span>' + hit.map(function (a) {
+      return '<div class="am-tks"><span>' + (cap || "Продукты на активы из этой темы") + '</span>' + hit.map(function (a) {
         return '<a href="board.html?q=' + encodeURIComponent(a.q) + '" data-pq="' + esc(a.q) + '" data-pc="' + esc(a.cls) + '">' + esc(AM_SHOW[a.name] || a.name) + "<em>" + a.n + "</em></a>";
       }).join("") + "</div>";
     }
-    var AM_DAY = null, AM_IDX = 0, AM_WHY = false, RD = null;
+    // Позиция каждой карусели (Утро — am, идеи дайджеста — id, разборы — rv) и открытая читалка
+    var AM_DAY = null, AM_WHY = false, RD = null, CAR = { am: 0, id: 0, rv: 0 };
     var CHEV_D = '<svg class="am-cv" width="14" height="9" viewBox="0 0 14 9" fill="none" aria-hidden="true"><path d="M1.5 1.5 7 7l5.5-5.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
     function amCur() {
       var all = amIssues(), k = 0;
@@ -716,7 +717,7 @@
       var o = amCur(), cur = o.cur, k = o.k;
       if (!cur) return '<p class="tg-note">Утренний обзор выходит по будням — здесь появится первый.</p>';
       var n = cur.items.length, d = isoDate(cur.date), age = daysAgo(cur.date), mins = 0;
-      if (AM_IDX >= n) AM_IDX = 0;
+      if (CAR.am >= n) CAR.am = 0;
       cur.items.forEach(function (it) { mins += amMin(it); });
       var out = '<div class="am">';
       out += '<p class="am-day">' + (k === 0 && age === 0 && d ? esc(WDN[d.getDay()].charAt(0).toUpperCase() + WDN[d.getDay()].slice(1) + ", " + d.getDate() + " " + MONG[d.getMonth()])
@@ -733,9 +734,9 @@
       }
       // Темы: вкладки и карточки, листаются вбок
       out += '<div class="am-tabs" role="tablist" aria-label="Темы обзора">' + cur.items.map(function (it, i) {
-        return '<button type="button" role="tab" data-amto="' + i + '" aria-selected="' + (i === AM_IDX) + '" aria-controls="am-c' + i + '">' + esc(it.rubric) + "</button>";
+        return '<button type="button" role="tab" data-amto="' + i + '" aria-selected="' + (i === CAR.am) + '" aria-controls="am-c' + i + '">' + esc(it.rubric) + "</button>";
       }).join("") + "</div>";
-      out += '<div class="am-car" id="am-car">' + cur.items.map(function (it, i) {
+      out += '<div class="am-car" id="am-car" data-car="am">' + cur.items.map(function (it, i) {
         return '<article class="am-cd" id="am-c' + i + '" role="tabpanel" aria-label="' + esc(it.rubric) + ", " + (i + 1) + " из " + n + '">' +
           '<div class="am-cdt"><span class="am-rb">' + esc(it.rubric) + '</span><span class="am-k">' + (i + 1) + " / " + n + "</span></div>" +
           '<h2 class="am-h">' + esc(it.title) + "</h2>" +
@@ -756,29 +757,31 @@
         }
       } else out += '<p class="tg-note am-pastn">Продукты под темы утра — у последнего обзора: в прошлых выпусках цены уже другие.</p>';
       if (!rs && LAZY.rs !== 2 && o.all.length < 2) out += '<p class="am-wait">Загружаю прошлые обзоры…</p>';
-      if (window.requestAnimationFrame) requestAnimationFrame(amPlace);
+      if (window.requestAnimationFrame) requestAnimationFrame(carPlace);
       return out + "</div>";
     }
-    function amStep(car) { var c = car.children; return c.length > 1 ? c[1].offsetLeft - c[0].offsetLeft : car.clientWidth || 1; }
-    // После перерисовки карточки стоят на той теме, где человек был
-    function amPlace() {
-      var car = document.getElementById("am-car"); if (!car) return;
-      car.style.scrollBehavior = "auto"; car.scrollLeft = AM_IDX * amStep(car); car.style.scrollBehavior = "";
+    function carStep(car) { var c = car.children; return c.length > 1 ? c[1].offsetLeft - c[0].offsetLeft : car.clientWidth || 1; }
+    // После перерисовки карточки стоят там, где человек был
+    function carPlace() {
+      [].forEach.call(document.querySelectorAll("[data-car]"), function (car) {
+        car.style.scrollBehavior = "auto"; car.scrollLeft = (CAR[car.getAttribute("data-car")] || 0) * carStep(car); car.style.scrollBehavior = "";
+      });
     }
     function amTabs() {
-      [].forEach.call(document.querySelectorAll(".am-tabs [data-amto]"), function (b) { b.setAttribute("aria-selected", +b.getAttribute("data-amto") === AM_IDX); });
+      [].forEach.call(document.querySelectorAll(".am-tabs [data-amto]"), function (b) { b.setAttribute("aria-selected", +b.getAttribute("data-amto") === CAR.am); });
     }
-    // Листают карточки пальцем — подсвечиваем вкладку (scroll не всплывает, слушаем на захвате)
+    // Листают карточки пальцем — запоминаем позицию, в «Утре» подсвечиваем вкладку темы
+    // (scroll не всплывает, слушаем на захвате)
     document.addEventListener("scroll", function (e) {
-      var car = e.target;
-      if (!car || car.id !== "am-car") return;
-      var i = Math.round(car.scrollLeft / amStep(car));
-      if (i !== AM_IDX && i >= 0 && i < car.children.length) { AM_IDX = i; amTabs(); }
+      var car = e.target, k = car && car.getAttribute && car.getAttribute("data-car");
+      if (!k) return;
+      var i = Math.round(car.scrollLeft / carStep(car));
+      if (i !== CAR[k] && i >= 0 && i < car.children.length) { CAR[k] = i; if (k === "am") amTabs(); }
     }, { capture: true, passive: true });
     function amTo(i) {
       var car = document.getElementById("am-car"); if (!car) return;
-      AM_IDX = i; amTabs();
-      var x = i * amStep(car);
+      CAR.am = i; amTabs();
+      var x = i * carStep(car);
       if (car.scrollTo) car.scrollTo({ left: x, behavior: "smooth" }); else car.scrollLeft = x;
     }
     function amDone() {
@@ -792,13 +795,14 @@
       var l = document.getElementById("am-pl"); if (l) l.classList.toggle("am-wy", AM_WHY);
     }
 
-    // Читалка разбора: во весь экран, тема за темой. Запись в истории — «назад» её закрывает
-    function openRd(i) {
-      if (RD || !amCur().cur) return;
-      RD = { i: i };
+    // Читалка: во весь экран, тема за темой (Утро) или идея за идеей (Идеи). Запись в истории —
+    // «назад» её закрывает
+    function openRd(k, i) {
+      if (RD || (k === "am" ? !amCur().cur : !idCur().list.length)) return;
+      RD = { k: k, i: i };
       var el = document.createElement("div");
       el.className = "tg-qz am-rd"; el.id = "am-rd";
-      el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", "Разбор утреннего обзора");
+      el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-label", k === "am" ? "Разбор утреннего обзора" : "Идея недели");
       el.addEventListener("click", rdClick);
       document.getElementById("tg-app").appendChild(el);
       document.documentElement.classList.add("tg-qz-on");
@@ -808,12 +812,14 @@
     function closeRd(viaHistory) {
       var el = document.getElementById("am-rd"); if (el) el.remove();
       document.documentElement.classList.remove("tg-qz-on");
-      var was = !!RD; if (RD) AM_IDX = RD.i; RD = null;
-      amTabs(); amPlace();
+      var was = !!RD; if (RD) CAR[RD.k] = RD.i; RD = null;
+      amTabs(); carPlace();
       if (was && !viaHistory && (history.state || {}).rd) history.back();
     }
     function rdRender() {
-      var el = document.getElementById("am-rd"), o = amCur();
+      var el = document.getElementById("am-rd");
+      if (el && RD && RD.k === "id") { idRd(el); return; }
+      var o = amCur();
       if (!el || !RD || !o.cur) return;
       var items = o.cur.items, n = items.length, i = Math.min(RD.i, n - 1), it = items[i];
       var bar = items.map(function (x, j) { return "<i" + (j <= i ? ' class="on"' : "") + "></i>"; }).join("");
@@ -845,6 +851,8 @@
       var v = b.getAttribute("data-rd");
       if (v === "close") closeRd(false);
       else if (v === "next") { RD.i++; rdRender(); }
+      else if (v === "tolist") closeRd(false);
+      else if (v === "tolist") closeRd(false);
       else if (v === "prev") { RD.i = Math.max(0, RD.i - 1); rdRender(); }
       else if (v === "prod") {
         closeRd(false);
@@ -855,6 +863,154 @@
       }
     }
     // <<< am
+    // >>> id
+    // ── Идеи (12.10.2026, Руслан: «теперь сделаем так же „Идеи“ в рынке») ──
+    // Тот же приём, что у «Утра»: идеи дайджеста — карточками вбок (график выплаты, главная
+    // цифра, вход), над ними строка дат (прошлые выпуски) и фильтр по типу продукта; «Подробнее»
+    // открывает читалку идеи (гипотеза, график, параметры, как заработать, риск, логика) с
+    // переходом к продукту. Ниже — разборы к вебинарам карточками, сверху — ближайший вебинар.
+    // Графики, «риск» и параметры — функции data/digest-lib.js (DF), те же, что на странице
+    // дайджеста: правишь там — меняется и здесь
+    var ID_DAY = null, ID_FAM = "all";
+    function idReady() { return !!(window.DIGEST_ARCHIVE && window.IDEAS); }
+    function dfReady() { return !!window.DF; }
+    function idIssueDate(x) { return isoDate(x.id) || isoDate(String(x.date || "").replace(/^(\d{2})\.(\d{2})\.(\d{4})$/, "$3-$2-$1")); }
+    function idCur() {
+      var A = window.DIGEST_ARCHIVE || {}, all = (A.issues || []).filter(function (x) { return x && x.ideas && x.ideas.length; }), k = 0;
+      if (ID_DAY) for (var i = 0; i < all.length; i++) if (all[i].id === ID_DAY) { k = i; break; }
+      var cur = all[k] || null;
+      if (cur && ID_FAM !== "all" && !cur.ideas.some(function (it) { return it.family === ID_FAM; })) ID_FAM = "all";
+      var list = cur ? cur.ideas.filter(function (it) { return ID_FAM === "all" || it.family === ID_FAM; }) : [];
+      return { all: all, k: k, cur: cur, list: list };
+    }
+    function idSec(f) { return (window.DF && DF.sectionOf(f)) || { label: f || "Идея", color: "#8A93A6" }; }
+    // Идея ↔ продукт: по точному имени на доске или в размещениях (идеи заводят из них же)
+    var IDNM = null;
+    function idProd(it) {
+      if (!IDNM) {
+        IDNM = {};
+        INSTR.forEach(function (r) { IDNM[r.name] = "instrument.html?id=" + encodeURIComponent(r.id); });
+        ((window.OFFERINGS || {}).items || []).forEach(function (o) { if (!o.hidden && !IDNM[o.name]) IDNM[o.name] = "offerings.html#" + encodeURIComponent(o.id); });
+      }
+      return IDNM[it.name] || null;
+    }
+    function idChart(it) { return window.DF ? '<div class="id-ch" aria-hidden="true">' + DF.payoffSvg(it.payoff, idSec(it.family).color) + "</div>" : ""; }
+    function idCard(it, i, n) {
+      var sc = idSec(it.family), m = it.metric || {}, price = it.p && it.p.price;
+      return '<article class="am-cd id-cd" style="--fc:' + esc(sc.color) + '" aria-label="' + esc(sc.label) + ", " + (i + 1) + " из " + n + '">' +
+        '<div class="am-cdt"><span class="id-fam"><i></i>' + esc(sc.label) + '</span><span class="am-k">' + (i + 1) + " / " + n + "</span></div>" +
+        '<h2 class="am-h id-h">' + esc(it.name) + "</h2>" +
+        '<p class="id-sub">' + esc([it.underlying, it.tenor].filter(Boolean).join(" · ")) + "</p>" +
+        idChart(it) +
+        '<div class="id-ms">' + (m.v ? "<div><b>" + esc(m.v) + "</b><span>" + esc(m.k || "") + "</span></div>" : "") +
+        (price ? '<div><b class="id-pz">' + esc(price) + "</b><span>вход</span></div>" : "") + "</div>" +
+        '<div class="am-ft"><button type="button" class="am-more" data-idrd="' + i + '">Подробнее об идее' + ARROW + "</button></div></article>";
+    }
+    function idDone() {
+      var b = S.cur === "mkt" && S.mkt.seg === "ideas" && document.getElementById("tg-mbody");
+      if (b) b.innerHTML = mktBody();
+      if (RD) rdRender();
+    }
+    function idWeb(e, past) {
+      var d = isoDate(e.date);
+      return '<a class="id-web" href="events.html"><span class="id-wd">' + (d ? "<small>" + WDS[d.getDay()] + "</small><b>" + d.getDate() + "</b><small>" + MONG[d.getMonth()].slice(0, 3) + "</small>" : "") + "</span>" +
+        '<span class="id-wt"><small>' + (past ? (e.recordingUrl ? "Запись вебинара" : "Прошедший вебинар") : "Вебинар" + (e.timeMsk ? " · " + esc(e.timeMsk) + " МСК" : "")) + "</small><b>" + esc(e.title) + "</b>" +
+        '<em>' + (past ? (e.recordingUrl ? "Смотреть запись" : "Подробнее") : "Записаться") + "</em></span>" + CHEV + "</a>";
+    }
+    function idBody() {
+      var out = '<div class="am">';
+      var E = (window.EVENTS && EVENTS.items) || [];
+      var nx = E.filter(function (e) { return e.date >= TODAY; }).sort(function (a, b) { return a.date < b.date ? -1 : 1; })[0];
+      if (nx) out += idWeb(nx, false);
+      // Дайджест и разборы — 460 КБ: грузим только здесь, теми же адресами, что и главная
+      if (!need("ideas", ["data/digest.js?v=srv6", "data/ideas.js?v=1"], idReady, idDone)) {
+        return out + (LAZY.ideas === 2 ? '<p class="tg-note">Не удалось загрузить идеи и разборы. Обновите страницу.</p>' : '<p class="tg-wait">Загружаю идеи недели…</p>') + "</div>";
+      }
+      need("dfl", ["data/digest-lib.js?v=10"], dfReady, idDone);       // графики — после дайджеста: DF читает его при загрузке
+      var o = idCur(), cur = o.cur;
+      if (cur) {
+        var d = idIssueDate(cur), n = cur.ideas.length;
+        if (CAR.id >= o.list.length) CAR.id = 0;
+        out += '<p class="am-day">Идеи недели' + (d ? " · " + d.getDate() + " " + MONG[d.getMonth()] : "") + "<span> · " + n + " " + plural(n, "идея", "идеи", "идей") + "</span></p>";
+        if (o.all.length > 1) {
+          out += '<div class="am-dates" role="group" aria-label="Выпуски дайджеста">' + o.all.slice(0, 8).map(function (x, j) {
+            var xd = idIssueDate(x);
+            return '<button type="button" data-idday="' + (j ? esc(x.id) : "") + '" aria-pressed="' + (j === o.k) + '" aria-label="Выпуск от ' + esc(x.date) + '"><small>' +
+              (xd ? MONG[xd.getMonth()].slice(0, 3) : "") + "</small><b>" + (xd ? xd.getDate() : "") + "</b></button>";
+          }).join("") + "</div>";
+        }
+        // Фильтр по типу продукта — разделы дайджеста, только те, что есть в выпуске
+        var cnt = {};
+        cur.ideas.forEach(function (it) { cnt[it.family] = (cnt[it.family] || 0) + 1; });
+        var secs = ((window.DIGEST_ARCHIVE || {}).sections || []).filter(function (s) { return cnt[s.key]; });
+        if (secs.length > 1) {
+          out += '<div class="tg-chips id-fams" role="group" aria-label="Тип продукта">' +
+            '<button type="button" data-idfam="all" aria-pressed="' + (ID_FAM === "all") + '">Все<em>' + n + "</em></button>" +
+            secs.map(function (s) { return '<button type="button" data-idfam="' + esc(s.key) + '" aria-pressed="' + (ID_FAM === s.key) + '" style="--fc:' + esc(s.color) + '"><i></i>' + esc(s.label) + "<em>" + cnt[s.key] + "</em></button>"; }).join("") + "</div>";
+        }
+        out += '<div class="am-car id-car" id="id-car" data-car="id">' + o.list.map(function (it, i) { return idCard(it, i, o.list.length); }).join("") + "</div>";
+        out += '<p class="tg-note">Идеи недели — подборка аналитика, а не индивидуальная рекомендация. Котировки индикативные.</p>';
+      }
+      // Разборы к вебинарам — карточками, открываются страницей разбора
+      var R = ((window.IDEAS || {}).issues || []).slice().sort(function (a, b) { return a.date < b.date ? 1 : -1; });
+      if (R.length) {
+        out += '<h2 class="tg-cap am-cap">Разборы к вебинарам</h2><div class="am-car rv-car" id="rv-car" data-car="rv">' + R.map(function (x) {
+          var f = (x.facts || [])[0], k = x.kind === "theme" ? 0 : (x.items || []).length;
+          return '<a class="am-cd rv-cd" href="ideas.html?i=' + encodeURIComponent(x.id) + '" style="--fc:' + esc(x.color || "#EE7D1B") + '">' +
+            '<div class="am-cdt"><span class="am-rb">' + esc(x.kick || "Разбор") + '</span><span class="am-k">' + esc(dmy(x.date).slice(0, 5)) + "</span></div>" +
+            '<h2 class="am-h">' + esc(x.title) + "</h2>" +
+            (f ? '<div class="rv-f"><b>' + esc(f.v) + "</b><span>" + esc(f.k) + "</span></div>" : '<p class="am-ld rv-sub">' + esc(x.sub || "") + "</p>") +
+            '<span class="rv-go">' + (k ? k + " " + plural(k, "компания", "компании", "компаний") + " · " : "") + "Открыть разбор" + ARROW + "</span></a>";
+        }).join("") + "</div>";
+      }
+      if (!nx) {
+        var last = E.slice().sort(function (a, b) { return a.date < b.date ? 1 : -1; })[0];
+        if (last) out += '<h2 class="tg-cap am-cap">Вебинары</h2>' + idWeb(last, true);
+      }
+      if (window.requestAnimationFrame) requestAnimationFrame(function () {
+        carPlace();
+        // выбранный тип — в видимую часть ряда фильтров
+        var f = document.querySelector('.id-fams [aria-pressed="true"]');
+        if (f) f.parentNode.scrollLeft = ID_FAM === "all" ? 0 : f.offsetLeft - 16;
+      });
+      return out + "</div>";
+    }
+    // Читалка идеи
+    function idRd(el) {
+      var o = idCur(), list = o.list, n = list.length;
+      if (!n) { closeRd(false); return; }
+      var i = Math.min(RD.i, n - 1); RD.i = i;
+      var it = list[i], sc = idSec(it.family), c = sc.color;
+      var bar = list.map(function (x, j) { return "<i" + (j <= i ? ' class="on"' : "") + "></i>"; }).join("");
+      var rows = window.DF && DF.paramRows ? DF.paramRows(it) : [];
+      var risk = window.DF && DF.riskOf ? DF.riskOf(it) : "";
+      var factors = (it.factors || []).map(function (f) { return String(f).replace(/^[^0-9A-Za-zА-Яа-яЁё«"$+−(]+/, ""); }).filter(Boolean);
+      var prod = idProd(it), nx = list[i + 1];
+      var sec = function (k, html) { return html ? '<h3 class="id-k">' + k + "</h3>" + html : ""; };
+      var next = nx ? '<button type="button" class="am-nx" data-rd="next"><small>Дальше · ' + esc(idSec(nx.family).label) + "</small><b>" + esc(nx.name) + "</b>" + ARROW + "</button>"
+        : '<button type="button" class="am-nx am-nx-end" data-rd="tolist"><b>К идеям недели</b>' + ARROW + "</button>";
+      el.innerHTML = '<div class="tg-qz-in" style="--fc:' + esc(c) + '"><div class="tg-qz-top"><button type="button" class="tg-qz-b" data-rd="close" aria-label="Закрыть идею">' +
+        '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 3l10 10M13 3 3 13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>' +
+        '<span class="tg-qz-n">' + esc(sc.label) + " · " + (i + 1) + " из " + n + "</span>" +
+        (i > 0 ? '<button type="button" class="am-pv" data-rd="prev">' + CHEV_L + "<span>Назад</span></button>" : "") + "</div>" +
+        '<div class="tg-qz-bar" aria-hidden="true">' + bar + "</div>" +
+        '<div class="tg-qz-body am-rdb"><h2 class="am-rh">' + esc(it.name) + '</h2><p class="id-rsub">' + esc([it.underlying, it.tenor].filter(Boolean).join(" · ")) + "</p>" +
+        (it.hypothesis ? '<p class="id-hyp">' + amText(it.hypothesis) + "</p>" : "") +
+        (window.DF ? '<div class="id-rch">' + DF.payoffSvg(it.payoff, c) + (it.payout ? "<p>" + amText(it.payout) + "</p>" : "") + "</div>" : "") +
+        (rows.length ? '<dl class="id-pr">' + rows.map(function (r) { return "<div><dt>" + esc(r[0]) + "</dt><dd>" + esc(r[1]) + "</dd></div>"; }).join("") + "</dl>" : "") +
+        '<div class="am-rt">' + sec("Как заработать", it.how ? "<p>" + amText(it.how) + "</p>" : "") +
+        sec("Риск", risk ? "<p>" + amText(risk) + "</p>" : "") +
+        sec("Логика идеи", (it.situation ? "<p>" + amText(it.situation) + "</p>" : "") +
+          (factors.length ? '<ul class="id-fs">' + factors.map(function (f) { return "<li>" + amText(f) + "</li>"; }).join("") + "</ul>" : "") +
+          (it.conclusion ? "<p>" + amText(it.conclusion) + "</p>" : "")) + "</div>" +
+        (it.fx && window.SITE && SITE.LEGAL && SITE.LEGAL.fx ? '<p class="id-fx">' + esc(SITE.LEGAL.fx) + "</p>" : "") +
+        (prod ? '<a class="am-more id-prod" href="' + esc(prod) + '">Открыть продукт' + ARROW + "</a>"
+          : amChips({ title: it.name, lead: [it.underlying, it.p && it.p.asset].join(" "), body: null }, "Продукты на этот актив")) +
+        '<p class="am-link id-dg"><a href="digest.html#' + encodeURIComponent(o.cur.id) + "/" + encodeURIComponent(it.id) + '">Идея в дайджесте — PDF выпуска и ссылка для клиента</a></p>' +
+        next + "</div></div>";
+      el.scrollTop = 0;
+    }
+    // <<< id
     function mktBody() {
       var body = "";
       if (S.mkt.seg === "sum") body = svBody();
@@ -868,21 +1024,7 @@
           return '<li><a class="tg-row" href="' + esc(r.href) + '" target="_blank" rel="noopener"><span class="tg-tx"><span class="tg-nm">' + esc(k) + '</span><span class="tg-sb">' + esc(r.n) + '</span></span><span class="tg-fig tg-g"><b>' + fq(r.v) + "%</b><small>годовых</small></span></a></li>";
         }).join("") + "</ul>";
         body += '<a class="tg-more" href="screener.html">Все ставки по срокам</a><p class="tg-note">Обновлено ' + esc(String(R.updated || "").replace(/^(\d{4})-(\d{2})-(\d{2})/, "$3.$2")) + ". Источники: ЦБ, Мосбиржа, Финуслуги.</p>";
-      } else {
-        var E = (window.EVENTS && EVENTS.items) || [];
-        var nx = E.filter(function (e) { return e.date >= TODAY; }).sort(function (a, b) { return a.date < b.date ? -1 : 1; })[0];
-        if (nx) body += '<a class="tg-card" href="events.html"><span class="tg-rb">Вебинар · ' + esc(dmy(nx.date)) + (nx.timeMsk ? " · " + esc(nx.timeMsk) + " МСК" : "") + "</span><h2>" + esc(nx.title) + '</h2><span class="tg-go" aria-hidden="true">Записаться →</span></a>';
-        // Дайджест и разборы — 460 КБ: грузим только здесь, теми же адресами, что и главная
-        if (!need("ideas", ["data/digest.js?v=srv6", "data/ideas.js?v=1"], function () { return !!(window.DIGEST_ARCHIVE && window.IDEAS); })) {
-          body += LAZY.ideas === 2 ? '<p class="tg-note">Не удалось загрузить дайджест и разборы. Обновите страницу.</p>' : '<p class="tg-wait">Загружаю дайджест и разборы…</p>';
-        } else {
-          var D = DIGEST_ARCHIVE.issues && DIGEST_ARCHIVE.issues[0];
-          var I = IDEAS.issues && IDEAS.issues[0];
-          if (D) body += '<a class="tg-card" href="digest.html"><span class="tg-rb">Дайджест · ' + esc(D.date) + "</span><h2>Идеи недели</h2><p>" + esc(String(D.summary || "").split(", ").slice(0, 4).join(", ")) + '</p><span class="tg-go" aria-hidden="true">Открыть →</span></a>';
-          if (I) body += '<a class="tg-card" href="ideas.html"><span class="tg-rb">Разбор · ' + esc(dmy(I.date)) + "</span><h2>" + esc(I.title) + "</h2><p>" + esc(String(I.sub || "").slice(0, 180)) + '…</p><span class="tg-go" aria-hidden="true">Читать →</span></a>';
-        }
-        if (!nx) { var last = E.slice().sort(function (a, b) { return a.date < b.date ? 1 : -1; })[0]; if (last) body += '<a class="tg-card" href="events.html"><span class="tg-rb">Прошедший вебинар</span><h2>' + esc(last.title) + '</h2><span class="tg-go" aria-hidden="true">' + (last.recordingUrl ? "Смотреть запись →" : "Подробнее →") + "</span></a>"; }
-      }
+      } else body = idBody();
       return body;
     }
     function viewMkt() {
@@ -1121,9 +1263,15 @@
       var amt = e.target.closest("[data-amto]");
       if (amt) { amTo(+amt.getAttribute("data-amto")); return; }
       var amr = e.target.closest("[data-amrd]");
-      if (amr) { openRd(+amr.getAttribute("data-amrd")); return; }
+      if (amr) { openRd("am", +amr.getAttribute("data-amrd")); return; }
+      var idr = e.target.closest("[data-idrd]");
+      if (idr) { openRd("id", +idr.getAttribute("data-idrd")); return; }
+      var idd = e.target.closest("[data-idday]");
+      if (idd) { ID_DAY = idd.getAttribute("data-idday") || null; CAR.id = 0; idDone(); return; }
+      var idf = e.target.closest("[data-idfam]");
+      if (idf) { ID_FAM = idf.getAttribute("data-idfam"); CAR.id = 0; idDone(); return; }
       var amd = e.target.closest("[data-amday]");
-      if (amd) { AM_DAY = amd.getAttribute("data-amday") || null; AM_IDX = 0; amDone(); return; }
+      if (amd) { AM_DAY = amd.getAttribute("data-amday") || null; CAR.am = 0; amDone(); return; }
       var amw = e.target.closest("[data-amwhy]");
       if (amw) { amWhy(amw); return; }
       if (e.target.closest("[data-unpick]")) { e.preventDefault(); S.prod.pick = null; render(true); save(); return; }

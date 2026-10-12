@@ -958,6 +958,60 @@
     .am-nx-end { background: #EE7D1B; color: #0C0A08; }
     .am-nx-end svg { color: #0C0A08; }
     /* <<< am */
+    /* >>> id */
+    /* Идеи (12.10.2026): тот же приём, что у «Утра» — карточки вбок, читалка во весь экран.
+       Цвет идеи — цвет раздела дайджеста (--fc) */
+    .id-web { display: flex; align-items: center; gap: 12px; margin: 10px 0 4px; padding: 12px 14px 12px 12px; border-radius: 16px; background: var(--tg-card); color: var(--tg-ink); }
+    .id-wd { flex: none; width: 46px; display: flex; flex-direction: column; align-items: center; padding: 4px 0; border-radius: 12px; background: rgba(238,125,27,.13); }
+    .id-wd small { font-size: 11px; line-height: 1.2; color: #FFC894; }
+    .id-wd b { font-family: 'Rubik', sans-serif; font-size: 19px; font-weight: 600; line-height: 1.1; color: #FFC894; }
+    .id-wt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+    .id-wt small { font-size: 12.5px; color: var(--tg-faint); }
+    .id-wt b { font-size: 15.5px; font-weight: 600; line-height: 1.3; }
+    .id-wt em { font-style: normal; font-size: 13.5px; color: #EE7D1B; }
+    .id-fams { margin-top: 10px; }
+    .id-fams i { display: inline-block; width: 8px; height: 8px; margin-right: 7px; border-radius: 50%; background: var(--fc); vertical-align: 1px; }
+    .id-fams em { margin-left: 6px; font-style: normal; font-family: 'JetBrains Mono', monospace; font-size: 12px; opacity: .7; }
+    .id-car { margin-top: 12px; }
+    .id-fam { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--fc); }
+    .id-fam i { width: 8px; height: 8px; border-radius: 50%; background: var(--fc); }
+    .id-h { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; margin-bottom: 4px; font-size: 19px; }
+    .id-sub { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; margin: 0; font-size: 14px; line-height: 1.4; color: var(--tg-mut); }
+    .id-ch { margin: 12px -4px 0; }
+    .id-ch svg, .id-rch svg { display: block; width: 100%; height: auto; }
+    .id-ms { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+    .id-ms div { min-width: 0; }
+    .id-ms b { display: block; font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 500; line-height: 1.3; color: var(--tg-ink); }
+    .id-ms .id-pz { font-family: 'Onest', sans-serif; font-size: 15px; font-weight: 600; }
+    .id-ms span { display: block; margin-top: 2px; font-size: 12px; line-height: 1.3; color: var(--tg-faint); }
+    .rv-cd { color: var(--tg-ink); box-shadow: inset 0 3px 0 var(--fc); }
+    .rv-cd .am-rb { color: var(--fc); }
+    .rv-f b { display: block; font-family: 'Rubik', sans-serif; font-size: 30px; font-weight: 600; line-height: 1.1; color: var(--fc); }
+    .rv-f span { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; margin-top: 4px; font-size: 14px; line-height: 1.4; color: var(--tg-mut); }
+    .rv-sub { -webkit-line-clamp: 4; font-size: 14.5px; color: var(--tg-mut); }
+    .rv-go { display: flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 14px; font-size: 14.5px; font-weight: 500; color: #EE7D1B; }
+    .rv-go svg { margin-left: auto; }
+    /* Читалка идеи */
+    .id-rsub { margin: -8px 0 16px; font-size: 15px; line-height: 1.45; color: var(--tg-mut); }
+    .id-hyp { margin: 0 0 18px; padding: 12px 14px; border-left: 3px solid var(--fc); border-radius: 0 12px 12px 0; background: rgba(255,255,255,.05); font-size: 17px; line-height: 1.55; color: var(--tg-ink); }
+    .id-rch { padding: 12px 12px 10px; border-radius: 16px; background: var(--tg-card); }
+    .id-rch p { margin: 8px 4px 0; font-size: 13.5px; line-height: 1.5; color: var(--tg-mut); }
+    .id-pr { margin: 12px 0 0; border-radius: 16px; background: var(--tg-card); overflow: hidden; }
+    .id-pr div { display: flex; justify-content: space-between; gap: 14px; padding: 11px 14px; border-bottom: 1px solid var(--tg-line); }
+    .id-pr div:last-child { border-bottom: 0; }
+    .id-pr dt { flex: none; font-size: 14px; color: var(--tg-mut); }
+    .id-pr dd { margin: 0; min-width: 0; font-size: 14.5px; font-weight: 500; line-height: 1.4; text-align: right; color: var(--tg-ink); }
+    .id-k { margin: 24px 0 8px; font-family: 'Rubik', sans-serif; font-size: 18px; font-weight: 600; }
+    .am-rdb .am-rt .id-k + p { margin-top: 0; }
+    .id-fs { margin: 12px 0 0; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; }
+    .id-fs li { font-size: 16px; line-height: 1.5; color: rgba(242,243,247,.88); }
+    .id-fs li::marker { color: var(--fc); }
+    .id-fs + p { margin-top: 14px; }
+    .id-fx { margin: 18px 0 0; padding: 10px 12px; border-left: 3px solid #EE7D1B; border-radius: 0 10px 10px 0; background: rgba(238,125,27,.12); font-size: 13px; line-height: 1.5; color: #E7B98D; }
+    .am-rd a.id-prod { margin-top: 22px; color: #0C0A08; text-decoration: none; }
+    .am-rdb > .am-tks { margin-top: 22px; }
+    .id-dg { margin: 16px 0 0; font-size: 14.5px; }
+    /* <<< id */
     /* Сводка рынка (вкладка «Рынок») — вид и стили в svview.js, общем со страницей /svodka */
     .tg-grp { margin: 8px 0 16px; border-radius: 14px; background: var(--tg-card); overflow: hidden; }
     .tg-grp a { display: flex; align-items: center; gap: 12px; min-height: 50px; padding-left: 12px; }
@@ -2383,7 +2437,7 @@
   else setTimeout(start, 1200);
 })();
 </script>
-<script src="tabs.js?v=16"></script>
+<script src="tabs.js?v=17"></script>
 <script src="ptr.js?v=2" defer></script>
 </body>
 

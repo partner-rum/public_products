@@ -507,5 +507,5 @@ window.DF = (function () {
   st.textContent = CSS;
   document.head.appendChild(st);
 
-  return { colorOf, sectionOf, payoffSvg, detailBody };
+  return { colorOf, sectionOf, payoffSvg, detailBody, audienceOf, riskOf, paramRows };
 })();
