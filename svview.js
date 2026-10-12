@@ -275,12 +275,16 @@
     d = d || {}; o = o || {};
     var w = d.world || {}, wIdx = (w.idx || []).some(function (x) { return x && x.v; });
     var wNews = age(w.updated) < 24 && (w.news || []).some(function (n) { return n.t; });
+    // С 12.10.2026 в «Главном за сутки» и российские деловые ленты (ru_feeds.py на сервере)
+    var ruMedia = (d.src || []).some(function (x) { return /Прайм|Финам|Интерфакс|Ведомости|ТАСС/.test(x); });
     var out = meta(d) + mood(d.mood) + quotes(d);
     if (o.share) out += '<button type="button" class="sv-shr" data-svshare><span class="sv-ic">' + SHARE + '</span><span class="sv-tx"><b>Поделиться сводкой</b><small>' + esc(o.share) + "</small></span>" + CHEV + "</button>";
     out += news(d, o) + divs(d, o);
     out += '<p class="sv-note">Не является индивидуальной инвестиционной рекомендацией. Котировки Мосбиржи — с задержкой до 15 минут.</p>' +
       '<details class="sv-src"><summary>Источники и как собрана сводка</summary><p>Источники: ' + esc((d.src || []).join(", ")) + ". " +
-      (wIdx ? "Мировые индексы — CNBC. " : "") + "Новости — заголовки публичных Telegram-каналов" + (wNews ? " и англоязычных деловых СМИ" : "") +
+      (wIdx ? "Мировые индексы — CNBC. " : "") + "Новости — заголовки " +
+      (ruMedia ? "деловых СМИ" + (wNews ? " (в том числе англоязычных)" : "") + " и публичных Telegram-каналов"
+        : "публичных Telegram-каналов" + (wNews ? " и англоязычных деловых СМИ" : "")) +
       ", отобраны и пересказаны автоматически. Индекс настроения считается по тону новостей, ширине рынка, импульсу IMOEX, волатильности и облигациям.</p></details>";
     return '<div class="sv">' + out + "</div>";
   }

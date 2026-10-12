@@ -530,7 +530,7 @@
         // Вид сводки — общий модуль svview.js (тот же, что у страницы /svodka); грузится вместе с данными
         var js = window.SvView ? Promise.resolve() : new Promise(function (ok, no) {
           var sc = document.createElement("script");
-          sc.src = "svview.js?v=1"; sc.onload = ok; sc.onerror = no;
+          sc.src = "svview.js?v=2"; sc.onload = ok; sc.onerror = no;
           document.head.appendChild(sc);
         });
         Promise.all([fetch("live/svodka.json", { cache: "no-cache" })
