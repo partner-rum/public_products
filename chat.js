@@ -106,6 +106,15 @@
     ".ca-dock-lbl{display:none;}" +
     // Строка закрывает низ страницы — отодвигаем подвал, чтобы последние строки читались.
     "@media(min-width:861px){html.ca-dock-pad body{padding-bottom:88px;}}" +
+    // Строку на компьютере можно свернуть в кружок-звезду в углу (13.10.2026, просьба Руслана:
+    // «жутко бесит»). Выбор помнится в localStorage so_ai_dock; на телефоне строка как была.
+    ".ca-dock-x{flex:none;display:none;align-items:center;justify-content:center;width:32px;height:32px;margin-left:-2px;padding:0;border:0;border-radius:50%;background:none;color:rgba(20,22,28,.55);font-family:inherit;font-size:22px;line-height:1;cursor:pointer;transition:background .15s,color .15s;}" +
+    ".ca-dock-x:hover{background:rgba(20,22,28,.09);color:#14161C;}" +
+    ".ca-mini{position:fixed;right:24px;bottom:24px;z-index:300;display:none;align-items:center;justify-content:center;width:52px;height:52px;padding:0;border:0;border-radius:50%;background:#D3D7DF;box-shadow:0 10px 28px rgba(0,0,0,.5),0 0 0 2px rgba(238,125,27,0);cursor:pointer;transition:box-shadow .2s;}" +
+    ".ca-mini:hover,.ca-mini:focus-visible{outline:none;box-shadow:0 10px 28px rgba(0,0,0,.5),0 0 0 2px rgba(238,125,27,.7);}" +
+    "@media(min-width:861px){.ca-dock-x{display:inline-flex;}" +
+    "html.ca-min .ca-dock{display:none;}html.ca-min .ca-mini{display:inline-flex;}html.ca-min .ca-mini.hide{display:none;}" +
+    "html.ca-min body{padding-bottom:0;}}" +
     "@media(max-width:860px){.ca-dock{width:auto;max-width:none;height:50px;padding:0 18px 0 14px;gap:9px;cursor:pointer;}" +
     ".ca-dock-in,.ca-dock-go,.ca-dock-tag{display:none;}" +
     ".ca-dock-lbl{display:block;font-size:14.5px;font-weight:600;line-height:1.15;white-space:nowrap;text-align:left;}" +
@@ -682,9 +691,21 @@
     dock.innerHTML = ICON_STAR_20 + '<span class="ca-dock-tag">AI</span>' +
       '<input class="ca-dock-in" type="text" autocomplete="off" aria-label="Вопрос AI-ассистенту" placeholder="Спросите о продукте, цене или сайте…">' +
       '<span class="ca-dock-lbl">Спросить AI<small>' + CAN_LIST + '</small></span>' +
-      '<button class="ca-dock-go" type="submit">Спросить' + ICON_ARROW + '</button>';
+      '<button class="ca-dock-go" type="submit">Спросить' + ICON_ARROW + '</button>' +
+      '<button class="ca-dock-x" type="button" aria-label="Скрыть строку AI" title="Скрыть строку">&times;</button>';
     var dockIn = dock.querySelector(".ca-dock-in");
     document.documentElement.classList.add("ca-dock-pad");
+
+    // Свёрнутая строка (только компьютер): кружок со звездой в правом нижнем углу открывает чат.
+    var mini = document.createElement("button");
+    mini.type = "button"; mini.className = "ca-mini";
+    mini.setAttribute("aria-label", "Открыть AI-ассистента"); mini.title = "AI-ассистент";
+    mini.innerHTML = ICON_STAR_20;
+    function setMin(on) {
+      document.documentElement.classList.toggle("ca-min", on);
+      try { if (on) localStorage.setItem("so_ai_dock", "min"); else localStorage.removeItem("so_ai_dock"); } catch (e) {}
+    }
+    try { if (localStorage.getItem("so_ai_dock") === "min") document.documentElement.classList.add("ca-min"); } catch (e) {}
 
     // Телефон: прятать пилюлю при прокрутке вниз, показывать при прокрутке вверх
     // и у самого низа страницы (там её ничто не перекрывает)
@@ -722,6 +743,7 @@
       '</div><div class="ca-note">Отвечает ИИ — может ошибаться · Не является индивидуальной инвестиционной рекомендацией</div></div>';
 
     document.body.appendChild(dock);
+    document.body.appendChild(mini);
     document.body.appendChild(panel);
 
     els.log = panel.querySelector(".ca-log");
@@ -730,7 +752,7 @@
 
     var opened = false;
     function open() {
-      panel.classList.add("on"); dock.classList.add("hide");
+      panel.classList.add("on"); dock.classList.add("hide"); mini.classList.add("hide");
       if (qualOk()) els.input.placeholder = "Ваш вопрос…";   // длинная подсказка на телефоне рвалась в две строки
       if (!opened && !msgs.length && heroMode()) {
         opened = true;
@@ -754,7 +776,7 @@
       }
       setTimeout(function () { if (!els.hero) els.input.focus(); }, 150);
     }
-    function close() { panel.classList.remove("on"); dock.classList.remove("hide"); }
+    function close() { panel.classList.remove("on"); dock.classList.remove("hide"); mini.classList.remove("hide"); }
 
     // Открыть чат и сразу задать вопрос (Enter в строке, кнопки-примеры): работа делом, не обещанием.
     function ask(text) {
@@ -773,6 +795,12 @@
     });
     // На телефоне строка — пилюля без поля: тап по ней открывает чат; на десктопе клик по
     // пустому месту строки ставит курсор в поле.
+    dock.querySelector(".ca-dock-x").addEventListener("click", function (e) {
+      e.stopPropagation();
+      setMin(true); goal("chat_dock_hide");
+      mini.focus();
+    });
+    mini.addEventListener("click", function () { goal("chat_mini_open"); open(); });
     dock.addEventListener("click", function (e) {
       if (e.target === dockIn || (e.target.closest && e.target.closest(".ca-dock-go"))) return;
       if (getComputedStyle(dockIn).display === "none") { goal("chat_dock_open"); open(); }
