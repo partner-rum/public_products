@@ -154,6 +154,8 @@
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
   function grp(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " "); }
   function dec(v, d) { return v.toFixed(d).replace(".", ","); }
+  // «84 выпуска», «58 выпусков», «21 выпуск» — счётчики считаются из данных, слово тоже
+  function vyp(n) { var a = n % 10, b = n % 100; return "выпуск" + (b >= 11 && b <= 14 ? "ов" : a === 1 ? "" : a >= 2 && a <= 4 ? "а" : "ов"); }
   // млрд ₽ с разрядным пробелом; от тысячи — триллионы
   function fmtB(v) {
     if (v >= 1000) return dec(v / 1000, 1) + " трлн";
@@ -192,7 +194,7 @@
     var rum = L.groups.rum || 0, rank = named.filter(function (x) { return x.v > rum; }).length + 1;
     return '<div class="mk-nums">' +
       '<div><div class="k">Выпусков за ' + ys[0].y + '–' + L.y + '</div><div class="v">' + grp(n) + '</div><div class="d">' + fmtB(tot) + ' ₽ номинала, из них розничных ' + fmtB(mk) + ' ₽</div></div>' +
-      '<div><div class="k">Розничных в ' + L.y + '</div><div class="v">' + fmtB(L.market) + '<small>₽</small></div><div class="d">' + grp(L.n_market) + ' выпусков за ' + AS.months + ' месяцев — ' + Math.round(L.n_market / P.n_market * 100) + '% от числа выпусков за весь ' + P.y + ' год</div></div>' +
+      '<div><div class="k">Розничных в ' + L.y + '</div><div class="v">' + fmtB(L.market) + '<small>₽</small></div><div class="d">' + grp(L.n_market) + ' ' + vyp(L.n_market) + ' за ' + AS.months + ' месяцев — ' + Math.round(L.n_market / P.n_market * 100) + '% от числа выпусков за весь ' + P.y + ' год</div></div>' +
       '<div><div class="k">Три крупнейших</div><div class="v">' + Math.round(top3v / sum * 100) + '<small>%</small></div><div class="d">' + top3.map(function (x) { return x.g.label; }).join(", ") + ' — доля в розничном сегменте ' + L.y + ' года вместе с оценкой ВПФИ</div></div>' +
       '<div><div class="k">Румберг в ' + L.y + '</div><div class="v">' + fmtB(rum) + '<small>₽</small></div><div class="d">' + dec(rum / sum * 100, 1) + '% розничного сегмента, ' + rank + '-е место среди эмитентов</div></div>' +
     '</div>';
@@ -387,11 +389,13 @@
     var L = last();
     return '<div class="mk-h">Размещено в ' + L.y + ' — уже погашено <b>по ' + AS.human + '</b></div>' +
       '<div class="mk-red">' +
-        '<div><div class="v">' + fmtB(r.redeemed) + '</div><div class="k">' + r.redeemed_n + ' выпусков, ' + fmtPc(r.redeemed / L.market * 100) + ' размещённого</div></div>' +
-        '<div><div class="v">' + fmtB(r.early) + '</div><div class="k">из них досрочно — автоколл или оферта, ' + r.early_n + ' выпусков</div></div>' +
+        '<div><div class="v">' + fmtB(r.redeemed) + '</div><div class="k">' + r.redeemed_n + ' ' + vyp(r.redeemed_n) + ', ' + fmtPc(r.redeemed / L.market * 100) + ' размещённого</div></div>' +
+        '<div><div class="v">' + fmtB(r.early) + '</div><div class="k">из них досрочно — автоколл или оферта, ' + r.early_n + ' ' + vyp(r.early_n) + '</div></div>' +
         '<div><div class="v">' + r.median_life_days + ' дн.</div><div class="k">медианный срок жизни погашенных выпусков</div></div>' +
       '</div>' +
-      '<div class="pf-cap">До конца года срок наступит ещё у бумаг на ' + fmtB(Math.max(0, r.due_in_year - (r.redeemed - r.early))) + ' ₽ — не считая новых досрочных погашений.</div>';
+      // due_rest считает генератор: срок впереди и бумага не погашена. Формула-запас
+      // для старого файла данных завышает остаток на досрочно погашенные со сроком в этом году
+      '<div class="pf-cap">До конца года срок наступит ещё у бумаг на ' + fmtB(r.due_rest != null ? r.due_rest : Math.max(0, r.due_in_year - (r.redeemed - r.early))) + ' ₽ — не считая новых досрочных погашений.</div>';
   }
 
   // ── сборка ──
@@ -438,7 +442,7 @@
       { t: "2024–2026: СФО как конвейер", en: "от банков к платформам",
         d: "Специализированное финансовое общество раньше означало единичную сделку. С 2024 года это способ выпускать десятки бумаг в год для брокерских клиентов — так работают Атон и Румберг; через своё СФО вышел на рынок и Т-Банк. Эмитентов в розничном сегменте стало " + L.issuers + " против " + y23.issuers + " в 2023 году." },
       { t: "Короткие выпуски гасятся в год размещения", en: "медиана срока " + fmtTerm(D.years[0].median_term) + " → " + fmtTerm(L.median_term),
-        d: r ? "Из размещённого в " + L.y + " году к " + AS.human + " погашено " + fmtB(r.redeemed) + " ₽ (" + r.redeemed_n + " выпусков), из них " + fmtB(r.early) + " ₽ досрочно. Медианный срок жизни уже погашенных — " + r.median_life_days + " дней при медиане срока по всему году " + fmtTerm(L.median_term) + ": короткие бумаги успевают погаситься в год выпуска." : "Заметная часть выпусков гасится в год размещения." }
+        d: r ? "Из размещённого в " + L.y + " году к " + AS.human + " погашено " + fmtB(r.redeemed) + " ₽ (" + r.redeemed_n + " " + vyp(r.redeemed_n) + "), из них " + fmtB(r.early) + " ₽ досрочно. Медианный срок жизни уже погашенных — " + r.median_life_days + " дней при медиане срока по всему году " + fmtTerm(L.median_term) + ": короткие бумаги успевают погаситься в год выпуска." : "Заметная часть выпусков гасится в год размещения." }
     ];
   }
   var GLOSS = [
