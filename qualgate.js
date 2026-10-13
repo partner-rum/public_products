@@ -1,8 +1,8 @@
 /* Гейт квалифицированного инвестора.
    Один раз на браузер (180 дней) поверх витрины: подтверждение статуса до доступа к материалам.
    Подключение: <script src="qualgate.js?v=1"></script> перед </body>. Без зависимостей.
-   На главной ждёт завершения интро-ролика (.intro / body.intro-lock), затем показывает гейт —
-   ровно «после загрузки витрины». Демо: ?qual=1 — принудительно показать (без записи в хранилище).
+   На главной гейт встаёт ВНУТРЬ входного экрана (QualGate.embed, 13.10.2026); если входного
+   экрана нет или он ушёл без гейта — ждёт снятия .intro / body.intro-lock и показывает свою вуаль. Демо: ?qual=1 — принудительно показать (без записи в хранилище).
    Поисковым роботам гейт не показывается — см. isBot(). */
 (function () {
   "use strict";
@@ -67,6 +67,7 @@
     ".qg-links a:hover{text-decoration:underline;}" +
     ".qg-links .sep{opacity:.5;margin:0 6px;}" +
     ".qg-lock,.qg-lock body{overflow:hidden!important;}" +
+    ".qg-in .qg-card{transform:none;}" +
     "@media(max-width:480px){.qg-card{padding:26px 20px 20px;}.qg-h{font-size:18px;}}";
 
   function injectCss() {
@@ -77,50 +78,16 @@
     document.head.appendChild(s);
   }
 
-  function show() {
-    injectCss();
-    var root = document.documentElement;
-    root.classList.add("qg-lock");
-
-    var veil = document.createElement("div");
-    veil.className = "qg-veil";
-    veil.setAttribute("role", "dialog");
-    veil.setAttribute("aria-modal", "true");
-    veil.setAttribute("aria-labelledby", "qg-h");
-
+  // Карточка гейта: вопрос → «Нет» → объяснение → «Я квалифицированный инвестор» → вопрос.
+  // Рисуется в любой контейнер — в свою вуаль (show) или внутрь входного экрана главной
+  // (embed): тексты, переходы, цели и запись подтверждения живут только здесь.
+  function card(host, onPass, onChange) {
     function focusFirst() {
-      var b = veil.querySelector("button");
-      if (b) { try { b.focus(); } catch (e) {} }
-    }
-    function onKey(e) {
-      if (e.key !== "Tab") return;              // Escape намеренно не закрывает — обязательный гейт
-      var fs = veil.querySelectorAll("button, a[href]");   // на блок-экране есть ссылки — их тоже держим в трапе
-      if (!fs.length) return;
-      var first = fs[0], last = fs[fs.length - 1];
-      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
-    }
-    // Остальная страница на время гейта — inert: убирает 81 фокусируемый элемент из
-    // Tab-порядка и из кликов (раньше Tab/клик уводили фокус за вуаль на BODY).
-    var inerted = [];
-    function setBgInert(on) {
-      [].slice.call(document.body.children).forEach(function (el) {
-        if (el === veil) return;
-        if (on) { if (!el.hasAttribute("inert")) { el.setAttribute("inert", ""); inerted.push(el); } }
-      });
-      if (!on) { inerted.forEach(function (el) { el.removeAttribute("inert"); }); inerted = []; }
-    }
-    function pass() {
-      goal("qual_yes");
-      mark();
-      document.removeEventListener("keydown", onKey, true);
-      setBgInert(false);
-      root.classList.remove("qg-lock");
-      veil.classList.remove("on");
-      setTimeout(function () { if (veil.parentNode) veil.remove(); }, 320);
+      var b = host.querySelector("button");
+      if (b) { try { b.focus({ preventScroll: true }); } catch (e) {} }
     }
     function renderAsk() {
-      veil.innerHTML =
+      host.innerHTML =
         '<div class="qg-card">' +
           '<div class="qg-eyebrow"><span class="qg-dot"></span>Только для квалифицированных инвесторов</div>' +
           '<h2 class="qg-h" id="qg-h">Пожалуйста, подтвердите, что вы являетесь квалифицированным инвестором</h2>' +
@@ -131,8 +98,9 @@
           '</div>' +
           '<p class="qg-note">Не является индивидуальной инвестиционной рекомендацией.</p>' +
         '</div>';
-      veil.querySelector(".qg-yes").addEventListener("click", pass);
-      veil.querySelector(".qg-no").addEventListener("click", renderBlocked);
+      host.querySelector(".qg-yes").addEventListener("click", onPass);
+      host.querySelector(".qg-no").addEventListener("click", renderBlocked);
+      if (onChange) onChange();
       focusFirst();
     }
     function renderBlocked() {
@@ -141,7 +109,7 @@
       // где честно ответивший «Нет» мог только вернуться и передумать. Добавляем
       // объяснение статуса и реальные выходы (сайт компании, контакт). Саму логику
       // гейта и текст вопроса не меняем.
-      veil.innerHTML =
+      host.innerHTML =
         '<div class="qg-card">' +
           '<div class="qg-eyebrow"><span class="qg-dot" style="background:#E0705A"></span>Доступ ограничен</div>' +
           '<h2 class="qg-h" id="qg-h">Материалы доступны только квалифицированным инвесторам</h2>' +
@@ -152,19 +120,96 @@
           '<p class="qg-links"><a href="https://rumbergcapital.com" target="_blank" rel="noopener">О компании Rumberg</a>' +
             '<span class="sep">·</span><a href="https://t.me/Rumberb_Sales_Team_bot" target="_blank" rel="noopener">Задать вопрос</a></p>' +
         '</div>';
-      veil.querySelector(".qg-back").addEventListener("click", renderAsk);
+      host.querySelector(".qg-back").addEventListener("click", renderAsk);
+      if (onChange) onChange();
       focusFirst();
     }
+    renderAsk();
+  }
 
+  // Фокус не выходит из гейта: Tab ходит по его кнопкам и ссылкам, остальная страница —
+  // inert (убирает 81 фокусируемый элемент из Tab-порядка и из кликов; раньше Tab/клик
+  // уводили фокус за вуаль на BODY). keep — элемент тела, который не трогаем.
+  function trap(box, keep) {
+    function onKey(e) {
+      if (e.key !== "Tab") return;              // Escape намеренно не закрывает — обязательный гейт
+      var fs = box.querySelectorAll("button, a[href]");   // на блок-экране есть ссылки — их тоже держим в трапе
+      if (!fs.length) return;
+      var first = fs[0], last = fs[fs.length - 1];
+      if (!box.contains(document.activeElement)) { e.preventDefault(); first.focus(); return; }
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+    var inerted = [];
+    [].slice.call(document.body.children).forEach(function (el) {
+      if (el === keep || el === box) return;
+      if (!el.hasAttribute("inert")) { el.setAttribute("inert", ""); inerted.push(el); }
+    });
+    document.addEventListener("keydown", onKey, true);
+    return function release() {
+      document.removeEventListener("keydown", onKey, true);
+      inerted.forEach(function (el) { el.removeAttribute("inert"); });
+      inerted = [];
+    };
+  }
+
+  var open = false;     // гейт на экране — своей вуалью или внутри входного экрана главной
+  var passed = false;   // на этой странице уже ответили «Да» (в демо ?qual=1 запись не ведётся)
+
+  function show() {
+    if (open) return;
+    open = true;
+    injectCss();
+    var root = document.documentElement;
+    root.classList.add("qg-lock");
+
+    var veil = document.createElement("div");
+    veil.className = "qg-veil";
+    veil.setAttribute("role", "dialog");
+    veil.setAttribute("aria-modal", "true");
+    veil.setAttribute("aria-labelledby", "qg-h");
     // Клик по подложке (не по карточке) не должен уводить фокус на BODY.
     veil.addEventListener("mousedown", function (e) { if (e.target === veil) e.preventDefault(); });
 
     document.body.appendChild(veil);         // сперва в DOM — иначе focus() не сработает
-    setBgInert(true);                        // фон недоступен, пока висит гейт
-    renderAsk();
+    var release = trap(veil, veil);          // фон недоступен, пока висит гейт
+    card(veil, function pass() {
+      goal("qual_yes");
+      mark();
+      passed = true; open = false;
+      release();
+      root.classList.remove("qg-lock");
+      veil.classList.remove("on");
+      setTimeout(function () { if (veil.parentNode) veil.remove(); }, 320);
+    });
     goal("qual_shown");   // один раз за показ: кнопка «назад» его не удваивает
-    document.addEventListener("keydown", onKey, true);
     requestAnimationFrame(function () { veil.classList.add("on"); });
+  }
+
+  // Гейт ВНУТРИ входного экрана главной (index.html, 13.10.2026): экран «звезда → Rumberg →
+  // кто мы» сам превращается в вопрос — одним движением, без второй вуали поверх.
+  // host — пустой контейнер на входном экране, keep — сам входной экран (его не делаем inert),
+  // onPass — после «Да» и записи подтверждения, onChange — карточка сменилась (пересчитать
+  // раскладку). false — гейт не нужен (статус уже подтверждён) или уже на экране.
+  function embed(host, o) {
+    o = o || {};
+    if (open || passed || seen()) return false;
+    open = true;
+    injectCss();
+    host.classList.add("qg-in");
+    host.setAttribute("role", "dialog");
+    host.setAttribute("aria-modal", "true");
+    host.setAttribute("aria-labelledby", "qg-h");
+    var release = trap(host, o.keep || host);
+    card(host, function () {
+      goal("qual_yes");
+      mark();
+      passed = true; open = false;
+      release();
+      if (o.onPass) o.onPass();
+    }, o.onChange);
+    goal("qual_shown");
+    return true;
   }
 
   /* На главной интро-ролик (.intro, body.intro-lock) — это «загрузка витрины».
@@ -204,7 +249,7 @@
 
   function init() {
     if (seen() || (!demo && isBot())) return;
-    whenClear(show);
+    whenClear(function () { if (!open && !passed && !seen()) show(); });
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
@@ -212,6 +257,8 @@
 
   window.QualGate = {
     show: function () { whenClear(show); },
+    need: function () { return !passed && !seen() && (demo || !isBot()); },   // нужен ли гейт этому посетителю
+    embed: embed,
     reset: function () {                       // ручной сброс для проверки гейта
       try { localStorage.removeItem(KEY); } catch (e) {}
       try { sessionStorage.removeItem(KEY); } catch (e) {}
