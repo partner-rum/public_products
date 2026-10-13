@@ -143,14 +143,80 @@
     // Сумма входа — всегда своей строкой под активом и сроком: в одном месте у каждой
     // строки, список читается столбиком (в строку с активом она то влезала, то переносилась)
     var ROWS_B = document.documentElement.getAttribute("data-rows") === "b";
+    // >>> tip — что значит цифра у продукта (13.10.2026). Подпись под цифрой («премия»,
+    // «участие», «купон»…) — пунктиром; тап по ней открывает лист снизу: одна фраза, пример
+    // на цифрах ЭТОГО продукта и ссылка в статью Библиотеки. Тап по строке мимо подписи —
+    // в карточку, как раньше. Тексты — из описаний типов в data/lib.js (TYPES.desc).
+    var TERMS = {
+      premium: { h: "Премия", lib: "warrants", t: "Цена входа в процентах от номинала. Её платите один раз при покупке — и это максимум, который можно потерять." },
+      premiumD: { h: "Премия", lib: "digital", t: "Цена входа в процентах от номинала. Платите один раз при покупке — больше потерять нельзя. Взамен — фиксированная выплата, если к дате оценки актив не ниже страйка; насколько выше — не важно." },
+      part: { h: "Участие", lib: "protection", t: "Какая доля роста актива достаётся вам к погашению. Номинал при этом возвращается при любом движении актива." },
+      prot: { h: "Защита", lib: "protection", t: "Какая часть номинала вернётся к погашению при любом движении актива." },
+      cpnA: { h: "Купон", lib: "autocall", t: "Доход в процентах годовых от номинала. Начисляется, пока актив (у корзины — худшая бумага) держится выше купонного барьера. Если на дату наблюдения он выше барьера автоотзыва, выпуск гасится досрочно с выплатой номинала и купона." },
+      cpnR: { h: "Купон", lib: "revconv", t: "Доход в процентах годовых от номинала, платится при любом сценарии. Плата за него — риск актива: если к погашению он ниже страйка, номинал вернётся не полностью." },
+      cpnT: { h: "Купон за срок", lib: null, t: "Платится один раз за весь срок, а не каждый год — и только если к дате оценки актив не ниже страйка. Ниже — купона нет, а номинал возвращается по динамике актива." },
+      ku: { h: "Коэффициент участия", lib: "booster", t: "Во сколько раз усиливается рост актива — в пределах диапазона до потолка. Падение актива переходит в выплату один к одному. Покупка по номиналу." },
+      price: { h: "Цена", lib: "discount", t: "Цена облигации в процентах от номинала. Покупаете дешевле, к погашению получаете 100% номинала — разница и есть доход, если эмитент выполнит обязательства." }
+    };
+    function termKey(r, f) {
+      if (!f || !f.n) return null;
+      return { warrant: "premium", digital: "premiumD", autocall: "cpnA", revconv: "cpnR", rcdigital: "cpnT", booster: "ku", discount: "price" }[r.type] ||
+        (r.type === "protection" ? (f.n === "участие" ? "part" : "prot") : null);
+    }
+    function rubFull(v) { return Math.round(v).toLocaleString("ru-RU").replace(/\s/g, " ") + " ₽"; }
+    function pctTxt(v) { return String(Math.round(v * 100) / 100).replace(".", ",") + "%"; }
+    // Пример на цифрах продукта; нет нужных полей — без примера
+    function termEx(k, r) {
+      var nom = Number(r.minNom) || 1000000, q = Number(r.quote);
+      if ((k === "premium" || k === "premiumD") && q > 0) return "Здесь: премия " + pctTxt(q) + " — вход " + rubFull(nom * q / 100) + " при номинале " + rubFull(nom) + ".";
+      var who = r.basket && r.basket.length > 1 ? (r.basketMode === "avg" ? "корзина в среднем" : "худшая бумага корзины") : "актив";
+      if (k === "part" && r.participation != null) { var p = r.participation * 100; return "Здесь: участие " + pctTxt(p) + " — если " + who + " вырастет на 20%, к номиналу добавится " + pctTxt(p * 0.2) + "."; }
+      if (k === "cpnT") { var ct = Number(r.couponPct != null ? r.couponPct : r.quote); if (ct > 0) return "Здесь: " + pctTxt(ct) + " за весь срок — " + rubFull(nom * ct / 100) + " при номинале " + rubFull(nom) + ", если условие выполнится."; }
+      if (k === "cpnA" || k === "cpnR") { var ca = Number(r.couponPa != null ? r.couponPa : r.quote); if (ca > 0) return "Здесь: " + pctTxt(ca) + " годовых — " + rubFull(nom * ca / 100) + " в год при номинале " + rubFull(nom) + (k === "cpnA" ? ", пока условие выполняется." : "."); }
+      if (k === "price" && q > 0) return "Здесь: цена " + pctTxt(q) + " — вход " + rubFull(nom * q / 100) + ", к погашению " + rubFull(nom) + ".";
+      if (k === "ku") { var ku = Number(r.ku || r.quote); if (ku > 0) return "Здесь: коэффициент " + pctTxt(ku) + " — рост актива на 10% даст +" + pctTxt(ku / 10) + " к номиналу (в пределах диапазона)."; }
+      return "";
+    }
+    var TIP = null;   // открытый лист: { el, opener }
+    function openTip(k, id, opener) {
+      var T = TERMS[k]; if (!T || TIP) return;
+      var r = BY[id], ex = r ? termEx(k, r) : "";
+      var el = document.createElement("div");
+      el.className = "tg-tip"; el.id = "tg-tip";
+      el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.setAttribute("aria-labelledby", "tg-tip-h");
+      el.innerHTML = '<div class="tg-tip-bg" data-tipx></div><div class="tg-tip-card">' +
+        '<div class="tg-tip-k">Что значит цифра · котировки индикативные</div>' +
+        '<h3 id="tg-tip-h">' + T.h + "</h3><p>" + T.t + "</p>" + (ex ? '<p class="tg-tip-ex">' + esc(ex) + "</p>" : "") +
+        '<div class="tg-tip-act">' + (T.lib ? '<a href="about.html#' + T.lib + '">Подробнее в Библиотеке</a>' : "") +
+        '<button type="button" data-tipx>Понятно</button></div></div>';
+      el.addEventListener("click", function (e) { if (e.target.closest("[data-tipx]")) closeTip(false); });
+      document.body.appendChild(el);
+      TIP = { el: el, opener: opener };
+      try { history.pushState({ tip: 1 }, ""); } catch (e) {}   // «назад» закрывает лист, а не уводит со страницы
+      requestAnimationFrame(function () { el.classList.add("on"); });
+      try { el.querySelector("button").focus({ preventScroll: true }); } catch (e) {}
+    }
+    function closeTip(viaHistory) {
+      if (!TIP) return;
+      var t = TIP; TIP = null;
+      t.el.remove();
+      try { if (t.opener) t.opener.focus({ preventScroll: true }); } catch (e) {}
+      if (!viaHistory && (history.state || {}).tip) history.back();
+    }
+    // <<< tip
+    function termTag(r, f) {
+      var k = termKey(r, f);
+      return k ? '<small class="tg-fqt" data-term="' + k + '" data-id="' + esc(r.id) + '" role="button" tabindex="0" title="Что значит «' + esc(f.n) + '»">' + esc(f.n) + "</small>"
+        : "<small>" + esc(f.n) + "</small>";
+    }
     function prodRow(r) {
       var f = figure(r), nm = pname(r), sum = fromRub(entryRub(r));
       if (ROWS_B) return '<li><a class="tg-row" href="instrument.html?id=' + encodeURIComponent(r.id) + '">' + glyph(r) +
         '<span class="tg-tx"><span class="tg-nm">' + esc(nm.head) + '</span><span class="tg-sb">' + esc(nm.rest) + "</span></span>" +
-        '<span class="tg-fig"><b>' + esc(f.v) + "</b><small>" + esc(f.n) + "</small>" + (sum ? '<small class="tg-in2">' + sum + "</small>" : "") + "</span></a></li>";
+        '<span class="tg-fig"><b>' + esc(f.v) + "</b>" + termTag(r, f) + (sum ? '<small class="tg-in2">' + sum + "</small>" : "") + "</span></a></li>";
       return '<li><a class="tg-row" href="instrument.html?id=' + encodeURIComponent(r.id) + '">' + glyph(r) +
         '<span class="tg-tx"><span class="tg-nm">' + esc(nm.head) + '</span><span class="tg-sb">' + esc(nm.rest) + (sum ? '<span class="tg-in">' + sum + "</span>" : "") + "</span></span>" +
-        '<span class="tg-fig"><b>' + esc(f.v) + "</b><small>" + esc(f.n) + "</small></span></a></li>";
+        '<span class="tg-fig"><b>' + esc(f.v) + "</b>" + termTag(r, f) + "</span></a></li>";
     }
     // Избранное: ☆ в карточке продукта кладёт id в localStorage (so_fav) — список наверху «Продуктов»
     function favList() {
@@ -1530,6 +1596,7 @@
     function back() { if (H.d > 0) history.back(); else go("home"); }
     window.addEventListener("popstate", function (e) {
       var st = e.state;
+      if (TIP && !(st && st.tip)) closeTip(true);              // «назад» из пояснения — закрыть лист
       if (QZ && !(st && st.qz)) closeQuiz(true);           // «назад» из опроса — закрыть опрос
       if (RD && !(st && st.rd)) closeRd(true);             // «назад» из читалки разбора — закрыть её
       if (!st || !st.tg || !VIEWS[st.tg]) return;          // чужие записи (истории stories.js) — не наши
@@ -1538,7 +1605,13 @@
       H.d = st.d || 0; H.from = st.from || null;
       if (st.tg !== S.cur) { save(); S.cur = st.tg; render(false, S.y[st.tg] || 0, true); tabs(); save(); }
     });
+    app.addEventListener("keydown", function (e) {
+      var tm = e.target.closest && e.target.closest("[data-term]");
+      if (tm && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); openTip(tm.getAttribute("data-term"), tm.getAttribute("data-id"), tm); }
+    });
     app.addEventListener("click", function (e) {
+      var tm = e.target.closest("[data-term]");
+      if (tm) { e.preventDefault(); e.stopPropagation(); openTip(tm.getAttribute("data-term"), tm.getAttribute("data-id"), tm); return; }
       if (e.target.closest("[data-tgback]")) { back(); return; }
       if (e.target.closest("[data-quiz]")) { e.preventDefault(); openQuiz(); return; }
       var shr = e.target.closest("[data-svshare]");
@@ -1590,7 +1663,7 @@
     });
     nav.addEventListener("click", function (e) { var b = e.target.closest("button[data-t]"); if (b) go(b.getAttribute("data-t")); });
     window.addEventListener("pagehide", save);
-    document.addEventListener("keydown", function (e) { if (e.key === "Escape" && QZ) closeQuiz(false); if (e.key === "Escape" && RD) closeRd(false); });
+    document.addEventListener("keydown", function (e) { if (e.key === "Escape" && TIP) { closeTip(false); return; } if (e.key === "Escape" && QZ) closeQuiz(false); if (e.key === "Escape" && RD) closeRd(false); });
 
     // Закрыли ассистента крестиком — подсветка возвращается к разделу
     function watchChat() {
