@@ -654,9 +654,9 @@ window.PLACEMENTS_DATA = {
      "n": "iShares Bitcoin Trust ETF",
      "w": 1.0,
      "f0": 40.11,
-     "px": 46.755,
-     "pxTime": "2026-10-12",
-     "perfPct": 16.6
+     "px": 46.855,
+     "pxTime": "2026-10-13",
+     "perfPct": 16.8
     }
    ],
    "dates": {
@@ -677,7 +677,7 @@ window.PLACEMENTS_DATA = {
      "barrierPct": 500.0
     }
    },
-   "perfPct": 16.6
+   "perfPct": 16.8
   },
   {
    "isin": "RU000A10ASL7",
@@ -1163,7 +1163,7 @@ window.PLACEMENTS_DATA = {
    },
    "payoff": {
     "couponPa": 24.8,
-    "couponPeriodPct": 25.0,
+    "couponPeriodPct": null,
     "couponBarrierPct": 100.0,
     "memory": true,
     "obsCount": 1,
@@ -1803,9 +1803,9 @@ window.PLACEMENTS_DATA = {
      "n": "iShares Bitcoin Trust ETF",
      "w": 1.0,
      "f0": 58.67,
-     "px": 46.755,
-     "pxTime": "2026-10-12",
-     "perfPct": -20.3
+     "px": 46.855,
+     "pxTime": "2026-10-13",
+     "perfPct": -20.1
     }
    ],
    "dates": {
@@ -1821,7 +1821,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 100.0,
     "protectionPct": 100.0
    },
-   "perfPct": -20.3
+   "perfPct": -20.1
   },
   {
    "isin": "RU000A10BA19",
