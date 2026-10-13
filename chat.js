@@ -48,13 +48,15 @@
   var OWN_SUG = Array.isArray(SETUP.suggestions) && SETUP.suggestions.length;
   if (OWN_SUG) CFG.suggestions = SETUP.suggestions.slice(0, 4);
 
-  // Гейт квалинвестора пройден — те же три места, что у seen() в qualgate.js. Расчёт цены
+  // Гейт квалинвестора пройден СЕГОДНЯ — та же проверка, что у seen() в qualgate.js
+  // (там хранится дата подтверждения по Москве; правишь одну — правь вторую). Расчёт цены
   // опциона в чате работает только после гейта (воркер смотрит на qual), поэтому и
   // обещание «посчитаю» показываем только тогда — иначе оно было бы неправдой.
   function qualOk() {
-    if (document.cookie.indexOf("so_qual_v1=1") !== -1) return true;
-    try { if (localStorage.getItem("so_qual_v1") === "1") return true; } catch (e) {}
-    try { if (sessionStorage.getItem("so_qual_v1") === "1") return true; } catch (e) {}
+    var t = new Date(Date.now() + 3 * 3600000).toISOString().slice(0, 10);
+    if (document.cookie.indexOf("so_qual_v1=" + t) !== -1) return true;
+    try { if (localStorage.getItem("so_qual_v1") === t) return true; } catch (e) {}
+    try { if (sessionStorage.getItem("so_qual_v1") === t) return true; } catch (e) {}
     return false;
   }
 
