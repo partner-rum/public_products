@@ -654,9 +654,9 @@ window.PLACEMENTS_DATA = {
      "n": "iShares Bitcoin Trust ETF",
      "w": 1.0,
      "f0": 40.11,
-     "px": 47.11,
+     "px": 46.295,
      "pxTime": "2026-10-14",
-     "perfPct": 17.5
+     "perfPct": 15.4
     }
    ],
    "dates": {
@@ -677,7 +677,7 @@ window.PLACEMENTS_DATA = {
      "barrierPct": 500.0
     }
    },
-   "perfPct": 17.5
+   "perfPct": 15.4
   },
   {
    "isin": "RU000A10ASL7",
@@ -866,9 +866,9 @@ window.PLACEMENTS_DATA = {
      "n": "SPDR Gold Shares (GLD)",
      "w": 1.0,
      "f0": 393.24,
-     "px": 381.33,
-     "pxTime": "2026-10-13",
-     "perfPct": -3.0
+     "px": 375.015,
+     "pxTime": "2026-10-14",
+     "perfPct": -4.6
     }
    ],
    "dates": {
@@ -884,7 +884,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 70.0,
     "protectionPct": 100.0
    },
-   "perfPct": -3.0
+   "perfPct": -4.6
   },
   {
    "isin": "RU000A10DES6",
@@ -907,9 +907,9 @@ window.PLACEMENTS_DATA = {
      "n": "SPDR S&P 500 ETF Trust",
      "w": 1.0,
      "f0": 689.17,
-     "px": 778.04,
+     "px": 771.68,
      "pxTime": "2026-10-14",
-     "perfPct": 12.9
+     "perfPct": 12.0
     }
    ],
    "dates": {
@@ -925,7 +925,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 70.0,
     "protectionPct": 100.0
    },
-   "perfPct": 12.9
+   "perfPct": 12.0
   },
   {
    "isin": "RU000A10CV70",
@@ -989,9 +989,9 @@ window.PLACEMENTS_DATA = {
      "n": "Global X Uranium ETF",
      "w": 1.0,
      "f0": 49.2,
-     "px": 37.292,
-     "pxTime": "2026-10-13",
-     "perfPct": -24.2
+     "px": 35.82,
+     "pxTime": "2026-10-14",
+     "perfPct": -27.2
     }
    ],
    "dates": {
@@ -1007,7 +1007,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 30.0,
     "protectionPct": 100.0
    },
-   "perfPct": -24.2
+   "perfPct": -27.2
   },
   {
    "isin": "RU000A10CVB8",
@@ -1803,9 +1803,9 @@ window.PLACEMENTS_DATA = {
      "n": "iShares Bitcoin Trust ETF",
      "w": 1.0,
      "f0": 58.67,
-     "px": 47.11,
+     "px": 46.295,
      "pxTime": "2026-10-14",
-     "perfPct": -19.7
+     "perfPct": -21.1
     }
    ],
    "dates": {
@@ -1821,7 +1821,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 100.0,
     "protectionPct": 100.0
    },
-   "perfPct": -19.7
+   "perfPct": -21.1
   },
   {
    "isin": "RU000A10BA19",
@@ -1967,9 +1967,9 @@ window.PLACEMENTS_DATA = {
      "n": "Currency Pair USD/RUB",
      "w": 1.0,
      "f0": 81.5616,
-     "px": 84.1875,
-     "pxTime": "2026-10-13",
-     "perfPct": 3.2
+     "px": 83.8175,
+     "pxTime": "2026-10-14",
+     "perfPct": 2.8
     }
    ],
    "dates": {
@@ -1985,7 +1985,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 145.0,
     "protectionPct": 95.0
    },
-   "perfPct": 3.2
+   "perfPct": 2.8
   },
   {
    "isin": "RU000A10A9F3",
@@ -2008,36 +2008,36 @@ window.PLACEMENTS_DATA = {
      "n": "МКПАО \"Хэдхантер\"",
      "w": 1.0,
      "f0": 3183.0,
-     "px": 2783.0,
-     "pxTime": "2026-10-13",
-     "perfPct": -12.6
+     "px": 2754.0,
+     "pxTime": "2026-10-14",
+     "perfPct": -13.5
     },
     {
      "t": "MOEX",
      "n": "МосБиржа",
      "w": 1.0,
      "f0": 201.8,
-     "px": 157.6,
-     "pxTime": "2026-10-13",
-     "perfPct": -21.9
+     "px": 156.34,
+     "pxTime": "2026-10-14",
+     "perfPct": -22.5
     },
     {
      "t": "TATN",
      "n": "Татнефть (ао)",
      "w": 1.0,
      "f0": 682.3,
-     "px": 667.5,
-     "pxTime": "2026-10-13",
-     "perfPct": -2.2
+     "px": 651.9,
+     "pxTime": "2026-10-14",
+     "perfPct": -4.5
     },
     {
      "t": "X5",
      "n": "Корпоративный центр ИКС 5",
      "w": 1.0,
      "f0": 3528.0,
-     "px": 2122.5,
-     "pxTime": "2026-10-13",
-     "perfPct": -39.8
+     "px": 2120.0,
+     "pxTime": "2026-10-14",
+     "perfPct": -39.9
     }
    ],
    "dates": {
@@ -2058,7 +2058,7 @@ window.PLACEMENTS_DATA = {
      "barrierPct": null
     }
    },
-   "perfPct": -39.8
+   "perfPct": -39.9
   },
   {
    "isin": "RU000A10A9G1",
@@ -2081,9 +2081,9 @@ window.PLACEMENTS_DATA = {
      "n": "SPDR S&P 500 ETF Trust",
      "w": 1.0,
      "f0": 536.7,
-     "px": 778.04,
+     "px": 771.68,
      "pxTime": "2026-10-14",
-     "perfPct": 45.0
+     "perfPct": 43.8
     }
    ],
    "dates": {
@@ -2099,7 +2099,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 120.0,
     "protectionPct": 100.0
    },
-   "perfPct": 45.0
+   "perfPct": 43.8
   },
   {
    "isin": "RU000A10A9C0",
