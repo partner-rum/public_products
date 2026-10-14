@@ -3,15 +3,15 @@
 // Источники: ЦБ (ключевая, RUONIA), MOEX ISS (RUSFAR, БПИФы, ОФЗ),
 // Финуслуги (вклады и накопительные счета — витрина МосБиржи).
 window.RATES = {
-  "updated": "2026-10-14 13:30",
+  "updated": "2026-10-14 16:31",
   "cbr": {
     "key": {
       "rate": 14.0,
       "date": "2026-07-27"
     },
     "ruonia": {
-      "rate": 13.84,
-      "date": "2026-10-12"
+      "rate": 13.73,
+      "date": "2026-10-13"
     }
   },
   "rusfar": [
@@ -57,7 +57,7 @@ window.RATES = {
     {
       "id": "MONY",
       "name": "АК БАРС Денежный рынок",
-      "price": 134.16,
+      "price": 134.28,
       "ter": 0.2,
       "rate": 13.63
     },
@@ -71,14 +71,14 @@ window.RATES = {
     {
       "id": "SBMM",
       "name": "Первая Сберегательный",
-      "price": 19.6135,
+      "price": 19.613,
       "ter": 0.3,
       "rate": 13.53
     },
     {
       "id": "AMNR",
       "name": "АТОН Накопительный",
-      "price": 158.485,
+      "price": 158.489,
       "ter": 0.3,
       "rate": 13.53
     },
@@ -92,7 +92,7 @@ window.RATES = {
     {
       "id": "TMON",
       "name": "Т-Капитал Денежный рынок",
-      "price": 165.95,
+      "price": 165.94,
       "ter": 1.15,
       "rate": 12.68
     }
@@ -103,21 +103,21 @@ window.RATES = {
       "name": "ОФЗ 26207",
       "maturity": "2027-02-03",
       "years": 0.31,
-      "rate": 12.31
+      "rate": 12.34
     },
     {
       "id": "SU26232RMFS7",
       "name": "ОФЗ 26232",
       "maturity": "2027-10-06",
       "years": 0.98,
-      "rate": 12.98
+      "rate": 13.05
     },
     {
       "id": "SU26212RMFS9",
       "name": "ОФЗ 26212",
       "maturity": "2028-01-19",
       "years": 1.27,
-      "rate": 13.54
+      "rate": 13.55
     }
   ],
   "deposits": [
@@ -186,6 +186,22 @@ window.RATES = {
       "feature": null
     },
     {
+      "bank": "Альфа-Банк",
+      "name": "Социальный",
+      "rate": 23.76,
+      "kind": "deposit",
+      "termMonths": 12,
+      "daysFrom": 365,
+      "daysTo": 365,
+      "minAmount": 1,
+      "url": "https://finuslugi.ru/vklady/alfabank_socialnyj",
+      "promo": true,
+      "floating": false,
+      "refill": true,
+      "capitalization": false,
+      "feature": null
+    },
+    {
       "bank": "Банк ПСБ",
       "name": "Александр Невский",
       "rate": 23.0,
@@ -218,22 +234,6 @@ window.RATES = {
       "feature": null
     },
     {
-      "bank": "Сбербанк",
-      "name": "Социальный",
-      "rate": 22.0,
-      "kind": "deposit",
-      "termMonths": 12,
-      "daysFrom": 365,
-      "daysTo": 365,
-      "minAmount": 1,
-      "url": "https://finuslugi.ru/vklady/sberbank_socialnyj",
-      "promo": true,
-      "floating": false,
-      "refill": true,
-      "capitalization": false,
-      "feature": null
-    },
-    {
       "bank": "Банк ПСБ",
       "name": "Народный",
       "rate": 22.0,
@@ -246,6 +246,22 @@ window.RATES = {
       "promo": true,
       "floating": false,
       "refill": false,
+      "capitalization": false,
+      "feature": null
+    },
+    {
+      "bank": "Сбербанк",
+      "name": "Социальный",
+      "rate": 22.0,
+      "kind": "deposit",
+      "termMonths": 12,
+      "daysFrom": 365,
+      "daysTo": 365,
+      "minAmount": 1,
+      "url": "https://finuslugi.ru/vklady/sberbank_socialnyj",
+      "promo": true,
+      "floating": false,
+      "refill": true,
       "capitalization": false,
       "feature": null
     },
@@ -343,22 +359,6 @@ window.RATES = {
       "floating": false,
       "refill": false,
       "capitalization": true,
-      "feature": null
-    },
-    {
-      "bank": "Альфа-Банк",
-      "name": "Социальный",
-      "rate": 19.83,
-      "kind": "deposit",
-      "termMonths": 12,
-      "daysFrom": 365,
-      "daysTo": 365,
-      "minAmount": 1,
-      "url": "https://finuslugi.ru/vklady/alfabank_socialnyj",
-      "promo": true,
-      "floating": false,
-      "refill": true,
-      "capitalization": false,
       "feature": null
     },
     {
