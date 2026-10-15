@@ -1,8 +1,8 @@
 // Файл собирается скриптом выгрузки из бэкофиса и админкой сейлзов — руками не править.
 // Выпуски с "src": "sales" добавлены через админку; при перегенерации сохраняются,
-// пока их ISIN не появится в выгрузке. Обновлено: 2026-10-14
+// пока их ISIN не появится в выгрузке. Обновлено: 2026-10-15
 window.PLACEMENTS_DATA = {
- "updated": "2026-10-14",
+ "updated": "2026-10-15",
  "issues": [
   {
    "isin": "RU000A10E6K5",
@@ -654,9 +654,9 @@ window.PLACEMENTS_DATA = {
      "n": "iShares Bitcoin Trust ETF",
      "w": 1.0,
      "f0": 40.11,
-     "px": 46.295,
-     "pxTime": "2026-10-14",
-     "perfPct": 15.4
+     "px": 46.24,
+     "pxTime": "2026-10-15",
+     "perfPct": 15.3
     }
    ],
    "dates": {
@@ -677,7 +677,7 @@ window.PLACEMENTS_DATA = {
      "barrierPct": 500.0
     }
    },
-   "perfPct": 15.4
+   "perfPct": 15.3
   },
   {
    "isin": "RU000A10ASL7",
@@ -1803,9 +1803,9 @@ window.PLACEMENTS_DATA = {
      "n": "iShares Bitcoin Trust ETF",
      "w": 1.0,
      "f0": 58.67,
-     "px": 46.295,
-     "pxTime": "2026-10-14",
-     "perfPct": -21.1
+     "px": 46.24,
+     "pxTime": "2026-10-15",
+     "perfPct": -21.2
     }
    ],
    "dates": {
@@ -1821,7 +1821,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 100.0,
     "protectionPct": 100.0
    },
-   "perfPct": -21.1
+   "perfPct": -21.2
   },
   {
    "isin": "RU000A10BA19",
