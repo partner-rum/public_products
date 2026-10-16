@@ -1,8 +1,8 @@
 // Файл сгенерирован update_site.py — руками не править (перезапишется при следующем запуске).
 // Продукты с "src": "sales" добавлены через админку и сохраняются при перегенерации.
-// Обновлено: 2026-10-05
+// Обновлено: 2026-10-16
 window.SITE_DATA = {
-  "updated": "2026-10-05",
+  "updated": "2026-10-16",
   "instruments": [
     {
       "id": "RCD-OFZ248-K100-1Y",
@@ -2094,6 +2094,51 @@ window.SITE_DATA = {
       "quote": 35.5,
       "chg": 0,
       "minNom": 30000000,
+      "src": "sales"
+    },
+    {
+      "id": "W-WO5-HYPER-C100-3Y",
+      "type": "warrant",
+      "structure": "call",
+      "name": "CALL 100 · худшая из корзины · 3 года",
+      "underlying": "Amazon / Alphabet / Meta / Microsoft / Oracle",
+      "basket": [
+        "AMZN",
+        "GOOGL",
+        "META",
+        "MSFT",
+        "ORCL"
+      ],
+      "cls": "Акции США",
+      "currency": "USD",
+      "strike": 100,
+      "spot": 100,
+      "tenor": "3 года",
+      "quote": 14.25,
+      "chg": 0,
+      "minNom": 1000000,
+      "src": "sales"
+    },
+    {
+      "id": "W-WO4-HYPER-C100-3Y",
+      "type": "warrant",
+      "structure": "call",
+      "name": "CALL 100 · худшая из корзины · 3 года",
+      "underlying": "Amazon / Alphabet / Meta / Microsoft",
+      "basket": [
+        "AMZN",
+        "GOOGL",
+        "META",
+        "MSFT"
+      ],
+      "cls": "Акции США",
+      "currency": "USD",
+      "strike": 100,
+      "spot": 100,
+      "tenor": "3 года",
+      "quote": 16.75,
+      "chg": 0,
+      "minNom": 1000000,
       "src": "sales"
     }
   ],
