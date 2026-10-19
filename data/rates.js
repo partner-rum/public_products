@@ -3,7 +3,7 @@
 // Источники: ЦБ (ключевая, RUONIA), MOEX ISS (RUSFAR, БПИФы, ОФЗ),
 // Финуслуги (вклады и накопительные счета — витрина МосБиржи).
 window.RATES = {
-  "updated": "2026-10-19 10:30",
+  "updated": "2026-10-19 11:34",
   "cbr": {
     "key": {
       "rate": 14.0,
@@ -50,14 +50,14 @@ window.RATES = {
     {
       "id": "BCSD",
       "name": "БКС Денежный рынок",
-      "price": 14.548,
+      "price": 14.549,
       "ter": 0.2,
       "rate": 13.58
     },
     {
       "id": "MONY",
       "name": "АК БАРС Денежный рынок",
-      "price": 134.7,
+      "price": 134.44,
       "ter": 0.2,
       "rate": 13.58
     },
@@ -92,7 +92,7 @@ window.RATES = {
     {
       "id": "TMON",
       "name": "Т-Капитал Денежный рынок",
-      "price": 166.22,
+      "price": 166.25,
       "ter": 1.15,
       "rate": 12.63
     }
@@ -103,14 +103,14 @@ window.RATES = {
       "name": "ОФЗ 26207",
       "maturity": "2027-02-03",
       "years": 0.29,
-      "rate": 12.28
+      "rate": 12.21
     },
     {
       "id": "SU26232RMFS7",
       "name": "ОФЗ 26232",
       "maturity": "2027-10-06",
       "years": 0.96,
-      "rate": 12.98
+      "rate": 13.08
     },
     {
       "id": "SU26212RMFS9",
@@ -846,7 +846,7 @@ window.RATES = {
       "name": "Новые деньги",
       "rate": 13.6,
       "kind": "deposit",
-      "termMonths": 4,
+      "termMonths": 3,
       "daysFrom": 61,
       "daysTo": 1095,
       "minAmount": 15000,
@@ -872,6 +872,22 @@ window.RATES = {
       "refill": false,
       "capitalization": false,
       "feature": "С привязкой к ключевой ставке ЦБ РФ"
+    },
+    {
+      "bank": "Газпромбанк",
+      "name": "Новые деньги",
+      "rate": 13.6,
+      "kind": "deposit",
+      "termMonths": 4,
+      "daysFrom": 61,
+      "daysTo": 1095,
+      "minAmount": 15000,
+      "url": "https://finuslugi.ru/vklady/gazprombank_novye_dengi",
+      "promo": false,
+      "floating": false,
+      "refill": false,
+      "capitalization": false,
+      "feature": "Для новых накоплений"
     },
     {
       "bank": "Газпромбанк",
@@ -955,22 +971,6 @@ window.RATES = {
     },
     {
       "bank": "Газпромбанк",
-      "name": "Новые деньги",
-      "rate": 13.45,
-      "kind": "deposit",
-      "termMonths": 3,
-      "daysFrom": 61,
-      "daysTo": 1095,
-      "minAmount": 15000,
-      "url": "https://finuslugi.ru/vklady/gazprombank_novye_dengi",
-      "promo": false,
-      "floating": false,
-      "refill": false,
-      "capitalization": false,
-      "feature": "Для новых накоплений"
-    },
-    {
-      "bank": "Газпромбанк",
       "name": "ГПБ-счет (на ежедневный остаток)",
       "rate": 13.0,
       "kind": "saving",
@@ -1036,7 +1036,7 @@ window.RATES = {
     {
       "bank": "Газпромбанк",
       "name": "Новые деньги",
-      "rate": 12.5,
+      "rate": 12.7,
       "kind": "deposit",
       "termMonths": 2,
       "daysFrom": 61,
