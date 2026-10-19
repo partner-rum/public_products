@@ -45,8 +45,21 @@
 // node --check их пропустит (в JS они валидны), а make_prerender.py читает файл
 // через json.loads и молча оставит пререндер устаревшим. Все пояснения — здесь.
 window.TALKS = {
-  "updated": "2026-09-04",
+  "updated": "2026-10-19",
   "items": [
+    {
+      "id": "gpb-trading-2026-10",
+      "org": "Газпромбанк Инвестиции",
+      "note": "52 мин",
+      "title": "Артем Фетисов: «Лучше быть удачливым, чем умным»",
+      "date": "2026-10-16",
+      "cover": "media/talk-gpb-trading.jpg",
+      "links": [
+        { "label": "RUTUBE", "url": "https://rutube.ru/video/fb7eb6a7e5e7a90eaf0c8092c2fb69c0/" },
+        { "label": "YOUTUBE", "url": "https://www.youtube.com/watch?v=uYp2BNdULqk" },
+        { "label": "VK", "url": "https://vkvideo.ru/video-138567971_456239632" }
+      ]
+    },
     {
       "id": "smartlab-warrants-2026-07",
       "org": "Smart-Lab",
