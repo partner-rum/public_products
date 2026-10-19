@@ -3,7 +3,7 @@
 // Источники: ЦБ (ключевая, RUONIA), MOEX ISS (RUSFAR, БПИФы, ОФЗ),
 // Финуслуги (вклады и накопительные счета — витрина МосБиржи).
 window.RATES = {
-  "updated": "2026-10-19 16:32",
+  "updated": "2026-10-19 19:32",
   "cbr": {
     "key": {
       "rate": 14.0,
@@ -50,14 +50,14 @@ window.RATES = {
     {
       "id": "BCSD",
       "name": "БКС Денежный рынок",
-      "price": 14.549,
+      "price": 14.551,
       "ter": 0.2,
       "rate": 13.6
     },
     {
       "id": "MONY",
       "name": "АК БАРС Денежный рынок",
-      "price": 134.43,
+      "price": 134.44,
       "ter": 0.2,
       "rate": 13.6
     },
@@ -71,7 +71,7 @@ window.RATES = {
     {
       "id": "SBMM",
       "name": "Первая Сберегательный",
-      "price": 19.651,
+      "price": 19.6505,
       "ter": 0.3,
       "rate": 13.5
     },
@@ -85,14 +85,14 @@ window.RATES = {
     {
       "id": "AKMM",
       "name": "Альфа Денежный рынок",
-      "price": 179.76,
+      "price": 179.77,
       "ter": 0.69,
       "rate": 13.11
     },
     {
       "id": "TMON",
       "name": "Т-Капитал Денежный рынок",
-      "price": 166.28,
+      "price": 166.29,
       "ter": 1.15,
       "rate": 12.65
     }
@@ -103,21 +103,21 @@ window.RATES = {
       "name": "ОФЗ 26207",
       "maturity": "2027-02-03",
       "years": 0.29,
-      "rate": 12.32
+      "rate": 12.29
     },
     {
       "id": "SU26232RMFS7",
       "name": "ОФЗ 26232",
       "maturity": "2027-10-06",
       "years": 0.96,
-      "rate": 13.02
+      "rate": 13.07
     },
     {
       "id": "SU26212RMFS9",
       "name": "ОФЗ 26212",
       "maturity": "2028-01-19",
       "years": 1.25,
-      "rate": 13.62
+      "rate": 13.64
     }
   ],
   "deposits": [
@@ -554,6 +554,22 @@ window.RATES = {
       "feature": null
     },
     {
+      "bank": "Альфа-Банк",
+      "name": "Альфа-Счет Alfa Only (% на минимальный остаток)",
+      "rate": 15.0,
+      "kind": "saving",
+      "termMonths": 0,
+      "daysFrom": 1,
+      "daysTo": 91,
+      "minAmount": 1,
+      "url": "https://finuslugi.ru/vklady/alfabank_alfa_schet_premium",
+      "promo": false,
+      "floating": false,
+      "refill": true,
+      "capitalization": true,
+      "feature": null
+    },
+    {
       "bank": "Банк Уралсиб",
       "name": "Доход Плюс. Премиум",
       "rate": 15.0,
@@ -615,6 +631,22 @@ window.RATES = {
       "floating": false,
       "refill": true,
       "capitalization": true,
+      "feature": null
+    },
+    {
+      "bank": "Вайлдберриз Банк",
+      "name": "Оптимальный",
+      "rate": 14.5,
+      "kind": "deposit",
+      "termMonths": 4,
+      "daysFrom": 90,
+      "daysTo": 365,
+      "minAmount": 50000,
+      "url": "https://finuslugi.ru/vklady/wbbank_optimalnyy",
+      "promo": false,
+      "floating": false,
+      "refill": false,
+      "capitalization": false,
       "feature": null
     },
     {
@@ -734,22 +766,6 @@ window.RATES = {
       "name": "Мой дом (% в конце срока)",
       "rate": 13.9,
       "kind": "deposit",
-      "termMonths": 4,
-      "daysFrom": 61,
-      "daysTo": 1100,
-      "minAmount": 1500000,
-      "url": "https://finuslugi.ru/vklady/domrf_moj_dom_procenty_v_konce_sroka",
-      "promo": false,
-      "floating": false,
-      "refill": false,
-      "capitalization": false,
-      "feature": null
-    },
-    {
-      "bank": "ДОМ.РФ Банк",
-      "name": "Мой дом (% в конце срока)",
-      "rate": 13.9,
-      "kind": "deposit",
       "termMonths": 5,
       "daysFrom": 61,
       "daysTo": 1100,
@@ -823,22 +839,6 @@ window.RATES = {
       "floating": false,
       "refill": false,
       "capitalization": true,
-      "feature": null
-    },
-    {
-      "bank": "ДОМ.РФ Банк",
-      "name": "Мой дом (% в конце срока)",
-      "rate": 13.7,
-      "kind": "deposit",
-      "termMonths": 2,
-      "daysFrom": 61,
-      "daysTo": 1100,
-      "minAmount": 1500000,
-      "url": "https://finuslugi.ru/vklady/domrf_moj_dom_procenty_v_konce_sroka",
-      "promo": false,
-      "floating": false,
-      "refill": false,
-      "capitalization": false,
       "feature": null
     },
     {
