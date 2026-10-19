@@ -102,7 +102,10 @@ def build_protection():
 # Добавить базовый актив — строка в WARRANT_UNDERLYINGS + котировки в WARRANT_QUOTES.
 
 WARRANT_UNDERLYINGS = {
-    "OFZ238": dict(short="ОФЗ 26238", underlying="ОФЗ 26238",           cls="Облигации",  currency="RUB", uRef="52% ном."),
+    "OFZ238": dict(short="ОФЗ 26238", underlying="ОФЗ 26238",           cls="Облигации",  currency="RUB", uRef="51,5% ном."),
+    # Оффер рынка 19.10.2026 ÷ 0,8 (вверх до 0,25); у 26248 своя экспирация в id.
+    "OFZ248": dict(short="ОФЗ 26248", underlying="ОФЗ 26248",           cls="Облигации",  currency="RUB", uRef="79,4% ном.",
+                   expiry={2: ("19.10.2028", "1028")}),
     "NBIS":   dict(short="NBIS",      underlying="Nebius Group (NBIS)", cls="Акции США",  currency="USD", uRef="$205"),
     "NVDA":   dict(short="NVDA",      underlying="NVIDIA (NVDA)",       cls="Акции США",  currency="USD", uRef="$206"),
     "SPY":    dict(short="SPY",       underlying="S&P 500 (SPY)",       cls="Индекс",     currency="USD", uRef="$747"),
@@ -141,8 +144,9 @@ TENOR_META = {
 
 # Котировки из прайсера: (БА, структура, срок) -> (quote, chg). chg=0 — свежий прайс-лист.
 WARRANT_QUOTES = {
-    ("OFZ238", "call", 2): (15.00, 0), ("OFZ238", "call", 3): (16.00, 0),
-    ("OFZ238", "call105", 2): (10.00, 0), ("OFZ238", "call105", 3): (12.00, 0),
+    ("OFZ238", "call", 2): (12.25, 0), ("OFZ238", "call", 3): (16.00, 0),
+    ("OFZ238", "call105", 2): (9.25, 0), ("OFZ238", "call105", 3): (12.00, 0),
+    ("OFZ248", "call", 2): (10.00, 0), ("OFZ248", "call105", 2): (7.00, 0),
 
     ("NBIS", "call", 2): (70.50, 0), ("NBIS", "call", 3): (86.50, 0),
     ("NBIS", "cs", 2): (14.25, 0),   ("NBIS", "cs", 3): (22.25, 0),

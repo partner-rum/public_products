@@ -1,8 +1,8 @@
 // Файл сгенерирован update_site.py — руками не править (перезапишется при следующем запуске).
 // Продукты с "src": "sales" добавлены через админку и сохраняются при перегенерации.
-// Обновлено: 2026-10-16
+// Обновлено: 2026-10-19
 window.SITE_DATA = {
-  "updated": "2026-10-16",
+  "updated": "2026-10-19",
   "instruments": [
     {
       "id": "RCD-OFZ248-K100-1Y",
@@ -85,10 +85,10 @@ window.SITE_DATA = {
       "cls": "Облигации",
       "currency": "RUB",
       "strike": 100,
-      "uRef": "52% ном.",
+      "uRef": "51,5% ном.",
       "spot": 100,
       "tenor": "2 года",
-      "quote": 15,
+      "quote": 12.25,
       "chg": 0,
       "minNom": 1000000
     },
@@ -117,10 +117,10 @@ window.SITE_DATA = {
       "cls": "Облигации",
       "currency": "RUB",
       "strike": 105,
-      "uRef": "52% ном.",
+      "uRef": "51,5% ном.",
       "spot": 100,
       "tenor": "2 года",
-      "quote": 10,
+      "quote": 9.25,
       "chg": 0,
       "minNom": 1000000
     },
@@ -137,6 +137,38 @@ window.SITE_DATA = {
       "spot": 100,
       "tenor": "3 года",
       "quote": 12,
+      "chg": 0,
+      "minNom": 1000000
+    },
+    {
+      "id": "W-OFZ248-C100-1028",
+      "type": "warrant",
+      "structure": "call",
+      "name": "CALL 100 · ОФЗ 26248 · 2 года",
+      "underlying": "ОФЗ 26248",
+      "cls": "Облигации",
+      "currency": "RUB",
+      "strike": 100,
+      "uRef": "79,4% ном.",
+      "spot": 100,
+      "tenor": "2 года",
+      "quote": 10,
+      "chg": 0,
+      "minNom": 1000000
+    },
+    {
+      "id": "W-OFZ248-C105-1028",
+      "type": "warrant",
+      "structure": "call",
+      "name": "CALL 105 · ОФЗ 26248 · 2 года",
+      "underlying": "ОФЗ 26248",
+      "cls": "Облигации",
+      "currency": "RUB",
+      "strike": 105,
+      "uRef": "79,4% ном.",
+      "spot": 100,
+      "tenor": "2 года",
+      "quote": 7,
       "chg": 0,
       "minNom": 1000000
     },
