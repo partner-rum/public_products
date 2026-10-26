@@ -132,9 +132,9 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26248",
      "w": 1.0,
      "f0": 81.441,
-     "px": 79.53,
+     "px": 79.499,
      "pxTime": "2026-10-26",
-     "perfPct": -2.3
+     "perfPct": -2.4
     }
    ],
    "dates": {
@@ -155,7 +155,7 @@ window.PLACEMENTS_DATA = {
      "barrierPct": null
     }
    },
-   "perfPct": -2.3
+   "perfPct": -2.4
   },
   {
    "isin": "RU000A10BZ44",
@@ -301,9 +301,9 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26248",
      "w": 1.0,
      "f0": 79.969,
-     "px": 79.53,
+     "px": 79.499,
      "pxTime": "2026-10-26",
-     "perfPct": -0.5
+     "perfPct": -0.6
     }
    ],
    "dates": {
@@ -324,7 +324,7 @@ window.PLACEMENTS_DATA = {
      "barrierPct": 100.0
     }
    },
-   "perfPct": -0.5
+   "perfPct": -0.6
   },
   {
    "isin": "RU000A10CRT8",
@@ -470,7 +470,7 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26248",
      "w": 1.0,
      "f0": 89.873,
-     "px": 79.53,
+     "px": 79.499,
      "pxTime": "2026-10-26",
      "perfPct": -11.5
     }
@@ -516,7 +516,7 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26248",
      "w": 1.0,
      "f0": 88.549,
-     "px": 79.53,
+     "px": 79.499,
      "pxTime": "2026-10-26",
      "perfPct": -10.2
     }
@@ -562,9 +562,9 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26248",
      "w": 1.0,
      "f0": 88.4,
-     "px": 79.53,
+     "px": 79.499,
      "pxTime": "2026-10-26",
-     "perfPct": -10.0
+     "perfPct": -10.1
     }
    ],
    "dates": {
@@ -585,7 +585,7 @@ window.PLACEMENTS_DATA = {
      "barrierPct": 100.0
     }
    },
-   "perfPct": -10.0
+   "perfPct": -10.1
   },
   {
    "isin": "RU000A10CVC6",
@@ -608,7 +608,7 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26248",
      "w": 1.0,
      "f0": 86.356,
-     "px": 79.53,
+     "px": 79.499,
      "pxTime": "2026-10-26",
      "perfPct": -7.9
     }
@@ -738,7 +738,7 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26248",
      "w": 1.0,
      "f0": 90.05,
-     "px": 79.53,
+     "px": 79.499,
      "pxTime": "2026-10-26",
      "perfPct": -11.7
     }
@@ -784,9 +784,9 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26230",
      "w": 1.0,
      "f0": 63.766,
-     "px": 56.78,
+     "px": 56.85,
      "pxTime": "2026-10-26",
-     "perfPct": -11.0
+     "perfPct": -10.8
     }
    ],
    "dates": {
@@ -802,7 +802,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 100.0,
     "protectionPct": 0.0
    },
-   "perfPct": -11.0
+   "perfPct": -10.8
   },
   {
    "isin": "RU000A10CV88",
@@ -1151,7 +1151,7 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26248",
      "w": 1.0,
      "f0": 85.77,
-     "px": 79.53,
+     "px": 79.499,
      "pxTime": "2026-10-26",
      "perfPct": -7.3
     }
@@ -1639,9 +1639,9 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26246",
      "w": 1.0,
      "f0": 90.79,
-     "px": 80.78,
+     "px": 80.689,
      "pxTime": "2026-10-26",
-     "perfPct": -11.0
+     "perfPct": -11.1
     }
    ],
    "dates": {
@@ -1657,7 +1657,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 300.0,
     "protectionPct": 100.0
    },
-   "perfPct": -11.0
+   "perfPct": -11.1
   },
   {
    "isin": "RU000A10BUF3",
@@ -1967,9 +1967,9 @@ window.PLACEMENTS_DATA = {
      "n": "Currency Pair USD/RUB",
      "w": 1.0,
      "f0": 81.5616,
-     "px": 81.2175,
+     "px": 80.75,
      "pxTime": "2026-10-26",
-     "perfPct": -0.4
+     "perfPct": -1.0
     }
    ],
    "dates": {
@@ -1985,7 +1985,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 145.0,
     "protectionPct": 95.0
    },
-   "perfPct": -0.4
+   "perfPct": -1.0
   },
   {
    "isin": "RU000A10A9F3",
@@ -2008,7 +2008,7 @@ window.PLACEMENTS_DATA = {
      "n": "МКПАО \"Хэдхантер\"",
      "w": 1.0,
      "f0": 3183.0,
-     "px": 2685.0,
+     "px": 2687.0,
      "pxTime": "2026-10-26",
      "perfPct": -15.6
     },
@@ -2017,25 +2017,25 @@ window.PLACEMENTS_DATA = {
      "n": "МосБиржа",
      "w": 1.0,
      "f0": 201.8,
-     "px": 155.5,
+     "px": 155.21,
      "pxTime": "2026-10-26",
-     "perfPct": -22.9
+     "perfPct": -23.1
     },
     {
      "t": "TATN",
      "n": "Татнефть (ао)",
      "w": 1.0,
      "f0": 682.3,
-     "px": 629.3,
+     "px": 630.0,
      "pxTime": "2026-10-26",
-     "perfPct": -7.8
+     "perfPct": -7.7
     },
     {
      "t": "X5",
      "n": "Корпоративный центр ИКС 5",
      "w": 1.0,
      "f0": 3528.0,
-     "px": 2276.0,
+     "px": 2274.0,
      "pxTime": "2026-10-26",
      "perfPct": -35.5
     }
