@@ -217,7 +217,7 @@ window.SITE_DATA = {
       "uRef": "$205",
       "spot": 100,
       "tenor": "2 года",
-      "quote": 14.25,
+      "quote": 20,
       "chg": 0,
       "minNom": 1000000
     },
@@ -234,7 +234,7 @@ window.SITE_DATA = {
       "uRef": "$205",
       "spot": 100,
       "tenor": "3 года",
-      "quote": 22.25,
+      "quote": 22,
       "chg": 0,
       "minNom": 1000000
     },
@@ -413,7 +413,7 @@ window.SITE_DATA = {
       "uRef": "$37",
       "spot": 100,
       "tenor": "2 года",
-      "quote": 20,
+      "quote": 22,
       "chg": 0,
       "minNom": 1000000
     },
@@ -462,7 +462,7 @@ window.SITE_DATA = {
       "uRef": "4 739 пт",
       "spot": 100,
       "tenor": "3 года",
-      "quote": 13,
+      "quote": 13.25,
       "chg": 0,
       "minNom": 1000000
     },
@@ -527,7 +527,7 @@ window.SITE_DATA = {
       "uRef": "$1 012",
       "spot": 100,
       "tenor": "2 года",
-      "quote": 17.75,
+      "quote": 18.75,
       "chg": 0,
       "minNom": 1000000
     },
