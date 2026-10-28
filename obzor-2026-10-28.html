@@ -1,0 +1,859 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="Rumberg">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Обзор рынка 28 октября — Rumberg</title>
+<meta name="description" content="Российский рынок на 28 октября 2026: индекс Мосбиржи выше 2500 на ожиданиях переговоров, крепкий рубль, дорогая нефть, ОФЗ и мнения брокеров.">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Обзор рынка 28 октября: рынок поверил в переговоры">
+<meta property="og:description" content="Индекс Мосбиржи выше 2500 третий день, рубль крепкий, ОФЗ развернулись от дна. Сценарии, риски и мнения брокеров.">
+<meta property="og:url" content="https://invest.rumberg.ru/obzor-2026-10-28">
+<meta property="og:image" content="https://invest.rumberg.ru/og-cover.png">
+<meta property="og:locale" content="ru_RU">
+<meta name="robots" content="noindex, follow">
+<link rel="canonical" href="https://invest.rumberg.ru/obzor-2026-10-28">
+<meta name="theme-color" content="#0B0C10">
+<link href="fonts/fonts.css?v=2" rel="stylesheet">
+<script src="metrika.js?v=10" defer></script>
+<style>
+/* Раскладка: «полярная ночь» витрины Rumberg. Тезис и шкала сценариев сверху,
+   дальше разделы в две колонки: слева заголовок с выводом, справа данные. */
+:root {
+  --bg: #0B0C10;
+  --card: #14161C;
+  --ink: #F2F3F7;
+  --mute: rgba(242,243,247,.66);
+  --faint: rgba(242,243,247,.56);
+  --line: rgba(255,255,255,.11);
+  --line2: rgba(255,255,255,.06);
+  --accent: #EE7D1B;
+  --accent-soft: rgba(238,125,27,.14);
+  --up: #55C08A;
+  --down: #E0705F;
+  --flat: rgba(242,243,247,.42);
+  --display: "Rubik", "Segoe UI", system-ui, sans-serif;
+  --body: "Onest", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "Consolas", monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: radial-gradient(1100px 520px at 88% -8%, rgba(238,125,27,.10), transparent 62%), var(--bg);
+  color: var(--ink);
+  font: 400 16px/1.6 var(--body);
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+a.brand:hover { text-decoration: none; }
+a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+.wrap {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.num, .mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.up { color: var(--up); }
+.dn { color: var(--down); }
+.nz { color: var(--flat); }
+
+/* шапка */
+.top { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 22px; border-bottom: 1px solid var(--line); }
+.brand { color: var(--ink); display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.brand .star { color: var(--accent); font-size: 18px; line-height: 1; }
+.brand b { font: 600 20px/1 var(--display); letter-spacing: -.01em; }
+.brand span { color: var(--mute); font-size: 14px; }
+.stamp { font: 500 12px/1.4 var(--mono); color: var(--faint); text-align: right; letter-spacing: .04em; }
+
+/* герой */
+.hero { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); gap: 40px 64px; padding-block: 56px 24px; align-items: end; }
+.kicker { font: 500 12px/1.4 var(--mono); color: var(--accent); letter-spacing: .1em; text-transform: uppercase; margin: 0 0 18px; }
+h1 { font: 600 clamp(2.5rem, 5.6vw, 4.4rem)/1.02 var(--display); letter-spacing: -.025em; margin: 0 0 22px; text-wrap: balance; }
+.lead { font-size: 18px; line-height: 1.6; color: rgba(242,243,247,.82); max-width: 40rem; margin: 0; }
+.big { border-left: 1px solid var(--line); padding-left: 32px; }
+.big-k { font: 500 12px/1.4 var(--mono); color: var(--faint); letter-spacing: .08em; text-transform: uppercase; }
+.big-v { font: 600 clamp(4rem, 8vw, 6.4rem)/1 var(--display); letter-spacing: -.035em; margin: 10px 0 6px; font-variant-numeric: tabular-nums; }
+.big-d { font: 600 18px/1.3 var(--mono); }
+.big-l { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 22px 0 0; padding-top: 16px; border-top: 1px solid var(--line); }
+.big-l div { min-width: 0; }
+.big-l dt { font-size: 12px; color: var(--faint); }
+.big-l dd { margin: 2px 0 0; font: 600 17px/1.2 var(--mono); }
+
+/* шкала сценариев */
+.rbox { margin: 36px 0 0; padding: 22px 26px 18px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; }
+.rhead { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.rhead h2 { font: 600 17px/1.3 var(--display); margin: 0; }
+.rhead p { margin: 0; font-size: 13px; color: var(--faint); }
+.ruler { position: relative; height: 214px; margin: 10px 14px 0; }
+.ruler .trk { position: absolute; left: 0; right: 0; top: 132px; height: 2px; background: var(--line); }
+.ruler .fill { position: absolute; top: 131px; height: 4px; border-radius: 2px; left: calc(var(--a) * 100%); width: calc((var(--b) - var(--a)) * 100%); background: linear-gradient(90deg, rgba(238,125,27,.12), var(--accent)); }
+.ruler .band { position: absolute; top: 122px; height: 22px; border-radius: 3px; left: calc(var(--a) * 100%); width: calc((var(--b) - var(--a)) * 100%); background: var(--accent-soft); border: 1px dashed rgba(238,125,27,.45); }
+.mk { position: absolute; top: 0; bottom: 0; left: calc(var(--p) * 100%); width: 0; }
+.mk .dot { position: absolute; top: 128px; left: -5px; width: 10px; height: 10px; border-radius: 50%; background: var(--bg); border: 2px solid var(--mute); }
+.mk .stem { position: absolute; left: 0; width: 1px; background: rgba(242,243,247,.28); }
+.mk .lab { position: absolute; left: 0; transform: translateX(-50%); white-space: nowrap; text-align: center; line-height: 1.25; }
+.mk .lab b { display: block; font: 600 15px/1.3 var(--mono); }
+.mk .lab span { display: block; font-size: 12.5px; color: var(--mute); }
+.mk.sc .dot { border-color: var(--ink); background: var(--ink); width: 8px; height: 8px; left: -4px; top: 129px; }
+.mk.up1 .lab { top: 54px; }
+.mk.up1 .stem { top: 96px; height: 32px; }
+.mk.up2 .lab { top: 0; }
+.mk.up2 .stem { top: 42px; height: 86px; }
+.mk.dn1 .lab { top: 150px; }
+.mk.now .dot { width: 16px; height: 16px; left: -8px; top: 125px; background: var(--accent); border: 3px solid var(--bg); box-shadow: 0 0 0 2px var(--accent), 0 0 22px rgba(238,125,27,.7); }
+.mk.now .lab b { color: var(--accent); font-size: 17px; }
+.mk.al .lab { transform: translateX(-12px); text-align: left; }
+.mk.ar .lab { transform: translateX(calc(-100% + 12px)); text-align: right; }
+.rleg { display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: 12.5px; color: var(--mute); padding-top: 12px; border-top: 1px solid var(--line2); }
+.rleg i { display: inline-block; vertical-align: middle; margin-right: 7px; }
+.rleg .i1 { width: 18px; height: 4px; border-radius: 2px; background: linear-gradient(90deg, rgba(238,125,27,.12), var(--accent)); }
+.rleg .i2 { width: 8px; height: 8px; border-radius: 50%; background: var(--ink); }
+.rleg .i3 { width: 16px; height: 10px; border-radius: 2px; background: var(--accent-soft); border: 1px dashed rgba(238,125,27,.6); }
+
+/* полоса показателей */
+.ind { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin: 40px 0 0; }
+.ind > div { padding: 18px 18px 20px 0; border-top: 1px solid var(--line); min-width: 0; }
+.ind .k { font-size: 13px; color: var(--mute); }
+.ind .v { font: 600 24px/1.2 var(--mono); margin: 6px 0 4px; font-variant-numeric: tabular-nums; }
+.ind .d { font-size: 13px; color: var(--faint); }
+.ind .d .up, .ind .d .dn { font-family: var(--mono); font-weight: 600; }
+
+/* разделы */
+.sec { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 20px 64px; padding-block: 64px; border-top: 1px solid var(--line); }
+.sec:first-of-type { margin-top: 48px; }
+.sh { align-self: start; position: sticky; top: 24px; }
+.sh .tag { font: 500 12px/1.4 var(--mono); color: var(--accent); letter-spacing: .1em; text-transform: uppercase; margin: 0 0 10px; }
+.sh h2 { font: 600 28px/1.12 var(--display); letter-spacing: -.015em; margin: 0 0 12px; text-wrap: balance; }
+.sh p { margin: 0; color: var(--mute); font-size: 15px; line-height: 1.55; }
+.sb { min-width: 0; display: flex; flex-direction: column; gap: 36px; }
+.sb p { margin: 0; max-width: 46rem; }
+.prose { display: flex; flex-direction: column; gap: 14px; }
+.prose p { color: rgba(242,243,247,.86); }
+h3 { font: 600 19px/1.3 var(--display); margin: 0 0 14px; letter-spacing: -.005em; }
+.sub { font-size: 13px; color: var(--faint); margin: -8px 0 14px; }
+
+/* хронология */
+.tl { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.tl li { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 20px; padding-block: 16px; border-top: 1px solid var(--line2); }
+.tl li:first-child { border-top: 0; padding-top: 0; }
+.tl time { font: 600 14px/1.6 var(--mono); color: var(--accent); }
+.tl p { margin: 0; }
+.tl p b { font-weight: 600; }
+.note { border: 1px solid var(--line); border-radius: 12px; padding: 18px 22px; background: rgba(20,22,28,.6); }
+.note .nk { font: 500 12px/1.4 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--faint); margin: 0 0 8px; }
+.note p { margin: 0; color: rgba(242,243,247,.86); }
+
+/* горизонтальные столбики */
+.bars { display: flex; flex-direction: column; gap: 4px; }
+.br { display: grid; grid-template-columns: 150px minmax(0, 1fr) 66px; align-items: center; gap: 14px; min-height: 30px; }
+.bn { font-size: 14.5px; line-height: 1.25; min-width: 0; }
+.bn i { font-style: normal; display: block; font: 400 11.5px/1.3 var(--mono); color: var(--faint); }
+.ba { position: relative; height: 12px; }
+.bz { position: absolute; left: var(--z); top: -8px; bottom: -8px; width: 1px; background: rgba(242,243,247,.3); }
+.bb { position: absolute; top: 0; bottom: 0; border-radius: 2px; }
+.bb.up { left: var(--z); width: calc(var(--w) * (100% - var(--z))); background: var(--up); }
+.bb.dn { right: calc(100% - var(--z)); width: calc(var(--w) * (100% - var(--z))); background: var(--down); }
+.bb.nz { left: var(--z); width: 2px; background: var(--flat); }
+.bb.hl { background: var(--accent); }
+.bv { font: 600 14px/1 var(--mono); text-align: right; font-variant-numeric: tabular-nums; }
+.bars.sect .bb.up { background: rgba(85,192,138,.75); }
+
+/* Сбербанк */
+.figs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; border-top: 1px solid var(--line); }
+.figs > div { padding: 16px 16px 4px 0; min-width: 0; }
+.figs .k { font-size: 13px; color: var(--mute); }
+.figs .v { font: 600 22px/1.2 var(--mono); margin: 6px 0 2px; }
+.figs .d { font-size: 13px; color: var(--faint); }
+
+/* макро */
+.trio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px; }
+.trio > div { min-width: 0; }
+.trio h3 { margin-bottom: 8px; }
+.trio .hv { font: 600 26px/1.15 var(--mono); margin: 0 0 10px; }
+.trio .hv small { font-size: 14px; font-weight: 500; color: var(--mute); }
+.trio p { font-size: 15px; color: rgba(242,243,247,.84); }
+.vb { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; align-items: end; height: 150px; margin: 4px 0 0; }
+.vb > div { display: flex; flex-direction: column; justify-content: flex-end; height: 100%; min-width: 0; }
+.vb .col { background: rgba(242,243,247,.24); border-radius: 3px 3px 0 0; height: calc(var(--h) * 100%); min-height: 3px; }
+.vb .col.hl { background: var(--up); }
+.vb .vv { font: 600 14px/1.2 var(--mono); margin-bottom: 6px; }
+.vb .vk { font-size: 12px; color: var(--faint); margin-top: 8px; line-height: 1.3; }
+.mini { display: flex; flex-direction: column; border-top: 1px solid var(--line); }
+.mini > div { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; padding-block: 10px; border-bottom: 1px solid var(--line2); font-size: 14.5px; }
+.mini span:last-child { font-family: var(--mono); white-space: nowrap; }
+.pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 32px; }
+.pair > div { min-width: 0; }
+
+/* ОФЗ */
+.rg { position: relative; height: 92px; margin: 0 10px; }
+.rg .trk { position: absolute; left: 0; right: 0; top: 18px; height: 2px; background: var(--line); }
+.rg .fill { position: absolute; top: 17px; height: 4px; border-radius: 2px; left: calc(var(--a) * 100%); width: calc((var(--b) - var(--a)) * 100%); background: var(--up); }
+.rg .mk .dot { top: 14px; }
+.rg .mk .lab { top: 34px; }
+.rg .mk.now .dot { top: 11px; background: var(--up); box-shadow: 0 0 0 2px var(--up); }
+.rg .mk.now .lab b { color: var(--up); }
+.curve { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 28px; align-items: start; }
+.curve > div { min-width: 0; }
+.crv { width: 100%; height: auto; display: block; }
+.crv.n { display: none; }
+.crv .gl { stroke: var(--line2); stroke-width: 1; }
+.crv .ax { stroke: var(--line); stroke-width: 1; }
+.crv .tk { fill: rgba(242,243,247,.55); font-family: var(--mono); }
+.crv .key { stroke: var(--accent); stroke-width: 1.5; stroke-dasharray: 5 5; fill: none; }
+.crv .keyt { fill: var(--accent); font-family: var(--mono); }
+.crv .ln { stroke: rgba(242,243,247,.45); stroke-width: 1.5; fill: none; }
+.crv .pt { fill: var(--ink); stroke: var(--bg); stroke-width: 2; }
+.crv .yl { fill: var(--ink); font-family: var(--mono); font-weight: 600; }
+.crv .nl { fill: rgba(242,243,247,.55); font-family: var(--mono); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+th { text-align: left; font: 500 11.5px/1.3 var(--mono); color: var(--faint); letter-spacing: .06em; text-transform: uppercase; padding: 0 10px 10px 0; border-bottom: 1px solid var(--line); white-space: nowrap; }
+td { padding: 10px 10px 10px 0; border-bottom: 1px solid var(--line2); vertical-align: top; }
+td.r, th.r { text-align: right; }
+td.num { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.views { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.views > div { padding: 20px 22px; min-width: 0; }
+.views > div + div { border-left: 1px solid var(--line); }
+.views .vh { display: flex; align-items: center; gap: 10px; font: 600 15px/1.3 var(--display); margin: 0 0 12px; }
+.views .vh i { font: 600 11px/1 var(--mono); font-style: normal; padding: 5px 8px; border-radius: 999px; letter-spacing: .06em; text-transform: uppercase; }
+.views .pro i { background: rgba(85,192,138,.16); color: var(--up); }
+.views .con i { background: rgba(224,112,95,.16); color: var(--down); }
+.views p { font-size: 14.5px; color: rgba(242,243,247,.84); }
+.views p + p { margin-top: 12px; }
+.views p b { color: var(--ink); font-weight: 600; }
+
+/* брокеры */
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--line); }
+.stats > div { padding: 16px 16px 0 0; min-width: 0; }
+.stats .v { font: 600 30px/1.1 var(--mono); }
+.stats .k { font-size: 13px; color: var(--mute); margin-top: 6px; }
+.rate { display: flex; height: 14px; border-radius: 7px; overflow: hidden; gap: 2px; }
+.rate span { display: block; height: 100%; }
+.rate .b { background: var(--up); }
+.rate .h { background: rgba(242,243,247,.32); }
+.rate .s { background: var(--down); }
+.rlab { display: flex; flex-wrap: wrap; gap: 6px 22px; margin-top: 10px; font-size: 13.5px; color: var(--mute); }
+.rlab b { font-family: var(--mono); color: var(--ink); margin-right: 4px; }
+.acts { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.acts li { display: grid; grid-template-columns: 130px minmax(0, 1fr); gap: 16px; padding-block: 11px; border-bottom: 1px solid var(--line2); font-size: 14.5px; }
+.acts li b { font-weight: 600; }
+.acts li span { color: rgba(242,243,247,.84); }
+details.full { border: 1px solid var(--line); border-radius: 12px; }
+details.full > summary { cursor: pointer; list-style: none; padding: 16px 20px; font: 600 15px/1.3 var(--display); display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+details.full > summary::-webkit-details-marker { display: none; }
+details.full > summary::after { content: "+"; font: 500 20px/1 var(--mono); color: var(--accent); }
+details.full[open] > summary::after { content: "−"; }
+.fbody { padding: 0 20px 20px; }
+.sort { display: flex; gap: 8px; margin: 0 0 14px; flex-wrap: wrap; }
+.sort button { font: 500 13px/1 var(--body); color: var(--mute); background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 9px 14px; cursor: pointer; }
+.sort button[aria-pressed="true"] { color: var(--bg); background: var(--ink); border-color: var(--ink); }
+.scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.scroll table { min-width: 760px; }
+.tkr { font: 400 11.5px/1.2 var(--mono); color: var(--faint); display: block; }
+.pb { display: inline-block; height: 6px; border-radius: 3px; vertical-align: middle; margin-right: 8px; }
+
+/* риски и календарь */
+.risks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 40px; }
+.risks > div { padding-block: 16px; border-top: 1px solid var(--line); min-width: 0; }
+.risks h3 { font-size: 16.5px; margin-bottom: 6px; }
+.risks p { font-size: 14.5px; color: rgba(242,243,247,.82); }
+.cal { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+.cal li { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 16px; padding-block: 11px; border-bottom: 1px solid var(--line2); font-size: 15px; }
+.cal time { font: 600 14px/1.55 var(--mono); color: var(--mute); }
+.cal li.today time { color: var(--accent); }
+.olds { font-size: 14.5px; color: rgba(242,243,247,.82); }
+
+/* витрина и подвал */
+.cta { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 24px; align-items: center; padding: 30px 32px; margin: 8px 0 0; border-radius: 16px; background: linear-gradient(120deg, rgba(238,125,27,.16), rgba(238,125,27,.03) 60%), var(--card); border: 1px solid rgba(238,125,27,.32); }
+.cta h2 { font: 600 24px/1.2 var(--display); margin: 0 0 8px; letter-spacing: -.01em; }
+.cta p { margin: 0; color: rgba(242,243,247,.84); max-width: 44rem; }
+.btn { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 0 22px; border-radius: 999px; background: var(--accent); color: #0C0A08; font: 600 15px/1 var(--body); white-space: nowrap; }
+.btn:hover { background: #F58E33; text-decoration: none; }
+.foot { padding-block: 36px 48px; margin-top: 56px; border-top: 1px solid var(--line); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px 48px; font-size: 13px; color: var(--faint); line-height: 1.6; }
+.foot p { margin: 0; }
+.foot b { color: var(--mute); font-weight: 500; }
+
+@media (max-width: 1020px) {
+  .hero { grid-template-columns: minmax(0, 1fr); gap: 36px; padding-top: 40px; }
+  .big { border-left: 0; padding-left: 0; border-top: 1px solid var(--line); padding-top: 24px; }
+  .sec { grid-template-columns: minmax(0, 1fr); gap: 28px; padding-block: 52px; }
+  .sh { position: static; }
+  .curve { grid-template-columns: minmax(0, 1fr); }
+  .trio { grid-template-columns: minmax(0, 1fr); gap: 36px; }
+}
+@media (max-width: 720px) {
+  body { font-size: 15.5px; }
+  .top { padding-block: 16px; }
+  .stamp { display: none; }
+  h1 { font-size: clamp(2.2rem, 10vw, 2.9rem); }
+  .lead { font-size: 16.5px; }
+  .big-v { font-size: 4.2rem; }
+  .big-l dd { font-size: 16px; }
+  .rbox { padding: 18px 16px 14px; margin-top: 28px; }
+  .ruler { height: 700px; margin: 18px 0 14px; }
+  .ruler .trk { left: 50%; right: auto; top: 0; bottom: 0; width: 2px; height: auto; margin-left: -1px; }
+  .ruler .fill { left: 50%; margin-left: -2px; width: 4px; top: calc((1 - var(--b)) * 100%); height: calc((var(--b) - var(--a)) * 100%); background: linear-gradient(0deg, rgba(238,125,27,.12), var(--accent)); }
+  .ruler .band { left: 50%; margin-left: -11px; width: 22px; top: calc((1 - var(--b)) * 100%); height: calc((var(--b) - var(--a)) * 100%); }
+  .ruler .mk { left: 0; right: 0; width: auto; top: calc((1 - var(--p)) * 100%); bottom: auto; height: 0; }
+  .ruler .mk .dot { top: -5px; left: calc(50% - 5px); }
+  .ruler .mk.sc .dot { top: -4px; left: calc(50% - 4px); }
+  .ruler .mk.now .dot { top: -8px; left: calc(50% - 8px); }
+  .ruler .mk .stem { display: none; }
+  .ruler .mk .lab, .ruler .mk.al .lab, .ruler .mk.ar .lab { top: 0; transform: translateY(-50%); white-space: normal; width: calc(50% - 26px); }
+  .ruler .mk.up1 .lab, .ruler .mk.up2 .lab { left: calc(50% + 18px); right: auto; text-align: left; }
+  .ruler .mk.dn1 .lab { left: auto; right: calc(50% + 18px); text-align: right; }
+  .mk .lab span { font-size: 12px; }
+  .ind { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 28px; }
+  .ind .v { font-size: 21px; }
+  .sec { padding-block: 44px; }
+  .sh h2 { font-size: 25px; }
+  .tl li { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  .br { grid-template-columns: 104px minmax(0, 1fr) 58px; gap: 10px; }
+  .bn { font-size: 13.5px; }
+  .figs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .figs .v { font-size: 20px; }
+  .pair { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+  .crv.w { display: none; }
+  .crv.n { display: block; }
+  .views { grid-template-columns: minmax(0, 1fr); }
+  .views > div + div { border-left: 0; border-top: 1px solid var(--line); }
+  .stats .v { font-size: 24px; }
+  .acts li { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .risks { grid-template-columns: minmax(0, 1fr); }
+  .cal li { grid-template-columns: 84px minmax(0, 1fr); gap: 12px; font-size: 14.5px; }
+  .cta { grid-template-columns: minmax(0, 1fr); padding: 24px 20px; }
+  .cta .btn { width: 100%; }
+  .foot { grid-template-columns: minmax(0, 1fr); }
+  .fbody { padding: 0 14px 16px; }
+  details.full > summary { padding: 16px 14px; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="./"><span class="star" aria-hidden="true">✦</span><b>Rumberg</b><span>Обзор рынка</span></a>
+    <div class="stamp">28.10.2026 · 10:40 МСК</div>
+  </header>
+
+  <section class="hero">
+    <div>
+      <p class="kicker">Обзор рынка · среда, 28 октября</p>
+      <h1>Рынок поверил в переговоры</h1>
+      <p class="lead">Индекс Мосбиржи третий день держится выше 2&nbsp;500, впервые с 17 июня. За октябрь он прибавил 12%, с 1 сентября 16%. Рубль укрепился, инфляция замедляется, гособлигации отходят от октябрьского дна. Главный повод для покупок: трехсторонняя встреча России, США и Украины в Абу-Даби, которую ждут в первой половине ноября.</p>
+    </div>
+    <div class="big">
+      <div class="big-k">Индекс Мосбиржи · 10:38</div>
+      <div class="big-v">2&nbsp;539</div>
+      <div class="big-d up">+1,1% за день</div>
+      <dl class="big-l">
+        <div><dt>за октябрь</dt><dd class="up">+12%</dd></div>
+        <div><dt>с 1 сентября</dt><dd class="up">+16%</dd></div>
+        <div><dt>максимум дня</dt><dd>2&nbsp;543</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <div class="rbox" role="figure" aria-label="Шкала индекса Мосбиржи: 2187 на 1 сентября, 2267 на 30 сентября, 2539 сейчас. Сценарии брокеров: 2400 при срыве переговоров, 2550 при позитиве, 2600 технически, 2700 у оптимистов к концу года.">
+    <div class="rhead">
+      <h2>Где индекс сейчас и куда его ведут сценарии</h2>
+      <p>шкала 2&nbsp;150–2&nbsp;750 пунктов</p>
+    </div>
+    <div class="ruler">
+      <div class="trk"></div>
+      <div class="band" style="--a:.5833;--b:.6333"></div>
+      <div class="fill" style="--a:.0617;--b:.6483"></div>
+
+      <div class="mk dn1 al" style="--p:.0617"><span class="dot"></span><div class="lab"><b>2&nbsp;187</b><span>1 сентября</span></div></div>
+      <div class="mk dn1" style="--p:.195"><span class="dot"></span><div class="lab"><b>2&nbsp;267</b><span>30 сентября</span></div></div>
+      <div class="mk dn1 now" style="--p:.6483"><span class="dot"></span><div class="lab"><b>2&nbsp;539</b><span>сейчас</span></div></div>
+
+      <div class="mk sc up1" style="--p:.4167"><span class="stem"></span><span class="dot"></span><div class="lab"><b>2&nbsp;400</b><span>срыв переговоров</span></div></div>
+      <div class="mk sc up2" style="--p:.6667"><span class="stem"></span><span class="dot"></span><div class="lab"><b>2&nbsp;550</b><span>позитив в переговорах</span></div></div>
+      <div class="mk sc up1" style="--p:.75"><span class="stem"></span><span class="dot"></span><div class="lab"><b>2&nbsp;600</b><span>технически открытый путь</span></div></div>
+      <div class="mk sc up2 ar" style="--p:.9167"><span class="stem"></span><span class="dot"></span><div class="lab"><b>2&nbsp;700</b><span>оптимисты к концу года</span></div></div>
+    </div>
+    <div class="rleg">
+      <span><i class="i1"></i>рост с 1 сентября</span>
+      <span><i class="i2"></i>сценарии: Цифра брокер (2&nbsp;400, 2&nbsp;550), Ведомости (2&nbsp;600, 2&nbsp;700)</span>
+      <span><i class="i3"></i>база Ведомостей: консолидация 2&nbsp;500–2&nbsp;530</span>
+    </div>
+  </div>
+
+  <div class="ind">
+    <div><div class="k">Индекс РТС</div><div class="v">993</div><div class="d"><span class="up">+25%</span> с 1 сентября</div></div>
+    <div><div class="k">Доллар, курс ЦБ</div><div class="v">80,53&nbsp;₽</div><div class="d"><span class="up">−3,7%</span> с 17 октября</div></div>
+    <div><div class="k">Юань, ЦБ / биржа</div><div class="v">12,07&nbsp;₽</div><div class="d">биржа 12,09&nbsp;₽, евро 90,10&nbsp;₽</div></div>
+    <div><div class="k">Brent, декабрь</div><div class="v">$114–115</div><div class="d">золото ~$4&nbsp;040</div></div>
+    <div><div class="k">Ключевая ставка</div><div class="v">14,00%</div><div class="d">сохранена 23.10, след. 18.12</div></div>
+    <div><div class="k">Инфляция годовая</div><div class="v">6,8%</div><div class="d">на 19.10, за неделю 0,05%</div></div>
+    <div><div class="k">RGBI, гособлигации</div><div class="v">112,54</div><div class="d"><span class="up">+1,7%</span> от дна 8 октября</div></div>
+    <div><div class="k">Обороты акций 27.10</div><div class="v">68,5 млрд&nbsp;₽</div><div class="d">днем ранее 84,5 млрд&nbsp;₽</div></div>
+  </div>
+
+  <section class="sec" id="politics">
+    <div class="sh">
+      <p class="tag">Геополитика</p>
+      <h2>Переговорный трек ускорился</h2>
+      <p>За неделю появились место, срок и тема встречи. Рынок покупает ожидание.</p>
+    </div>
+    <div class="sb">
+      <ol class="tl">
+        <li><time>21 окт</time><p>Путин встретился со спецпосланником США Уиткоффом в Санкт-Петербурге. Там договорились о трехсторонних переговорах.</p></li>
+        <li><time>23 окт</time><p><b>Песков:</b> встреча России, США и Украины пройдет в Абу-Даби в первой половине ноября. Ушаков говорил о десятых числах. Тема переговоров: гарантии безопасности в рамках окончательного соглашения.</p></li>
+        <li><time>27 окт</time><p>Путин провел телефонные разговоры с президентом Финляндии Стуббом и премьером Норвегии Стёре, звонки были по инициативе скандинавской стороны. Рынок прочитал это как расширение круга переговорщиков, и рост днем ускорился.</p></li>
+      </ol>
+      <div class="prose">
+        <h3>Энергетика и бизнес</h3>
+        <p>США и Россия обсуждают возвращение американских компаний в российские проекты, включая энергетику. Новак говорил о перспективах «Северных потоков» и энергетическом сотрудничестве в Арктике. Выиграть от такого сценария могут Газпром, Лукойл, Роснефть и Новатэк.</p>
+        <p>В Москве прошел саммит Форума стран-экспортеров газа с участием Ирана и Катара, и выступление Путина подтолкнуло нефтегазовый сектор. Трамп допустил скорую встречу с Путиным и Зеленским.</p>
+      </div>
+      <div class="note">
+        <p class="nk">Что еще не решено</p>
+        <p>Точной даты встречи нет. Санкции пока действуют: возвращение американских компаний только обсуждается, а 29 октября истекает продленная лицензия OFAC для зарубежных АЗС и болгарских активов Лукойла. Значительная часть позитива уже в ценах, поэтому рынок стал чувствительнее к разочарованиям.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="stocks">
+    <div class="sh">
+      <p class="tag">Акции</p>
+      <h2>Растет почти все, кроме металлургов</h2>
+      <p>Потребсектор, IT и транспорт ведут рынок. Металлы и золото в росте не участвуют.</p>
+    </div>
+    <div class="sb">
+      <div>
+        <h3>Утро 28 октября</h3>
+        <p class="sub">Изменение к закрытию вторника, 10:40 мск</p>
+        <div class="bars" id="movers"></div>
+      </div>
+      <div class="prose">
+        <p>Во вторник индекс закрылся выше 2&nbsp;500 впервые с середины июня, внутри дня поднимался к 2&nbsp;530. Вечером часть роста ушла вслед за нефтью. Лидерами дня стали ЛСР (+5,4%), ВК (+5,1%), Совкомбанк (+3,5%), Аэрофлот (+3,4%) и Мосбиржа (+3,0%). Хуже рынка были ММК (−2,4%), Полюс и Алроса (−2,0%), Северсталь (−1,6%). Акции МГКЛ обвалились после сообщений о блокировке налоговых счетов дочерних структур.</p>
+        <p>Среда открылась на 2&nbsp;528, к 10:40 индекс на 2&nbsp;539, диапазон 2&nbsp;526–2&nbsp;543. Больше всего торгуют Озон (4,2 млрд&nbsp;₽), Газпром (2,9 млрд), Сбербанк (2,2 млрд), Лукойл (1,8 млрд) и Т-Технологии (1,4 млрд).</p>
+      </div>
+      <div>
+        <h3>Сбербанк: МСФО за 9 месяцев</h3>
+        <p class="sub">Отчет опубликован 28 октября</p>
+        <div class="figs">
+          <div><div class="k">Чистая прибыль</div><div class="v">1&nbsp;529,9 млрд&nbsp;₽</div><div class="d"><span class="up">+17%</span> год к году</div></div>
+          <div><div class="k">III квартал</div><div class="v">510,8 млрд&nbsp;₽</div><div class="d"><span class="up">+13,9%</span> год к году</div></div>
+          <div><div class="k">Рентабельность капитала</div><div class="v">24,0%</div><div class="d">за квартал 23,5%, ждали 22,4%</div></div>
+          <div><div class="k">Процентные доходы</div><div class="v">3&nbsp;158,8 млрд&nbsp;₽</div><div class="d"><span class="up">+23%</span>, комиссии +3%</div></div>
+        </div>
+      </div>
+      <p>Рентабельность оказалась выше ожиданий Цифра брокера. Медианная цель 14 брокеров по Сбербанку 395&nbsp;₽, это +32% к цене 300&nbsp;₽. Т-Инвестиции 9 октября подтвердили рекомендацию «покупать» с целью 388&nbsp;₽.</p>
+    </div>
+  </section>
+
+  <section class="sec" id="macro">
+    <div class="sh">
+      <p class="tag">Макро</p>
+      <h2>Рубль, нефть, инфляция</h2>
+      <p>Дорогая нефть держит рубль и бюджет. Инфляция замедляется, ЦБ обещает снижение ставки в 2027 году.</p>
+    </div>
+    <div class="sb">
+      <div class="trio">
+        <div>
+          <h3>Рубль</h3>
+          <div class="hv">80,53&nbsp;₽ <small>за доллар</small></div>
+          <p>17 октября доллар стоил 83,62&nbsp;₽, за полторы недели он подешевел на 3,7%. Рубль держат дорогая нефть и продажи валюты экспортерами под налоги. Цифра брокер ждет 80–82&nbsp;₽ в ближайшее время и выше 82&nbsp;₽ в ноябре, когда налоговый фактор исчерпается и вырастет импорт перед праздниками.</p>
+        </div>
+        <div>
+          <h3>Нефть</h3>
+          <div class="hv">$114–115 <small>Brent</small></div>
+          <p>Военная премия вернулась после двух дней снижения. США призвали страны Персидского залива готовиться к возможной кампании против Ирана после выборов 3 ноября, продолжаются атаки хуситов и инциденты с танкерами в Ормузском проливе. Запасы нефти в США за неделю упали на 2,0 млн баррелей, хотя ждали роста.</p>
+        </div>
+        <div>
+          <h3>Ставка</h3>
+          <div class="hv">14% <small>до 18 декабря</small></div>
+          <p>ЦБ 23 октября второй раз подряд сохранил ставку: экономика растет умеренно, ценовое давление остается повышенным. Прогноз средней ставки на 2027 год 12,5–13,5%, то есть пространство для снижения регулятор подтвердил. Инфляция на конец года по прогнозу ЦБ 7,1–7,6%.</p>
+        </div>
+      </div>
+      <div class="pair">
+        <div>
+          <h3>Недельная инфляция</h3>
+          <p class="sub">Три последние недели, данные Ведомостей на 21.10</p>
+          <div class="vb">
+            <div><div class="vv">0,96%</div><div class="col" style="--h:1"></div><div class="vk">две недели назад</div></div>
+            <div><div class="vv">0,11%</div><div class="col" style="--h:.115"></div><div class="vk">неделю назад</div></div>
+            <div><div class="vv up">0,05%</div><div class="col hl" style="--h:.052"></div><div class="vk">последняя неделя</div></div>
+          </div>
+        </div>
+        <div>
+          <h3>Ожидания снижаются</h3>
+          <p class="sub">Сентябрь → октябрь</p>
+          <div class="mini">
+            <div><span>Инфляционные ожидания населения</span><span>14,2% → <b class="up">13,2%</b></span></div>
+            <div><span>Наблюдаемая инфляция</span><span>15,1% → <b class="up">14,5%</b></span></div>
+            <div><span>Ценовые ожидания компаний</span><span>21,9 → <b class="up">21,0</b></span></div>
+            <div><span>Годовая инфляция на 19.10</span><span>6,8%</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="ofz">
+    <div class="sh">
+      <p class="tag">Гособлигации</p>
+      <h2>ОФЗ развернулись от дна</h2>
+      <p>RGBI на максимуме за полтора месяца. Брокеры спорят, пора ли покупать длинные бумаги.</p>
+    </div>
+    <div class="sb">
+      <div>
+        <h3>Индекс RGBI</h3>
+        <p class="sub">Отыграно около 60% просадки с 1 сентября до 8 октября</p>
+        <div class="rg" role="img" aria-label="RGBI: минимум 110,62 8 октября, сейчас 112,54, на 1 сентября 113,88">
+          <div class="trk"></div>
+          <div class="fill" style="--a:.0595;--b:.5784"></div>
+          <div class="mk al" style="--p:.0595"><span class="dot"></span><div class="lab"><b>110,62</b><span>8 окт, минимум</span></div></div>
+          <div class="mk now" style="--p:.5784"><span class="dot"></span><div class="lab"><b>112,54</b><span>сейчас</span></div></div>
+          <div class="mk ar" style="--p:.9405"><span class="dot"></span><div class="lab"><b>113,88</b><span>1 сентября</span></div></div>
+        </div>
+      </div>
+      <div class="curve">
+        <div>
+          <h3>Кривая доходностей</h3>
+          <p class="sub">Мосбиржа, утро 28.10, доходность к погашению</p>
+          <div id="curve"></div>
+        </div>
+        <div>
+          <table>
+            <thead><tr><th>Выпуск</th><th>Погашение</th><th class="r">Цена</th><th class="r">Доход.</th></tr></thead>
+            <tbody>
+              <tr><td class="num">26212</td><td>янв 2028</td><td class="num r">92,8</td><td class="num r">14,07%</td></tr>
+              <tr><td class="num">26244</td><td>мар 2034</td><td class="num r">80,6</td><td class="num r">16,41%</td></tr>
+              <tr><td class="num">26247</td><td>май 2039</td><td class="num r">80,5</td><td class="num r">16,49%</td></tr>
+              <tr><td class="num">26248</td><td>май 2040</td><td class="num r">80,2</td><td class="num r">16,46%</td></tr>
+              <tr><td class="num">26238</td><td>май 2041</td><td class="num r">52,4</td><td class="num r">15,98%</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="prose">
+        <p>Кривая нормальная: короткие бумаги у ключевой ставки, длинные дают 16–16,5%. В конце сентября длинные доходили до 16,8–16,9%, максимума за полтора года, на фоне планов Минфина нарастить заимствования в 2026–2027 годах. За девять месяцев длинные ОФЗ принесли около −6%, флоатеры около +12% (данные Альфа-банка).</p>
+        <p>Банки продолжают занимать у ЦБ: на аукционе 8-дневного репо размещено 6,5 трлн&nbsp;₽ при спросе 8,2 трлн, ставка 14,03%. Неделей ранее было 5,9 и 7,2 трлн. Сегодня Минфин размещает 26254 и 26244, и Цифра брокер допускает слабый спрос из-за высоких ставок денежного рынка. Аукционы покажут, есть ли покупатель на длину.</p>
+      </div>
+      <div class="views">
+        <div class="pro">
+          <p class="vh"><i>за</i>Покупать длину</p>
+          <p><b>ПСБ, Дмитрий Грицкевич (27.10).</b> Пространство для восстановления RGBI до конца года сохраняется. Прогноз ставки на 2027 год предполагает ее снижение, и при отсутствии новых форс-мажоров длинные ОФЗ могут восстановиться. Идея: накапливать длинные госбумаги и корпоративные выпуски с фиксированной ставкой до 20–30% облигационного портфеля, остальное держать в надежных флоатерах умеренной срочности.</p>
+          <p>Ранее ПСБ оценивал доходность длинных ОФЗ на горизонте 12 месяцев около 30%.</p>
+        </div>
+        <div class="con">
+          <p class="vh"><i>против</i>Ждать</p>
+          <p><b>Альфа-банк, стратегия на IV квартал.</b> Высока вероятность дальнейшего роста доходностей, драйверов для разворота пока нет. Для защитного портфеля лучший выбор флоатеры.</p>
+          <p><b>Финам (24.09):</b> длинные доходности к концу года могут сходить к 17%. <b>Совкомбанк:</b> в ближайшие месяцы диапазон 16,5–17%. <b>Т-Банк:</b> длинные выпуски с постоянным купоном, например 26250, остаются волатильными.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="brokers">
+    <div class="sh">
+      <p class="tag">Мнения брокеров</p>
+      <h2>Консенсус выше рынка</h2>
+      <p>Цели брокеров на 12 месяцев дают запас роста почти везде. Исключение составляет нефтегаз.</p>
+    </div>
+    <div class="sb">
+      <div class="stats">
+        <div><div class="v">42 из 45</div><div class="k">бумаг индекса с целевыми ценами</div></div>
+        <div><div class="v up">+37,5%</div><div class="k">медианный потенциал</div></div>
+        <div><div class="v up">+28,6%</div><div class="k">потенциал с учетом весов индекса</div></div>
+      </div>
+      <div>
+        <h3>Действующие рейтинги</h3>
+        <div class="rate" role="img" aria-label="Покупать 260, держать 109, продавать 19">
+          <span class="b" style="width:67%"></span><span class="h" style="width:28.1%"></span><span class="s" style="width:4.9%"></span>
+        </div>
+        <div class="rlab"><span><b>260</b>«покупать»</span><span><b>109</b>«держать»</span><span><b>19</b>«продавать»</span></div>
+      </div>
+      <div>
+        <h3>Потенциал по секторам</h3>
+        <p class="sub">С учетом весов бумаг в индексе</p>
+        <div class="bars sect" id="sectors"></div>
+        <p style="margin-top:16px">Нефтегаз занимает почти половину индекса, и запаса по нему почти нет: медианная цель по Лукойлу 5&nbsp;952&nbsp;₽ после ралли ниже рынка. Основной потенциал брокеры видят в банках, IT и металлах.</p>
+      </div>
+      <div>
+        <h3>Десять крупнейших бумаг индекса</h3>
+        <p class="sub">Медианная цель брокеров к текущей цене, под названием вес в индексе</p>
+        <div class="bars" id="top10"></div>
+      </div>
+      <div>
+        <h3>Последние действия брокеров</h3>
+        <p class="sub">16–19 октября</p>
+        <ul class="acts">
+          <li><b>Икс 5</b><span>Перед отчетом 29.10: БКС «покупать», 2&nbsp;400&nbsp;₽; ВТБ 2&nbsp;589&nbsp;₽; ПСБ 3&nbsp;200&nbsp;₽; Freedom Global «держать», 3&nbsp;000&nbsp;₽.</span></li>
+          <li><b>Яндекс</b><span>Перед отчетом 29.10: Финам «покупать», 5&nbsp;125&nbsp;₽; Альфа «покупать».</span></li>
+          <li><b>Роснефть</b><span>Финам «покупать», 461,55&nbsp;₽.</span></li>
+          <li><b>Северсталь</b><span>Велес «покупать», 913&nbsp;₽.</span></li>
+          <li><b>Русал</b><span>Финам «покупать», 25,8&nbsp;₽; БКС «держать».</span></li>
+          <li><b>Циан</b><span>Т-Инвестиции «покупать», 800&nbsp;₽.</span></li>
+          <li><b>ВК</b><span>БКС «покупать».</span></li>
+          <li><b>Против</b><span>Алроса: «продавать» у БКС и Финама. Банк Санкт-Петербург: «продавать» у БКС, «держать» у Газпромбанка. Полюс на пересмотре у Freedom Global.</span></li>
+        </ul>
+      </div>
+      <details class="full">
+        <summary>Все бумаги индекса: цены и цели брокеров</summary>
+        <div class="fbody">
+          <div class="sort" role="group" aria-label="Сортировка таблицы">
+            <button type="button" id="s-w" aria-pressed="true">по весу в индексе</button>
+            <button type="button" id="s-p" aria-pressed="false">по потенциалу</button>
+          </div>
+          <div class="scroll">
+            <table>
+              <thead><tr><th>Акция</th><th class="r">Вес</th><th class="r">Цена, ₽</th><th class="r">Брокеров</th><th class="r">Цель, ₽</th><th>Потенциал</th><th class="r">Пок / держ / прод</th><th class="r">Див.</th></tr></thead>
+              <tbody id="tbl"></tbody>
+            </table>
+          </div>
+          <p class="sub" style="margin:14px 0 0">Последние цели брокеров за 12 месяцев, цены текущие биржевые.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  <section class="sec" id="outlook">
+    <div class="sh">
+      <p class="tag">Ориентиры</p>
+      <h2>Что дальше с индексом</h2>
+      <p>Базовый сценарий: консолидация у 2&nbsp;500. Путь к 2&nbsp;600 технически открыт.</p>
+    </div>
+    <div class="sb">
+      <div class="prose">
+        <p><b>Цифра брокер (28.10):</b> при позитиве в геополитике индекс закрепится выше 2&nbsp;550, при разочаровании в переговорах вернется к 2&nbsp;400, при нейтральном фоне останется в боковике.</p>
+        <p><b>Ведомости (28.10):</b> базовый сценарий консолидация в 2&nbsp;500–2&nbsp;530 с риском отката к 2&nbsp;460–2&nbsp;480 на фиксации прибыли. Технически открыт путь к 2&nbsp;600, оптимисты видят 2&nbsp;700 к концу года. На счета начали приходить дивиденды крупных компаний, часть денег вернется в рынок.</p>
+        <p><b>Финам</b> ждал 2&nbsp;500 к концу 2026 года. Этот ориентир уже исполнен.</p>
+      </div>
+      <div class="note">
+        <p class="nk">Как рынок оценивали до эскалации</p>
+        <p class="olds">Цели на конец 2026 года, которые брокеры давали в декабре 2025 — марте 2026: Газпромбанк 3&nbsp;300–3&nbsp;500, SberCIB 3&nbsp;400, ВТБ 3&nbsp;610, Т-Инвестиции 3&nbsp;200–3&nbsp;300, Синара 3&nbsp;600. До них далеко, но они показывают, где рынок видели при спокойном фоне.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="risks">
+    <div class="sh">
+      <p class="tag">Риски</p>
+      <h2>Что может помешать</h2>
+      <p>Рост держится на ожиданиях. Разочарование в переговорах или жесткая ФРС быстро заберут часть движения.</p>
+    </div>
+    <div class="sb">
+      <div class="risks">
+        <div><h3>Переговоры</h3><p>Дата встречи в Абу-Даби не названа. Трамп критиковал Зеленского и говорил, что переговоры пора поручить кому-то другому. При срыве Цифра брокер ждет откат индекса к 2&nbsp;400.</p></div>
+        <div><h3>Объемы</h3><p>Рост вторника прошел на обороте 68,5 млрд&nbsp;₽ против 84,5 млрд днем ранее. Импульс слабеет.</p></div>
+        <div><h3>Длинные ОФЗ</h3><p>Альфа, Финам и Совкомбанк ждут доходности 16,5–17% еще несколько месяцев. Минфин наращивает размещения, банки берут у ЦБ триллионы по 14%.</p></div>
+        <div><h3>Нефть</h3><p>Военная премия может уйти так же быстро, как пришла. Во вторник дипломатия сняла с Brent 1,5% за день.</p></div>
+        <div><h3>Рубль</h3><p>После налогового периода и с ростом импорта Цифра брокер ждет доллар выше 82&nbsp;₽ в ноябре. Экспортерам это в плюс, для RGBI и ставки это риск.</p></div>
+        <div><h3>ФРС сегодня в 21:00 мск</h3><p>Ждут паузу на уровне 3,75–4,00%, но фьючерсы закладывают около 80% на повышение в декабре. Жесткий сигнал ударит по сырью через доллар.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="calendar">
+    <div class="sh">
+      <p class="tag">Календарь</p>
+      <h2>Ближайшие события</h2>
+      <p>Отчеты Икс 5 и Яндекса завтра, выборы в США 3 ноября, встреча в Абу-Даби в первой половине месяца.</p>
+    </div>
+    <div class="sb">
+      <ul class="cal">
+        <li class="today"><time>28.10</time><span>Сбербанк, МСФО за 9 месяцев (опубликовано). Минфин: аукционы ОФЗ-ПД 26254 и 26244. 18:30 запасы нефти в США. 21:00 решение ФРС, 21:30 пресс-конференция Уорша. В Израиле считают голоса: ни один блок не набрал большинства.</span></li>
+        <li><time>29.10</time><span>Икс 5: МСФО за III квартал и 9 месяцев. Яндекс: МСФО за III квартал. OFAC: истекает продленная лицензия для зарубежных АЗС и болгарских активов Лукойла.</span></li>
+        <li><time>неделя</time><span>Решения ЕЦБ и Банка Японии, изменений не ждут.</span></li>
+        <li><time>03.11</time><span>Выборы в США. Рынок нефти ждет после них решения по Ирану.</span></li>
+        <li><time>05.11</time><span>Яндекс: заочное ВОСА, новая редакция устава.</span></li>
+        <li><time>1–15.11</time><span>Трехсторонние переговоры в Абу-Даби.</span></li>
+        <li><time>19.11</time><span>Циан: внеочередное собрание акционеров.</span></li>
+        <li><time>20.11</time><span>Лукойл: ВОСА по дивидендам за 9 месяцев 2026 года.</span></li>
+        <li><time>09.12</time><span>Лукойл: отсечка по дивидендам 535&nbsp;₽, 8,4% к цене 6&nbsp;354&nbsp;₽.</span></li>
+        <li><time>18.12</time><span>Заседание Банка России по ключевой ставке.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <aside class="cta">
+    <div>
+      <h2>Продукты на бумаги из обзора</h2>
+      <p>На витрине Rumberg 127 структурных продуктов, в том числе на Сбербанк, Лукойл, Полюс, Яндекс, Газпром, Озон и ОФЗ. По каждому видна формула выплаты и индикативная цена.</p>
+    </div>
+    <a class="btn" href="board.html">Открыть витрину</a>
+  </aside>
+
+  <footer class="foot">
+    <p><b>Источники.</b> Мосбиржа, Банк России, Ведомости, Цифра брокер, ПСБ, Альфа-банк, Финам, Совкомбанк, Т-Инвестиции. Котировки на 28.10.2026, 10:40 мск, если не указано иное.</p>
+    <p><b>Для квалифицированных инвесторов.</b> Материал носит информационный характер и не является индивидуальной инвестиционной рекомендацией. Целевые цены и рейтинги отражают мнения брокеров, а не оценку Rumberg. Прогнозы не гарантируют результата.</p>
+  </footer>
+</div>
+
+<script>
+(function () {
+  var NB = " ";
+  function pct(v, d) {
+    if (v === 0) return "0,0%";
+    var s = Math.abs(v).toFixed(d == null ? 1 : d).replace(".", ",");
+    return (v > 0 ? "+" : "−") + s + "%";
+  }
+  function bars(id, rows, opt) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    var max = opt.max, z = opt.z || 0;
+    el.innerHTML = rows.map(function (r) {
+      var v = r[1], w = (Math.abs(v) / max).toFixed(4);
+      var cls = v > 0 ? "up" : v < 0 ? "dn" : "nz";
+      var bcls = cls + (r[3] ? " hl" : "");
+      var label = r[4] || pct(v, opt.d);
+      return '<div class="br"><span class="bn">' + r[0] + (r[2] ? "<i>" + r[2] + "</i>" : "") + '</span>' +
+        '<span class="ba" style="--z:' + z + '%">' + (z ? '<span class="bz"></span>' : "") +
+        '<span class="bb ' + bcls + '" style="--w:' + w + '"></span></span>' +
+        '<span class="bv ' + cls + '">' + label + "</span></div>";
+    }).join("");
+  }
+
+  bars("movers", [
+    ["Магнит", 2.5], ["Озон", 2.2], ["Аэрофлот", 1.9], ["ВК", 1.8], ["Икс 5", 1.7],
+    ["Яндекс", 1.1], ["Новатэк", 1.0], ["Полюс", 0], ["Норникель", -0.1], ["НЛМК", -0.3]
+  ], { max: 2.5, z: 12 });
+
+  bars("sectors", [
+    ["Электроэнергетика", 69, "", 0, "+69%"], ["Технологии", 62, "", 0, "+62%"],
+    ["Металлы и добыча", 48, "", 0, "+48%"], ["Финансы", 40, "", 0, "+40%"],
+    ["Телеком", 39, "", 0, "+39%"], ["Потребсектор", 31, "", 0, "+31%"],
+    ["Транспорт", 11, "", 0, "+11%"], ["Химия", 11, "", 0, "+11%"],
+    ["Нефть и газ", 9.5, "почти половина индекса", 1, "+9,5%"]
+  ], { max: 69, z: 0 });
+
+  bars("top10", [
+    ["Лукойл", -6.3, "17,3%"], ["Сбербанк", 31.6, "11,8%"], ["Газпром", 20.5, "10,4%"],
+    ["Яндекс", 68.1, "5,7%"], ["Татнефть", 15.0, "5,5%"], ["Новатэк", 15.7, "4,9%"],
+    ["Т-Технологии", 51.8, "4,8%"], ["Норникель", 55.5, "3,8%"], ["Озон", 64.5, "3,2%"],
+    ["Роснефть", 22.7, "3,0%"]
+  ], { max: 68.1, z: 10 });
+
+  // Кривая ОФЗ: широкий и узкий варианты, выбирает CSS
+  function curve(W, H, narrow) {
+    var L = narrow ? 38 : 50, R = W - (narrow ? 14 : 22), T = 28, B = H - 32;
+    var fs = narrow ? 11.5 : 12;
+    function x(t) { return L + (t - 2027) / 15 * (R - L); }
+    function y(v) { return B - (v - 13.5) / 3.5 * (B - T); }
+    var pts = [["26212", 2028.04, 14.07], ["26244", 2034.2, 16.41], ["26247", 2039.37, 16.49], ["26248", 2040.37, 16.46], ["26238", 2041.37, 15.98]];
+    var s = '<svg class="crv ' + (narrow ? "n" : "w") + '" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Кривая доходностей ОФЗ: 26212 — 14,07%, 26244 — 16,41%, 26247 — 16,49%, 26248 — 16,46%, 26238 — 15,98%; ключевая ставка 14%">';
+    [14, 15, 16, 17].forEach(function (v) {
+      s += '<line class="gl" x1="' + L + '" x2="' + R + '" y1="' + y(v) + '" y2="' + y(v) + '"/>';
+      s += '<text class="tk" x="' + (L - 8) + '" y="' + (y(v) + 4) + '" text-anchor="end" font-size="' + fs + '">' + v + '%</text>';
+    });
+    (narrow ? [2028, 2034, 2040] : [2028, 2031, 2034, 2037, 2040]).forEach(function (t) {
+      s += '<text class="tk" x="' + x(t) + '" y="' + (B + 22) + '" text-anchor="middle" font-size="' + fs + '">' + t + '</text>';
+    });
+    s += '<line class="ax" x1="' + L + '" x2="' + R + '" y1="' + B + '" y2="' + B + '"/>';
+    s += '<line class="key" x1="' + L + '" x2="' + R + '" y1="' + y(14) + '" y2="' + y(14) + '"/>';
+    s += '<text class="keyt" x="' + R + '" y="' + (y(14) + 17) + '" text-anchor="end" font-size="' + fs + '">ключевая 14%</text>';
+    s += '<polyline class="ln" points="' + pts.map(function (p) { return x(p[1]).toFixed(1) + "," + y(p[2]).toFixed(1); }).join(" ") + '"/>';
+    pts.forEach(function (p) { s += '<circle class="pt" cx="' + x(p[1]).toFixed(1) + '" cy="' + y(p[2]).toFixed(1) + '" r="5"/>'; });
+    function t(cls, tx, ty, txt, anchor) { return '<text class="' + cls + '" x="' + tx.toFixed(1) + '" y="' + ty.toFixed(1) + '" text-anchor="' + (anchor || "middle") + '" font-size="' + fs + '">' + txt + "</text>"; }
+    var p0 = pts[0], p1 = pts[1], c1 = pts[2], c2 = pts[3], p4 = pts[4];
+    var cx = (x(c1[1]) + x(c2[1])) / 2;
+    s += t("yl", x(p0[1]), y(p0[2]) - 12, "14,07%");
+    s += t("yl", x(p1[1]), y(p1[2]) - 12, "16,41%");
+    s += t("yl", cx, y(c1[2]) - 12, narrow ? "16,5%" : "16,46–16,49%");
+    s += t("yl", x(p4[1]) + 4, y(p4[2]) + 20, "15,98%", "end");
+    if (!narrow) {
+      s += t("nl", x(p0[1]), y(p0[2]) + 21, "26212");
+      s += t("nl", x(p1[1]), y(p1[2]) + 21, "26244");
+      s += t("nl", cx - 18, y(c1[2]) + 21, "26247 · 26248");
+      s += t("nl", x(p4[1]) + 4, y(p4[2]) + 37, "26238", "end");
+    }
+    return s + "</svg>";
+  }
+  var cv = document.getElementById("curve");
+  if (cv) cv.innerHTML = curve(640, 300, false) + curve(360, 250, true);
+
+  // Таблица бумаг индекса
+  var D = [
+    ["Лукойл","LKOH",17.3,"6"+NB+"354,0",11,"5"+NB+"952,0",-6.3,"9 / 2 / 0","11,0%"],
+    ["Сбербанк","SBER",11.8,"300,3",14,"395,1",31.6,"11 / 3 / 0","12,9%"],
+    ["Газпром","GAZP",10.4,"118,0",14,"142,2",20.5,"7 / 6 / 1",""],
+    ["Яндекс","YDEX",5.7,"3"+NB+"570,0",13,"6"+NB+"000,0",68.1,"13 / 1 / 0","6,5%"],
+    ["Татнефть","TATN",5.5,"643,2",7,"740,0",15.0,"6 / 0 / 0","11,9%"],
+    ["Новатэк","NVTK",4.9,"1"+NB+"210,1",11,"1"+NB+"400,0",15.7,"10 / 3 / 0","7,0%"],
+    ["Т-Технологии","T",4.8,"278,3",10,"422,5",51.8,"9 / 1 / 0","6,5%"],
+    ["Норникель","GMKN",3.8,"115,8",13,"180,0",55.5,"9 / 4 / 0","1,6%"],
+    ["Озон","OZON",3.2,"3"+NB+"714,0",12,"6"+NB+"110,0",64.5,"11 / 1 / 0","6,1%"],
+    ["Роснефть","ROSN",3.0,"391,8",8,"480,8",22.7,"6 / 4 / 0","3,5%"],
+    ["Икс 5","X5",2.9,"2"+NB+"395,0",11,"3"+NB+"000,0",25.3,"11 / 2 / 0","10,8%"],
+    ["ВТБ","VTBR",2.4,"58,5",8,"97,7",67.1,"4 / 6 / 1","17,1%"],
+    ["Сбербанк-п","SBERP",2.3,"299,8",null,"",null,"","12,9%"],
+    ["Полюс","PLZL",2.1,"1"+NB+"113,8",10,"1"+NB+"580,0",41.9,"8 / 3 / 2","11,1%"],
+    ["Сургутнефтегаз-п","SNGSP",1.9,"41,1",3,"44,8",9.0,"2 / 0 / 0","2,1%"],
+    ["Сургутнефтегаз","SNGS",1.8,"18,2",3,"24,6",35.1,"2 / 2 / 0","4,9%"],
+    ["Татнефть-п","TATNP",1.2,"624,9",null,"",null,"","12,3%"],
+    ["Хэдхантер","HEAD",1.1,"2"+NB+"750,0",12,"4"+NB+"343,0",57.9,"10 / 0 / 0","16,2%"],
+    ["Интер РАО","IRAO",1.1,"2,85",8,"4,8",68.5,"9 / 0 / 0","11,4%"],
+    ["Мосбиржа","MOEX",1.1,"164,1",10,"195,0",18.8,"5 / 6 / 2","12,6%"],
+    ["МТС","MTSS",0.9,"176,8",13,"240,0",35.8,"7 / 5 / 0","19,8%"],
+    ["Северсталь","CHMF",0.9,"710,2",6,"806,5",13.6,"4 / 4 / 0",""],
+    ["МКБ","CBOM",0.9,"10,4",null,"",null,"0 / 0 / 1",""],
+    ["Русал","RUAL",0.8,"25,4",8,"48,5",90.7,"3 / 2 / 0",""],
+    ["НЛМК","NLMK",0.8,"75,8",5,"108,0",42.4,"4 / 3 / 0",""],
+    ["ФосАгро","PHOR",0.7,"5"+NB+"673,0",9,"6"+NB+"300,0",11.1,"3 / 5 / 1",""],
+    ["Совкомбанк","SVCB",0.6,"10,9",6,"15,2",39.1,"7 / 1 / 1","3,4%"],
+    ["ДОМ.РФ","DOMRF",0.6,"2"+NB+"135,1",8,"2"+NB+"795,0",30.9,"10 / 1 / 0","11,7%"],
+    ["ММК","MAGN",0.5,"23,3",5,"30,0",28.6,"6 / 1 / 1",""],
+    ["Транснефть","TRNFP",0.5,"1"+NB+"079,4",8,"1"+NB+"565,0",45.0,"9 / 2 / 0","19,2%"],
+    ["Ростелеком","RTKM",0.5,"44,6",8,"65,5",46.7,"5 / 3 / 1","6,3%"],
+    ["Аэрофлот","AFLT",0.5,"38,2",9,"40,6",6.3,"4 / 4 / 2","14,7%"],
+    ["Эн+","ENPG",0.5,"335,2",2,"555,0",65.6,"2 / 0 / 0",""],
+    ["Банк Санкт-Петербург","BSPB",0.4,"263,1",4,"380,0",44.4,"1 / 5 / 1","17,7%"],
+    ["Совкомфлот","FLOT",0.4,"92,4",9,"107,0",15.9,"4 / 4 / 1","5,5%"],
+    ["Мать и дитя","MDMG",0.4,"1"+NB+"290,7",7,"1"+NB+"650,0",27.8,"7 / 2 / 0","6,6%"],
+    ["Позитив","POSI",0.4,"1"+NB+"239,2",8,"1"+NB+"225,0",-1.1,"10 / 1 / 1","2,4%"],
+    ["Алроса","ALRS",0.3,"21,2",6,"26,0",22.5,"1 / 4 / 2",""],
+    ["Циан","CNRU",0.3,"689,4",8,"780,0",13.1,"7 / 3 / 0","23,4%"],
+    ["ЮГК","UGLD",0.3,"0,70",4,"1,07",40.2,"3 / 3 / 0",""],
+    ["АФК Система","AFKS",0.2,"8,03",6,"14,0",74.3,"3 / 3 / 0",""],
+    ["ВК","VKCO",0.2,"148,9",8,"272,0",82.6,"5 / 6 / 1",""],
+    ["Русагро","RAGR",0.2,"74,1",1,"154,4",108.5,"1 / 1 / 0","22,5%"],
+    ["Ренессанс Страхование","RENI",0.2,"71,2",5,"120,0",68.6,"5 / 0 / 0","5,9%"],
+    ["Группа Астра","ASTR",null,"220,6",5,"355,0",60.9,"7 / 2 / 0",""]
+  ];
+  var tb = document.getElementById("tbl");
+  function row(r) {
+    var p = r[6], pc = p == null ? "" : (p >= 0 ? "up" : "dn");
+    var bw = p == null ? 0 : Math.max(2, Math.min(70, Math.abs(p) / 108.5 * 70));
+    var bar = p == null ? '<span class="nz">—</span>' :
+      '<span class="pb" style="width:' + bw.toFixed(0) + 'px;background:var(--' + (p >= 0 ? "up" : "down") + ')"></span><span class="num ' + pc + '">' + pct(p, 1) + "</span>";
+    return "<tr><td>" + r[0] + '<span class="tkr">' + r[1] + "</span></td>" +
+      '<td class="num r">' + (r[2] == null ? '<span class="nz">вне</span>' : String(r[2]).replace(".", ",") + "%") + "</td>" +
+      '<td class="num r">' + r[3] + "</td>" +
+      '<td class="num r">' + (r[4] == null ? '<span class="nz">—</span>' : r[4]) + "</td>" +
+      '<td class="num r">' + (r[5] || '<span class="nz">—</span>') + "</td>" +
+      '<td class="num">' + bar + "</td>" +
+      '<td class="num r">' + (r[7] || '<span class="nz">—</span>') + "</td>" +
+      '<td class="num r">' + (r[8] || '<span class="nz">—</span>') + "</td></tr>";
+  }
+  function render(by) {
+    var a = D.slice();
+    if (by === "p") a.sort(function (x, y) { return (y[6] == null ? -1e9 : y[6]) - (x[6] == null ? -1e9 : x[6]); });
+    else a.sort(function (x, y) { return (y[2] == null ? -1 : y[2]) - (x[2] == null ? -1 : x[2]); });
+    if (tb) tb.innerHTML = a.map(row).join("");
+    var bw = document.getElementById("s-w"), bp = document.getElementById("s-p");
+    if (bw) bw.setAttribute("aria-pressed", by === "w" ? "true" : "false");
+    if (bp) bp.setAttribute("aria-pressed", by === "p" ? "true" : "false");
+  }
+  render("w");
+  var sw = document.getElementById("s-w"), sp = document.getElementById("s-p");
+  if (sw) sw.addEventListener("click", function () { render("w"); });
+  if (sp) sp.addEventListener("click", function () { render("p"); });
+})();
+</script>
+<script src="ptr.js?v=2" defer></script>
+</body>
+</html>
