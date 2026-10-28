@@ -137,6 +137,11 @@
   .arow .ap { display:block; font-style:normal; font-family:var(--m); font-size:11px;
     color:var(--up); margin-top:3px }
   .arow:hover .at { color:var(--ink) }
+  /* обзор рынка внутри «Разборов»: фрейм страницы обзора во всю высоту */
+  .ob-wrap { padding-top:8px }
+  .ob-frame { display:block; width:100%; height:2400px; border:0; background:#0B0C10 }
+  .ob-open { margin:18px 0 0; font-size:14px }
+  .ob-open a { color:var(--solar) }
   /* Открытый выпуск: оранжевая дата и плотный заголовок, без заливки —
      строка остаётся строкой, а не превращается в кнопку */
   .arow.on .at { color:var(--ink); font-weight:600 }
@@ -719,10 +724,23 @@
 
 <script src="metrika.js?v=10" defer></script>
 <script src="data/ideas.js"></script>
+<script src="data/obzor.js?v=1"></script>
 <script src="data/instruments.js"></script>
 <script>
 (function () {
   var IDEAS = window.IDEAS || { issues: [] };
+  // Обзоры рынка (data/obzor.js, с 28.10.2026) стоят в том же списке, что и разборы,
+  // по дате; открываются внутри страницы фреймом самой страницы обзора (kind "obzor").
+  // В data/ideas.js их нет намеренно: тот файл пересобирает make_ideas.py
+  (function () {
+    var O = (window.OBZOR && OBZOR.items) || [];
+    if (!O.length) return;
+    var all = IDEAS.issues.concat(O.map(function (o) {
+      return { id: o.id, kind: "obzor", date: o.date, title: o.title, lead: o.lead, url: o.url };
+    }));
+    all.sort(function (a, b) { return a.date < b.date ? 1 : a.date > b.date ? -1 : 0; });
+    IDEAS = { updated: IDEAS.updated, issues: all };
+  })();
   var INSTR = (window.SITE_DATA && SITE_DATA.instruments) || [];
 
   // Слои описаны для ВСЕХ тем сразу: страница показывает и текущий выпуск,
@@ -998,9 +1016,10 @@
       (i === cur ? ' aria-current="true"' : '') + '>' +
       '<span class="ad">' + esc(humanShort(x.date)) + '</span>' +
       '<span class="at">' + esc(x.title) + '</span>' +
+      (x.kind === "obzor" ? '<span class="an"><i class="ak">обзор рынка</i></span>' :
       '<span class="an">' + items.length + ' ' + plural(items.length, "компания", "компании", "компаний") +
       (withP ? '<i class="ap">' + withP + ' с продуктами</i>' : '') +
-      (x.kind === "theme" ? '<i class="ak">материал вебинара</i>' : '') + '</span>' +
+      (x.kind === "theme" ? '<i class="ak">материал вебинара</i>' : '') + '</span>') +
       '</button>';
   }
   function archHTML(cur) {
@@ -1364,6 +1383,35 @@
     else document.addEventListener("DOMContentLoaded", go, { once: true });
   }
 
+  // ── Обзор рынка (kind:"obzor") ─────────────────────────────────────────
+  // Фрейм той же страницы, что открывается по прямой ссылке: обзор живёт в одном
+  // файле. Высота — по содержимому (страница наша, тот же origin), пересчёт —
+  // на каждое изменение размера тела обзора (шрифты, раскрытие таблицы, ширина)
+  function obzorHTML(iss) {
+    var u = esc(iss.url);
+    return '<div class="wrap ob-wrap">' +
+      '<iframe class="ob-frame" src="' + u + '?embed=1" title="' + esc(iss.title) + '"></iframe>' +
+      '<p class="ob-open"><a href="' + u + '">Открыть обзор отдельной страницей</a></p></div>';
+  }
+  function obzorMount(box) {
+    var f = box.querySelector(".ob-frame");
+    if (!f) return;
+    function fit() {
+      try {
+        var b = f.contentDocument && f.contentDocument.body;
+        if (b) f.style.height = Math.ceil(b.getBoundingClientRect().height) + "px";
+      } catch (e) { /* чужой origin не ждём, но без высоты фрейм просто короче */ }
+    }
+    f.addEventListener("load", function () {
+      fit();
+      try {
+        var RO = f.contentWindow.ResizeObserver;
+        if (RO) new RO(fit).observe(f.contentDocument.body);
+      } catch (e2) { /* без наблюдателя — разовые пересчёты ниже */ }
+      setTimeout(fit, 700); setTimeout(fit, 2500);
+    });
+  }
+
   function render(idx) {
     var box = document.getElementById("issue");
     var iss = IDEAS.issues[idx];
@@ -1376,7 +1424,13 @@
       history.replaceState(null, "", location.pathname + "?" + qs.toString() + location.hash);
     } catch (e0) { /* адресная строка не критична для отрисовки */ }
     if (!iss) { box.innerHTML = '<div class="wrap"><p class="sec-p">Разборов пока нет.</p></div>'; return; }
-    if (iss.kind === "theme") {
+    if (iss.kind === "obzor") {
+      // Обзор рынка — своя страница; здесь она стоит фреймом во всю высоту
+      // (без своей шапки, Метрики и ptr.js — см. ?embed=1 в obzor-*.html)
+      SPOT_HUMAN = human(iss.date);
+      box.innerHTML = obzorHTML(iss);
+      obzorMount(box);
+    } else if (iss.kind === "theme") {
       // Материал вебинара — свой рендер, см. themeHTML: у него нет цен и целей
       box.innerHTML = themeHTML(iss, idx);
       themeMount(box);
@@ -1478,7 +1532,7 @@
     // Дата базы расчёта в подвале — из выпуска, а не зашитая; у материала
     // вебинара цен нет, и фраза о потенциале там не к месту
     var fpot = document.getElementById("fpot"), fdate = document.getElementById("fdate");
-    if (fpot) fpot.hidden = iss.kind === "theme";
+    if (fpot) fpot.hidden = iss.kind === "theme" || iss.kind === "obzor";
     if (fdate) fdate.textContent = SPOT_HUMAN || "—";
 
     // Колонка слева: тот же список строк, что и в шапке, но всегда на виду

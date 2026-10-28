@@ -890,6 +890,9 @@
     .tg-card p { margin: 0; font-size: 14.5px; line-height: 1.5; color: var(--tg-mut); }
     .tg-go { display: inline-block; margin-top: 10px; font-size: 13.5px; color: #EE7D1B; }
     .tg-meta { margin: 6px 0 10px; font-size: 13px; color: var(--tg-faint); }
+    /* Обзор рынка сверху «Рынка» (data/obzor.js, 28.10.2026) */
+    .tg-ob { color: var(--tg-ink); text-decoration: none; margin-bottom: 16px; background: linear-gradient(120deg, rgba(238,125,27,.15), rgba(238,125,27,.02) 62%), var(--tg-card); box-shadow: inset 0 0 0 1px rgba(238,125,27,.3); }
+    .tg-ob .tg-go { display: flex; align-items: center; gap: 8px; min-height: 24px; font-size: 14.5px; font-weight: 500; }
     .tg-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px; }
     .tg-tile { background: var(--tg-card); border-radius: 14px; padding: 12px 14px; }
     .tg-tile b { display: block; font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 500; }
@@ -1612,8 +1615,6 @@
       // строятся чипсы, поэтому вход появляется и там, где пилюля шапки скрыта.
       { href: "partners.html", t: "Сотрудничество", m: "фининститутам и агентам" },
       { href: "digest.html", t: "Дайджест", m: window.DIGEST ? window.DIGEST.date.slice(0, 5) : "идеи" },
-      // Обзор рынка отдельной страницей (28.10.2026, Руслан: «засунь его сюда» — рядом с «Разборами»)
-      { href: "obzor-2026-10-28.html", t: "Обзор рынка", m: "28.10" },
       // Разбор темы раз в две недели под вебинар: метка — дата выпуска из data/ideas.js
       { href: "ideas.html", t: "Разборы", m: (window.IDEAS && IDEAS.issues && IDEAS.issues[0]) ? dmy(IDEAS.issues[0].date).slice(0, 5) : "темы" },
       { href: "board.html", t: "Текущие продукты", m: ni + " шт." },
@@ -2495,11 +2496,24 @@
       if (window.DIGEST && window.DIGEST.date) put("digest.html", String(window.DIGEST.date).slice(0, 5));
       window.dispatchEvent(new Event("so-lazy"));   // телефонное оглавление дописывает дату
     });
+    // У «Разборов» дата самого свежего материала: разбора (data/ideas.js) или
+    // обзора рынка (data/obzor.js, с 28.10.2026 они в одном списке на ideas.html)
+    var dIdea = "", dObzor = "";
+    function putIdeas() {
+      var d = dIdea > dObzor ? dIdea : dObzor;
+      // Дата лежит в ISO: тот же разбор, что у dmy() выше по файлу
+      if (d) put("ideas.html", String(d).split("-").reverse().join(".").slice(0, 5));
+    }
     load("data/ideas.js?v=1", function () {
       var i = window.IDEAS && window.IDEAS.issues && window.IDEAS.issues[0];
-      // Дата выпуска лежит в ISO: тот же разбор, что у dmy() выше по файлу
-      if (i && i.date) put("ideas.html", String(i.date).split("-").reverse().join(".").slice(0, 5));
+      if (i && i.date) dIdea = String(i.date);
+      putIdeas();
       window.dispatchEvent(new Event("so-lazy"));   // телефонное оглавление дописывает дату
+    });
+    load("data/obzor.js?v=1", function () {
+      var o = window.OBZOR && window.OBZOR.items && window.OBZOR.items[0];
+      if (o && o.date) dObzor = String(o.date);
+      putIdeas();
     });
   }
   var started = false;
@@ -2519,7 +2533,7 @@
   else setTimeout(start, 1200);
 })();
 </script>
-<script src="tabs.js?v=20"></script>
+<script src="tabs.js?v=21"></script>
 <script src="ptr.js?v=2" defer></script>
 </body>
 

@@ -1369,13 +1369,30 @@
       el.scrollTop = 0;
     }
     // <<< sv
+    // Обзор рынка (data/obzor.js, с 28.10.2026, Руслан: «на телефоне в рынок») — карточкой
+    // сверху любого раздела «Рынка». Старше двух недель не показывается: обзор датирован
+    function obReady() { return !!window.OBZOR; }
+    function obDone() {
+      var b = S.cur === "mkt" && document.getElementById("tg-mbody");
+      if (b && !b.querySelector(".tg-ob")) b.insertAdjacentHTML("afterbegin", obCard());
+    }
+    function obCard() {
+      if (!need("obzor", ["data/obzor.js?v=1"], obReady, obDone)) return "";
+      var o = (window.OBZOR.items || [])[0];
+      if (!o || !o.url) return "";
+      var t = Date.parse(o.date + "T00:00:00+03:00");
+      if (!(t > 0) || Date.now() - t > 14 * 864e5) return "";
+      return '<a class="tg-card tg-ob" href="' + esc(o.url) + '"><span class="tg-rb">Обзор рынка · ' + esc(dmy(o.date).slice(0, 5)) + "</span>" +
+        "<h2>" + esc(o.title) + "</h2>" + (o.lead ? "<p>" + esc(o.lead) + "</p>" : "") +
+        '<span class="tg-go">Читать обзор' + ARROW + "</span></a>";
+    }
     function mktBody() {
       var body = "";
       if (S.mkt.seg === "sum") body = svBody2();
       else if (S.mkt.seg === "morning") body = amBody();
       else if (S.mkt.seg === "rates") body = rtBody();
       else body = idBody();
-      return body;
+      return obCard() + body;
     }
     function viewMkt() {
       return frame("Рынок", seg("mkt", "Раздел рынка", [["sum", "Сводка"], ["morning", "Утро"], ["rates", "Ставки"], ["ideas", "Идеи"]])) +

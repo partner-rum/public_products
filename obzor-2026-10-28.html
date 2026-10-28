@@ -20,7 +20,13 @@
 <link rel="canonical" href="https://invest.rumberg.ru/obzor-2026-10-28">
 <meta name="theme-color" content="#0B0C10">
 <link href="fonts/fonts.css?v=2" rel="stylesheet">
-<script src="metrika.js?v=10" defer></script>
+<script>
+// Внутри «Разборов» (ideas.html) страница стоит фреймом с ?embed=1: без своей шапки,
+// ссылки открываются во всём окне, Метрику и ptr.js ведёт сама страница «Разборов»
+var OB_EMBED = /[?&]embed=1(&|$)/.test(location.search) && window.top !== window.self;
+if (OB_EMBED) { document.documentElement.className += " embed"; document.write('<base target="_top">'); }
+else document.write('<script src="metrika.js?v=10" defer><\/script>');
+</script>
 <style>
 /* Раскладка: «полярная ночь» витрины Rumberg. Тезис и шкала сценариев сверху,
    дальше разделы в две колонки: слева заголовок с выводом, справа данные. */
@@ -36,13 +42,18 @@
   --accent-soft: rgba(238,125,27,.14);
   --up: #55C08A;
   --down: #E0705F;
-  --flat: rgba(242,243,247,.42);
+  --flat: rgba(242,243,247,.52);
   --display: "Rubik", "Segoe UI", system-ui, sans-serif;
   --body: "Onest", "Segoe UI", system-ui, sans-serif;
   --mono: "JetBrains Mono", ui-monospace, "Consolas", monospace;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
+html.embed .top { display: none; }
+html.embed body { background: var(--bg); }
+html.embed .hero { padding-top: 12px; }
+html.embed .sh { position: static; }
+html.embed .foot { margin-top: 40px; padding-bottom: 8px; }
 body {
   margin: 0;
   background: radial-gradient(1100px 520px at 88% -8%, rgba(238,125,27,.10), transparent 62%), var(--bg);
@@ -854,6 +865,8 @@ details.full[open] > summary::after { content: "−"; }
   if (sp) sp.addEventListener("click", function () { render("p"); });
 })();
 </script>
-<script src="ptr.js?v=2" defer></script>
+<script>
+if (!OB_EMBED) { var ptr = document.createElement("script"); ptr.src = "ptr.js?v=2"; ptr.defer = true; document.head.appendChild(ptr); }
+</script>
 </body>
 </html>
