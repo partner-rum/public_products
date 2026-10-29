@@ -3914,6 +3914,141 @@ function wbPeople(raw) {
 
 const wbCame = (people) => people.reduce((n, p) => n + (p.c ? 1 : 0), 0);
 
+// ── Выступления: эфиры и публикации в СМИ (data/talks.js) ──
+// Сейлз заводит запись в админке, Руслан одобряет в Telegram, по ✅ бот
+// коммитит запись (и обложку видео) в репозиторий. Свой путь, а не общий
+// SUBMIT_SECTIONS: в шапке data/talks.js живёт длинный рукописный комментарий
+// с «{label, url}» внутри — общий publishItem режет файл по первой «{» и
+// переписывает шапку целиком. Здесь шапка сохраняется байт в байт.
+const TALK_LABELS = ["RUTUBE", "YOUTUBE", "VK", "MOEX", "СЛУШАТЬ", "СМОТРЕТЬ", "ЧИТАТЬ"];
+const TALK_COVER_MAX = 1536 * 1024;          // обложка — картинка 16:9, не фото с камеры
+const TALK_COVER_TTL = 604800;               // неделя на одобрение, как у документов
+
+// Только https и только адрес целиком: ссылка печатается кнопкой на витрине,
+// а javascript:/data: в href — готовая дыра.
+function talkUrl(v) {
+  const u = cleanStr(v, 400);
+  if (!/^https:\/\/[^\s"'<>]+$/i.test(u)) return null;
+  try { return new URL(u).href; } catch (e) { return null; }
+}
+function talkYt(u) {
+  const m = String(u || "").match(/(?:youtube\.com\/(?:watch\?(?:[^#]*&)?v=|shorts\/|live\/|embed\/)|youtu\.be\/)([\w-]{11})/i);
+  return m ? m[1] : null;
+}
+function talkRt(u) {
+  const m = String(u || "").match(/rutube\.ru\/(?:video|shorts|play\/embed)\/([0-9a-f]{32})/i);
+  return m ? m[1] : null;
+}
+// «Нота» на витрине запрещена (правило Руслана), а у чужих материалов она в
+// названии встречается. Заголовок берём дословно — поэтому не правим, а просим
+// взять другую фразу площадки (так сделано у подкаста ГПБ, см. шапку talks.js).
+const TALK_NOTA = /(^|[^\p{L}])нот(а|ы|е|у|ой|ам|ами|ах)?(?=$|[^\p{L}])/iu;
+
+// Сырая заявка → запись talks.js. Возвращает { item } или { err }.
+function talkItem(raw) {
+  raw = raw || {};
+  const kind = raw.kind === "press" ? "press" : "video";
+  const org = cleanStr(raw.org, 80);
+  if (!org) return { err: "talk_no_org" };
+  const title = cleanStr(raw.title, 200).replace(/\s+/g, " ");
+  if (!title) return { err: "talk_no_title" };
+  if (TALK_NOTA.test(title) || TALK_NOTA.test(org)) return { err: "talk_nota" };
+  const date = cleanStr(raw.date, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || isNaN(Date.parse(date + "T00:00:00Z"))) return { err: "talk_bad_date" };
+  if (Date.parse(date + "T00:00:00Z") > Date.now() + 2 * 864e5) return { err: "talk_future" };
+  let note = cleanStr(raw.note, 60);
+  const item = { id: "", org: org };
+  const links = [];
+  if (kind === "press") {
+    const speaker = cleanStr(raw.speaker, 60);
+    if (!speaker) return { err: "talk_no_speaker" };
+    const u = talkUrl(raw.url);
+    if (!u) return { err: "talk_bad_link" };
+    item.kind = "press";
+    item.note = note || "комментарий";
+    item.speaker = speaker;
+    links.push({ label: "ЧИТАТЬ", url: u });
+  } else {
+    if (note) item.note = note;
+    for (const l of (Array.isArray(raw.links) ? raw.links : []).slice(0, 6)) {
+      if (!l || !l.url) continue;
+      const label = cleanStr(l.label, 12).toUpperCase();
+      if (!TALK_LABELS.includes(label) || label === "ЧИТАТЬ") return { err: "talk_bad_label" };
+      const u = talkUrl(l.url);
+      if (!u) return { err: "talk_bad_link" };
+      if (!links.some((x) => x.url === u)) links.push({ label, url: u });
+    }
+    if (!links.length) return { err: "talk_no_links" };
+    // RUTUBE первым: у части клиентов YouTube не открывается (см. шапку talks.js)
+    links.sort((a, b) => TALK_LABELS.indexOf(a.label) - TALK_LABELS.indexOf(b.label));
+  }
+  item.title = title;
+  item.date = date;
+  item.links = links.slice(0, 4);
+  item.id = (slugId(org).slice(0, 18) + "-" + slugId(title).slice(0, 22)).replace(/-+$/, "") + "-" + date.slice(0, 7);
+  return { item };
+}
+
+// Загруженная обложка: JPEG, PNG или WebP по сигнатуре, а не по имени файла.
+function talkCoverBytes(dataUrl) {
+  const b64 = String(dataUrl || "").replace(/^data:[^,]*,/, "");
+  if (!b64) return { none: true };
+  if (b64.length > TALK_COVER_MAX * 1.4) return { err: "talk_cover_big" };
+  let bytes;
+  try { bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)); } catch (e) { return { err: "talk_cover_bad" }; }
+  if (bytes.length > TALK_COVER_MAX) return { err: "talk_cover_big" };
+  const ext = talkImgExt(bytes);
+  return ext ? { bytes, ext } : { err: "talk_cover_bad" };
+}
+function talkImgExt(b) {
+  if (b[0] === 0xFF && b[1] === 0xD8 && b[2] === 0xFF) return "jpg";
+  if (b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4E && b[3] === 0x47) return "png";
+  if (b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46 &&
+      b[8] === 0x57 && b[9] === 0x45 && b[10] === 0x42 && b[11] === 0x50) return "webp";
+  return null;
+}
+
+// Кадр с площадки, если обложку не загрузили: берётся В МОМЕНТ ✅ и кладётся
+// в media/ — ссылка на чужой CDN однажды отвалилась бы молча (см. шапку talks.js).
+async function talkFetchCover(src) {
+  const grab = async (url) => {
+    const r = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0 so-leads-worker" } });
+    if (!r.ok) return null;
+    const b = new Uint8Array(await r.arrayBuffer());
+    const ext = talkImgExt(b);
+    return ext && b.length > 2000 && b.length < 4 * 1024 * 1024 ? { bytes: b, ext } : null;
+  };
+  if (src.indexOf("yt:") === 0) {
+    const id = src.slice(3);
+    // maxres есть не у всех роликов; hq — 4:3 с полосами, но есть всегда
+    return (await grab("https://i.ytimg.com/vi/" + id + "/maxresdefault.jpg")) ||
+           (await grab("https://i.ytimg.com/vi/" + id + "/sddefault.jpg")) ||
+           (await grab("https://i.ytimg.com/vi/" + id + "/hqdefault.jpg"));
+  }
+  if (src.indexOf("rt:") === 0) {
+    const r = await fetch("https://rutube.ru/api/video/" + src.slice(3) + "/?format=json");
+    if (!r.ok) return null;
+    const j = await r.json().catch(() => null);
+    const t = j && j.thumbnail_url;
+    return t && /^https:\/\//.test(t) ? grab(t) : null;
+  }
+  return null;
+}
+
+// Файл talks.js: шапка до «window.TALKS =» остаётся как есть, тело — JSON
+// с отступом 2 и ссылками в одну строку, как в рукописной версии.
+function talksSplit(text) {
+  const at = text.indexOf("window.TALKS");
+  const from = at >= 0 ? text.indexOf("{", at) : -1;
+  if (from < 0) throw new Error("talks_parse");
+  return { head: text.slice(0, at), obj: JSON.parse(text.slice(from, text.lastIndexOf("}") + 1)) };
+}
+function talksRender(head, obj) {
+  const body = JSON.stringify(obj, null, 2)
+    .replace(/\{\n\s+"label": ("[^"]*"),\n\s+"url": ("[^"]*")\n\s+\}/g, "{ \"label\": $1, \"url\": $2 }");
+  return head + "window.TALKS = " + body + ";\n";
+}
+
 async function handleSubmit(request, env, cors, ctx) {
   if (!env.SALES_KEYS || !env.ADMIN_CHAT_ID) return json({ ok: false, error: "not_configured" }, 503, cors);
   let data;
@@ -4013,6 +4148,101 @@ async function handleSubmit(request, env, cors, ctx) {
     return json({ ok: true, direct: true, inv: inv, came: came, rejected: parsed.rejected, notified: notified }, 200, cors);
   }
 
+
+  // ── Выступления: эфир/видео или публикация в СМИ ──
+  // Заявка, как у продуктов: на сайт попадает только после ✅ Руслана.
+  // Загруженная обложка ждёт решения в KV, а не в репозитории: репозиторий
+  // публичный, и неодобренная картинка навсегда осталась бы в истории git.
+  if (data.action === "talk") {
+    const { item, err } = talkItem(data.item);
+    if (err) return json({ ok: false, error: err }, 422, cors);
+    let cv = null, kvKey = null, ext = null, coverNote = "", upBytes = null;
+    if (item.kind !== "press") {
+      const up = talkCoverBytes(data.coverB64);
+      if (up.err) return json({ ok: false, error: up.err }, 422, cors);
+      if (up.bytes) {
+        if (!env.POST_KV) return json({ ok: false, error: "kv_not_configured" }, 503, cors);
+        kvKey = "tcov:" + crypto.randomUUID();
+        try { await env.POST_KV.put(kvKey, up.bytes.buffer, { expirationTtl: TALK_COVER_TTL }); }
+        catch (e) { return json({ ok: false, error: "kv_put_failed" }, 502, cors); }
+        cv = "kv"; ext = up.ext; upBytes = up.bytes;
+        coverNote = "загружена (" + up.ext.toUpperCase() + ", " + Math.max(1, Math.round(up.bytes.length / 1024)) + " КБ)";
+      } else {
+        // Не загрузили — кадр возьмём с площадки в момент ✅
+        const yt = item.links.map((l) => talkYt(l.url)).find(Boolean);
+        const rt = item.links.map((l) => talkRt(l.url)).find(Boolean);
+        if (yt) { cv = "yt:" + yt; coverNote = "кадр с YouTube"; }
+        else if (rt) { cv = "rt:" + rt; coverNote = "кадр с Rutube"; }
+        else return json({ ok: false, error: "talk_no_cover" }, 422, cors);
+      }
+    }
+    const payload = JSON.stringify({ s: "talk", by: author, item, cv: cv || undefined, k: kvKey || undefined, ext: ext || undefined });
+    if (payload.length > 3400) {
+      if (kvKey) { try { await env.POST_KV.delete(kvKey); } catch (e) {} }
+      return json({ ok: false, error: "too_long" }, 422, cors);
+    }
+    const linesTxt = item.links.map((l) => esc(l.label) + ": " + esc(l.url)).join("\n");
+    const text =
+      (item.kind === "press" ? "📰 <b>Публикация в «Выступления»</b>" : "🎙 <b>Видео в «Выступления»</b>") +
+      " · от <b>" + esc(author) + "</b>\n" +
+      "<b>" + esc(item.org) + "</b>" + (item.note ? " · " + esc(item.note) : "") + " · " + esc(item.date) + "\n" +
+      esc(item.title) + "\n" +
+      (item.speaker ? "Спикер: " + esc(item.speaker) + "\n" : "") +
+      linesTxt + "\n" +
+      (coverNote ? "Обложка: " + esc(coverNote) + "\n" : "") +
+      "\n<pre>" + esc(payload) + "</pre>";
+    const rr = await tg(env, "sendMessage", {
+      chat_id: env.ADMIN_CHAT_ID, text, parse_mode: "HTML", disable_web_page_preview: true,
+      reply_markup: { inline_keyboard: [[
+        { text: "✅ Опубликовать", callback_data: "pub" },
+        { text: "❌ Отклонить", callback_data: "rej" },
+      ]] },
+    });
+    let sent = null;
+    try { sent = await rr.json(); } catch (e) {}
+    if (!sent || !sent.ok) {
+      if (kvKey) { try { await env.POST_KV.delete(kvKey); } catch (e) {} }   // карточки нет — файл ни к чему
+      return json({ ok: false, error: "telegram_failed" }, 502, cors);
+    }
+    const mid = sent.result && sent.result.message_id;
+    // Обложку показываем Руслану отдельным сообщением-ответом: решать по
+    // картинке, которой не видел, нельзя. Не вышло — заявка всё равно ушла.
+    try {
+      if (cv === "kv") {
+        const fd = new FormData();
+        fd.append("chat_id", String(env.ADMIN_CHAT_ID));
+        if (mid) fd.append("reply_to_message_id", String(mid));
+        fd.append("caption", "Обложка к заявке выше");
+        fd.append("photo", new Blob([upBytes], { type: "image/" + (ext === "jpg" ? "jpeg" : ext) }), "cover." + ext);
+        await fetch("https://api.telegram.org/bot" + env.BOT_TOKEN + "/sendPhoto", { method: "POST", body: fd });
+      } else if (cv && cv.indexOf("yt:") === 0) {
+        await tg(env, "sendPhoto", { chat_id: env.ADMIN_CHAT_ID, reply_to_message_id: mid,
+          photo: "https://i.ytimg.com/vi/" + cv.slice(3) + "/hqdefault.jpg", caption: "Кадр с YouTube — станет обложкой" });
+      }
+    } catch (e) { /* превью необязательно */ }
+    return json({ ok: true, mid: mid, id: item.id }, 200, cors);
+  }
+
+  // Снятие выступления — тоже через ✅: запись исчезнет со страницы после одобрения
+  if (data.action === "talk_rm") {
+    const rmId = cleanStr(data.id, 90);
+    if (!rmId) return json({ ok: false, error: "no_id" }, 422, cors);
+    const rmName = cleanStr(data.name, 160);
+    const payload = JSON.stringify({ s: "talk", by: author, rm: rmId });
+    const rr = await tg(env, "sendMessage", {
+      chat_id: env.ADMIN_CHAT_ID, parse_mode: "HTML", disable_web_page_preview: true,
+      text: "🗑 <b>Снять из «Выступлений»</b> · от <b>" + esc(author) + "</b>\n" + esc(rmName || rmId) +
+        "\n\n<pre>" + esc(payload) + "</pre>",
+      reply_markup: { inline_keyboard: [[
+        { text: "✅ Снять", callback_data: "pub" },
+        { text: "❌ Отклонить", callback_data: "rej" },
+      ]] },
+    });
+    let sent = null;
+    try { sent = await rr.json(); } catch (e) {}
+    if (!sent || !sent.ok) return json({ ok: false, error: "telegram_failed" }, 502, cors);
+    return json({ ok: true, mid: sent.result && sent.result.message_id }, 200, cors);
+  }
 
   // Новый PDF-дайджест: файл через Worker не гоняем — сейлз шлёт его Руслану в Telegram,
   // а отсюда уходит только отбивка-уведомление (без кнопок и модерации).
@@ -5106,6 +5336,84 @@ async function attachOfferingDoc(env, payload) {
   throw new Error("github_conflict");
 }
 
+// ✅ по выступлению: обложка (у видео) → media/, запись → data/talks.js.
+// Обложка коммитится ПЕРВОЙ: запись без файла дала бы на витрине пустой кадр,
+// файл без записи никому не мешает.
+async function publishTalk(env, payload) {
+  if (!env.GITHUB_TOKEN || !env.GITHUB_REPO) throw new Error("github_not_configured");
+  const branch = env.GITHUB_BRANCH || "main";
+  const base = "https://api.github.com/repos/" + env.GITHUB_REPO + "/contents/";
+  const readTalks = async () => {
+    const g = await fetch(base + "data/talks.js?ref=" + branch, { headers: ghHeaders(env) });
+    if (!g.ok) throw new Error("github_get_" + g.status);
+    const meta = await g.json();
+    const text = b64decodeUtf8(meta.content);
+    return Object.assign({ sha: meta.sha }, talksSplit(text));
+  };
+
+  let item = null, cover = null;
+  if (!payload.rm) {
+    item = Object.assign({}, payload.item, { links: (payload.item.links || []).slice() });
+    if (item.kind !== "press") {
+      if (payload.cv === "kv") {
+        if (!env.POST_KV || !payload.k) throw new Error("kv_not_configured");
+        const buf = await env.POST_KV.get(payload.k, "arrayBuffer");
+        if (!buf) throw new Error("обложка устарела, попросите загрузить заново");
+        const b = new Uint8Array(buf);
+        cover = { bytes: b, ext: talkImgExt(b) || payload.ext || "jpg" };
+      } else if (payload.cv) {
+        cover = await talkFetchCover(payload.cv);
+        if (!cover) throw new Error("не удалось взять кадр с площадки — загрузите обложку вручную");
+      } else throw new Error("нет обложки");
+    }
+    // id — по текущему файлу, чтобы имя обложки и запись совпали
+    const cur = await readTalks();
+    item.id = uniqueId(item.id, new Set((cur.obj.items || []).map((i) => i.id)));
+    if (cover) {
+      const path = "media/talk-" + item.id + "." + cover.ext;
+      let sha;
+      const g = await fetch(base + path + "?ref=" + branch, { headers: ghHeaders(env) });
+      if (g.ok) sha = (await g.json()).sha;
+      const body = { message: "Админка: обложка выступления " + item.id + " (от " + payload.by + ")",
+                     content: b64encodeBytes(cover.bytes), branch };
+      if (sha) body.sha = sha;
+      const put = await fetch(base + path, { method: "PUT", headers: ghHeaders(env), body: JSON.stringify(body) });
+      if (!put.ok) throw new Error("cover_put_" + put.status);
+      item.cover = path;
+    }
+  }
+
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const cur = await readTalks();
+    const obj = cur.obj;
+    if (!Array.isArray(obj.items)) obj.items = [];
+    let msg;
+    if (payload.rm) {
+      const kept = obj.items.filter((i) => i.id !== payload.rm);
+      if (kept.length === obj.items.length) throw new Error("записи «" + payload.rm + "» на сайте нет");
+      obj.items = kept;
+      msg = "Админка: выступление снято — " + payload.rm + " (от " + payload.by + ")";
+    } else {
+      if (obj.items.some((i) => i.id === item.id)) throw new Error("запись " + item.id + " уже есть");
+      // Порядок в файле = порядок на странице: новая встаёт перед первой, что старше её
+      const at = obj.items.findIndex((i) => String(i.date || "") < item.date);
+      obj.items.splice(at < 0 ? obj.items.length : at, 0, item);
+      msg = "Админка: " + (item.kind === "press" ? "публикация" : "выступление") + " — " +
+            item.org + ": " + item.title + " (от " + payload.by + ")";
+    }
+    obj.updated = new Date().toISOString().slice(0, 10);
+    const put = await fetch(base + "data/talks.js", { method: "PUT", headers: ghHeaders(env), body: JSON.stringify({
+      message: msg, content: b64encodeUtf8(talksRender(cur.head, obj)), sha: cur.sha, branch }) });
+    if (put.ok) {
+      if (payload.k && env.POST_KV) { try { await env.POST_KV.delete(payload.k); } catch (e) {} }
+      return payload.rm ? { removed: payload.rm } : item;
+    }
+    if (put.status !== 409 && put.status !== 422) throw new Error("github_put_" + put.status);
+    // sha устарел — параллельная правка; перечитываем и пробуем ещё раз
+  }
+  throw new Error("github_conflict");
+}
+
 async function attachPlacementDoc(env, payload) {
   if (!env.GITHUB_TOKEN || !env.GITHUB_REPO) throw new Error("github_not_configured");
   if (!env.POST_KV) throw new Error("kv_not_configured");
@@ -5335,13 +5643,16 @@ async function handleTelegram(request, env, ctx) {
     let payload;
     try { payload = JSON.parse(msgText.slice(at, end + 1)); } catch { await answer("Данные повреждены", true); return new Response("ok"); }
     const isDoc = payload.s === "pdoc" || payload.s === "odoc";
+    const isTalk = payload.s === "talk";
     const label = payload.s === "pdoc" ? "Документы выпусков"
       : payload.s === "odoc" ? "Документы размещений"
+      : payload.s === "talk" ? "Выступления"
       : payload.s === "deal" || payload.s === "dealrm" ? "Сделки партнёров"
       : payload.s === "partner" ? "Партнёры"
       : (SUBMIT_SECTIONS[payload.s] || {}).label || payload.s;
     const title = payload.s === "pdoc" ? payload.isin + " · " + (payload.label || "")
       : payload.s === "odoc" ? payload.oid + " · " + (payload.label || "")
+      : payload.s === "talk" ? ((payload.item && (payload.item.org + " · " + payload.item.title)) || payload.rm || "")
       : payload.s === "deal" ? payload.ref + " · " + ((payload.d && payload.d.product) || "")
       : payload.s === "dealrm" ? payload.ref + " · " + payload.id
       : payload.s === "partner" ? payload.ref + " · " + ((payload.p && payload.p.name) || "")
@@ -5351,7 +5662,7 @@ async function handleTelegram(request, env, ctx) {
 
     if (cb.data === "rej") {
       // отклонённый документ незачем держать в KV до истечения недели
-      if (isDoc && payload.k && env.POST_KV) {
+      if ((isDoc || isTalk) && payload.k && env.POST_KV) {
         try { await env.POST_KV.delete(payload.k); } catch (e) {}
       }
       await editCard("❌ <b>Отклонено</b> · " + esc(label) + "\n" + esc(title) + " (от " + esc(payload.by) + ")");
@@ -5402,6 +5713,10 @@ async function handleTelegram(request, env, ctx) {
                  "Ключ: <code>" + esc(issued) + "</code>\n" +
                  "<i>Ключ показан один раз. Сейлз может забрать его в админке двое суток; " +
                  "потерялся — перевыпустите командой /partnerkey " + esc(payload.ref) + "</i>";
+        } else if (isTalk) {
+          await publishTalk(env, payload);
+          head = payload.rm ? "🗑 <b>Снято</b> · " : "✅ <b>Опубликовано</b> · ";
+          what = title;
         } else if (isDoc) {
           if (payload.s === "odoc") await attachOfferingDoc(env, payload);
           else await attachPlacementDoc(env, payload);
