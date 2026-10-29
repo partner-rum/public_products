@@ -3,7 +3,7 @@
 // Источники: ЦБ (ключевая, RUONIA), MOEX ISS (RUSFAR, БПИФы, ОФЗ),
 // Финуслуги (вклады и накопительные счета — витрина МосБиржи).
 window.RATES = {
-  "updated": "2026-10-29 10:32",
+  "updated": "2026-10-29 13:32",
   "cbr": {
     "key": {
       "rate": 14.0,
@@ -31,33 +31,33 @@ window.RATES = {
       "id": "RUSFAR2W",
       "term": "2 недели",
       "days": 14,
-      "rate": 13.99
+      "rate": 14.01
     },
     {
       "id": "RUSFAR1M",
       "term": "1 месяц",
       "days": 30,
-      "rate": 14.04
+      "rate": 14.05
     },
     {
       "id": "RUSFAR3M",
       "term": "3 месяца",
       "days": 90,
-      "rate": 14.1
+      "rate": 14.11
     }
   ],
   "funds": [
     {
       "id": "BCSD",
       "name": "БКС Денежный рынок",
-      "price": 14.603,
+      "price": 14.605,
       "ter": 0.2,
       "rate": 13.83
     },
     {
       "id": "MONY",
       "name": "АК БАРС Денежный рынок",
-      "price": 134.73,
+      "price": 134.94,
       "ter": 0.2,
       "rate": 13.83
     },
@@ -78,21 +78,21 @@ window.RATES = {
     {
       "id": "AMNR",
       "name": "АТОН Накопительный",
-      "price": 159.377,
+      "price": 159.376,
       "ter": 0.3,
       "rate": 13.73
     },
     {
       "id": "AKMM",
       "name": "Альфа Денежный рынок",
-      "price": 180.45,
+      "price": 180.44,
       "ter": 0.69,
       "rate": 13.34
     },
     {
       "id": "TMON",
       "name": "Т-Капитал Денежный рынок",
-      "price": 166.88,
+      "price": 166.86,
       "ter": 1.15,
       "rate": 12.88
     }
@@ -103,21 +103,21 @@ window.RATES = {
       "name": "ОФЗ 26207",
       "maturity": "2027-02-03",
       "years": 0.27,
-      "rate": 13.08
+      "rate": 13.31
     },
     {
       "id": "SU26232RMFS7",
       "name": "ОФЗ 26232",
       "maturity": "2027-10-06",
       "years": 0.94,
-      "rate": 13.11
+      "rate": 13.12
     },
     {
       "id": "SU26212RMFS9",
       "name": "ОФЗ 26212",
       "maturity": "2028-01-19",
       "years": 1.22,
-      "rate": 13.68
+      "rate": 13.69
     }
   ],
   "deposits": [
