@@ -567,5 +567,11 @@ window.PLACEMENT_DOCS = {
    "name": "Ключевые условия выпуска (КУВ)",
    "file": "docs/kuv-RU000A10CVJ1.pdf"
   }
+ ],
+ "RU000A10B9Y3": [
+  {
+   "name": "Ключевые условия выпуска (КУВ)",
+   "file": "docs/kuv-RU000A10B9Y3.pdf"
+  }
  ]
 };
