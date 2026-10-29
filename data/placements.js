@@ -1,47 +1,9 @@
 // Файл собирается скриптом выгрузки из бэкофиса и админкой сейлзов — руками не править.
-// Выпуски с "src": "sales" добавлены через админку; при перегенерации из бэкофиса они
-// сохраняются, пока их ISIN не появится в выгрузке (тогда побеждают данные бэкофиса).
+// Выпуски с "src": "sales" добавлены через админку; при перегенерации сохраняются,
+// пока их ISIN не появится в выгрузке. Обновлено: 2026-10-29
 window.PLACEMENTS_DATA = {
  "updated": "2026-10-29",
  "issues": [
-  {
-   "isin": "RU000A10B9Y3",
-   "name": "СП-1-31-ЦБ-FX-RUB",
-   "serial": "СП-1-31-ЦБ-FX-RUB",
-   "kind": "participation",
-   "currency": "RUB",
-   "issueStart": "2026-09-24",
-   "maturity": "2029-12-06",
-   "regNumber": "6- 31-00761-R-001P",
-   "notional": 1000,
-   "fx": true,
-   "basket": [
-    {
-     "n": "Howmet Aerospace Inc.",
-     "w": 1,
-     "t": "US4432011082",
-     "f0": 195.19
-    },
-    {
-     "n": "ket Lab Corporation",
-     "w": 1,
-     "t": "US7731211089",
-     "f0": 58.6
-    },
-    {
-     "n": "Space Exploration Technologies Corp.",
-     "w": 1,
-     "t": "US84615Q1031",
-     "f0": 145.23
-    }
-   ],
-   "payoff": {
-    "participationPct": 100,
-    "optType": "CALL",
-    "style": "EUROPEAN"
-   },
-   "src": "sales"
-  },
   {
    "isin": "RU000A10E6K5",
    "name": "СП-2-90-CLN-5",
@@ -109,25 +71,66 @@ window.PLACEMENTS_DATA = {
    "src": "sales"
   },
   {
+   "isin": "RU000A10B9Y3",
+   "name": "СФО РСП СП-1-31-ЦБ-FX-RUB",
+   "serial": "СФО РСП СП-1-31-ЦБ-FX-RUB",
+   "secid": "RU000A10B9Y3",
+   "issuer": "SFO-RSP",
+   "currency": "RUB",
+   "notional": 1000.0,
+   "regNumber": "6-31-00761-R-001P",
+   "issueStart": "2026-09-24",
+   "maturity": "2029-12-06",
+   "fx": true,
+   "bid": 25.5,
+   "kind": "participation",
+   "wrapper": null,
+   "basket": [
+    {
+     "t": "Idex_RSP_31_Space",
+     "n": "Idex RSP 31 Space",
+     "w": 1.0,
+     "f0": 100.0,
+     "px": 100.0,
+     "pxTime": "2026-09-24",
+     "perfPct": 0.0
+    }
+   ],
+   "dates": {
+    "initialFixing": "2026-10-28",
+    "expiry": "2029-10-29",
+    "settlement": "2029-12-06"
+   },
+   "payoff": {
+    "optType": "CALL_SPREAD",
+    "style": "EUROPEAN",
+    "strikePct": 100.0,
+    "strike2Pct": 200.0,
+    "participationPct": 100.0,
+    "protectionPct": 0.0
+   },
+   "perfPct": 0.0
+  },
+  {
    "isin": "RU000A10CV96",
    "name": "РСП СП-2-70",
    "serial": "РСП СП-2-70",
    "secid": "RU000A10CV96",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-04-00761-R-002P",
    "issueStart": "2026-09-10",
    "maturity": "2028-10-18",
    "fx": false,
-   "bid": 14,
+   "bid": 14.0,
    "kind": "participation",
    "wrapper": null,
    "basket": [
     {
      "t": "CSI_300",
      "n": "CSI 300 Index",
-     "w": 1,
+     "w": 1.0,
      "f0": 4548.39,
      "px": 4921.6,
      "pxTime": "2026-05-25",
@@ -142,10 +145,10 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "optType": "CALL",
     "style": "EUROPEAN",
-    "strikePct": 100,
+    "strikePct": 100.0,
     "strike2Pct": null,
-    "participationPct": 100,
-    "protectionPct": 0
+    "participationPct": 100.0,
+    "protectionPct": 0.0
    },
    "perfPct": 8.2
   },
@@ -156,23 +159,23 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A10CVJ1",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-13-00761-R-002P",
    "issueStart": "2026-09-09",
    "maturity": "2028-03-23",
    "fx": false,
-   "bid": 7.25,
+   "bid": 7.0,
    "kind": "coupon",
    "wrapper": "WARRANT",
    "basket": [
     {
      "t": "DOFZ26248",
      "n": "ОФЗ 26248",
-     "w": 1,
+     "w": 1.0,
      "f0": 81.441,
-     "px": 80.125,
+     "px": 79.843,
      "pxTime": "2026-10-29",
-     "perfPct": -1.6
+     "perfPct": -2.0
     }
    ],
    "dates": {
@@ -182,8 +185,8 @@ window.PLACEMENTS_DATA = {
    },
    "payoff": {
     "couponPa": 19.35,
-    "couponPeriodPct": 29,
-    "couponBarrierPct": 105,
+    "couponPeriodPct": 29.0,
+    "couponBarrierPct": 105.0,
     "memory": false,
     "obsCount": 1,
     "acBarrierPct": null,
@@ -193,7 +196,7 @@ window.PLACEMENTS_DATA = {
      "barrierPct": null
     }
    },
-   "perfPct": -1.6
+   "perfPct": -2.0
   },
   {
    "isin": "RU000A10BZ44",
@@ -202,7 +205,7 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A10BZ44",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-45-00761-R-001P",
    "issueStart": "2026-08-31",
    "maturity": "2027-09-07",
@@ -214,7 +217,7 @@ window.PLACEMENTS_DATA = {
     {
      "t": "CNYRUB",
      "n": "Currency Pair CNY/RUB",
-     "w": 1,
+     "w": 1.0,
      "f0": 12.7335,
      "px": 12.65,
      "pxTime": "2026-08-17",
@@ -229,10 +232,10 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "optType": "CALL",
     "style": "EUROPEAN",
-    "strikePct": 100,
+    "strikePct": 100.0,
     "strike2Pct": null,
-    "participationPct": 100,
-    "protectionPct": 0
+    "participationPct": 100.0,
+    "protectionPct": 0.0
    },
    "perfPct": -0.7
   },
@@ -243,7 +246,7 @@ window.PLACEMENTS_DATA = {
    "secid": null,
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6- 42-00761-R-001P",
    "issueStart": "2026-08-10",
    "maturity": "2029-09-21",
@@ -255,11 +258,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "Index_RSP_42_Enregy_AI",
      "n": "Index RSP 42 Enregy AI",
-     "w": 1,
-     "f0": 100,
-     "px": 100,
+     "w": 1.0,
+     "f0": 100.0,
+     "px": 100.0,
      "pxTime": "2026-08-10",
-     "perfPct": 0
+     "perfPct": 0.0
     }
    ],
    "dates": {
@@ -270,12 +273,12 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "optType": "CALL",
     "style": "EUROPEAN",
-    "strikePct": 100,
+    "strikePct": 100.0,
     "strike2Pct": null,
-    "participationPct": 100,
-    "protectionPct": 80
+    "participationPct": 100.0,
+    "protectionPct": 80.0
    },
-   "perfPct": 0
+   "perfPct": 0.0
   },
   {
    "isin": "RU000A10BZ36",
@@ -284,7 +287,7 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A10BZ36",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-44-00761-R-001P",
    "issueStart": "2026-08-05",
    "maturity": "2027-08-12",
@@ -296,7 +299,7 @@ window.PLACEMENTS_DATA = {
     {
      "t": "CNYRUB",
      "n": "Currency Pair CNY/RUB",
-     "w": 1,
+     "w": 1.0,
      "f0": 11.9677,
      "px": 12.65,
      "pxTime": "2026-08-17",
@@ -311,10 +314,10 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "optType": "CALL",
     "style": "EUROPEAN",
-    "strikePct": 100,
+    "strikePct": 100.0,
     "strike2Pct": null,
-    "participationPct": 100,
-    "protectionPct": 0
+    "participationPct": 100.0,
+    "protectionPct": 0.0
    },
    "perfPct": 5.7
   },
@@ -325,23 +328,23 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A10CVH5",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-12-00761-R-002P",
    "issueStart": "2026-07-02",
    "maturity": "2027-07-14",
    "fx": false,
-   "bid": 92.75,
+   "bid": 92.0,
    "kind": "coupon",
    "wrapper": "NOTE",
    "basket": [
     {
      "t": "DOFZ26248",
      "n": "ОФЗ 26248",
-     "w": 1,
+     "w": 1.0,
      "f0": 79.969,
-     "px": 80.125,
+     "px": 79.843,
      "pxTime": "2026-10-29",
-     "perfPct": 0.2
+     "perfPct": -0.2
     }
    ],
    "dates": {
@@ -351,18 +354,18 @@ window.PLACEMENTS_DATA = {
    },
    "payoff": {
     "couponPa": 20.22,
-    "couponPeriodPct": 20,
-    "couponBarrierPct": 100,
+    "couponPeriodPct": 20.0,
+    "couponBarrierPct": 100.0,
     "memory": true,
     "obsCount": 1,
     "acBarrierPct": null,
     "protection": {
      "type": "EKI",
-     "strikePct": 100,
-     "barrierPct": 100
+     "strikePct": 100.0,
+     "barrierPct": 100.0
     }
    },
-   "perfPct": 0.2
+   "perfPct": -0.2
   },
   {
    "isin": "RU000A10CRT8",
@@ -371,7 +374,7 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A10CRT8",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-58-00761-R- 001P",
    "issueStart": "2026-06-25",
    "maturity": "2031-07-31",
@@ -383,11 +386,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "RUMPREIPO 1",
      "n": "Rumberg Pre-IPO Index 1",
-     "w": 1,
+     "w": 1.0,
      "f0": 85.11,
      "px": 85.11,
      "pxTime": "2026-06-25",
-     "perfPct": 0
+     "perfPct": 0.0
     }
    ],
    "dates": {
@@ -398,12 +401,12 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "optType": "CALL",
     "style": "EUROPEAN",
-    "strikePct": 100,
+    "strikePct": 100.0,
     "strike2Pct": null,
     "participationPct": 51.07,
-    "protectionPct": 0
+    "protectionPct": 0.0
    },
-   "perfPct": 0
+   "perfPct": 0.0
   },
   {
    "isin": "RU000A10B9X5",
@@ -412,7 +415,7 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A10B9X5",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-30-00761-R-001P",
    "issueStart": "2026-06-16",
    "maturity": "2029-02-13",
@@ -424,11 +427,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "Index_AI_RSP_30",
      "n": "Index AI RSP 30",
-     "w": 1,
-     "f0": 100,
-     "px": 100,
+     "w": 1.0,
+     "f0": 100.0,
+     "px": 100.0,
      "pxTime": "2026-06-16",
-     "perfPct": 0
+     "perfPct": 0.0
     }
    ],
    "dates": {
@@ -439,12 +442,12 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "optType": "CALL",
     "style": "EUROPEAN",
-    "strikePct": 100,
+    "strikePct": 100.0,
     "strike2Pct": null,
-    "participationPct": 100,
-    "protectionPct": 0
+    "participationPct": 100.0,
+    "protectionPct": 0.0
    },
-   "perfPct": 0
+   "perfPct": 0.0
   },
   {
    "isin": "RU000A10CVG7",
@@ -453,23 +456,23 @@ window.PLACEMENTS_DATA = {
    "secid": null,
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-11-00761-R-002P",
    "issueStart": "2026-06-08",
    "maturity": "2029-06-18",
    "fx": false,
-   "bid": 3.5,
+   "bid": 3.25,
    "kind": "participation",
    "wrapper": null,
    "basket": [
     {
      "t": "DOFZ26238",
      "n": "ОФЗ 26238",
-     "w": 1,
+     "w": 1.0,
      "f0": 56.51,
-     "px": 52.466,
+     "px": 52.2,
      "pxTime": "2026-10-29",
-     "perfPct": -7.2
+     "perfPct": -7.6
     }
    ],
    "dates": {
@@ -480,12 +483,12 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "optType": "CALL",
     "style": "EUROPEAN",
-    "strikePct": 100,
+    "strikePct": 100.0,
     "strike2Pct": null,
-    "participationPct": 100,
-    "protectionPct": 0
+    "participationPct": 100.0,
+    "protectionPct": 0.0
    },
-   "perfPct": -7.2
+   "perfPct": -7.6
   },
   {
    "isin": "RU000A10CVF9",
@@ -494,23 +497,23 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A10CVF9",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-1000761-R-002P",
    "issueStart": "2026-04-23",
    "maturity": "2027-04-29",
    "fx": false,
-   "bid": 84.25,
+   "bid": 83.75,
    "kind": "coupon",
    "wrapper": "NOTE",
    "basket": [
     {
      "t": "DOFZ26248",
      "n": "ОФЗ 26248",
-     "w": 1,
+     "w": 1.0,
      "f0": 89.873,
-     "px": 80.125,
+     "px": 79.843,
      "pxTime": "2026-10-29",
-     "perfPct": -10.8
+     "perfPct": -11.2
     }
    ],
    "dates": {
@@ -521,17 +524,17 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "couponPa": 19.97,
     "couponPeriodPct": 19.75,
-    "couponBarrierPct": 100,
+    "couponBarrierPct": 100.0,
     "memory": true,
     "obsCount": 1,
     "acBarrierPct": null,
     "protection": {
      "type": "EKI",
-     "strikePct": 100,
-     "barrierPct": 100
+     "strikePct": 100.0,
+     "barrierPct": 100.0
     }
    },
-   "perfPct": -10.8
+   "perfPct": -11.2
   },
   {
    "isin": "RU000A10CVE2",
@@ -540,23 +543,23 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A10CVE2",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-09-00761-R-002P",
    "issueStart": "2026-03-31",
    "maturity": "2027-04-08",
    "fx": false,
-   "bid": 86,
+   "bid": 85.0,
    "kind": "coupon",
    "wrapper": "NOTE",
    "basket": [
     {
      "t": "DOFZ26248",
      "n": "ОФЗ 26248",
-     "w": 1,
+     "w": 1.0,
      "f0": 88.549,
-     "px": 80.125,
+     "px": 79.843,
      "pxTime": "2026-10-29",
-     "perfPct": -9.5
+     "perfPct": -9.8
     }
    ],
    "dates": {
@@ -567,17 +570,17 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "couponPa": 21.74,
     "couponPeriodPct": 21.5,
-    "couponBarrierPct": 100,
+    "couponBarrierPct": 100.0,
     "memory": true,
     "obsCount": 1,
     "acBarrierPct": null,
     "protection": {
      "type": "EKI",
-     "strikePct": 100,
-     "barrierPct": 100
+     "strikePct": 100.0,
+     "barrierPct": 100.0
     }
    },
-   "perfPct": -9.5
+   "perfPct": -9.8
   },
   {
    "isin": "RU000A10CVD4",
@@ -586,23 +589,23 @@ window.PLACEMENTS_DATA = {
    "secid": null,
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-08 00761-R-002P",
    "issueStart": "2026-03-06",
    "maturity": "2027-03-17",
    "fx": false,
-   "bid": 85.25,
+   "bid": 84.75,
    "kind": "coupon",
    "wrapper": "NOTE",
    "basket": [
     {
      "t": "DOFZ26248",
      "n": "ОФЗ 26248",
-     "w": 1,
+     "w": 1.0,
      "f0": 88.4,
-     "px": 80.125,
+     "px": 79.843,
      "pxTime": "2026-10-29",
-     "perfPct": -9.4
+     "perfPct": -9.7
     }
    ],
    "dates": {
@@ -612,18 +615,18 @@ window.PLACEMENTS_DATA = {
    },
    "payoff": {
     "couponPa": 23.38,
-    "couponPeriodPct": 23,
-    "couponBarrierPct": 100,
+    "couponPeriodPct": 23.0,
+    "couponBarrierPct": 100.0,
     "memory": true,
     "obsCount": 1,
     "acBarrierPct": null,
     "protection": {
      "type": "EKI",
-     "strikePct": 100,
-     "barrierPct": 100
+     "strikePct": 100.0,
+     "barrierPct": 100.0
     }
    },
-   "perfPct": -9.4
+   "perfPct": -9.7
   },
   {
    "isin": "RU000A10CVC6",
@@ -632,23 +635,23 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A10CVC6",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-07- 00761-R-002P",
    "issueStart": "2026-02-09",
    "maturity": "2027-02-17",
    "fx": false,
-   "bid": 88.25,
+   "bid": 87.5,
    "kind": "coupon",
    "wrapper": "NOTE",
    "basket": [
     {
      "t": "DOFZ26248",
      "n": "ОФЗ 26248",
-     "w": 1,
+     "w": 1.0,
      "f0": 86.356,
-     "px": 80.125,
+     "px": 79.843,
      "pxTime": "2026-10-29",
-     "perfPct": -7.2
+     "perfPct": -7.5
     }
    ],
    "dates": {
@@ -658,18 +661,18 @@ window.PLACEMENTS_DATA = {
    },
    "payoff": {
     "couponPa": 25.42,
-    "couponPeriodPct": 25,
-    "couponBarrierPct": 100,
+    "couponPeriodPct": 25.0,
+    "couponBarrierPct": 100.0,
     "memory": true,
     "obsCount": 1,
     "acBarrierPct": null,
     "protection": {
      "type": "EKI",
-     "strikePct": 100,
-     "barrierPct": 100
+     "strikePct": 100.0,
+     "barrierPct": 100.0
     }
    },
-   "perfPct": -7.2
+   "perfPct": -7.5
   },
   {
    "isin": "RU000A10B9W7",
@@ -678,7 +681,7 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A10B9W7",
    "issuer": "SFO-RSP",
    "currency": "USD",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-29-00761-R-001P",
    "issueStart": "2026-01-22",
    "maturity": "2027-02-18",
@@ -690,11 +693,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "IBIT",
      "n": "iShares Bitcoin Trust ETF",
-     "w": 1,
+     "w": 1.0,
      "f0": 40.11,
      "px": 46.14,
      "pxTime": "2026-10-28",
-     "perfPct": 15
+     "perfPct": 15.0
     }
    ],
    "dates": {
@@ -705,17 +708,17 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "couponPa": null,
     "couponPeriodPct": null,
-    "couponBarrierPct": 80,
+    "couponBarrierPct": 80.0,
     "memory": true,
     "obsCount": 1,
     "acBarrierPct": null,
     "protection": {
      "type": "MULTI",
-     "strikePct": 100,
-     "barrierPct": 500
+     "strikePct": 100.0,
+     "barrierPct": 500.0
     }
    },
-   "perfPct": 15
+   "perfPct": 15.0
   },
   {
    "isin": "RU000A10ASL7",
@@ -724,7 +727,7 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A10ASL7",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-24-00761-R-001P",
    "issueStart": "2025-12-25",
    "maturity": "2028-12-25",
@@ -736,7 +739,7 @@ window.PLACEMENTS_DATA = {
     {
      "t": "RWMD",
      "n": "Румберг Широкий Рынок Д",
-     "w": 1,
+     "w": 1.0,
      "f0": 91.22
     }
    ],
@@ -748,10 +751,10 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "optType": "CALL",
     "style": "EUROPEAN",
-    "strikePct": 110,
+    "strikePct": 110.0,
     "strike2Pct": null,
-    "participationPct": 100,
-    "protectionPct": 0
+    "participationPct": 100.0,
+    "protectionPct": 0.0
    },
    "perfPct": null
   },
@@ -762,23 +765,23 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A10CBL9",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-55-00761-R-001P",
    "issueStart": "2025-12-15",
    "maturity": "2026-12-11",
    "fx": false,
-   "bid": 80.25,
+   "bid": 80.0,
    "kind": "coupon",
    "wrapper": "NOTE",
    "basket": [
     {
      "t": "DOFZ26248",
      "n": "ОФЗ 26248",
-     "w": 1,
+     "w": 1.0,
      "f0": 90.05,
-     "px": 80.125,
+     "px": 79.843,
      "pxTime": "2026-10-29",
-     "perfPct": -11
+     "perfPct": -11.3
     }
    ],
    "dates": {
@@ -788,18 +791,18 @@ window.PLACEMENTS_DATA = {
    },
    "payoff": {
     "couponPa": 24.6,
-    "couponPeriodPct": 25,
-    "couponBarrierPct": 100,
+    "couponPeriodPct": 25.0,
+    "couponBarrierPct": 100.0,
     "memory": true,
     "obsCount": 1,
     "acBarrierPct": null,
     "protection": {
      "type": "EKI",
-     "strikePct": 100,
-     "barrierPct": 100
+     "strikePct": 100.0,
+     "barrierPct": 100.0
     }
    },
-   "perfPct": -11
+   "perfPct": -11.3
   },
   {
    "isin": "RU000A10CBK1",
@@ -808,7 +811,7 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A10CBK1",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-54 00761-R-001P",
    "issueStart": "2025-12-10",
    "maturity": "2027-12-20",
@@ -820,11 +823,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "DOFZ26230",
      "n": "ОФЗ 26230",
-     "w": 1,
+     "w": 1.0,
      "f0": 63.766,
-     "px": 57.297,
+     "px": 57.062,
      "pxTime": "2026-10-29",
-     "perfPct": -10.1
+     "perfPct": -10.5
     }
    ],
    "dates": {
@@ -835,12 +838,12 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "optType": "CALL",
     "style": "EUROPEAN",
-    "strikePct": 100,
+    "strikePct": 100.0,
     "strike2Pct": null,
-    "participationPct": 100,
-    "protectionPct": 0
+    "participationPct": 100.0,
+    "protectionPct": 0.0
    },
-   "perfPct": -10.1
+   "perfPct": -10.5
   },
   {
    "isin": "RU000A10CV88",
@@ -849,19 +852,19 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A10CV88",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-03-00761-R-002P",
    "issueStart": "2025-11-27",
    "maturity": "2026-12-23",
    "fx": false,
-   "bid": 97,
+   "bid": 97.0,
    "kind": "participation",
    "wrapper": null,
    "basket": [
     {
      "t": "RNATGAS",
      "n": "Rumberg Natural Gas",
-     "w": 1,
+     "w": 1.0,
      "f0": 4.012,
      "px": 2.96,
      "pxTime": "2025-11-27",
@@ -876,10 +879,10 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "optType": "CALL",
     "style": "EUROPEAN",
-    "strikePct": 100,
+    "strikePct": 100.0,
     "strike2Pct": null,
-    "participationPct": 27,
-    "protectionPct": 100
+    "participationPct": 27.0,
+    "protectionPct": 100.0
    },
    "perfPct": -26.2
   },
@@ -890,7 +893,7 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A10DER8",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-18-00761-R-002P",
    "issueStart": "2025-11-25",
    "maturity": "2026-12-17",
@@ -902,11 +905,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "GLD",
      "n": "SPDR Gold Shares (GLD)",
-     "w": 1,
+     "w": 1.0,
      "f0": 393.24,
      "px": 373.51,
      "pxTime": "2026-10-28",
-     "perfPct": -5
+     "perfPct": -5.0
     }
    ],
    "dates": {
@@ -917,12 +920,12 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "optType": "CALL",
     "style": "EUROPEAN",
-    "strikePct": 100,
+    "strikePct": 100.0,
     "strike2Pct": null,
-    "participationPct": 70,
-    "protectionPct": 100
+    "participationPct": 70.0,
+    "protectionPct": 100.0
    },
-   "perfPct": -5
+   "perfPct": -5.0
   },
   {
    "isin": "RU000A10DES6",
@@ -931,7 +934,7 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A10DES6",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-19-00761-R-002P",
    "issueStart": "2025-11-25",
    "maturity": "2026-12-17",
@@ -943,7 +946,7 @@ window.PLACEMENTS_DATA = {
     {
      "t": "SPY",
      "n": "SPDR S&P 500 ETF Trust",
-     "w": 1,
+     "w": 1.0,
      "f0": 689.17,
      "px": 772.31,
      "pxTime": "2026-10-28",
@@ -958,10 +961,10 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "optType": "PUT",
     "style": "EUROPEAN",
-    "strikePct": 100,
+    "strikePct": 100.0,
     "strike2Pct": null,
-    "participationPct": 70,
-    "protectionPct": 100
+    "participationPct": 70.0,
+    "protectionPct": 100.0
    },
    "perfPct": 12.1
   },
@@ -972,7 +975,7 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A10CV70",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-02-00761-R-002P",
    "issueStart": "2025-11-20",
    "maturity": "2026-12-17",
@@ -984,7 +987,7 @@ window.PLACEMENTS_DATA = {
     {
      "t": "CSI_300",
      "n": "CSI 300 Index",
-     "w": 1,
+     "w": 1.0,
      "f0": 4621.75,
      "px": 4921.6,
      "pxTime": "2026-05-25",
@@ -999,10 +1002,10 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "optType": "CALL",
     "style": "EUROPEAN",
-    "strikePct": 100,
+    "strikePct": 100.0,
     "strike2Pct": null,
-    "participationPct": 80,
-    "protectionPct": 100
+    "participationPct": 80.0,
+    "protectionPct": 100.0
    },
    "perfPct": 6.5
   },
@@ -1013,7 +1016,7 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A10DEK3",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-17-00761-R-002P",
    "issueStart": "2025-11-18",
    "maturity": "2026-12-14",
@@ -1025,7 +1028,7 @@ window.PLACEMENTS_DATA = {
     {
      "t": "URA",
      "n": "Global X Uranium ETF",
-     "w": 1,
+     "w": 1.0,
      "f0": 49.2,
      "px": 36.55,
      "pxTime": "2026-10-28",
@@ -1040,10 +1043,10 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "optType": "CALL",
     "style": "EUROPEAN",
-    "strikePct": 100,
+    "strikePct": 100.0,
     "strike2Pct": null,
-    "participationPct": 30,
-    "protectionPct": 100
+    "participationPct": 30.0,
+    "protectionPct": 100.0
    },
    "perfPct": -25.7
   },
@@ -1054,7 +1057,7 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A10CVB8 ",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-06 00761-R-002P",
    "issueStart": "2025-11-13",
    "maturity": "2026-11-17",
@@ -1066,11 +1069,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "DOFZ26238",
      "n": "ОФЗ 26238",
-     "w": 1,
+     "w": 1.0,
      "f0": 58.826,
-     "px": 52.466,
+     "px": 52.2,
      "pxTime": "2026-10-29",
-     "perfPct": -10.8
+     "perfPct": -11.3
     }
    ],
    "dates": {
@@ -1079,15 +1082,15 @@ window.PLACEMENTS_DATA = {
     "settlement": "2026-11-17"
    },
    "payoff": {
-    "couponPa": 20,
-    "couponPeriodPct": 20,
-    "couponBarrierPct": 110,
+    "couponPa": 20.0,
+    "couponPeriodPct": 20.0,
+    "couponBarrierPct": 110.0,
     "memory": true,
     "obsCount": 1,
     "acBarrierPct": null,
     "protection": null
    },
-   "perfPct": -10.8
+   "perfPct": -11.3
   },
   {
    "isin": "RU000A10CV62",
@@ -1096,7 +1099,7 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A10CV62",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-01-00761-R-002P",
    "issueStart": "2025-11-05",
    "maturity": "2027-10-29",
@@ -1108,7 +1111,7 @@ window.PLACEMENTS_DATA = {
     {
      "t": "RWMD",
      "n": "Румберг Широкий Рынок Д",
-     "w": 1,
+     "w": 1.0,
      "f0": 86.47
     }
    ],
@@ -1120,10 +1123,10 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "optType": "CALL",
     "style": "EUROPEAN",
-    "strikePct": 100,
+    "strikePct": 100.0,
     "strike2Pct": null,
-    "participationPct": 100,
-    "protectionPct": 0
+    "participationPct": 100.0,
+    "protectionPct": 0.0
    },
    "perfPct": null
   },
@@ -1134,7 +1137,7 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A10CBJ3",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-53 00761-R-001P",
    "issueStart": "2025-10-09",
    "maturity": "2027-10-21",
@@ -1146,11 +1149,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "DOFZ26238",
      "n": "ОФЗ 26238",
-     "w": 1,
+     "w": 1.0,
      "f0": 55.449,
-     "px": 52.466,
+     "px": 52.2,
      "pxTime": "2026-10-29",
-     "perfPct": -5.4
+     "perfPct": -5.9
     }
    ],
    "dates": {
@@ -1161,12 +1164,12 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "optType": "CALL",
     "style": "EUROPEAN",
-    "strikePct": 100,
+    "strikePct": 100.0,
     "strike2Pct": null,
-    "participationPct": 100,
-    "protectionPct": 0
+    "participationPct": 100.0,
+    "protectionPct": 0.0
    },
-   "perfPct": -5.4
+   "perfPct": -5.9
   },
   {
    "isin": "RU000A10CBH7",
@@ -1175,7 +1178,7 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A10CBH7",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-52 00761-R-001P",
    "issueStart": "2025-10-07",
    "maturity": "2026-10-20",
@@ -1187,11 +1190,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "DOFZ26248",
      "n": "ОФЗ 26248",
-     "w": 1,
+     "w": 1.0,
      "f0": 85.77,
-     "px": 80.125,
+     "px": 79.843,
      "pxTime": "2026-10-29",
-     "perfPct": -6.6
+     "perfPct": -6.9
     }
    ],
    "dates": {
@@ -1202,17 +1205,17 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "couponPa": 24.8,
     "couponPeriodPct": null,
-    "couponBarrierPct": 100,
+    "couponBarrierPct": 100.0,
     "memory": true,
     "obsCount": 1,
     "acBarrierPct": null,
     "protection": {
      "type": "EKI",
-     "strikePct": 100,
-     "barrierPct": 100
+     "strikePct": 100.0,
+     "barrierPct": 100.0
     }
    },
-   "perfPct": -6.6
+   "perfPct": -6.9
   },
   {
    "isin": "RU000A10CBG9",
@@ -1221,7 +1224,7 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A10CBG9",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-51-00761-R-001P",
    "issueStart": "2025-09-25",
    "maturity": "2027-10-06",
@@ -1233,11 +1236,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "DOFZ26238",
      "n": "ОФЗ 26238",
-     "w": 1,
+     "w": 1.0,
      "f0": 56.31,
-     "px": 52.466,
+     "px": 52.2,
      "pxTime": "2026-10-29",
-     "perfPct": -6.8
+     "perfPct": -7.3
     }
    ],
    "dates": {
@@ -1248,12 +1251,12 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "optType": "CALL",
     "style": "EUROPEAN",
-    "strikePct": 100,
+    "strikePct": 100.0,
     "strike2Pct": null,
-    "participationPct": 100,
-    "protectionPct": 0
+    "participationPct": 100.0,
+    "protectionPct": 0.0
    },
-   "perfPct": -6.8
+   "perfPct": -7.3
   },
   {
    "isin": "RU000A10CBF1",
@@ -1262,7 +1265,7 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A10CBF1",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-50 00761-R-001P",
    "issueStart": "2025-09-10",
    "maturity": "2027-09-21",
@@ -1274,11 +1277,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "DOFZ26238",
      "n": "ОФЗ 26238",
-     "w": 1,
+     "w": 1.0,
      "f0": 60.2,
-     "px": 52.466,
+     "px": 52.2,
      "pxTime": "2026-10-29",
-     "perfPct": -12.8
+     "perfPct": -13.3
     }
    ],
    "dates": {
@@ -1289,12 +1292,12 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "optType": "CALL",
     "style": "EUROPEAN",
-    "strikePct": 100,
+    "strikePct": 100.0,
     "strike2Pct": null,
-    "participationPct": 100,
-    "protectionPct": 0
+    "participationPct": 100.0,
+    "protectionPct": 0.0
    },
-   "perfPct": -12.8
+   "perfPct": -13.3
   },
   {
    "isin": "RU000A10CBE4",
@@ -1303,7 +1306,7 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A10CBE4",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-49 00761-R-001P",
    "issueStart": "2025-09-09",
    "maturity": "2027-09-16",
@@ -1315,11 +1318,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "DOFZ26238",
      "n": "ОФЗ 26238",
-     "w": 1,
+     "w": 1.0,
      "f0": 60.9,
-     "px": 52.466,
+     "px": 52.2,
      "pxTime": "2026-10-29",
-     "perfPct": -13.8
+     "perfPct": -14.3
     }
    ],
    "dates": {
@@ -1330,12 +1333,12 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "optType": "CALL",
     "style": "EUROPEAN",
-    "strikePct": 100,
+    "strikePct": 100.0,
     "strike2Pct": null,
-    "participationPct": 100,
-    "protectionPct": 0
+    "participationPct": 100.0,
+    "protectionPct": 0.0
    },
-   "perfPct": -13.8
+   "perfPct": -14.3
   },
   {
    "isin": "RU000A10CBD6",
@@ -1344,7 +1347,7 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A10CBD6",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-48 00761-R-001P",
    "issueStart": "2025-09-04",
    "maturity": "2027-09-15",
@@ -1356,11 +1359,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "DOFZ26238",
      "n": "ОФЗ 26238",
-     "w": 1,
+     "w": 1.0,
      "f0": 61.19,
-     "px": 52.466,
+     "px": 52.2,
      "pxTime": "2026-10-29",
-     "perfPct": -14.3
+     "perfPct": -14.7
     }
    ],
    "dates": {
@@ -1371,12 +1374,12 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "optType": "CALL",
     "style": "EUROPEAN",
-    "strikePct": 100,
+    "strikePct": 100.0,
     "strike2Pct": null,
-    "participationPct": 100,
-    "protectionPct": 0
+    "participationPct": 100.0,
+    "protectionPct": 0.0
    },
-   "perfPct": -14.3
+   "perfPct": -14.7
   },
   {
    "isin": "RU000A10ASK9",
@@ -1385,7 +1388,7 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A10ASK9",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-23-00761-R-001P",
    "issueStart": "2025-09-03",
    "maturity": "2027-09-09",
@@ -1397,7 +1400,7 @@ window.PLACEMENTS_DATA = {
     {
      "t": "RWMD",
      "n": "Румберг Широкий Рынок Д",
-     "w": 1,
+     "w": 1.0,
      "f0": 99.96
     }
    ],
@@ -1409,10 +1412,10 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "optType": "CALL",
     "style": "EUROPEAN",
-    "strikePct": 100,
+    "strikePct": 100.0,
     "strike2Pct": null,
-    "participationPct": 100,
-    "protectionPct": 0
+    "participationPct": 100.0,
+    "protectionPct": 0.0
    },
    "perfPct": null
   },
@@ -1423,7 +1426,7 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A10CBC8",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-47 00761-R-001P",
    "issueStart": "2025-09-02",
    "maturity": "2027-09-09",
@@ -1435,11 +1438,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "DOFZ26238",
      "n": "ОФЗ 26238",
-     "w": 1,
+     "w": 1.0,
      "f0": 61.3,
-     "px": 52.466,
+     "px": 52.2,
      "pxTime": "2026-10-29",
-     "perfPct": -14.4
+     "perfPct": -14.8
     }
    ],
    "dates": {
@@ -1450,12 +1453,12 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "optType": "CALL",
     "style": "EUROPEAN",
-    "strikePct": 100,
+    "strikePct": 100.0,
     "strike2Pct": null,
-    "participationPct": 100,
-    "protectionPct": 0
+    "participationPct": 100.0,
+    "protectionPct": 0.0
    },
-   "perfPct": -14.4
+   "perfPct": -14.8
   },
   {
    "isin": "RU000A10ASJ1",
@@ -1464,7 +1467,7 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A10ASJ1",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-22-00761-R-001P",
    "issueStart": "2025-08-22",
    "maturity": "2027-09-01",
@@ -1476,7 +1479,7 @@ window.PLACEMENTS_DATA = {
     {
      "t": "RWMD",
      "n": "Румберг Широкий Рынок Д",
-     "w": 1,
+     "w": 1.0,
      "f0": 100.92
     }
    ],
@@ -1488,10 +1491,10 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "optType": "CALL",
     "style": "EUROPEAN",
-    "strikePct": 100,
+    "strikePct": 100.0,
     "strike2Pct": null,
-    "participationPct": 100,
-    "protectionPct": 0
+    "participationPct": 100.0,
+    "protectionPct": 0.0
    },
    "perfPct": null
   },
@@ -1502,7 +1505,7 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A10BUH9",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-41-00761-R-001P",
    "issueStart": "2025-08-22",
    "maturity": "2027-09-02",
@@ -1514,11 +1517,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "DOFZ26238",
      "n": "ОФЗ 26238",
-     "w": 1,
+     "w": 1.0,
      "f0": 60.89,
-     "px": 52.466,
+     "px": 52.2,
      "pxTime": "2026-10-29",
-     "perfPct": -13.8
+     "perfPct": -14.3
     }
    ],
    "dates": {
@@ -1529,12 +1532,12 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "optType": "CALL",
     "style": "EUROPEAN",
-    "strikePct": 100,
+    "strikePct": 100.0,
     "strike2Pct": null,
-    "participationPct": 100,
-    "protectionPct": 0
+    "participationPct": 100.0,
+    "protectionPct": 0.0
    },
-   "perfPct": -13.8
+   "perfPct": -14.3
   },
   {
    "isin": "RU000A10ASH5",
@@ -1543,7 +1546,7 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A10ASH5",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-21-00761-R-001P",
    "issueStart": "2025-08-20",
    "maturity": "2027-08-24",
@@ -1555,7 +1558,7 @@ window.PLACEMENTS_DATA = {
     {
      "t": "RWMD",
      "n": "Румберг Широкий Рынок Д",
-     "w": 1,
+     "w": 1.0,
      "f0": 101.4
     }
    ],
@@ -1567,10 +1570,10 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "optType": "CALL",
     "style": "EUROPEAN",
-    "strikePct": 100,
+    "strikePct": 100.0,
     "strike2Pct": null,
-    "participationPct": 100,
-    "protectionPct": 0
+    "participationPct": 100.0,
+    "protectionPct": 0.0
    },
    "perfPct": null
   },
@@ -1581,23 +1584,23 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A10BA27",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-36 00761-R-001P",
    "issueStart": "2025-08-14",
    "maturity": "2028-08-22",
    "fx": true,
-   "bid": 78,
+   "bid": 78.0,
    "kind": "participation",
    "wrapper": null,
    "basket": [
     {
      "t": "DOFZ26238",
      "n": "ОФЗ 26238",
-     "w": 1,
+     "w": 1.0,
      "f0": 62.65,
-     "px": 52.466,
+     "px": 52.2,
      "pxTime": "2026-10-29",
-     "perfPct": -16.3
+     "perfPct": -16.7
     }
    ],
    "dates": {
@@ -1608,12 +1611,12 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "optType": "CALL",
     "style": "EUROPEAN",
-    "strikePct": 100,
+    "strikePct": 100.0,
     "strike2Pct": null,
-    "participationPct": 180,
-    "protectionPct": 100
+    "participationPct": 180.0,
+    "protectionPct": 100.0
    },
-   "perfPct": -16.3
+   "perfPct": -16.7
   },
   {
    "isin": "RU000A10A9H9",
@@ -1622,7 +1625,7 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A10A9H9",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-16-00761-R001P",
    "issueStart": "2025-08-08",
    "maturity": "2028-08-18",
@@ -1634,11 +1637,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "DOFZ26238",
      "n": "ОФЗ 26238",
-     "w": 1,
+     "w": 1.0,
      "f0": 61.175,
-     "px": 52.466,
+     "px": 52.2,
      "pxTime": "2026-10-29",
-     "perfPct": -14.2
+     "perfPct": -14.7
     }
    ],
    "dates": {
@@ -1649,12 +1652,12 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "optType": "CALL",
     "style": "EUROPEAN",
-    "strikePct": 100,
+    "strikePct": 100.0,
     "strike2Pct": null,
-    "participationPct": 100,
-    "protectionPct": 0
+    "participationPct": 100.0,
+    "protectionPct": 0.0
    },
-   "perfPct": -14.2
+   "perfPct": -14.7
   },
   {
    "isin": "RU000A10BUG1",
@@ -1663,23 +1666,23 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A10BUG1",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-40 00761-R-001P",
    "issueStart": "2025-08-06",
    "maturity": "2028-08-15",
    "fx": false,
-   "bid": 86,
+   "bid": 86.0,
    "kind": "participation",
    "wrapper": null,
    "basket": [
     {
      "t": "DOFZ26246",
      "n": "ОФЗ 26246",
-     "w": 1,
+     "w": 1.0,
      "f0": 90.79,
-     "px": 81.041,
+     "px": 80.993,
      "pxTime": "2026-10-29",
-     "perfPct": -10.7
+     "perfPct": -10.8
     }
    ],
    "dates": {
@@ -1690,12 +1693,12 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "optType": "CALL_SPREAD",
     "style": "EUROPEAN",
-    "strikePct": 100,
-    "strike2Pct": 130,
-    "participationPct": 300,
-    "protectionPct": 100
+    "strikePct": 100.0,
+    "strike2Pct": 130.0,
+    "participationPct": 300.0,
+    "protectionPct": 100.0
    },
-   "perfPct": -10.7
+   "perfPct": -10.8
   },
   {
    "isin": "RU000A10BUF3",
@@ -1704,23 +1707,23 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A10BUF3",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-39 00761-R-001P",
    "issueStart": "2025-07-22",
    "maturity": "2028-07-31",
    "fx": false,
-   "bid": 80,
+   "bid": 79.75,
    "kind": "participation",
    "wrapper": null,
    "basket": [
     {
      "t": "DOFZ26238",
      "n": "ОФЗ 26238",
-     "w": 1,
+     "w": 1.0,
      "f0": 59.4,
-     "px": 52.466,
+     "px": 52.2,
      "pxTime": "2026-10-29",
-     "perfPct": -11.7
+     "perfPct": -12.1
     }
    ],
    "dates": {
@@ -1731,12 +1734,12 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "optType": "CALL",
     "style": "EUROPEAN",
-    "strikePct": 100,
+    "strikePct": 100.0,
     "strike2Pct": null,
-    "participationPct": 190,
-    "protectionPct": 100
+    "participationPct": 190.0,
+    "protectionPct": 100.0
    },
-   "perfPct": -11.7
+   "perfPct": -12.1
   },
   {
    "isin": "RU000A10BUD8",
@@ -1745,23 +1748,23 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A10BUD8",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-37 00761-R-001P",
    "issueStart": "2025-07-16",
    "maturity": "2028-07-25",
    "fx": false,
-   "bid": 80.25,
+   "bid": 80.0,
    "kind": "participation",
    "wrapper": null,
    "basket": [
     {
      "t": "DOFZ26238",
      "n": "ОФЗ 26238",
-     "w": 1,
+     "w": 1.0,
      "f0": 58.857,
-     "px": 52.466,
+     "px": 52.2,
      "pxTime": "2026-10-29",
-     "perfPct": -10.9
+     "perfPct": -11.3
     }
    ],
    "dates": {
@@ -1772,12 +1775,12 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "optType": "CALL",
     "style": "EUROPEAN",
-    "strikePct": 100,
+    "strikePct": 100.0,
     "strike2Pct": null,
-    "participationPct": 190,
-    "protectionPct": 100
+    "participationPct": 190.0,
+    "protectionPct": 100.0
    },
-   "perfPct": -10.9
+   "perfPct": -11.3
   },
   {
    "isin": "RU000A10BUE6",
@@ -1786,23 +1789,23 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A10BUE6",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-38 00761-R-001P",
    "issueStart": "2025-07-16",
    "maturity": "2028-07-25",
    "fx": false,
-   "bid": 82,
+   "bid": 81.75,
    "kind": "participation",
    "wrapper": null,
    "basket": [
     {
      "t": "DOFZ26238",
      "n": "ОФЗ 26238",
-     "w": 1,
+     "w": 1.0,
      "f0": 58.857,
-     "px": 52.466,
+     "px": 52.2,
      "pxTime": "2026-10-29",
-     "perfPct": -10.9
+     "perfPct": -11.3
     }
    ],
    "dates": {
@@ -1813,12 +1816,12 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "optType": "CALL_SPREAD",
     "style": "EUROPEAN",
-    "strikePct": 100,
-    "strike2Pct": 135,
-    "participationPct": 300,
-    "protectionPct": 100
+    "strikePct": 100.0,
+    "strike2Pct": 135.0,
+    "participationPct": 300.0,
+    "protectionPct": 100.0
    },
-   "perfPct": -10.9
+   "perfPct": -11.3
   },
   {
    "isin": "RU000A10B9V9",
@@ -1827,7 +1830,7 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A10B9V9",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "СП-1-28-ЦБ- FX-RUB",
    "issueStart": "2025-06-04",
    "maturity": "2027-02-17",
@@ -1839,7 +1842,7 @@ window.PLACEMENTS_DATA = {
     {
      "t": "IBIT",
      "n": "iShares Bitcoin Trust ETF",
-     "w": 1,
+     "w": 1.0,
      "f0": 58.67,
      "px": 46.14,
      "pxTime": "2026-10-28",
@@ -1854,10 +1857,10 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "optType": "CALL_SPREAD",
     "style": "EUROPEAN",
-    "strikePct": 100,
-    "strike2Pct": 160,
-    "participationPct": 100,
-    "protectionPct": 100
+    "strikePct": 100.0,
+    "strike2Pct": 160.0,
+    "participationPct": 100.0,
+    "protectionPct": 100.0
    },
    "perfPct": -21.4
   },
@@ -1868,23 +1871,23 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A10BA19",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-35- 00761-R-001P",
    "issueStart": "2025-06-03",
    "maturity": "2028-06-12",
    "fx": true,
-   "bid": 83.75,
+   "bid": 83.25,
    "kind": "participation",
    "wrapper": null,
    "basket": [
     {
      "t": "DOFZ26238",
      "n": "ОФЗ 26238",
-     "w": 1,
+     "w": 1.0,
      "f0": 54.73,
-     "px": 52.466,
+     "px": 52.2,
      "pxTime": "2026-10-29",
-     "perfPct": -4.1
+     "perfPct": -4.6
     }
    ],
    "dates": {
@@ -1895,12 +1898,12 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "optType": "CALL",
     "style": "EUROPEAN",
-    "strikePct": 100,
+    "strikePct": 100.0,
     "strike2Pct": null,
-    "participationPct": 190,
-    "protectionPct": 100
+    "participationPct": 190.0,
+    "protectionPct": 100.0
    },
-   "perfPct": -4.1
+   "perfPct": -4.6
   },
   {
    "isin": "RU000A10BA01",
@@ -1909,23 +1912,23 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A10BA01",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-34-00761-R-001P",
    "issueStart": "2025-05-06",
    "maturity": "2028-05-19",
    "fx": true,
-   "bid": 90.75,
+   "bid": 90.25,
    "kind": "participation",
    "wrapper": null,
    "basket": [
     {
      "t": "DOFZ26238",
      "n": "ОФЗ 26238",
-     "w": 1,
+     "w": 1.0,
      "f0": 52.942,
-     "px": 52.466,
+     "px": 52.2,
      "pxTime": "2026-10-29",
-     "perfPct": -0.9
+     "perfPct": -1.4
     }
    ],
    "dates": {
@@ -1936,12 +1939,12 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "optType": "CALL",
     "style": "EUROPEAN",
-    "strikePct": 100,
+    "strikePct": 100.0,
     "strike2Pct": null,
-    "participationPct": 190,
-    "protectionPct": 100
+    "participationPct": 190.0,
+    "protectionPct": 100.0
    },
-   "perfPct": -0.9
+   "perfPct": -1.4
   },
   {
    "isin": "RU000A10B9Z0",
@@ -1950,23 +1953,23 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A10B9Z0",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-33-00761-R-001P",
    "issueStart": "2025-04-25",
    "maturity": "2027-05-07",
    "fx": true,
-   "bid": 91,
+   "bid": 90.5,
    "kind": "participation",
    "wrapper": null,
    "basket": [
     {
      "t": "DOFZ26238",
      "n": "ОФЗ 26238",
-     "w": 1,
+     "w": 1.0,
      "f0": 53.078,
-     "px": 52.466,
+     "px": 52.2,
      "pxTime": "2026-10-29",
-     "perfPct": -1.2
+     "perfPct": -1.7
     }
    ],
    "dates": {
@@ -1977,12 +1980,12 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "optType": "CALL",
     "style": "EUROPEAN",
-    "strikePct": 100,
+    "strikePct": 100.0,
     "strike2Pct": null,
-    "participationPct": 150,
-    "protectionPct": 95
+    "participationPct": 150.0,
+    "protectionPct": 95.0
    },
-   "perfPct": -1.2
+   "perfPct": -1.7
   },
   {
    "isin": "RU000A10B9U1",
@@ -1991,7 +1994,7 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A10B9U1",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-27-00761-R-001P",
    "issueStart": "2025-04-25",
    "maturity": "2026-05-08",
@@ -2003,11 +2006,11 @@ window.PLACEMENTS_DATA = {
     {
      "t": "USDRUB",
      "n": "Currency Pair USD/RUB",
-     "w": 1,
+     "w": 1.0,
      "f0": 81.5616,
-     "px": 81.0825,
+     "px": 81.1675,
      "pxTime": "2026-10-29",
-     "perfPct": -0.6
+     "perfPct": -0.5
     }
    ],
    "dates": {
@@ -2018,12 +2021,12 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "optType": "CALL_SPREAD",
     "style": "EUROPEAN",
-    "strikePct": 100,
-    "strike2Pct": 150,
-    "participationPct": 145,
-    "protectionPct": 95
+    "strikePct": 100.0,
+    "strike2Pct": 150.0,
+    "participationPct": 145.0,
+    "protectionPct": 95.0
    },
-   "perfPct": -0.6
+   "perfPct": -0.5
   },
   {
    "isin": "RU000A10A9F3",
@@ -2044,38 +2047,38 @@ window.PLACEMENTS_DATA = {
     {
      "t": "HEAD",
      "n": "МКПАО \"Хэдхантер\"",
-     "w": 1,
-     "f0": 3183,
-     "px": 2717,
+     "w": 1.0,
+     "f0": 3183.0,
+     "px": 2714.0,
      "pxTime": "2026-10-29",
-     "perfPct": -14.6
+     "perfPct": -14.7
     },
     {
      "t": "MOEX",
      "n": "МосБиржа",
-     "w": 1,
+     "w": 1.0,
      "f0": 201.8,
-     "px": 166.06,
+     "px": 165.3,
      "pxTime": "2026-10-29",
-     "perfPct": -17.7
+     "perfPct": -18.1
     },
     {
      "t": "TATN",
      "n": "Татнефть (ао)",
-     "w": 1,
+     "w": 1.0,
      "f0": 682.3,
-     "px": 641.4,
+     "px": 643.3,
      "pxTime": "2026-10-29",
-     "perfPct": -6
+     "perfPct": -5.7
     },
     {
      "t": "X5",
      "n": "Корпоративный центр ИКС 5",
-     "w": 1,
-     "f0": 3528,
-     "px": 2368,
+     "w": 1.0,
+     "f0": 3528.0,
+     "px": 2363.5,
      "pxTime": "2026-10-29",
-     "perfPct": -32.9
+     "perfPct": -33.0
     }
    ],
    "dates": {
@@ -2086,17 +2089,17 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "couponPa": 37.24,
     "couponPeriodPct": null,
-    "couponBarrierPct": 100,
+    "couponBarrierPct": 100.0,
     "memory": false,
     "obsCount": 4,
-    "acBarrierPct": 100,
+    "acBarrierPct": 100.0,
     "protection": {
      "type": "EKI",
-     "strikePct": 100,
+     "strikePct": 100.0,
      "barrierPct": null
     }
    },
-   "perfPct": -32.9
+   "perfPct": -33.0
   },
   {
    "isin": "RU000A10A9G1",
@@ -2105,19 +2108,19 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A10A9G1",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-15-00761-R- 001P",
    "issueStart": "2025-03-26",
    "maturity": "2027-01-29",
    "fx": false,
-   "bid": 146,
+   "bid": 146.0,
    "kind": "participation",
    "wrapper": null,
    "basket": [
     {
      "t": "SPY",
      "n": "SPDR S&P 500 ETF Trust",
-     "w": 1,
+     "w": 1.0,
      "f0": 536.7,
      "px": 772.31,
      "pxTime": "2026-10-28",
@@ -2132,10 +2135,10 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "optType": "CALL",
     "style": "EUROPEAN",
-    "strikePct": 100,
+    "strikePct": 100.0,
     "strike2Pct": null,
-    "participationPct": 120,
-    "protectionPct": 100
+    "participationPct": 120.0,
+    "protectionPct": 100.0
    },
    "perfPct": 43.9
   },
@@ -2146,7 +2149,7 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A10A9C0",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-11-00761-R-001P",
    "issueStart": "2025-02-27",
    "maturity": "2027-03-11",
@@ -2158,7 +2161,7 @@ window.PLACEMENTS_DATA = {
     {
      "t": "RWMD",
      "n": "Румберг Широкий Рынок Д",
-     "w": 1,
+     "w": 1.0,
      "f0": 115.27
     }
    ],
@@ -2170,10 +2173,10 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "optType": "CALL",
     "style": "EUROPEAN",
-    "strikePct": 100,
+    "strikePct": 100.0,
     "strike2Pct": null,
-    "participationPct": 100,
-    "protectionPct": 0
+    "participationPct": 100.0,
+    "protectionPct": 0.0
    },
    "perfPct": null
   },
@@ -2184,23 +2187,23 @@ window.PLACEMENTS_DATA = {
    "secid": null,
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-13-00761-R- 001P",
    "issueStart": "2025-02-21",
    "maturity": "2028-03-07",
    "fx": false,
-   "bid": 89.5,
+   "bid": 89.0,
    "kind": "participation",
    "wrapper": null,
    "basket": [
     {
      "t": "DOFZ26238",
      "n": "ОФЗ 26238",
-     "w": 1,
+     "w": 1.0,
      "f0": 53.34,
-     "px": 52.466,
+     "px": 52.2,
      "pxTime": "2026-10-29",
-     "perfPct": -1.6
+     "perfPct": -2.1
     }
    ],
    "dates": {
@@ -2211,12 +2214,12 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "optType": "CALL_SPREAD",
     "style": "EUROPEAN",
-    "strikePct": 100,
-    "strike2Pct": 140,
-    "participationPct": 200,
-    "protectionPct": 100
+    "strikePct": 100.0,
+    "strike2Pct": 140.0,
+    "participationPct": 200.0,
+    "protectionPct": 100.0
    },
-   "perfPct": -1.6
+   "perfPct": -2.1
   },
   {
    "isin": "RU000A10A9B2",
@@ -2225,7 +2228,7 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A10A9B2",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-10-00761-R-001P",
    "issueStart": "2024-12-27",
    "maturity": "2026-12-25",
@@ -2237,7 +2240,7 @@ window.PLACEMENTS_DATA = {
     {
      "t": "RWMD",
      "n": "Румберг Широкий Рынок Д",
-     "w": 1,
+     "w": 1.0,
      "f0": 105.5
     }
    ],
@@ -2249,10 +2252,10 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "optType": "CALL",
     "style": "EUROPEAN",
-    "strikePct": 100,
+    "strikePct": 100.0,
     "strike2Pct": null,
-    "participationPct": 100,
-    "protectionPct": 0
+    "participationPct": 100.0,
+    "protectionPct": 0.0
    },
    "perfPct": null
   },
@@ -2263,7 +2266,7 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A109EJ8",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-08-00761-R-001P",
    "issueStart": "2024-11-29",
    "maturity": "2026-12-04",
@@ -2275,7 +2278,7 @@ window.PLACEMENTS_DATA = {
     {
      "t": "RWMD",
      "n": "Румберг Широкий Рынок Д",
-     "w": 1,
+     "w": 1.0,
      "f0": 97.83
     }
    ],
@@ -2287,10 +2290,10 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "optType": "CALL",
     "style": "EUROPEAN",
-    "strikePct": 100,
+    "strikePct": 100.0,
     "strike2Pct": null,
-    "participationPct": 100,
-    "protectionPct": 0
+    "participationPct": 100.0,
+    "protectionPct": 0.0
    },
    "perfPct": null
   },
@@ -2301,7 +2304,7 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A108FA6",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-05-00761-R-001P",
    "issueStart": "2024-10-14",
    "maturity": "2027-10-26",
@@ -2313,9 +2316,9 @@ window.PLACEMENTS_DATA = {
     {
      "t": "RUMOILGAS",
      "n": "Румберг Нефтегазовый Сектор",
-     "w": 1,
+     "w": 1.0,
      "f0": 99.95,
-     "px": 100,
+     "px": 100.0,
      "pxTime": "2024-10-15",
      "perfPct": 0.1
     }
@@ -2328,10 +2331,10 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "optType": "CALL",
     "style": "EUROPEAN",
-    "strikePct": 100,
+    "strikePct": 100.0,
     "strike2Pct": null,
-    "participationPct": 100,
-    "protectionPct": 0
+    "participationPct": 100.0,
+    "protectionPct": 0.0
    },
    "perfPct": 0.1
   },
@@ -2342,7 +2345,7 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A109EH2",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-07-00761-R-001P",
    "issueStart": "2024-09-25",
    "maturity": "2026-09-30",
@@ -2354,8 +2357,8 @@ window.PLACEMENTS_DATA = {
     {
      "t": "RWMD",
      "n": "Румберг Широкий Рынок Д",
-     "w": 1,
-     "f0": 110
+     "w": 1.0,
+     "f0": 110.0
     }
    ],
    "dates": {
@@ -2366,10 +2369,10 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "optType": "CALL",
     "style": "EUROPEAN",
-    "strikePct": 100,
+    "strikePct": 100.0,
     "strike2Pct": null,
-    "participationPct": 100,
-    "protectionPct": 0
+    "participationPct": 100.0,
+    "protectionPct": 0.0
    },
    "perfPct": null
   },
@@ -2380,7 +2383,7 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A108F97",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-04-00761-R-001P",
    "issueStart": "2024-08-05",
    "maturity": "2026-08-03",
@@ -2392,9 +2395,9 @@ window.PLACEMENTS_DATA = {
     {
      "t": "RTECHTRD",
      "n": "Румберг Технологический Сектор ПДН Д",
-     "w": 1,
+     "w": 1.0,
      "f0": 90.17,
-     "px": 90,
+     "px": 90.0,
      "pxTime": "2024-08-07",
      "perfPct": -0.2
     }
@@ -2407,14 +2410,14 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "couponPa": 25.58,
     "couponPeriodPct": null,
-    "couponBarrierPct": 105,
+    "couponBarrierPct": 105.0,
     "memory": true,
     "obsCount": 8,
-    "acBarrierPct": 105,
+    "acBarrierPct": 105.0,
     "protection": {
      "type": "EKI",
-     "strikePct": 100,
-     "barrierPct": 100
+     "strikePct": 100.0,
+     "barrierPct": 100.0
     }
    },
    "perfPct": -0.2
@@ -2426,7 +2429,7 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A108F89",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-03-00761-R-001P",
    "issueStart": "2024-08-05",
    "maturity": "2026-08-03",
@@ -2438,9 +2441,9 @@ window.PLACEMENTS_DATA = {
     {
      "t": "RTECHTRD",
      "n": "Румберг Технологический Сектор ПДН Д",
-     "w": 1,
+     "w": 1.0,
      "f0": 90.17,
-     "px": 90,
+     "px": 90.0,
      "pxTime": "2024-08-07",
      "perfPct": -0.2
     }
@@ -2453,10 +2456,10 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "optType": "CALL",
     "style": "EUROPEAN",
-    "strikePct": 100,
+    "strikePct": 100.0,
     "strike2Pct": null,
-    "participationPct": 100,
-    "protectionPct": 0
+    "participationPct": 100.0,
+    "protectionPct": 0.0
    },
    "perfPct": -0.2
   },
@@ -2467,7 +2470,7 @@ window.PLACEMENTS_DATA = {
    "secid": null,
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-06-00761-R-001P",
    "issueStart": "2024-07-08",
    "maturity": "2027-07-13",
@@ -2479,8 +2482,8 @@ window.PLACEMENTS_DATA = {
     {
      "t": "LANTHANUM.1",
      "n": "Лантаниум 1.0",
-     "w": 1,
-     "f0": 100,
+     "w": 1.0,
+     "f0": 100.0,
      "px": 117.50737404,
      "pxTime": "2026-02-27",
      "perfPct": 17.5
@@ -2494,10 +2497,10 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "optType": "CALL",
     "style": "EUROPEAN",
-    "strikePct": 100,
+    "strikePct": 100.0,
     "strike2Pct": null,
-    "participationPct": 100,
-    "protectionPct": 0
+    "participationPct": 100.0,
+    "protectionPct": 0.0
    },
    "perfPct": 17.5
   },
@@ -2508,7 +2511,7 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A108F71",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "СП-1-2",
    "issueStart": "2024-07-02",
    "maturity": "2027-07-06",
@@ -2520,7 +2523,7 @@ window.PLACEMENTS_DATA = {
     {
      "t": "RUMBANKS",
      "n": "Румберг Банковский Сектор",
-     "w": 1,
+     "w": 1.0,
      "f0": 100.45
     }
    ],
@@ -2532,10 +2535,10 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "optType": "CALL",
     "style": "EUROPEAN",
-    "strikePct": 100,
+    "strikePct": 100.0,
     "strike2Pct": null,
-    "participationPct": 100,
-    "protectionPct": 0
+    "participationPct": 100.0,
+    "protectionPct": 0.0
    },
    "perfPct": null
   },
@@ -2546,7 +2549,7 @@ window.PLACEMENTS_DATA = {
    "secid": "RU000A1087H2",
    "issuer": "SFO-RSP",
    "currency": "RUB",
-   "notional": 1000,
+   "notional": 1000.0,
    "regNumber": "6-01-00761-R-001P",
    "issueStart": "2024-04-24",
    "maturity": "2027-04-28",
@@ -2558,7 +2561,7 @@ window.PLACEMENTS_DATA = {
     {
      "t": "RUMSTEEL",
      "n": "Румберг Отечественная Сталь",
-     "w": 1,
+     "w": 1.0,
      "f0": 99.74
     }
    ],
@@ -2570,10 +2573,10 @@ window.PLACEMENTS_DATA = {
    "payoff": {
     "optType": "CALL",
     "style": "EUROPEAN",
-    "strikePct": 100,
+    "strikePct": 100.0,
     "strike2Pct": null,
-    "participationPct": 100,
-    "protectionPct": 0
+    "participationPct": 100.0,
+    "protectionPct": 0.0
    },
    "perfPct": null
   }
