@@ -249,7 +249,7 @@ def index_blocks():
         for t in tk.get("items", []):
             bits = [b for b in (t.get("org"), t.get("note"), t.get("title")) if b]
             rows.append(esc(". ".join(bits)) + ".")
-        out["talks"] = ("<p>Выступления: записи, где нас позвали говорить о рынке.</p>"
+        out["talks"] = ("<p>Выступления: эфиры и публикации, где нас позвали говорить о рынке.</p>"
                         "<ul>%s</ul>" % "".join("<li>%s</li>" % r for r in rows)) if rows else ""
     except FileNotFoundError:
         pass  # раздела может не быть — полоса тогда и не показывается

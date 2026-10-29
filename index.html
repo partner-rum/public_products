@@ -436,6 +436,14 @@
   .tk .play { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
   .tk .play i { width:34px; height:34px; border-radius:50%; background:rgba(25,26,47,.62); border:1px solid rgba(255,255,255,.22); display:flex; align-items:center; justify-content:center; transition:background .2s, border-color .2s; }
   .tk .card:hover .play i { background:rgba(240,110,8,.9); border-color:transparent; }
+  /* Обложка публикации в СМИ (kind: "press"): кадра у статьи нет, поэтому
+     вёрстка — название издания, спикер и тонкая диагональ из фирменной графики.
+     Кегль от ширины обложки: она 190px в полосе и во всю ширину на телефоне. */
+  .tk .ph.pr { container-type:inline-size; display:flex; flex-direction:column; justify-content:space-between; padding:8% 9%; }
+  .tk .pr-o { position:relative; z-index:1; max-width:80%; font-family:var(--display); font-weight:500; font-size:clamp(12px, 8.6cqi, 24px); line-height:1.15; letter-spacing:-0.01em; color:var(--tx); }
+  .tk .pr-s { position:relative; z-index:1; font-size:clamp(11px, 6.2cqi, 14px); color:var(--mut); }
+  .tk .pr-g { position:absolute; right:0; bottom:0; width:44%; height:auto; }
+  .tk .card:hover .ph.pr { border-color:rgba(240,110,8,.5); }
   .tk .bd { min-width:0; padding-top:1px; }
   .tk .org { font-family:var(--m); font-size:0.6875rem; letter-spacing:.06em; color:var(--dim); display:flex; align-items:center; gap:7px; margin-bottom:7px; }
   .tk .org .d { width:3px; height:3px; border-radius:50%; background:rgba(255,255,255,.24); }
@@ -1373,12 +1381,12 @@
 
       <section class="cell">
         <div class="ch"><h2><a class="chl" href="research.html">Утро на рынках</a></h2><span class="cap" id="ndate"></span></div>
-        <div id="news"><!-- seo:news:start --><p>Утро на рынках, обзор от 28.10.2026.</p><ul><li>Мир. Нефть дорожает на нервах. Выборы в Израиле без решающего большинства, США опровергают вывод кораблей из Персидского залива — рынок держит премию за риск. Утром Brent выше $115, WTI выше $101, Urals выше $114.</li><li>США. Ставки не спешат вниз. Доходность 10-летних США снизилась на 1 б.п. до 4,99%, CPI за сентябрь +0,6% м/м и 3,7% г/г. ФРС решает в среду, но рынок не ждёт изменений — внимание на риторике.</li><li>Азия. Япония держит оборону. Банк Японии удерживает доходности 10-летних бондов ниже 3,0% — локальный успех регулятора. Решения ЦБ Японии на этой неделе ждут без изменений политики.</li><li>Россия. Переговоры против эскалации. Индекс МосБиржи во вторник +0,76% до 2510,38 п., утром в среду +1,0% до 2535,58 п. Но Лавров говорит об эскалации, и оптимизм вечером спал.</li></ul><!-- seo:news:end --></div>
+        <div id="news"><!-- seo:news:start --><p>Утро на рынках, обзор от 29.10.2026.</p><ul><li>Мир. Переговоры вместо эскалации. WSJ пишет о попытках США наладить контакты со сторонниками жёсткой линии в Иране, консультации могут пройти в Турции до 4 ноября — премия за риск остаётся, но военный сценарий откладывают.</li><li>США. ФРС держит паузу. Ставку сохранили на 3,75%-4,00% голосами 10 членов FOMC, но двое выступили за более жёсткое решение — доходность 10-летних выросла на 6 б.п. до 5,05%.</li><li>Россия. Переговоры тянут индекс вверх. МосБиржа выросла на 0,6% до 2526,54 п. на новостях о переговорах РФ, США и Украины; утром четверга индекс теряет 0,48% до 2514,45 п.</li></ul><!-- seo:news:end --></div>
       </section>
 
       <section class="cell">
         <div class="ch"><h2><a class="chl" href="board.html">Актуальные продукты</a></h2></div>
-        <div id="mprod"><!-- seo:mprod:start --><p>Актуальные продукты: CALL 100 · ОФЗ 26248 · 2 года, Купонный варрант CALL 105 · ОФЗ 26248 · 1,5 года, CALL 100 · CSI 300 · 3 года, Защита капитала · CSI 300 · 3 года, Автоколл · Полупроводники США · 3 года.</p><!-- seo:mprod:end --></div>
+        <div id="mprod"><!-- seo:mprod:start --><p>Актуальные продукты: Купонный варрант CALL 105 · ОФЗ 26248 · 1,5 года, Защита капитала · ОФЗ 26238 · 3 года, CALL 100 · CSI 300 · 2 года, CALL 100 · Сбербанк · 2 года, Дисконтная облигация на ВЭБ.РФ · 5 лет.</p><!-- seo:mprod:end --></div>
       </section>
 
       <section class="cell">
@@ -1390,7 +1398,7 @@
 
   <section class="talks" id="talks" hidden>
     <div class="ch"><h2><a class="chl" href="company.html#talks">Выступления</a></h2><span class="cap" id="talkcap">нас зовут говорить о рынке</span></div>
-    <div class="tk" id="talklist"><!-- seo:talks:start --><p>Выступления: записи, где нас позвали говорить о рынке.</p><ul><li>Газпромбанк Инвестиции. 52 мин. Артем Фетисов: «Лучше быть удачливым, чем умным».</li><li>Smart-Lab. Румберг — Фабрика варрантов.</li><li>Газпромбанк Инвестиции. «Инвестор не должен становиться заложником продукта».</li><li>Московская биржа. презентация на IR-платформе. Варрант «Ультрадоходный» — как заработать на структурных облигациях.</li><li>Газпромбанк Инвестиции. подкаст · 59 мин. Объясняем всё про структурные продукты.</li></ul><!-- seo:talks:end --></div>
+    <div class="tk" id="talklist"><!-- seo:talks:start --><p>Выступления: эфиры и публикации, где нас позвали говорить о рынке.</p><ul><li>Российская газета. комментарий. Новый сервис перевода ценных бумаг усиливает конкуренцию между брокерами.</li><li>Газпромбанк Инвестиции. 52 мин. Артем Фетисов: «Лучше быть удачливым, чем умным».</li><li>Bankiros.ru. комментарий. Ставки по вкладам пойдут вниз в 2027 году? Почему сейчас важен каждый процент.</li><li>Агентство Бизнес Новостей. комментарий. Рост без возвращения: что происходит с иностранными вложениями в ОФЗ.</li><li>Smart-Lab. Румберг — Фабрика варрантов.</li><li>Газпромбанк Инвестиции. «Инвестор не должен становиться заложником продукта».</li><li>Московская биржа. презентация на IR-платформе. Варрант «Ультрадоходный» — как заработать на структурных облигациях.</li><li>Газпромбанк Инвестиции. подкаст · 59 мин. Объясняем всё про структурные продукты.</li></ul><!-- seo:talks:end --></div>
   </section>
 
   <div class="endcta">
@@ -1414,7 +1422,7 @@
 <script src="data/rates.js?v=2"></script>
 <script src="data/morning.js?v=1"></script>
 <script src="data/events.js?v=13"></script>
-<script src="data/talks.js?v=4"></script>
+<script src="data/talks.js?v=5"></script>
 <script>
   // Утренний обзор больше НЕ зашит в страницу — он приезжает из data/morning.js,
   // который пишет бот. Дата там в ISO, свежесть считается ниже в коде.
@@ -1630,7 +1638,7 @@
       { href: "company.html", t: "О компании", m: "юрлица и контакты" },
       // Счётчик записей живой: полоса ниже показывает две свежих, а этот пункт
       // говорит, сколько их всего — иначе «Выступления» дважды обещают одно и то же
-      { href: "company.html#talks", t: "Выступления", m: nt ? nt + " " + plural(nt, "запись", "записи", "записей") : "интервью и эфиры" }
+      { href: "company.html#talks", t: "Выступления", m: nt ? nt + " " + plural(nt, "материал", "материала", "материалов") : "интервью и эфиры" }
     ];
     document.getElementById("rail-list").innerHTML = rail.map(function (s) {
       return '<a class="rl" href="' + s.href + '"><span class="rt">' + s.t + '</span><span class="rm">' + s.m + '</span></a>';
@@ -1704,9 +1712,15 @@
           // Обложка ведёт туда же, куда название и чип RUTUBE: для мыши она
           // кликабельна, а из табуляции и дерева доступности выпадает — иначе
           // скринридер объявлял один адрес трижды на каждую карточку
-          '<a class="ph" href="' + esc(main) + '" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true">' +
-            '<img src="' + esc(t.cover) + '" alt="" loading="lazy" width="640" height="360">' +
-            '<span class="play"><i><svg width="11" height="12" viewBox="0 0 11 12" aria-hidden="true"><path d="M10 5.13a1 1 0 010 1.74l-8 4.6a1 1 0 01-1.5-.87V1.4A1 1 0 012 .53l8 4.6z" fill="#F2F3F7"/></svg></i></span>' +
+          // У публикации в СМИ кадра нет: обложку рисуем сами (издание, спикер,
+          // фирменная диагональ), значок «play» ей не положен — это статья
+          '<a class="ph' + (t.kind === "press" ? ' pr' : '') + '" href="' + esc(main) + '" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true">' +
+            (t.kind === "press"
+              ? '<span class="pr-o">' + esc(t.org) + '</span>' +
+                (t.speaker ? '<span class="pr-s">' + esc(t.speaker) + '</span>' : '') +
+                '<svg class="pr-g" viewBox="0 0 64 64" aria-hidden="true"><path d="M6 64 L64 6" stroke="#F06E08" stroke-width="1.4"/><path d="M28 64 L64 28" stroke="rgba(255,255,255,.3)" stroke-width="1"/></svg>'
+              : '<img src="' + esc(t.cover) + '" alt="" loading="lazy" width="640" height="360">' +
+                '<span class="play"><i><svg width="11" height="12" viewBox="0 0 11 12" aria-hidden="true"><path d="M10 5.13a1 1 0 010 1.74l-8 4.6a1 1 0 01-1.5-.87V1.4A1 1 0 012 .53l8 4.6z" fill="#F2F3F7"/></svg></i></span>') +
           '</a>' +
           '<div class="bd">' +
             '<div class="org">' + esc(t.org) +

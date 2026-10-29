@@ -104,6 +104,12 @@
   .talk .play { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
   .talk .play i { width: 36px; height: 36px; border-radius: 50%; background: rgba(25,26,47,.62); border: 1px solid rgba(255,255,255,.22); display: flex; align-items: center; justify-content: center; transition: background .2s, border-color .2s; }
   .talk:hover .play i { background: rgba(240,110,8,.9); border-color: transparent; }
+  /* Обложка публикации в СМИ (kind: "press") — как на главной: издание, спикер, диагональ */
+  .talk .ph.pr { container-type: inline-size; display: flex; flex-direction: column; justify-content: space-between; padding: 8% 9%; }
+  .talk .pr-o { position: relative; z-index: 1; max-width: 80%; font-family: var(--display); font-weight: 500; font-size: clamp(12px, 8.6cqi, 24px); line-height: 1.15; letter-spacing: -0.01em; color: var(--ink); }
+  .talk .pr-s { position: relative; z-index: 1; font-size: clamp(11px, 6.2cqi, 14px); color: var(--hushed); }
+  .talk .pr-g { position: absolute; right: 0; bottom: 0; width: 44%; height: auto; }
+  .talk:hover .ph.pr { border-color: rgba(240,110,8,.5); }
   .talk .bd { min-width: 0; }
   .talk .org { font-family: var(--f-mono); font-size: 11px; letter-spacing: .06em; color: var(--faint); display: flex; align-items: center; gap: 7px; margin-bottom: 6px; }
   .talk .org .d { width: 3px; height: 3px; border-radius: 50%; background: rgba(255,255,255,.24); }
@@ -540,7 +546,7 @@
   <div id="awardlist"></div>
 
   <div class="cap" id="talks">Выступления</div>
-  <p class="ci-sub" style="margin:0 0 4px">Записи, где нас позвали говорить о рынке. Rutube и YouTube — одна и та же запись, выбирайте, что открывается.</p>
+  <p class="ci-sub" style="margin:0 0 4px">Эфиры и публикации, где нас позвали говорить о рынке. Rutube и YouTube — одна и та же запись, выбирайте, что открывается.</p>
   <div id="talklist"></div>
 
   <div class="cap">Юридические лица</div>
@@ -568,7 +574,7 @@
 </div>
 
 <script src="data/awards.js?v=1"></script>
-<script src="data/talks.js?v=4"></script>
+<script src="data/talks.js?v=5"></script>
 <script>
   // Награды. Данные — data/awards.js. Нет файла или он пуст — заголовок и
   // контейнер убираются целиком: пустая рубрика хуже отсутствующей.
@@ -646,9 +652,14 @@
       return '<div class="talk">' +
         // Обложка дублирует ссылку названия — из табуляции и дерева доступности
         // она выпадает, чтобы один адрес не объявлялся трижды
-        '<a class="ph" href="' + esc(main) + '" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true">' +
-          '<img src="' + esc(t.cover) + '" alt="" loading="lazy" width="640" height="360">' +
-          '<span class="play"><i><svg width="12" height="13" viewBox="0 0 11 12" aria-hidden="true"><path d="M10 5.13a1 1 0 010 1.74l-8 4.6a1 1 0 01-1.5-.87V1.4A1 1 0 012 .53l8 4.6z" fill="#F2F3F7"/></svg></i></span>' +
+        // У публикации в СМИ кадра нет — своя обложка, без значка «play»
+        '<a class="ph' + (t.kind === "press" ? ' pr' : '') + '" href="' + esc(main) + '" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true">' +
+          (t.kind === "press"
+            ? '<span class="pr-o">' + esc(t.org) + '</span>' +
+              (t.speaker ? '<span class="pr-s">' + esc(t.speaker) + '</span>' : '') +
+              '<svg class="pr-g" viewBox="0 0 64 64" aria-hidden="true"><path d="M6 64 L64 6" stroke="#F06E08" stroke-width="1.4"/><path d="M28 64 L64 28" stroke="rgba(255,255,255,.3)" stroke-width="1"/></svg>'
+            : '<img src="' + esc(t.cover) + '" alt="" loading="lazy" width="640" height="360">' +
+              '<span class="play"><i><svg width="12" height="13" viewBox="0 0 11 12" aria-hidden="true"><path d="M10 5.13a1 1 0 010 1.74l-8 4.6a1 1 0 01-1.5-.87V1.4A1 1 0 012 .53l8 4.6z" fill="#F2F3F7"/></svg></i></span>') +
         '</a>' +
         '<div class="bd">' +
           '<div class="org">' + esc(t.org) +
