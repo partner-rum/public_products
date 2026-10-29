@@ -161,6 +161,9 @@
   .tkp .ln span { font-family:var(--m); font-size:11px; color:var(--hushed); border:1px solid var(--border); border-radius:2px; padding:5px 9px; }
   @media (max-width:560px) { .tkp { grid-template-columns:1fr; } .tk-other { grid-template-columns:1fr; } }
   .hint.bad { color:#E0705A; }
+  body.role-talks .tab:not([data-f="f-talk"]) { display:none; }
+  body.role-talks .lead { display:none; }
+  .role-note { margin:0 0 14px; font-size:13px; color:var(--hushed); }
   .hint-box.after { margin:10px 0 0; }
 
   .send { width:100%; margin-top:6px; background:var(--solar); color:#0C0A08; border:0; border-radius:12px;
@@ -273,6 +276,7 @@
     <button class="tab" data-f="f-talk" type="button">Выступление</button>
     <button class="tab" data-f="f-remove" type="button">Снять с сайта</button>
   </div>
+  <p class="role-note" id="role-note" hidden>Ваш ключ открывает только вкладку «Выступление» — видео и публикации в СМИ.</p>
 
   <div class="queue" id="queue" style="display:none">
     <div class="qh"><span class="t">мои заявки</span>
@@ -1327,6 +1331,30 @@
     });
   });
 
+  // ── РОЛЬ КЛЮЧА ──
+  // Ключ, выданный ботом с ролью «talks» (маркетинг), открывает только
+  // «Выступление»: остальные вкладки прячем, чтобы человек не заполнял форму,
+  // которую сервер всё равно отобьёт. Права проверяет сервер, здесь — удобство.
+  var roleT = null;
+  function applyRole(scope) {
+    var talksOnly = scope === "talks";
+    document.body.classList.toggle("role-talks", talksOnly);
+    var note = document.getElementById("role-note");
+    if (note) note.hidden = !talksOnly;
+    if (talksOnly) {
+      var t = document.querySelector('.tab[data-f="f-talk"]');
+      if (t && !t.classList.contains("on")) t.click();
+    }
+  }
+  function checkRole() {
+    var key = keyEl.value.trim();
+    if (key.length < 6) { applyRole("all"); return; }
+    postAsk({ key: key, action: "whoami" }).then(function (d) { applyRole(d.scope); })
+      .catch(function () { /* ключ не подошёл или сервер старый — вкладки как были */ });
+  }
+  keyEl.addEventListener("input", function () { clearTimeout(roleT); roleT = setTimeout(checkRole, 700); });
+  checkRole();
+
   // Сообщения об успехе и ошибке скринридер не объявлял вовсе.
   document.querySelectorAll(".msg").forEach(function (m) {
     m.setAttribute("role", "status");
@@ -2213,6 +2241,7 @@
   // Сервер отдаёт коды вроде telegram_failed или kv_not_configured — печатать их
   // сейлзу как есть означает отправить его к Руслану за переводом.
   var ERR_RU = {
+    no_rights: "Ваш ключ открывает только вкладку «Выступление». Остальное — через сейлзов или Руслана.",
     talk_no_org: "Впишите площадку или издание.",
     talk_no_title: "Впишите заголовок.",
     talk_nota: "В заголовке слово «нота» — на сайте оно запрещено. Возьмите другую фразу из названия.",

@@ -369,6 +369,46 @@ async function takeDeskKey(env, ref, by) {
   return { key: rec.show, first: first };
 }
 
+// ── Ключи админки, выданные ботом (/adminkey) ──
+// SALES_KEYS — секрет Cloudflare: прочитать его нельзя, только перезаписать
+// целиком, поэтому нового сотрудника туда не добавить, не зная чужих ключей.
+// Здесь ключ живёт ХЭШЕМ в KV `akey:<имя>` (сам ключ видит только Руслан в
+// ответе бота), а права задаёт роль: «talks» — только вкладка «Выступление»
+// (маркетинг), «all» — как у сейлза. Роль talks нужна не для красоты: с ключом
+// сейлза сделки партнёров пишутся без одобрения.
+const ADMIN_SCOPES = {
+  talks: ["talk", "talk_rm", "req_status", "withdraw", "whoami"],
+  all: null,
+};
+const ADMIN_SCOPE_RU = { talks: "только «Выступление»", all: "как у сейлза — все вкладки" };
+
+async function adminKeyIssue(env, name, scope) {
+  const key = makeDeskKey();
+  const h = await keyHash("admin/" + name, key);
+  // Хэш и роль — в metadata: поиск ключа обходится одним list, без get на запись
+  await env.POST_KV.put("akey:" + name, JSON.stringify({ h, scope, ts: Date.now() }), { metadata: { h, scope, ts: Date.now() } });
+  return key;
+}
+
+// Ключ из формы → { name, scope } или null. Мусор отсекаем по форме ключа ДО
+// похода в KV: /submit открыт всему интернету.
+async function adminKeyFind(env, key) {
+  if (!env.POST_KV || !KEY_SHAPE.test(key)) return null;
+  let cursor = null;
+  do {
+    const r = await env.POST_KV.list({ prefix: "akey:", limit: 100, cursor: cursor || undefined });
+    for (const k of r.keys) {
+      const md = k.metadata || {};
+      const name = k.name.slice(5);
+      if (md.h && safeEq(md.h, await keyHash("admin/" + name, key))) {
+        return { name, scope: ADMIN_SCOPES.hasOwnProperty(md.scope) ? md.scope : "talks" };
+      }
+    }
+    cursor = r.list_complete ? null : r.cursor;
+  } while (cursor);
+  return null;
+}
+
 // Вход в рабочий стол: партнёры И свои сейлзы. Возвращает {ref, kind} или null.
 // ТРИ источника: секреты PARTNER_KEYS и SALES_KEYS (заводит Руслан руками) плюс
 // ключи, выданные конвейером админки, — от них в KV лежит только хэш.
@@ -4061,7 +4101,19 @@ async function handleSubmit(request, env, cors, ctx) {
     const i = pair.indexOf(":");
     if (i > 0 && pair.slice(i + 1).trim() === key && key) { author = pair.slice(0, i).trim(); break; }
   }
+  // Нет в SALES_KEYS — ищем среди ключей, выданных ботом (/adminkey)
+  let scope = "all";
+  if (!author) {
+    let found = null;
+    try { found = await adminKeyFind(env, key); } catch (e) { found = null; }
+    if (found) { author = found.name; scope = found.scope; }
+  }
   if (!author) return json({ ok: false, error: "bad_key" }, 403, cors);
+  // Права роли: ключ маркетинга открывает только «Выступление» и ленту своих заявок
+  const allowed = ADMIN_SCOPES[scope];
+  if (allowed && !allowed.includes(String(data.action || ""))) return json({ ok: false, error: "no_rights" }, 403, cors);
+  // Админка спрашивает роль, чтобы показать только доступные вкладки
+  if (data.action === "whoami") return json({ ok: true, author: author, scope: scope }, 200, cors);
 
   // ── Вебинары: список приглашённых и отметки о приходе ──
   // Читает СВОЙ список: сейлз видит только то, что завёл сам (ключ включает его
@@ -5790,6 +5842,66 @@ async function handleTelegram(request, env, ctx) {
                 "<i>Прежний ключ перестаёт работать (хранилище обновляется до минуты). " +
                 "Кабинет показывает сделки, вознаграждение и активность ВСЕХ агентов — " +
                 "ключ никому не передавайте.</i>");
+      return new Response("ok");
+    }
+
+    // ---- Ключи админки: /adminkey, /adminkeys, /adminkeyrm. ТОЛЬКО Руслан, в личке.
+    // Ключ показывается ОДИН раз — в ответе бота; в KV остаётся только хэш.
+    if (/^\/adminkey(?:s|rm)?(?:@\w+)?(?:\s|$)/.test(msg.text)) {
+      const isAdmin = env.ADMIN_CHAT_ID && String(from.id) === String(env.ADMIN_CHAT_ID);
+      if (!isAdmin || !msg.chat || msg.chat.type !== "private") return new Response("ok");
+      const say = function (t) {
+        return tg(env, "sendMessage", { chat_id: msg.chat.id, text: t, parse_mode: "HTML", disable_web_page_preview: true });
+      };
+      if (!env.POST_KV) { await say("Хранилище (POST_KV) не подключено — ключ записать некуда."); return new Response("ok"); }
+
+      if (/^\/adminkeys/.test(msg.text)) {
+        const rows = [];
+        let cursor = null;
+        do {
+          const r = await env.POST_KV.list({ prefix: "akey:", limit: 100, cursor: cursor || undefined });
+          for (const k of r.keys) {
+            const md = k.metadata || {};
+            rows.push("• <code>" + esc(k.name.slice(5)) + "</code> — " + esc(ADMIN_SCOPE_RU[md.scope] || ADMIN_SCOPE_RU.talks) +
+                      (md.ts ? " · выдан " + new Date(md.ts).toISOString().slice(0, 10) : ""));
+          }
+          cursor = r.list_complete ? null : r.cursor;
+        } while (cursor);
+        await say(rows.length ? "<b>Ключи админки, выданные ботом</b>\n" + rows.join("\n") +
+          "\n\n<i>Ключи сейлзов из секрета SALES_KEYS здесь не показываются.</i>"
+          : "Ключей, выданных ботом, пока нет. Выдать: <code>/adminkey имя</code>");
+        return new Response("ok");
+      }
+
+      const parts = msg.text.replace(/^\/adminkey(?:rm)?(@\w+)?\s*/, "").trim().toLowerCase().split(/\s+/).filter(Boolean);
+      const name = parts[0] || "";
+      if (/^\/adminkeyrm/.test(msg.text)) {
+        if (!name) { await say("Формат: <code>/adminkeyrm имя</code> — ключ перестанет пускать в админку."); return new Response("ok"); }
+        const had = await env.POST_KV.get("akey:" + name);
+        if (!had) { await say("Ключа «" + esc(name) + "» нет. Все ключи: <code>/adminkeys</code>"); return new Response("ok"); }
+        await env.POST_KV.delete("akey:" + name);
+        await say("Ключ «" + esc(name) + "» отозван. <i>Хранилище обновляется до минуты.</i>");
+        return new Response("ok");
+      }
+
+      const scope = parts[1] || "talks";
+      if (!name || !REF_SHAPE.test(name) || !ADMIN_SCOPES.hasOwnProperty(scope)) {
+        await say("Формат: <code>/adminkey имя</code> — ключ только на «Выступление» (для маркетинга).\n" +
+                  "<code>/adminkey имя all</code> — все вкладки, как у сейлза.\n" +
+                  "Имя — латиница, цифры, точка, дефис; оно подписывает заявки этого человека.");
+        return new Response("ok");
+      }
+      // Имя сейлза из секрета не занимаем: заявки двух людей подписывались бы одинаково
+      if (keyPairs(env.SALES_KEYS).some(function (x) { return x[0] === name; })) {
+        await say("Имя «" + esc(name) + "» уже занято ключом сейлза из SALES_KEYS — выберите другое.");
+        return new Response("ok");
+      }
+      const fresh = await adminKeyIssue(env, name, scope);
+      await say("<b>Ключ админки</b>\nИмя: <code>" + esc(name) + "</code>\nПрава: " + esc(ADMIN_SCOPE_RU[scope]) +
+                "\nКлюч: <code>" + esc(fresh) + "</code>\n\n" +
+                "Вход: https://invest.rumberg.ru/admin.html — ключ вписать в поле вверху страницы.\n" +
+                "<i>Ключ показан один раз и больше нигде не хранится. Прежний ключ с этим именем перестаёт " +
+                "работать (хранилище обновляется до минуты). Отозвать: /adminkeyrm " + esc(name) + "</i>");
       return new Response("ok");
     }
 
