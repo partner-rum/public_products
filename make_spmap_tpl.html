@@ -19,18 +19,19 @@
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Rumberg — структурные продукты">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="theme-color" content="#0B0C10">
+<meta name="theme-color" content="#191A2F">
 <link href="fonts/fonts.css?v=2" rel="stylesheet">
+<link href="brand/brand.css?v=1" rel="stylesheet">
 <style>
   /* Раскладка: герой с «анатомией кода» → карта двумя классами → термины и
      механизмы → группы с карточками продуктов → паспорта базовых активов.
      Мир — «полярная ночь»: три ступени поверхности, хайрлайны, один оранжевый */
   :root {
-    --canvas: #0B0C10; --card: #14161C; --card-2: #191B22; --well: #0C0E13;
+    --canvas: #191A2F; --card: #22243B; --card-2: #272941; --well: #1A1C32;
     --ink: #F2F3F7; --hushed: rgba(242,243,247,0.66); --faint: rgba(242,243,247,0.56);
     --border: rgba(255,255,255,0.11); --border-soft: rgba(255,255,255,0.07);
-    --solar: #EE7D1B; --solar-l: #F58E33; --fc: #8A93A6;
-    --f-body: 'Onest', system-ui, sans-serif; --f-mono: 'JetBrains Mono', Consolas, monospace; --display: 'Rubik','Onest',system-ui,sans-serif;
+    --solar: #F06E08; --solar-l: #F48834; --fc: #8A93A6;
+    --f-body: 'Onest', system-ui, sans-serif; --f-mono: 'JetBrains Mono', Consolas, monospace; --display: Montserrat,'Onest',system-ui,sans-serif;
     --ease: cubic-bezier(0.16, 1, 0.3, 1);
     color-scheme: dark;
   }
@@ -38,29 +39,29 @@
   html { scroll-behavior: smooth; background: var(--canvas); }
   body { margin: 0; background: var(--canvas); color: var(--ink); font-family: var(--f-body); font-size: 15px; -webkit-font-smoothing: antialiased; }
   a { text-decoration: none; color: inherit; }
-  ::selection { background: rgba(238,125,27,0.35); color: var(--ink); }
-  a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 4px; }
+  ::selection { background: rgba(240,110,8,0.35); color: var(--ink); }
+  a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 2px; }
   .wrap { max-width: 1200px; margin: 0 auto; padding: 0 40px; }
-  .skip { position: absolute; left: -9999px; top: 0; z-index: 100; background: var(--solar); color: #0C0A08; padding: 10px 16px; border-radius: 0 0 8px 0; font-size: 14px; }
+  .skip { position: absolute; left: -9999px; top: 0; z-index: 100; background: var(--solar); color: #191A2F; padding: 10px 16px; border-radius: 0 0 2px 0; font-size: 14px; }
   .skip:focus { left: 0; }
-  .lbl { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); }
+  .lbl { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--faint); }
 
-  .nav { position: sticky; top: 0; z-index: 30; background: rgba(11,12,16,0.82); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); }
+  .nav { position: sticky; top: 0; z-index: 30; background: rgba(25,26,47,0.82); backdrop-filter: none; -webkit-backdrop-filter: none; border-bottom: 1px solid var(--border); }
   .nav-in { max-width: 1200px; margin: 0 auto; padding: 0 40px; height: 62px; display: flex; align-items: center; gap: 12px; }
   .brand { display: flex; align-items: center; gap: 10px; } .brand-name { font-size: 14.5px; font-weight: 600; }
   .topnav { margin-left: auto; display: flex; align-items: center; gap: 22px; font-size: 14px; font-weight: 500; }
   .topnav a { color: var(--hushed); transition: color .2s; } .topnav a:hover { color: var(--ink); }
   .topnav a[aria-current="page"] { color: var(--ink); font-weight: 600; }
-  .btn-solar { background: var(--solar); color: #0C0A08 !important; border-radius: 6px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 7px; transition: background .3s ease-in-out; }
+  .btn-solar { background: var(--solar); color: #191A2F !important; border-radius: 2px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 7px; transition: background .3s ease-in-out; }
   .btn-solar:hover { background: var(--solar-l); }
 
   /* ── Герой ── */
   .hero { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 64px; align-items: center; padding: 64px 0 40px; }
   .eyebrow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  .eyebrow .tag { border: 1px solid var(--border); border-radius: 999px; padding: 4px 10px; }
+  .eyebrow .tag { border: 1px solid var(--border); border-radius: 2px; padding: 4px 10px; }
   .eyebrow a { color: var(--hushed); border-bottom: 1px solid var(--border); }
   .eyebrow a:hover { color: var(--ink); }
-  .hero h1 { margin: 18px 0 16px; font-family: var(--display); font-size: clamp(34px, 4.6vw, 58px); font-weight: 600; line-height: 1.05; letter-spacing: -0.03em; text-wrap: balance; }
+  .hero h1 { margin: 18px 0 16px; font-family: var(--display); font-size: clamp(34px, 4.6vw, 58px); font-weight: 500; line-height: 1.05; letter-spacing: -0.01em; text-wrap: balance; }
   .hero .lead { margin: 0; font-size: 17px; line-height: 1.6; color: var(--hushed); max-width: 46ch; text-wrap: pretty; }
   .stats { display: flex; flex-wrap: wrap; margin-top: 30px; border-top: 1px solid var(--border-soft); }
   .stats > div { padding: 18px 28px 0 0; }
@@ -71,7 +72,7 @@
   /* Анатомия кода: код повторён трижды, в каждой строке подсвечена своя часть —
      класс (1) → группа (12) → тип (1220). Так видно, что код вложенный, а не
      четыре независимые цифры */
-  .anat { background: var(--card); border: 1px solid var(--border-soft); border-radius: 16px; padding: 22px 26px 22px; }
+  .anat { background: var(--card); border: 1px solid var(--border-soft); border-radius: 2px; padding: 22px 26px 22px; }
   .anat .lbl { margin-bottom: 16px; }
   .anat-rows { display: grid; gap: 4px; }
   .ar { display: grid; grid-template-columns: 116px 1fr; gap: 16px; align-items: center; padding: 10px 0; }
@@ -88,15 +89,15 @@
   .layout > * { min-width: 0; }
   .toc { position: sticky; top: 82px; display: flex; flex-direction: column; gap: 1px; max-height: calc(100vh - 100px); overflow: auto; }
   .toc-h { padding: 0 10px 8px; }
-  .toc a { display: flex; gap: 10px; align-items: baseline; padding: 8px 10px; border-radius: 8px; font-size: 13.5px; line-height: 1.35; color: var(--hushed); border-left: 2px solid transparent; transition: background .15s, color .15s; }
+  .toc a { display: flex; gap: 10px; align-items: baseline; padding: 8px 10px; border-radius: 2px; font-size: 13.5px; line-height: 1.35; color: var(--hushed); border-left: 2px solid transparent; transition: background .15s, color .15s; }
   .toc a:hover { background: rgba(255,255,255,0.05); color: var(--ink); }
-  .toc a.on { color: var(--ink); border-left-color: var(--solar); border-radius: 0 8px 8px 0; }
+  .toc a.on { color: var(--ink); border-left-color: var(--solar); border-radius: 0 2px 2px 0; }
   .toc a.g .gc { flex: none; font-family: var(--f-mono); font-size: 11px; color: var(--fc); min-width: 18px; }
   .toc a.g + a:not(.g), .toc a:not(.g) + a.g { margin-top: 10px; }
 
   .sec { scroll-margin-top: 80px; padding-top: 48px; }
   .sec + .sec { margin-top: 24px; border-top: 1px solid var(--border-soft); }
-  .sec-h { margin: 8px 0 10px; font-family: var(--display); font-size: clamp(26px, 3vw, 34px); font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; }
+  .sec-h { margin: 8px 0 10px; font-family: var(--display); font-size: clamp(26px, 3vw, 34px); font-weight: 500; letter-spacing: -0.01em; line-height: 1.1; }
   .sec-lead { font-size: 16px; line-height: 1.6; color: var(--hushed); max-width: 60ch; margin: 0 0 26px; text-wrap: pretty; }
   .sec-lead p { margin: 0; }
 
@@ -107,12 +108,12 @@
   .tg + .tg { margin-top: 18px; }
   .tg-h { padding-bottom: 6px; }
   .tchips { display: flex; flex-wrap: wrap; gap: 6px; }
-  .tchip { background: none; border: 1px solid var(--border); border-radius: 999px; padding: 7px 12px; font-family: var(--f-body); font-size: 13px; font-weight: 500; line-height: 1.2; color: var(--hushed); cursor: pointer; transition: color .15s, border-color .15s, background .15s; }
+  .tchip { background: none; border: 1px solid var(--border); border-radius: 2px; padding: 7px 12px; font-family: var(--f-body); font-size: 13px; font-weight: 500; line-height: 1.2; color: var(--hushed); cursor: pointer; transition: color .15s, border-color .15s, background .15s; }
   .tchip:hover { color: var(--ink); border-color: rgba(255,255,255,0.3); }
-  .tchip.on { color: var(--ink); border-color: var(--solar); background: rgba(238,125,27,0.10); }
-  .tdef { position: sticky; top: 82px; background: var(--card); border: 1px solid var(--border-soft); border-radius: 16px; padding: 20px 24px 18px; min-height: 180px; }
+  .tchip.on { color: var(--ink); border-color: var(--solar); background: rgba(255, 255, 255, 0.045); }
+  .tdef { position: sticky; top: 82px; background: var(--card); border: 1px solid var(--border-soft); border-radius: 2px; padding: 20px 24px 18px; min-height: 180px; }
   .td { display: none; } .td.on { display: block; }
-  .td h3 { margin: 6px 0 10px; font-family: var(--display); font-size: 21px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.2; }
+  .td h3 { margin: 6px 0 10px; font-family: var(--display); font-size: 19.7px; font-weight: 500; letter-spacing: -0.01em; line-height: 1.2; }
   .td p { margin: 0 0 8px; font-size: 14.5px; line-height: 1.6; color: var(--hushed); text-wrap: pretty; max-width: 62ch; }
   .td ul { margin: 4px 0 8px; padding-left: 20px; font-size: 14px; line-height: 1.6; color: var(--hushed); max-width: 62ch; }
   .td li + li { margin-top: 5px; }
@@ -123,15 +124,15 @@
   .cls + .cls { margin-top: 22px; }
   .cls-h { display: flex; align-items: baseline; gap: 14px; padding: 0 0 12px; }
   .cls-h .n { font-family: var(--f-mono); font-size: 26px; font-weight: 500; color: var(--fc); letter-spacing: -0.02em; }
-  .cls-h .t { font-family: var(--display); font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
+  .cls-h .t { font-family: var(--display); font-size: 16.9px; font-weight: 500; letter-spacing: -0.01em; }
   .cls-h .s { margin-left: auto; }
   .ov { display: grid; grid-template-columns: repeat(auto-fit, minmax(186px, 1fr)); gap: 12px; }
-  .ovg { background: var(--card); border: 1px solid var(--border-soft); border-radius: 14px; padding: 0 8px 8px; overflow: hidden; }
+  .ovg { background: var(--card); border: 1px solid var(--border-soft); border-radius: 2px; padding: 0 8px 8px; overflow: hidden; }
   .ovg::before { content: ""; display: block; height: 3px; background: var(--fc); margin: 0 -8px 12px; }
-  .ovh { display: flex; gap: 10px; align-items: baseline; padding: 2px 8px 10px; font-family: var(--display); font-size: 15px; font-weight: 600; line-height: 1.3; letter-spacing: -0.01em; }
+  .ovh { display: flex; gap: 10px; align-items: baseline; padding: 2px 8px 10px; font-family: var(--display); font-size: 14.1px; font-weight: 500; line-height: 1.3; letter-spacing: -0.01em; }
   .ovh .gc { font-family: var(--f-mono); font-size: 18px; font-weight: 500; color: var(--fc); }
   .ovg ul { list-style: none; margin: 0; padding: 0; }
-  .ovg li a { display: flex; gap: 9px; align-items: baseline; padding: 7px 8px; border-radius: 8px; font-size: 13px; line-height: 1.35; color: var(--hushed); transition: background .15s, color .15s; }
+  .ovg li a { display: flex; gap: 9px; align-items: baseline; padding: 7px 8px; border-radius: 2px; font-size: 13px; line-height: 1.35; color: var(--hushed); transition: background .15s, color .15s; }
   .ovg li a:hover { background: rgba(255,255,255,0.06); color: var(--ink); }
   .ovg .c { flex: none; font-family: var(--f-mono); font-size: 11.5px; color: var(--fc); opacity: .85; }
   .ovg .n { flex: 1; min-width: 0; }
@@ -139,7 +140,7 @@
   /* Легенда таблицей: цвет · номер класса · название · группы */
   .leg { max-width: 600px; margin: -8px 0 24px; border-bottom: 1px solid var(--border-soft); }
   .lr { display: grid; grid-template-columns: 14px 16px auto 1fr; gap: 0 12px; align-items: center; padding: 8px 0; border-top: 1px solid var(--border-soft); }
-  .sw { width: 12px; height: 12px; border-radius: 3px; background: var(--c); }
+  .sw { width: 12px; height: 12px; border-radius: 2px; background: var(--c); }
   .lr .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--solar); margin-left: 2px; }
   .ln { font-family: var(--f-mono); font-size: 14px; font-weight: 500; }
   .lt { font-size: 14px; font-weight: 500; white-space: nowrap; }
@@ -149,18 +150,18 @@
   .grp { scroll-margin-top: 80px; margin-top: 56px; }
   .grp-h { border-top: 3px solid var(--fc); padding-top: 18px; margin-bottom: 4px; }
   .grp-h .gc { color: var(--fc); }
-  .grp-h h2 { font-family: var(--display); font-size: clamp(26px, 3vw, 34px); font-weight: 600; letter-spacing: -0.02em; line-height: 1.1; margin: 8px 0 10px; }
+  .grp-h h2 { font-family: var(--display); font-size: clamp(26px, 3vw, 34px); font-weight: 500; letter-spacing: -0.01em; line-height: 1.1; margin: 8px 0 10px; }
   .grp-h h2 .jar { font-family: var(--f-body); font-size: 15px; font-weight: 400; color: var(--faint); letter-spacing: 0; margin-left: 8px; }
   .grp-h p { margin: 0; font-size: 16px; line-height: 1.6; color: var(--hushed); max-width: 64ch; text-wrap: pretty; }
 
   .pd { scroll-margin-top: 80px; padding: 30px 0 32px; border-bottom: 1px solid var(--border-soft); }
   .pd-h { display: flex; gap: 18px; align-items: flex-start; }
-  .pd-code { flex: none; font-family: var(--f-mono); font-size: 15px; font-weight: 500; color: var(--fc); border: 1px solid var(--fc); border-radius: 8px; padding: 6px 9px; line-height: 1; margin-top: 3px; letter-spacing: 0.02em; }
+  .pd-code { flex: none; font-family: var(--f-mono); font-size: 15px; font-weight: 500; color: var(--fc); border: 1px solid var(--fc); border-radius: 2px; padding: 6px 9px; line-height: 1; margin-top: 3px; letter-spacing: 0.02em; }
   .pd-t { min-width: 0; }
-  .pd h3 { margin: 0; font-family: var(--display); font-size: 22px; font-weight: 600; line-height: 1.25; letter-spacing: -0.02em; text-wrap: balance; }
+  .pd h3 { margin: 0; font-family: var(--display); font-size: 20.7px; font-weight: 500; line-height: 1.25; letter-spacing: -0.01em; text-wrap: balance; }
   .pd-meta { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 7px; font-size: 12.5px; color: var(--faint); }
   .pd-meta .en { font-family: var(--f-mono); font-size: 11.5px; }
-  .ours { display: flex; flex-wrap: wrap; gap: 6px 20px; align-items: center; margin: 16px 0 0; padding: 10px 14px; border-radius: 10px; background: rgba(238,125,27,0.10); border: 1px solid rgba(238,125,27,0.22); }
+  .ours { display: flex; flex-wrap: wrap; gap: 6px 20px; align-items: center; margin: 16px 0 0; padding: 10px 14px; border-radius: 2px; background: rgba(255, 255, 255, 0.045); border: 1px solid rgba(240,110,8,0.22); }
   .ours .k { color: var(--solar); }
   .ours a { display: inline-flex; gap: 6px; align-items: center; font-size: 13.5px; font-weight: 600; }
   .ours a .ar { color: var(--solar); } .ours a:hover { color: var(--solar-l); }
@@ -175,7 +176,7 @@
 
   /* Формулы — в колодце: это «выписка», другая поверхность, чем проза */
   .pd-f { margin-top: 6px; }
-  .fb { background: var(--well); border: 1px solid var(--border-soft); border-radius: 12px; padding: 14px 16px 12px; margin-top: 10px; }
+  .fb { background: var(--well); border: 1px solid var(--border-soft); border-radius: 2px; padding: 14px 16px 12px; margin-top: 10px; }
   .fb-k { margin-bottom: 10px; }
   .fc { font-size: 13px; color: var(--hushed); margin: 10px 0 4px; }
   .fn { font-size: 13px; line-height: 1.5; color: var(--hushed); margin: 6px 0; }
@@ -183,7 +184,7 @@
   .fx i { font-style: normal; color: #CFE0FF; }
   .fx sub { font-size: 0.72em; }
   .fx .nary { font-size: 1.35em; line-height: 1; }
-  .cases { display: inline-grid; grid-template-columns: auto auto; gap: 3px 22px; border-left: 1.5px solid rgba(255,255,255,0.45); border-radius: 8px 0 0 8px; padding: 3px 0 3px 12px; }
+  .cases { display: inline-grid; grid-template-columns: auto auto; gap: 3px 22px; border-left: 1.5px solid rgba(255,255,255,0.45); border-radius: 2px 0 0 2px; padding: 3px 0 3px 12px; }
   .cr { display: contents; }
   .cc { color: var(--hushed); }
   .cc::before { content: "если "; color: var(--faint); }
@@ -200,18 +201,18 @@
   .bar { margin-top: 12px; }
   .bar-k { display: block; margin-bottom: 6px; }
   .chips { display: flex; flex-wrap: wrap; gap: 6px; }
-  .chip { display: inline-flex; gap: 6px; align-items: baseline; border: 1px solid var(--border); border-radius: 999px; padding: 4px 10px; font-size: 12.5px; }
+  .chip { display: inline-flex; gap: 6px; align-items: baseline; border: 1px solid var(--border); border-radius: 2px; padding: 4px 10px; font-size: 12.5px; }
   .chip .ck { font-family: var(--f-mono); font-size: 11px; color: var(--faint); }
 
-  .viz { margin: 0; background: var(--card); border: 1px solid var(--border-soft); border-radius: 14px; padding: 14px 14px 10px; }
+  .viz { margin: 0; background: var(--card); border: 1px solid var(--border-soft); border-radius: 2px; padding: 14px 14px 10px; }
   .viz svg { display: block; width: 100%; height: auto; }
   .viz figcaption { font-size: 12px; line-height: 1.5; color: var(--faint); margin-top: 6px; }
 
   /* ── Базовые активы: паспорт вместо таблицы ── */
-  .asset { margin-top: 22px; background: var(--card); border: 1px solid var(--border-soft); border-radius: 16px; padding: 22px 24px 20px; }
+  .asset { margin-top: 22px; background: var(--card); border: 1px solid var(--border-soft); border-radius: 2px; padding: 22px 24px 20px; }
   .asset.none { padding: 16px 24px; display: flex; gap: 16px; align-items: baseline; flex-wrap: wrap; }
   .asset.none h3 { margin: 0; }
-  .asset h3 { margin: 0 0 6px; font-family: var(--display); font-size: 19px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.3; }
+  .asset h3 { margin: 0 0 6px; font-family: var(--display); font-size: 17.9px; font-weight: 500; letter-spacing: -0.01em; line-height: 1.3; }
   .asset .ad { margin: 0 0 16px; font-size: 14px; line-height: 1.6; color: var(--hushed); max-width: 64ch; text-wrap: pretty; }
   .asset-g { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 28px; align-items: start; }
   .asset-g > * { min-width: 0; }
@@ -219,18 +220,18 @@
   .fields li { padding: 7px 0; border-top: 1px solid var(--border-soft); font-size: 13.5px; line-height: 1.4; display: flex; gap: 10px; align-items: baseline; }
   .fields li::before { content: ""; flex: none; width: 6px; height: 6px; border-radius: 50%; background: var(--fc); position: relative; top: -2px; }
   .passes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); gap: 12px; margin-top: 8px; }
-  .pass { background: var(--well); border: 1px solid var(--border-soft); border-radius: 12px; padding: 12px 14px 6px; }
-  .pass .pt { font-family: var(--display); font-size: 15px; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 6px; line-height: 1.3; }
+  .pass { background: var(--well); border: 1px solid var(--border-soft); border-radius: 2px; padding: 12px 14px 6px; }
+  .pass .pt { font-family: var(--display); font-size: 14.1px; font-weight: 500; letter-spacing: -0.01em; margin-bottom: 6px; line-height: 1.3; }
   .pass .pt .w { font-family: var(--f-mono); font-size: 12px; font-weight: 500; color: var(--solar); margin-left: 8px; white-space: nowrap; }
   .prow { display: grid; grid-template-columns: 118px 1fr; gap: 10px; padding: 7px 0; border-top: 1px solid var(--border-soft); font-size: 13px; line-height: 1.45; }
-  .prow .pk { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--faint); padding-top: 2px; }
+  .prow .pk { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--faint); padding-top: 2px; }
   .prow .pv { color: var(--hushed); overflow-wrap: anywhere; }
   .prow .pv.m { font-family: var(--f-mono); color: var(--ink); font-size: 12.5px; }
-  .prow .pv a { color: var(--ink); border-bottom: 1px solid rgba(238,125,27,0.5); }
+  .prow .pv a { color: var(--ink); border-bottom: 1px solid rgba(240,110,8,0.5); }
   .prow .pv a:hover { border-bottom-color: var(--solar); }
   .prow .pv small { display: block; color: var(--faint); font-size: 12px; margin-top: 2px; }
 
-  .about-doc { margin-top: 40px; padding: 18px 20px; border: 1px solid var(--border-soft); border-radius: 12px; font-size: 13.5px; line-height: 1.6; color: var(--hushed); max-width: 72ch; }
+  .about-doc { margin-top: 40px; padding: 18px 20px; border: 1px solid var(--border-soft); border-radius: 2px; font-size: 13.5px; line-height: 1.6; color: var(--hushed); max-width: 72ch; }
   .about-doc .lbl { display: block; margin-bottom: 6px; }
 
   .endcta { margin-top: 44px; border-top: 1px solid var(--border); padding-top: 20px; display: flex; gap: 26px; flex-wrap: wrap; align-items: center; }
@@ -259,8 +260,8 @@
     .layout { grid-template-columns: 1fr; gap: 20px; }
     .toc { position: static; flex-direction: row; overflow-x: auto; max-height: none; gap: 6px; padding-bottom: 4px; }
     .toc-h { display: none; }
-    .toc a { flex: none; border: 1px solid var(--border); white-space: nowrap; border-radius: 999px; }
-    .toc a.on { border-color: var(--solar); border-radius: 999px; }
+    .toc a { flex: none; border: 1px solid var(--border); white-space: nowrap; border-radius: 2px; }
+    .toc a.on { border-color: var(--solar); border-radius: 2px; }
     .toc a.g + a:not(.g), .toc a:not(.g) + a.g { margin-top: 0; }
     .tdict { grid-template-columns: 1fr; gap: 18px; }
     .tdef { position: static; }
@@ -304,7 +305,7 @@
 <header class="nav">
   <div class="nav-in">
     <a class="brand" href="index.html" aria-label="На главную">
-      <svg width="22" height="22" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>
+      <svg width="22" height="22" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#F06E08"/></svg>
       <span class="brand-name">Rumberg</span><span class="brand-tag">Инвестиционные решения</span>
     </a>
     <nav class="topnav">
@@ -315,7 +316,7 @@
       <a href="placements.html">Выпуски</a>
       <a href="about.html" aria-current="page">Библиотека</a>
       <a class="btn-solar" href="board.html">Доска
-        <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3.46 10.54 L10.54 3.46 M4.88 3.46 H10.54 V9.12" stroke="#191A2F" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </a>
     </nav>
   </div>
@@ -377,8 +378,8 @@
 
     <div class="endcta">
       <span class="t">Как устроены продукты, которые мы выпускаем:</span>
-      <a href="about.html">Библиотека продуктов<span class="ar" aria-hidden="true">→</span></a>
-      <a href="board.html">Актуальная доска<span class="ar" aria-hidden="true">→</span></a>
+      <a href="about.html">Библиотека продуктов<span class="ar" aria-hidden="true">↗</span></a>
+      <a href="board.html">Актуальная доска<span class="ar" aria-hidden="true">↗</span></a>
     </div>
   </div>
 </div>
@@ -387,7 +388,7 @@
 <footer>
   <div class="wrap footer-in">
     <div class="footer-brand">
-      <div class="row"><svg width="18" height="18" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>Rumberg</div>
+      <div class="row"><svg width="18" height="18" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#F06E08"/></svg>Rumberg</div>
       <div class="sub lbl">Витрина структурных продуктов</div>
     </div>
     <div class="footer-right">
@@ -439,9 +440,9 @@
   });
 })();
 </script>
-<script src="chat.js?v=27"></script>
-<script src="search.js?v=8"></script>
-<script src="nav-about.js?v=9"></script>
-<script src="ptr.js?v=2" defer></script>
+<script src="chat.js?v=28"></script>
+<script src="search.js?v=9"></script>
+<script src="nav-about.js?v=10"></script>
+<script src="ptr.js?v=3" defer></script>
 </body>
 </html>

@@ -24,59 +24,60 @@
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Rumberg — структурные продукты">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="theme-color" content="#0B0C10">
+<meta name="theme-color" content="#191A2F">
 <link href="fonts/fonts.css?v=2" rel="stylesheet">
+<link href="brand/brand.css?v=1" rel="stylesheet">
 <style>
   :root {
-    --canvas: #0B0C10; --card: #14161C;
+    --canvas: #191A2F; --card: #22243B;
     --ink: #F2F3F7; --hushed: rgba(242,243,247,0.64); --faint: rgba(242,243,247,0.56);
     --border: rgba(255,255,255,0.11); --border-soft: rgba(255,255,255,0.07);
-    --solar: #EE7D1B; --solar-l: #F58E33;
-    --steel: #4F86E6; --amber-t: #E0A24A; --down: #EE7D1B;
-    --f-body: 'Onest', system-ui, sans-serif; --f-mono: 'JetBrains Mono', Consolas, monospace; --display:'Rubik','Onest',system-ui,sans-serif;
+    --solar: #F06E08; --solar-l: #F48834;
+    --steel: #4F86E6; --amber-t: #E0A24A; --down: #F06E08;
+    --f-body: 'Onest', system-ui, sans-serif; --f-mono: 'JetBrains Mono', Consolas, monospace; --display:Montserrat,'Onest',system-ui,sans-serif;
     --ease: cubic-bezier(0.16, 1, 0.3, 1);
   }
   * { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
   body { margin: 0; background: var(--canvas); color: var(--ink); font-family: var(--f-body); -webkit-font-smoothing: antialiased; }
   a { text-decoration: none; color: inherit; }
-  ::selection { background: rgba(238,125,27,0.35); color: var(--ink); }
-  a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 4px; }
+  ::selection { background: rgba(240,110,8,0.35); color: var(--ink); }
+  a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 2px; }
   .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
   .wrap { max-width: 1160px; margin: 0 auto; padding: 0 44px; }
 
-  .skip { position: absolute; left: -9999px; top: 0; z-index: 100; background: var(--solar); color: #0C0A08; padding: 10px 16px; border-radius: 0 0 8px 0; font-size: 14px; }
+  .skip { position: absolute; left: -9999px; top: 0; z-index: 100; background: var(--solar); color: #191A2F; padding: 10px 16px; border-radius: 0 0 2px 0; font-size: 14px; }
   .skip:focus { left: 0; }
 
-  .nav { position: sticky; top: 0; z-index: 30; background: rgba(11,12,16,0.82); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); }
+  .nav { position: sticky; top: 0; z-index: 30; background: rgba(25,26,47,0.82); backdrop-filter: none; -webkit-backdrop-filter: none; border-bottom: 1px solid var(--border); }
   .nav-in { max-width: 1160px; margin: 0 auto; padding: 0 44px; height: 62px; display: flex; align-items: center; gap: 12px; }
   .brand { display: flex; align-items: center; gap: 10px; } .brand-name { font-size: 14.5px; font-weight: 600; }
   .topnav { margin-left: auto; display: flex; align-items: center; gap: 22px; font-size: 14px; font-weight: 500; }
   .topnav a { color: var(--hushed); transition: color .2s; } .topnav a:hover { color: var(--ink); }
   .topnav a[aria-current="page"] { color: var(--ink); font-weight: 600; }
-  .btn-solar { background: var(--solar); color: #0C0A08 !important; border-radius: 6px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 7px; transition: background .3s ease-in-out; }
+  .btn-solar { background: var(--solar); color: #191A2F !important; border-radius: 2px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 7px; transition: background .3s ease-in-out; }
   .btn-solar:hover { background: var(--solar-l); }
 
   .page-head { padding: 46px 0 4px; }
-  .page-head h1 { margin: 0 0 14px; font-family: var(--display); font-size: clamp(32px, 4.5vw, 44px); font-weight: 500; line-height: 1.08; letter-spacing: -0.02em; text-wrap: balance; }
+  .page-head h1 { margin: 0 0 14px; font-family: var(--display); font-size: clamp(32px, 4.5vw, 44px); font-weight: 500; line-height: 1.08; letter-spacing: -0.01em; text-wrap: balance; }
   .page-head p { margin: 0; font-size: 16px; line-height: 1.6; color: var(--hushed); max-width: 640px; text-wrap: pretty; }
 
   .principles { display: grid; grid-template-columns: repeat(3, 1fr); padding: 34px 0 0; }
   .principle { padding: 4px 26px 8px 0; }
   .principle + .principle { border-left: 1px solid var(--border-soft); padding-left: 26px; }
-  .principle .k { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); margin-bottom: 8px; }
+  .principle .k { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--faint); margin-bottom: 8px; }
   .principle .v { font-size: 13.5px; line-height: 1.55; color: var(--hushed); text-wrap: pretty; }
 
   /* ── Содержание (общее) + статья (частное) ── */
   .layout { display: grid; grid-template-columns: 296px minmax(0, 1fr); gap: 40px; align-items: start; margin-top: 34px; }
   .toc { position: sticky; top: 82px; }
-  .toc-h { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint); margin-bottom: 8px; }
+  .toc-h { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--faint); margin-bottom: 8px; }
   /* Две группы содержания: сначала из чего собраны продукты, потом сами продукты */
-  .toc-sec { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint); padding: 0 9px 7px; }
+  .toc-sec { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--faint); padding: 0 9px 7px; }
   .toc-sec + .toc-sec, .toc-i + .toc-sec, .toc-kids + .toc-sec { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border-soft); }
-  .toc-i { display: flex; gap: 11px; align-items: baseline; width: 100%; text-align: left; background: none; border: none; cursor: pointer; padding: 8px 9px; border-radius: 8px; font-family: var(--f-body); color: var(--ink); }
+  .toc-i { display: flex; gap: 11px; align-items: baseline; width: 100%; text-align: left; background: none; border: none; cursor: pointer; padding: 8px 9px; border-radius: 2px; font-family: var(--f-body); color: var(--ink); }
   .toc-i:hover { background: rgba(255,255,255,0.05); }
-  .toc-i.active { background: rgba(238,125,27,0.16); color: var(--ink); }
+  .toc-i.active { background: rgba(255, 255, 255, 0.072); color: var(--ink); }
   .toc-i.active .sub, .toc-i.active .cnt { color: rgba(242,243,247,0.72); }
   .toc-i .dot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--fc); position: relative; top: -1px; }
   .toc-i .tx { flex: 1; min-width: 0; }
@@ -88,7 +89,7 @@
   .toc-kids-in { overflow: hidden; min-height: 0; padding-left: 13px; border-left: 1px solid var(--border-soft); }
   .toc-kids .toc-i { padding: 6px 9px; }
   .toc-kids .toc-i .nm { font-size: 13px; font-weight: 500; }
-  .toc-link { display: flex; gap: 11px; align-items: baseline; padding: 8px 9px; border-radius: 8px; color: var(--ink); transition: background .15s; }
+  .toc-link { display: flex; gap: 11px; align-items: baseline; padding: 8px 9px; border-radius: 2px; color: var(--ink); transition: background .15s; }
   .toc-link:hover { background: rgba(255,255,255,0.05); }
   .toc-link .dot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--fc); position: relative; top: -1px; }
   .toc-link .tx { flex: 1; min-width: 0; }
@@ -98,38 +99,38 @@
   .toc-i .chev { flex: none; color: var(--faint); transition: transform .25s var(--ease); align-self: center; }
   .toc-i.exp .chev { transform: rotate(180deg); }
   .toc-i.exp { background: rgba(255,255,255,0.05); }
-  .toc-i.exp.active { background: rgba(238,125,27,0.16); }
+  .toc-i.exp.active { background: rgba(255, 255, 255, 0.072); }
 
   /* Статья */
-  .art-title { margin: 0 0 9px; font-family: var(--display); font-size: clamp(27px, 3.4vw, 37px); font-weight: 500; letter-spacing: -0.02em; line-height: 1.1; max-width: 620px; }
-  .art-kind { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.11em; text-transform: uppercase; color: var(--fc); margin: 0 0 10px; }
+  .art-title { margin: 0 0 9px; font-family: var(--display); font-size: clamp(27px, 3.4vw, 37px); font-weight: 500; letter-spacing: -0.01em; line-height: 1.1; max-width: 620px; }
+  .art-kind { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--fc); margin: 0 0 10px; }
   .art-kind .mapc { color: var(--hushed); border-bottom: 1px solid var(--border); }
   .art-kind .mapc:hover { color: var(--ink); border-bottom-color: var(--fc); }
   .maplink { margin-top: 14px !important; font-size: 14px !important; }
-  .maplink a { color: var(--ink); font-weight: 600; border-bottom: 1px solid rgba(238,125,27,0.5); }
+  .maplink a { color: var(--ink); font-weight: 600; border-bottom: 1px solid rgba(240,110,8,0.5); }
   .maplink a:hover { border-bottom-color: var(--solar); }
   .art-sub { font-size: 15px; line-height: 1.55; color: var(--hushed); max-width: 640px; text-wrap: pretty; }
   .art-bar { width: 56px; height: 4px; background: var(--fc); margin: 16px 0 22px; }
   .art-grid { display: grid; grid-template-columns: 1.25fr 1fr; gap: 28px; align-items: start; }
   .kv { margin: 0 0 18px; } .kv:last-child { margin-bottom: 0; }
-  .kv .k { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.11em; text-transform: uppercase; color: var(--faint); margin-bottom: 7px; }
+  .kv .k { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--faint); margin-bottom: 7px; }
   .kv .v { font-size: 14.5px; line-height: 1.62; color: var(--hushed); text-wrap: pretty; }
   .metrics { display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 18px; }
   .metric { min-width: 150px; flex: 1; }
-  .metric .k { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); }
+  .metric .k { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--faint); }
   .metric .v { font-size: 13.5px; color: var(--hushed); margin-top: 4px; line-height: 1.5; }
-  .plaque { padding: 12px 14px; border: 1px solid var(--border-soft); background: rgba(255,255,255,0.03); border-radius: 10px; font-size: 13px; line-height: 1.55; color: var(--hushed); margin-bottom: 18px; }
-  .plaque .k { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.11em; text-transform: uppercase; color: var(--down); margin-bottom: 6px; }
-  .usecase { display: flex; gap: 12px; align-items: flex-start; background: rgba(238,125,27,0.12); border: 1px solid rgba(238,125,27,0.22); border-radius: 10px; padding: 13px 16px; margin-bottom: 20px; }
+  .plaque { padding: 12px 14px; border: 1px solid var(--border-soft); background: rgba(255,255,255,0.03); border-radius: 2px; font-size: 13px; line-height: 1.55; color: var(--hushed); margin-bottom: 18px; }
+  .plaque .k { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--down); margin-bottom: 6px; }
+  .usecase { display: flex; gap: 12px; align-items: flex-start; background: rgba(255, 255, 255, 0.054); border: 1px solid rgba(240,110,8,0.22); border-radius: 2px; padding: 13px 16px; margin-bottom: 20px; }
   .usecase .ic { flex: none; line-height: 0; margin-top: 1px; }
-  .usecase .k { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.11em; text-transform: uppercase; color: var(--solar); margin-bottom: 5px; }
+  .usecase .k { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--solar); margin-bottom: 5px; }
   .usecase .v { font-size: 15px; line-height: 1.55; color: var(--ink); font-weight: 500; text-wrap: pretty; }
   .boardlink { display: inline-flex; align-items: center; gap: 7px; margin-top: 4px; font-size: 14px; font-weight: 600; color: var(--fc); }
   .boardlink .cnt { font-family: var(--f-mono); font-size: 11.5px; font-weight: 400; color: var(--faint); }
 
   /* «Сейчас на доске»: живые продукты этого типа, ссылками в карточки */
   .live { margin-top: 22px; border-top: 1px solid var(--border-soft); padding-top: 14px; }
-  .live .k { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.11em; text-transform: uppercase; color: var(--faint); margin-bottom: 4px; }
+  .live .k { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--faint); margin-bottom: 4px; }
   .lrow { display: flex; align-items: center; gap: 10px; padding: 9px 0; font-size: 13.5px; color: var(--hushed); border-bottom: 1px solid var(--border-soft); transition: color .18s; }
   .lrow:hover { color: var(--ink); }
   .lrow .nm { flex: 1; min-width: 0; line-height: 1.4; }
@@ -141,7 +142,7 @@
      ширину: в левой колонке она давала 1400px текста против 460px графика,
      и справа зияла пустота. Тройкой это ещё и читается как сравнение,
      чем она и является. Разделители — как у .principles в шапке страницы */
-  .rows-k { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.11em; text-transform: uppercase; color: var(--faint); margin: 30px 0 0; }
+  .rows-k { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--faint); margin: 30px 0 0; }
   .lrow .cnt { font-family: var(--f-mono); font-size: 11.5px; color: var(--faint); white-space: nowrap; }
   .trio { display: grid; grid-template-columns: repeat(3, 1fr); margin: 10px 0 4px; border-top: 1px solid var(--border); }
   .trio > div { padding: 14px 26px 6px 0; }
@@ -149,7 +150,7 @@
   .trio .t { font-size: 15px; font-weight: 600; line-height: 1.3; }
   .trio .en { display: block; font-family: var(--f-mono); font-size: 11px; font-weight: 400; color: var(--faint); margin-top: 4px; }
   .trio .d { font-size: 13.5px; line-height: 1.6; color: var(--hushed); margin-top: 9px; text-wrap: pretty; }
-  .trio a { color: var(--ink); font-weight: 600; border-bottom: 1px solid rgba(238,125,27,0.5); }
+  .trio a { color: var(--ink); font-weight: 600; border-bottom: 1px solid rgba(240,110,8,0.5); }
   .trio a:hover { border-bottom-color: var(--solar); }
   /* Колонка, которая и есть наш продукт: единственная точка, где базовая бумага
      смыкается с витриной, — помечена акцентной планкой, а не заливкой */
@@ -163,7 +164,7 @@
   .lgi b { color: var(--ink); font-weight: 600; }
 
   .gloss { margin-top: 26px; border-top: 1px solid var(--border-soft); padding-top: 16px; }
-  .gloss summary { cursor: pointer; font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); list-style: none; display: flex; align-items: center; gap: 8px; }
+  .gloss summary { cursor: pointer; font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--faint); list-style: none; display: flex; align-items: center; gap: 8px; }
   .gloss summary::-webkit-details-marker { display: none; }
   .gloss summary::before { content: "+"; color: var(--fc); font-size: 15px; line-height: 1; width: 12px; }
   .gloss[open] summary::before { content: "\2212"; }
@@ -175,7 +176,7 @@
   .backmx { display: inline-flex; align-items: center; gap: 7px; background: none; border: none; cursor: pointer; font-family: var(--f-body); font-size: 13px; color: var(--hushed); padding: 0 0 14px; }
   .backmx:hover { color: var(--ink); }
 
-  .viz { background: var(--card); border: 1px solid var(--border-soft); border-radius: 12px; padding: 18px 20px 14px; }
+  .viz { background: var(--card); border: 1px solid var(--border-soft); border-radius: 2px; padding: 18px 20px 14px; }
   .pf svg { display: block; width: 100%; height: auto; }
   .pf-axis { font-family: var(--f-mono); font-size: 11px; color: var(--faint); text-align: right; margin-top: 3px; }
   .pf-cap { font-size: 12px; line-height: 1.5; color: var(--faint); margin-top: 10px; text-wrap: pretty; }
@@ -184,12 +185,12 @@
   .pf.grown .pf-bar { transform: scaleY(1); }
 
   .prot-ctrls { display: flex; flex-wrap: wrap; gap: 18px; margin-bottom: 14px; }
-  .ctrl .k { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); margin-bottom: 7px; }
-  .seg { display: inline-flex; background: rgba(255,255,255,0.06); border-radius: 9px; padding: 3px; gap: 2px; }
-  .seg button { border: none; background: none; cursor: pointer; font-family: var(--f-mono); font-size: 12.5px; color: var(--hushed); padding: 6px 12px; border-radius: 7px; transition: background .18s, color .18s; }
-  /* Выбранная кнопка: #4F86E6 на подложке #262A33 давал 4,03:1 при кегле 12,5px —
+  .ctrl .k { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--faint); margin-bottom: 7px; }
+  .seg { display: inline-flex; background: rgba(255,255,255,0.06); border-radius: 2px; padding: 3px; gap: 2px; }
+  .seg button { border: none; background: none; cursor: pointer; font-family: var(--f-mono); font-size: 12.5px; color: var(--hushed); padding: 6px 12px; border-radius: 2px; transition: background .18s, color .18s; }
+  /* Выбранная кнопка: #4F86E6 на подложке #343852 давал 4,03:1 при кегле 12,5px —
      ниже порога 4,5. Осветлённый тон того же синего — 4,89:1 */
-  .seg button.on { background: #262A33; color: #6796EC; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.35); }
+  .seg button.on { background: #343852; color: #6796EC; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.35); }
   .prot-read { font-size: 13px; line-height: 1.55; color: var(--hushed); margin-top: 12px; text-wrap: pretty; }
   .prot-read b { color: var(--ink); }
 
@@ -203,8 +204,8 @@
      buttontext (чёрный). Без этой строки названия шести типов варрантов
      печатались чёрным по тёмной карточке — контраст 1,16:1, то есть их не было
      видно вовсе, при живых подписи и ссылке под ними */
-  .cell { background: var(--card); border: 1px solid var(--border-soft); border-radius: 11px; padding: 10px 11px 9px; cursor: pointer; text-align: left; font-family: var(--f-body); color: var(--ink); transition: box-shadow .18s, transform .18s, border-color .18s; }
-  .cell:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.4); }
+  .cell { background: var(--card); border: 1px solid var(--border-soft); border-radius: 2px; padding: 10px 11px 9px; cursor: pointer; text-align: left; font-family: var(--f-body); color: var(--ink); transition: box-shadow .18s, transform .18s, border-color .18s; }
+  .cell:hover { transform: none; box-shadow: 0 8px 20px rgba(0,0,0,0.4); }
   .cell svg { display: block; width: 100%; height: auto; }
   .cell svg text { display: none; }
   .cell .nm { font-size: 13px; font-weight: 600; margin-top: 7px; }
@@ -214,14 +215,14 @@
   .nextprev { display: flex; justify-content: space-between; gap: 14px; margin-top: 34px; border-top: 1px solid var(--border); padding-top: 18px; }
   .np { background: none; border: none; cursor: pointer; font-family: var(--f-body); color: var(--hushed); text-align: left; padding: 6px 0; max-width: 46%; }
   .np:hover { color: var(--ink); } .np.r { text-align: right; }
-  .np .l { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); }
+  .np .l { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--faint); }
   .np .n { font-size: 14.5px; margin-top: 3px; }
   .np[disabled] { visibility: hidden; }
 
   footer { margin-top: 64px; background: var(--canvas); border-top: 1px solid var(--border); color: var(--hushed); }
   .footer-in { padding: 34px 0 44px; display: flex; justify-content: space-between; gap: 32px; flex-wrap: wrap; }
   .footer-brand .row { display: flex; align-items: center; gap: 10px; color: var(--ink); font-size: 14px; font-weight: 600; }
-  .footer-brand .sub { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); margin-top: 8px; }
+  .footer-brand .sub { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--faint); margin-top: 8px; }
   .footer-right { display: flex; flex-direction: column; gap: 10px; max-width: 460px; }
   .disclaimer { font-size: 12.5px; line-height: 1.55; }
   .updated { font-family: var(--f-mono); font-size: 11.5px; color: var(--faint); }
@@ -268,7 +269,7 @@
   @media (max-width: 900px) {
     html.lib-m .principles, html.lib-m .maplink { display: none; }
     html.lib-m .page-head { padding-top: 26px; }
-    html.lib-m .page-head h1 { font-size: 32px; margin-bottom: 8px; }
+    html.lib-m .page-head h1 { font-size: 30.1px; margin-bottom: 8px; }
     html.lib-m .page-head p { font-size: 15px; line-height: 1.55; }
     html.lib-m .layout { margin-top: 14px; }
     html.lib-m:not(.lib-a) .layout > main { display: none; }
@@ -302,7 +303,7 @@
 <header class="nav">
   <div class="nav-in">
     <a class="brand" href="index.html" aria-label="На главную">
-      <svg width="22" height="22" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>
+      <svg width="22" height="22" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#F06E08"/></svg>
       <span class="brand-name">Rumberg</span><span class="brand-tag">Инвестиционные решения</span>
     </a>
     <nav class="topnav">
@@ -313,7 +314,7 @@
       <a href="placements.html">Выпуски</a>
       <a href="about.html" aria-current="page">Библиотека</a>
       <a class="btn-solar" href="board.html">Доска
-        <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3.46 10.54 L10.54 3.46 M4.88 3.46 H10.54 V9.12" stroke="#191A2F" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </a>
     </nav>
   </div>
@@ -322,7 +323,7 @@
 <section class="wrap page-head">
   <h1>Как это работает</h1>
   <p>Сначала базовые бумаги, из которых всё собрано, затем сами продукты. По каждому: как устроен, профиль выплаты, риск и когда уместен.</p>
-  <p class="maplink">Все типы рынка с формулами выплат — в <a href="map.html">карте структурных продуктов →</a></p>
+  <p class="maplink">Все типы рынка с формулами выплат — в <a href="map.html">карте структурных продуктов ↗</a></p>
 </section>
 
 <section class="wrap principles">
@@ -349,7 +350,7 @@
 <footer>
   <div class="wrap footer-in">
     <div class="footer-brand">
-      <div class="row"><svg width="18" height="18" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>Rumberg</div>
+      <div class="row"><svg width="18" height="18" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#F06E08"/></svg>Rumberg</div>
       <div class="sub">Витрина структурных продуктов</div>
     </div>
     <div class="footer-right">
@@ -361,7 +362,7 @@
 
 <script src="data/instruments.js"></script>
 <script src="data/market.js"></script>
-<script src="market-lib.js?v=8"></script>
+<script src="market-lib.js?v=9"></script>
 <script>
 (function () {
   "use strict";
@@ -434,7 +435,7 @@
 
   // ── Движок пэйоффов ──
   var W = 340, H = 178, PADX = 24, TOP = 26, ZERO = 108, PREM = 134, CAP = 62;
-  var GRID = "rgba(255,255,255,0.09)", AX = "rgba(255,255,255,0.17)", LAB = "rgba(255,255,255,0.68)", KOc = "#EE7D1B", LITE = "#E7E9F0";
+  var GRID = "rgba(255,255,255,0.09)", AX = "rgba(255,255,255,0.17)", LAB = "rgba(255,255,255,0.68)", KOc = "#F06E08", LITE = "#E7E9F0";
   var MONO = 'font-family="JetBrains Mono, monospace"';
   function xu(u) { return (PADX + (u / 2) * (W - 2 * PADX)); }
   function svgWrap(inner) { return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="display:block" aria-hidden="true" focusable="false">' + inner + '</svg>'; }
@@ -467,7 +468,7 @@
         '<rect class="pf-bar" x="' + x2 + '" y="' + (base - h100) + '" width="' + bw + '" height="' + h100 + '" rx="3" fill="#E7E9F0"/>' +
         '<text x="' + (x1 + bw / 2) + '" y="' + (base + 14) + '" text-anchor="middle" font-size="11" ' + MONO + ' fill="' + LAB + '">вход 50%</text>' +
         '<text x="' + (x2 + bw / 2) + '" y="' + (base + 14) + '" text-anchor="middle" font-size="11" ' + MONO + ' fill="#E7E9F0">погашение 100%</text>' +
-        '<text x="' + ((x1 + x2 + bw) / 2) + '" y="' + (base - h50 - 8) + '" text-anchor="middle" font-size="11" ' + MONO + ' fill="#EE7D1B">+50 п.п.</text>';
+        '<text x="' + ((x1 + x2 + bw) / 2) + '" y="' + (base - h50 - 8) + '" text-anchor="middle" font-size="11" ' + MONO + ' fill="#F06E08">+50 п.п.</text>';
       return svgWrap(inner);
     }
     // Денежный поток облигации: купоны по периодам плюс номинал на погашении.
@@ -680,8 +681,8 @@
         '<text x="' + xu(1) + '" y="' + (H - 4) + '" text-anchor="middle" font-size="11" ' + MONO + ' fill="' + LAB + '">S₀ · старт</text>';
       // Подпись «участие» — над концом линии (не пересекает её)
       var pl = dir === "up"
-        ? '<text x="' + (xu(2) - 4) + '" y="' + Math.max(TOP - 6, yTop - 10) + '" text-anchor="end" font-size="11" ' + MONO + ' fill="#EE7D1B">участие</text>'
-        : '<text x="' + (xu(0) + 4) + '" y="' + Math.max(TOP - 6, yTop - 10) + '" text-anchor="start" font-size="11" ' + MONO + ' fill="#EE7D1B">участие</text>';
+        ? '<text x="' + (xu(2) - 4) + '" y="' + Math.max(TOP - 6, yTop - 10) + '" text-anchor="end" font-size="11" ' + MONO + ' fill="#F06E08">участие</text>'
+        : '<text x="' + (xu(0) + 4) + '" y="' + Math.max(TOP - 6, yTop - 10) + '" text-anchor="start" font-size="11" ' + MONO + ' fill="#F06E08">участие</text>';
       inner += pl + line(d, "#E7E9F0");
       return svgWrap(inner);
     }
@@ -826,11 +827,11 @@
     '<div class="toc-sec">Справочник</div>' +
     '<a class="toc-link" href="map.html" style="--fc:#8A93A6"><span class="dot" aria-hidden="true"></span>' +
       '<span class="tx"><span class="nm">Карта структурных продуктов</span><br><span class="sub">все типы рынка · формулы выплат</span></span>' +
-      '<span class="ar" aria-hidden="true">→</span></a>';
+      '<span class="ar" aria-hidden="true">↗</span></a>';
 
   // ── Статьи ──
   function usecaseHTML(d, label) {
-    return '<div class="usecase"><span class="ic" aria-hidden="true"><svg width="17" height="17" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="6.4" stroke="#EE7D1B" stroke-width="1.5"/><circle cx="9" cy="9" r="1.9" fill="#EE7D1B"/></svg></span>' +
+    return '<div class="usecase"><span class="ic" aria-hidden="true"><svg width="17" height="17" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="6.4" stroke="#F06E08" stroke-width="1.5"/><circle cx="9" cy="9" r="1.9" fill="#F06E08"/></svg></span>' +
       '<div><div class="k">' + (label || "Когда уместен") + '</div><div class="v">' + d.whenToUse + '</div></div></div>';
   }
   function metricsHTML(d) {
@@ -865,7 +866,7 @@
     var n = liveCount(famKey);
     return '<a class="boardlink" href="' + fam.board + '">' + label +
       (n ? '<span class="cnt">· ' + n + ' шт.</span>' : '') +
-      '<svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>';
+      '<svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3.46 10.54 L10.54 3.46 M4.88 3.46 H10.54 V9.12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>';
   }
   // Подтип варранта → код structure в data/instruments.js. На доске сейчас живут
   // только call и cs; у остальных подтипов совпадений не будет, пока деск не
@@ -886,7 +887,7 @@
     var list = liveFor(id, famKey);
     var rows = list.slice(0, 4).map(function (it) {
       return '<a class="lrow" href="instrument.html?id=' + encodeURIComponent(it.id) + '"><span class="nm">' + it.name + '</span>' +
-        '<svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>';
+        '<svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3.46 10.54 L10.54 3.46 M4.88 3.46 H10.54 V9.12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>';
     }).join("");
     var footLabel = famKey === "warrant" ? "Все варранты на доске" : "Вся подборка на доске";
     return '<div class="live"><div class="k">Сейчас на доске</div>' +
@@ -907,7 +908,7 @@
         (r.en ? '<span class="en">' + r.en + '</span>' : '') + '</div><div class="d">' + r.d + '</div></div>';
     }).join("") + '</div>';
   }
-  var ARROW = '<svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var ARROW = '<svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3.46 10.54 L10.54 3.46 M4.88 3.46 H10.54 V9.12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   function lrow(href, name, cnt) {
     return '<a class="lrow" href="' + href + '"><span class="nm">' + name + '</span>' +
       (cnt ? '<span class="cnt">' + cnt + '</span>' : '') + ARROW + '</a>';
@@ -1461,10 +1462,10 @@
   if (u) document.getElementById("updated").textContent = u.split("-").reverse().join(".");
 })();
 </script>
-<script src="chat.js?v=27"></script>
-<script src="search.js?v=8"></script>
-<script src="nav-about.js?v=9"></script>
-<script src="qualgate.js?v=8"></script>
-<script src="ptr.js?v=2" defer></script>
+<script src="chat.js?v=28"></script>
+<script src="search.js?v=9"></script>
+<script src="nav-about.js?v=10"></script>
+<script src="qualgate.js?v=9"></script>
+<script src="ptr.js?v=3" defer></script>
 </body>
 </html>

@@ -13,8 +13,9 @@
 <meta property="og:locale" content="ru_RU">
 <meta name="robots" content="noindex, follow">
 <link rel="canonical" href="https://invest.rumberg.ru/svodka">
-<meta name="theme-color" content="#0B0C10">
+<meta name="theme-color" content="#191A2F">
 <link href="fonts/fonts.css?v=2" rel="stylesheet">
+<link href="brand/brand.css?v=1" rel="stylesheet">
 <script src="metrika.js?v=10" defer></script>
 <!--
   Сводка рынка отдельной страницей (09.10.2026, Руслан: «делай всё» на разбор карточки дня).
@@ -29,22 +30,22 @@
   правишь вид сводки — правь там.
 -->
 <style>
-  :root { --bg:#0B0C10; --card:#14161C; --card2:#1B1E25; --ink:#F2F3F7; --mut:rgba(242,243,247,.64); --faint:rgba(242,243,247,.5);
-    --line:rgba(255,255,255,.08); --or:#EE7D1B; --up:#55C08A; --dn:#E0705A; }
+  :root { --bg:#191A2F; --card:#22243B; --card2:#292C44; --ink:#F2F3F7; --mut:rgba(242,243,247,.64); --faint:rgba(242,243,247,.5);
+    --line:rgba(255,255,255,.08); --or:#F06E08; --up:#55C08A; --dn:#E0705A; }
   * { box-sizing: border-box; }
   html { -webkit-text-size-adjust: 100%; }
   body { margin: 0; background: var(--bg); color: var(--ink); font-family: 'Onest', system-ui, sans-serif; font-size: 16px; line-height: 1.45; }
   a { color: inherit; text-decoration: none; }
-  a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--or); outline-offset: 2px; border-radius: 6px; }
+  a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--or); outline-offset: 2px; border-radius: 2px; }
   .bar { position: sticky; top: 0; z-index: 10; background: var(--bg); border-bottom: 1px solid var(--line); }
   .bar::before { content: ""; position: absolute; left: 0; right: 0; bottom: 100%; height: 100vh; background: var(--bg); }
   .bar-in { max-width: 680px; margin: 0 auto; padding: 0 16px; height: 56px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-  .brand { display: flex; align-items: center; gap: 8px; min-height: 44px; font-family: 'Rubik', sans-serif; font-weight: 600; font-size: 18px; }
+  .brand { display: flex; align-items: center; gap: 8px; min-height: 44px; font-family: Montserrat, sans-serif; font-weight: 500; font-size: 16.9px; }
   .brand svg { color: var(--or); }
   .to { display: flex; align-items: center; gap: 6px; min-height: 44px; font-size: 14.5px; color: var(--mut); }
   .to:hover { color: var(--ink); }
   main { max-width: 680px; margin: 0 auto; padding: 22px 16px 40px; }
-  h1 { margin: 0; font-family: 'Rubik', sans-serif; font-weight: 600; font-size: clamp(30px, 8vw, 40px); line-height: 1.1; letter-spacing: -.01em; }
+  h1 { margin: 0; font-family: Montserrat, sans-serif; font-weight: 500; font-size: clamp(30px, 8vw, 40px); line-height: 1.1; letter-spacing: -0.01em; }
   .wait { margin: 30px 0; font-size: 15px; color: var(--mut); }
   .foot { max-width: 680px; margin: 0 auto; padding: 18px 16px 40px; border-top: 1px solid var(--line); font-size: 13.5px; color: var(--mut); }
   .foot a { color: var(--or); }
@@ -54,14 +55,14 @@
 <body>
 <header class="bar"><div class="bar-in">
   <a class="brand" href="/" aria-label="Rumberg — на главную витрины"><svg viewBox="0 0 26 26" width="20" height="20" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="currentColor"/></svg>Rumberg</a>
-  <a class="to" href="/">Витрина продуктов <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+  <a class="to" href="/">Витрина продуктов <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3.46 10.54 L10.54 3.46 M4.88 3.46 H10.54 V9.12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
 </div></header>
 <main id="main">
   <h1>Сводка рынка</h1>
   <div id="sv"><p class="wait">Загружаю сводку…</p></div>
 </main>
-<footer class="foot">Rumberg — эмитент структурных облигаций для квалифицированных инвесторов. <a href="/">Витрина продуктов →</a></footer>
-<script src="svview.js?v=4"></script>
+<footer class="foot">Rumberg — эмитент структурных облигаций для квалифицированных инвесторов. <a href="/">Витрина продуктов ↗</a></footer>
+<script src="svview.js?v=5"></script>
 <script>
 (function () {
   "use strict";
@@ -87,12 +88,12 @@
   box.addEventListener("click", function (e) {
     var b = e.target.closest("[data-svshare]"); if (!b || !SV) return;
     if (window.SvCard) { SvCard.open(SV, b); return; }
-    var s = document.createElement("script"); s.src = "svcard.js?v=2";
+    var s = document.createElement("script"); s.src = "svcard.js?v=3";
     s.onload = function () { if (window.SvCard) SvCard.open(SV, b); };
     document.head.appendChild(s);
   });
 })();
 </script>
-<script src="ptr.js?v=2" defer></script>
+<script src="ptr.js?v=3" defer></script>
 </body>
 </html>

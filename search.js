@@ -289,11 +289,11 @@
       ".sf{display:none;position:relative;min-width:0;}",
       ".nav-in.sf-open .sf{display:block;}",
       ".sf-btn{flex:none;display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;",
-      "  box-sizing:border-box;padding:0;border-radius:9px;border:1px solid rgba(255,255,255,.13);",
+      "  box-sizing:border-box;padding:0;border-radius:2px;border:1px solid rgba(255,255,255,.13);",
       "  background:rgba(255,255,255,.05);color:#F2F3F7;cursor:pointer;transition:border-color .18s,background .18s;}",
       ".sf-btn:hover{border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.08);}",
       ".sf-btn svg{display:block;}",
-      ".nav-in.sf-open .sf-btn{border-color:rgba(238,125,27,.55);}",
+      ".nav-in.sf-open .sf-btn{border-color:rgba(240,110,8,.55);}",
       // Пункты меню — всегда в одну строку: «Лучшие ставки» в две ломало высоту шапки
       ".nav-in .topnav a{white-space:nowrap;}",
       // Первая ступень ужатия — без подписи; дальше fit() теснит меню
@@ -308,7 +308,7 @@
       "  .nav-in{position:relative;}",
       "  .nav-in.sf-open .sf{position:absolute;top:50%;transform:translateY(-50%);right:var(--sf-r,44px);",
       "    width:min(520px,calc(100% - 2*var(--sf-r,44px)));z-index:60;}",
-      "  .nav-in.sf-open .sf-in{background:#14161C;box-shadow:0 0 0 6px #0B0C10,0 10px 30px rgba(0,0,0,.5);}",
+      "  .nav-in.sf-open .sf-in{background:#22243B;box-shadow:0 0 0 6px #191A2F,0 10px 30px rgba(0,0,0,.5);}",
       "}",
       // Главная на 861–900px ещё рисует десктопный ряд — поле поверх, как на десктопе
       "@media (min-width:861px) and (max-width:900px){",
@@ -317,19 +317,19 @@
       "    width:min(520px,calc(100% - 2*var(--sf-r,20px)));z-index:60;flex:none;}",
       "}",
       ".sf-in{width:100%;height:36px;box-sizing:border-box;background:rgba(255,255,255,.05);",
-      "  border:1px solid rgba(255,255,255,.13);border-radius:9px;color:#F2F3F7;",
+      "  border:1px solid rgba(255,255,255,.13);border-radius:2px;color:#F2F3F7;",
       "  font-family:'Onest',system-ui,sans-serif;font-size:13.5px;padding:0 12px 0 34px;",
       "  transition:border-color .18s,background .18s;}",
       ".sf-in::placeholder{color:rgba(242,243,247,.45);}",
-      ".sf-in:focus{outline:none;border-color:rgba(238,125,27,.55);background:rgba(255,255,255,.07);}",
+      ".sf-in:focus{outline:none;border-color:rgba(240,110,8,.55);background:rgba(255,255,255,.07);}",
       ".sf-ic{position:absolute;left:11px;top:50%;transform:translateY(-50%);pointer-events:none;opacity:.5;}",
       ".sf-panel{position:absolute;top:calc(100% + 7px);left:0;right:0;min-width:330px;z-index:90;",
-      "  background:#14161C;border:1px solid rgba(255,255,255,.13);border-radius:12px;",
+      "  background:#22243B;border:1px solid rgba(255,255,255,.13);border-radius:2px;",
       "  box-shadow:0 18px 48px rgba(0,0,0,.55);overflow:hidden;display:none;",
       "  max-height:min(70vh,520px);overflow-y:auto;}",
       ".sf.open .sf-panel{display:block;}",
-      ".sf-cap{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.13em;",
-      "  text-transform:uppercase;color:rgba(242,243,247,.45);padding:11px 14px 6px;}",
+      ".sf-cap{font-family:Onest, system-ui, sans-serif;font-size:11px;letter-spacing:normal;",
+      "  text-transform:none;color:rgba(242,243,247,.45);padding:11px 14px 6px;}",
       ".sf-row{display:flex;align-items:center;gap:10px;padding:7px 10px 7px 14px;",
       "  border-top:1px solid rgba(255,255,255,.05);}",
       ".sf-cap + .sf-row{border-top:0;}",
@@ -341,18 +341,18 @@
       "  color:rgba(242,243,247,.5);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}",
       ".sf-q{flex:none;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:rgba(242,243,247,.68);}",
       ".sf-bid{color:#55C08A;}",
-      ".sf-copy{flex:none;background:rgba(238,125,27,.14);border:1px solid rgba(238,125,27,.34);",
-      "  color:#F58E33;border-radius:7px;font-family:'Onest',system-ui,sans-serif;font-size:12px;",
+      ".sf-copy{flex:none;background:rgba(255, 255, 255, 0.063);border:1px solid rgba(240,110,8,.34);",
+      "  color:#F48834;border-radius:2px;font-family:'Onest',system-ui,sans-serif;font-size:12px;",
       "  padding:6px 10px;cursor:pointer;transition:background .15s,color .15s;}",
-      ".sf-copy:hover{background:rgba(238,125,27,.24);}",
-      ".sf-copy.done{background:#EE7D1B;color:#0C0A08;border-color:#EE7D1B;}",
+      ".sf-copy:hover{background:rgba(255, 255, 255, 0.108);}",
+      ".sf-copy.done{background:#F06E08;color:#191A2F;border-color:#F06E08;}",
       ".sf-copy.done::after{content:' ✓';}",
       ".sf-all{display:block;padding:11px 14px;border-top:1px solid rgba(255,255,255,.09);",
-      "  font-size:12.5px;color:#F58E33;text-decoration:none;}",
+      "  font-size:12.5px;color:#F48834;text-decoration:none;}",
       ".sf-all:hover{background:rgba(255,255,255,.05);}",
       ".sf-hint{padding:14px;font-size:12.5px;line-height:1.5;color:rgba(242,243,247,.55);}",
       ".sf-said{position:fixed;left:50%;bottom:26px;transform:translateX(-50%);z-index:100001;",
-      "  background:#14161C;border:1px solid rgba(255,255,255,.16);border-radius:10px;",
+      "  background:#22243B;border:1px solid rgba(255,255,255,.16);border-radius:2px;",
       "  padding:11px 16px;font-family:'Onest',system-ui,sans-serif;font-size:13px;color:#F2F3F7;",
       "  box-shadow:0 12px 34px rgba(0,0,0,.5);max-width:min(92vw,560px);word-break:break-all;}",
       // Тач-цель ≥44px и панель во всю ширину экрана: на телефоне выпадашка
@@ -366,8 +366,8 @@
       "  .crumbs a{display:inline-flex;align-items:center;min-height:44px;}",
       // Сплошная шапка вместо размытия: blur под липкой шапкой пересчитывается каждый
       // кадр прокрутки — самая дорогая отрисовка на телефоне (на главной сняли раньше)
-      "  header.nav{background:#0B0C10!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;}",
-      "  header.nav::before{content:'';position:absolute;left:0;right:0;bottom:100%;height:100vh;background:#0B0C10;pointer-events:none;}",
+      "  header.nav{background:#191A2F!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;}",
+      "  header.nav::before{content:'';position:absolute;left:0;right:0;bottom:100%;height:100vh;background:#191A2F;pointer-events:none;}",
       // Телефон: шапка в одну строку 57px, как на главной, — звезда и имя
       // слева, лупа и меню справа. Было 118–165px в три ряда (логотип; меню
       // с «Доской»; поле поиска) — пятая часть экрана. «Доска» живёт в меню.
@@ -402,7 +402,7 @@
       // «‹» — шаг назад на телефоне, слева от логотипа (только если пришли с нашего сайта)
       ".sf-back{display:none;}",
       "@media (max-width:900px){.nav-in .sf-back{display:inline-flex;align-items:center;justify-content:center;flex:none;",
-      "  width:36px;height:44px;margin-left:-12px;margin-right:2px;color:#EE7D1B;text-decoration:none;}}"
+      "  width:36px;height:44px;margin-left:-12px;margin-right:2px;color:#F06E08;text-decoration:none;}}"
     ].join("");
     document.head.appendChild(s);
   }

@@ -19,19 +19,19 @@
   if (window.SvView) return;
 
   var CSS = [
-    ".sv { --sv-card:#14161C; --sv-card2:#1B1E25; --sv-ink:#F2F3F7; --sv-mut:rgba(242,243,247,.64); --sv-faint:rgba(242,243,247,.56);",
-    "  --sv-line:rgba(255,255,255,.08); --sv-up:#55C08A; --sv-dn:#E0705A; --sv-or:#EE7D1B; color: var(--sv-ink); }",
+    ".sv { --sv-card:#22243B; --sv-card2:#292C44; --sv-ink:#F2F3F7; --sv-mut:rgba(242,243,247,.64); --sv-faint:rgba(242,243,247,.56);",
+    "  --sv-line:rgba(255,255,255,.08); --sv-up:#55C08A; --sv-dn:#E0705A; --sv-or:#F06E08; color: var(--sv-ink); }",
     ".sv-meta { margin: 6px 0 14px; font-size: 13.5px; color: var(--sv-mut); }",
     ".sv-meta b { font-weight: 500; color: var(--sv-ink); }",
     ".sv-meta.sv-old, .sv-meta.sv-old b { color: #E0A24A; }",
-    ".sv-card { background: var(--sv-card); border-radius: 18px; padding: 14px 16px; }",
-    ".sv-rb { display: block; font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--sv-or); }",
+    ".sv-card { background: var(--sv-card); border-radius: 2px; padding: 14px 16px; }",
+    ".sv-rb { display: block; font-size: 12px; font-weight: 600; letter-spacing: normal; text-transform: none; color: var(--sv-or); }",
     /* Настроение — спидометр (вариант D, выбор Руслана 09.10.2026) */
     ".sv-gw { display: flex; align-items: center; gap: 14px; margin-top: 4px; }",
     ".sv-gs { flex: none; width: 148px; height: 86px; }",
-    ".sv-gs text { font-family: 'Rubik', sans-serif; font-weight: 600; }",
+    ".sv-gs text { font-family: Montserrat, sans-serif; font-weight: 500; }",
     ".sv-gl { min-width: 0; }",
-    ".sv-gl em { display: block; font-style: normal; font-family: 'Rubik', sans-serif; font-weight: 600; font-size: 22px; line-height: 1.15; }",
+    ".sv-gl em { display: block; font-style: normal; font-family: Montserrat, sans-serif; font-weight: 500; font-size: 20.7px; line-height: 1.15; }",
     ".sv-gl small { display: block; margin-top: 4px; font-size: 13.5px; line-height: 1.35; color: var(--sv-faint); }",
     /* Из чего складывается */
     ".sv-parts { margin-top: 2px; }",
@@ -48,46 +48,46 @@
     ".sv-part small { grid-column: 1 / -1; margin-top: 2px; font-size: 12.5px; line-height: 1.35; color: var(--sv-mut); }",
     ".sv-parts p { margin: 4px 0 10px; font-size: 12px; line-height: 1.45; color: var(--sv-faint); }",
     /* Изменение за день — плашкой */
-    ".sv-pl { display: inline-block; padding: 2px 7px; border-radius: 7px; background: rgba(242,243,247,.08); color: var(--sv-mut); font-style: normal; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 500; white-space: nowrap; }",
+    ".sv-pl { display: inline-block; padding: 2px 7px; border-radius: 2px; background: rgba(242,243,247,.08); color: var(--sv-mut); font-style: normal; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; font-weight: 500; white-space: nowrap; }",
     ".sv-pl.up { background: rgba(85,192,138,.14); color: #7FD3A7; }",
     ".sv-pl.dn { background: rgba(224,112,90,.15); color: #EE9A87; }",
     /* Котировки плитками: IMOEX, доллар, S&P 500, Nasdaq; ключевая ставка — полосой под ними */
     ".sv-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }",
-    ".sv-tile { position: relative; min-width: 0; background: var(--sv-card); border-radius: 16px; padding: 12px 14px 13px; }",
+    ".sv-tile { position: relative; min-width: 0; background: var(--sv-card); border-radius: 2px; padding: 12px 14px 13px; }",
     ".sv-tile > span { display: block; font-size: 13px; color: var(--sv-mut); }",
     ".sv-tile > b { display: block; margin: 4px 0 6px; font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 500; white-space: nowrap; }",
     ".sv-sp { position: absolute; top: 12px; right: 12px; display: block; width: 52px; height: 20px; }",
     ".sv-tile small { margin-left: 6px; font-size: 12px; color: var(--sv-faint); white-space: nowrap; }",
-    ".sv-key { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; margin-top: 8px; padding: 12px 14px; background: var(--sv-card); border-radius: 16px; font-size: 14px; color: var(--sv-mut); }",
+    ".sv-key { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; margin-top: 8px; padding: 12px 14px; background: var(--sv-card); border-radius: 2px; font-size: 14px; color: var(--sv-mut); }",
     ".sv-key b { font-family: 'JetBrains Mono', monospace; font-size: 17px; font-weight: 500; color: var(--sv-ink); }",
     ".sv-key small { margin-left: auto; font-size: 12.5px; color: var(--sv-faint); white-space: nowrap; }",
     /* Поделиться */
-    ".sv-shr { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 60px; margin: 12px 0 0; padding: 10px 14px; border: 1px solid rgba(238,125,27,.32); border-radius: 14px; background: rgba(238,125,27,.07); color: var(--sv-ink); font-family: inherit; text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent; }",
-    ".sv-shr:active { background: rgba(238,125,27,.15); }",
-    "@media (hover: hover) { .sv-shr:hover { background: rgba(238,125,27,.12); } }",
-    ".sv-shr .sv-ic { flex: none; width: 38px; height: 38px; display: grid; place-items: center; border-radius: 11px; background: var(--sv-or); color: #0C0A08; }",
+    ".sv-shr { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 60px; margin: 12px 0 0; padding: 10px 14px; border: 1px solid rgba(240,110,8,.32); border-radius: 2px; background: rgba(255, 255, 255, 0.032); color: var(--sv-ink); font-family: inherit; text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent; }",
+    ".sv-shr:active { background: rgba(255, 255, 255, 0.068); }",
+    "@media (hover: hover) { .sv-shr:hover { background: rgba(255, 255, 255, 0.054); } }",
+    ".sv-shr .sv-ic { flex: none; width: 38px; height: 38px; display: grid; place-items: center; border-radius: 2px; background: var(--sv-or); color: #191A2F; }",
     ".sv-shr .sv-tx { flex: 1; min-width: 0; }",
     ".sv-shr b { display: block; font-size: 15.5px; font-weight: 600; }",
     ".sv-shr small { display: block; margin-top: 2px; font-size: 13px; color: var(--sv-mut); }",
     ".sv-shr > svg { flex: none; color: var(--sv-faint); }",
     /* Разделы */
-    ".sv-h { margin: 30px 0 4px; font-family: 'Rubik', sans-serif; font-size: 20px; font-weight: 600; line-height: 1.25; color: var(--sv-ink); }",
+    ".sv-h { margin: 30px 0 4px; font-family: Montserrat, sans-serif; font-size: 18.8px; font-weight: 500; line-height: 1.25; color: var(--sv-ink); }",
     ".sv-hs { margin: 0 0 6px; font-size: 13.5px; color: var(--sv-faint); }",
     ".sv-sw { display: flex; gap: 8px; margin: 10px 0 4px; }",
-    ".sv-sw button { position: relative; display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; border: 0; border-radius: 18px; background: var(--sv-card2); color: var(--sv-ink); font-family: inherit; font-size: 14px; font-weight: 500; cursor: pointer; -webkit-tap-highlight-color: transparent; }",
+    ".sv-sw button { position: relative; display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; border: 0; border-radius: 2px; background: var(--sv-card2); color: var(--sv-ink); font-family: inherit; font-size: 14px; font-weight: 500; cursor: pointer; -webkit-tap-highlight-color: transparent; }",
     ".sv-sw button::before { content: ''; position: absolute; inset: -4px 0; }",
     ".sv-sw button span { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: var(--sv-faint); }",
-    ".sv-sw button[aria-pressed='true'] { background: var(--sv-ink); color: #0B0C10; }",
-    ".sv-sw button[aria-pressed='true'] span { color: rgba(11,12,16,.6); }",
+    ".sv-sw button[aria-pressed='true'] { background: var(--sv-ink); color: #191A2F; }",
+    ".sv-sw button[aria-pressed='true'] span { color: rgba(25,26,47,.6); }",
     /* Новости */
     ".sv-news { margin: 0; padding: 0; list-style: none; }",
     ".sv-news[hidden] { display: none; }",
     ".sv-news > li { padding: 12px 0 13px; border-bottom: 1px solid var(--sv-line); }",
     ".sv-news > li:last-child { border-bottom: 0; }",
     ".sv-nm { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--sv-faint); }",
-    ".sv-tkc { padding: 1px 6px; border: 1px solid rgba(242,243,247,.16); border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--sv-mut); }",
+    ".sv-tkc { padding: 1px 6px; border: 1px solid rgba(242,243,247,.16); border-radius: 2px; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; color: var(--sv-mut); }",
     ".sv-nt { margin: 4px 0 0; font-size: 16px; line-height: 1.4; }",
-    ".sv-np { position: relative; display: inline-flex; align-items: center; gap: 6px; min-height: 32px; margin-top: 6px; padding: 0 12px; border-radius: 16px; background: var(--sv-card2); color: var(--sv-or) !important; font-size: 13.5px; font-weight: 500; -webkit-tap-highlight-color: transparent; }",
+    ".sv-np { position: relative; display: inline-flex; align-items: center; gap: 6px; min-height: 32px; margin-top: 6px; padding: 0 12px; border-radius: 2px; background: var(--sv-card2); color: var(--sv-or) !important; font-size: 13.5px; font-weight: 500; -webkit-tap-highlight-color: transparent; }",
     ".sv-np::before { content: ''; position: absolute; inset: -6px 0; }",
     ".sv-np + .sv-np { margin-left: 6px; }",
     /* Дивиденды */
@@ -130,7 +130,7 @@
   var WD = ["воскресенье", "понедельник", "вторник", "среда", "четверг", "пятница", "суббота"];
   var WS = ["вс", "пн", "вт", "ср", "чт", "пт", "сб"];
   var WV = ["в воскресенье", "в понедельник", "во вторник", "в среду", "в четверг", "в пятницу", "в субботу"];
-  var ARROW = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var ARROW = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3.46 10.54 L10.54 3.46 M4.88 3.46 H10.54 V9.12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   var CHEV = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 3.5 10.5 8 6 12.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   var SHARE = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7.5 8.5 12 4l4.5 4.5"/><path d="M5 13.5v5a1.5 1.5 0 0 0 1.5 1.5h11a1.5 1.5 0 0 0 1.5-1.5v-5"/></svg>';
 
@@ -187,7 +187,7 @@
     var top = '<div class="sv-gw"><svg class="sv-gs" viewBox="0 0 148 86" aria-hidden="true">' +
         '<defs><linearGradient id="sv-gg" x1="0" x2="1"><stop offset="0" stop-color="#E0705A"/><stop offset=".5" stop-color="#F2F3F7" stop-opacity=".32"/><stop offset="1" stop-color="#55C08A"/></linearGradient></defs>' +
         '<path d="M14 78 A60 60 0 0 1 134 78" fill="none" stroke="url(#sv-gg)" stroke-width="11" stroke-linecap="round"/>' +
-        '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="8" fill="#F2F3F7" stroke="#14161C" stroke-width="3"/>' +
+        '<circle cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="8" fill="#F2F3F7" stroke="#22243B" stroke-width="3"/>' +
         '<text x="74" y="76" text-anchor="middle" font-size="34" fill="' + c + '">' + sc + "</text></svg>" +
         '<div class="sv-gl"><em style="color:' + c + '">' + esc(m.label) + "</em><small>" + sc + " из 100 — от страха к жадности</small></div></div>";
     var head = '<section class="sv-card sv-mood" aria-label="Настроение рынка: ' + sc + " из 100, " + esc(m.label) + '"><span class="sv-rb">Настроение рынка</span>' + top;

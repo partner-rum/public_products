@@ -25,18 +25,19 @@
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Rumberg — структурные продукты">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="theme-color" content="#0B0C10">
+<meta name="theme-color" content="#191A2F">
 <link href="fonts/fonts.css?v=2" rel="stylesheet">
+<link href="brand/brand.css?v=1" rel="stylesheet">
 <script src="metrika.js?v=10" defer></script>
 <style>
   :root {
-    --canvas: #0B0C10; --card: #14161C;
+    --canvas: #191A2F; --card: #22243B;
     --ink: #F2F3F7; --hushed: rgba(242,243,247,0.64); --faint: rgba(242,243,247,0.56);
     --border: rgba(255,255,255,0.11); --border-soft: rgba(255,255,255,0.07);
-    --solar: #EE7D1B; --solar-l: #F58E33;
+    --solar: #F06E08; --solar-l: #F48834;
     --f-body: 'Onest', system-ui, sans-serif;
     --f-mono: 'JetBrains Mono', Consolas, monospace;
-    --display: 'Rubik', 'Onest', system-ui, sans-serif;
+    --display: Montserrat, 'Onest', system-ui, sans-serif;
     --ease: cubic-bezier(0.16, 1, 0.3, 1);
   }
   * { box-sizing: border-box; }
@@ -44,26 +45,26 @@
   a { text-decoration: none; color: inherit; }
   a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
 
-  .nav { position: sticky; top: 0; z-index: 20; background: rgba(11,12,16,0.82); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); }
+  .nav { position: sticky; top: 0; z-index: 20; background: rgba(25,26,47,0.82); backdrop-filter: none; -webkit-backdrop-filter: none; border-bottom: 1px solid var(--border); }
   .nav-in { max-width: 1080px; margin: 0 auto; padding: 0 44px; height: 62px; display: flex; align-items: center; gap: 12px; }
   .brand { display: flex; align-items: center; gap: 10px; }
   .brand-name { font-size: 14.5px; font-weight: 600; }
   .topnav { margin-left: auto; display: flex; align-items: center; gap: 22px; font-size: 14px; font-weight: 500; }
   .topnav a { color: var(--hushed); transition: color .2s; }
   .topnav a:hover { color: var(--ink); }
-  .btn-solar { background: var(--solar); color: #0C0A08 !important; border-radius: 6px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 7px; transition: background .3s ease-in-out; }
+  .btn-solar { background: var(--solar); color: #191A2F !important; border-radius: 2px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 7px; transition: background .3s ease-in-out; }
   .btn-solar:hover { background: var(--solar-l); }
 
   .wrap { max-width: 720px; margin: 0 auto; padding: 0 24px 72px; }
-  h1 { margin: 44px 0 12px; font-family: var(--display); font-size: clamp(26px, 4vw, 34px); font-weight: 600; letter-spacing: -0.02em; line-height: 1.12; }
+  h1 { margin: 44px 0 12px; font-family: var(--display); font-size: clamp(26px, 4vw, 34px); font-weight: 500; letter-spacing: -0.01em; line-height: 1.12; }
   .lead { margin: 0 0 8px; font-size: 15px; line-height: 1.6; color: var(--hushed); max-width: 600px; }
   .lead b { color: var(--ink); font-weight: 600; }
-  .cap { margin: 34px 0 6px; font-family: var(--f-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); display: flex; align-items: center; gap: 8px; }
+  .cap { margin: 34px 0 6px; font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--faint); display: flex; align-items: center; gap: 8px; }
   .cap::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--solar); }
 
   .row { display: block; padding: 20px 4px; border-bottom: 1px solid var(--border-soft); transition: background .2s; }
   .row:first-of-type { border-top: 1px solid var(--border-soft); }
-  .row .q { font-family: var(--display); font-size: 16.5px; font-weight: 600; transition: color .2s; }
+  .row .q { font-family: var(--display); font-size: 15.5px; font-weight: 500; transition: color .2s; }
   .row .q::before { content: "— "; color: var(--solar); }
   .row .d { margin-top: 7px; font-size: 13.5px; line-height: 1.6; color: var(--hushed); max-width: 600px; }
   .row .d b { color: var(--ink); font-weight: 500; }
@@ -72,8 +73,8 @@
   .row:hover .q { color: var(--solar); }
   .row:hover .go { transform: translateX(4px); }
 
-  .flow { margin: 34px 0 0; padding: 18px 20px; background: rgba(238,125,27,0.07); border: 1px solid rgba(238,125,27,0.28); border-radius: 12px; }
-  .flow .fcap { font-family: var(--f-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--solar-l); margin: 0 0 10px; }
+  .flow { margin: 34px 0 0; padding: 18px 20px; background: rgba(255, 255, 255, 0.032); border: 1px solid rgba(240,110,8,0.28); border-radius: 2px; }
+  .flow .fcap { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--solar-l); margin: 0 0 10px; }
   .flow .fline { font-size: 13.5px; line-height: 1.75; color: rgba(242,243,247,0.85); }
   .flow .fline b { color: var(--ink); font-weight: 600; }
   .flow .fline .sep { color: var(--solar); padding: 0 6px; }
@@ -93,7 +94,7 @@
   <div class="nav-in">
     <a class="brand" href="index.html" aria-label="На главную">
       <svg width="22" height="22" viewBox="0 0 26 26" fill="none" aria-hidden="true">
-        <path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/>
+        <path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#F06E08"/>
       </svg>
       <span class="brand-name">Rumberg</span><span class="brand-tag">Инвестиционные решения</span>
     </a>
@@ -104,7 +105,7 @@
       <a href="placements.html">Выпуски</a>
       <a href="about.html">Библиотека</a>
       <a class="btn-solar" href="board.html?type=warrant">Доска
-        <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3.46 10.54 L10.54 3.46 M4.88 3.46 H10.54 V9.12" stroke="#191A2F" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </a>
     </nav>
   </div>
@@ -119,37 +120,37 @@
   <a class="row" href="board.html">
     <div class="q">«А что у вас есть прямо сейчас?»</div>
     <div class="d">Доска прайсинга: все текущие продукты с котировками в процентах от номинала. Открываете при клиенте — отвечаете за минуту.</div>
-    <span class="go">Открыть доску &rarr;</span>
+    <span class="go">Открыть доску &nearr;</span>
   </a>
 
   <a class="row" href="board.html">
     <div class="q">«Пришлите что-нибудь посмотреть»</div>
     <div class="d">Выбираете продукт — на его странице жмёте <b>«Поделиться»</b>: готовое сообщение с названием, сутью и параметрами для Telegram или WhatsApp собирается за 10 секунд. Клиент получает ссылку на живую страницу, а не вложение.</div>
-    <span class="go">Выбрать продукт &rarr;</span>
+    <span class="go">Выбрать продукт &nearr;</span>
   </a>
 
   <a class="row" href="digest.html">
     <div class="q">«Почему сейчас хорошая точка входа?»</div>
     <div class="d">Дайджест недели: гипотеза, рыночная ситуация и факторы — готовая аргументация для звонка. Обновляется каждую неделю.</div>
-    <span class="go">Читать дайджест &rarr;</span>
+    <span class="go">Читать дайджест &nearr;</span>
   </a>
 
   <a class="row" href="offerings.html">
     <div class="q">«Во что можно зайти на размещении?»</div>
     <div class="d">Раздел «На размещении»: выпуски, которые мы размещаем прямо сейчас или готовим, — с параметрами и материалами.</div>
-    <span class="go">Смотреть размещения &rarr;</span>
+    <span class="go">Смотреть размещения &nearr;</span>
   </a>
 
   <a class="row" href="placements.html">
     <div class="q">«А что вы уже делали?»</div>
     <div class="d">Размещённые выпуски — ваш трек-рекорд: фиксинги, динамика и эмиссионные документы (КУВ, КИД) по каждому выпуску. Доверие цифрами, а не словами.</div>
-    <span class="go">Показать выпуски &rarr;</span>
+    <span class="go">Показать выпуски &nearr;</span>
   </a>
 
   <a class="row" href="about.html">
     <div class="q">«Я не понимаю, как это работает»</div>
     <div class="d">Библиотека: механика продуктов простыми словами — профили выплат, риск, примеры расчёта. Отправьте клиенту перед встречей, чтобы говорить на одном языке.</div>
-    <span class="go">Открыть библиотеку &rarr;</span>
+    <span class="go">Открыть библиотеку &nearr;</span>
   </a>
 
   <div class="flow">
@@ -160,10 +161,10 @@
   <p class="note">Информация предназначена для квалифицированных инвесторов и не является индивидуальной инвестиционной рекомендацией.</p>
 </div>
 
-<script src="chat.js?v=27"></script>
-<script src="search.js?v=8"></script>
-<script src="nav-about.js?v=9"></script>
-<script src="qualgate.js?v=8"></script>
-<script src="ptr.js?v=2" defer></script>
+<script src="chat.js?v=28"></script>
+<script src="search.js?v=9"></script>
+<script src="nav-about.js?v=10"></script>
+<script src="qualgate.js?v=9"></script>
+<script src="ptr.js?v=3" defer></script>
 </body>
 </html>

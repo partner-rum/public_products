@@ -24,28 +24,29 @@
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Rumberg — структурные продукты">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="theme-color" content="#0B0C10">
+<meta name="theme-color" content="#191A2F">
 <link href="fonts/fonts.css?v=2" rel="stylesheet">
+<link href="brand/brand.css?v=1" rel="stylesheet">
 <style>
   :root {
-    --canvas: #0B0C10; --card: #14161C; --panel-2: #191B22; --tile: rgba(255,255,255,0.045);
-    --black: #1A1919;
+    --canvas: #191A2F; --card: #22243B; --panel-2: #272941; --tile: rgba(255,255,255,0.045);
+    --black: #282738;
     --ink: #F2F3F7; --hushed: rgba(242,243,247,0.64); --faint: rgba(242,243,247,0.56);
     --border: rgba(255,255,255,0.11); --border-soft: rgba(255,255,255,0.07);
-    --solar: #EE7D1B; --solar-l: #F58E33;
+    --solar: #F06E08; --solar-l: #F48834;
     --up: #55C08A; --down: #E0705A; --loss: #E0705A;
     --f-body: 'Onest', system-ui, sans-serif;
     --f-mono: 'JetBrains Mono', Consolas, monospace;
-    --display: 'Rubik', 'Onest', system-ui, sans-serif;
+    --display: Montserrat, 'Onest', system-ui, sans-serif;
     --ease: cubic-bezier(0.16, 1, 0.3, 1);
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--canvas); color: var(--ink); font-family: var(--f-body); -webkit-font-smoothing: antialiased; }
   a { text-decoration: none; color: inherit; }
-  a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 4px; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 2px; }
   .wrap { max-width: 1280px; margin: 0 auto; padding: 0 44px 40px; }
 
-  .nav { position: sticky; top: 0; z-index: 20; background: rgba(11,12,16,0.82); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); }
+  .nav { position: sticky; top: 0; z-index: 20; background: rgba(25,26,47,0.82); backdrop-filter: none; -webkit-backdrop-filter: none; border-bottom: 1px solid var(--border); }
   .nav-in { max-width: 1280px; margin: 0 auto; padding: 0 44px; height: 62px; display: flex; align-items: center; gap: 12px; }
   .brand { display: flex; align-items: center; gap: 10px; }
   .brand-name { font-size: 14.5px; font-weight: 600; }
@@ -53,11 +54,11 @@
   .topnav a { color: var(--hushed); transition: color .2s; }
   .topnav a:hover { color: var(--ink); }
   .topnav a[aria-current="page"] { color: var(--ink); font-weight: 600; }
-  .btn-solar { background: var(--solar); color: #0C0A08 !important; border-radius: 6px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 7px; transition: background .3s ease-in-out; }
+  .btn-solar { background: var(--solar); color: #191A2F !important; border-radius: 2px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 7px; transition: background .3s ease-in-out; }
   .btn-solar:hover { background: var(--solar-l); }
 
   .head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin: 26px 0 18px; }
-  h1 { margin: 0; font-family: var(--display); font-size: 30px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1; }
+  h1 { margin: 0; font-family: var(--display); font-size: 28.2px; font-weight: 400; letter-spacing: -0.01em; line-height: 1.1; }
   .count { font-family: var(--f-mono); font-size: 12px; color: var(--hushed); }
   .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 
@@ -65,18 +66,18 @@
 
   .aside { position: sticky; top: 78px; display: flex; flex-direction: column; max-height: calc(100dvh - 100px); }
   .controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
-  .search { width: 100%; border: 1px solid var(--border); border-radius: 6px; background: var(--card); padding: 10px 12px; font-family: var(--f-body); font-size: 16px; color: var(--ink); }
+  .search { width: 100%; border: 1px solid var(--border); border-radius: 2px; background: var(--card); padding: 10px 12px; font-family: var(--f-body); font-size: 16px; color: var(--ink); }
   .search::placeholder { color: var(--faint); }
   .search:focus { outline: 2px solid var(--ink); outline-offset: 1px; }
   .chips { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-  .kf { border: 1px solid var(--border); background: var(--card); border-radius: 6px; padding: 6px 12px; font-size: 12.5px; font-weight: 500; color: var(--hushed); cursor: pointer; font-family: var(--f-body); }
+  .kf { border: 1px solid var(--border); background: var(--card); border-radius: 2px; padding: 6px 12px; font-size: 12.5px; font-weight: 500; color: var(--hushed); cursor: pointer; font-family: var(--f-body); }
   .kf:hover { color: var(--ink); }
-  .kf.active { background: rgba(238,125,27,0.16); border-color: var(--solar); color: var(--ink); font-weight: 600; }
+  .kf.active { background: rgba(255, 255, 255, 0.072); border-color: var(--solar); color: var(--ink); font-weight: 600; }
   .kf .n { font-family: var(--f-mono); font-size: 11px; opacity: 0.75; margin-left: 4px; }
   .matured-toggle { display: flex; align-items: center; gap: 7px; min-height: 24px; font-size: 12.5px; color: var(--hushed); cursor: pointer; user-select: none; margin-left: auto; }
   .matured-toggle input { accent-color: var(--solar); width: 14px; height: 14px; cursor: pointer; }
 
-  .list { background: var(--card); border: 1px solid var(--border-soft); border-radius: 12px; overflow-y: auto; flex: 1; min-height: 0; }
+  .list { background: var(--card); border: 1px solid var(--border-soft); border-radius: 2px; overflow-y: auto; flex: 1; min-height: 0; }
   .group-h { display: flex; align-items: center; gap: 9px; width: 100%; border: none; border-top: 1px solid var(--border-soft); background: var(--panel-2); cursor: pointer; font-family: var(--f-body); color: var(--ink); padding: 11px 14px; text-align: left; position: sticky; top: 0; z-index: 2; }
   .group-h:first-child { border-top: none; }
   .group-h .chev { transition: transform .2s var(--ease); color: var(--hushed); font-size: 11px; }
@@ -91,7 +92,7 @@
   .item .r1 { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
   .item .serial { font-size: 13.5px; font-weight: 600; }
   .item .param { font-family: var(--f-mono); font-size: 11.5px; color: var(--hushed); white-space: nowrap; }
-  .doc-link { display: flex; align-items: center; gap: 10px; padding: 10px 13px; margin-top: 8px; background: rgba(255,255,255,0.045); border: 1px solid rgba(255,255,255,0.08); border-radius: 9px; color: #F2F3F7; font-size: 13.5px; text-decoration: none; transition: background .2s; }
+  .doc-link { display: flex; align-items: center; gap: 10px; padding: 10px 13px; margin-top: 8px; background: rgba(255,255,255,0.045); border: 1px solid rgba(255,255,255,0.08); border-radius: 2px; color: #F2F3F7; font-size: 13.5px; text-decoration: none; transition: background .2s; }
   .doc-link:hover { background: rgba(255,255,255,0.08); }
   .doc-link svg { flex: none; }
   .item .r2 { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-top: 3px; }
@@ -101,17 +102,17 @@
   .empty-list { padding: 22px 14px; font-size: 13px; color: var(--faint); }
 
   .panel-wrap { position: sticky; top: 78px; }
-  .panel { background: var(--card); border: 1px solid var(--border-soft); border-radius: 12px; padding: 26px 28px; max-height: calc(100dvh - 100px); overflow-y: auto; }
+  .panel { background: var(--card); border: 1px solid var(--border-soft); border-radius: 2px; padding: 26px 28px; max-height: calc(100dvh - 100px); overflow-y: auto; }
   .panel-close { display: none; }
   .pp-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; flex-wrap: wrap; }
-  .pp-title { font-family: var(--display); font-size: 24px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1; }
+  .pp-title { font-family: var(--display); font-size: 22.6px; font-weight: 400; letter-spacing: -0.01em; line-height: 1.1; }
   .pp-sub { margin-top: 5px; font-family: var(--f-mono); font-size: 11.5px; color: var(--faint); display: flex; gap: 10px; flex-wrap: wrap; }
   .item .perf-k { font-family: var(--f-mono); font-size: 11px; color: var(--faint); margin-right: 5px;
     letter-spacing: 0.06em; }
   .item .prot { font-family: var(--f-mono); font-size: 11px; color: var(--up); background: rgba(85,192,138,0.12);
-    border-radius: 20px; padding: 2px 8px; margin-left: auto; margin-right: 8px; white-space: nowrap; }
+    border-radius: 2px; padding: 2px 8px; margin-left: auto; margin-right: 8px; white-space: nowrap; }
   .empty-list .reset-f { display: block; margin: 10px auto 0; border: 1px solid var(--border);
-    background: none; color: var(--hushed); border-radius: 8px; padding: 9px 16px;
+    background: none; color: var(--hushed); border-radius: 2px; padding: 9px 16px;
     font-family: var(--f-body); font-size: 13px; cursor: pointer; }
   .empty-list .reset-f:hover { border-color: var(--solar); color: var(--ink); }
   /* Факты считаются из данных: ни одной цифры доходности, только состав витрины */
@@ -120,7 +121,7 @@
   .facts .dot { opacity: 0.45; margin: 0 8px; }
   .facts .stale { color: var(--loss); }
   .skip-link { position: absolute; left: 10px; top: -60px; z-index: 30; background: var(--solar);
-    color: #0C0A08; padding: 11px 18px; border-radius: 0 0 10px 10px; font-size: 13px; font-weight: 600;
+    color: #191A2F; padding: 11px 18px; border-radius: 0 0 2px 2px; font-size: 13px; font-weight: 600;
     text-decoration: none; }
   .skip-link:focus { top: 0; }
   /* Тач-цели: шапки групп — основной способ навигации по 57 выпускам, а были 40px */
@@ -132,12 +133,12 @@
     .ct-btn, .panel-close { min-height: 44px; }
     .search { min-height: 44px; }
   }
-  .kind-chip { display: inline-block; font-size: 11.5px; font-weight: 600; border-radius: 999px; padding: 3px 10px; white-space: nowrap; }
-  .status { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hushed); }
+  .kind-chip { display: inline-block; font-size: 11.5px; font-weight: 600; border-radius: 2px; padding: 3px 10px; white-space: nowrap; }
+  .status { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--hushed); }
   .status.live::before { content: "●"; color: var(--up); margin-right: 5px; font-size: 11px; }
   .status.matured::before { content: "●"; color: var(--faint); margin-right: 5px; font-size: 11px; }
-  .pp-bid { display: inline-flex; align-items: baseline; gap: 9px; margin-top: 13px; padding: 8px 14px; border-radius: 10px; background: rgba(85,192,138,0.12); border: 1px solid rgba(85,192,138,0.42); }
-  .pp-bid .lbl { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--up); }
+  .pp-bid { display: inline-flex; align-items: baseline; gap: 9px; margin-top: 13px; padding: 8px 14px; border-radius: 2px; background: rgba(85,192,138,0.12); border: 1px solid rgba(85,192,138,0.42); }
+  .pp-bid .lbl { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--up); }
   .pp-bid .val { font-family: var(--f-mono); font-size: 19px; font-weight: 600; color: var(--up); line-height: 1; }
   .pp-bid .u { font-size: 11px; color: rgba(85,192,138,0.9); }
   .tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 20px 0 4px; }
@@ -146,11 +147,11 @@
   .pp-title-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
   .pp-title-row .ct-btn { padding: 8px 14px; font-size: 13px; }
   .tile { min-width: 0; }
-  .tile { background: var(--tile); border-radius: 8px; padding: 12px 14px; }
+  .tile { background: var(--tile); border-radius: 2px; padding: 12px 14px; }
   .tile .v { font-family: var(--f-mono); font-size: 16px; font-weight: 500; }
-  .tile .k { margin-top: 4px; font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); }
+  .tile .k { margin-top: 4px; font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--faint); }
   .sec { margin-top: 20px; }
-  .sec .h { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--hushed); padding-bottom: 8px; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
+  .sec .h { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--hushed); padding-bottom: 8px; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
   .kv { display: flex; justify-content: space-between; gap: 18px; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.07); font-size: 13.5px; }
   .kv .k { color: var(--hushed); }
   .kv .v { text-align: right; }
@@ -177,7 +178,7 @@
        паразитный горизонтальный скролл от закрытых absolute-попапов. */
     .panel { max-height: none; overflow: visible; }
     /* color обязателен: <button> не наследует цвет, и надпись была системной тёмной по тёмному */
-    .panel-close { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 12px; border: 1px solid var(--border); background: var(--card); border-radius: 6px; padding: 8px 14px; font-family: var(--f-body); font-size: 13.5px; cursor: pointer; color: var(--ink); }
+    .panel-close { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 12px; border: 1px solid var(--border); background: var(--card); border-radius: 2px; padding: 8px 14px; font-family: var(--f-body); font-size: 13.5px; cursor: pointer; color: var(--ink); }
   }
   @media (max-width: 860px) {
     .nav-in { height: auto; flex-wrap: wrap; padding: 12px 20px; row-gap: 10px; }
@@ -197,7 +198,7 @@
   <div class="nav-in">
     <a class="brand" href="index.html" aria-label="На главную">
       <svg width="22" height="22" viewBox="0 0 26 26" fill="none" aria-hidden="true">
-        <path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/>
+        <path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#F06E08"/>
       </svg>
       <span class="brand-name">Rumberg</span><span class="brand-tag">Инвестиционные решения</span>
     </a>
@@ -209,7 +210,7 @@
       <a href="placements.html" aria-current="page">Выпуски</a>
       <a href="about.html">Библиотека</a>
       <a class="btn-solar" href="board.html?type=warrant">Доска
-        <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3.46 10.54 L10.54 3.46 M4.88 3.46 H10.54 V9.12" stroke="#191A2F" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </a>
     </nav>
   </div>
@@ -251,7 +252,7 @@
 <script src="data/placements.js?v=1"></script>
 <script src="data/placement_docs.js?v=1"></script>
 <script src="data/harden.js?v=1"></script>
-<script src="contact.js?v=10"></script>
+<script src="contact.js?v=11"></script>
 <script>
   const S = window.SITE;
   // Без охраны страница умирала целиком: не доехал data/placements.js — скрипт
@@ -260,7 +261,7 @@
   const D = window.PLACEMENTS_DATA || null;
   const TODAY = new Date().toISOString().slice(0, 10);
   const KINDS = {
-    coupon:        { label: "Купонный", fg: "#EE7D1B", bg: "rgba(238,125,27,0.16)" },
+    coupon:        { label: "Купонный", fg: "#F06E08", bg: "rgba(240,110,8,0.16)" },
     // #4F86E6 на своей заливке давал 4,14:1 — ниже порога; светлее проходит.
     participation: { label: "Участие в росте", fg: "#89B0F0", bg: "rgba(79,134,230,0.16)" }
   };
@@ -404,7 +405,7 @@
     const docsHTML = docs.length
       ? '<div class="sec"><div class="h">Документы</div>' + docs.map(d =>
           '<a class="doc-link" href="' + S.esc(d.file) + '" target="_blank" rel="noopener">' +
-          '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#EE7D1B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>' +
+          '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#F06E08" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>' +
           '<span>' + S.esc(d.name) + '</span></a>').join("") + '</div>'
       : '';
 
@@ -427,7 +428,7 @@
       '</div>' +
       '<div class="sec"><div class="h">Базовый актив</div>' + assets + '</div>' +
       '<div class="sec"><div class="h">Параметры выплаты</div>' + kv(pay) +
-        (i.fx ? '<div style="margin-top:12px;padding:9px 13px;border-left:3px solid #EE7D1B;background:rgba(238,125,27,0.12);border-radius:0 7px 7px 0;font-size:12.5px;line-height:1.5;color:#E7B98D">' + S.LEGAL.fx + '</div>' : '') + '</div>' +
+        (i.fx ? '<div style="margin-top:12px;padding:9px 13px;border-left:3px solid #F06E08;background:rgba(240,110,8,0.12);border-radius:0 7px 7px 0;font-size:12.5px;line-height:1.5;color:#EAB286">' + S.LEGAL.fx + '</div>' : '') + '</div>' +
       // (i.dates || {}) — у выпусков из админки дат фиксаций нет, паспорт не должен падать
       '<div class="sec"><div class="h">Даты</div>' + kv([
         ["Размещение", fmtD(i.issueStart), true],
@@ -680,10 +681,10 @@
   // (search.js подпишет «← Выпуски» и сделает шаг назад)
   if (selected && hash) document.getElementById("panel-close").setAttribute("data-back", "← {}");
 </script>
-<script src="chat.js?v=27"></script>
-<script src="search.js?v=8"></script>
-<script src="nav-about.js?v=9"></script>
-<script src="qualgate.js?v=8"></script>
-<script src="ptr.js?v=2" defer></script>
+<script src="chat.js?v=28"></script>
+<script src="search.js?v=9"></script>
+<script src="nav-about.js?v=10"></script>
+<script src="qualgate.js?v=9"></script>
+<script src="ptr.js?v=3" defer></script>
 </body>
 </html>

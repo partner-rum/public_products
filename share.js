@@ -10,27 +10,27 @@ window.Share = (function () {
     link: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F2F3F7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>',
     tg: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8FB4F0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3 2 10.5l6 2.2M22 3 15 21l-3.5-7.3M22 3 8 12.7v4.8l3.5-3.8"/></svg>',
     wa: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#7FD3AC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20 5.5 15.5A8 8 0 1 1 8.5 18.5z"/></svg>',
-    pdf: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F2A661" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M12 15l-4-4M12 15l4-4M4 21h16"/></svg>',
+    pdf: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F89E58" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M12 15l-4-4M12 15l4-4M4 21h16"/></svg>',
     check: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg>'
   };
 
   var CSS =
     '.sh{position:relative;display:inline-flex}' +
-    '.sh-btn{display:inline-flex;align-items:center;gap:7px;background:transparent;border:1px solid rgba(255,255,255,0.14);color:#F2F3F7;border-radius:8px;padding:8px 13px;font-family:inherit;font-size:13px;cursor:pointer;transition:border-color .2s,background .2s}' +
+    '.sh-btn{display:inline-flex;align-items:center;gap:7px;background:transparent;border:1px solid rgba(255,255,255,0.14);color:#F2F3F7;border-radius:2px;padding:8px 13px;font-family:inherit;font-size:13px;cursor:pointer;transition:border-color .2s,background .2s}' +
     '.sh-btn:hover{border-color:rgba(255,255,255,0.28);background:rgba(255,255,255,0.05)}' +
     '.sh-btn svg{display:block}' +
     // visibility:hidden в закрытом состоянии убирает пункты меню из табуляции и из
     // дерева скринридера (opacity+pointer-events этого не делали — A.6).
-    '.sh-menu{position:absolute;right:0;top:calc(100% + 8px);z-index:60;width:238px;max-width:calc(100vw - 24px);background:#1B1D26;border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:6px;box-shadow:0 16px 40px rgba(0,0,0,0.55);opacity:0;visibility:hidden;transform:translateY(-4px);pointer-events:none;transition:opacity .18s ease,transform .18s cubic-bezier(0.16,1,0.3,1),visibility 0s linear .18s}' +
+    '.sh-menu{position:absolute;right:0;top:calc(100% + 8px);z-index:60;width:238px;max-width:calc(100vw - 24px);background:#292B45;border:1px solid rgba(255,255,255,0.12);border-radius:2px;padding:6px;box-shadow:0 16px 40px rgba(0,0,0,0.55);opacity:0;visibility:hidden;transform:translateY(-4px);pointer-events:none;transition:opacity .18s ease,transform .18s cubic-bezier(0.16,1,0.3,1),visibility 0s linear .18s}' +
     '.sh.open .sh-menu{opacity:1;visibility:visible;transform:none;pointer-events:auto;transition:opacity .18s ease,transform .18s cubic-bezier(0.16,1,0.3,1),visibility 0s}' +
     '.sh.align-left .sh-menu,.sh.align-left .sh-toast{right:auto;left:0}' +
-    '.sh-mi{display:flex;align-items:center;gap:11px;width:100%;text-align:left;background:none;border:none;border-radius:8px;padding:10px 11px;cursor:pointer;font-family:inherit;font-size:13.5px;color:#F2F3F7;text-decoration:none}' +
+    '.sh-mi{display:flex;align-items:center;gap:11px;width:100%;text-align:left;background:none;border:none;border-radius:2px;padding:10px 11px;cursor:pointer;font-family:inherit;font-size:13.5px;color:#F2F3F7;text-decoration:none}' +
     '.sh-mi:hover{background:rgba(255,255,255,0.06)}' +
-    '.sh-mi .ic{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;flex:none;background:rgba(255,255,255,0.06)}' +
-    '.sh-mi .ic.tg{background:rgba(79,134,230,0.18)}.sh-mi .ic.wa{background:rgba(85,192,138,0.16)}.sh-mi .ic.pdf{background:rgba(238,125,27,0.16)}' +
+    '.sh-mi .ic{width:26px;height:26px;border-radius:2px;display:grid;place-items:center;flex:none;background:rgba(255,255,255,0.06)}' +
+    '.sh-mi .ic.tg{background:rgba(79,134,230,0.18)}.sh-mi .ic.wa{background:rgba(85,192,138,0.16)}.sh-mi .ic.pdf{background:rgba(255, 255, 255, 0.072)}' +
     '.sh-mi small{display:block;color:rgba(242,243,247,0.56);font-size:11px;margin-top:1px}' +
     '.sh-sep{height:1px;background:rgba(255,255,255,0.07);margin:5px 8px}' +
-    '.sh-toast{position:absolute;right:0;top:calc(100% + 8px);z-index:61;white-space:nowrap;display:inline-flex;align-items:center;gap:8px;font-size:12.5px;color:#55C08A;background:rgba(85,192,138,0.14);border:1px solid rgba(85,192,138,0.35);border-radius:8px;padding:7px 12px;opacity:0;transform:translateY(-4px);pointer-events:none;transition:opacity .2s,transform .2s}' +
+    '.sh-toast{position:absolute;right:0;top:calc(100% + 8px);z-index:61;white-space:nowrap;display:inline-flex;align-items:center;gap:8px;font-size:12.5px;color:#55C08A;background:rgba(85,192,138,0.14);border:1px solid rgba(85,192,138,0.35);border-radius:2px;padding:7px 12px;opacity:0;transform:translateY(-4px);pointer-events:none;transition:opacity .2s,transform .2s}' +
     '.sh-toast.on{opacity:1;transform:none}' +
     '@media print{.sh{display:none !important}}';
 

@@ -82,7 +82,7 @@
     };
     // Фирменная звезда — залитая, для плитки AI в центре нижней панели
     var STAR_FILL = '<svg viewBox="0 0 26 26" width="19" height="19" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="currentColor"/></svg>';
-    var ARROW = '<svg width="16" height="16" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    var ARROW = '<svg width="16" height="16" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3.46 10.54 L10.54 3.46 M4.88 3.46 H10.54 V9.12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
     function svg(k, w) { return '<svg viewBox="0 0 24 24" width="' + (w || 24) + '" height="' + (w || 24) + '" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + IC[k] + '</svg>'; }
     var CHEV = '<svg class="tg-chev" width="8" height="13" viewBox="0 0 8 13" fill="none" aria-hidden="true"><path d="M1.5 1.5 6.5 6.5 1.5 11.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
@@ -427,7 +427,7 @@
       var X = function (k) { return 7 + k * (286 / (n - 1)); };
       var xn = i === 0 ? X(0) : i >= n ? X(n - 1) : X(i - 1) + (X(i) - X(i - 1)) * Math.max(0.08, Math.min(0.92, (Date.parse(TODAY) - Date.parse(T[i - 1].d)) / (Date.parse(T[i].d) - Date.parse(T[i - 1].d))));
       var svgp = '<svg class="tg-life-l" viewBox="0 0 300 16" preserveAspectRatio="none" aria-hidden="true"><path d="M7 8H293" stroke="rgba(255,255,255,.14)" stroke-width="2"/>' +
-        '<path d="M7 8H' + xn.toFixed(1) + '" stroke="#EE7D1B" stroke-width="2"/></svg>';
+        '<path d="M7 8H' + xn.toFixed(1) + '" stroke="#F06E08" stroke-width="2"/></svg>';
       var dots = T.map(function (p, k) { return '<i class="' + (k < i ? "d" : "") + '" style="left:' + (X(k) / 3).toFixed(2) + '%"></i>'; }).join("") +
         '<b style="left:' + (xn / 3).toFixed(2) + '%"></b>';
       var nx = T[Math.min(i, n - 1)], now;
@@ -608,7 +608,7 @@
         // Вид сводки — общий модуль svview.js (тот же, что у страницы /svodka); грузится вместе с данными
         var js = window.SvView ? Promise.resolve() : new Promise(function (ok, no) {
           var sc = document.createElement("script");
-          sc.src = "svview.js?v=4"; sc.onload = ok; sc.onerror = no;
+          sc.src = "svview.js?v=5"; sc.onload = ok; sc.onerror = no;
           document.head.appendChild(sc);
         });
         Promise.all([fetch("live/svodka.json", { cache: "no-cache" })
@@ -684,7 +684,7 @@
       if (!SV) return;
       if (window.SvCard) { SvCard.open(SV, btn); return; }
       var sc = document.createElement("script");
-      sc.src = "svcard.js?v=2";
+      sc.src = "svcard.js?v=3";
       sc.onload = function () { if (window.SvCard) SvCard.open(SV, btn); };
       document.head.appendChild(sc);
     }
@@ -995,7 +995,7 @@
       if (!need("ideas", ["data/digest.js?v=srv6", "data/ideas.js?v=1"], idReady, idDone)) {
         return out + (LAZY.ideas === 2 ? '<p class="tg-note">Не удалось загрузить идеи и разборы. Обновите страницу.</p>' : '<p class="tg-wait">Загружаю идеи недели…</p>') + "</div>";
       }
-      need("dfl", ["data/digest-lib.js?v=10"], dfReady, idDone);       // графики — после дайджеста: DF читает его при загрузке
+      need("dfl", ["data/digest-lib.js?v=11"], dfReady, idDone);       // графики — после дайджеста: DF читает его при загрузке
       var o = idCur(), cur = o.cur;
       if (cur) {
         var d = idIssueDate(cur), n = cur.ideas.length;
@@ -1025,7 +1025,7 @@
       if (R.length) {
         out += '<h2 class="tg-cap am-cap">Разборы к вебинарам</h2><div class="am-car rv-car" id="rv-car" data-car="rv">' + R.map(function (x) {
           var f = (x.facts || [])[0], k = x.kind === "theme" ? 0 : (x.items || []).length;
-          return '<a class="am-cd rv-cd" href="ideas.html?i=' + encodeURIComponent(x.id) + '" style="--fc:' + esc(x.color || "#EE7D1B") + '">' +
+          return '<a class="am-cd rv-cd" href="ideas.html?i=' + encodeURIComponent(x.id) + '" style="--fc:' + esc(x.color || "#F06E08") + '">' +
             '<div class="am-cdt"><span class="am-rb">' + esc(x.kick || "Разбор") + '</span><span class="am-k">' + esc(dmy(x.date).slice(0, 5)) + "</span></div>" +
             '<h2 class="am-h">' + esc(x.title) + "</h2>" +
             (f ? '<div class="rv-f"><b>' + esc(f.v) + "</b><span>" + esc(f.k) + "</span></div>" : '<p class="am-ld rv-sub">' + esc(x.sub || "") + "</p>") +

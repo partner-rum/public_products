@@ -79,7 +79,7 @@
   // Рисуем в два прохода: первый только считает высоту, второй рисует на холсте этой высоты
   function paintCard(cv, D) {
     var W = 1080, P = 72, IN = W - 2 * P;
-    var INK = "#F2F3F7", MUT = "rgba(242,243,247,.64)", FAINT = "rgba(242,243,247,.44)", OR = "#EE7D1B", CARDC = "#14161C", LINE = "rgba(255,255,255,.10)";
+    var INK = "#F2F3F7", MUT = "rgba(242,243,247,.64)", FAINT = "rgba(242,243,247,.44)", OR = "#F06E08", CARDC = "#22243B", LINE = "rgba(255,255,255,.10)";
     var R = "'Rubik', sans-serif", O = "'Onest', sans-serif", MO = "'JetBrains Mono', monospace";
     var c = cv.getContext("2d");
     function pass(draw) {
@@ -120,9 +120,9 @@
       function fit(s, w, size, f, maxW) { var z = size; font(w, z, f); while (z > 24 && c.measureText(s).width > maxW) { z -= 2; font(w, z, f); } return z; }
 
       if (draw) {
-        c.fillStyle = "#0B0C10"; c.fillRect(0, 0, W, cv.height);
+        c.fillStyle = "#191A2F"; c.fillRect(0, 0, W, cv.height);
         var g = c.createRadialGradient(W * 0.86, 40, 0, W * 0.86, 40, 760);
-        g.addColorStop(0, "rgba(238,125,27,.20)"); g.addColorStop(1, "rgba(238,125,27,0)");
+        g.addColorStop(0, "rgba(240,110,8,.20)"); g.addColorStop(1, "rgba(240,110,8,0)");
         c.fillStyle = g; c.fillRect(0, 0, W, 900);
       }
       c.textBaseline = "alphabetic";
@@ -153,7 +153,7 @@
           gb.addColorStop(0, "#E0705A"); gb.addColorStop(0.5, "rgba(242,243,247,.34)"); gb.addColorStop(1, "#55C08A");
           box(bx, by, bw, 12, 6, gb);
           var mx = bx + bw * sc / 100;
-          c.fillStyle = "#0B0C10"; c.beginPath(); c.arc(mx, by + 6, 19, 0, Math.PI * 2); c.fill();
+          c.fillStyle = "#191A2F"; c.beginPath(); c.arc(mx, by + 6, 19, 0, Math.PI * 2); c.fill();
           c.fillStyle = INK; c.beginPath(); c.arc(mx, by + 6, 14, 0, Math.PI * 2); c.fill();
         }
         font(400, 25, O); txt("страх", bx, top + h - 24, FAINT); txt("жадность", bx + bw, top + h - 24, FAINT, "right");
@@ -218,27 +218,27 @@
 
   var CSS = [
     "html.svc-on, html.svc-on body { overflow: hidden; }",
-    ".svc { position: fixed; inset: 0; z-index: 700; overflow-y: auto; background: #0B0C10; color: #F2F3F7; font-family: 'Onest', system-ui, sans-serif; -webkit-overflow-scrolling: touch; }",
+    ".svc { position: fixed; inset: 0; z-index: 700; overflow-y: auto; background: #191A2F; color: #F2F3F7; font-family: 'Onest', system-ui, sans-serif; -webkit-overflow-scrolling: touch; }",
     ".svc-in { max-width: 560px; min-height: 100%; margin: 0 auto; padding: calc(env(safe-area-inset-top) + 4px) 16px calc(env(safe-area-inset-bottom) + 20px); display: flex; flex-direction: column; }",
     ".svc-top { display: flex; align-items: center; gap: 8px; height: 52px; }",
-    ".svc-x { width: 44px; height: 44px; margin-left: -10px; display: grid; place-items: center; border: 0; border-radius: 12px; background: none; color: #F2F3F7; cursor: pointer; }",
-    ".svc-x:focus-visible, .svc button:focus-visible, .svc input:focus-visible { outline: 2px solid #EE7D1B; outline-offset: 2px; }",
+    ".svc-x { width: 44px; height: 44px; margin-left: -10px; display: grid; place-items: center; border: 0; border-radius: 2px; background: none; color: #F2F3F7; cursor: pointer; }",
+    ".svc-x:focus-visible, .svc button:focus-visible, .svc input:focus-visible { outline: 2px solid #F06E08; outline-offset: 2px; }",
     ".svc-t { font-size: 15px; color: rgba(242,243,247,.64); }",
-    ".svc-p { display: grid; place-items: center; min-height: 260px; margin: 4px 0 14px; border-radius: 16px; background: #14161C; overflow: hidden; }",
+    ".svc-p { display: grid; place-items: center; min-height: 260px; margin: 4px 0 14px; border-radius: 2px; background: #22243B; overflow: hidden; }",
     ".svc-p img { display: block; max-width: 100%; max-height: 56vh; width: auto; height: auto; -webkit-touch-callout: default; }",
     ".svc-w { font-size: 14px; color: rgba(242,243,247,.64); }",
     ".svc-l { margin: 0 0 12px; font-size: 14px; line-height: 1.45; color: rgba(242,243,247,.64); overflow-wrap: anywhere; }",
     ".svc-l b { color: #F2F3F7; font-weight: 500; }",
-    ".svc-a { display: inline; padding: 0; border: 0; background: none; color: #EE7D1B; font: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }",
+    ".svc-a { display: inline; padding: 0; border: 0; background: none; color: #F06E08; font: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }",
     ".svc-f { display: flex; gap: 8px; margin: 0 0 12px; }",
-    ".svc-f input { flex: 1; min-width: 0; height: 44px; padding: 0 12px; border: 1px solid rgba(255,255,255,.14); border-radius: 12px; background: #14161C; color: #F2F3F7; font: 16px 'JetBrains Mono', monospace; }",
-    ".svc-f button { flex: none; height: 44px; padding: 0 16px; border: 0; border-radius: 12px; background: #2A2E37; color: #F2F3F7; font: 500 15px 'Onest', sans-serif; cursor: pointer; }",
+    ".svc-f input { flex: 1; min-width: 0; height: 44px; padding: 0 12px; border: 1px solid rgba(255,255,255,.14); border-radius: 2px; background: #22243B; color: #F2F3F7; font: 16px 'JetBrains Mono', monospace; }",
+    ".svc-f button { flex: none; height: 44px; padding: 0 16px; border: 0; border-radius: 2px; background: #383C56; color: #F2F3F7; font: 500 15px 'Onest', sans-serif; cursor: pointer; }",
     ".svc-e { margin: -6px 0 12px; font-size: 13px; color: #E0705A; }",
-    ".svc-go { display: flex; align-items: center; justify-content: center; width: 100%; height: 54px; border: 0; border-radius: 14px; background: #EE7D1B; color: #0C0A08; font: 600 16px 'Onest', sans-serif; cursor: pointer; }",
+    ".svc-go { display: flex; align-items: center; justify-content: center; width: 100%; height: 54px; border: 0; border-radius: 2px; background: #F06E08; color: #191A2F; font: 600 16px 'Onest', sans-serif; cursor: pointer; }",
     ".svc-go[disabled] { opacity: .5; }",
-    ".svc-c { width: 100%; height: 50px; margin-top: 10px; border: 1px solid rgba(255,255,255,.14); border-radius: 14px; background: none; color: #F2F3F7; font: 500 15px 'Onest', sans-serif; cursor: pointer; }",
+    ".svc-c { width: 100%; height: 50px; margin-top: 10px; border: 1px solid rgba(255,255,255,.14); border-radius: 2px; background: none; color: #F2F3F7; font: 500 15px 'Onest', sans-serif; cursor: pointer; }",
     ".svc-s { min-height: 20px; margin: 12px 0 0; font-size: 14px; line-height: 1.45; color: #55C08A; text-align: center; }",
-    ".svc-u { width: 100%; height: 40px; margin-top: 6px; padding: 0 10px; border: 1px solid rgba(255,255,255,.14); border-radius: 10px; background: #14161C; color: #F2F3F7; font: 14px 'JetBrains Mono', monospace; }",
+    ".svc-u { width: 100%; height: 40px; margin-top: 6px; padding: 0 10px; border: 1px solid rgba(255,255,255,.14); border-radius: 2px; background: #22243B; color: #F2F3F7; font: 14px 'JetBrains Mono', monospace; }",
     ".svc-n { margin: auto 0 0; padding-top: 16px; font-size: 12px; line-height: 1.5; color: rgba(242,243,247,.5); text-align: center; }"
   ].join("\n");
   function css() { if (document.getElementById("svc-css")) return; var s = document.createElement("style"); s.id = "svc-css"; s.textContent = CSS; document.head.appendChild(s); }

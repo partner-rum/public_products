@@ -24,39 +24,40 @@
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Rumberg — структурные продукты">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="theme-color" content="#0B0C10">
+<meta name="theme-color" content="#191A2F">
 <link href="fonts/fonts.css?v=2" rel="stylesheet">
+<link href="brand/brand.css?v=1" rel="stylesheet">
 <style>
   :root {
-    --canvas: #0B0C10; --card: #14161C; --panel-2: #191B22; --tile: rgba(255,255,255,0.045); --black: #1A1919;
+    --canvas: #191A2F; --card: #22243B; --panel-2: #272941; --tile: rgba(255,255,255,0.045); --black: #282738;
     --ink: #F2F3F7; --hushed: rgba(242,243,247,0.64); --faint: rgba(242,243,247,0.56);
     --border: rgba(255,255,255,0.11); --border-soft: rgba(255,255,255,0.07);
-    --solar: #EE7D1B; --solar-l: #F58E33;
+    --solar: #F06E08; --solar-l: #F48834;
     --spruce: #5E9B82; --steel: #4F86E6; --amber: #E0A24A;
-    --up: #55C08A; --down: #EE7D1B; --loss: #E0705A;
-    --f-body: 'Onest', system-ui, sans-serif; --f-mono: 'JetBrains Mono', Consolas, monospace; --display:'Rubik','Onest',system-ui,sans-serif;
+    --up: #55C08A; --down: #F06E08; --loss: #E0705A;
+    --f-body: 'Onest', system-ui, sans-serif; --f-mono: 'JetBrains Mono', Consolas, monospace; --display:Montserrat,'Onest',system-ui,sans-serif;
     --ease: cubic-bezier(0.16, 1, 0.3, 1);
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--canvas); color: var(--ink); font-family: var(--f-body); -webkit-font-smoothing: antialiased; }
   a { text-decoration: none; color: inherit; }
-  a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 4px; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 2px; }
   .wrap { max-width: 1200px; margin: 0 auto; padding: 0 44px; }
 
-  .nav { position: sticky; top: 0; z-index: 30; background: rgba(11,12,16,0.82); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); }
+  .nav { position: sticky; top: 0; z-index: 30; background: rgba(25,26,47,0.82); backdrop-filter: none; -webkit-backdrop-filter: none; border-bottom: 1px solid var(--border); }
   .nav-in { max-width: 1200px; margin: 0 auto; padding: 0 44px; height: 62px; display: flex; align-items: center; gap: 12px; }
   .brand { display: flex; align-items: center; gap: 10px; } .brand-name { font-size: 14.5px; font-weight: 600; }
   .topnav { margin-left: auto; display: flex; align-items: center; gap: 22px; font-size: 14px; font-weight: 500; }
   .topnav a { color: var(--hushed); transition: color .2s; } .topnav a:hover { color: var(--ink); }
   .topnav a[aria-current="page"] { color: var(--ink); font-weight: 600; }
-  .btn-solar { background: var(--solar); color: #0C0A08 !important; border-radius: 6px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 7px; transition: background .3s; }
+  .btn-solar { background: var(--solar); color: #191A2F !important; border-radius: 2px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 7px; transition: background .3s; }
   .btn-solar:hover { background: var(--solar-l); }
 
   .crumbs { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--hushed); padding: 24px 0 18px; }
   .crumbs .sep { color: var(--faint); } .crumbs .here { color: var(--ink); font-weight: 500; }
   .head { margin-bottom: 8px; }
   .head-row { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; }
-  h1 { margin: 0; font-family:var(--display); font-size: 32px; font-weight: 400; letter-spacing: -0.02em; }
+  h1 { margin: 0; font-family:var(--display); font-size: 30.1px; font-weight: 400; letter-spacing: -0.01em; }
   .count { font-family: var(--f-mono); font-size: 13px; color: var(--hushed); }
   .intro { margin-top: 8px; font-size: 14.5px; line-height: 1.55; color: var(--hushed); max-width: 640px; text-wrap: pretty; }
 
@@ -65,10 +66,10 @@
   /* Список слева */
   .aside { position: sticky; top: 78px; display: flex; flex-direction: column; gap: 10px; max-height: calc(100dvh - 100px); }
   .filters { display: flex; gap: 6px; }
-  .fbtn { border: 1px solid var(--border); background: var(--card); border-radius: 20px; padding: 6px 13px; font-family: var(--f-body); font-size: 12.5px; color: var(--hushed); cursor: pointer; }
-  .fbtn.on { background: rgba(238,125,27,0.16); color: var(--ink); border-color: var(--solar); }
+  .fbtn { border: 1px solid var(--border); background: var(--card); border-radius: 2px; padding: 6px 13px; font-family: var(--f-body); font-size: 12.5px; color: var(--hushed); cursor: pointer; }
+  .fbtn.on { background: rgba(255, 255, 255, 0.072); color: var(--ink); border-color: var(--solar); }
   .fbtn .n { font-family: var(--f-mono); font-size: 11px; opacity: 0.6; margin-left: 5px; }
-  .list { overflow-y: auto; border: 1px solid var(--border-soft); border-radius: 12px; background: var(--card); }
+  .list { overflow-y: auto; border: 1px solid var(--border-soft); border-radius: 2px; background: var(--card); }
   /* ── РЕЖИМ ОДНОГО ВЫПУСКА ────────────────────────────────────────────────
      При одном размещении список и фильтры не нужны: список занимал 90px, а
      колонка под него — всю высоту. Паспорт разворачивается во всю ширину и на
@@ -92,8 +93,8 @@
   .item .st.live .dot { background: var(--spruce); } .item .st.up .dot { background: var(--amber); }
 
   /* Паспорт справа */
-  .panel { border: 1px solid var(--border-soft); border-radius: 14px; background: var(--card); padding: 26px 30px; }
-  .o-kind { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fc); }
+  .panel { border: 1px solid var(--border-soft); border-radius: 2px; background: var(--card); padding: 26px 30px; }
+  .o-kind { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--fc); }
   .o-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; flex-wrap: wrap; }
   .o-top-right { display: flex; flex-direction: column; align-items: flex-end; gap: 12px; margin-left: auto; }
   .o-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
@@ -101,36 +102,36 @@
   .o-actions .ct-menu { left: auto; right: 0; }
   /* главный CTA — тач-таргет ≥44px */
   .o-actions .ct-btn { min-height: 44px; }
-  .o-doc-btn { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font-size: 13px; color: var(--ink); background: transparent; transition: border-color .2s, background .2s; }
+  .o-doc-btn { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--border); border-radius: 2px; padding: 8px 12px; font-size: 13px; color: var(--ink); background: transparent; transition: border-color .2s, background .2s; }
   .o-doc-btn:hover { border-color: rgba(255,255,255,0.28); background: rgba(255,255,255,0.05); }
   .o-doc-btn svg { display: block; flex: none; }
-  .o-name { margin: 7px 0 4px; font-family:var(--display); font-size: 25px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.15; }
+  .o-name { margin: 7px 0 4px; font-family:var(--display); font-size: 23.5px; font-weight: 400; letter-spacing: -0.01em; line-height: 1.15; }
   .o-ref { font-size: 13.5px; color: var(--hushed); } .o-ref b { color: var(--ink); font-weight: 600; }
-  .badge { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 600; border-radius: 20px; padding: 6px 13px; white-space: nowrap; }
+  .badge { display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 600; border-radius: 2px; padding: 6px 13px; white-space: nowrap; }
   .badge.up { background: rgba(255,255,255,0.08); color: var(--ink); border: 1px solid var(--border); }
-  .badge.live { background: rgba(238,125,27,0.16); color: var(--ink); }
+  .badge.live { background: rgba(255, 255, 255, 0.072); color: var(--ink); }
   .badge .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
 
-  .o-teaser { margin: 16px 0 20px; padding: 14px 18px; background: var(--panel-2); border-radius: 10px; font-size: 15.5px; line-height: 1.5; color: var(--ink); text-wrap: pretty; }
+  .o-teaser { margin: 16px 0 20px; padding: 14px 18px; background: var(--panel-2); border-radius: 2px; font-size: 15.5px; line-height: 1.5; color: var(--ink); text-wrap: pretty; }
   .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 22px; }
-  .tile { background: var(--tile); border-radius: 10px; padding: 11px 14px; }
+  .tile { background: var(--tile); border-radius: 2px; padding: 11px 14px; }
   .tile .v { font-family: var(--f-mono); font-size: 15px; font-weight: 500; color: var(--ink); } .tile .v.hi { color: var(--fc); }
   .tile .k { font-size: 11px; color: var(--hushed); margin-top: 3px; }
 
   .o-grid { display: grid; grid-template-columns: 1.25fr 1fr; gap: 28px; align-items: start; }
   .blk { margin-bottom: 18px; } .blk:last-child { margin-bottom: 0; }
-  .blk .k { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.11em; text-transform: uppercase; color: var(--hushed); margin-bottom: 8px; }
+  .blk .k { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--hushed); margin-bottom: 8px; }
   .o-grid h3.k { margin: 0 0 8px; font-weight: 500; } /* секции — семантические заголовки без UA-отступов */
   .blk p { margin: 0; font-size: 14.5px; line-height: 1.62; color: var(--hushed); text-wrap: pretty; }
-  .plaque { padding: 12px 14px; border: 1px solid rgba(238,125,27,0.28); background: rgba(238,125,27,0.12); border-radius: 8px; font-size: 13px; line-height: 1.5; color: #E7B98D; }
+  .plaque { padding: 12px 14px; border: 1px solid rgba(240,110,8,0.28); background: rgba(255, 255, 255, 0.054); border-radius: 2px; font-size: 13px; line-height: 1.5; color: #EAB286; }
   /* ── ДВА ИСХОДА (купонный варрант) ──────────────────────────────────────────────
      Развилка продукта двумя плитками из чисел, которые уже стоят в паспорте.
      Заменяет прозу «как работает» и оранжевую плашку риска: та была самым
      громким элементом карточки, и предложение читалось как предупреждение. */
   .oc { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px; }
-  .oc .out { border: 1px solid var(--border-soft); border-radius: 12px; padding: 16px 18px 15px; background: var(--tile); }
+  .oc .out { border: 1px solid var(--border-soft); border-radius: 2px; padding: 16px 18px 15px; background: var(--tile); }
   .oc .out.yes { border-color: rgba(224,162,74,0.42); background: rgba(224,162,74,0.07); }
-  .oc .cond { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hushed); margin-bottom: 10px; }
+  .oc .cond { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--hushed); margin-bottom: 10px; }
   .oc .yes .cond { color: #E0A24A; }
   .oc .get { font-family: var(--f-mono); font-size: 26px; font-weight: 500; letter-spacing: -0.01em; line-height: 1.1; }
   .oc .yes .get { color: #E0A24A; }
@@ -151,17 +152,17 @@
   details.more { margin-top: 12px; }
   details.more summary { cursor: pointer; font-size: 13px; color: var(--hushed); list-style: none; display: inline-flex; align-items: center; gap: 6px; }
   details.more summary::-webkit-details-marker { display: none; }
-  details.more summary::before { content: "+"; font-family: var(--f-mono); width: 16px; height: 16px; border: 1px solid var(--border); border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; }
+  details.more summary::before { content: "+"; font-family: var(--f-mono); width: 16px; height: 16px; border: 1px solid var(--border); border-radius: 2px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; }
   details.more[open] summary::before { content: "–"; }
   details.more p { margin: 10px 0 0; font-size: 13.5px; line-height: 1.6; color: var(--hushed); }
   .dealers { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 8px; }
-  .dealers span { font-family: var(--f-mono); font-size: 11.5px; color: var(--hushed); background: var(--tile); border-radius: 6px; padding: 4px 9px; }
-  .pf { background: var(--tile); border-radius: 10px; padding: 14px 16px 10px; }
+  .dealers span { font-family: var(--f-mono); font-size: 11.5px; color: var(--hushed); background: var(--tile); border-radius: 2px; padding: 4px 9px; }
+  .pf { background: var(--tile); border-radius: 2px; padding: 14px 16px 10px; }
   .pf svg { display: block; width: 100%; height: auto; }
   .pf-cap { font-size: 11.5px; line-height: 1.45; color: var(--hushed); margin-top: 8px; text-wrap: pretty; }
   /* Видео о продукте: вписываем и вертикальные (9:16), и горизонтальные ролики —
      ограничиваем по высоте и центрируем, чтобы вертикаль не растягивала колонку */
-  .o-video { display: flex; justify-content: center; background: #000; border: 1px solid var(--border-soft); border-radius: 12px; overflow: hidden; }
+  .o-video { display: flex; justify-content: center; background: #000; border: 1px solid var(--border-soft); border-radius: 2px; overflow: hidden; }
   .o-video video { max-width: 100%; max-height: 60vh; width: auto; height: auto; display: block; }
   @media (max-width: 920px) { .o-video video { max-height: 72vh; } }
   .o-transcript { margin-top: 10px; font-size: 13px; }
@@ -175,16 +176,16 @@
   .bk-w { font-family: var(--f-mono); font-size: 13px; color: #49D69C; min-width: 38px; } /* фирменный зелёный АльянсКапитал */
   .bk-nm { font-size: 13.5px; color: var(--ink); flex: 1; }
   .bk-tk { font-family: var(--f-mono); font-size: 11px; color: var(--hushed); }
-  .bk-sec { font-size: 11px; color: var(--hushed); background: var(--tile); border-radius: 5px; padding: 2px 8px; white-space: nowrap; }
+  .bk-sec { font-size: 11px; color: var(--hushed); background: var(--tile); border-radius: 2px; padding: 2px 8px; white-space: nowrap; }
   .bk-a { color: var(--ink); border-bottom: 1px dotted rgba(255,255,255,0.28); transition: color .15s, border-color .15s; }
   .bk-a:hover { color: var(--steel); border-bottom-color: var(--steel); }
   .bk-ext { font-size: 11px; color: var(--faint); margin-left: 3px; }
   .bk-a:hover .bk-ext { color: var(--steel); }
   /* Пример расчёта при погашении */
-  .ex { background: var(--tile); border-radius: 10px; overflow: hidden; }
+  .ex { background: var(--tile); border-radius: 2px; overflow: hidden; }
   .ex-tbl { width: 100%; border-collapse: collapse; }
   .ex-tbl th, .ex-tbl td { padding: 8px 12px; border: 1px solid var(--border); text-align: right; vertical-align: baseline; }
-  .ex-tbl thead th { font-size: 11px; font-weight: 500; color: var(--hushed); text-transform: uppercase; letter-spacing: 0.05em; background: rgba(255,255,255,0.035); }
+  .ex-tbl thead th { font-size: 11px; font-weight: 500; color: var(--hushed); text-transform: none; letter-spacing: normal; background: rgba(255,255,255,0.035); }
   .ex-tbl th[scope="col"]:first-child, .ex-tbl th[scope="row"] { text-align: left; }
   .ex-l { font-family: var(--f-mono); font-size: 13px; font-weight: 400; color: var(--hushed); }
   .ex-v { font-family: var(--f-mono); font-size: 13.5px; font-weight: 500; }
@@ -200,10 +201,10 @@
   .o-partner { color: var(--steel); font-weight: 500; white-space: nowrap; }
   .o-partner:hover { text-decoration: underline; }
   .docs { margin-top: 16px; }
-  .docs .k { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.11em; text-transform: uppercase; color: var(--hushed); margin-bottom: 9px; }
-  .doc { display: flex; align-items: center; gap: 12px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 11px 13px; margin-bottom: 8px; transition: border-color .18s, box-shadow .18s, transform .18s; }
-  .doc:hover { border-color: rgba(255,255,255,0.22); box-shadow: 0 6px 16px rgba(0,0,0,0.4); transform: translateY(-1px); }
-  .doc .ic { flex: none; width: 34px; height: 34px; border-radius: 8px; background: var(--tile); display: grid; place-items: center; }
+  .docs .k { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--hushed); margin-bottom: 9px; }
+  .doc { display: flex; align-items: center; gap: 12px; background: var(--card); border: 1px solid var(--border); border-radius: 2px; padding: 11px 13px; margin-bottom: 8px; transition: border-color .18s, box-shadow .18s, transform .18s; }
+  .doc:hover { border-color: rgba(255,255,255,0.22); box-shadow: 0 6px 16px rgba(0,0,0,0.4); transform: none; }
+  .doc .ic { flex: none; width: 34px; height: 34px; border-radius: 2px; background: var(--tile); display: grid; place-items: center; }
   /* середина строки должна сжиматься, иначе длинное имя выдавливает иконку */
   .doc > span:not(.ic):not(.dl) { min-width: 0; flex: 1 1 auto; }
   .doc .nm { display: block; font-size: 13.5px; font-weight: 600; line-height: 1.3; text-wrap: pretty; }
@@ -214,7 +215,7 @@
   footer { margin-top: 56px; background: var(--canvas); border-top: 1px solid var(--border); }
   .footer-in { padding: 30px 0 44px; display: flex; justify-content: space-between; gap: 32px; flex-wrap: wrap; }
   .footer-brand .row { display: flex; align-items: center; gap: 10px; color: var(--ink); font-size: 14px; font-weight: 600; }
-  .footer-brand .sub { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); margin-top: 8px; }
+  .footer-brand .sub { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--faint); margin-top: 8px; }
   .disclaimer { font-size: 12.5px; line-height: 1.55; color: var(--hushed); max-width: 460px; }
 
   .panel-close { display: none; }
@@ -223,7 +224,7 @@
     .layout { grid-template-columns: 1fr; }
     /* Один выпуск — паспорт виден сразу, а не всплывает поверх по тапу:
        иначе на телефоне продукт вообще не показывался. */
-    .layout.solo .panel { display: block; position: static; inset: auto; border-radius: 14px; }
+    .layout.solo .panel { display: block; position: static; inset: auto; border-radius: 2px; }
     .aside { position: static; max-height: none; }
     .list { max-height: 50vh; }
     .tiles { grid-template-columns: 1fr 1fr; }
@@ -234,7 +235,7 @@
     .panel { display: none; }
     .panel.open { display: block; position: fixed; inset: 0; z-index: 40; border-radius: 0; overflow-y: auto; }
     /* color обязателен: <button> не наследует цвет, и надпись была системной тёмной по тёмному */
-    .panel-close { display: inline-flex; align-items: center; gap: 7px; margin-bottom: 14px; background: none; border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font-family: var(--f-body); font-size: 13px; cursor: pointer; color: var(--ink); }
+    .panel-close { display: inline-flex; align-items: center; gap: 7px; margin-bottom: 14px; background: none; border: 1px solid var(--border); border-radius: 2px; padding: 8px 12px; font-family: var(--f-body); font-size: 13px; cursor: pointer; color: var(--ink); }
   }
   @media (max-width: 860px) {
     .nav-in { height: auto; flex-wrap: wrap; padding: 12px 20px; row-gap: 10px; }
@@ -256,40 +257,40 @@
      у оверлея свой фон; «К списку» прилипает к верху — страница длинная. */
   @media (max-width: 920px) {
     .panel.landing.open { background: var(--canvas); padding: 10px 16px 112px; }
-    .panel.landing.open .panel-close { position: sticky; top: 10px; z-index: 6; background: rgba(11,12,16,0.82); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+    .panel.landing.open .panel-close { position: sticky; top: 10px; z-index: 6; background: rgba(25,26,47,0.82); backdrop-filter: none; -webkit-backdrop-filter: none; }
   }
-  .lnd-head h1 { font-size: 19px; color: var(--hushed); font-weight: 400; }
+  .lnd-head h1 { font-size: 17.9px; color: var(--hushed); font-weight: 400; }
   .lnd-head .intro { display: none; }
 
   /* ── ИДЕЯ: герой с плеером ─────────────────────────────────────────────── */
-  .lh { position: relative; border-radius: 18px; overflow: hidden; background: #07080B; border: 1px solid var(--border-soft); }
+  .lh { position: relative; border-radius: 2px; overflow: hidden; background: #15162A; border: 1px solid var(--border-soft); }
   .lh-bg { position: absolute; inset: 0; overflow: hidden; }
-  .lh-bg img { width: 100%; height: 100%; object-fit: cover; display: block; transform: scale(1.14); filter: blur(30px) saturate(0.85); opacity: 0.5; }
+  .lh-bg img { width: 100%; height: 100%; object-fit: cover; display: block; transform: scale(1.14); filter: none; opacity: 0.5; }
   .lh-scrim { position: absolute; inset: 0;
     background:
-      radial-gradient(120% 80% at 88% 40%, rgba(7,8,11,0) 0%, rgba(7,8,11,0.55) 58%, rgba(7,8,11,0.9) 100%),
-      linear-gradient(to right, rgba(7,8,11,0.92) 0%, rgba(7,8,11,0.72) 44%, rgba(7,8,11,0.5) 100%); }
+      radial-gradient(120% 80% at 88% 40%, rgba(21,22,42,0) 0%, rgba(21,22,42,0.55) 58%, rgba(21,22,42,0.9) 100%),
+      linear-gradient(to right, rgba(21,22,42,0.92) 0%, rgba(21,22,42,0.72) 44%, rgba(21,22,42,0.5) 100%); }
   .lh-grid { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 36px; align-items: center; padding: 34px 34px; }
   /* Плеер — рамка 9:16 под вертикальный ролик. Постер и видео одного кадра,
      поэтому переключение по нажатию не дёргает картинку. */
-  .lh-media { position: relative; border-radius: 14px; overflow: hidden; background: #04050A; box-shadow: 0 18px 44px rgba(0,0,0,0.5); aspect-ratio: 9 / 16; cursor: pointer; }
-  .lh-media img, .lh-media video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; background: #04050A; }
+  .lh-media { position: relative; border-radius: 2px; overflow: hidden; background: #121329; box-shadow: 0 18px 44px rgba(0,0,0,0.5); aspect-ratio: 9 / 16; cursor: pointer; }
+  .lh-media img, .lh-media video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; background: #121329; }
   .lh-media.playing, .lh-media.still { cursor: default; }
   .lh-media.playing video { object-fit: contain; }
   .lh-badge { position: absolute; top: 12px; left: 12px; right: 12px; z-index: 2; display: flex; justify-content: flex-end; pointer-events: none; }
-  .lh-badge .badge.live { background: rgba(11,12,16,0.72); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); border: 1px solid rgba(238,125,27,0.5); }
+  .lh-badge .badge.live { background: rgba(25,26,47,0.72); backdrop-filter: none; -webkit-backdrop-filter: none; border: 1px solid rgba(240,110,8,0.5); }
   .lh-badge .badge.live .dot { background: var(--solar); }
   .lh-media.playing .lh-badge { display: none; }
   /* Кнопка «смотреть»: круг с треугольником и подпись, внизу кадра на градиенте */
   .lh-pb { position: absolute; left: 0; right: 0; bottom: 0; z-index: 2; display: flex; align-items: center; gap: 12px; padding: 60px 16px 16px;
-           background: linear-gradient(to top, rgba(4,5,10,0.92), rgba(4,5,10,0)); border: none; color: var(--ink); font-family: var(--f-body); cursor: pointer; text-align: left; }
+           background: linear-gradient(to top, rgba(18,19,41,0.92), rgba(18,19,41,0)); border: none; color: var(--ink); font-family: var(--f-body); cursor: pointer; text-align: left; }
   .lh-pb .ico { flex: none; width: 46px; height: 46px; border-radius: 50%; background: var(--solar); display: grid; place-items: center; transition: transform .2s var(--ease), background .2s; }
   .lh-pb .ico svg { margin-left: 2px; }
   .lh-media:hover .lh-pb .ico { transform: scale(1.06); background: var(--solar-l); }
   .lh-pb .lbl { font-size: 14px; font-weight: 600; line-height: 1.3; }
   .lh-pb .lbl .dim { font-weight: 400; color: rgba(242,243,247,0.62); }
   .lh-media.playing .lh-pb { display: none; }
-  .lh-kick { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(242,243,247,0.72); display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+  .lh-kick { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: rgba(242,243,247,0.72); display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
   .lh-kick a { color: #49D69C; } /* фирменный зелёный АльянсКапитал */
   .lh-kick a:hover { text-decoration: underline; }
   .lh-kick .sep { color: rgba(242,243,247,0.38); }
@@ -297,11 +298,11 @@
      отдельной строкой. Партнёр всегда идёт своей строкой — разделитель не нужен. */
   .lh-kick .sep { display: none; }
   .lh-kick .sep + span { flex-basis: 100%; }
-  .lh-name { margin: 14px 0 0; font-family: var(--display); font-size: 54px; line-height: 1.02; font-weight: 500; letter-spacing: -0.03em; }
+  .lh-name { margin: 14px 0 0; font-family: var(--display); font-size: 50.8px; line-height: 1.02; font-weight: 500; letter-spacing: -0.01em; }
   .lh-lead { margin: 16px 0 0; max-width: 560px; font-size: 18px; line-height: 1.5; color: rgba(242,243,247,0.86); text-wrap: pretty; }
   .lh-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; margin: 28px 0 0; }
   .lh-cta .ct-btn { min-height: 44px; }
-  .lh-cta .o-doc-btn { background: rgba(11,12,16,0.55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); min-height: 44px; }
+  .lh-cta .o-doc-btn { background: rgba(25,26,47,0.55); backdrop-filter: none; -webkit-backdrop-filter: none; min-height: 44px; }
 
   /* Широкий герой (hero.wide): у выпуска нет ролика, но есть горизонтальная
      иллюстрация с пустым полем слева под текст — она идёт во весь кадр без
@@ -312,14 +313,14 @@
   .lh.wide .lh-bg img { transform: none; filter: none; opacity: 1; object-position: 100% 34%; transform-origin: 100% 30%; animation: lh-drift 26s cubic-bezier(.2,.6,.3,1) both; }
   @keyframes lh-drift { from { transform: scale(1.07); } to { transform: scale(1); } }
   .lh.wide .lh-scrim { background:
-      linear-gradient(to right, rgba(7,8,11,0.9) 0%, rgba(7,8,11,0.66) 36%, rgba(7,8,11,0.12) 66%, rgba(7,8,11,0) 100%),
-      linear-gradient(to top, rgba(7,8,11,0.7) 0%, rgba(7,8,11,0) 34%); }
+      linear-gradient(to right, rgba(21,22,42,0.9) 0%, rgba(21,22,42,0.66) 36%, rgba(21,22,42,0.12) 66%, rgba(21,22,42,0) 100%),
+      linear-gradient(to top, rgba(21,22,42,0.7) 0%, rgba(21,22,42,0) 34%); }
   .lh.wide .lh-grid { width: 100%; grid-template-columns: minmax(0, 620px); padding: 48px 42px; }
   .lh.wide .lh-name { font-size: 62px; }
   .lh-stat { margin-bottom: 20px; }
-  .lh-stat .badge.live { background: rgba(11,12,16,0.62); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); border: 1px solid rgba(238,125,27,0.5); }
-  .lh-stat .badge.live .dot { background: var(--solar); box-shadow: 0 0 0 0 rgba(238,125,27,0.6); animation: lh-ping 2.4s ease-out 3; }
-  @keyframes lh-ping { 0% { box-shadow: 0 0 0 0 rgba(238,125,27,0.6); } 70%, 100% { box-shadow: 0 0 0 9px rgba(238,125,27,0); } }
+  .lh-stat .badge.live { background: rgba(25,26,47,0.62); backdrop-filter: none; -webkit-backdrop-filter: none; border: 1px solid rgba(240,110,8,0.5); }
+  .lh-stat .badge.live .dot { background: var(--solar); box-shadow: 0 0 0 0 rgba(240,110,8,0.6); animation: lh-ping 2.4s ease-out 3; }
+  @keyframes lh-ping { 0% { box-shadow: 0 0 0 0 rgba(240,110,8,0.6); } 70%, 100% { box-shadow: 0 0 0 9px rgba(240,110,8,0); } }
   @media (prefers-reduced-motion: reduce) {
     .lh.wide .lh-bg img, .lh-stat .badge.live .dot { animation: none; }
   }
@@ -331,7 +332,7 @@
   .bstrip { margin-top: 30px; }
   .bs-row { display: flex; gap: 5px; }
   .bs-c { min-width: 0; }
-  .bs-c i { display: block; height: 10px; border-radius: 3px; background: var(--c); box-shadow: 0 0 22px -2px var(--c); transform-origin: 0 50%; }
+  .bs-c i { display: block; height: 10px; border-radius: 2px; background: var(--c); box-shadow: 0 0 22px -2px var(--c); transform-origin: 0 50%; }
   .bstrip.anim .bs-c i { transform: scaleX(0); transition: transform .9s cubic-bezier(.2,.7,.2,1); }
   .bstrip.anim.in .bs-c i { transform: none; }
   .bstrip.anim.in .bs-c:nth-child(2) i { transition-delay: .08s; }
@@ -349,9 +350,9 @@
   /* ── Разделы ───────────────────────────────────────────────────────────── */
   .ls { margin-top: 44px; }
   .ls-hd { padding-bottom: 10px; border-bottom: 1px solid var(--border); }
-  .ls-h { margin: 0; font-family: var(--display); font-size: 26px; font-weight: 400; letter-spacing: -0.02em; }
+  .ls-h { margin: 0; font-family: var(--display); font-size: 24.4px; font-weight: 400; letter-spacing: -0.01em; }
   .ls-sub { margin: 8px 0 0; font-size: 14px; line-height: 1.55; color: var(--hushed); max-width: 660px; text-wrap: pretty; }
-  .ls-k { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.11em; text-transform: uppercase; color: var(--hushed); margin-bottom: 9px; }
+  .ls-k { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--hushed); margin-bottom: 9px; }
   .src { margin: 14px 0 0; font-size: 12px; line-height: 1.55; color: var(--faint); text-wrap: pretty; max-width: 760px; }
 
   /* ── ЗАЧЕМ: три тезиса с цифрой ────────────────────────────────────────── */
@@ -384,7 +385,7 @@
   .fd summary::after { content: "+"; margin-left: auto; font-family: var(--f-mono); font-size: 18px; color: var(--hushed); flex: none; line-height: 1; }
   .fd[open] summary::after { content: "–"; }
   .fd summary:hover .fd-t { color: var(--solar); }
-  .fd-t { font-family: var(--display); font-size: 18px; font-weight: 400; letter-spacing: -0.01em; flex: none; }
+  .fd-t { font-family: var(--display); font-size: 16.9px; font-weight: 400; letter-spacing: -0.01em; flex: none; }
   .fd-h { font-size: 13px; color: var(--faint); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .fd-b { padding: 4px 0 26px; }
 
@@ -414,10 +415,10 @@
   .fx p { margin: 0; font-size: 16px; line-height: 1.55; color: var(--ink); text-wrap: pretty; }
   .fx p.d { margin-top: 8px; font-size: 13.5px; line-height: 1.6; color: var(--hushed); }
   .pay { display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr); gap: 18px; align-items: stretch; margin-top: 18px; }
-  .pay-chart { background: var(--card); border: 1px solid var(--border-soft); border-radius: 12px; padding: 16px 18px 12px; min-width: 0; }
+  .pay-chart { background: var(--card); border: 1px solid var(--border-soft); border-radius: 2px; padding: 16px 18px 12px; min-width: 0; }
   .pay-chart svg { display: block; width: 100%; height: auto; }
-  .calc { background: var(--card); border: 1px solid var(--border-soft); border-radius: 12px; padding: 18px 20px; min-width: 0; display: flex; flex-direction: column; }
-  .calc .k { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.11em; text-transform: uppercase; color: var(--hushed); }
+  .calc { background: var(--card); border: 1px solid var(--border-soft); border-radius: 2px; padding: 18px 20px; min-width: 0; display: flex; flex-direction: column; }
+  .calc .k { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--hushed); }
   .calc-val { font-family: var(--f-mono); font-size: 29px; font-weight: 500; letter-spacing: -0.02em; margin-top: 8px; }
   .calc input[type=range] { width: 100%; margin: 14px 0 4px; accent-color: var(--solar); height: 26px; }
   .calc-scale { display: flex; justify-content: space-between; font-family: var(--f-mono); font-size: 11px; color: var(--faint); }
@@ -435,7 +436,7 @@
   /* Корзина — таблица */
   .btbl { width: 100%; border-collapse: collapse; margin-top: 8px; }
   .btbl th, .btbl td { text-align: left; padding: 11px 12px 11px 0; border-bottom: 1px solid var(--border-soft); vertical-align: baseline; }
-  .btbl thead th { font-family: var(--f-mono); font-size: 11px; font-weight: 400; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); border-bottom-color: var(--border); padding-bottom: 8px; }
+  .btbl thead th { font-family: Onest, system-ui, sans-serif; font-size: 11px; font-weight: 400; letter-spacing: normal; text-transform: none; color: var(--faint); border-bottom-color: var(--border); padding-bottom: 8px; }
   .btbl .bnm { font-size: 15px; font-weight: 600; color: var(--ink); }
   .btbl .bfull { display: block; font-size: 11.5px; font-weight: 400; color: var(--faint); margin-top: 3px; }
   .btbl .btk { font-family: var(--f-mono); font-size: 12.5px; color: var(--hushed); white-space: nowrap; }
@@ -464,7 +465,7 @@
   .faq summary:hover { color: var(--solar); }
   .faq .a { padding: 0 34px 16px 2px; font-size: 14px; line-height: 1.6; color: var(--hushed); text-wrap: pretty; }
 
-  .lend { margin-top: 38px; display: flex; flex-wrap: wrap; align-items: center; gap: 14px; padding: 20px 22px; background: var(--card); border: 1px solid var(--border-soft); border-radius: 12px; }
+  .lend { margin-top: 38px; display: flex; flex-wrap: wrap; align-items: center; gap: 14px; padding: 20px 22px; background: var(--card); border: 1px solid var(--border-soft); border-radius: 2px; }
   .lend .tx { font-size: 15px; font-weight: 500; }
   .lend .sub { font-size: 12.5px; color: var(--hushed); margin-top: 4px; }
   .lend .act { margin-left: auto; display: flex; gap: 9px; flex-wrap: wrap; }
@@ -480,8 +481,8 @@
     .lh.wide .lh-grid { grid-template-columns: minmax(0, 560px); padding: 36px 30px; }
     .lh.wide .lh-name { font-size: 48px; }
     .lh.wide .lh-scrim { background:
-      linear-gradient(to right, rgba(7,8,11,0.92) 0%, rgba(7,8,11,0.74) 46%, rgba(7,8,11,0.2) 78%, rgba(7,8,11,0.05) 100%),
-      linear-gradient(to top, rgba(7,8,11,0.7) 0%, rgba(7,8,11,0) 34%); }
+      linear-gradient(to right, rgba(21,22,42,0.92) 0%, rgba(21,22,42,0.74) 46%, rgba(21,22,42,0.2) 78%, rgba(21,22,42,0.05) 100%),
+      linear-gradient(to top, rgba(21,22,42,0.7) 0%, rgba(21,22,42,0) 34%); }
     .why, .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 28px; }
     .wh + .wh { border-left: none; padding-left: 0; margin-left: 0; }
     .spec { grid-template-columns: 186px minmax(0, 1fr); }
@@ -509,7 +510,7 @@
     .lh.wide { display: block; min-height: 0; }
     .lh.wide .lh-bg { position: relative; height: 230px; }
     .lh.wide .lh-bg img { object-position: 100% 0; transform-origin: 100% 0; transform: scale(1.75); animation: none; }
-    .lh.wide .lh-scrim { bottom: auto; height: 230px; background: linear-gradient(to bottom, rgba(7,8,11,0) 45%, #07080B 100%), linear-gradient(to right, rgba(7,8,11,0.55), rgba(7,8,11,0) 60%); }
+    .lh.wide .lh-scrim { bottom: auto; height: 230px; background: linear-gradient(to bottom, rgba(21,22,42,0) 45%, #15162A 100%), linear-gradient(to right, rgba(21,22,42,0.55), rgba(21,22,42,0) 60%); }
     .lh.wide .lh-grid { padding: 0 16px 22px; margin-top: -54px; }
     .lh.wide .lh-name { font-size: 36px; }
     .bs-row { gap: 3px; }
@@ -541,7 +542,7 @@
     .lend .act { margin-left: 0; width: 100%; }
   }
   @media (max-width: 900px) {
-    .panel.landing.open .panel-close { -webkit-backdrop-filter: none; backdrop-filter: none; background: #0B0C10; }
+    .panel.landing.open .panel-close { -webkit-backdrop-filter: none; backdrop-filter: none; background: #191A2F; }
   }
 </style>
 <script src="metrika.js?v=10" defer></script>
@@ -551,7 +552,7 @@
 <header class="nav">
   <div class="nav-in">
     <a class="brand" href="index.html" aria-label="На главную">
-      <svg width="22" height="22" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>
+      <svg width="22" height="22" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#F06E08"/></svg>
       <span class="brand-name">Rumberg</span><span class="brand-tag">Инвестиционные решения</span>
     </a>
     <nav class="topnav">
@@ -562,7 +563,7 @@
       <a href="placements.html">Выпуски</a>
       <a href="about.html">Библиотека</a>
       <a class="btn-solar" href="board.html">Доска
-        <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3.46 10.54 L10.54 3.46 M4.88 3.46 H10.54 V9.12" stroke="#191A2F" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </a>
     </nav>
   </div>
@@ -589,7 +590,7 @@
 <footer>
   <div class="wrap footer-in">
     <div class="footer-brand">
-      <div class="row"><svg width="18" height="18" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>Rumberg</div>
+      <div class="row"><svg width="18" height="18" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#F06E08"/></svg>Rumberg</div>
       <div class="sub">Витрина структурных продуктов</div>
     </div>
     <div class="disclaimer">Не является индивидуальной инвестиционной рекомендацией. Продукты доступны только квалифицированным инвесторам.</div>
@@ -598,8 +599,8 @@
 
 <script src="data/offerings.js?v=srv23"></script>
 <script src="data/harden.js?v=1"></script>
-<script src="share.js?v=8"></script>
-<script src="contact.js?v=10"></script>
+<script src="share.js?v=9"></script>
+<script src="contact.js?v=11"></script>
 <script>
 (function () {
   "use strict";
@@ -947,7 +948,7 @@
     if (!isFinite(Number(o.price)) || Number(o.price) <= 0) return "";
     var g = csGeo(o), x = g.x, y = g.y, cap = g.cap, be = g.be, capMax = g.y1;
     var mono = 'font-family="JetBrains Mono, monospace"';
-    var col = "#EE7D1B", el = [];
+    var col = "#F06E08", el = [];
     [capMax, 0, g.y0].forEach(function (v) {
       el.push('<line x1="' + g.L + '" y1="' + y(v) + '" x2="' + (g.W - g.R) + '" y2="' + y(v) + '" stroke="rgba(255,255,255,' + (v === 0 ? 0.26 : 0.1) + ')" stroke-width="1"' + (v === 0 ? ' stroke-dasharray="4 4"' : '') + '/>');
       el.push('<text x="' + (g.L - 8) + '" y="' + (y(v) + 4) + '" text-anchor="end" font-size="11" ' + mono + ' fill="rgba(242,243,247,' + (v === 0 ? 0.72 : 0.5) + ')">' + pctTxt(Math.round(v)) + '</text>');
@@ -962,7 +963,7 @@
     el.push('<circle cx="' + x(cap) + '" cy="' + y(capMax) + '" r="4" fill="' + col + '"/>');
     if (!g.narrow) el.push('<text x="' + (x(cap) + 10) + '" y="' + (y(capMax) + 16) + '" font-size="11.5" ' + mono + ' fill="' + col + '">дальше не растёт</text>');
     el.push('<line id="cs-gx" x1="' + x(be) + '" y1="' + g.T + '" x2="' + x(be) + '" y2="' + y(g.y0) + '" stroke="rgba(255,255,255,0.28)" stroke-width="1" stroke-dasharray="3 4"/>');
-    el.push('<circle id="cs-dot" cx="' + x(be) + '" cy="' + y(0) + '" r="6" fill="#0B0C10" stroke="' + col + '" stroke-width="2.6"/>');
+    el.push('<circle id="cs-dot" cx="' + x(be) + '" cy="' + y(0) + '" r="6" fill="#191A2F" stroke="' + col + '" stroke-width="2.6"/>');
     (g.narrow ? [g.x0, 0, cap] : [g.x0, 0, Math.round(cap / 2), cap, g.x1]).forEach(function (v) {
       el.push('<text x="' + x(v) + '" y="' + (g.H - 14) + '" text-anchor="middle" font-size="11" ' + mono + ' fill="rgba(242,243,247,0.5)">' + pctTxt(v) + '</text>');
     });
@@ -1112,7 +1113,7 @@
             (o.video.poster ? ' poster="' + esc(o.video.poster) + '"' : '') + '>' +
             '<source src="' + esc(o.video.src) + '" type="video/mp4">Ваш браузер не поддерживает видео.</video>' +
           '<button class="lh-pb" type="button" aria-label="Смотреть ролик о выпуске">' +
-            '<span class="ico"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true"><path d="M7 4.5 L17 11 L7 17.5 Z" fill="#0C0A08"/></svg></span>' +
+            '<span class="ico"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true"><path d="M7 4.5 L17 11 L7 17.5 Z" fill="#191A2F"/></svg></span>' +
             '<span class="lbl">Смотреть ролик' + (o.video.meta ? '<span class="dim"> · ' + esc(o.video.meta) + '</span>' : '') + '</span></button>' +
         '</div>'
       : (o.hero && o.hero.poster
@@ -1303,10 +1304,10 @@
   if (startId) document.getElementById("close").setAttribute("data-back", "← {}");
 })();
 </script>
-<script src="chat.js?v=27"></script>
-<script src="search.js?v=8"></script>
-<script src="nav-about.js?v=9"></script>
-<script src="qualgate.js?v=8"></script>
-<script src="ptr.js?v=2" defer></script>
+<script src="chat.js?v=28"></script>
+<script src="search.js?v=9"></script>
+<script src="nav-about.js?v=10"></script>
+<script src="qualgate.js?v=9"></script>
+<script src="ptr.js?v=3" defer></script>
 </body>
 </html>

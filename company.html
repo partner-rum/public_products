@@ -24,18 +24,19 @@
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Rumberg — структурные продукты">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="theme-color" content="#0B0C10">
+<meta name="theme-color" content="#191A2F">
 <link href="fonts/fonts.css?v=2" rel="stylesheet">
+<link href="brand/brand.css?v=1" rel="stylesheet">
 <script src="metrika.js?v=10" defer></script>
 <style>
   :root {
-    --canvas: #0B0C10; --card: #14161C;
+    --canvas: #191A2F; --card: #22243B;
     --ink: #F2F3F7; --hushed: rgba(242,243,247,0.64); --faint: rgba(242,243,247,0.56);
     --border: rgba(255,255,255,0.11); --border-soft: rgba(255,255,255,0.07);
-    --solar: #EE7D1B; --solar-l: #F58E33;
+    --solar: #F06E08; --solar-l: #F48834;
     --f-body: 'Onest', system-ui, sans-serif;
     --f-mono: 'JetBrains Mono', Consolas, monospace;
-    --display: 'Rubik', 'Onest', system-ui, sans-serif;
+    --display: Montserrat, 'Onest', system-ui, sans-serif;
     --ease: cubic-bezier(0.16, 1, 0.3, 1);
   }
   * { box-sizing: border-box; }
@@ -43,7 +44,7 @@
   a { text-decoration: none; color: inherit; }
   a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
 
-  .nav { position: sticky; top: 0; z-index: 20; background: rgba(11,12,16,0.82); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); }
+  .nav { position: sticky; top: 0; z-index: 20; background: rgba(25,26,47,0.82); backdrop-filter: none; -webkit-backdrop-filter: none; border-bottom: 1px solid var(--border); }
   .nav-in { max-width: 1080px; margin: 0 auto; padding: 0 44px; height: 62px; display: flex; align-items: center; gap: 12px; }
   .brand { display: flex; align-items: center; gap: 10px; }
   .brand-name { font-size: 14.5px; font-weight: 600; }
@@ -57,20 +58,20 @@
   .topnav { margin-left: auto; display: flex; align-items: center; gap: 14px; font-size: 14px; font-weight: 500; }
   .topnav a { color: var(--hushed); transition: color .2s; }
   .topnav a:hover { color: var(--ink); }
-  .btn-solar { background: var(--solar); color: #0C0A08 !important; border-radius: 6px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 7px; transition: background .3s ease-in-out; }
+  .btn-solar { background: var(--solar); color: #191A2F !important; border-radius: 2px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 7px; transition: background .3s ease-in-out; }
   .btn-solar:hover { background: var(--solar-l); }
 
   .wrap { max-width: 720px; margin: 0 auto; padding: 0 24px 72px; }
-  h1 { margin: 44px 0 14px; font-family: var(--display); font-size: clamp(26px, 4vw, 34px); font-weight: 600; letter-spacing: -0.02em; line-height: 1.12; }
+  h1 { margin: 44px 0 14px; font-family: var(--display); font-size: clamp(26px, 4vw, 34px); font-weight: 500; letter-spacing: -0.01em; line-height: 1.12; }
   .lead { margin: 0 0 8px; font-size: 15.5px; line-height: 1.65; color: var(--hushed); max-width: 620px; }
   .lead b { color: var(--ink); font-weight: 600; }
 
-  .cap { margin: 34px 0 10px; font-family: var(--f-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); display: flex; align-items: center; gap: 8px; }
+  .cap { margin: 34px 0 10px; font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--faint); display: flex; align-items: center; gap: 8px; }
   .cap::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--solar); }
 
   .entity { padding: 16px 0; border-bottom: 1px solid var(--border-soft); }
   .entity:first-of-type { border-top: 1px solid var(--border-soft); }
-  .entity .n { font-family: var(--display); font-size: 16px; font-weight: 600; }
+  .entity .n { font-family: var(--display); font-size: 15px; font-weight: 500; }
   .entity .d { margin-top: 5px; font-size: 13.5px; line-height: 1.55; color: var(--hushed); }
   .entity .ogrn { font-family: var(--f-mono); font-size: 12.5px; color: var(--faint); margin-top: 4px; }
 
@@ -79,13 +80,13 @@
      нет, и рисовать их подобия нельзя, поэтому блок текстовый. */
   .award { padding: 18px 0; border-bottom: 1px solid var(--border-soft); }
   .award:first-of-type { border-top: 1px solid var(--border-soft); }
-  .award .org { font-family: var(--display); font-size: 17px; font-weight: 600; letter-spacing: -.014em; }
+  .award .org { font-family: var(--display); font-size: 16px; font-weight: 500; letter-spacing: -0.01em; }
   .award .nom { margin-top: 5px; font-size: 14px; color: var(--ink); }
   .award .nom .y { font-family: var(--f-mono); font-size: 12.5px; color: var(--faint); }
   .award .note { margin-top: 5px; font-size: 13px; line-height: 1.5; color: var(--hushed); }
   .award .ln { display: flex; gap: 8px; margin-top: 11px; flex-wrap: wrap; }
   .award .ln a { font-family: var(--f-mono); font-size: 11px; letter-spacing: .04em; color: var(--hushed);
-    border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px;
+    border: 1px solid var(--border); border-radius: 2px; padding: 6px 10px;
     display: inline-flex; align-items: center; gap: 6px; transition: border-color .15s, color .15s; }
   .award .ln a:hover { color: var(--ink); border-color: rgba(255,255,255,0.32); }
   @media (max-width: 560px) {
@@ -97,19 +98,19 @@
      Обложка слева фиксированной ширины, чтобы низкие кадры не разъезжались. */
   .talk { display: grid; grid-template-columns: 208px 1fr; gap: 18px; align-items: start; padding: 18px 0; border-bottom: 1px solid var(--border-soft); }
   .talk:first-of-type { border-top: 1px solid var(--border-soft); }
-  .talk .ph { position: relative; display: block; border-radius: 8px; overflow: hidden; background: var(--card); border: 1px solid var(--border); aspect-ratio: 16/9; }
+  .talk .ph { position: relative; display: block; border-radius: 2px; overflow: hidden; background: var(--card); border: 1px solid var(--border); aspect-ratio: 16/9; }
   .talk .ph img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: .9; transition: transform .5s var(--ease), opacity .3s; }
   .talk:hover .ph img { transform: scale(1.035); opacity: 1; }
   .talk .play { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
-  .talk .play i { width: 36px; height: 36px; border-radius: 50%; background: rgba(11,12,16,.62); border: 1px solid rgba(255,255,255,.22); display: flex; align-items: center; justify-content: center; transition: background .2s, border-color .2s; }
-  .talk:hover .play i { background: rgba(238,125,27,.9); border-color: transparent; }
+  .talk .play i { width: 36px; height: 36px; border-radius: 50%; background: rgba(25,26,47,.62); border: 1px solid rgba(255,255,255,.22); display: flex; align-items: center; justify-content: center; transition: background .2s, border-color .2s; }
+  .talk:hover .play i { background: rgba(240,110,8,.9); border-color: transparent; }
   .talk .bd { min-width: 0; }
   .talk .org { font-family: var(--f-mono); font-size: 11px; letter-spacing: .06em; color: var(--faint); display: flex; align-items: center; gap: 7px; margin-bottom: 6px; }
   .talk .org .d { width: 3px; height: 3px; border-radius: 50%; background: rgba(255,255,255,.24); }
-  .talk .n { font-family: var(--display); font-size: 16px; font-weight: 600; line-height: 1.35; }
+  .talk .n { font-family: var(--display); font-size: 15px; font-weight: 500; line-height: 1.35; }
   .talk:hover .n { color: var(--solar-l); }
   .talk .ln { display: flex; gap: 8px; margin-top: 11px; }
-  .talk .ln a { font-family: var(--f-mono); font-size: 11px; letter-spacing: .04em; color: var(--hushed); border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; transition: border-color .15s, color .15s; }
+  .talk .ln a { font-family: var(--f-mono); font-size: 11px; letter-spacing: .04em; color: var(--hushed); border: 1px solid var(--border); border-radius: 2px; padding: 6px 10px; transition: border-color .15s, color .15s; }
   .talk .ln a:hover { color: var(--ink); border-color: rgba(255,255,255,0.32); }
   @media (max-width: 560px) {
     .talk { grid-template-columns: 1fr; gap: 12px; }
@@ -125,8 +126,8 @@
   .kv .v a { color: var(--solar-l); }
 
   .links { display: flex; gap: 12px; flex-wrap: wrap; margin: 30px 0 0; }
-  .lbtn { display: inline-flex; align-items: center; gap: 8px; border-radius: 12px; padding: 12px 18px; font-size: 14px; font-weight: 500; transition: background .15s, border-color .15s; }
-  .lbtn.primary { background: var(--solar); color: #0C0A08; }
+  .lbtn { display: inline-flex; align-items: center; gap: 8px; border-radius: 2px; padding: 12px 18px; font-size: 14px; font-weight: 500; transition: background .15s, border-color .15s; }
+  .lbtn.primary { background: var(--solar); color: #191A2F; }
   .lbtn.primary:hover { background: var(--solar-l); }
   .lbtn.ghost { border: 1px solid var(--border); color: var(--ink); }
   .lbtn.ghost:hover { border-color: rgba(255,255,255,0.32); }
@@ -138,11 +139,11 @@
   .ci-lead b { color: var(--ink); font-weight: 600; }
   .ci-sub { margin: -2px 0 12px; font-size: 13.5px; line-height: 1.55; color: var(--hushed); max-width: 560px; }
 
-  .ci-cap { margin: 32px 0 12px; font-family: var(--f-mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); display: flex; align-items: center; gap: 8px; }
+  .ci-cap { margin: 32px 0 12px; font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--faint); display: flex; align-items: center; gap: 8px; }
   .ci-cap::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--solar); }
   .chips { display: flex; flex-wrap: wrap; gap: 7px; }
-  .chip { display: inline-flex; align-items: center; border: 1px solid var(--border); border-radius: 999px; padding: 5px 11px; font-size: 12.5px; color: var(--hushed); animation: chipIn .4s var(--ease) backwards; }
-  .chip.hot { border-color: rgba(238,125,27,0.45); color: #F0AE72; }
+  .chip { display: inline-flex; align-items: center; border: 1px solid var(--border); border-radius: 2px; padding: 5px 11px; font-size: 12.5px; color: var(--hushed); animation: chipIn .4s var(--ease) backwards; }
+  .chip.hot { border-color: rgba(240,110,8,0.45); color: #F5A76A; }
   @keyframes chipIn { from { opacity: 0; transform: translateY(7px); } }
 
   /* Плавное появление секций при скролле */
@@ -151,32 +152,32 @@
 
   /* Живые цифры */
   .ci-nums { display: flex; gap: 36px; flex-wrap: wrap; margin-top: 30px; padding: 22px 0; border-top: 1px solid var(--border-soft); border-bottom: 1px solid var(--border-soft); }
-  .ci-num .v { font-family: var(--display); font-size: 34px; font-weight: 600; letter-spacing: -0.02em; color: var(--solar); line-height: 1.05; font-variant-numeric: tabular-nums; }
+  .ci-num .v { font-family: var(--display); font-size: 32px; font-weight: 500; letter-spacing: -0.01em; color: var(--solar); line-height: 1.05; font-variant-numeric: tabular-nums; }
   .ci-num .k { margin-top: 6px; font-size: 12.5px; line-height: 1.45; color: var(--hushed); max-width: 175px; }
   .ci-num .d { margin-top: 5px; font-family: var(--f-mono); font-size: 11px; letter-spacing: .03em; color: var(--faint); }
 
   /* Конструктор структур: чипсы + морфящаяся диаграмма */
-  .px { border: 1px solid var(--border-soft); border-radius: 12px; background: var(--card); padding: 15px 16px 12px; }
+  .px { border: 1px solid var(--border-soft); border-radius: 2px; background: var(--card); padding: 15px 16px 12px; }
   .px-tabs { display: flex; flex-wrap: wrap; gap: 7px; }
-  .px-tab { border: 1px solid var(--border); background: transparent; color: var(--hushed); border-radius: 999px; padding: 6px 13px; font-family: var(--f-body); font-size: 12.5px; cursor: pointer; transition: color .2s, border-color .2s, background .2s; }
+  .px-tab { border: 1px solid var(--border); background: transparent; color: var(--hushed); border-radius: 2px; padding: 6px 13px; font-family: var(--f-body); font-size: 12.5px; cursor: pointer; transition: color .2s, border-color .2s, background .2s; }
   .px-tab:hover { color: var(--ink); border-color: rgba(255,255,255,0.3); }
-  .px-tab.on { background: var(--solar); border-color: var(--solar); color: #0C0A08; font-weight: 600; }
+  .px-tab.on { background: var(--solar); border-color: var(--solar); color: #191A2F; font-weight: 600; }
   .px svg { display: block; width: 100%; height: auto; margin-top: 4px; }
-  .px-axis { display: flex; justify-content: space-between; padding: 0 6px; font-family: var(--f-mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
+  .px-axis { display: flex; justify-content: space-between; padding: 0 6px; font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--faint); }
   .px-note { margin-top: 10px; font-size: 12.5px; line-height: 1.55; color: var(--hushed); min-height: 40px; transition: opacity .25s; }
 
   /* Орбиты активов вокруг звезды */
-  .ob-wrap { display: grid; grid-template-columns: 1fr 230px; gap: 20px; margin-top: 28px; border: 1px solid var(--border-soft); border-radius: 14px; background: var(--card); padding: 18px; }
+  .ob-wrap { display: grid; grid-template-columns: 1fr 230px; gap: 20px; margin-top: 28px; border: 1px solid var(--border-soft); border-radius: 2px; background: var(--card); padding: 18px; }
   .ob { position: relative; height: 344px; }
   .orb { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); border: 1px dashed rgba(255,255,255,0.09); border-radius: 50%; }
   .ob-star { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); }
-  .ob-star svg { display: block; filter: drop-shadow(0 0 12px rgba(238,125,27,0.45)); }
-  .orb-lab { position: absolute; transform: translate(-50%,-50%); z-index: 2; font-family: var(--f-mono); font-size: 11px; letter-spacing: .09em; text-transform: uppercase; background: var(--card); border: 1px solid var(--border-soft); border-radius: 999px; padding: 2px 8px; white-space: nowrap; }
+  .ob-star svg { display: block; filter: drop-shadow(0 0 12px rgba(240,110,8,0.45)); }
+  .orb-lab { position: absolute; transform: translate(-50%,-50%); z-index: 2; font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; background: var(--card); border: 1px solid var(--border-soft); border-radius: 2px; padding: 2px 8px; white-space: nowrap; }
   .od { position: absolute; left: 0; top: 0; width: 10px; height: 10px; margin: -5px; border-radius: 50%; cursor: pointer; will-change: transform; }
   .od::after { content: ""; position: absolute; inset: -6px; border-radius: 50%; }
-  .ob-tip { position: absolute; z-index: 3; background: #191C23; border: 1px solid var(--border); border-radius: 7px; padding: 4px 9px; font-family: var(--f-mono); font-size: 11px; color: var(--ink); pointer-events: none; opacity: 0; transition: opacity .15s; white-space: nowrap; transform: translate(-50%, -135%); }
+  .ob-tip { position: absolute; z-index: 3; background: #272A42; border: 1px solid var(--border); border-radius: 2px; padding: 4px 9px; font-family: var(--f-mono); font-size: 11px; color: var(--ink); pointer-events: none; opacity: 0; transition: opacity .15s; white-space: nowrap; transform: translate(-50%, -135%); }
   .ob-leg .st { margin-bottom: 15px; }
-  .ob-leg .st .v { font-family: var(--display); font-size: 24px; font-weight: 600; letter-spacing: -0.02em; color: var(--solar); }
+  .ob-leg .st .v { font-family: var(--display); font-size: 22.6px; font-weight: 500; letter-spacing: -0.01em; color: var(--solar); }
   .ob-leg .st .k { margin-top: 2px; font-size: 11.5px; line-height: 1.4; color: var(--hushed); }
   .ob-leg .lg { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--hushed); margin-top: 9px; }
   .ob-leg .lg i { flex: none; width: 9px; height: 9px; border-radius: 50%; }
@@ -192,12 +193,12 @@
 
   /* ─── Наш бизнес ─── */
   .bz-roles { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 22px; margin-top: 4px; }
-  .bz-r { padding-top: 13px; border-top: 1px solid rgba(238,125,27,0.4); }
-  .bz-r .n { font-family: var(--display); font-size: 15px; font-weight: 600; }
+  .bz-r { padding-top: 13px; border-top: 1px solid rgba(240,110,8,0.4); }
+  .bz-r .n { font-family: var(--display); font-size: 14.1px; font-weight: 500; }
   .bz-r .d { margin: 6px 0 0; font-size: 13.5px; line-height: 1.55; color: var(--hushed); }
   .bz-w { padding: 16px 0; border-bottom: 1px solid var(--border-soft); }
   .bz-w:first-child { border-top: 1px solid var(--border-soft); }
-  .bz-w .n { font-family: var(--display); font-size: 16px; font-weight: 600; }
+  .bz-w .n { font-family: var(--display); font-size: 15px; font-weight: 500; }
   .bz-w .d { margin-top: 5px; font-size: 13.5px; line-height: 1.55; color: var(--hushed); }
   .bz-act { margin-top: 10px; }
   .bz-go { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; color: var(--solar-l); }
@@ -225,7 +226,7 @@
   <div class="nav-in">
     <a class="brand" href="index.html" aria-label="На главную">
       <svg width="22" height="22" viewBox="0 0 26 26" fill="none" aria-hidden="true">
-        <path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/>
+        <path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#F06E08"/>
       </svg>
       <span class="brand-name">Rumberg</span><span class="brand-tag">Инвестиционные решения</span>
     </a>
@@ -237,7 +238,7 @@
       <a href="placements.html">Выпуски</a>
       <a href="about.html">Библиотека</a>
       <a class="btn-solar" href="board.html">Доска
-        <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3.46 10.54 L10.54 3.46 M4.88 3.46 H10.54 V9.12" stroke="#191A2F" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </a>
     </nav>
   </div>
@@ -280,12 +281,12 @@
     <div class="bz-w">
       <div class="n">Агентам и партнёрам</div>
       <div class="d">Продукт уходит клиенту одной ссылкой: параметры, график выплат, пример расчёта на его сумму, печатный one-pager. Заявка возвращается вам, сделки и вознаграждение — в рабочем столе.</div>
-      <div class="bz-act"><a class="bz-go" href="partners.html#ag">Как это устроено<svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></a></div>
+      <div class="bz-act"><a class="bz-go" href="partners.html#ag">Как это устроено<svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3.46 10.54 L10.54 3.46 M4.88 3.46 H10.54 V9.12" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></a></div>
     </div>
     <div class="bz-w">
       <div class="n">Квалифицированным инвесторам</div>
       <div class="d">Выпуски на размещении и текущие продукты — через вашего менеджера или партнёра. Формула выплаты известна до сделки, документы по выпуску лежат рядом с ним.</div>
-      <div class="bz-act"><a class="bz-go" href="offerings.html">Что на размещении<svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></a></div>
+      <div class="bz-act"><a class="bz-go" href="offerings.html">Что на размещении<svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3.46 10.54 L10.54 3.46 M4.88 3.46 H10.54 V9.12" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></a></div>
     </div>
   </div>
 
@@ -312,12 +313,12 @@
     <div class="px" id="px">
       <div class="px-tabs" role="tablist" aria-label="Тип структуры" id="px-tabs"></div>
       <svg viewBox="0 0 560 226" aria-hidden="true">
-        <defs><linearGradient id="pxg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#EE7D1B" stop-opacity="0.20"/><stop offset="1" stop-color="#EE7D1B" stop-opacity="0"/></linearGradient></defs>
+        <defs><linearGradient id="pxg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F06E08" stop-opacity="0.20"/><stop offset="1" stop-color="#F06E08" stop-opacity="0"/></linearGradient></defs>
         <line x1="40" y1="196" x2="540" y2="196" stroke="rgba(255,255,255,0.13)" stroke-width="1"/>
         <path id="px-area" fill="url(#pxg)" stroke="none"/>
         <line id="px-dash" x1="40" x2="540" stroke="rgba(255,255,255,0.22)" stroke-width="1" stroke-dasharray="4 5" opacity="0" style="transition: opacity .3s"/>
         <text id="px-dash-t" x="536" text-anchor="end" font-family="JetBrains Mono, monospace" font-size="10" fill="rgba(242,243,247,0.5)" opacity="0" style="transition: opacity .3s"></text>
-        <path id="px-line" fill="none" stroke="#EE7D1B" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+        <path id="px-line" fill="none" stroke="#F06E08" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
         <circle id="px-dot" r="4.5" fill="#55C08A" opacity="0" style="transition: opacity .3s"/>
         <text id="px-dot-t" font-family="JetBrains Mono, monospace" font-size="10" fill="#55C08A" text-anchor="end" opacity="0" style="transition: opacity .3s"></text>
       </svg>
@@ -331,14 +332,14 @@
     <div class="ci-sub">В выпусках и на витрине — от ОФЗ и российских акций до биткоин-ETF, урана и NVIDIA. Наведите на точку — орбиты остановятся.</div>
     <div class="ob-wrap">
       <div class="ob" id="ob">
-        <div class="ob-star"><svg width="30" height="30" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg></div>
+        <div class="ob-star"><svg width="30" height="30" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#F06E08"/></svg></div>
         <div class="ob-tip" id="ob-tip"></div>
       </div>
       <div class="ob-leg">
         <div class="st"><div class="v"><span data-cnt="25" data-suf="+">25+</span></div><div class="k">базовых активов в выпусках и на витрине</div></div>
         <div class="st"><div class="v"><span data-cnt="62">62</span></div><div class="k">выпуска за два года</div></div>
         <div class="st"><div class="v"><span data-cnt="9">9</span></div><div class="k">собственных индексов Румберг</div></div>
-        <div class="lg"><i style="background:#EE7D1B"></i>иностранные · 8</div>
+        <div class="lg"><i style="background:#F06E08"></i>иностранные · 8</div>
         <div class="lg"><i style="background:rgba(242,243,247,0.85)"></i>локальные · 9</div>
         <div class="lg"><i style="background:#4F86E6"></i>индексы Румберг · 9</div>
       </div>
@@ -469,7 +470,7 @@
       // наведение на точку показывает название и останавливает вращение
       var ob = document.getElementById("ob"), tip = document.getElementById("ob-tip");
       var G = [
-        { r: 1.0, sp: 0.05, col: "#EE7D1B", lab: "иностранные", items: ["S&P 500 ETF", "Биткоин-ETF", "Золото (GLD)", "CSI 300", "Уран (Global X)", "NVIDIA", "Hang Seng", "Nebius"] },
+        { r: 1.0, sp: 0.05, col: "#F06E08", lab: "иностранные", items: ["S&P 500 ETF", "Биткоин-ETF", "Золото (GLD)", "CSI 300", "Уран (Global X)", "NVIDIA", "Hang Seng", "Nebius"] },
         { r: 0.68, sp: -0.038, col: "rgba(242,243,247,0.85)", lab: "локальные", items: ["ОФЗ 26238", "Сбербанк", "Лукойл", "Яндекс", "Хэдхантер", "МосБиржа", "Татнефть", "ИКС 5", "USD/RUB"] },
         { r: 0.38, sp: 0.028, col: "#4F86E6", lab: "индексы Rumberg", items: ["Широкий рынок", "Технологии", "Pre-IPO 1", "AI RSP 30", "Nat. Gas", "Нефтегаз", "Банки", "Сталь", "Лантаниум"] }
       ];
@@ -660,11 +661,11 @@
     }).join("");
   })();
 </script>
-<script src="chat.js?v=27"></script>
-<script src="qualgate.js?v=8"></script>
-<script src="search.js?v=8"></script>
-<script src="nav-about.js?v=9"></script>
-<script src="contact.js?v=10"></script>
+<script src="chat.js?v=28"></script>
+<script src="qualgate.js?v=9"></script>
+<script src="search.js?v=9"></script>
+<script src="nav-about.js?v=10"></script>
+<script src="contact.js?v=11"></script>
 <script>
   // «Запросить прайсинг» в разделе «Наш бизнес» — общий конвейер заявок.
   (function () {
@@ -677,7 +678,7 @@
     });
   })();
 </script>
-<script src="ptr.js?v=2" defer></script>
+<script src="ptr.js?v=3" defer></script>
 </body>
 
 </html>

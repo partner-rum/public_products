@@ -11,35 +11,36 @@
      файл make_quotes.py (локальный). -->
 <meta name="robots" content="noindex, nofollow, noarchive">
 <meta name="referrer" content="no-referrer">
-<meta name="theme-color" content="#0B0C10">
+<meta name="theme-color" content="#191A2F">
 <link href="fonts/fonts.css?v=2" rel="stylesheet">
+<link href="brand/brand.css?v=1" rel="stylesheet">
 <style>
   :root{
-    --bg:#0B0C10; --card:#14161C; --ink:#F2F3F7; --mute:rgba(242,243,247,.64);
-    --line:rgba(255,255,255,.11); --or:#EE7D1B; --orh:#F58E33; --up:#55C08A; --down:#E5484D;
+    --bg:#191A2F; --card:#22243B; --ink:#F2F3F7; --mute:rgba(242,243,247,.64);
+    --line:rgba(255,255,255,.11); --or:#F06E08; --orh:#F48834; --up:#55C08A; --down:#E5484D;
   }
   *{box-sizing:border-box}
   html{-webkit-text-size-adjust:100%}
   body{margin:0;background:var(--bg);color:var(--ink);font:0.9375rem/1.5 Onest,system-ui,sans-serif}
   .wrap{max-width:880px;margin:0 auto;padding:40px 20px 64px}
-  .brand{display:flex;align-items:center;gap:10px;font:600 1rem Rubik,sans-serif;color:var(--ink);text-decoration:none}
+  .brand{display:flex;align-items:center;gap:10px;font:600 1rem Montserrat,sans-serif;color:var(--ink);text-decoration:none}
   .brand svg{width:20px;height:20px}
-  h1{font:600 2rem/1.15 Rubik,sans-serif;margin:28px 0 8px;letter-spacing:-.01em}
+  h1{font:600 2rem/1.15 Montserrat,sans-serif;margin:28px 0 8px;letter-spacing:-0.01em}
   .sub{color:var(--mute);margin:0 0 28px}
   .sub b{color:var(--ink);font-weight:500;font-family:"JetBrains Mono",monospace;font-size:.875rem}
-  .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:2px;padding:20px}
   .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
-  button{font:600 .9375rem Onest,sans-serif;border-radius:10px;padding:0 18px;min-height:44px;cursor:pointer;border:1px solid var(--line);background:transparent;color:var(--ink)}
-  button.pri{background:var(--or);border-color:var(--or);color:#0C0A08}
+  button{font:600 .9375rem Onest,sans-serif;border-radius:2px;padding:0 18px;min-height:44px;cursor:pointer;border:1px solid var(--line);background:transparent;color:var(--ink)}
+  button.pri{background:var(--or);border-color:var(--or);color:#191A2F}
   button.pri:hover{background:var(--orh)}
   button:not(.pri):hover{border-color:rgba(255,255,255,.3)}
   button:focus-visible,textarea:focus-visible{outline:2px solid var(--or);outline-offset:2px}
   label{display:block;font-size:.875rem;color:var(--mute);margin:20px 0 8px}
-  textarea{width:100%;min-height:88px;resize:vertical;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:.875rem/1.5 "JetBrains Mono",monospace}
+  textarea{width:100%;min-height:88px;resize:vertical;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:2px;padding:10px 12px;font:.875rem/1.5 "JetBrains Mono",monospace}
   .hint{font-size:.8125rem;color:var(--mute);margin-top:6px}
   .warn{color:#F2A896}
   table{width:100%;border-collapse:collapse;margin-top:24px;font-size:.875rem}
-  th{text-align:left;font:500 .75rem "JetBrains Mono",monospace;color:var(--mute);letter-spacing:.06em;text-transform:uppercase;padding:0 10px 10px;border-bottom:1px solid var(--line)}
+  th{text-align:left;font:500 .75rem "JetBrains Mono",monospace;color:var(--mute);letter-spacing:normal;text-transform:none;padding:0 10px 10px;border-bottom:1px solid var(--line)}
   td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
   td.m,th.m{font-family:"JetBrains Mono",monospace;white-space:nowrap}
   th.r,td.r{text-align:right}
@@ -48,9 +49,9 @@
   tr.miss td{color:#F2A896}
   .foot{font-size:.8125rem;color:var(--mute);margin-top:24px;max-width:640px}
   .state{padding:48px 0;color:var(--mute);max-width:520px}
-  .state h2{font:600 1.25rem Rubik,sans-serif;color:var(--ink);margin:0 0 8px}
+  .state h2{font:600 1.25rem Montserrat,sans-serif;color:var(--ink);margin:0 0 8px}
   @media (max-width:600px){
-    .wrap{padding:24px 16px 48px} h1{font-size:1.625rem}
+    .wrap{padding:24px 16px 48px} h1{font-size:1.5275rem}
     .nm{display:none} button{flex:1 1 auto}
   }
 </style>
@@ -58,7 +59,7 @@
 <body>
 <div class="wrap">
   <a class="brand" href="/" aria-label="Rumberg">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#EE7D1B" d="M12 1l2.6 8.4H23l-6.8 5 2.6 8.4L12 17.8 5.2 22.8l2.6-8.4L1 9.4h8.4z"/></svg>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#F06E08" d="M12 1l2.6 8.4H23l-6.8 5 2.6 8.4L12 17.8 5.2 22.8l2.6-8.4L1 9.4h8.4z"/></svg>
     Rumberg
   </a>
   <main id="app"><div class="state">Загружаем котировки…</div></main>

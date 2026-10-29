@@ -11,7 +11,7 @@ window.Contact = (function () {
   };
 
   var IC = {
-    chat: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0C0A08" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2z"/></svg>',
+    chat: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#191A2F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H8l-4 4V5a2 2 0 0 1 2-2h13a2 2 0 0 1 2 2z"/></svg>',
     tg: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#8FB4F0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 3 2 10.5l6 2.2M22 3 15 21l-3.5-7.3M22 3 8 12.7v4.8l3.5-3.8"/></svg>',
     wa: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7FD3AC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20 5.5 15.5A8 8 0 1 1 8.5 18.5z"/></svg>',
     check: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 6"/></svg>',
@@ -20,24 +20,24 @@ window.Contact = (function () {
 
   var CSS =
     '.ct{position:relative;display:inline-flex}' +
-    '.ct-btn{display:inline-flex;align-items:center;gap:8px;background:#EE7D1B;color:#0C0A08;border:none;border-radius:8px;padding:11px 18px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:background .2s}' +
-    '.ct-btn:hover{background:#F58E33}' +
+    '.ct-btn{display:inline-flex;align-items:center;gap:8px;background:#F06E08;color:#191A2F;border:none;border-radius:2px;padding:11px 18px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:background .2s}' +
+    '.ct-btn:hover{background:#F48834}' +
     '.ct-btn svg{display:block}' +
     // visibility:hidden в закрытом состоянии убирает пункты меню из порядка табуляции
     // и из дерева скринридера (opacity+pointer-events этого не делали — A.6).
-    '.ct-menu{position:absolute;left:0;top:calc(100% + 10px);z-index:70;width:302px;max-width:calc(100vw - 24px);background:#1B1D26;border:1px solid rgba(255,255,255,0.12);border-radius:14px;padding:14px;box-shadow:0 18px 46px rgba(0,0,0,0.55);opacity:0;visibility:hidden;transform:translateY(-6px);pointer-events:none;transition:opacity .18s ease,transform .18s cubic-bezier(0.16,1,0.3,1),visibility 0s linear .18s}' +
+    '.ct-menu{position:absolute;left:0;top:calc(100% + 10px);z-index:70;width:302px;max-width:calc(100vw - 24px);background:#292B45;border:1px solid rgba(255,255,255,0.12);border-radius:2px;padding:14px;box-shadow:0 18px 46px rgba(0,0,0,0.55);opacity:0;visibility:hidden;transform:translateY(-6px);pointer-events:none;transition:opacity .18s ease,transform .18s cubic-bezier(0.16,1,0.3,1),visibility 0s linear .18s}' +
     '.ct.open .ct-menu{opacity:1;visibility:visible;transform:none;pointer-events:auto;transition:opacity .18s ease,transform .18s cubic-bezier(0.16,1,0.3,1),visibility 0s}' +
     '.ct-lead{font-size:12.5px;line-height:1.45;color:rgba(242,243,247,0.62);margin-bottom:11px}' +
-    '.ct-mi{display:flex;align-items:center;gap:11px;width:100%;text-align:left;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:9px;padding:10px 12px;cursor:pointer;font-family:inherit;font-size:13.5px;color:#F2F3F7;text-decoration:none;margin-bottom:7px}' +
+    '.ct-mi{display:flex;align-items:center;gap:11px;width:100%;text-align:left;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:2px;padding:10px 12px;cursor:pointer;font-family:inherit;font-size:13.5px;color:#F2F3F7;text-decoration:none;margin-bottom:7px}' +
     '.ct-mi:hover{background:rgba(255,255,255,0.08)}' +
-    '.ct-mi .ic{width:26px;height:26px;border-radius:7px;display:grid;place-items:center;flex:none;background:rgba(255,255,255,0.06)}' +
+    '.ct-mi .ic{width:26px;height:26px;border-radius:2px;display:grid;place-items:center;flex:none;background:rgba(255,255,255,0.06)}' +
     '.ct-mi .ic.tg{background:rgba(79,134,230,0.18)}.ct-mi .ic.wa{background:rgba(85,192,138,0.16)}' +
     '.ct-sep{display:flex;align-items:center;gap:10px;margin:12px 2px 10px;color:rgba(242,243,247,0.56);font-size:11.5px;white-space:nowrap}' +
     '.ct-sep::before,.ct-sep::after{content:"";height:1px;flex:1;background:rgba(255,255,255,0.1)}' +
     '.ct-form{display:flex;flex-direction:column;gap:8px}' +
-    '.ct-inp{width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.14);border-radius:9px;padding:10px 12px;color:#F2F3F7;font-family:inherit;font-size:16px;outline:none}' +
+    '.ct-inp{width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.14);border-radius:2px;padding:10px 12px;color:#F2F3F7;font-family:inherit;font-size:16px;outline:none}' +
     '.ct-inp::placeholder{color:rgba(242,243,247,0.4)}' +
-    '.ct-inp:focus{border-color:rgba(238,125,27,0.6)}' +
+    '.ct-inp:focus{border-color:rgba(240,110,8,0.6)}' +
     '.ct-inp.invalid{border-color:rgba(224,112,90,0.7)}' +
     '.ct-err{min-height:0;font-size:11.5px;line-height:1.35;color:#E0705A;margin:-3px 2px 0}' +
     '.ct-err:empty{display:none}' +
@@ -45,16 +45,16 @@ window.Contact = (function () {
     '.ct-done .dh{display:flex;align-items:flex-start;gap:9px;font-size:13.5px;line-height:1.4;color:#F2F3F7}' +
     '.ct-done .dh .ic{color:#55C08A;flex:none;margin-top:1px}' +
     '.ct-done .ds{font-size:12px;line-height:1.45;color:rgba(242,243,247,0.62)}' +
-    '.ct-done .da{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.14);border-radius:9px;padding:10px 12px;color:#F2F3F7;text-decoration:none;font-size:13.5px;font-weight:500}' +
+    '.ct-done .da{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.14);border-radius:2px;padding:10px 12px;color:#F2F3F7;text-decoration:none;font-size:13.5px;font-weight:500}' +
     '.ct-done .da:hover{background:rgba(255,255,255,0.08)}' +
     '.ct-sel{appearance:none;-webkit-appearance:none;cursor:pointer;padding-right:34px;background-image:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2712%27 height=%2712%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27%23A0A5B8%27 stroke-width=%272.5%27%3E%3Cpath d=%27M6 9l6 6 6-6%27/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}' +
     '.ct-sel:invalid{color:rgba(242,243,247,0.56)}' +
-    '.ct-form option{background:#1B1D26;color:#F2F3F7}' +
-    '.ct-send{margin-top:2px;background:#EE7D1B;color:#0C0A08;border:none;border-radius:9px;padding:11px;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;transition:background .2s}' +
-    '.ct-send:hover{background:#F58E33}' +
+    '.ct-form option{background:#292B45;color:#F2F3F7}' +
+    '.ct-send{margin-top:2px;background:#F06E08;color:#191A2F;border:none;border-radius:2px;padding:11px;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;transition:background .2s}' +
+    '.ct-send:hover{background:#F48834}' +
     '.ct-send:disabled{opacity:.6;cursor:default}' +
     '.ct-note{margin-top:10px;font-size:11px;line-height:1.4;color:rgba(242,243,247,0.38)}' +
-    '.ct-toast{position:absolute;left:0;top:calc(100% + 10px);z-index:71;max-width:302px;display:inline-flex;align-items:center;gap:8px;font-size:13px;line-height:1.35;color:#55C08A;background:rgba(85,192,138,0.14);border:1px solid rgba(85,192,138,0.35);border-radius:9px;padding:10px 14px;opacity:0;transform:translateY(-6px);pointer-events:none;transition:opacity .2s,transform .2s}' +
+    '.ct-toast{position:absolute;left:0;top:calc(100% + 10px);z-index:71;max-width:302px;display:inline-flex;align-items:center;gap:8px;font-size:13px;line-height:1.35;color:#55C08A;background:rgba(85,192,138,0.14);border:1px solid rgba(85,192,138,0.35);border-radius:2px;padding:10px 14px;opacity:0;transform:translateY(-6px);pointer-events:none;transition:opacity .2s,transform .2s}' +
     '.ct-toast.on{opacity:1;transform:none}' +
     '.ct-toast.err{color:#E0705A;background:rgba(224,112,90,0.14);border-color:rgba(224,112,90,0.4)}' +
     '@media print{.ct{display:none !important}}';

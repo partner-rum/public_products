@@ -16,69 +16,70 @@
      в sitemap.xml она не лежит, поисковикам закрыта. Когда наберётся
      достаточно записей — убрать noindex, добавить в sitemap и в навигацию. -->
 <meta name="robots" content="noindex, nofollow">
-<meta name="theme-color" content="#0B0C10">
+<meta name="theme-color" content="#191A2F">
 <link href="fonts/fonts.css?v=2" rel="stylesheet">
+<link href="brand/brand.css?v=1" rel="stylesheet">
 <style>
   :root {
-    --bg:#0B0C10; --panel:rgba(255,255,255,0.04); --line:rgba(255,255,255,0.09);
+    --bg:#191A2F; --panel:rgba(255,255,255,0.04); --line:rgba(255,255,255,0.09);
     --tx:#F2F3F7; --mut:#A0A5B8; --dim:#888C9C;
-    --solar:#EE7D1B; --solar-l:#F58E33; --blue:#4F86E6; --up:#55C08A;
+    --solar:#F06E08; --solar-l:#F48834; --blue:#4F86E6; --up:#55C08A;
     --rule-soft:rgba(255,255,255,0.05);
-    --f:'Onest',system-ui,sans-serif; --m:'JetBrains Mono',Consolas,monospace; --display:'Rubik','Onest',system-ui,sans-serif;
+    --f:'Onest',system-ui,sans-serif; --m:'JetBrains Mono',Consolas,monospace; --display:Montserrat,'Onest',system-ui,sans-serif;
     --ease:cubic-bezier(0.16,1,0.3,1);
     --shell:1280px;
   }
   * { box-sizing:border-box; }
   body { margin:0; background:var(--bg); color:var(--tx); font-family:var(--f); -webkit-font-smoothing:antialiased; min-height:100dvh; }
-  body::before, body::after { content:""; position:fixed; z-index:0; pointer-events:none; border-radius:50%; filter:blur(90px); }
-  body::before { width:46vw; height:46vw; left:-14vw; top:-20vw; background:radial-gradient(circle, rgba(79,134,230,0.14), transparent 65%); }
-  body::after { width:44vw; height:44vw; right:-12vw; top:-14vw; background:radial-gradient(circle, rgba(238,125,27,0.12), transparent 65%); }
+  body::before, body::after { content:""; position:fixed; z-index:0; pointer-events:none; border-radius:50%; filter:none; }
+  body::before { width:46vw; height:46vw; left:-14vw; top:-20vw; background:none; }
+  body::after { width:44vw; height:44vw; right:-12vw; top:-14vw; background:radial-gradient(circle, rgba(255, 255, 255, 0.054), transparent 65%); }
   a { text-decoration:none; color:inherit; cursor:pointer; }
-  a:focus-visible { outline:2px solid var(--solar); outline-offset:3px; border-radius:4px; }
+  a:focus-visible { outline:2px solid var(--solar); outline-offset:3px; border-radius:2px; }
 
-  .nav { position:sticky; top:0; z-index:10; background:rgba(11,12,16,0.82); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); border-bottom:1px solid var(--line); }
+  .nav { position:sticky; top:0; z-index:10; background:rgba(25,26,47,0.82); backdrop-filter:none; -webkit-backdrop-filter:none; border-bottom:1px solid var(--line); }
   .nav-in { max-width:var(--shell); margin:0 auto; padding:0 44px; height:60px; display:flex; align-items:center; gap:12px; }
   .nav .name { font-size:14px; font-weight:600; }
   .nav-cta { margin-left:auto; display:flex; align-items:center; gap:10px; }
   .topnav { margin-left:auto; display:flex; align-items:center; gap:22px; font-size:14px; font-weight:500; }
   .topnav a { color:var(--mut); transition:color .2s; }
   .topnav a:hover { color:var(--tx); }
-  .topnav .btn-solar { color:#0C0A08; }
-  .btn-solar { display:inline-flex; align-items:center; gap:8px; background:var(--solar); color:#0C0A08; border-radius:6px; padding:9px 15px; font-size:13px; font-weight:600; transition:background .3s ease-in-out; }
+  .topnav .btn-solar { color:#191A2F; }
+  .btn-solar { display:inline-flex; align-items:center; gap:8px; background:var(--solar); color:#191A2F; border-radius:2px; padding:9px 15px; font-size:13px; font-weight:600; transition:background .3s ease-in-out; }
   .btn-solar:hover { background:var(--solar-l); }
-  .btn-tg { display:inline-flex; align-items:center; gap:7px; background:var(--panel); border:1px solid var(--line); color:var(--tx); border-radius:6px; padding:8px 13px; font-size:13px; font-weight:600; transition:border-color .2s, background .2s; }
+  .btn-tg { display:inline-flex; align-items:center; gap:7px; background:var(--panel); border:1px solid var(--line); color:var(--tx); border-radius:2px; padding:8px 13px; font-size:13px; font-weight:600; transition:border-color .2s, background .2s; }
   .btn-tg:hover { border-color:var(--blue); background:rgba(79,134,230,0.12); }
 
   .wrap { position:relative; z-index:1; max-width:var(--shell); margin:0 auto; padding:0 44px; }
 
   .head { padding:52px 0 26px; border-bottom:1px solid var(--line); }
-  .kicker { font-family:var(--m); font-size:11px; letter-spacing:.17em; text-transform:uppercase; color:var(--dim); }
-  h1 { margin:16px 0 0; font-family:var(--display); font-size:clamp(30px,4vw,46px); font-weight:600; line-height:1.06; letter-spacing:-0.022em; }
+  .kicker { font-family:Onest, system-ui, sans-serif; font-size:11px; letter-spacing:normal; text-transform:none; color:var(--dim); }
+  h1 { margin:16px 0 0; font-family:var(--display); font-size:clamp(30px,4vw,46px); font-weight:500; line-height:1.06; letter-spacing:-0.01em; }
   h1 .lm { color:var(--solar); }
   .head .sub { margin:16px 0 0; font-size:15px; line-height:1.6; color:var(--mut); max-width:620px; }
-  .head .meta { margin-top:18px; display:flex; gap:22px; flex-wrap:wrap; font-family:var(--m); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--dim); }
+  .head .meta { margin-top:18px; display:flex; gap:22px; flex-wrap:wrap; font-family:Onest, system-ui, sans-serif; font-size:11px; letter-spacing:normal; text-transform:none; color:var(--dim); }
   .head .meta b { color:var(--mut); font-weight:500; }
 
   /* ── Переключатель выпусков (архив), как в дайджесте ── */
   .pick { position:relative; display:inline-flex; margin-top:20px; }
   .pick-btn { display:inline-flex; align-items:center; gap:10px; background:var(--panel); border:1px solid var(--line);
-    color:var(--tx); border-radius:9px; padding:10px 14px; font-family:inherit; font-size:13px; cursor:pointer;
+    color:var(--tx); border-radius:2px; padding:10px 14px; font-family:inherit; font-size:13px; cursor:pointer;
     transition:border-color .2s, background .2s; }
   .pick-btn:hover { border-color:rgba(255,255,255,0.26); background:rgba(255,255,255,0.06); }
-  .pick-btn .lbl { font-family:var(--m); font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--dim); }
+  .pick-btn .lbl { font-family:Onest, system-ui, sans-serif; font-size:11px; letter-spacing:normal; text-transform:none; color:var(--dim); }
   .pick-btn .cur { font-weight:600; }
   .pick-btn .cv { transition:transform .22s var(--ease); color:var(--dim); }
   .pick.open .cv { transform:rotate(180deg); }
   /* visibility в закрытом состоянии убирает пункты из табуляции и из дерева скринридера */
   .pick-menu { position:absolute; left:0; top:calc(100% + 8px); z-index:40; width:340px; max-width:calc(100vw - 40px);
-    background:#1B1D26; border:1px solid var(--line); border-radius:12px; padding:6px; box-shadow:0 18px 44px rgba(0,0,0,0.58);
+    background:#292B45; border:1px solid var(--line); border-radius:2px; padding:6px; box-shadow:0 18px 44px rgba(0,0,0,0.58);
     opacity:0; visibility:hidden; transform:translateY(-4px); transition:opacity .18s ease, transform .18s var(--ease), visibility 0s linear .18s; }
   .pick.open .pick-menu { opacity:1; visibility:visible; transform:none; transition:opacity .18s ease, transform .18s var(--ease), visibility 0s; }
-  .pick-mh { font-family:var(--m); font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--dim); padding:8px 10px 6px; }
-  .pick-i { display:block; width:100%; text-align:left; background:none; border:none; border-radius:8px; padding:10px 11px;
+  .pick-mh { font-family:Onest, system-ui, sans-serif; font-size:11px; letter-spacing:normal; text-transform:none; color:var(--dim); padding:8px 10px 6px; }
+  .pick-i { display:block; width:100%; text-align:left; background:none; border:none; border-radius:2px; padding:10px 11px;
     cursor:pointer; font-family:inherit; color:var(--tx); }
   .pick-i:hover { background:rgba(255,255,255,0.06); }
-  .pick-i.active { background:rgba(238,125,27,0.1); }
+  .pick-i.active { background:rgba(255, 255, 255, 0.045); }
   .pick-i .d { display:flex; align-items:baseline; gap:10px; }
   .pick-i .t { font-size:13.5px; font-weight:600; }
   .pick-i.active .t { color:var(--solar); }
@@ -88,21 +89,21 @@
   /* Фильтр по рубрикам собирается из записей ВЫБРАННОГО выпуска */
   .chips { display:flex; gap:8px; flex-wrap:wrap; padding:20px 0 0; }
   .chip { font-family:var(--m); font-size:11px; letter-spacing:.06em; padding:7px 13px; border:1px solid var(--line);
-    border-radius:20px; color:var(--mut); background:transparent; cursor:pointer; transition:border-color .2s, background .2s, color .2s; }
+    border-radius:2px; color:var(--mut); background:transparent; cursor:pointer; transition:border-color .2s, background .2s, color .2s; }
   .chip:hover { border-color:rgba(255,255,255,0.24); color:var(--tx); }
-  .chip.on { background:var(--solar); border-color:var(--solar); color:#0C0A08; font-weight:600; }
+  .chip.on { background:var(--solar); border-color:var(--solar); color:#191A2F; font-weight:600; }
 
   /* ── Запись ресерча ── */
   .rs { padding:34px 0 32px; border-bottom:1px solid var(--line); scroll-margin-top:76px; }
   .rs:last-of-type { border-bottom:0; }
   .rs .top { display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; }
-  .rs .rub { font-family:var(--m); font-size:11px; letter-spacing:.17em; text-transform:uppercase; color:var(--solar); }
+  .rs .rub { font-family:Onest, system-ui, sans-serif; font-size:11px; letter-spacing:normal; text-transform:none; color:var(--solar); }
   .rs .dt { font-family:var(--m); font-size:11px; letter-spacing:.1em; color:var(--dim); }
   .rs .anchor { margin-left:auto; font-family:var(--m); font-size:11px; letter-spacing:.1em; color:var(--dim);
     opacity:0; transition:opacity .2s, color .2s; }
   .rs:hover .anchor { opacity:1; }
   .rs .anchor:hover { color:var(--solar); }
-  .rs h2 { margin:12px 0 0; font-family:var(--display); font-size:25px; font-weight:600; letter-spacing:-0.018em; line-height:1.22; max-width:820px; }
+  .rs h2 { margin:12px 0 0; font-family:var(--display); font-size:23.5px; font-weight:500; letter-spacing:-0.01em; line-height:1.22; max-width:820px; }
   .rs .lead { margin:12px 0 0; font-size:15.5px; line-height:1.6; color:var(--tx); max-width:820px; }
 
   /* Текст разбора: две колонки на широком экране — иначе строка уходит за 100 знаков */
@@ -114,18 +115,18 @@
 
   /* Продукты под идею */
   .prods { margin-top:24px; }
-  .prods .cap { font-family:var(--m); font-size:11px; letter-spacing:.17em; text-transform:uppercase; color:var(--dim);
+  .prods .cap { font-family:Onest, system-ui, sans-serif; font-size:11px; letter-spacing:normal; text-transform:none; color:var(--dim);
     padding-bottom:10px; border-bottom:1px solid var(--rule-soft); }
   .pr { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px 20px; align-items:baseline;
-    padding:14px 14px 15px; margin:0 -14px; border-radius:9px; border-left:2px solid transparent;
+    padding:14px 14px 15px; margin:0 -14px; border-radius:2px; border-left:2px solid transparent;
     border-bottom:1px solid var(--rule-soft); transition:background .18s ease, border-color .18s ease; }
   .pr:last-child { border-bottom:0; }
-  .pr:hover { background:rgba(238,125,27,0.06); border-left-color:var(--solar); }
+  .pr:hover { background:rgba(255, 255, 255, 0.027); border-left-color:var(--solar); }
   .pr .nm { font-size:14.5px; font-weight:600; letter-spacing:-0.008em; transition:color .18s ease; }
   .pr:hover .nm { color:var(--solar); }
   .pr .q { font-family:var(--m); font-size:14.5px; font-weight:500; color:var(--solar); white-space:nowrap;
     font-variant-numeric:tabular-nums; text-align:right; }
-  .pr .q i { display:block; font-style:normal; font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--dim); margin-top:3px; }
+  .pr .q i { display:block; font-style:normal; font-size:11px; letter-spacing:normal; text-transform:none; color:var(--dim); margin-top:3px; }
   .pr .why { grid-column:1 / -1; font-size:13px; line-height:1.6; color:var(--mut); max-width:760px; }
   .pr .par { grid-column:1 / -1; font-family:var(--m); font-size:11px; letter-spacing:.05em; color:var(--dim); }
   .pr.gone { opacity:.5; }
@@ -134,7 +135,7 @@
 
   /* Пустое состояние: страница только заводится */
   .empty { padding:64px 0 80px; text-align:center; color:var(--dim); }
-  .empty .t { font-family:var(--display); font-size:20px; font-weight:600; color:var(--mut); }
+  .empty .t { font-family:var(--display); font-size:18.8px; font-weight:500; color:var(--mut); }
   .empty .d { margin-top:10px; font-size:13.5px; line-height:1.6; }
   .empty code { font-family:var(--m); font-size:12.5px; color:var(--solar); }
 
@@ -150,7 +151,7 @@
     .nav-in, .wrap { padding-left:20px; padding-right:20px; }
     .head { padding:36px 0 22px; }
     .rs { padding:26px 0 24px; }
-    .rs h2 { font-size:21px; }
+    .rs h2 { font-size:19.7px; }
     .pr { grid-template-columns:minmax(0,1fr); }
     .pr .q { text-align:left; }
   }
@@ -170,7 +171,7 @@
 <header class="nav">
   <div class="nav-in">
     <a class="brand" href="index.html" aria-label="На главную" style="display:flex;align-items:center;gap:12px">
-      <svg width="21" height="21" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>
+      <svg width="21" height="21" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#F06E08"/></svg>
       <span class="name">Rumberg</span><span class="brand-tag">Инвестиционные решения</span>
     </a>
     <!-- Меню как на остальных страницах (06.10.2026): раньше здесь были только
@@ -184,7 +185,7 @@
       <a href="placements.html">Выпуски</a>
       <a href="about.html">Библиотека</a>
       <a class="btn-solar" href="board.html">Доска
-        <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3.46 10.54 L10.54 3.46 M4.88 3.46 H10.54 V9.12" stroke="#191A2F" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </a>
     </nav>
   </div>
@@ -233,7 +234,7 @@
       for (var i = 0; i < arr.length; i++) if (arr[i].id === id) return arr[i];
       return null;
     }
-    var AR = '<svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    var AR = '<svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3.46 10.54 L10.54 3.46 M4.88 3.46 H10.54 V9.12" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
     // ── Пустое состояние: страница уже живая, но выпусков ещё нет ──
     if (!ISSUES.length) {
@@ -421,10 +422,10 @@
     selectIssue(want || ISSUES[0].id, false);
   })();
 </script>
-<script src="chat.js?v=27"></script>
-<script src="search.js?v=8"></script>
-<script src="nav-about.js?v=9"></script>
-<script src="qualgate.js?v=8"></script>
-<script src="ptr.js?v=2" defer></script>
+<script src="chat.js?v=28"></script>
+<script src="search.js?v=9"></script>
+<script src="nav-about.js?v=10"></script>
+<script src="qualgate.js?v=9"></script>
+<script src="ptr.js?v=3" defer></script>
 </body>
 </html>

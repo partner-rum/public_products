@@ -24,29 +24,30 @@
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Rumberg — структурные продукты">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="theme-color" content="#0B0C10">
+<meta name="theme-color" content="#191A2F">
 <link href="fonts/fonts.css?v=2" rel="stylesheet">
+<link href="brand/brand.css?v=1" rel="stylesheet">
 <style>
   :root {
-    --canvas: #0B0C10; --card: #14161C; --panel-2: #191B22; --tile: rgba(255,255,255,0.045);
-    --black: #1A1919;
+    --canvas: #191A2F; --card: #22243B; --panel-2: #272941; --tile: rgba(255,255,255,0.045);
+    --black: #282738;
     --ink: #F2F3F7; --hushed: rgba(242,243,247,0.64); --faint: rgba(242,243,247,0.56);
     --border: rgba(255,255,255,0.11); --border-soft: rgba(255,255,255,0.07);
-    --solar: #EE7D1B; --solar-l: #F58E33;
+    --solar: #F06E08; --solar-l: #F48834;
     --spruce: #5E9B82; --steel: #4F86E6; --amber: #E0A24A;
     --up: #55C08A; --down: #E0705A; --loss: #E0705A;
     --f-body: 'Onest', system-ui, sans-serif;
     --f-mono: 'JetBrains Mono', Consolas, monospace;
-    --display: 'Rubik', 'Onest', system-ui, sans-serif;
+    --display: Montserrat, 'Onest', system-ui, sans-serif;
     --ease: cubic-bezier(0.16, 1, 0.3, 1);
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--canvas); color: var(--ink); font-family: var(--f-body); -webkit-font-smoothing: antialiased; }
   a { text-decoration: none; color: inherit; }
-  a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 4px; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 2px; }
   .wrap { max-width: 1280px; margin: 0 auto; padding: 0 44px 40px; }
 
-  .nav { position: sticky; top: 0; z-index: 20; background: rgba(11,12,16,0.82); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); }
+  .nav { position: sticky; top: 0; z-index: 20; background: rgba(25,26,47,0.82); backdrop-filter: none; -webkit-backdrop-filter: none; border-bottom: 1px solid var(--border); }
   .nav-in { max-width: 1280px; margin: 0 auto; padding: 0 44px; height: 62px; display: flex; align-items: center; gap: 12px; }
   .brand { display: flex; align-items: center; gap: 10px; }
   .brand-name { font-size: 14.5px; font-weight: 600; }
@@ -54,18 +55,18 @@
   .topnav a { color: var(--hushed); transition: color .2s; }
   .topnav a:hover { color: var(--ink); }
   .topnav a[aria-current="page"] { color: var(--ink); font-weight: 600; }
-  .btn-solar { background: var(--solar); color: #0C0A08 !important; border-radius: 6px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 7px; transition: background .3s ease-in-out; }
+  .btn-solar { background: var(--solar); color: #191A2F !important; border-radius: 2px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 7px; transition: background .3s ease-in-out; }
   .btn-solar:hover { background: var(--solar-l); }
 
   /* ── Полоса под шапкой: синусоида-фон + лента мотивирующих фраз ── */
-  .ticker { position: relative; height: 54px; overflow: hidden; background: #101114; border-bottom: 1px solid #23242B; }
+  .ticker { position: relative; height: 54px; overflow: hidden; background: #1E1F33; border-bottom: 1px solid #31324A; }
   .ticker svg.tk-sine { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 0; }
   .tk-rot { position: absolute; inset: 0; z-index: 2; display: flex; align-items: center; justify-content: center; pointer-events: none; }
   .tk-rot span { position: absolute; font-family: var(--f-body); font-size: 14.5px; color: var(--ink); opacity: 0; transition: opacity .6s ease; text-align: center; padding: 0 20px; letter-spacing: -0.005em; }
   .tk-rot span.on { opacity: 1; }
 
   .head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin: 26px 0 18px; }
-  h1 { margin: 0; font-family: var(--display); font-size: 30px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.1; }
+  h1 { margin: 0; font-family: var(--display); font-size: 28.2px; font-weight: 400; letter-spacing: -0.01em; line-height: 1.1; }
   .count { font-family: var(--f-mono); font-size: 12px; color: var(--hushed); }
 
   .layout { display: grid; grid-template-columns: 380px minmax(0, 1fr); gap: 20px; align-items: start; }
@@ -73,13 +74,13 @@
   /* ── Список слева ── */
   .aside { position: sticky; top: 78px; display: flex; flex-direction: column; max-height: calc(100dvh - 100px); }
   .controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
-  .search { width: 100%; border: 1px solid var(--border); border-radius: 6px; background: var(--card); padding: 10px 12px; font-family: var(--f-body); font-size: 16px; color: var(--ink); }
+  .search { width: 100%; border: 1px solid var(--border); border-radius: 2px; background: var(--card); padding: 10px 12px; font-family: var(--f-body); font-size: 16px; color: var(--ink); }
   .search::placeholder { color: var(--faint); }
   .search:focus { outline: 2px solid var(--ink); outline-offset: 1px; }
   .chips { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-  .kf { border: 1px solid var(--border); background: var(--card); border-radius: 6px; padding: 6px 12px; font-size: 12.5px; font-weight: 500; color: var(--hushed); cursor: pointer; font-family: var(--f-body); }
+  .kf { border: 1px solid var(--border); background: var(--card); border-radius: 2px; padding: 6px 12px; font-size: 12.5px; font-weight: 500; color: var(--hushed); cursor: pointer; font-family: var(--f-body); }
   .kf:hover { color: var(--ink); }
-  .kf.active { background: rgba(238,125,27,0.16); border-color: var(--solar); color: var(--ink); font-weight: 600; }
+  .kf.active { background: rgba(255, 255, 255, 0.072); border-color: var(--solar); color: var(--ink); font-weight: 600; }
   /* Второй ряд — уточнение под клиента, поэтому тише первого: без заливки, мельче */
   .chips-sub { margin-top: 6px; gap: 14px; }
   /* На телефоне фильтры едут лентой, а не переносятся: три ряда чипсов занимали
@@ -105,7 +106,7 @@
   .ta { border: none; background: transparent; padding: 2px 2px; font-family: var(--f-body); font-size: 12.5px; font-weight: 500; color: var(--hushed); cursor: pointer; }
   .ta:hover { color: var(--ink); }
 
-  .list { background: var(--card); border: 1px solid var(--border-soft); border-radius: 12px; overflow-y: auto; flex: 1; min-height: 0; }
+  .list { background: var(--card); border: 1px solid var(--border-soft); border-radius: 2px; overflow-y: auto; flex: 1; min-height: 0; }
   .group-h { display: flex; align-items: center; gap: 9px; width: 100%; border: none; border-top: 1px solid var(--border-soft); background: var(--panel-2); cursor: pointer; font-family: var(--f-body); color: var(--ink); padding: 11px 14px; text-align: left; position: sticky; top: 0; z-index: 2; }
   .group-h:first-child { border-top: none; }
   .group-h .chev { transition: transform .2s var(--ease); color: var(--hushed); font-size: 11px; }
@@ -123,9 +124,9 @@
   .item .q i { display: block; font-style: normal; font-weight: 500; font-size: 11px; letter-spacing: .05em; color: rgba(242,243,247,0.52); }
   /* h2-обёртки заголовков не тащат UA-стили */
   .gh { margin: 0; font-size: inherit; font-weight: inherit; }
-  .sec h2.h { margin: 0 0 4px; font-weight: 600; }
-  .skip { position: absolute; left: 10px; top: -60px; z-index: 40; background: var(--solar); color: #0C0A08;
-          padding: 11px 18px; border-radius: 0 0 10px 10px; font-size: 13px; font-weight: 600; }
+  .sec h2.h { margin: 0 0 4px; font-weight: 500; }
+  .skip { position: absolute; left: 10px; top: -60px; z-index: 40; background: var(--solar); color: #191A2F;
+          padding: 11px 18px; border-radius: 0 0 2px 2px; font-size: 13px; font-weight: 600; }
   .skip:focus { top: 0; }
   /* Вторая строка: срок, валюта, порог входа — то, по чему агент отсеивает, не открывая паспорт */
   .item .r2 { margin-top: 3px; }
@@ -136,19 +137,19 @@
   /* ── Сравнение продуктов ────────────────────────────────────────────────
      Режим: чипс «Сравнить» в фильтрах → в списке появляются галочки, клик по
      пункту добавляет/убирает продукт (до 3), при 2+ панель показывает сравнение. */
-  .cmp-chip { border: 1px solid var(--border); background: var(--card); border-radius: 20px; padding: 6px 13px; font-family: var(--f-body); font-size: 12.5px; color: var(--hushed); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .cmp-chip { border: 1px solid var(--border); background: var(--card); border-radius: 2px; padding: 6px 13px; font-family: var(--f-body); font-size: 12.5px; color: var(--hushed); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
   .cmp-chip:hover { color: var(--ink); }
-  .cmp-chip.on { background: rgba(238,125,27,0.16); color: var(--ink); border-color: var(--solar); }
+  .cmp-chip.on { background: rgba(255, 255, 255, 0.072); color: var(--ink); border-color: var(--solar); }
   /* галочка перед названием — только в режиме сравнения */
   .list.cmp .item { padding-left: 12px; }
-  .item .ck { display: none; flex: none; width: 15px; height: 15px; margin-right: 9px; border: 1px solid var(--border); border-radius: 4px; position: relative; top: 2px; }
+  .item .ck { display: none; flex: none; width: 15px; height: 15px; margin-right: 9px; border: 1px solid var(--border); border-radius: 2px; position: relative; top: 2px; }
   .list.cmp .item .ck { display: inline-block; }
   .item.picked .ck { background: var(--solar); border-color: var(--solar); }
-  .item.picked .ck::after { content: "✓"; position: absolute; inset: 0; color: #0C0A08; font-size: 11px; font-weight: 700; line-height: 15px; text-align: center; }
-  .item.picked { background: rgba(238,125,27,0.10); }
+  .item.picked .ck::after { content: "✓"; position: absolute; inset: 0; color: #191A2F; font-size: 11px; font-weight: 700; line-height: 15px; text-align: center; }
+  .item.picked { background: rgba(255, 255, 255, 0.045); }
   .list.cmp .item .r1 { align-items: flex-start; }
   /* полоска состояния под списком */
-  .cmp-bar { display: none; align-items: center; gap: 10px; margin-top: 8px; padding: 9px 12px; background: var(--card); border: 1px solid var(--solar); border-radius: 10px; font-size: 12.5px; color: var(--hushed); }
+  .cmp-bar { display: none; align-items: center; gap: 10px; margin-top: 8px; padding: 9px 12px; background: var(--card); border: 1px solid var(--solar); border-radius: 2px; font-size: 12.5px; color: var(--hushed); }
   .cmp-bar.on { display: flex; }
   .cmp-bar .cnt { font-family: var(--f-mono); color: var(--ink); }
   .cmp-bar .rst { margin-left: auto; border: none; background: transparent; padding: 0; font-family: var(--f-body); font-size: 12.5px; color: var(--solar); cursor: pointer; }
@@ -156,17 +157,17 @@
 
   /* таблица сравнения */
   .cmp-head { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 4px; }
-  .cmp-h1 { font-family: var(--display); font-size: 21px; font-weight: 400; letter-spacing: -0.01em; }
+  .cmp-h1 { font-family: var(--display); font-size: 19.7px; font-weight: 400; letter-spacing: -0.01em; }
   .cmp-scroll { overflow-x: auto; margin: 14px -2px 0; }
   .cmp-tbl { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 420px; }
   .cmp-tbl th, .cmp-tbl td { padding: 9px 12px; border: 1px solid var(--border-soft); vertical-align: top; text-align: left; }
   .cmp-tbl thead th { background: var(--panel-2); font-weight: 600; font-size: 13px; line-height: 1.3; }
-  .cmp-tbl thead th .tp { display: block; font-family: var(--f-mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); margin-top: 4px; font-weight: 400; }
+  .cmp-tbl thead th .tp { display: block; font-family: Onest, system-ui, sans-serif; font-size: 10.5px; letter-spacing: normal; text-transform: none; color: var(--faint); margin-top: 4px; font-weight: 400; }
   .cmp-tbl tbody th { font-weight: 400; color: var(--hushed); background: var(--card); white-space: nowrap; }
   /* первая колонка залипает — на телефоне видно, какой это параметр */
   .cmp-tbl th:first-child, .cmp-tbl td:first-child { position: sticky; left: 0; z-index: 1; }
   .cmp-tbl thead th:first-child { background: var(--panel-2); }
-  .cmp-tbl tr.diff td { background: rgba(238,125,27,0.06); }
+  .cmp-tbl tr.diff td { background: rgba(255, 255, 255, 0.027); }
   .cmp-tbl td .mono { font-family: var(--f-mono); }
   .cmp-legend { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 12px; font-size: 12px; color: var(--hushed); }
   .cmp-legend .lg { display: inline-flex; align-items: center; gap: 6px; }
@@ -174,7 +175,7 @@
   .cmp-diffnote { margin-top: 10px; font-size: 11.5px; color: var(--faint); }
   /* результаты общего калькулятора по продуктам */
   .cmp-res { display: grid; gap: 10px; margin-top: 12px; }
-  .cmp-r { background: var(--card); border: 1px solid var(--border-soft); border-radius: 9px; padding: 11px 13px; display: flex; align-items: baseline; gap: 12px; }
+  .cmp-r { background: var(--card); border: 1px solid var(--border-soft); border-radius: 2px; padding: 11px 13px; display: flex; align-items: baseline; gap: 12px; }
   .cmp-r .nm { font-size: 12.5px; font-weight: 600; display: flex; align-items: center; gap: 7px; min-width: 0; }
   .cmp-r .nm .sw { width: 9px; height: 9px; border-radius: 50%; flex: none; }
   .cmp-r .vals { margin-left: auto; display: flex; align-items: baseline; gap: 14px; white-space: nowrap; }
@@ -187,18 +188,18 @@
 
   /* ── Паспорт справа ── */
   .panel-wrap { position: sticky; top: 78px; }
-  .panel { background: var(--card); border: 1px solid var(--border-soft); border-radius: 12px; padding: 26px 28px; max-height: calc(100dvh - 100px); overflow-y: auto; }
+  .panel { background: var(--card); border: 1px solid var(--border-soft); border-radius: 2px; padding: 26px 28px; max-height: calc(100dvh - 100px); overflow-y: auto; }
   .panel-close { display: none; }
 
   .pp-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; flex-wrap: wrap; }
-  .pp-title { font-family: var(--display); font-size: 23px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.15; }
+  .pp-title { font-family: var(--display); font-size: 21.6px; font-weight: 400; letter-spacing: -0.01em; line-height: 1.15; }
   /* Все действия — в строке с названием, как на размещённых выпусках: вниз за ними
      не идут. Кегль «Обсудить» мельче базового — рядом с 23-м заголовком
      полноразмерная кнопка спорит с ним за внимание. */
   .pp-title-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
   .pp-title-row .pp-actions { margin-top: 0; }
   .pp-title-row .ct-btn { padding: 8px 14px; font-size: 13px; }
-  .badge { display: inline-block; margin-top: 7px; font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink); background: rgba(255,255,255,0.08); border-radius: 6px; padding: 3px 8px; }
+  .badge { display: inline-block; margin-top: 7px; font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--ink); background: rgba(255,255,255,0.08); border-radius: 2px; padding: 3px 8px; }
   .pp-sub { margin-top: 8px; font-size: 13px; color: var(--hushed); max-width: 480px; }
   /* Котировка в паспорте — ВСЕГДА на своей строке и по левому краю, в одну линию
      с бейджем, подзаголовком и кнопками. Раньше блок переносился «как получится»
@@ -210,21 +211,21 @@
   .quote-big .q-dec { font-size: 0.6em; }
   .quote-sub { font-size: 11.5px; color: var(--faint); margin-top: 2px; }
 
-  .chart-box { margin-top: 18px; border: 1px solid rgba(255,255,255,0.07); border-radius: 10px; padding: 14px 16px 10px; }
+  .chart-box { margin-top: 18px; border: 1px solid rgba(255,255,255,0.07); border-radius: 2px; padding: 14px 16px 10px; }
   .chart-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
   .chart-title { font-size: 13.5px; font-weight: 600; }
-  .tabs { display: flex; gap: 4px; background: rgba(255,255,255,0.06); border-radius: 8px; padding: 3px; }
-  .tab { border: none; border-radius: 6px; padding: 5px 13px; font-size: 12.5px; font-weight: 500; cursor: pointer; background: transparent; color: var(--hushed); font-family: var(--f-body); }
-  .tab.active { font-weight: 600; background: #262A33; color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,0.35); }
+  .tabs { display: flex; gap: 4px; background: rgba(255,255,255,0.06); border-radius: 2px; padding: 3px; }
+  .tab { border: none; border-radius: 2px; padding: 5px 13px; font-size: 12.5px; font-weight: 500; cursor: pointer; background: transparent; color: var(--hushed); font-family: var(--f-body); }
+  .tab.active { font-weight: 600; background: #343852; color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,0.35); }
   .chart-caption { margin-top: 8px; font-size: 11.5px; line-height: 1.5; color: var(--faint); }
 
   .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 14px; }
-  .metric { background: var(--tile); border-radius: 8px; padding: 10px 12px; }
+  .metric { background: var(--tile); border-radius: 2px; padding: 10px 12px; }
   .metric .v { font-family: var(--f-mono); font-size: 13.5px; }
-  .metric .k { margin-top: 3px; font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--faint); }
+  .metric .k { margin-top: 3px; font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--faint); }
 
   .sec { margin-top: 20px; }
-  .sec .h { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--hushed); padding-bottom: 8px; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
+  .sec .h { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--hushed); padding-bottom: 8px; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
   .sec .intro { font-size: 13px; color: var(--hushed); margin: 8px 0 2px; }
   .scenario { display: grid; grid-template-columns: 1.3fr 1.3fr 0.6fr; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.07); }
   .scenario .l { font-size: 13.5px; font-weight: 600; }
@@ -233,7 +234,7 @@
   .explainer { font-size: 13.5px; line-height: 1.65; color: var(--hushed); margin: 10px 0 0; text-wrap: pretty; }
   .facts { display: flex; gap: 22px; flex-wrap: wrap; margin-top: 14px; }
   .fact { min-width: 140px; max-width: 220px; }
-  .fact .k { font-size: 11px; color: var(--faint); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 3px; }
+  .fact .k { font-size: 11px; color: var(--faint); text-transform: none; letter-spacing: normal; margin-bottom: 3px; }
   .fact .v { font-size: 13px; line-height: 1.45; }
 
   /* Действия — сразу над диаграммой (вниз не долистывают). Акцент отдан операции
@@ -243,14 +244,14 @@
   .pp-actions { margin-top: 16px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
   .pp-actions .btn-pdf.btn-secondary { border: none !important; background: transparent !important; color: var(--hushed) !important; padding: 8px 10px; transition: color .2s; }
   .pp-actions .btn-pdf.btn-secondary:hover { color: var(--ink) !important; background: rgba(255,255,255,0.05) !important; }
-  .pp-actions .sh-btn { background: var(--solar); border-color: var(--solar); color: #0C0A08; font-weight: 600; padding: 9px 16px; }
+  .pp-actions .sh-btn { background: var(--solar); border-color: var(--solar); color: #191A2F; font-weight: 600; padding: 9px 16px; }
   /* На телефоне основная операция агента должна попадать под палец: 44px минимум */
   @media (max-width: 900px) { .pp-actions .sh-btn { padding: 13px 18px; } }
-  .pp-actions .sh-btn:hover { background: var(--solar-l); border-color: var(--solar-l); color: #0C0A08; }
-  .pp-actions .sh-btn svg path { stroke: #0C0A08; }
+  .pp-actions .sh-btn:hover { background: var(--solar-l); border-color: var(--solar-l); color: #191A2F; }
+  .pp-actions .sh-btn svg path { stroke: #191A2F; }
   .pp-actions .ct-btn { background: transparent !important; border: 1px solid var(--border) !important; color: var(--hushed) !important; font-weight: 400 !important; }
   .pp-actions .ct-btn:hover { color: var(--ink) !important; background: rgba(255,255,255,0.05) !important; }
-  .btn-pdf { display: inline-flex; align-items: center; gap: 8px; background: var(--solar); color: var(--ink); border-radius: 6px; padding: 9px 16px; font-size: 13.5px; font-weight: 500; transition: background .3s ease-in-out; }
+  .btn-pdf { display: inline-flex; align-items: center; gap: 8px; background: var(--solar); color: var(--ink); border-radius: 2px; padding: 9px 16px; font-size: 13.5px; font-weight: 500; transition: background .3s ease-in-out; }
   .btn-pdf:hover { background: var(--solar-l); }
   .btn-secondary { background: transparent !important; color: var(--ink) !important; border: 1px solid var(--border); }
   .btn-secondary:hover { background: rgba(255,255,255,0.06) !important; }
@@ -258,15 +259,15 @@
   .placeholder { display: grid; place-items: center; min-height: 300px; color: var(--faint); font-size: 14px; }
   .disclaimer { margin-top: 20px; font-size: 12px; line-height: 1.5; color: var(--faint); }
 
-  .calc { background: var(--tile); border: 1px solid var(--border-soft); border-radius: 10px; padding: 15px 16px; }
+  .calc { background: var(--tile); border: 1px solid var(--border-soft); border-radius: 2px; padding: 15px 16px; }
   .calc-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 13px; }
   .calc-l { font-size: 13px; color: var(--hushed); }
   .calc-l b { color: var(--ink); font-family: var(--f-mono); font-weight: 500; }
-  .calc-input { width: 150px; background: var(--card); border: 1px solid var(--border); border-radius: 7px; padding: 8px 11px; color: var(--ink); font-family: var(--f-mono); font-size: 16px; text-align: right; }
+  .calc-input { width: 150px; background: var(--card); border: 1px solid var(--border); border-radius: 2px; padding: 8px 11px; color: var(--ink); font-family: var(--f-mono); font-size: 16px; text-align: right; }
   .calc-input:focus { outline: 2px solid var(--solar); outline-offset: 1px; }
   .calc-range { flex: 1; max-width: 58%; accent-color: var(--solar); cursor: pointer; }
   .calc-out { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 2px; }
-  .calc-o { background: var(--card); border: 1px solid var(--border-soft); border-radius: 8px; padding: 11px 13px; }
+  .calc-o { background: var(--card); border: 1px solid var(--border-soft); border-radius: 2px; padding: 11px 13px; }
   .calc-o .v { font-family: var(--f-mono); font-size: 19px; font-weight: 600; letter-spacing: -0.01em; }
   .calc-o .k { font-size: 11px; color: var(--faint); margin-top: 3px; }
   .calc-note { margin-top: 11px; font-size: 11.5px; line-height: 1.45; color: var(--faint); }
@@ -286,7 +287,7 @@
        На мобиле вертикально скроллит .panel-wrap. */
     .panel { max-height: none; overflow: visible; }
     /* color обязателен: <button> не наследует цвет, и надпись была системной тёмной по тёмному */
-    .panel-close { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 12px; border: 1px solid var(--border); background: var(--card); border-radius: 6px; padding: 8px 14px; font-family: var(--f-body); font-size: 13.5px; cursor: pointer; color: var(--ink); }
+    .panel-close { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 12px; border: 1px solid var(--border); background: var(--card); border-radius: 2px; padding: 8px 14px; font-family: var(--f-body); font-size: 13.5px; cursor: pointer; color: var(--ink); }
     .metrics { grid-template-columns: repeat(2, 1fr); }
     .scenario { grid-template-columns: 1fr; gap: 3px; }
     .scenario .r { text-align: left; }
@@ -320,7 +321,7 @@
   <div class="nav-in">
     <a class="brand" href="index.html" aria-label="На главную">
       <svg width="22" height="22" viewBox="0 0 26 26" fill="none" aria-hidden="true">
-        <path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/>
+        <path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#F06E08"/>
       </svg>
       <span class="brand-name">Rumberg</span><span class="brand-tag">Инвестиционные решения</span>
     </a>
@@ -332,7 +333,7 @@
       <a href="placements.html">Выпуски</a>
       <a href="about.html">Библиотека</a>
       <a class="btn-solar" href="board.html" aria-current="page">Доска
-        <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3.46 10.54 L10.54 3.46 M4.88 3.46 H10.54 V9.12" stroke="#191A2F" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </a>
     </nav>
   </div>
@@ -373,8 +374,8 @@
 <script src="data/instruments.js?v=fx8"></script>
 <script src="data/lib.js?v=ax9"></script>
 <script src="data/harden.js?v=1"></script>
-<script src="share.js?v=8"></script>
-<script src="contact.js?v=10"></script>
+<script src="share.js?v=9"></script>
+<script src="contact.js?v=11"></script>
 <script>
   const S = window.SITE;
   // Охрана данных: не доехал data/lib.js или data/instruments.js — страница
@@ -420,7 +421,7 @@
   // --- Графики (SVG строками, Ramp-палитра) ---
   const W = 560, H = 270, PAD = 26;
   const MONO = 'font-family="JetBrains Mono, monospace"';
-  const C = { line: "#E7E9F0", gold: "#EE7D1B", grid: "rgba(255,255,255,0.09)", axis: "rgba(255,255,255,0.17)", lab: "rgba(255,255,255,0.46)", lab2: "rgba(255,255,255,0.68)" };
+  const C = { line: "#E7E9F0", gold: "#F06E08", grid: "rgba(255,255,255,0.09)", axis: "rgba(255,255,255,0.17)", lab: "rgba(255,255,255,0.46)", lab2: "rgba(255,255,255,0.68)" };
 
   function chartUnderlying(inst, U) {
     const data = U.history;
@@ -916,7 +917,7 @@
   // входа (варрант 15%, бустер 100%, дисконт 68% номинала), поэтому «выплата в %
   // номинала» несравнима. Приводим всё к РЕЗУЛЬТАТУ НА ВЛОЖЕННУЮ СУММУ.
   const CMP_MAX = 3;
-  const CMP_COLORS = ["#EE7D1B", "#4F86E6", "#55C08A"];
+  const CMP_COLORS = ["#F06E08", "#4F86E6", "#55C08A"];
   let cmpMode = false, cmp = [];
 
   // Цена входа в % номинала. Бустер покупается по номиналу (в quote у него КУ).
@@ -1208,7 +1209,7 @@
     // на instrument.html по присланной ссылке. Поэтому первой и залитой стоит
     // «Отправить клиенту», а «Обсудить продукт» (заявка НАМ) уходит в тихие.
     return '<span class="sh-host" id="sh-host"></span><a class="btn-pdf btn-secondary" href="onepager.html?id=' + encodeURIComponent(inst.id) + '&print=1">' +
-      '<svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M7 1 V9 M7 9 L4 6 M7 9 L10 6" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 12 H12" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round"/></svg>' +
+      '<svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M7 1 V9 M7 9 L4 6 M7 9 L10 6" stroke="#191A2F" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 12 H12" stroke="#191A2F" stroke-width="1.6" stroke-linecap="round"/></svg>' +
       'Скачать one-pager (PDF)</a><span class="ct-host" id="ct-host"></span>';
   }
 
@@ -1239,7 +1240,7 @@
       calcHTML(inst) +
       '<div class="sec"><h2 class="h">Пример расчёта</h2><div class="intro">' + c.exampleIntro + '</div>' +
         c.scenarios.map(s => '<div class="scenario"><div class="l">' + s[0] + '</div><div class="d">' + s[1] + '</div><div class="r" style="color:' + s[3] + '">' + s[2] + '</div></div>').join("") +
-        (S.isFxSensitive(S.esc(inst.underlying)) ? '<div style="margin-top:12px;padding:9px 13px;border-left:1px solid #EE7D1B;background:rgba(238,125,27,0.12);border-radius:0 7px 7px 0;font-size:12.5px;line-height:1.5;color:#E7B98D">' + S.LEGAL.fx + '</div>' : '') + '</div>' +
+        (S.isFxSensitive(S.esc(inst.underlying)) ? '<div style="margin-top:12px;padding:9px 13px;border-left:1px solid #F06E08;background:rgba(240,110,8,0.12);border-radius:0 7px 7px 0;font-size:12.5px;line-height:1.5;color:#EAB286">' + S.LEGAL.fx + '</div>' : '') + '</div>' +
       '<div class="sec"><h2 class="h">Как устроен продукт</h2><div class="explainer">' + c.explainer + '</div>' +
         '<div class="facts">' + c.facts.map(f => '<div class="fact"><div class="k">' + f[0] + '</div><div class="v">' + f[1] + '</div></div>').join("") + '</div></div>';
   }
@@ -1655,7 +1656,7 @@
     var svg = document.getElementById("tk-sine");
     if (!svg) return;
     var NS = "http://www.w3.org/2000/svg", path = document.createElementNS(NS, "path");
-    path.setAttribute("fill", "none"); path.setAttribute("stroke", "rgba(238,125,27,0.30)"); path.setAttribute("stroke-width", "1.6"); path.setAttribute("stroke-linecap", "round");
+    path.setAttribute("fill", "none"); path.setAttribute("stroke", "rgba(240,110,8,0.30)"); path.setAttribute("stroke-width", "1.6"); path.setAttribute("stroke-linecap", "round");
     svg.appendChild(path);
     var W = 1000, H = 54, phase = 0;
     function size() { W = svg.clientWidth || 1000; svg.setAttribute("viewBox", "0 0 " + W + " " + H); }
@@ -1678,10 +1679,10 @@
     wave();
   })();
 </script>
-<script src="chat.js?v=27"></script>
-<script src="search.js?v=8"></script>
-<script src="nav-about.js?v=9"></script>
-<script src="qualgate.js?v=8"></script>
-<script src="ptr.js?v=2" defer></script>
+<script src="chat.js?v=28"></script>
+<script src="search.js?v=9"></script>
+<script src="nav-about.js?v=10"></script>
+<script src="qualgate.js?v=9"></script>
+<script src="ptr.js?v=3" defer></script>
 </body>
 </html>

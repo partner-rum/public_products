@@ -28,17 +28,18 @@
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Rumberg — структурные продукты">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="theme-color" content="#0B0C10">
+<meta name="theme-color" content="#191A2F">
 <link href="fonts/fonts.css?v=2" rel="stylesheet">
+<link href="brand/brand.css?v=1" rel="stylesheet">
 <style>
   :root {
-    --canvas: #0B0C10; --card: #14161C;
+    --canvas: #191A2F; --card: #22243B;
     --ink: #F2F3F7; --hushed: rgba(242,243,247,0.64); --faint: rgba(242,243,247,0.56);
     --border: rgba(255,255,255,0.11); --border-soft: rgba(255,255,255,0.07);
-    --solar: #EE7D1B; --solar-l: #F58E33; --down: #EE7D1B;
+    --solar: #F06E08; --solar-l: #F48834; --down: #F06E08;
     /* Серый семейства «базовых бумаг»: статистика — не продукт, цветом типа не помечается */
     --fc: #8A93A6;
-    --f-body: 'Onest', system-ui, sans-serif; --f-mono: 'JetBrains Mono', Consolas, monospace; --display: 'Rubik','Onest',system-ui,sans-serif;
+    --f-body: 'Onest', system-ui, sans-serif; --f-mono: 'JetBrains Mono', Consolas, monospace; --display: Montserrat,'Onest',system-ui,sans-serif;
     --ease: cubic-bezier(0.16, 1, 0.3, 1);
     color-scheme: dark;
   }
@@ -46,52 +47,52 @@
   html { scroll-behavior: smooth; background: var(--canvas); }
   body { margin: 0; background: var(--canvas); color: var(--ink); font-family: var(--f-body); font-size: 14px; -webkit-font-smoothing: antialiased; }
   a { text-decoration: none; color: inherit; }
-  ::selection { background: rgba(238,125,27,0.35); color: var(--ink); }
-  a:focus-visible, button:focus-visible, summary:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 4px; }
+  ::selection { background: rgba(240,110,8,0.35); color: var(--ink); }
+  a:focus-visible, button:focus-visible, summary:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 2px; }
   .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
   .wrap { max-width: 1160px; margin: 0 auto; padding: 0 44px; }
-  .skip { position: absolute; left: -9999px; top: 0; z-index: 100; background: var(--solar); color: #0C0A08; padding: 10px 16px; border-radius: 0 0 8px 0; font-size: 14px; }
+  .skip { position: absolute; left: -9999px; top: 0; z-index: 100; background: var(--solar); color: #191A2F; padding: 10px 16px; border-radius: 0 0 2px 0; font-size: 14px; }
   .skip:focus { left: 0; }
 
-  .nav { position: sticky; top: 0; z-index: 30; background: rgba(11,12,16,0.82); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); }
+  .nav { position: sticky; top: 0; z-index: 30; background: rgba(25,26,47,0.82); backdrop-filter: none; -webkit-backdrop-filter: none; border-bottom: 1px solid var(--border); }
   .nav-in { max-width: 1160px; margin: 0 auto; padding: 0 44px; height: 62px; display: flex; align-items: center; gap: 12px; }
   .brand { display: flex; align-items: center; gap: 10px; } .brand-name { font-size: 14.5px; font-weight: 600; }
   .topnav { margin-left: auto; display: flex; align-items: center; gap: 22px; font-size: 14px; font-weight: 500; }
   .topnav a { color: var(--hushed); transition: color .2s; } .topnav a:hover { color: var(--ink); }
-  .btn-solar { background: var(--solar); color: #0C0A08 !important; border-radius: 6px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 7px; transition: background .3s ease-in-out; }
+  .btn-solar { background: var(--solar); color: #191A2F !important; border-radius: 2px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 7px; transition: background .3s ease-in-out; }
   .btn-solar:hover { background: var(--solar-l); }
 
   /* padding-top, а НЕ сокращённая запись: .page-head стоит ниже .wrap с той же
      специфичностью, и `padding: 44px 0 0` обнуляла её боковые отступы — шапка
      страницы съезжала на 44px левее всего остального содержимого */
   .page-head { padding-top: 44px; }
-  .eyebrow { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  .eyebrow .tag { border: 1px solid var(--border); border-radius: 999px; padding: 4px 10px; }
-  .page-head h1 { margin: 12px 0 14px; font-family: var(--display); font-size: clamp(30px, 4vw, 42px); font-weight: 500; line-height: 1.08; letter-spacing: -0.02em; text-wrap: balance; max-width: 780px; }
+  .eyebrow { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--faint); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .eyebrow .tag { border: 1px solid var(--border); border-radius: 2px; padding: 4px 10px; }
+  .page-head h1 { margin: 12px 0 14px; font-family: var(--display); font-size: clamp(30px, 4vw, 42px); font-weight: 500; line-height: 1.08; letter-spacing: -0.01em; text-wrap: balance; max-width: 780px; }
   .page-head .lead { margin: 0; font-size: 16px; line-height: 1.6; color: var(--hushed); max-width: 660px; text-wrap: pretty; }
   .art-bar { width: 56px; height: 4px; background: var(--fc); margin: 20px 0 24px; }
 
   /* Статья: те же классы, что в библиотеке, — market-lib.js рисует одинаково на обеих страницах */
   .art-grid { display: grid; grid-template-columns: 1.25fr 1fr; gap: 28px; align-items: start; }
   .kv { margin: 0 0 18px; }
-  .kv .k { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.11em; text-transform: uppercase; color: var(--faint); margin-bottom: 7px; }
+  .kv .k { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--faint); margin-bottom: 7px; }
   .kv .v { font-size: 14.5px; line-height: 1.62; color: var(--hushed); text-wrap: pretty; }
   .kv .v b { color: var(--ink); font-weight: 600; }
-  .plaque { padding: 12px 14px; border: 1px solid var(--border-soft); background: rgba(255,255,255,0.03); border-radius: 10px; font-size: 13px; line-height: 1.55; color: var(--hushed); margin-bottom: 18px; }
-  .plaque .k { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.11em; text-transform: uppercase; color: var(--down); margin-bottom: 6px; }
-  .usecase { display: flex; gap: 12px; align-items: flex-start; background: rgba(238,125,27,0.12); border: 1px solid rgba(238,125,27,0.22); border-radius: 10px; padding: 13px 16px; margin-bottom: 20px; }
+  .plaque { padding: 12px 14px; border: 1px solid var(--border-soft); background: rgba(255,255,255,0.03); border-radius: 2px; font-size: 13px; line-height: 1.55; color: var(--hushed); margin-bottom: 18px; }
+  .plaque .k { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--down); margin-bottom: 6px; }
+  .usecase { display: flex; gap: 12px; align-items: flex-start; background: rgba(255, 255, 255, 0.054); border: 1px solid rgba(240,110,8,0.22); border-radius: 2px; padding: 13px 16px; margin-bottom: 20px; }
   .usecase .ic { flex: none; line-height: 0; margin-top: 1px; }
-  .usecase .k { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.11em; text-transform: uppercase; color: var(--solar); margin-bottom: 5px; }
+  .usecase .k { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--solar); margin-bottom: 5px; }
   .usecase .v { font-size: 15px; line-height: 1.55; color: var(--ink); font-weight: 500; text-wrap: pretty; }
-  .viz { background: var(--card); border: 1px solid var(--border-soft); border-radius: 12px; padding: 18px 20px 14px; }
+  .viz { background: var(--card); border: 1px solid var(--border-soft); border-radius: 2px; padding: 18px 20px 14px; }
   .pf-cap { font-size: 12px; line-height: 1.5; color: var(--faint); margin-top: 10px; text-wrap: pretty; }
   .prot-ctrls { display: flex; flex-wrap: wrap; gap: 18px; margin-bottom: 14px; }
-  .ctrl .k { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); margin-bottom: 7px; }
-  .seg { display: inline-flex; background: rgba(255,255,255,0.06); border-radius: 9px; padding: 3px; gap: 2px; }
-  .seg button { border: none; background: none; cursor: pointer; font-family: var(--f-mono); font-size: 12.5px; color: var(--hushed); padding: 6px 12px; border-radius: 7px; transition: background .18s, color .18s; }
-  .seg button.on { background: #262A33; color: #6796EC; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.35); }
+  .ctrl .k { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--faint); margin-bottom: 7px; }
+  .seg { display: inline-flex; background: rgba(255,255,255,0.06); border-radius: 2px; padding: 3px; gap: 2px; }
+  .seg button { border: none; background: none; cursor: pointer; font-family: var(--f-mono); font-size: 12.5px; color: var(--hushed); padding: 6px 12px; border-radius: 2px; transition: background .18s, color .18s; }
+  .seg button.on { background: #343852; color: #6796EC; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.35); }
   .gloss { margin-top: 26px; border-top: 1px solid var(--border-soft); padding-top: 16px; }
-  .gloss summary { cursor: pointer; font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); list-style: none; display: flex; align-items: center; gap: 8px; }
+  .gloss summary { cursor: pointer; font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--faint); list-style: none; display: flex; align-items: center; gap: 8px; }
   .gloss summary::-webkit-details-marker { display: none; }
   .gloss summary::before { content: "+"; color: var(--fc); font-size: 15px; line-height: 1; width: 12px; }
   .gloss[open] summary::before { content: "\2212"; }
@@ -114,7 +115,7 @@
   footer { margin-top: 56px; background: var(--canvas); border-top: 1px solid var(--border); color: var(--hushed); }
   .footer-in { padding: 34px 0 44px; display: flex; justify-content: space-between; gap: 32px; flex-wrap: wrap; }
   .footer-brand .row { display: flex; align-items: center; gap: 10px; color: var(--ink); font-size: 14px; font-weight: 600; }
-  .footer-brand .sub { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); margin-top: 8px; }
+  .footer-brand .sub { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--faint); margin-top: 8px; }
   .footer-right { display: flex; flex-direction: column; gap: 10px; max-width: 460px; }
   .disclaimer { font-size: 12.5px; line-height: 1.55; }
   .updated { font-family: var(--f-mono); font-size: 11.5px; color: var(--faint); }
@@ -146,7 +147,7 @@
 <header class="nav">
   <div class="nav-in">
     <a class="brand" href="index.html" aria-label="На главную">
-      <svg width="22" height="22" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>
+      <svg width="22" height="22" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#F06E08"/></svg>
       <span class="brand-name">Rumberg</span><span class="brand-tag">Инвестиционные решения</span>
     </a>
     <nav class="topnav">
@@ -157,7 +158,7 @@
       <a href="placements.html">Выпуски</a>
       <a href="about.html">Библиотека</a>
       <a class="btn-solar" href="board.html">Доска
-        <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3.46 10.54 L10.54 3.46 M4.88 3.46 H10.54 V9.12" stroke="#191A2F" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </a>
     </nav>
   </div>
@@ -175,8 +176,8 @@
 
 <div class="endcta">
   <span class="t">Как устроены сами продукты и что стоит под ними:</span>
-  <a href="about.html">Библиотека продуктов<span class="ar" aria-hidden="true">→</span></a>
-  <a href="board.html">Актуальная доска<span class="ar" aria-hidden="true">→</span></a>
+  <a href="about.html">Библиотека продуктов<span class="ar" aria-hidden="true">↗</span></a>
+  <a href="board.html">Актуальная доска<span class="ar" aria-hidden="true">↗</span></a>
 </div>
 </div>
 </main>
@@ -184,7 +185,7 @@
 <footer>
   <div class="wrap footer-in">
     <div class="footer-brand">
-      <div class="row"><svg width="18" height="18" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>Rumberg</div>
+      <div class="row"><svg width="18" height="18" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#F06E08"/></svg>Rumberg</div>
       <div class="sub">Витрина структурных продуктов</div>
     </div>
     <div class="footer-right">
@@ -197,7 +198,7 @@
 <p class="vh" id="announce" aria-live="polite"></p>
 
 <script src="data/market.js"></script>
-<script src="market-lib.js?v=8"></script>
+<script src="market-lib.js?v=9"></script>
 <script>
 (function () {
   "use strict";
@@ -209,7 +210,7 @@
   // Те же три обёртки, что в библиотеке: market-lib.js их получает аргументами,
   // чтобы одна и та же вёрстка собиралась на обеих страницах
   function usecaseHTML(d, label) {
-    return '<div class="usecase"><span class="ic" aria-hidden="true"><svg width="17" height="17" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="6.4" stroke="#EE7D1B" stroke-width="1.5"/><circle cx="9" cy="9" r="1.9" fill="#EE7D1B"/></svg></span>' +
+    return '<div class="usecase"><span class="ic" aria-hidden="true"><svg width="17" height="17" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="6.4" stroke="#F06E08" stroke-width="1.5"/><circle cx="9" cy="9" r="1.9" fill="#F06E08"/></svg></span>' +
       '<div><div class="k">' + label + '</div><div class="v">' + d.whenToUse + '</div></div></div>';
   }
   function glossHTML(title, items) {
@@ -242,9 +243,9 @@
   if (d) document.getElementById("asof").textContent = d.split("-").reverse().join(".");
 })();
 </script>
-<script src="chat.js?v=27"></script>
-<script src="search.js?v=8"></script>
-<script src="nav-about.js?v=9"></script>
-<script src="ptr.js?v=2" defer></script>
+<script src="chat.js?v=28"></script>
+<script src="search.js?v=9"></script>
+<script src="nav-about.js?v=10"></script>
+<script src="ptr.js?v=3" defer></script>
 </body>
 </html>

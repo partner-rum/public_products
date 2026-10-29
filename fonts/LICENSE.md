@@ -1,5 +1,5 @@
 # Лицензии шрифтов
-Локальные копии шрифтов Google Fonts. Все три семейства — под SIL Open Font License 1.1,
+Локальные копии шрифтов Google Fonts. Все четыре семейства — под SIL Open Font License 1.1,
 которая разрешает размещение на своём сервере при сохранении текста лицензии.
 Источник: репозиторий google/fonts. Обновлять — `fonts_fetch.py`.
 
@@ -11,6 +11,10 @@ Copyright 2020 The JetBrains Mono Project Authors (https://github.com/JetBrains/
 
 ## Rubik
 Copyright 2015 The Rubik Project Authors (https://github.com/googlefonts/rubik)
+
+## Montserrat
+Copyright 2011 The Montserrat Project Authors (https://github.com/JulietaUla/Montserrat)
+Вариативные файлы `montserrat-var-cyrillic.woff2` и `montserrat-var-latin.woff2` (веса 100–900), подключаются в `brand/brand.css`.
 
 ---
 

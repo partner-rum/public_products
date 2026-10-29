@@ -15,54 +15,54 @@
 
   var css = "" +
     /* — вариант 1: приветственная карточка — */
-    ".in-veil{position:fixed;inset:0;background:rgba(11,12,16,.74);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);z-index:220;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;transition:opacity .25s ease;}" +
+    ".in-veil{position:fixed;inset:0;background:rgba(25,26,47,.74);backdrop-filter:none;-webkit-backdrop-filter:none;z-index:220;display:flex;align-items:center;justify-content:center;padding:16px;opacity:0;transition:opacity .25s ease;}" +
     ".in-veil.on{opacity:1;}" +
-    ".in-card{position:relative;width:100%;max-width:470px;background:#14161C;border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:26px 26px 20px;color:#F2F3F7;font-family:'Onest',system-ui,sans-serif;transform:translateY(12px);transition:transform .25s ease;box-shadow:0 24px 70px rgba(0,0,0,.5);}" +
+    ".in-card{position:relative;width:100%;max-width:470px;background:#22243B;border:1px solid rgba(255,255,255,.12);border-radius:2px;padding:26px 26px 20px;color:#F2F3F7;font-family:'Onest',system-ui,sans-serif;transform:translateY(12px);transition:transform .25s ease;box-shadow:0 24px 70px rgba(0,0,0,.5);}" +
     ".in-veil.on .in-card{transform:none;}" +
-    ".in-eyebrow{display:flex;align-items:center;gap:8px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:rgba(242,243,247,.55);margin:0 0 10px;}" +
-    ".in-dot{width:8px;height:8px;border-radius:50%;background:#EE7D1B;flex:none;}" +
-    ".in-h{margin:0 0 16px;font-family:'Rubik','Onest',sans-serif;font-weight:600;font-size:22px;line-height:1.2;color:#F2F3F7;}" +
+    ".in-eyebrow{display:flex;align-items:center;gap:8px;font-size:11px;letter-spacing:normal;text-transform:none;color:rgba(242,243,247,.55);margin:0 0 10px;}" +
+    ".in-dot{width:8px;height:8px;border-radius:50%;background:#F06E08;flex:none;}" +
+    ".in-h{margin:0 0 16px;font-family:Montserrat,'Onest',sans-serif;font-weight:500;font-size:20.7px;line-height:1.2;color:#F2F3F7;}" +
     ".in-step{display:flex;gap:12px;margin:0 0 12px;}" +
-    ".in-n{flex:none;width:24px;height:24px;border-radius:50%;background:rgba(238,125,27,.14);border:1px solid rgba(238,125,27,.4);color:#F58E33;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;margin-top:1px;}" +
+    ".in-n{flex:none;width:24px;height:24px;border-radius:50%;background:rgba(255, 255, 255, 0.063);border:1px solid rgba(240,110,8,.4);color:#F48834;font-size:12px;font-weight:600;display:flex;align-items:center;justify-content:center;margin-top:1px;}" +
     ".in-step p{margin:0;font-size:13.5px;line-height:1.55;color:rgba(242,243,247,.78);}" +
     ".in-step b{color:#F2F3F7;font-weight:500;}" +
     ".in-btns{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0 0;}" +
-    ".in-go{flex:1 1 auto;min-width:180px;display:inline-flex;align-items:center;justify-content:center;gap:8px;background:#EE7D1B;color:#0C0A08;font-weight:600;font-size:14px;text-decoration:none;border-radius:12px;padding:12px 18px;transition:background .15s;}" +
-    ".in-go:hover{background:#F58E33;}" +
-    ".in-skip{flex:1 1 auto;background:none;border:1px solid rgba(255,255,255,.16);color:rgba(242,243,247,.8);font-family:inherit;font-size:14px;border-radius:12px;padding:12px 18px;cursor:pointer;transition:border-color .15s,color .15s;}" +
+    ".in-go{flex:1 1 auto;min-width:180px;display:inline-flex;align-items:center;justify-content:center;gap:8px;background:#F06E08;color:#191A2F;font-weight:600;font-size:14px;text-decoration:none;border-radius:2px;padding:12px 18px;transition:background .15s;}" +
+    ".in-go:hover{background:#F48834;}" +
+    ".in-skip{flex:1 1 auto;background:none;border:1px solid rgba(255,255,255,.16);color:rgba(242,243,247,.8);font-family:inherit;font-size:14px;border-radius:2px;padding:12px 18px;cursor:pointer;transition:border-color .15s,color .15s;}" +
     ".in-skip:hover{border-color:rgba(255,255,255,.32);color:#F2F3F7;}" +
     ".in-note{margin:14px 0 0;font-size:11.5px;color:rgba(242,243,247,.4);text-align:center;}" +
-    ".in-x{position:absolute;top:12px;right:12px;width:32px;height:32px;border:0;background:none;color:rgba(242,243,247,.5);font-size:20px;line-height:1;cursor:pointer;border-radius:8px;}" +
+    ".in-x{position:absolute;top:12px;right:12px;width:32px;height:32px;border:0;background:none;color:rgba(242,243,247,.5);font-size:20px;line-height:1;cursor:pointer;border-radius:2px;}" +
     ".in-x:hover{color:#F2F3F7;background:rgba(255,255,255,.06);}" +
     "@media(max-width:480px){.in-card{padding:22px 18px 16px;}.in-btns{flex-direction:column;}}" +
     /* — вариант 2: блок «С чего начать» — */
     ".in-start{max-width:1180px;margin:26px auto 6px;padding:0 22px;font-family:'Onest',system-ui,sans-serif;}" +
-    ".in-start-cap{display:flex;align-items:center;gap:8px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:rgba(242,243,247,.55);margin:0 0 12px;}" +
+    ".in-start-cap{display:flex;align-items:center;gap:8px;font-size:11px;letter-spacing:normal;text-transform:none;color:rgba(242,243,247,.55);margin:0 0 12px;}" +
     ".in-start-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;}" +
-    ".in-sc{display:block;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:16px;padding:16px 18px;text-decoration:none;transition:border-color .15s,background .15s;}" +
+    ".in-sc{display:block;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:2px;padding:16px 18px;text-decoration:none;transition:border-color .15s,background .15s;}" +
     ".in-sc:hover{border-color:rgba(255,255,255,.22);background:rgba(255,255,255,.06);}" +
-    ".in-sc.accent{border-color:rgba(238,125,27,.45);background:rgba(238,125,27,.07);}" +
-    ".in-sc.accent:hover{border-color:rgba(238,125,27,.75);}" +
-    ".in-sc .t{font-family:'Rubik','Onest',sans-serif;font-weight:600;font-size:15px;color:#F2F3F7;margin:0 0 6px;}" +
+    ".in-sc.accent{border-color:rgba(240,110,8,.45);background:rgba(255, 255, 255, 0.032);}" +
+    ".in-sc.accent:hover{border-color:rgba(240,110,8,.75);}" +
+    ".in-sc .t{font-family:Montserrat,'Onest',sans-serif;font-weight:500;font-size:14.1px;color:#F2F3F7;margin:0 0 6px;}" +
     ".in-sc .d{font-size:12.5px;line-height:1.5;color:rgba(242,243,247,.6);margin:0 0 10px;}" +
-    ".in-sc .go{font-size:12.5px;font-weight:500;color:#F58E33;}" +
+    ".in-sc .go{font-size:12.5px;font-weight:500;color:#F48834;}" +
     /* — вариант 2a: одна строка для новичка — */
     ".in-line{display:flex;align-items:center;gap:10px;margin:18px 0 0;font-family:'Onest',system-ui,sans-serif;font-size:13.5px;color:rgba(242,243,247,.66);flex-wrap:wrap;}" +
-    ".in-line a{color:#F58E33;text-decoration:none;font-weight:500;white-space:nowrap;}" +
+    ".in-line a{color:#F48834;text-decoration:none;font-weight:500;white-space:nowrap;}" +
     ".in-line a:hover{text-decoration:underline;}" +
     /* — вариант 2b: две мини-дорожки — */
     ".in-mini{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0 0;font-family:'Onest',system-ui,sans-serif;}" +
-    ".in-mc{flex:1 1 230px;display:flex;justify-content:space-between;align-items:baseline;gap:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:12px;padding:14px 16px;text-decoration:none;transition:border-color .15s;}" +
+    ".in-mc{flex:1 1 230px;display:flex;justify-content:space-between;align-items:baseline;gap:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:2px;padding:14px 16px;text-decoration:none;transition:border-color .15s;}" +
     ".in-mc:hover{border-color:rgba(255,255,255,.22);}" +
-    ".in-mc.accent{border-color:rgba(238,125,27,.45);background:rgba(238,125,27,.06);}" +
-    ".in-mc.accent:hover{border-color:rgba(238,125,27,.75);}" +
-    ".in-mc span{font-family:'Rubik','Onest',sans-serif;font-weight:600;font-size:14px;color:#F2F3F7;}" +
-    ".in-mc em{font-style:normal;font-size:12.5px;font-weight:500;color:#F58E33;white-space:nowrap;}" +
+    ".in-mc.accent{border-color:rgba(240,110,8,.45);background:rgba(255, 255, 255, 0.027);}" +
+    ".in-mc.accent:hover{border-color:rgba(240,110,8,.75);}" +
+    ".in-mc span{font-family:Montserrat,'Onest',sans-serif;font-weight:500;font-size:13.2px;color:#F2F3F7;}" +
+    ".in-mc em{font-style:normal;font-size:12.5px;font-weight:500;color:#F48834;white-space:nowrap;}" +
     /* — вариант 3: плашка-гид — */
-    ".in-hint{display:flex;align-items:center;gap:10px;background:rgba(238,125,27,.07);border:1px solid rgba(238,125,27,.28);border-radius:12px;padding:10px 14px;margin:0 0 16px;font-family:'Onest',system-ui,sans-serif;font-size:13px;line-height:1.45;color:rgba(242,243,247,.78);flex-wrap:wrap;}" +
-    ".in-hint a{color:#F58E33;text-decoration:none;font-weight:500;white-space:nowrap;}" +
+    ".in-hint{display:flex;align-items:center;gap:10px;background:rgba(255, 255, 255, 0.032);border:1px solid rgba(240,110,8,.28);border-radius:2px;padding:10px 14px;margin:0 0 16px;font-family:'Onest',system-ui,sans-serif;font-size:13px;line-height:1.45;color:rgba(242,243,247,.78);flex-wrap:wrap;}" +
+    ".in-hint a{color:#F48834;text-decoration:none;font-weight:500;white-space:nowrap;}" +
     ".in-hint a:hover{text-decoration:underline;}" +
-    ".in-hint-x{margin-left:auto;flex:none;width:26px;height:26px;border:0;background:none;color:rgba(242,243,247,.45);font-size:16px;line-height:1;cursor:pointer;border-radius:6px;}" +
+    ".in-hint-x{margin-left:auto;flex:none;width:26px;height:26px;border:0;background:none;color:rgba(242,243,247,.45);font-size:16px;line-height:1;cursor:pointer;border-radius:2px;}" +
     ".in-hint-x:hover{color:#F2F3F7;background:rgba(255,255,255,.06);}";
 
   function injectCss() {
@@ -123,22 +123,22 @@
         '<a class="in-sc accent" href="' + GUIDE_URL + '">' +
           '<div class="t">Я здесь впервые</div>' +
           '<div class="d">Что такое структурный продукт и как читать условия — простыми словами.</div>' +
-          '<div class="go">Как это работает &rarr;</div>' +
+          '<div class="go">Как это работает &nearr;</div>' +
         '</a>' +
         '<a class="in-sc" href="digest.html">' +
           '<div class="t">Идея этой недели</div>' +
           '<div class="d">Дайджест: гипотеза, рыночная ситуация, факторы и параметры выпуска.</div>' +
-          '<div class="go">Читать дайджест &rarr;</div>' +
+          '<div class="go">Читать дайджест &nearr;</div>' +
         '</a>' +
         '<a class="in-sc" href="board.html">' +
           '<div class="t">Текущие продукты</div>' +
           '<div class="d">Доска прайсинга: котировки в % от номинала, параметры, профили выплат.</div>' +
-          '<div class="go">Открыть доску &rarr;</div>' +
+          '<div class="go">Открыть доску &nearr;</div>' +
         '</a>' +
         '<a class="in-sc" href="placements.html">' +
           '<div class="t">Что уже разместили</div>' +
           '<div class="d">Реальные выпуски с фиксингами, динамикой и документами.</div>' +
-          '<div class="go">Смотреть выпуски &rarr;</div>' +
+          '<div class="go">Смотреть выпуски &nearr;</div>' +
         '</a>' +
       '</div>';
     if (afterEl && afterEl.parentNode) mountAfter(afterEl, el);
@@ -153,7 +153,7 @@
     el.className = "in-line";
     el.innerHTML =
       '<span>Впервые со структурными продуктами?</span>' +
-      '<a href="' + GUIDE_URL + '">Как это работает — 2 мин &rarr;</a>';
+      '<a href="' + GUIDE_URL + '">Как это работает — 2 мин &nearr;</a>';
     mountAfter(afterEl, el);
     return el;
   }
@@ -175,8 +175,8 @@
     var el = document.createElement("div");
     el.className = "in-mini";
     el.innerHTML =
-      '<a class="in-mc accent" href="' + GUIDE_URL + '"><span>Я впервые здесь</span><em>Как это работает &rarr;</em></a>' +
-      '<a class="in-mc" href="digest.html"><span>Идея этой недели</span><em>Читать дайджест &rarr;</em></a>';
+      '<a class="in-mc accent" href="' + GUIDE_URL + '"><span>Я впервые здесь</span><em>Как это работает &nearr;</em></a>' +
+      '<a class="in-mc" href="digest.html"><span>Идея этой недели</span><em>Читать дайджест &nearr;</em></a>';
     mountAfter(afterEl, el);
     return el;
   }
@@ -188,7 +188,7 @@
     el.className = "in-hint";
     el.innerHTML =
       '<span>Впервые со структурными продуктами?</span>' +
-      '<a href="' + GUIDE_URL + '">Как это работает &rarr;</a>' +
+      '<a href="' + GUIDE_URL + '">Как это работает &nearr;</a>' +
       '<button class="in-hint-x" aria-label="Скрыть подсказку">&times;</button>';
     mount.insertBefore(el, mount.firstChild);
     el.querySelector(".in-hint-x").addEventListener("click", function () {

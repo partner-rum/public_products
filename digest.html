@@ -24,31 +24,32 @@
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Rumberg — структурные продукты">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="theme-color" content="#0B0C10">
+<meta name="theme-color" content="#191A2F">
 <link href="fonts/fonts.css?v=2" rel="stylesheet">
+<link href="brand/brand.css?v=1" rel="stylesheet">
 <style>
   :root {
-    --canvas: #0B0C10; --card: #14161C; --panel-2: #191B22; --tile: rgba(255,255,255,0.045);
-    --black: #1A1919;
+    --canvas: #191A2F; --card: #22243B; --panel-2: #272941; --tile: rgba(255,255,255,0.045);
+    --black: #282738;
     --ink: #F2F3F7; --hushed: rgba(242,243,247,0.64); --faint: rgba(242,243,247,0.56);
     --border: rgba(255,255,255,0.11); --border-soft: rgba(255,255,255,0.07);
-    --solar: #EE7D1B; --solar-l: #F58E33; --up: #55C08A; --down: #EE7D1B;
-    --f-body: 'Onest', system-ui, sans-serif; --f-mono: 'JetBrains Mono', Consolas, monospace; --display: 'Rubik', 'Onest', system-ui, sans-serif;
+    --solar: #F06E08; --solar-l: #F48834; --up: #55C08A; --down: #F06E08;
+    --f-body: 'Onest', system-ui, sans-serif; --f-mono: 'JetBrains Mono', Consolas, monospace; --display: Montserrat, 'Onest', system-ui, sans-serif;
     --ease: cubic-bezier(0.16, 1, 0.3, 1);
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--canvas); color: var(--ink); font-family: var(--f-body); -webkit-font-smoothing: antialiased; }
   a { text-decoration: none; color: inherit; }
-  a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 4px; }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 2px; }
   .wrap { max-width: 1180px; margin: 0 auto; padding: 0 44px 56px; }
 
-  .nav { position: sticky; top: 0; z-index: 30; background: rgba(11,12,16,0.82); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); }
+  .nav { position: sticky; top: 0; z-index: 30; background: rgba(25,26,47,0.82); backdrop-filter: none; -webkit-backdrop-filter: none; border-bottom: 1px solid var(--border); }
   .nav-in { max-width: 1180px; margin: 0 auto; padding: 0 44px; height: 62px; display: flex; align-items: center; gap: 12px; }
   .brand { display: flex; align-items: center; gap: 10px; } .brand-name { font-size: 14.5px; font-weight: 600; }
   .topnav { margin-left: auto; display: flex; align-items: center; gap: 22px; font-size: 14px; font-weight: 500; }
   .topnav a { color: var(--hushed); transition: color .2s; } .topnav a:hover { color: var(--ink); }
   .topnav a[aria-current="page"] { color: var(--ink); font-weight: 600; }
-  .btn-solar { background: var(--solar); color: #0C0A08 !important; border-radius: 6px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 7px; transition: background .3s; }
+  .btn-solar { background: var(--solar); color: #191A2F !important; border-radius: 2px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 7px; transition: background .3s; }
   .btn-solar:hover { background: var(--solar-l); }
 
   .crumbs { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--hushed); padding: 24px 0 22px; }
@@ -56,25 +57,25 @@
 
   .head { margin-bottom: 6px; }
   .head-row { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
-  h1 { margin: 0; font-family: var(--display); font-size: 34px; font-weight: 400; letter-spacing: -0.02em; }
+  h1 { margin: 0; font-family: var(--display); font-size: 32px; font-weight: 400; letter-spacing: -0.01em; }
   .intro { margin-top: 10px; font-size: 15px; line-height: 1.6; color: var(--hushed); max-width: 680px; }
 
   /* Переключатель выпусков (архив) */
   .pick { position: relative; }
-  .pick-btn { display: inline-flex; align-items: center; gap: 10px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 8px 13px; font-family: var(--f-body); font-size: 14px; color: var(--ink); cursor: pointer; }
-  .btn-dl { display: inline-flex; align-items: center; gap: 8px; background: var(--solar); color: #0C0A08; border-radius: 8px; padding: 9px 15px; font-size: 13.5px; font-weight: 600; transition: background .2s; }
+  .pick-btn { display: inline-flex; align-items: center; gap: 10px; background: var(--card); border: 1px solid var(--border); border-radius: 2px; padding: 8px 13px; font-family: var(--f-body); font-size: 14px; color: var(--ink); cursor: pointer; }
+  .btn-dl { display: inline-flex; align-items: center; gap: 8px; background: var(--solar); color: #191A2F; border-radius: 2px; padding: 9px 15px; font-size: 13.5px; font-weight: 600; transition: background .2s; }
   .btn-dl:hover { background: var(--solar-l); }
   .btn-dl[hidden] { display: none; }
-  .btn-print { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--border); color: var(--ink); border-radius: 8px; padding: 8px 14px; font-size: 13.5px; font-weight: 500; transition: border-color .2s; }
+  .btn-print { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--border); color: var(--ink); border-radius: 2px; padding: 8px 14px; font-size: 13.5px; font-weight: 500; transition: border-color .2s; }
   .btn-print:hover { border-color: rgba(255,255,255,0.36); }
   .pick-btn:hover { border-color: rgba(255,255,255,0.22); }
-  .pick-btn .lbl { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.09em; text-transform: uppercase; color: var(--faint); }
+  .pick-btn .lbl { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--faint); }
   .pick-btn .cv { color: var(--hushed); transition: transform .25s var(--ease); }
   .pick.open .cv { transform: rotate(180deg); }
-  .pick-menu { position: absolute; top: calc(100% + 6px); left: 0; z-index: 40; min-width: 320px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 18px 44px rgba(0,0,0,0.5); padding: 6px; display: none; }
+  .pick-menu { position: absolute; top: calc(100% + 6px); left: 0; z-index: 40; min-width: 320px; background: var(--card); border: 1px solid var(--border); border-radius: 2px; box-shadow: 0 18px 44px rgba(0,0,0,0.5); padding: 6px; display: none; }
   .pick.open .pick-menu { display: block; }
-  .pick-mh { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); padding: 8px 12px 6px; }
-  .pick-i { display: block; width: 100%; text-align: left; background: none; border: none; border-radius: 8px; padding: 10px 12px; cursor: pointer; font-family: var(--f-body); color: var(--ink); }
+  .pick-mh { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--faint); padding: 8px 12px 6px; }
+  .pick-i { display: block; width: 100%; text-align: left; background: none; border: none; border-radius: 2px; padding: 10px 12px; cursor: pointer; font-family: var(--f-body); color: var(--ink); }
   .pick-i:hover { background: rgba(255,255,255,0.05); }
   .pick-i.active { background: rgba(255,255,255,0.09); }
   .pick-i .d { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
@@ -82,16 +83,16 @@
   .pick-i .d .c { font-family: var(--f-mono); font-size: 11px; color: var(--faint); white-space: nowrap; }
   .pick-i .s { font-size: 12px; color: var(--hushed); margin-top: 3px; line-height: 1.4; }
 
-  .qual { margin: 16px 0 4px; display: inline-flex; align-items: center; gap: 10px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 9px 15px; font-size: 12.5px; color: var(--hushed); }
+  .qual { margin: 16px 0 4px; display: inline-flex; align-items: center; gap: 10px; background: var(--card); border: 1px solid var(--border); border-radius: 2px; padding: 9px 15px; font-size: 12.5px; color: var(--hushed); }
 
   .layout { display: grid; grid-template-columns: 300px minmax(0,1fr); gap: 40px; align-items: start; margin-top: 24px; }
 
   .toc { position: sticky; top: 86px; }
-  .toc-h { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint); margin-bottom: 8px; }
+  .toc-h { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--faint); margin-bottom: 8px; }
   .toc-sec { font-size: 12px; font-weight: 600; margin: 16px 0 6px; }
-  .toc-i { display: flex; gap: 12px; align-items: baseline; width: 100%; text-align: left; background: none; border: none; cursor: pointer; padding: 7px 8px; border-radius: 8px; font-family: var(--f-body); color: var(--ink); }
+  .toc-i { display: flex; gap: 12px; align-items: baseline; width: 100%; text-align: left; background: none; border: none; cursor: pointer; padding: 7px 8px; border-radius: 2px; font-family: var(--f-body); color: var(--ink); }
   .toc-i:hover { background: rgba(255,255,255,0.05); }
-  .toc-i.active { background: #262A33; color: var(--ink); }
+  .toc-i.active { background: #343852; color: var(--ink); }
   .toc-i.active .num, .toc-i.active .mv { color: rgba(255,255,255,0.72); }
   .toc-i .num { font-family: var(--f-mono); font-size: 11px; color: var(--faint); flex: none; width: 20px; }
   .toc-i .tx { flex: 1; min-width: 0; }
@@ -99,8 +100,8 @@
   .toc-i .mv { font-family: var(--f-mono); font-size: 11px; color: var(--fc); margin-top: 2px; }
 
   .art-num { font-family: var(--f-mono); font-size: 13px; color: var(--fc); letter-spacing: 0.05em; }
-  .art-kind { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); margin-left: 10px; }
-  .art-title { margin: 12px 0 6px; font-family: var(--display); font-size: 40px; font-weight: 400; letter-spacing: -0.025em; line-height: 1.08; max-width: 640px; }
+  .art-kind { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--faint); margin-left: 10px; }
+  .art-title { margin: 12px 0 6px; font-family: var(--display); font-size: 37.6px; font-weight: 400; letter-spacing: -0.01em; line-height: 1.08; max-width: 640px; }
   .art-un { font-size: 15px; color: var(--hushed); margin-bottom: 8px; }
   /* «Обсудить идею» — сразу под заголовком: идею рассылают клиентам, до низа не долистывают */
   .art-cta { margin-top: 14px; }
@@ -109,7 +110,7 @@
   .nextprev { display: flex; justify-content: space-between; gap: 14px; margin-top: 30px; border-top: 1px solid var(--border); padding-top: 18px; }
   .np { background: none; border: none; cursor: pointer; font-family: var(--f-body); color: var(--hushed); text-align: left; padding: 6px 0; max-width: 46%; }
   .np:hover { color: var(--ink); } .np.r { text-align: right; }
-  .np .l { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--faint); }
+  .np .l { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--faint); }
   .np .n { font-size: 14.5px; margin-top: 3px; }
   .np[disabled] { visibility: hidden; }
 
@@ -139,7 +140,7 @@
 
 <header class="nav">
   <div class="nav-in">
-    <a class="brand" href="index.html" aria-label="На главную"><svg width="22" height="22" viewBox="0 0 26 26" fill="none"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg><span class="brand-name">Rumberg</span><span class="brand-tag">Инвестиционные решения</span></a>
+    <a class="brand" href="index.html" aria-label="На главную"><svg width="22" height="22" viewBox="0 0 26 26" fill="none"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#F06E08"/></svg><span class="brand-name">Rumberg</span><span class="brand-tag">Инвестиционные решения</span></a>
     <nav class="topnav">
       <a href="screener.html">Лучшие ставки</a>
       <a href="ideas.html">Разборы</a>
@@ -148,7 +149,7 @@
       <a href="placements.html">Выпуски</a>
       <a href="about.html">Библиотека</a>
       <a class="btn-solar" href="board.html">Доска
-        <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M3.46 10.54 L10.54 3.46 M4.88 3.46 H10.54 V9.12" stroke="#191A2F" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </a>
     </nav>
   </div>
@@ -168,7 +169,7 @@
         <div class="pick-menu" id="pick-menu"><div class="pick-mh">Архив выпусков</div><div id="pick-list"></div></div>
       </div>
       <a class="btn-dl" id="digest-pdf" href="#" download hidden>
-        <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M7 1 V9 M7 9 L4 6 M7 9 L10 6" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 12 H12" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M7 1 V9 M7 9 L4 6 M7 9 L10 6" stroke="#191A2F" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 12 H12" stroke="#191A2F" stroke-width="1.6" stroke-linecap="round"/></svg>
         Скачать дайджест (PDF)
       </a>
       <a class="btn-print" id="digest-print" href="digest-print.html">
@@ -179,7 +180,7 @@
     <div class="intro" id="intro"></div>
   </div>
 
-  <div class="qual"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M7 0 L8.4 5.6 L14 7 L8.4 8.4 L7 14 L5.6 8.4 L0 7 L5.6 5.6 Z" fill="#EE7D1B"/></svg><span id="qual"></span></div>
+  <div class="qual"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M7 0 L8.4 5.6 L14 7 L8.4 8.4 L7 14 L5.6 8.4 L0 7 L5.6 5.6 Z" fill="#F06E08"/></svg><span id="qual"></span></div>
 
   <div class="layout">
     <aside class="toc"><div class="toc-h">Содержание</div><div id="toc"></div></aside>
@@ -193,10 +194,10 @@
 
 <script src="data/lib.js?v=ax9"></script>
 <script src="data/digest.js?v=srv6"></script>
-<script src="data/digest-lib.js?v=10"></script>
+<script src="data/digest-lib.js?v=11"></script>
 <script src="data/harden.js?v=1"></script>
-<script src="share.js?v=8"></script>
-<script src="contact.js?v=10"></script>
+<script src="share.js?v=9"></script>
+<script src="contact.js?v=11"></script>
 <script>
   const A = window.DIGEST_ARCHIVE;
   // ── ЭКРАНИРОВАНИЕ ──
@@ -337,7 +338,7 @@
     const draftIdeas = (A.draft && A.draft.ideas) || [];
     const banner = document.createElement("div");
     banner.textContent = "ЧЕРНОВИК ВЫПУСКА · не опубликовано — так дайджест будет выглядеть на сайте после публикации";
-    banner.style.cssText = "position:sticky;top:0;z-index:50;background:#EE7D1B;color:#0C0A08;font-weight:600;text-align:center;padding:9px 16px;font-size:13px;line-height:1.4;font-family:var(--f-body)";
+    banner.style.cssText = "position:sticky;top:0;z-index:50;background:#F06E08;color:#191A2F;font-weight:600;text-align:center;padding:9px 16px;font-size:13px;line-height:1.4;font-family:var(--f-body)";
     document.body.insertBefore(banner, document.body.firstChild);
     if (!draftIdeas.length) {
       document.getElementById("article").innerHTML = '<div style="padding:48px 0;color:var(--hushed);font-size:15px">Черновик пуст — добавьте идеи в админке на вкладке «Идея в дайджест».</div>';
@@ -355,10 +356,10 @@
     selectIssue(startIssue, parts[1] || null, !!parts[1]);
   }
 </script>
-<script src="chat.js?v=27"></script>
-<script src="search.js?v=8"></script>
-<script src="nav-about.js?v=9"></script>
-<script src="qualgate.js?v=8"></script>
-<script src="ptr.js?v=2" defer></script>
+<script src="chat.js?v=28"></script>
+<script src="search.js?v=9"></script>
+<script src="nav-about.js?v=10"></script>
+<script src="qualgate.js?v=9"></script>
+<script src="ptr.js?v=3" defer></script>
 </body>
 </html>

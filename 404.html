@@ -24,17 +24,18 @@
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Rumberg — структурные продукты">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="theme-color" content="#0B0C10">
+<meta name="theme-color" content="#191A2F">
 <link href="fonts/fonts.css?v=2" rel="stylesheet">
+<link href="brand/brand.css?v=1" rel="stylesheet">
 <style>
   :root {
-    --canvas: #0B0C10; --card: #14161C;
+    --canvas: #191A2F; --card: #22243B;
     --ink: #F2F3F7; --hushed: rgba(242,243,247,0.64); --faint: rgba(242,243,247,0.56);
     --border: rgba(255,255,255,0.11); --border-soft: rgba(255,255,255,0.07);
-    --solar: #EE7D1B; --solar-l: #F58E33;
+    --solar: #F06E08; --solar-l: #F48834;
     --f-body: 'Onest', system-ui, sans-serif;
     --f-mono: 'JetBrains Mono', Consolas, monospace;
-    --display: 'Rubik', 'Onest', system-ui, sans-serif;
+    --display: Montserrat, 'Onest', system-ui, sans-serif;
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--canvas); color: var(--ink); font-family: var(--f-body); -webkit-font-smoothing: antialiased; }
@@ -62,12 +63,12 @@
 
   .wrap { max-width: 1080px; margin: 0 auto; padding: 0 44px 64px; }
   .box { max-width: 580px; margin: 84px auto 0; text-align: center; }
-  .code { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--solar); }
-  h1 { margin: 14px 0 0; font-family: var(--display); font-size: 30px; font-weight: 400; letter-spacing: -0.02em; line-height: 1.15; }
+  .code { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--solar); }
+  h1 { margin: 14px 0 0; font-family: var(--display); font-size: 28.2px; font-weight: 400; letter-spacing: -0.01em; line-height: 1.15; }
   p { margin: 16px 0 0; font-size: 14.5px; line-height: 1.65; color: var(--hushed); text-wrap: pretty; }
   .acts { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 28px; }
-  .btn { display: inline-flex; align-items: center; gap: 8px; border-radius: 6px; padding: 10px 17px; font-size: 13.5px; font-weight: 500; transition: background .3s ease-in-out; }
-  .btn-solar { background: var(--solar); color: #0C0A08; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; border-radius: 2px; padding: 10px 17px; font-size: 13.5px; font-weight: 500; transition: background .3s ease-in-out; }
+  .btn-solar { background: var(--solar); color: #191A2F; }
   .btn-solar:hover { background: var(--solar-l); }
   .btn-ghost { border: 1px solid var(--border); color: var(--ink); }
   .btn-ghost:hover { background: rgba(255,255,255,0.06); }
@@ -80,7 +81,7 @@
     .topnav { gap: 16px; font-size: 13.5px; }
     .wrap { padding: 0 20px 48px; }
     .box { margin-top: 48px; }
-    h1 { font-size: 25px; }
+    h1 { font-size: 23.5px; }
   }
 
   /* Телефон: шапка в одну строку 57px, как на остальных страницах; разделы — кнопками ниже */
@@ -99,7 +100,7 @@
   <div class="nav-in">
     <a class="brand" href="/index.html" aria-label="На главную">
       <svg width="22" height="22" viewBox="0 0 26 26" fill="none" aria-hidden="true">
-        <path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/>
+        <path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#F06E08"/>
       </svg>
       <span class="brand-name">Rumberg</span><span class="brand-tag">Инвестиционные решения</span>
     </a>
@@ -122,7 +123,7 @@
       доске. Если нужен именно тот продукт, по которому вы пришли, — напишите, подберём аналог.</p>
     <div class="acts">
       <a class="btn btn-solar" href="/board.html">Открыть доску
-        <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3.46 10.54 L10.54 3.46 M4.88 3.46 H10.54 V9.12" stroke="#191A2F" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </a>
       <a class="btn btn-ghost" href="https://t.me/Rumberb_Sales_Team_bot" target="_blank" rel="noopener">Написать в Telegram</a>
     </div>
@@ -135,6 +136,6 @@
   </div>
 </div>
 
-<script src="ptr.js?v=2" defer></script>
+<script src="ptr.js?v=3" defer></script>
 </body>
 </html>

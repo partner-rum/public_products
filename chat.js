@@ -93,32 +93,32 @@
   var css = "" +
     /* — строка-вопрос внизу по центру (на телефоне — пилюля без поля) — */
         // Светлая на тёмном, но приглушённая (Руслан: «чуть более спокойный контраст»): фон — серо-
-    // голубой #D3D7DF вместо белого #F2F3F7, текст — карточный #14161C. Рамка не нужна, предмет и так отделён; фокус/наведение — оранжевое кольцо.
-    ".ca-dock{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:300;display:flex;align-items:center;gap:10px;width:600px;max-width:calc(100vw - 32px);height:56px;margin:0;padding:0 8px 0 18px;box-sizing:border-box;border-radius:999px;background:#D3D7DF;border:0;box-shadow:0 12px 32px rgba(0,0,0,.5),0 0 0 2px rgba(238,125,27,0);font-family:'Onest',system-ui,sans-serif;color:#14161C;transition:box-shadow .2s;}" +
-    ".ca-dock:hover,.ca-dock:focus-within{box-shadow:0 12px 32px rgba(0,0,0,.5),0 0 0 2px rgba(238,125,27,.7);}" +
+    // голубой #D3D7DF вместо белого #F2F3F7, текст — карточный #22243B. Рамка не нужна, предмет и так отделён; фокус/наведение — оранжевое кольцо.
+    ".ca-dock{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:300;display:flex;align-items:center;gap:10px;width:600px;max-width:calc(100vw - 32px);height:56px;margin:0;padding:0 8px 0 18px;box-sizing:border-box;border-radius:2px;background:#D3D7DF;border:0;box-shadow:0 12px 32px rgba(0,0,0,.5),0 0 0 2px rgba(240,110,8,0);font-family:'Onest',system-ui,sans-serif;color:#22243B;transition:box-shadow .2s;}" +
+    ".ca-dock:hover,.ca-dock:focus-within{box-shadow:0 12px 32px rgba(0,0,0,.5),0 0 0 2px rgba(240,110,8,.7);}" +
     ".ca-dock.hide{display:none;}" +
     ".ca-dock>svg{flex:none;}" +
-    ".ca-dock-tag{flex:none;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;letter-spacing:.08em;color:#2A56B0;border:1px solid rgba(42,86,176,.45);border-radius:5px;padding:2px 5px;}" +
-    ".ca-dock-in{flex:1;min-width:0;background:none;border:0;outline:none;color:#14161C;font-family:inherit;font-size:15px;line-height:1.3;padding:0;}" +
-    ".ca-dock-in::placeholder{color:rgba(20,22,28,.66);}" +
-    ".ca-dock-go{flex:none;display:inline-flex;align-items:center;gap:7px;height:40px;padding:0 16px;border:0;border-radius:999px;background:#EE7D1B;color:#0C0A08;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;transition:background .15s;}" +
-    ".ca-dock-go:hover{background:#F58E33;}.ca-dock-go svg{width:14px;height:14px;}" +
+    ".ca-dock-tag{flex:none;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;letter-spacing:.08em;color:#2A56B0;border:1px solid rgba(42,86,176,.45);border-radius:2px;padding:2px 5px;}" +
+    ".ca-dock-in{flex:1;min-width:0;background:none;border:0;outline:none;color:#22243B;font-family:inherit;font-size:15px;line-height:1.3;padding:0;}" +
+    ".ca-dock-in::placeholder{color:rgba(34,36,59,.66);}" +
+    ".ca-dock-go{flex:none;display:inline-flex;align-items:center;gap:7px;height:40px;padding:0 16px;border:0;border-radius:2px;background:#F06E08;color:#191A2F;font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;transition:background .15s;}" +
+    ".ca-dock-go:hover{background:#F48834;}.ca-dock-go svg{width:14px;height:14px;}" +
     ".ca-dock-lbl{display:none;}" +
     // Строка закрывает низ страницы — отодвигаем подвал, чтобы последние строки читались.
     "@media(min-width:861px){html.ca-dock-pad body{padding-bottom:88px;}}" +
     // Строку на компьютере можно свернуть в кружок-звезду в углу (13.10.2026, просьба Руслана:
     // «жутко бесит»). Выбор помнится в localStorage so_ai_dock; на телефоне строка как была.
-    ".ca-dock-x{flex:none;display:none;align-items:center;justify-content:center;width:32px;height:32px;margin-left:-2px;padding:0;border:0;border-radius:50%;background:none;color:rgba(20,22,28,.55);font-family:inherit;font-size:22px;line-height:1;cursor:pointer;transition:background .15s,color .15s;}" +
-    ".ca-dock-x:hover{background:rgba(20,22,28,.09);color:#14161C;}" +
-    ".ca-mini{position:fixed;right:24px;bottom:24px;z-index:300;display:none;align-items:center;justify-content:center;width:52px;height:52px;padding:0;border:0;border-radius:50%;background:#D3D7DF;box-shadow:0 10px 28px rgba(0,0,0,.5),0 0 0 2px rgba(238,125,27,0);cursor:pointer;transition:box-shadow .2s;}" +
-    ".ca-mini:hover,.ca-mini:focus-visible{outline:none;box-shadow:0 10px 28px rgba(0,0,0,.5),0 0 0 2px rgba(238,125,27,.7);}" +
+    ".ca-dock-x{flex:none;display:none;align-items:center;justify-content:center;width:32px;height:32px;margin-left:-2px;padding:0;border:0;border-radius:50%;background:none;color:rgba(34,36,59,.55);font-family:inherit;font-size:22px;line-height:1;cursor:pointer;transition:background .15s,color .15s;}" +
+    ".ca-dock-x:hover{background:rgba(34,36,59,.09);color:#22243B;}" +
+    ".ca-mini{position:fixed;right:24px;bottom:24px;z-index:300;display:none;align-items:center;justify-content:center;width:52px;height:52px;padding:0;border:0;border-radius:50%;background:#D3D7DF;box-shadow:0 10px 28px rgba(0,0,0,.5),0 0 0 2px rgba(240,110,8,0);cursor:pointer;transition:box-shadow .2s;}" +
+    ".ca-mini:hover,.ca-mini:focus-visible{outline:none;box-shadow:0 10px 28px rgba(0,0,0,.5),0 0 0 2px rgba(240,110,8,.7);}" +
     "@media(min-width:861px){.ca-dock-x{display:inline-flex;}" +
     "html.ca-min .ca-dock{display:none;}html.ca-min .ca-mini{display:inline-flex;}html.ca-min .ca-mini.hide{display:none;}" +
     "html.ca-min body{padding-bottom:0;}}" +
     "@media(max-width:860px){.ca-dock{width:auto;max-width:none;height:50px;padding:0 18px 0 14px;gap:9px;cursor:pointer;}" +
     ".ca-dock-in,.ca-dock-go,.ca-dock-tag{display:none;}" +
     ".ca-dock-lbl{display:block;font-size:14.5px;font-weight:600;line-height:1.15;white-space:nowrap;text-align:left;}" +
-    ".ca-dock-lbl small{display:block;margin-top:2px;font-size:11.5px;font-weight:400;line-height:1.2;color:rgba(20,22,28,.68);}" +
+    ".ca-dock-lbl small{display:block;margin-top:2px;font-size:11.5px;font-weight:400;line-height:1.2;color:rgba(34,36,59,.68);}" +
     // Телефон: пилюля перекрывала последнюю видимую строку на каждой странице
     // (на доске — котировку, в выпусках — название). Теперь она уходит вниз при
     // прокрутке вниз и возвращается при прокрутке вверх; внизу страницы — запас,
@@ -137,106 +137,106 @@
     // и из дерева скринридера (opacity+pointer-events этого не делали — A.6).
     // Небольшое окно в правом нижнем углу (Руслан: «сделай маленькую, она всё мешает смотреть»):
     // 360×480, страница видна почти целиком.
-    ".ca-panel{position:fixed;right:20px;bottom:20px;z-index:301;width:360px;max-width:calc(100vw - 32px);height:480px;max-height:calc(100dvh - 40px);background:#ECEEF2;color:#14161C;color-scheme:light;border:1px solid rgba(20,22,28,.12);border-radius:16px;box-shadow:0 20px 50px rgba(0,0,0,.5);display:flex;flex-direction:column;overflow:hidden;font-family:'Onest',system-ui,sans-serif;opacity:0;visibility:hidden;transform:translateY(14px) scale(.98);transform-origin:bottom right;transition:opacity .2s,transform .22s cubic-bezier(.16,1,.3,1),visibility 0s linear .22s;pointer-events:none;}" +
+    ".ca-panel{position:fixed;right:20px;bottom:20px;z-index:301;width:360px;max-width:calc(100vw - 32px);height:480px;max-height:calc(100dvh - 40px);background:#ECEEF2;color:#22243B;color-scheme:light;border:1px solid rgba(34,36,59,.12);border-radius:2px;box-shadow:0 20px 50px rgba(0,0,0,.5);display:flex;flex-direction:column;overflow:hidden;font-family:'Onest',system-ui,sans-serif;opacity:0;visibility:hidden;transform:translateY(14px) scale(.98);transform-origin:bottom right;transition:opacity .2s,transform .22s cubic-bezier(.16,1,.3,1),visibility 0s linear .22s;pointer-events:none;}" +
     ".ca-panel.on{opacity:1;visibility:visible;transform:none;pointer-events:auto;transition:opacity .2s,transform .22s cubic-bezier(.16,1,.3,1),visibility 0s;}" +
-    ".ca-head{display:flex;align-items:center;gap:10px;padding:9px 10px 9px 14px;border-bottom:1px solid rgba(20,22,28,.1);flex:none;background:#E3E6EC;}" +
-    ".ca-ava{width:32px;height:32px;border-radius:9px;background:#14161C;display:flex;align-items:center;justify-content:center;flex:none;}" +
+    ".ca-head{display:flex;align-items:center;gap:10px;padding:9px 10px 9px 14px;border-bottom:1px solid rgba(34,36,59,.1);flex:none;background:#E3E6EC;}" +
+    ".ca-ava{width:32px;height:32px;border-radius:2px;background:#22243B;display:flex;align-items:center;justify-content:center;flex:none;}" +
     ".ca-ttl-row{display:flex;align-items:center;gap:7px;}" +
-    ".ca-ttl{font-family:'Rubik','Onest',sans-serif;font-weight:600;font-size:14.5px;color:#14161C;}" +
-    ".ca-sub{font-size:12px;color:rgba(20,22,28,.62);margin-top:1px;}" +
-    ".ca-x{margin-left:auto;width:44px;height:44px;border:0;background:none;color:rgba(20,22,28,.55);font-size:20px;line-height:1;cursor:pointer;border-radius:8px;flex:none;}" +
-    ".ca-x:hover{color:#14161C;background:rgba(20,22,28,.07);}" +
+    ".ca-ttl{font-family:Montserrat,'Onest',sans-serif;font-weight:500;font-size:13.6px;color:#22243B;}" +
+    ".ca-sub{font-size:12px;color:rgba(34,36,59,.62);margin-top:1px;}" +
+    ".ca-x{margin-left:auto;width:44px;height:44px;border:0;background:none;color:rgba(34,36,59,.55);font-size:20px;line-height:1;cursor:pointer;border-radius:2px;flex:none;}" +
+    ".ca-x:hover{color:#22243B;background:rgba(34,36,59,.07);}" +
     /* Клавиатурный фокус: у кнопок виджета его не было вовсе (outline:none на
        полях, ни одного правила :focus-visible), а страницы объявляют рамку
        только на <a> — виджет выпадал из обхода незаметно для глаза. */
-    ".ca-dock-go:focus-visible,.ca-x:focus-visible,.ca-send:focus-visible,.ca-discuss:focus-visible,.ca-sug button:focus-visible{outline:2px solid #EE7D1B;outline-offset:3px;}" +
-    ".ca-in:focus-visible,.ca-lead input:focus-visible{outline:2px solid #EE7D1B;outline-offset:1px;}" +
+    ".ca-dock-go:focus-visible,.ca-x:focus-visible,.ca-send:focus-visible,.ca-discuss:focus-visible,.ca-sug button:focus-visible{outline:2px solid #F06E08;outline-offset:3px;}" +
+    ".ca-in:focus-visible,.ca-lead input:focus-visible{outline:2px solid #F06E08;outline-offset:1px;}" +
     /* — лента сообщений — */
     ".ca-log{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;}" +
-    ".ca-msg{max-width:88%;font-size:13px;line-height:1.55;padding:9px 13px;border-radius:14px;white-space:pre-wrap;word-wrap:break-word;}" +
-    ".ca-msg.u{align-self:flex-end;background:#EE7D1B;color:#0C0A08;border-bottom-right-radius:5px;}" +
-    ".ca-msg.a{align-self:flex-start;background:#F8F9FB;color:#14161C;border:1px solid rgba(20,22,28,.08);border-bottom-left-radius:5px;}" +
+    ".ca-msg{max-width:88%;font-size:13px;line-height:1.55;padding:9px 13px;border-radius:2px;white-space:pre-wrap;word-wrap:break-word;}" +
+    ".ca-msg.u{align-self:flex-end;background:#F06E08;color:#191A2F;border-bottom-right-radius:2px;}" +
+    ".ca-msg.a{align-self:flex-start;background:#F8F9FB;color:#22243B;border:1px solid rgba(34,36,59,.08);border-bottom-left-radius:2px;}" +
     // оранжевый витрины на светлом не держит контраст для текста — ссылки темнее (4,6:1)
-    ".ca-msg.a a{color:#B4580B;}" +
-    ".ca-msg.a b{color:#14161C;font-weight:600;}" +
+    ".ca-msg.a a{color:#B95404;}" +
+    ".ca-msg.a b{color:#22243B;font-weight:600;}" +
     // кнопка one-pager под расчётом цены
-    ".ca-msg.a a.ca-op{display:inline-flex;align-items:center;gap:7px;min-height:40px;padding:0 14px;border-radius:10px;border:1px solid rgba(238,125,27,.6);background:#FFF4EA;color:#B4580B;font-weight:600;font-size:13px;text-decoration:none;white-space:nowrap;transition:background .15s,border-color .15s;}" +
-    ".ca-msg.a a.ca-op:hover{background:#FFE8D4;border-color:#EE7D1B;}" +
-    ".ca-msg.a a.ca-op:focus-visible{outline:2px solid #EE7D1B;outline-offset:2px;}" +
+    ".ca-msg.a a.ca-op{display:inline-flex;align-items:center;gap:7px;min-height:40px;padding:0 14px;border-radius:2px;border:1px solid rgba(240,110,8,.6);background:#FFF1E5;color:#B95404;font-weight:600;font-size:13px;text-decoration:none;white-space:nowrap;transition:background .15s,border-color .15s;}" +
+    ".ca-msg.a a.ca-op:hover{background:#FFE4CF;border-color:#F06E08;}" +
+    ".ca-msg.a a.ca-op:focus-visible{outline:2px solid #F06E08;outline-offset:2px;}" +
     ".ca-msg.a a.ca-op svg{width:15px;height:15px;flex:none;}" +
     /* — подсказки-вопросы — */
     ".ca-sug{display:flex;flex-direction:column;gap:8px;align-items:flex-start;}" +
-    ".ca-sug button{border:1px solid rgba(20,22,28,.14);background:#F8F9FB;color:rgba(20,22,28,.86);border-radius:12px;padding:10px 12px;min-height:44px;font-family:inherit;font-size:12.5px;line-height:1.4;cursor:pointer;text-align:left;transition:border-color .15s,color .15s,background .15s;}" +
-    ".ca-sug button:hover{border-color:rgba(238,125,27,.7);color:#14161C;background:#FFF6EE;}" +
+    ".ca-sug button{border:1px solid rgba(34,36,59,.14);background:#F8F9FB;color:rgba(34,36,59,.86);border-radius:2px;padding:10px 12px;min-height:44px;font-family:inherit;font-size:12.5px;line-height:1.4;cursor:pointer;text-align:left;transition:border-color .15s,color .15s,background .15s;}" +
+    ".ca-sug button:hover{border-color:rgba(240,110,8,.7);color:#22243B;background:#FFF3E9;}" +
     ".ca-sug button svg{flex:none;margin-right:8px;vertical-align:-1px;}" +
     /* — «думает»: мигающий блок-курсор терминала + бегущая полоса; фразы меняются
          по мере ожидания (ответ провайдера может идти до ~15 c) — */
-    ".ca-typing{align-self:flex-start;display:flex;flex-direction:column;align-items:flex-start;gap:7px;min-width:168px;padding:10px 14px;background:#F8F9FB;border:1px solid rgba(20,22,28,.08);border-radius:14px;border-bottom-left-radius:5px;font-size:12px;color:rgba(20,22,28,.58);font-family:'JetBrains Mono',monospace;}" +
+    ".ca-typing{align-self:flex-start;display:flex;flex-direction:column;align-items:flex-start;gap:7px;min-width:168px;padding:10px 14px;background:#F8F9FB;border:1px solid rgba(34,36,59,.08);border-radius:2px;border-bottom-left-radius:2px;font-size:12px;color:rgba(34,36,59,.58);font-family:'JetBrains Mono',monospace;}" +
     ".ca-typing .tl{display:flex;align-items:center;gap:2px;}" +
     ".ca-typing .tx{transition:opacity .16s ease;}" +
-    ".ca-typing .cur{color:#EE7D1B;animation:caCaret 1s steps(1) infinite;}" +
-    ".ca-typing .tb{position:relative;width:100%;height:2px;border-radius:2px;background:rgba(20,22,28,.1);overflow:hidden;}" +
-    ".ca-typing .tb::after{content:'';position:absolute;top:0;bottom:0;left:0;width:38%;border-radius:2px;background:linear-gradient(90deg,transparent,#EE7D1B,transparent);animation:caScan 1.5s ease-in-out infinite;}" +
+    ".ca-typing .cur{color:#F06E08;animation:caCaret 1s steps(1) infinite;}" +
+    ".ca-typing .tb{position:relative;width:100%;height:2px;border-radius:2px;background:rgba(34,36,59,.1);overflow:hidden;}" +
+    ".ca-typing .tb::after{content:'';position:absolute;top:0;bottom:0;left:0;width:38%;border-radius:2px;background:linear-gradient(90deg,transparent,#F06E08,transparent);animation:caScan 1.5s ease-in-out infinite;}" +
     "@keyframes caCaret{50%{opacity:0;}}" +
     "@keyframes caScan{0%{transform:translateX(-100%);}100%{transform:translateX(265%);}}" +
     "@media(prefers-reduced-motion:reduce){.ca-typing .cur,.ca-typing .tb::after{animation:none;}.ca-typing .tb::after{width:100%;opacity:.5;}}" +
     /* — низ — */
-    ".ca-foot{flex:none;border-top:1px solid rgba(20,22,28,.1);padding:8px 10px;background:#E3E6EC;}" +
+    ".ca-foot{flex:none;border-top:1px solid rgba(34,36,59,.1);padding:8px 10px;background:#E3E6EC;}" +
     ".ca-row{display:flex;gap:8px;align-items:flex-end;}" +
-    ".ca-in{flex:1;resize:none;max-height:96px;background:#F8F9FB;border:1px solid rgba(20,22,28,.16);border-radius:12px;color:#14161C;font-family:inherit;font-size:16px;line-height:1.4;padding:9px 12px;outline:none;}" +
-    ".ca-in::placeholder{color:rgba(20,22,28,.52);}" +
-    ".ca-in:focus{border-color:rgba(238,125,27,.7);}" +
+    ".ca-in{flex:1;resize:none;max-height:96px;background:#F8F9FB;border:1px solid rgba(34,36,59,.16);border-radius:2px;color:#22243B;font-family:inherit;font-size:16px;line-height:1.4;padding:9px 12px;outline:none;}" +
+    ".ca-in::placeholder{color:rgba(34,36,59,.52);}" +
+    ".ca-in:focus{border-color:rgba(240,110,8,.7);}" +
     ".ca-in:disabled{opacity:.6;}" +
-    ".ca-send{flex:none;width:44px;height:44px;border:0;border-radius:11px;background:#EE7D1B;color:#0C0A08;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;}" +
-    ".ca-send:hover{background:#F58E33;}.ca-send:disabled{opacity:.4;cursor:default;}" +
+    ".ca-send{flex:none;width:44px;height:44px;border:0;border-radius:2px;background:#F06E08;color:#191A2F;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;}" +
+    ".ca-send:hover{background:#F48834;}.ca-send:disabled{opacity:.4;cursor:default;}" +
     ".ca-send svg{width:17px;height:17px;}" +
-    ".ca-note{margin:6px 2px 0;font-size:11px;line-height:1.45;color:rgba(20,22,28,.6);text-align:center;}" +
+    ".ca-note{margin:6px 2px 0;font-size:11px;line-height:1.45;color:rgba(34,36,59,.6);text-align:center;}" +
     /* — кнопка и форма «Обсудить с Румбергом» — */
-    ".ca-discuss{width:100%;margin-bottom:8px;background:none;border:1px solid rgba(238,125,27,.6);color:#B4580B;border-radius:11px;padding:0 14px;min-height:44px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:background .15s,border-color .15s;}" +
-    ".ca-discuss:hover{background:#FFF1E4;border-color:#EE7D1B;}" +
+    ".ca-discuss{width:100%;margin-bottom:8px;background:none;border:1px solid rgba(240,110,8,.6);color:#B95404;border-radius:2px;padding:0 14px;min-height:44px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;transition:background .15s,border-color .15s;}" +
+    ".ca-discuss:hover{background:#FFEDDF;border-color:#F06E08;}" +
     ".ca-discuss svg{width:15px;height:15px;}" +
-    ".ca-lead{align-self:stretch;background:#FFF4EA;border:1px solid rgba(238,125,27,.4);border-radius:14px;padding:13px 14px;display:flex;flex-direction:column;gap:8px;}" +
-    ".ca-lead-t{font-size:13px;line-height:1.5;color:#14161C;}" +
-    ".ca-lead input{background:#FFFFFF;border:1px solid rgba(20,22,28,.18);border-radius:10px;color:#14161C;font-family:inherit;font-size:16px;padding:9px 11px;outline:none;}" +
-    ".ca-lead input::placeholder{color:rgba(20,22,28,.5);}" +
-    ".ca-lead input:focus{border-color:rgba(238,125,27,.7);}" +
-    ".ca-lead-send{background:#EE7D1B;color:#0C0A08;border:0;border-radius:10px;padding:9px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;}" +
-    ".ca-lead-send:hover{background:#F58E33;}.ca-lead-send:disabled{opacity:.5;cursor:default;}" +
-    ".ca-lead-ok{font-size:13px;line-height:1.55;color:#14161C;}.ca-lead-ok a{color:#B4580B;}" +
+    ".ca-lead{align-self:stretch;background:#FFF1E5;border:1px solid rgba(240,110,8,.4);border-radius:2px;padding:13px 14px;display:flex;flex-direction:column;gap:8px;}" +
+    ".ca-lead-t{font-size:13px;line-height:1.5;color:#22243B;}" +
+    ".ca-lead input{background:#FFFFFF;border:1px solid rgba(34,36,59,.18);border-radius:2px;color:#22243B;font-family:inherit;font-size:16px;padding:9px 11px;outline:none;}" +
+    ".ca-lead input::placeholder{color:rgba(34,36,59,.5);}" +
+    ".ca-lead input:focus{border-color:rgba(240,110,8,.7);}" +
+    ".ca-lead-send{background:#F06E08;color:#191A2F;border:0;border-radius:2px;padding:9px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;}" +
+    ".ca-lead-send:hover{background:#F48834;}.ca-lead-send:disabled{opacity:.5;cursor:default;}" +
+    ".ca-lead-ok{font-size:13px;line-height:1.55;color:#22243B;}.ca-lead-ok a{color:#B95404;}" +
     "@media(max-width:480px){.ca-panel{right:8px;left:8px;bottom:8px;width:auto;max-width:none;height:min(560px,calc(100dvh - 16px));}}" +
     /* — оговорка про CALL/PUT внутри чата — тише обычной реплики: пунктирная рамка без заливки — */
-    ".ca-msg.a.n{max-width:92%;background:none;border:1px dashed rgba(20,22,28,.24);color:rgba(20,22,28,.68);font-size:12.5px;line-height:1.5;}" +
+    ".ca-msg.a.n{max-width:92%;background:none;border:1px dashed rgba(34,36,59,.24);color:rgba(34,36,59,.68);font-size:12.5px;line-height:1.5;}" +
     /* — телефон, пустой чат: вопрос и три умения у большого пальца (Dribbble: Document Scanner
          и AI Assistant от Nixtio). Вместо приветствия в пять строк и пунктирной оговорки — */
     ".ca-hero{flex:1;display:flex;flex-direction:column;justify-content:space-between;gap:16px;min-height:100%;}" +
     ".ca-hero-top{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:18px 8px 4px;}" +
-    ".ca-hero-star{width:58px;height:58px;border-radius:17px;background:#14161C;display:grid;place-items:center;box-shadow:0 12px 30px rgba(238,125,27,.28);}" +
-    ".ca-hero-q{margin:16px 0 0;font-family:'Rubik','Onest',sans-serif;font-size:30px;font-weight:600;line-height:1.15;letter-spacing:-.01em;color:#14161C;}" +
-    ".ca-hero-ty{margin:10px 0 0;min-height:1.5em;font-size:14.5px;line-height:1.5;color:rgba(20,22,28,.62);}" +
-    ".ca-hero-ty i{font-style:normal;color:#EE7D1B;animation:caCaret 1s steps(1) infinite;}" +
+    ".ca-hero-star{width:58px;height:58px;border-radius:2px;background:#22243B;display:grid;place-items:center;box-shadow:none;}" +
+    ".ca-hero-q{margin:16px 0 0;font-family:Montserrat,'Onest',sans-serif;font-size:28.2px;font-weight:500;line-height:1.15;letter-spacing:-0.01em;color:#22243B;}" +
+    ".ca-hero-ty{margin:10px 0 0;min-height:1.5em;font-size:14.5px;line-height:1.5;color:rgba(34,36,59,.62);}" +
+    ".ca-hero-ty i{font-style:normal;color:#F06E08;animation:caCaret 1s steps(1) infinite;}" +
     ".ca-cards{display:flex;flex-direction:column;gap:8px;}" +
-    ".ca-card{display:flex;align-items:center;gap:12px;width:100%;min-height:66px;padding:10px 14px 10px 10px;border:1px solid rgba(20,22,28,.1);border-radius:16px;background:#F8F9FB;color:#14161C;text-align:left;font-family:inherit;cursor:pointer;transition:border-color .15s,background .15s;}" +
-    ".ca-card:hover,.ca-card:active{border-color:rgba(238,125,27,.7);background:#FFF6EE;}" +
-    ".ca-card:focus-visible{outline:2px solid #EE7D1B;outline-offset:2px;}" +
-    ".ca-card-ic{flex:none;width:42px;height:42px;border-radius:12px;background:#14161C;color:#EE7D1B;display:grid;place-items:center;}" +
+    ".ca-card{display:flex;align-items:center;gap:12px;width:100%;min-height:66px;padding:10px 14px 10px 10px;border:1px solid rgba(34,36,59,.1);border-radius:2px;background:#F8F9FB;color:#22243B;text-align:left;font-family:inherit;cursor:pointer;transition:border-color .15s,background .15s;}" +
+    ".ca-card:hover,.ca-card:active{border-color:rgba(240,110,8,.7);background:#FFF3E9;}" +
+    ".ca-card:focus-visible{outline:2px solid #F06E08;outline-offset:2px;}" +
+    ".ca-card-ic{flex:none;width:42px;height:42px;border-radius:2px;background:#22243B;color:#F06E08;display:grid;place-items:center;}" +
     ".ca-card-t{flex:1;min-width:0;}" +
     ".ca-card-t b{display:block;font-size:15px;font-weight:600;line-height:1.25;}" +
-    ".ca-card-t small{display:block;margin-top:2px;font-size:12.5px;line-height:1.35;color:rgba(20,22,28,.6);}" +
+    ".ca-card-t small{display:block;margin-top:2px;font-size:12.5px;line-height:1.35;color:rgba(34,36,59,.6);}" +
     "@media(prefers-reduced-motion:reduce){.ca-hero-ty i{animation:none;}}" +
     /* — условия расчёта чипами под ответом с ценой (Dribbble: PowerPeak, «AI Workout Builder» —
          из свободного текста AI выделяет параметры чипами) — */
     ".ca-pp{align-self:flex-start;max-width:96%;margin-top:-2px;}" +
     ".ca-pp-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px;}" +
-    ".ca-pp-k{font-size:12px;color:rgba(20,22,28,.55);margin-right:2px;}" +
-    ".ca-chip{display:inline-flex;align-items:center;gap:5px;min-height:40px;padding:0 12px;border-radius:20px;border:1px solid rgba(20,22,28,.16);background:#F8F9FB;color:#14161C;font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:border-color .15s,background .15s;}" +
-    ".ca-chip:hover{border-color:rgba(238,125,27,.7);}" +
-    ".ca-chip[aria-expanded=true]{border-color:#EE7D1B;background:#FFF1E4;}" +
+    ".ca-pp-k{font-size:12px;color:rgba(34,36,59,.55);margin-right:2px;}" +
+    ".ca-chip{display:inline-flex;align-items:center;gap:5px;min-height:40px;padding:0 12px;border-radius:2px;border:1px solid rgba(34,36,59,.16);background:#F8F9FB;color:#22243B;font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:border-color .15s,background .15s;}" +
+    ".ca-chip:hover{border-color:rgba(240,110,8,.7);}" +
+    ".ca-chip[aria-expanded=true]{border-color:#F06E08;background:#FFEDDF;}" +
     ".ca-chip svg{flex:none;opacity:.6;}" +
     ".ca-pp-opts{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}" +
     ".ca-pp-opts[hidden]{display:none;}" +
-    ".ca-pp-opts button{min-height:40px;padding:0 14px;border-radius:11px;border:1px solid rgba(238,125,27,.55);background:#FFF4EA;color:#B4580B;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;}" +
-    ".ca-pp-opts button[aria-current]{border-color:rgba(20,22,28,.14);background:#F8F9FB;color:rgba(20,22,28,.45);cursor:default;}" +
-    ".ca-chip:focus-visible,.ca-pp-opts button:focus-visible{outline:2px solid #EE7D1B;outline-offset:2px;}" +
+    ".ca-pp-opts button{min-height:40px;padding:0 14px;border-radius:2px;border:1px solid rgba(240,110,8,.55);background:#FFF1E5;color:#B95404;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;}" +
+    ".ca-pp-opts button[aria-current]{border-color:rgba(34,36,59,.14);background:#F8F9FB;color:rgba(34,36,59,.45);cursor:default;}" +
+    ".ca-chip:focus-visible,.ca-pp-opts button:focus-visible{outline:2px solid #F06E08;outline-offset:2px;}" +
     "@media(prefers-reduced-motion:reduce){.ca-panel{transition:none;}}";
 
   function inject() {
@@ -248,10 +248,10 @@
   /* фирменная 4-лучевая звезда (одна, без «искр-компаньонов» — это знак дома, не спарклы) */
   var ICON_STAR_SM =
     '<svg width="18" height="18" viewBox="0 0 26 26" fill="none" aria-hidden="true">' +
-    '<path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>';
+    '<path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#F06E08"/></svg>';
   var ICON_STAR_XS =
     '<svg width="9" height="9" viewBox="0 0 26 26" fill="none" aria-hidden="true">' +
-    '<path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>';
+    '<path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#F06E08"/></svg>';
   var ICON_SEND = '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>';
   var ICON_CHAT = '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-3.9-.9L3 21l1.9-5.6A8.5 8.5 0 0 1 12.5 3 8.38 8.38 0 0 1 21 11.5z"/></svg>';
 
@@ -292,7 +292,7 @@
   var IC_BOOK = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4.5h5.5a2 2 0 0 1 2 2V20a1.5 1.5 0 0 0-1.5-1.5H5zM19 4.5h-5.5a2 2 0 0 0-2 2V20a1.5 1.5 0 0 1 1.5-1.5H19z"/></svg>';
   var IC_PAY = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 18H10L19.5 6"/><path d="M3.5 13.5H20.5" stroke-dasharray="2 3" opacity=".55"/></svg>';
   var IC_FIND = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.5-4.5"/></svg>';
-  var IC_STAR_HERO = '<svg width="28" height="28" viewBox="0 0 26 26" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>';
+  var IC_STAR_HERO = '<svg width="28" height="28" viewBox="0 0 26 26" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#F06E08"/></svg>';
   var CARDS = [
     { t: "Объяснить продукт", s: "«Чем автоколл отличается от защиты капитала?»", q: EXAMPLES[0], ic: IC_BOOK },
     { t: "Посчитать цену", s: "CALL, PUT и защита капитала на один актив · «колл на Сбербанк на 2 года»", q: EXAMPLES[1], ic: IC_PAY, qual: true },
@@ -679,7 +679,7 @@
     if (limOv > 0) CFG.msgLimit = limOv;  // локальное демо: ?chatlimit=2
 
     var ICON_STAR_20 = '<svg width="20" height="20" viewBox="0 0 26 26" aria-hidden="true">' +
-      '<path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>';
+      '<path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#F06E08"/></svg>';
     var ICON_ARROW = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
     var REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 

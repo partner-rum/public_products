@@ -79,7 +79,7 @@
     menu.innerHTML = items.map(function (i) {
       var cur = i.href.split("?")[0] === here ? ' aria-current="page"' : "";
       return '<a href="' + i.href + '"' + (i.cta ? ' class="item-cta"' : "") + cur + ">" + i.text +
-        '<svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>';
+        '<svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3.46 10.54 L10.54 3.46 M4.88 3.46 H10.54 V9.12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>';
     }).join("");
     document.body.appendChild(backdrop);
     document.body.appendChild(menu);
@@ -112,22 +112,22 @@
     s.id = "nav-about-css";
     s.textContent =
       // Пилюля с оранжевым контуром: заметнее серых пунктов, но тише сплошной «Доски»
-      ".nav-about{display:inline-flex;align-items:center;font-size:13px;font-weight:500;color:#F0AE72;white-space:nowrap;border:1px solid rgba(238,125,27,0.45);border-radius:999px;padding:5px 12px;transition:color .2s,border-color .2s,background .2s;}" +
-      ".nav-about:hover{color:#0C0A08;background:#EE7D1B;border-color:#EE7D1B;}" +
-      ".nav-burger{display:none;align-items:center;justify-content:center;width:38px;height:38px;border:1px solid rgba(255,255,255,0.14);border-radius:6px;background:transparent;cursor:pointer;padding:0;}" +
+      ".nav-about{display:inline-flex;align-items:center;font-size:13px;font-weight:500;color:#F5A76A;white-space:nowrap;border:1px solid rgba(240,110,8,0.45);border-radius:2px;padding:5px 12px;transition:color .2s,border-color .2s,background .2s;}" +
+      ".nav-about:hover{color:#191A2F;background:#F06E08;border-color:#F06E08;}" +
+      ".nav-burger{display:none;align-items:center;justify-content:center;width:38px;height:38px;border:1px solid rgba(255,255,255,0.14);border-radius:2px;background:transparent;cursor:pointer;padding:0;}" +
       ".nav-burger:hover{border-color:rgba(255,255,255,0.30);}" +
       ".nav-backdrop{position:fixed;inset:0;z-index:39;background:rgba(0,0,0,0.45);opacity:0;pointer-events:none;transition:opacity .18s;}" +
       ".nav-backdrop.open{opacity:1;pointer-events:auto;}" +
-      ".nav-menu{position:fixed;right:12px;left:12px;z-index:41;background:#14161C;border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:6px;box-shadow:0 16px 40px rgba(0,0,0,0.55);opacity:0;transform:translateY(-6px);pointer-events:none;transition:opacity .18s,transform .18s cubic-bezier(0.16,1,0.3,1);}" +
+      ".nav-menu{position:fixed;right:12px;left:12px;z-index:41;background:#22243B;border:1px solid rgba(255,255,255,0.12);border-radius:2px;padding:6px;box-shadow:0 16px 40px rgba(0,0,0,0.55);opacity:0;transform:translateY(-6px);pointer-events:none;transition:opacity .18s,transform .18s cubic-bezier(0.16,1,0.3,1);}" +
       ".nav-menu.open{opacity:1;transform:none;pointer-events:auto;}" +
-      ".nav-menu a{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 14px;border-radius:8px;font-family:inherit;font-size:15px;font-weight:500;color:#F2F3F7;text-decoration:none;}" +
+      ".nav-menu a{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 14px;border-radius:2px;font-family:inherit;font-size:15px;font-weight:500;color:#F2F3F7;text-decoration:none;}" +
       ".nav-menu a+a{border-top:1px solid rgba(255,255,255,0.06);}" +
       ".nav-menu a:hover{background:rgba(255,255,255,0.06);}" +
       ".nav-menu a svg path{stroke:rgba(242,243,247,0.35);}" +
-      '.nav-menu a[aria-current="page"]{color:#EE7D1B;}' +
-      '.nav-menu a[aria-current="page"] svg path{stroke:#EE7D1B;}' +
-      ".nav-menu a.item-cta{color:#EE7D1B;font-weight:600;}" +
-      ".nav-menu a.item-cta svg path{stroke:#EE7D1B;}" +
+      '.nav-menu a[aria-current="page"]{color:#F06E08;}' +
+      '.nav-menu a[aria-current="page"] svg path{stroke:#F06E08;}' +
+      ".nav-menu a.item-cta{color:#F06E08;font-weight:600;}" +
+      ".nav-menu a.item-cta svg path{stroke:#F06E08;}" +
       // Порог 900, а не 640: с шестым пунктом («Ставки») ряд перестал влезать уже
       // на 760–900px и давал горизонтальный скролл. Ширина ряда ~890px.
       ".nav-in .brand-tag{font-size:13px;font-weight:400;color:rgba(242,243,247,0.55);padding-left:9px;margin-left:9px;border-left:1px solid rgba(255,255,255,0.14);white-space:nowrap;}" +

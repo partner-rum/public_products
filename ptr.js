@@ -37,7 +37,7 @@
    выпусках, выпуск на размещении. Там жест работает, когда слой прокручен до верха,
    а после перезагрузки якорь открывает тот же выпуск.
 
-   Подключение: <script src="ptr.js?v=2" defer></script> перед </body>. В админке
+   Подключение: <script src="ptr.js?v=3" defer></script> перед </body>. В админке
    модуля нет намеренно — там формы, случайный жест стёр бы набранное. */
 (function () {
   "use strict";
@@ -62,7 +62,7 @@
     ".panel-wrap.open,.panel.open{overscroll-behavior-y:none}" +
     ".ptr-clip{position:fixed;left:0;right:0;height:100px;overflow:hidden;pointer-events:none;z-index:9000}" +
     ".ptr{position:absolute;left:50%;top:0;display:flex;align-items:center;gap:9px;height:40px;padding:0 16px 0 6px;" +
-      "box-sizing:border-box;border-radius:999px;background:#1B1E25;border:1px solid rgba(255,255,255,.09);" +
+      "box-sizing:border-box;border-radius:2px;background:#292C44;border:1px solid rgba(255,255,255,.09);" +
       "box-shadow:0 12px 28px -10px rgba(0,0,0,.75);color:rgba(242,243,247,.72);" +
       "font:500 14px/1 'Onest',system-ui,-apple-system,sans-serif;letter-spacing:0;white-space:nowrap;" +
       "transform:translate(-50%,-58px);opacity:0;will-change:transform,opacity;" +
@@ -103,9 +103,9 @@
       '<div class="ptr" aria-hidden="true"><span class="ptr-ic">' +
         '<svg class="ptr-ring" viewBox="0 0 28 28">' +
           '<circle class="ptr-tr" cx="14" cy="14" r="12" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="2"/>' +
-          '<circle class="ptr-pr" cx="14" cy="14" r="12" fill="none" stroke="#EE7D1B" stroke-width="2" stroke-linecap="round"' +
+          '<circle class="ptr-pr" cx="14" cy="14" r="12" fill="none" stroke="#F06E08" stroke-width="2" stroke-linecap="round"' +
             ' stroke-dasharray="' + C + '" stroke-dashoffset="' + C + '" transform="rotate(-90 14 14)"/></svg>' +
-        '<svg class="ptr-star" viewBox="0 0 28 28"><path d="' + STAR + '" fill="#EE7D1B" transform="translate(14 14) scale(.5) translate(-13 -13)"/></svg>' +
+        '<svg class="ptr-star" viewBox="0 0 28 28"><path d="' + STAR + '" fill="#F06E08" transform="translate(14 14) scale(.5) translate(-13 -13)"/></svg>' +
         '<svg class="ptr-mark" viewBox="0 0 28 28">' +
           '<path class="ptr-ok" d="M9.2 14.4l3.1 3.1 6.5-6.6" fill="none" stroke="#55C08A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>' +
           '<g class="ptr-er" fill="#E0705A"><rect x="13" y="7.5" width="2" height="8.5" rx="1"/><circle cx="14" cy="19.6" r="1.3"/></g></svg>' +

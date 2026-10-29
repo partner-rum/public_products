@@ -23,28 +23,29 @@
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="theme-color" content="#0B0C10">
+<meta name="theme-color" content="#191A2F">
 <link href="fonts/fonts.css?v=2" rel="stylesheet">
+<link href="brand/brand.css?v=1" rel="stylesheet">
 <script src="metrika.js?v=10" defer></script>
 <style>
   :root {
-    --canvas: #0B0C10; --card: #14161C;
+    --canvas: #191A2F; --card: #22243B;
     --ink: #F2F3F7; --hushed: rgba(242,243,247,0.64); --faint: rgba(242,243,247,0.56);
     --border: rgba(255,255,255,0.11); --border-soft: rgba(255,255,255,0.07);
-    --solar: #EE7D1B; --solar-l: #F58E33; --blue: #4F86E6; --green: #55C08A;
+    --solar: #F06E08; --solar-l: #F48834; --blue: #4F86E6; --green: #55C08A;
     --f-body: 'Onest', system-ui, sans-serif;
     --f-mono: 'JetBrains Mono', Consolas, monospace;
-    --display: 'Rubik', 'Onest', system-ui, sans-serif;
+    --display: Montserrat, 'Onest', system-ui, sans-serif;
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--canvas); color: var(--ink); font-family: var(--f-body); -webkit-font-smoothing: antialiased; }
   a { text-decoration: none; color: inherit; }
   a:focus-visible, button:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
-  .skip { position:absolute; left:-9999px; top:0; background:var(--card); color:var(--ink); padding:10px 14px; border-radius:6px; z-index:99; }
+  .skip { position:absolute; left:-9999px; top:0; background:var(--card); color:var(--ink); padding:10px 14px; border-radius:2px; z-index:99; }
   .skip:focus { left:12px; top:10px; }
 
   /* шапка — тот же ряд, что на company.html */
-  .nav { position: sticky; top: 0; z-index: 20; background: rgba(11,12,16,0.82); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); }
+  .nav { position: sticky; top: 0; z-index: 20; background: rgba(25,26,47,0.82); backdrop-filter: none; -webkit-backdrop-filter: none; border-bottom: 1px solid var(--border); }
   .nav-in { max-width: 1080px; margin: 0 auto; padding: 0 44px; height: 62px; display: flex; align-items: center; gap: 12px; }
   .brand { display: flex; align-items: center; gap: 10px; }
   .brand-name { font-size: 14.5px; font-weight: 600; }
@@ -54,28 +55,28 @@
   .topnav a { color: var(--hushed); transition: color .2s; }
   .topnav a:hover { color: var(--ink); }
   .topnav a.on { color: var(--ink); }
-  .btn-solar { background: var(--solar); color: #0C0A08 !important; border-radius: 6px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 7px; transition: background .3s ease-in-out; }
+  .btn-solar { background: var(--solar); color: #191A2F !important; border-radius: 2px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 7px; transition: background .3s ease-in-out; }
   .btn-solar:hover { background: var(--solar-l); }
 
   .wrap { max-width: 1000px; margin: 0 auto; padding: 0 24px 80px; }
-  h1 { margin: 46px 0 14px; font-family: var(--display); font-size: clamp(27px, 4vw, 36px); font-weight: 600; letter-spacing: -0.02em; line-height: 1.12; }
+  h1 { margin: 46px 0 14px; font-family: var(--display); font-size: clamp(27px, 4vw, 36px); font-weight: 500; letter-spacing: -0.01em; line-height: 1.12; }
   .lead { margin: 0; font-size: 16px; line-height: 1.62; color: var(--hushed); max-width: 660px; }
   .lead b { color: var(--ink); font-weight: 600; }
 
-  .cap { margin: 46px 0 14px; font-family: var(--f-mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); display: flex; align-items: center; gap: 8px; }
+  .cap { margin: 46px 0 14px; font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--faint); display: flex; align-items: center; gap: 8px; }
   .cap::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--solar); }
 
   /* ДВА ТРЕКА — ядро страницы */
   .tracks { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px; }
-  .trk { scroll-margin-top: 78px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px 24px 22px; display: flex; flex-direction: column; min-width: 0; }
-  .trk-t { font-family: var(--display); font-size: 21px; font-weight: 600; letter-spacing: -0.01em; }
+  .trk { scroll-margin-top: 78px; background: var(--card); border: 1px solid var(--border); border-radius: 2px; padding: 24px 24px 22px; display: flex; flex-direction: column; min-width: 0; }
+  .trk-t { font-family: var(--display); font-size: 19.7px; font-weight: 500; letter-spacing: -0.01em; }
   .trk-w { margin-top: 5px; font-size: 13px; line-height: 1.5; color: var(--faint); }
   .trk-l { margin: 16px 0 0; padding: 0; list-style: none; }
   .trk-l li { position: relative; padding-left: 20px; margin-bottom: 11px; font-size: 14px; line-height: 1.55; color: var(--hushed); }
   .trk-l li b { color: var(--ink); font-weight: 600; }
   .trk-l li::before { content: ""; position: absolute; left: 3px; top: 8px; width: 6px; height: 6px; border-radius: 50%; background: var(--solar); opacity: .85; }
   .trk.b .trk-l li::before { background: var(--blue); }
-  .trk-h { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border-soft); font-family: var(--f-mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); }
+  .trk-h { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border-soft); font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--faint); }
   .trk-s { margin: 11px 0 0; padding: 0; list-style: none; counter-reset: s; }
   .trk-s li { counter-increment: s; position: relative; padding-left: 26px; margin-bottom: 8px; font-size: 13.5px; line-height: 1.5; color: var(--hushed); }
   .trk-s li::before { content: counter(s); position: absolute; left: 0; top: 0; width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--border); font-family: var(--f-mono); font-size: 10.5px; display: grid; place-items: center; color: var(--faint); }
@@ -87,7 +88,7 @@
   .trk.b .ct-menu { left: auto; right: 0; }
 
   /* КАК ПРОХОДИТ СДЕЛКА */
-  .flow { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; margin-top: 18px; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .flow { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; margin-top: 18px; border: 1px solid var(--border); border-radius: 2px; overflow: hidden; }
   .fs { padding: 18px 18px 20px; border-right: 1px solid var(--border-soft); min-width: 0; }
   .fs:last-child { border-right: none; }
   .fs .n { font-family: var(--f-mono); font-size: 11px; color: var(--solar); letter-spacing: .08em; }
@@ -96,7 +97,7 @@
 
   /* ЦИФРЫ */
   .nums { display: flex; gap: 40px; flex-wrap: wrap; margin-top: 18px; padding: 22px 0; border-top: 1px solid var(--border-soft); border-bottom: 1px solid var(--border-soft); }
-  .nm .v { font-family: var(--display); font-size: 32px; font-weight: 600; letter-spacing: -0.02em; color: var(--solar); line-height: 1.05; font-variant-numeric: tabular-nums; }
+  .nm .v { font-family: var(--display); font-size: 30.1px; font-weight: 500; letter-spacing: -0.01em; color: var(--solar); line-height: 1.05; font-variant-numeric: tabular-nums; }
   .nm .k { margin-top: 6px; font-size: 12.5px; line-height: 1.45; color: var(--hushed); max-width: 190px; }
 
   /* ВОПРОСЫ */
@@ -109,8 +110,8 @@
   .faq .a { padding: 0 30px 16px 0; font-size: 14px; line-height: 1.62; color: var(--hushed); max-width: 760px; }
 
   /* ЗАКРЫВАЮЩИЙ БЛОК */
-  .end { margin-top: 46px; padding: 26px 26px 24px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
-  .end .q { font-family: var(--display); font-size: 19px; font-weight: 600; }
+  .end { margin-top: 46px; padding: 26px 26px 24px; background: var(--card); border: 1px solid var(--border); border-radius: 2px; display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .end .q { font-family: var(--display); font-size: 17.9px; font-weight: 500; }
   .end .s { margin-top: 5px; font-size: 13.5px; color: var(--hushed); max-width: 420px; line-height: 1.5; }
   .end .r { margin-left: auto; display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
   .end a.ln { color: var(--hushed); border-bottom: 1px solid var(--border); padding-bottom: 1px; }
@@ -158,7 +159,7 @@
 <header class="nav">
   <div class="nav-in">
     <a class="brand" href="index.html" aria-label="На главную">
-      <svg width="22" height="22" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#EE7D1B"/></svg>
+      <svg width="22" height="22" viewBox="0 0 26 26" fill="none" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#F06E08"/></svg>
       <span class="brand-name">Rumberg</span><span class="brand-tag">Инвестиционные решения</span>
     </a>
     <nav class="topnav">
@@ -168,7 +169,7 @@
       <a href="placements.html">Выпуски</a>
       <a href="about.html">Библиотека</a>
       <a class="btn-solar" href="board.html">Доска
-        <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 7 H12 M8 3 L12 7 L8 11" stroke="#0C0A08" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3.46 10.54 L10.54 3.46 M4.88 3.46 H10.54 V9.12" stroke="#191A2F" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
     </nav>
   </div>
 </header>
@@ -196,7 +197,7 @@
       </ol>
       <div class="trk-act">
         <span id="ct-fi"></span>
-        <a class="trk-go" href="board.html">Открыть доску →</a>
+        <a class="trk-go" href="board.html">Открыть доску ↗</a>
       </div>
     </section>
 
@@ -217,7 +218,7 @@
       </ol>
       <div class="trk-act">
         <span id="ct-ag"></span>
-        <a class="trk-go" href="guide.html">Как это устроено →</a>
+        <a class="trk-go" href="guide.html">Как это устроено ↗</a>
       </div>
     </section>
   </div>
@@ -256,7 +257,7 @@
     </div>
     <div class="r">
       <span id="ct-end"></span>
-      <a class="ln" href="https://t.me/+NHbVOoUI5IBkN2Uy" target="_blank" rel="noopener">Telegram-группа →</a>
+      <a class="ln" href="https://t.me/+NHbVOoUI5IBkN2Uy" target="_blank" rel="noopener">Telegram-группа ↗</a>
     </div>
   </div>
 </main>
@@ -285,10 +286,10 @@
     document.querySelectorAll("[data-w]").forEach(function (e) { e.textContent = w[e.getAttribute("data-w")]; });
   })();
 </script>
-<script src="contact.js?v=10"></script>
-<script src="chat.js?v=27"></script>
-<script src="search.js?v=8"></script>
-<script src="nav-about.js?v=9"></script>
+<script src="contact.js?v=11"></script>
+<script src="chat.js?v=28"></script>
+<script src="search.js?v=9"></script>
+<script src="nav-about.js?v=10"></script>
 <script>
   (function () {
     if (!window.Contact) return;
@@ -301,6 +302,6 @@
       { title: "Сотрудничество", url: base, id: "coop", label: "Написать нам" });
   })();
 </script>
-<script src="ptr.js?v=2" defer></script>
+<script src="ptr.js?v=3" defer></script>
 </body>
 </html>
