@@ -30,6 +30,12 @@ window.OFFERINGS = {
      "file": "docs/kuv-sp-1-59.pdf",
      "ext": "PDF",
      "size": "343 КБ"
+    },
+    {
+     "name": "Ключевой информационный документ (КИД)",
+     "file": "docs/kid-sp-1-59.pdf",
+     "ext": "PDF",
+     "size": "241 КБ"
     }
    ]
   }
