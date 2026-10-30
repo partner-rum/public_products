@@ -218,9 +218,12 @@
   }
 
   /* На главной интро-ролик (.intro, body.intro-lock) — это «загрузка витрины».
-     Ждём, пока он уйдёт, и только потом показываем гейт. На остальных страницах — сразу. */
+     Ждём, пока он уйдёт, и только потом показываем гейт. На остальных страницах — сразу.
+     Ролик главная вешает прямо в body, поэтому ищем «body > .intro»: класс .intro носит
+     и обычный подзаголовок на offerings, instrument, board и digest — по нему гейт
+     ждал 9 секунд страховочного таймера и всплывал посреди чтения. */
   function splashActive() {
-    return !!document.querySelector(".intro") ||
+    return !!document.querySelector("body > .intro") ||
            (document.body && document.body.classList.contains("intro-lock"));
   }
   function whenClear(cb) {

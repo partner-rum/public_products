@@ -1616,7 +1616,12 @@
     if (lnd) { csMount(o); heroWire(o); stripWire(); growWire(); }
     document.querySelectorAll(".item").forEach(el => { var on = el.getAttribute("data-id") === id; el.classList.toggle("active", on); if (on) el.setAttribute("aria-current", "true"); else el.removeAttribute("aria-current"); });
     history.replaceState(null, "", "#" + id);
-    if (fromUser && window.matchMedia("(max-width: 920px)").matches) panel.classList.add("open");
+    // Один выпуск (solo) уже стоит в странице — оверлей ему не нужен. С классом open
+    // панель становилась отдельной прокруткой (overflow-y:auto) высотой почти во всю
+    // страницу: по ссылке offerings#<id> из Telegram она прокручивалась на пару сотен
+    // пикселей и упиралась, а страницу под ней ptr.js тянуть не даёт (overscroll none).
+    var solo = document.querySelector(".layout").classList.contains("solo");
+    if (fromUser && !solo && window.matchMedia("(max-width: 920px)").matches) panel.classList.add("open");
   }
   document.getElementById("close").addEventListener("click", () => document.getElementById("panel").classList.remove("open"));
 
@@ -1639,7 +1644,7 @@
 <script src="chat.js?v=28"></script>
 <script src="search.js?v=9"></script>
 <script src="nav-about.js?v=10"></script>
-<script src="qualgate.js?v=9"></script>
+<script src="qualgate.js?v=10"></script>
 <script src="ptr.js?v=3" defer></script>
 </body>
 </html>
