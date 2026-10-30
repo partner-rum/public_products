@@ -28,6 +28,7 @@ import functools
 import http.server
 import json
 import os
+import re
 import shutil
 import socket
 import subprocess
@@ -43,7 +44,7 @@ if "--out" in _argv:
 else:
     OUT_ARG = None
 ROOT = _argv[0] if _argv else os.path.dirname(os.path.abspath(__file__))
-OUT = OUT_ARG or os.path.join(ROOT, "og-ideas-5.jpg")
+OUT = OUT_ARG or os.path.join(ROOT, "og-ideas-6.jpg")
 # Chrome умеет снимать только PNG — снимаем во временный файл и сжимаем.
 RAW = os.path.join(ROOT, "_og_ideas_raw.png")
 TPL_NAME = "_og_ideas_tmp.html"
@@ -114,10 +115,16 @@ def plural(n, one, few, many):
     return "%d %s" % (n, many)
 
 
+def nb(s):
+    """Короткие предлоги и союзы не оставляем в конце строки: «в», «и», «на» —
+    неразрывный пробел после них (заголовок переносится браузером сам)."""
+    return re.sub(r"(?<![\w-])([А-Яа-яЁёA-Za-z]{1,2}) ", "\\1\u00a0", str(s or ""))
+
+
 def fit_size(title):
     """Темы бывают длинные («Электрификация и накопители энергии») — подбираем кегль."""
     n = len(title)
-    return 84 if n <= 20 else 72 if n <= 30 else 60 if n <= 42 else 50
+    return 80 if n <= 20 else 68 if n <= 30 else 58 if n <= 42 else 48
 
 
 def human(iso):
@@ -158,14 +165,20 @@ def build_html(iss):
         '<span class="chip%s">%s</span>' % (" hot" if i == 0 else "", esc(c))
         for i, c in enumerate(chips))
 
-    kicker = "материал вебинара" if theme else "разбор темы"
+    # Своя тройка плашек у выпуска (ogChips): у карты кейсов группы — статусы
+    # компаний, а не «направления», и общая подпись читалась бы неверно
+    if iss.get("ogChips"):
+        chip_html = "".join(
+            '<span class="chip%s">%s</span>' % (" hot" if i == 0 else "", esc(c))
+            for i, c in enumerate(iss["ogChips"]))
+    kicker = "Материал вебинара" if theme else "Разбор темы"
     when = human(iss.get("date"))
     if when:
         kicker += " · " + when
 
     return (TEMPLATE
             .replace("{{KICKER}}", esc(kicker))
-            .replace("{{TITLE}}", esc(title))
+            .replace("{{TITLE}}", esc(nb(title)))
             .replace("{{SIZE}}", str(fit_size(title)))
             .replace("{{SUB}}", esc(iss.get("ogSub") or
                                     "Компании по всей цепочке — от памяти и ускорителей "
@@ -179,56 +192,55 @@ TEMPLATE = """<!DOCTYPE html>
 <head>
 <meta charset="utf-8">
 <link href="fonts/fonts.css?v=2" rel="stylesheet">
+<link href="brand/brand.css?v=1" rel="stylesheet">
 <style>
-  :root{--bg:#0B0C10;--card:#14161C;--ink:#F2F3F7;--mut:rgba(242,243,247,.64);
-    --mut2:rgba(242,243,247,.40);--bd:rgba(255,255,255,.11);--or:#EE7D1B;
-    --f:'Onest',sans-serif;--m:'JetBrains Mono',monospace;--d:'Rubik',sans-serif;}
+  /* Палитра и гарнитура — по брендбуку Rumberg Capital (как на сайте с 29.10.2026):
+     фон #191A2F, оранжевый #F06E08 только на главном, заголовок Montserrat,
+     прямые углы 2px, без свечений */
+  :root{--bg:#191A2F;--card:#22243B;--ink:#F2F3F7;--mut:rgba(242,243,247,.70);
+    --mut2:rgba(242,243,247,.46);--bd:rgba(255,255,255,.12);--or:#F06E08;
+    --f:'Onest',sans-serif;--m:'JetBrains Mono',monospace;--d:'Montserrat',sans-serif;}
   *{box-sizing:border-box;margin:0;padding:0}
-  html,body{background:#22242b}
+  html,body{background:#2a2c44}
   body{display:flex;align-items:center;justify-content:center;min-height:100vh;
        color:var(--ink);font-family:var(--f);-webkit-font-smoothing:antialiased}
-  .og{position:relative;width:1200px;height:630px;background:var(--bg);overflow:hidden;
-      display:flex;flex-direction:column;padding:50px 58px;border-left:10px solid var(--or)}
-  .grid{position:absolute;inset:0;opacity:.55;
-    background:linear-gradient(rgba(255,255,255,.02) 1px,transparent 1px) 0 0/100% 42px}
-  .glow{position:absolute;right:-160px;top:-180px;width:700px;height:700px;border-radius:50%;
-    background:radial-gradient(circle,rgba(238,125,27,.20),transparent 62%);filter:blur(6px)}
-  /* Полоса-«стек» справа: три цвета слоёв, тот же порядок, что на странице */
-  .spine{position:absolute;right:0;top:0;bottom:0;width:6px;
-    background:linear-gradient(180deg,#EE7D1B 0 34%,#4F86E6 34% 60%,#55C08A 60% 100%);opacity:.75}
+  .og{position:relative;width:1200px;height:630px;overflow:hidden;
+      background:linear-gradient(135deg,#191A2F 0%,#1B1C35 55%,#22244A 100%);
+      display:flex;flex-direction:column;padding:52px 64px}
+  .grid{position:absolute;inset:0;
+    background:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px) 0 0/48px 48px,
+               linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px) 0 0/48px 48px;
+    -webkit-mask:linear-gradient(110deg,transparent 35%,#000 100%);mask:linear-gradient(110deg,transparent 35%,#000 100%)}
   .top{position:relative;z-index:2;display:flex;justify-content:space-between;align-items:center}
-  .wm{display:inline-flex;align-items:center;gap:12px;font-family:var(--d);font-weight:700;
-      font-size:23px;letter-spacing:.16em}
-  .dot{width:11px;height:11px;border-radius:50%;background:var(--or);box-shadow:0 0 16px var(--or)}
-  .qual{font-family:var(--m);font-size:12px;letter-spacing:.1em;color:var(--mut2);text-transform:uppercase}
+  .logo{height:38px;width:150px;background:url(brand/logo.svg) left center/contain no-repeat}
+  .qual{font-size:15px;color:var(--mut2)}
   .mid{position:relative;z-index:2;flex:1;display:flex;flex-direction:column;justify-content:center}
-  .kick{font-family:var(--m);font-size:15px;letter-spacing:.2em;text-transform:uppercase;
-        color:var(--or);margin-bottom:20px}
-  h1{font-family:var(--d);font-weight:800;line-height:1.04;letter-spacing:-.03em;
-     font-size:{{SIZE}}px;max-width:1000px}
-  .sub{font-size:21px;line-height:1.5;color:var(--mut);margin-top:18px;max-width:830px}
-  .tks{display:flex;gap:9px;margin-top:30px;flex-wrap:wrap}
-  .tk{position:relative;background:var(--card);border:1px solid var(--bd);border-radius:9px;
-      padding:9px 13px 9px 15px;font-family:var(--m);font-weight:700;font-size:18px;
-      letter-spacing:.02em;overflow:hidden}
+  .kick{font-size:21px;color:var(--mut);margin-bottom:18px;display:flex;align-items:center;gap:12px}
+  .kick .sq{width:10px;height:10px;background:var(--or)}
+  h1{font-family:var(--d);font-weight:600;line-height:1.08;letter-spacing:-.01em;
+     font-size:{{SIZE}}px;max-width:1040px}
+  .sub{font-size:22px;line-height:1.45;color:var(--mut);margin-top:16px;max-width:900px}
+  .tks{display:flex;gap:8px;margin-top:28px;flex-wrap:wrap;max-width:1060px}
+  .tk{position:relative;background:rgba(34,36,59,.85);border:1px solid var(--bd);border-radius:2px;
+      padding:9px 13px 9px 16px;font-family:var(--m);font-weight:600;font-size:18px;overflow:hidden}
   .tk::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--c)}
-  .tk.co{font-family:var(--d);font-weight:700;letter-spacing:0;font-size:17px}
-  .bot{position:relative;z-index:2;display:flex;align-items:center;gap:11px}
-  .chip{background:var(--card);border:1px solid var(--bd);border-radius:10px;
-        padding:10px 18px;font-size:18px;color:var(--ink);white-space:nowrap}
-  .chip.hot{background:var(--or);border-color:var(--or);color:#0C0A08;font-weight:600}
-  .site{margin-left:auto;font-family:var(--m);font-size:15px;color:var(--mut2);letter-spacing:.02em}
+  .tk.co{font-family:var(--f);font-weight:600;font-size:18px}
+  .bot{position:relative;z-index:2;display:flex;align-items:center;gap:10px}
+  .chip{border:1px solid var(--bd);background:rgba(34,36,59,.85);border-radius:2px;
+        padding:10px 17px;font-size:18px;color:var(--ink);white-space:nowrap}
+  .chip.hot{background:var(--or);border-color:var(--or);color:#191A2F;font-weight:600}
+  .site{margin-left:auto;font-family:var(--m);font-size:20px;color:var(--mut);letter-spacing:.01em}
 </style>
 </head>
 <body>
 <div class="og">
-  <div class="grid"></div><div class="glow"></div><div class="spine"></div>
+  <div class="grid"></div>
   <div class="top">
-    <span class="wm"><span class="dot"></span>RUMBERG</span>
+    <span class="logo" role="img" aria-label="Rumberg Capital"></span>
     <span class="qual">только для квалифицированных инвесторов · не ИИР</span>
   </div>
   <div class="mid">
-    <div class="kick">{{KICKER}}</div>
+    <div class="kick"><span class="sq"></span>{{KICKER}}</div>
     <h1>{{TITLE}}</h1>
     <div class="sub">{{SUB}}</div>
     <div class="tks">{{TICKERS}}</div>

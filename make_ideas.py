@@ -19,6 +19,7 @@
 Запуск:  python make_ideas.py [id-темы]     (по умолчанию — ru-market)
          python make_ideas.py pre-ipo        (тематический выпуск из JSON)
          python make_ideas.py space          (космос, вебинар 06.10.2026)
+         python make_ideas.py venture        (венчур в портфеле, вебинар 05.11.2026)
 """
 import glob
 import html
@@ -140,6 +141,13 @@ CONFIGS["pre-ipo"] = {
 CONFIGS["space"] = {
     "kind": "theme",
     "src": _res("space-2026-10", "issue.json"),
+}
+# Венчур в портфеле — материал вебинара 05.11.2026 по презентации инвестсоветника
+# Романа Романовича. Карта компаний — кейсы спикера, группы по статусу (на бирже /
+# подали на IPO / частные), поэтому в рейке обзора не ориентир IPO, а статус.
+CONFIGS["venture"] = {
+    "kind": "theme",
+    "src": _res("venture-2026-11", "issue.json"),
 }
 THEME_BLOCKS = ("stages", "cards", "steps", "tiles", "bignum", "columns", "chain",
                 "glossary", "faq", "map", "profiles", "cta", "payoff")
