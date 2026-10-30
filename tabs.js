@@ -1420,7 +1420,8 @@
         // Furniture от Nixtio — крупные карточки с изображением). У ролика кадр вертикальный —
         // кадрируем выше середины, где спутник
         O.forEach(function (o) {
-          var hp = o.hero && o.hero.poster;
+          // hero.cover — своя обложка карточки (схема по центру); иначе кадр героя
+          var hp = o.hero && (o.hero.cover || o.hero.poster);
           var cov = hp ? '<span class="tg-cov"><img src="' + esc(hp) + '" alt="" loading="lazy" decoding="async"' + (o.hero.wide ? "" : ' style="object-position:50% 34%"') + "></span>" : "";
           body += '<a class="tg-card tg-off' + (cov ? " tg-hasc" : "") + '" href="offerings.html#' + esc(o.id) + '">' + cov + '<span class="tg-stat">' + esc(o.statusLabel || "") + "</span><h2><span>" + esc(o.name) + "</span>" + CHEV + "</h2>" + (o.isin ? '<p class="tg-isin">ISIN ' + esc(o.isin) + "</p>" : "") + "<p>" + esc(o.lead || o.kind || "") + "</p>" +
             '<div class="tg-nums">' + (o.price != null ? "<div><b>" + fq(o.price) + "%</b><span>цена</span></div>" : "") + (o.tenor ? "<div><b>" + esc(o.tenor) + "</b><span>срок</span></div>" : "") + (o.nominal ? "<div><b>" + Number(o.nominal).toLocaleString("ru-RU") + " ₽</b><span>номинал</span></div>" : "") + "</div>" +

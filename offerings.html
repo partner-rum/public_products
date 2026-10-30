@@ -317,6 +317,8 @@
       linear-gradient(to top, rgba(21,22,42,0.7) 0%, rgba(21,22,42,0) 34%); }
   .lh.wide .lh-grid { width: 100%; grid-template-columns: minmax(0, 620px); padding: 48px 42px; }
   .lh.wide .lh-name { font-size: 62px; }
+  /* Схема (hero.cls "art") занимает правую треть кадра — текст до неё не доходит */
+  .lh.wide.art .lh-in { max-width: 500px; }
   .lh-stat { margin-bottom: 20px; }
   .lh-stat .badge.live { background: rgba(25,26,47,0.62); backdrop-filter: none; -webkit-backdrop-filter: none; border: 1px solid rgba(240,110,8,0.5); }
   .lh-stat .badge.live .dot { background: var(--solar); box-shadow: 0 0 0 0 rgba(240,110,8,0.6); animation: lh-ping 2.4s ease-out 3; }
@@ -474,6 +476,67 @@
      горизонтальный скролл всей страницы (видно только замером scrollWidth). */
   .lend .act .ct-menu { left: auto; right: 0; }
 
+  /* ── ТРЕКЕР (o.payoff === "track"): Pre-IPO через индекс ─────────────────
+     Столбики: факт — сплошной, прогноз и сценарий — контуром, цена входа —
+     акцентом. Вертикальные (выручка в «Зачем») и горизонтальные (оценки и
+     мультипликаторы в деталях). Высоты и ширины считаются в разметке. */
+  .lbars { margin-top: 30px; }
+  .lb-row { display: flex; align-items: flex-end; gap: 14px; max-width: 640px; }
+  .lb-c { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; }
+  .lb-v { font-family: var(--f-mono); font-size: 14px; color: var(--ink); white-space: nowrap; margin-bottom: 7px; }
+  .lb-c i { display: block; background: rgba(242,243,247,0.72); border-radius: 2px 2px 0 0; transform-origin: 50% 100%; }
+  .lb-c.f i { background: rgba(242,243,247,0.05); border: 1px dashed rgba(242,243,247,0.45); border-bottom: none; }
+  .lb-c.f .lb-v { color: var(--hushed); }
+  .lb-c.hi i { background: var(--solar); }
+  .lb-c.hi .lb-v { color: var(--solar); }
+  .lb-x { margin-top: 0; padding-top: 8px; border-top: 1px solid var(--border); font-family: var(--f-mono); font-size: 12.5px; color: var(--hushed); }
+  .lb-leg { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 12px; font-size: 12.5px; color: var(--hushed); }
+  .lb-leg span { display: inline-flex; align-items: center; gap: 7px; }
+  .lb-leg i { width: 12px; height: 10px; border-radius: 1px; background: rgba(242,243,247,0.72); }
+  .lb-leg i.f { background: rgba(242,243,247,0.05); border: 1px dashed rgba(242,243,247,0.5); }
+  .lb-leg i.hi { background: var(--solar); }
+  .lbars.anim .lb-c i { transform: scaleY(0); transition: transform .8s cubic-bezier(.2,.7,.2,1); }
+  .lbars.anim.in .lb-c i { transform: none; }
+  .lbars.anim.in .lb-c:nth-child(2) i { transition-delay: .07s; }
+  .lbars.anim.in .lb-c:nth-child(3) i { transition-delay: .14s; }
+  .lbars.anim.in .lb-c:nth-child(4) i { transition-delay: .21s; }
+  .lbars.anim.in .lb-c:nth-child(5) i { transition-delay: .28s; }
+  .hb { margin-top: 14px; max-width: 760px; }
+  .hb + .fx, .fx + .hb { margin-top: 22px; }
+  .hb-r { display: grid; grid-template-columns: 190px minmax(0, 1fr) 72px; align-items: center; gap: 14px; padding: 8px 0; border-bottom: 1px solid var(--border-soft); }
+  .hb-l { font-size: 14px; font-weight: 600; color: var(--ink); min-width: 0; }
+  .hb-l span { display: block; font-size: 12px; font-weight: 400; color: var(--faint); margin-top: 2px; }
+  .hb-b i { display: block; height: 12px; background: rgba(242,243,247,0.72); border-radius: 0 2px 2px 0; transform-origin: 0 50%; }
+  .hb-r.f .hb-b i { background: rgba(242,243,247,0.05); border: 1px dashed rgba(242,243,247,0.45); }
+  .hb-r.hi .hb-b i { background: var(--solar); }
+  .hb-v { font-family: var(--f-mono); font-size: 14px; text-align: right; white-space: nowrap; color: var(--ink); }
+  .hb-r.hi .hb-v { color: var(--solar); }
+  .hb-r.f .hb-v { color: var(--hushed); }
+  .hb.anim .hb-b i { transform: scaleX(0); transition: transform .8s cubic-bezier(.2,.7,.2,1); }
+  .hb.anim.in .hb-b i { transform: none; }
+  @media (prefers-reduced-motion: reduce) {
+    .lbars.anim .lb-c i, .hb.anim .hb-b i { transform: none; transition: none; }
+  }
+  /* Второй ползунок калькулятора — курс доллара */
+  .calc .k2 { margin-top: 16px; display: flex; justify-content: space-between; gap: 12px; font-size: 13px; color: var(--hushed); }
+  .calc .k2 b { font-family: var(--f-mono); font-weight: 500; color: var(--ink); }
+  .ex-v.nt { color: var(--ink); }
+  /* Сценарии выхода и цепочка бизнеса — колонками с линейкой сверху */
+  .paths, .chain { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 28px; margin-top: 6px; }
+  .chain { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0 24px; }
+  .pth, .chn { position: relative; padding: 16px 0 8px; border-top: 1px solid var(--border); min-width: 0; }
+  .pth.up { border-top: 2px solid var(--up); }
+  .chn::before { content: ""; position: absolute; top: -4px; left: 0; width: 7px; height: 7px; background: var(--solar); }
+  .pth .n, .chn .n { font-family: var(--f-mono); font-size: 12px; color: var(--faint); }
+  .chn .n { color: var(--solar); }
+  .pth .t, .chn .t { margin-top: 6px; font-size: 15px; font-weight: 600; line-height: 1.35; text-wrap: pretty; }
+  .pth .d, .chn .d { margin-top: 7px; font-size: 13.5px; line-height: 1.6; color: var(--hushed); text-wrap: pretty; }
+  .ctext { margin: 18px 0 0; max-width: 760px; font-size: 14.5px; line-height: 1.6; color: var(--hushed); text-wrap: pretty; }
+  .clients { margin-top: 22px; max-width: 860px; }
+  .cli { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 14px; padding: 10px 0; border-bottom: 1px solid var(--border-soft); align-items: baseline; }
+  .cli b { font-size: 15px; font-weight: 600; }
+  .cli span { font-size: 13.5px; line-height: 1.55; color: var(--hushed); }
+
   @media (max-width: 1023px) {
     .lh-grid { grid-template-columns: minmax(0, 1fr) 250px; gap: 24px; padding: 26px; }
     .lh-name { font-size: 42px; }
@@ -494,6 +557,7 @@
     .cal { grid-auto-flow: row; grid-auto-columns: auto; border-top: none; padding-left: 5px; }
     .clp { padding: 0 0 14px 20px; border-left: 1px solid var(--border-soft); }
     .clp::after { top: 3px; left: -4px; }
+    .chain { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
   @media (max-width: 720px) {
     .lh-grid { grid-template-columns: 1fr; gap: 18px; padding: 16px 16px 20px; }
@@ -540,6 +604,19 @@
     .btbl thead th:nth-child(3) { display: none; }
     .calc-val { font-size: 25px; }
     .lend .act { margin-left: 0; width: 100%; }
+    /* Иллюстрация-схема (hero.cls "art") на телефоне: полоса без приближения,
+       кадр прижат вправо — там вся цепочка целиком */
+    .lh.wide.art .lh-bg img { object-position: 100% 55%; transform: scale(1.25); transform-origin: 100% 100%; }
+    .lh.wide.art .lh-grid { margin-top: -34px; }
+    .paths, .chain { grid-template-columns: 1fr; }
+    .cli { grid-template-columns: 1fr; gap: 3px; }
+    .lb-row { gap: 8px; }
+    .lb-v { font-size: 12px; }
+    .lb-x { font-size: 11.5px; }
+    .hb-r { grid-template-columns: 116px minmax(0, 1fr) 54px; gap: 10px; }
+    .hb-l { font-size: 13px; }
+    .hb-l span { font-size: 11.5px; }
+    .hb-v { font-size: 13px; }
   }
   @media (max-width: 900px) {
     .panel.landing.open .panel-close { -webkit-backdrop-filter: none; backdrop-filter: none; background: #191A2F; }
@@ -579,7 +656,7 @@
   <div class="layout">
     <aside class="aside">
       <div class="filters" id="filters"></div>
-      <div class="list" id="list"><!-- seo:start --><div class="seo-pre"><p>Выпуски Rumberg на размещении: параметры, документы и порядок подачи заявок.</p><h2>На размещении</h2><ul><li>Квантовый скачок, Биржевая структурная облигация · колл-спред 100–200%, базовый актив — Корзина из 4 акций квантовых компаний (в USD), срок 3 года, ISIN RU000A10BZ51, Приём заявок до 16.10.2026.</li><li>Космические технологии, Биржевая структурная облигация · колл-спред 100–200%, базовый актив — Корзина из 3 акций космической отрасли (в USD), срок 3 года, ISIN RU000A10B9Y3, Приём заявок до 08.10.2026.</li></ul></div><!-- seo:end --></div>
+      <div class="list" id="list"><!-- seo:start --><div class="seo-pre"><p>Выпуски Rumberg на размещении: параметры, документы и порядок подачи заявок.</p><h2>На размещении</h2><ul><li>Pre-IPO Crusoe, Биржевая структурная облигация · Pre-IPO, базовый актив — Индекс RUMPREIPO.2 · привилегированные акции Crusoe (серия A), срок 5 лет, ISIN RU000A10CRU6, Размещение с 30.10.2026.</li></ul></div><!-- seo:end --></div>
     </aside>
     <div class="panel" id="panel"><button class="panel-close" id="close">← К списку</button><div id="panel-body"></div></div>
   </div>
@@ -993,14 +1070,158 @@
     '</div>';
   }
 
+  // ── ТРЕКЕР (o.payoff === "track") ─────────────────────────────────────────
+  // Pre-IPO через закрытый индекс: облигация экономически равна o.track.units
+  // акции, выплата идёт за её стоимостью и курсом доллара — без потолка и без
+  // защиты. Поэтому профиль — прямая, а калькулятор двигает две величины.
+  function isTrack(o) { return o.payoff === "track" && !!o.track; }
+  // Результат на вложенное, %: изменения акции g и курса f перемножаются
+  function trRes(g, f) { return ((1 + g / 100) * (1 + f / 100) - 1) * 100; }
+  var money2 = v => Number(v).toLocaleString("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  function trGeo() {
+    var narrow = window.matchMedia("(max-width: 720px)").matches;
+    var g = narrow
+      ? { W: 340, H: 256, L: 46, R: 12, T: 34, B: 34, narrow: true }
+      : { W: 520, H: 300, L: 56, R: 18, T: 40, B: 40, narrow: false };
+    g.x0 = -100; g.x1 = 200; g.y0 = -100; g.y1 = 200;
+    g.x = v => g.L + (v - g.x0) / (g.x1 - g.x0) * (g.W - g.L - g.R);
+    g.y = v => g.T + (g.y1 - v) / (g.y1 - g.y0) * (g.H - g.T - g.B);
+    return g;
+  }
+  // Прямая с поправкой на курс: при росте доллара на f она круче и упирается
+  // в верх кадра раньше правого края.
+  function trFxPath(g, f) {
+    var k = 1 + f / 100, xe = g.x1;
+    if (trRes(xe, f) > g.y1) xe = (3 / k - 1) * 100;
+    return 'M' + g.x(g.x0) + ' ' + g.y(g.y0) + ' L' + g.x(xe) + ' ' + g.y(trRes(xe, f));
+  }
+  function trChart(o) {
+    var g = trGeo(), x = g.x, y = g.y, t = o.track, col = "#F06E08", el = [];
+    var mono = 'font-family="JetBrains Mono, monospace"';
+    [g.y1, 100, 0, g.y0].forEach(function (v) {
+      el.push('<line x1="' + g.L + '" y1="' + y(v) + '" x2="' + (g.W - g.R) + '" y2="' + y(v) + '" stroke="rgba(255,255,255,' + (v === 0 ? 0.26 : 0.1) + ')" stroke-width="1"' + (v === 0 ? ' stroke-dasharray="4 4"' : '') + '/>');
+      el.push('<text x="' + (g.L - 8) + '" y="' + (y(v) + 4) + '" text-anchor="end" font-size="11" ' + mono + ' fill="rgba(242,243,247,' + (v === 0 ? 0.72 : 0.5) + ')">' + pctTxt(v) + '</text>');
+    });
+    el.push('<defs><linearGradient id="trg" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0%" stop-color="' + col + '" stop-opacity="0.22"/><stop offset="100%" stop-color="' + col + '" stop-opacity="0.02"/></linearGradient></defs>');
+    el.push('<path d="M' + x(0) + ' ' + y(0) + ' L' + x(g.x1) + ' ' + y(g.y1) + ' L' + x(g.x1) + ' ' + y(0) + ' Z" fill="url(#trg)"/>');
+    // Отметки на оси: оценка последнего раунда и сценарий — из данных
+    (t.marks || []).forEach(function (m) {
+      var mx = x(Number(m.x));
+      el.push('<line x1="' + mx + '" y1="' + (g.T - 8) + '" x2="' + mx + '" y2="' + y(g.y0) + '" stroke="rgba(255,255,255,0.24)" stroke-width="1" stroke-dasharray="2 4"/>');
+      el.push('<text x="' + mx + '" y="' + (g.T - 14) + '" text-anchor="middle" font-size="11" ' + mono + ' fill="rgba(242,243,247,0.66)">' + esc(g.narrow && m.s ? m.s : m.t) + '</text>');
+    });
+    el.push('<path d="M' + x(g.x0) + ' ' + y(g.y0) + ' L' + x(0) + ' ' + y(0) + '" stroke="rgba(242,243,247,0.42)" stroke-width="2.6" fill="none" stroke-linecap="round"/>');
+    el.push('<path d="M' + x(0) + ' ' + y(0) + ' L' + x(g.x1) + ' ' + y(g.y1) + '" stroke="' + col + '" stroke-width="2.6" fill="none" stroke-linecap="round"/>');
+    el.push('<path id="tr-fl" d="' + trFxPath(g, 0) + '" stroke="rgba(242,243,247,0.5)" stroke-width="1.4" stroke-dasharray="5 4" fill="none" opacity="0"/>');
+    el.push('<circle cx="' + x(0) + '" cy="' + y(0) + '" r="4" fill="#55C08A"/>');
+    el.push('<text x="' + (x(0) + 10) + '" y="' + (y(0) + 18) + '" font-size="11.5" ' + mono + ' fill="#55C08A">' + (g.narrow ? 'безубыток' : 'безубыток — цена входа') + '</text>');
+    el.push('<line id="tr-gx" x1="' + x(0) + '" y1="' + g.T + '" x2="' + x(0) + '" y2="' + y(g.y0) + '" stroke="rgba(255,255,255,0.28)" stroke-width="1" stroke-dasharray="3 4"/>');
+    el.push('<circle id="tr-dot" cx="' + x(0) + '" cy="' + y(0) + '" r="6" fill="#191A2F" stroke="' + col + '" stroke-width="2.6"/>');
+    [g.x0, 0, 100, g.x1].forEach(function (v) {
+      el.push('<text x="' + x(v) + '" y="' + (g.H - 14) + '" text-anchor="middle" font-size="11" ' + mono + ' fill="rgba(242,243,247,0.5)">' + pctTxt(v) + '</text>');
+    });
+    el.push('<text x="' + (g.W - g.R) + '" y="' + (g.H - 1) + '" text-anchor="end" font-size="11" ' + mono + ' fill="rgba(242,243,247,0.38)">стоимость акции ' + esc(t.asset) + ', $ →</text>');
+    return '<svg viewBox="0 0 ' + g.W + ' ' + g.H + '" role="img" aria-label="Профиль выплаты: результат на вложенное повторяет изменение стоимости акции ' + esc(t.asset) +
+      ' в долларах — без потолка и без защиты капитала; при падении акции на 100% теряется вся вложенная сумма. Курс доллара к рублю сдвигает результат в ту же сторону.">' +
+      el.join("") + '</svg>';
+  }
+  // Калькулятор трекера: два ползунка — стоимость акции и курс USD/RUB.
+  function trCalc(o) {
+    var t = o.track, inv = o.nominal * o.price / 100;
+    var g0 = Math.max(-100, Math.min(200, Number(t.calcStart) || 0));
+    return '<div class="calc">' +
+      '<div class="k">Сценарий: стоимость акции ' + esc(t.asset) + ' к выходу</div>' +
+      '<div class="calc-val" id="tr-g"></div>' +
+      '<input type="range" id="tr-range" min="-100" max="200" step="5" value="' + g0 + '" ' +
+        'aria-label="Изменение стоимости акции ' + esc(t.asset) + ' в долларах, процентов">' +
+      '<div class="calc-scale"><span>−100%</span><span>0</span><span>+200%</span></div>' +
+      '<div class="k2"><span>Курс USD/RUB к выходу</span><b id="tr-f"></b></div>' +
+      '<input type="range" id="tr-fx" min="-30" max="30" step="5" value="0" aria-label="Изменение курса доллара к рублю, процентов">' +
+      '<div class="calc-scale"><span>−30%</span><span>0</span><span>+30%</span></div>' +
+      '<div class="calc-out">' +
+        '<div class="calc-row"><span class="l">Стоимость акции</span><span class="r" id="tr-px"></span></div>' +
+        '<div class="calc-row"><span class="l">Стоимость одной облигации</span><span class="r" id="tr-rub"></span></div>' +
+        '<div class="calc-row big"><span class="l">Результат на вложенные ' + RUB(inv) + ' ₽</span><span class="r" id="tr-res"></span></div>' +
+      '</div>' +
+      (t.calcNote ? '<div class="calc-note">' + esc(t.calcNote) + '</div>' : '') +
+    '</div>';
+  }
+  function trWire(o) {
+    var r = document.getElementById("tr-range"), fx = document.getElementById("tr-fx");
+    if (!r || !fx) return;
+    var g = trGeo(), t = o.track, inv = o.nominal * o.price / 100;
+    function upd() {
+      var v = Number(r.value), f = Number(fx.value), res = trRes(v, f);
+      document.getElementById("tr-g").textContent = pctTxt(v);
+      document.getElementById("tr-f").textContent = f ? pctTxt(f) : "без изменений";
+      document.getElementById("tr-px").textContent = "$" + money2(t.entry * (1 + v / 100));
+      document.getElementById("tr-rub").textContent = "≈ " + RUB(inv * (1 + res / 100)) + " ₽";
+      var el = document.getElementById("tr-res");
+      el.textContent = pctTxt(Math.round(res));
+      el.className = "r " + (res > 0 ? "up" : res < 0 ? "dn" : "");
+      var dot = document.getElementById("tr-dot"), gx = document.getElementById("tr-gx"), fl = document.getElementById("tr-fl");
+      if (dot) { dot.setAttribute("cx", g.x(v)); dot.setAttribute("cy", g.y(Math.min(g.y1, res))); }
+      if (gx) { gx.setAttribute("x1", g.x(v)); gx.setAttribute("x2", g.x(v)); }
+      if (fl) { fl.setAttribute("d", trFxPath(g, f)); fl.setAttribute("opacity", f ? "1" : "0"); }
+    }
+    r.addEventListener("input", upd);
+    fx.addEventListener("input", upd);
+    upd();
+  }
+
+  // Столбики. Вертикальные — короткий ряд по годам; горизонтальные — ряд
+  // с подписями (раунды, мультипликаторы). k: "f" — прогноз/сценарий контуром,
+  // "hi" — акцент. Подписи значений — готовыми строками из данных (r.t).
+  var BARK = { f: " f", hi: " hi" };
+  function barLegend(b) {
+    return (b.legend && b.legend.length)
+      ? '<div class="lb-leg">' + b.legend.map(l => '<span><i class="' + (BARK[l.k] ? l.k : "") + '"></i>' + esc(l.t) + '</span>').join("") + '</div>' : "";
+  }
+  function vbars(b) {
+    if (!b || !b.rows || !b.rows.length) return "";
+    var max = Math.max.apply(null, b.rows.map(r => Number(r.v) || 0)) || 1, AREA = 150;
+    var alt = (b.title ? b.title + ": " : "") + b.rows.map(r => r.x + " — " + (r.t || r.v)).join(", ");
+    return '<div class="lbars anim">' + (b.title ? '<div class="ls-k">' + esc(b.title) + '</div>' : '') +
+      '<div class="lb-row" role="img" aria-label="' + esc(alt) + '">' + b.rows.map(r =>
+        '<div class="lb-c' + (BARK[r.k] || "") + '"><span class="lb-v">' + esc(r.t || r.v) + '</span>' +
+        '<i style="height:' + Math.max(2, Math.round((Number(r.v) || 0) / max * AREA)) + 'px"></i>' +
+        '<span class="lb-x">' + esc(r.x) + '</span></div>').join("") + '</div>' +
+      barLegend(b) + (b.note ? '<p class="src">' + esc(b.note) + '</p>' : '') + '</div>';
+  }
+  function hbars(b) {
+    if (!b || !b.rows || !b.rows.length) return "";
+    var max = Math.max.apply(null, b.rows.map(r => Number(r.v) || 0)) || 1;
+    var alt = (b.title ? b.title + ": " : "") + b.rows.map(r => r.l + (r.s ? " (" + r.s + ")" : "") + " — " + (r.t || r.v)).join(", ");
+    return '<div class="hb anim">' + (b.title ? '<div class="ls-k">' + esc(b.title) + '</div>' : '') +
+      '<div role="img" aria-label="' + esc(alt) + '">' + b.rows.map(r =>
+        '<div class="hb-r' + (BARK[r.k] || "") + '"><div class="hb-l">' + esc(r.l) + (r.s ? '<span>' + esc(r.s) + '</span>' : '') + '</div>' +
+        '<div class="hb-b"><i style="width:' + Math.max(0.8, (Number(r.v) || 0) / max * 100).toFixed(1) + '%"></i></div>' +
+        '<div class="hb-v">' + esc(r.t || r.v) + '</div></div>').join("") + '</div>' +
+      barLegend(b) + (b.note ? '<p class="src">' + esc(b.note) + '</p>' : '') + '</div>';
+  }
+  // Столбики вырастают, когда попадают в кадр (в свёрнутых разделах — когда
+  // раздел открыли). Без IntersectionObserver и при reduced-motion — сразу.
+  function growWire() {
+    var els = document.querySelectorAll(".lbars.anim, .hb.anim");
+    if (!els.length) return;
+    var calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (calm || !("IntersectionObserver" in window)) { els.forEach(e => e.classList.remove("anim")); return; }
+    var io = new IntersectionObserver(function (es) {
+      es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } });
+    }, { threshold: 0.3 });
+    els.forEach(e => io.observe(e));
+  }
+
   // Первая отрисовка графика уже в разметке; при смене раскладки (поворот экрана)
   // перерисовываем — иначе останется геометрия чужой ширины.
   function csMount(o) {
     var box = document.querySelector(".pay-chart");
     if (!box) return;
-    csWire(o);
+    var draw = isTrack(o) ? trChart : csChart, wire = isTrack(o) ? trWire : csWire;
+    wire(o);
     var mq = window.matchMedia("(max-width: 720px)");
-    if (mq.addEventListener) mq.addEventListener("change", function () { box.innerHTML = csChart(o); csWire(o); });
+    if (mq.addEventListener) mq.addEventListener("change", function () { box.innerHTML = draw(o); wire(o); });
   }
 
   function csWire(o) {
@@ -1122,7 +1343,9 @@
     // кадр, рамки 9:16 справа нет, и бейдж приёма заявок встаёт над названием.
     var wide = !o.video && !!(o.hero && o.hero.poster && o.hero.wide);
     if (wide) media = '';
-    var hero = '<section class="lh' + (wide ? ' wide' : '') + '">' +
+    // hero.cls — вариант кадрирования иллюстрации («art» — схема, не фото)
+    var heroCls = o.hero && /^[a-z-]{1,20}$/.test(String(o.hero.cls || "")) ? ' ' + o.hero.cls : '';
+    var hero = '<section class="lh' + (wide ? ' wide' : '') + heroCls + '">' +
       (o.hero && o.hero.poster ? '<div class="lh-bg"><img src="' + esc(o.hero.poster) + '" alt="" aria-hidden="true"></div>' : '') +
       '<div class="lh-scrim"></div>' +
       '<div class="lh-grid"><div class="lh-in">' +
@@ -1141,12 +1364,23 @@
     var whySec = (o.why && o.why.length)
       ? sec("Зачем", "", '<div class="why">' + o.why.map(w =>
           '<div class="wh"><div class="n">' + esc(w.n) + '</div><div class="t">' + esc(w.t) + '</div><div class="d">' + esc(w.d) + '</div></div>').join("") +
-          '</div>' + basketStrip(o) + (o.whySrc ? '<p class="src">' + esc(o.whySrc) + '</p>' : ''))
+          '</div>' + basketStrip(o) + vbars(o.bars) + (o.whySrc ? '<p class="src">' + esc(o.whySrc) + '</p>' : ''))
       : "";
 
     // ── УСЛОВИЯ: шесть фактов крупно. Шестой — про ноль, и он стоит в одном ряду
     //    с остальными, а не сноской.
-    var facts = [
+    var tr = isTrack(o), t = o.track || {};
+    // Трекер: вместо потолка — сколько акции в одной облигации, вместо «0 ₽,
+    // если корзина не выросла» — уровень риска из КИД: защиты нет вовсе.
+    var facts = tr ? [
+      [ fmt2(price) + '%', 'цена размещения', 'от номинала: ≈ ' + RUB(inv) + ' ₽ за бумагу*', 'hi' ],
+      [ fmt2(t.units) + ' акции', esc(t.asset) + ' в одной облигации', 'по цене входа $' + money2(t.entry) + ' за акцию', 'hi' ],
+      [ tenorTxt(o.tenor), 'срок', 'погашение ' + esc(o.maturity) + (t.ipo ? '; ориентир IPO — ' + esc(t.ipo) : '') ],
+      [ esc(o.minBuy || ""), 'порог входа', esc(o.venue || "") ],
+      [ esc(o.isin || ""), 'ISIN', 'у любого брокера — по этому коду' ],
+      [ (o.kidRisk ? esc(o.kidRisk) + ' из 7' : 'нет'), o.kidRisk ? 'уровень риска по КИД' : 'защиты капитала',
+        'защиты капитала нет: выплата падает вместе с оценкой ' + esc(t.asset) + ', вплоть до нуля', 'loss' ],
+    ] : [
       [ fmt2(price) + '%', 'цена входа', 'от номинала: ' + RUB(inv) + ' ₽ за бумагу', 'hi' ],
       [ fmt2(cap) + '%', 'потолок выплаты', 'от номинала: до ' + fmt2(Math.round((100 + capMax) / 10) / 10) + '× на вложенное*', 'hi' ],
       [ tenorTxt(o.tenor), 'срок', 'погашение ' + esc(o.maturity) ],
@@ -1157,7 +1391,8 @@
     var termsSec = sec("Условия", "",
       '<div class="facts">' + facts.map(f => '<div class="fc' + (f[3] ? ' ' + f[3] : '') + '"><div class="v">' + f[0] + '</div>' +
         '<div class="k">' + f[1] + '</div><div class="d">' + f[2] + '</div></div>').join("") + '</div>' +
-      '<p class="src">* До валютной переоценки и спреда 3%: выплата пересчитывается по курсу ЦБ USD/RUB. Как считается — в деталях ниже.</p>' +
+      '<p class="src">' + (tr ? esc(t.note || "")
+        : '* До валютной переоценки и спреда 3%: выплата пересчитывается по курсу ЦБ USD/RUB. Как считается — в деталях ниже.') + '</p>' +
       '<div class="lh-cta terms-cta"><span id="o-ct-host2"></span>' + docBtns + '</div>', "", "terms");
 
     // ── ДЕТАЛИ: всё остальное, свёрнуто.
@@ -1168,14 +1403,42 @@
       ? '<div class="exwrap"><div class="ls-k">' + esc(o.example.title || "Сценарии") + '</div><div class="ex"><table class="ex-tbl">' +
         (o.example.cols ? '<thead><tr>' + o.example.cols.map(c => '<th scope="col">' + esc(c) + '</th>').join("") + '</tr></thead>' : '') +
         '<tbody>' + o.example.rows.map(r => '<tr><th scope="row" class="ex-l">' + esc(r[0]) + '</th>' +
-          r.slice(1).map(v => {
-            var cls = /^0([,.]0+)?%?$/.test(String(v).trim()) ? "zero" : (String(v).indexOf("−") === 0 ? "dn" : "up");
+          r.slice(1).map((v, j) => {
+            // example.neutral — номера столбцов без окраски по знаку (суммы в рублях)
+            var cls = (o.example.neutral || []).indexOf(j + 1) >= 0 ? "nt"
+              : /^0([,.]0+)?%?$/.test(String(v).trim()) ? "zero" : (String(v).indexOf("−") === 0 ? "dn" : "up");
             return '<td class="ex-v ' + cls + '">' + esc(v) + '</td>';
           }).join("") + '</tr>').join("") +
         '</tbody></table></div>' + (o.example.note ? '<div class="ex-note">' + esc(o.example.note) + '</div>' : '') + '</div>'
       : "";
-    var payFold = fold("Как считается выплата", "формула, график, калькулятор сценария",
-      formula + '<div class="pay"><div class="pay-chart">' + csChart(o) + '</div>' + csCalc(o) + '</div>' + exBlk);
+    var payFold = fold("Как считается выплата", tr ? "формула, график, калькулятор, сценарии из КИД" : "формула, график, калькулятор сценария",
+      formula + '<div class="pay"><div class="pay-chart">' + (tr ? trChart(o) : csChart(o)) + '</div>' + (tr ? trCalc(o) : csCalc(o)) + '</div>' + exBlk);
+
+    // Сценарии выхода (o.paths), компания (o.company), оценка (o.valuation) —
+    // свёрнутые разделы трекера; у колл-спредов этих полей нет, и разделов тоже.
+    var pathsFold = (o.paths && o.paths.length)
+      ? fold("Как выйти из инвестиции", o.pathsHint || "",
+          '<div class="paths">' + o.paths.map((p, i) => '<div class="pth' + (p.c === "up" ? ' up' : '') + '"><div class="n">0' + (i + 1) + '</div>' +
+            '<div class="t">' + esc(p.t) + '</div><div class="d">' + esc(p.d) + '</div></div>').join("") + '</div>' +
+          (o.pathsNote ? '<p class="src">' + esc(o.pathsNote) + '</p>' : ''))
+      : "";
+    var co = o.company;
+    var companyFold = co
+      ? fold(co.title || "О компании", co.hint || "",
+          ((co.chain && co.chain.length) ? '<div class="chain">' + co.chain.map((c, i) => '<div class="chn"><div class="n">0' + (i + 1) + '</div>' +
+            '<div class="t">' + esc(c.t) + '</div><div class="d">' + esc(c.d) + '</div></div>').join("") + '</div>' : '') +
+          (co.text || []).map(p => '<p class="ctext">' + esc(p) + '</p>').join("") +
+          ((co.clients && co.clients.length) ? '<div class="clients"><div class="ls-k">' + esc(co.clientsTitle || "Клиенты и партнёры") + '</div>' +
+            co.clients.map(c => '<div class="cli"><b>' + esc(c.n) + '</b><span>' + esc(c.d) + '</span></div>').join("") + '</div>' : '') +
+          (co.src ? '<p class="src">' + esc(co.src) + '</p>' : ''))
+      : "";
+    var va = o.valuation;
+    var valFold = va
+      ? fold(va.title || "Оценка компании", va.hint || "",
+          hbars(va.bars) +
+          ((va.text && va.text.length) ? '<div class="fx">' + va.text.map((p, i) => '<p' + (i ? ' class="d"' : '') + '>' + esc(p) + '</p>').join("") + '</div>' : '') +
+          hbars(va.comps) + (va.src ? '<p class="src">' + esc(va.src) + '</p>' : ''))
+      : "";
 
     var basketFold = "";
     if (o.basket && o.basket.length) {
@@ -1201,8 +1464,13 @@
       [ "Базовый актив", esc(o.reference) ],
       [ "Цена размещения", fmt2(price) + '% номинала — ' + RUB(inv) + ' ₽ за бумагу' ],
       [ "Номинал", RUB(o.nominal) + " " + esc(o.currency) ],
-      [ "Максимальная выплата", fmt2(cap) + '% номинала' ],
+      tr ? [ "Одна облигация", fmt2(t.units) + ' акции ' + esc(t.asset) + (t.cls ? ' (' + esc(t.cls) + ')' : '') +
+             ' — $' + money2(t.units * t.entry) + ' по цене входа' ]
+         : [ "Максимальная выплата", fmt2(cap) + '% номинала' ],
+      tr ? [ "Потолок и защита", "нет: выплата идёт за стоимостью акции вверх и вниз" ] : null,
       [ "Срок", tenorTxt(o.tenor) ],
+      (tr && t.lastFix) ? [ "Предельная дата оценки", esc(t.lastFix) ] : null,
+      o.maturity ? [ "Погашение", esc(o.maturity) ] : null,
       o.fx ? [ "Валюта расчёта", esc(o.fx) ] : null,
       o.minBuy ? [ "Минимальная покупка", esc(o.minBuy).replace(/^покупка /, "") ] : null,
       o.venue ? [ "Где купить", esc(o.venue) ] : null,
@@ -1220,7 +1488,8 @@
 
     var risks = (o.risks && o.risks.length) ? o.risks : (o.risk ? [{ d: o.risk }] : []);
     var riskFold = risks.length
-      ? fold("Риски", risks.map(r => r.t).filter(Boolean).join(", ").toLowerCase(),
+      // Строчная — только первая буква: «IPO» в заголовке риска должно остаться заглавным
+      ? fold("Риски", risks.map(r => r.t).filter(Boolean).map(s => s.charAt(0).toLowerCase() + s.slice(1)).join(", "),
           '<ol class="rl">' + risks.map(r => '<li>' + (r.t ? '<b>' + esc(r.t) + '.</b> ' : '') + esc(r.d || r) + '</li>').join("") + '</ol>')
       : "";
 
@@ -1237,7 +1506,7 @@
       : "";
 
     var detailsSec = sec("Детали", "Для тех, кто хочет разобраться до конца — каждый раздел раскрывается по нажатию.",
-      payFold + basketFold + termsFold + riskFold + docsFold + faqFold, "ldet");
+      payFold + pathsFold + basketFold + companyFold + valFold + termsFold + riskFold + docsFold + faqFold, "ldet");
 
     var end = '<div class="lend"><div><div class="tx">Готовы обсудить выпуск?</div>' +
       '<div class="sub">Ответим по параметрам, поможем с заявкой у вашего брокера.</div></div>' +
@@ -1281,7 +1550,7 @@
     if (ctHost3 && window.Contact) {
       Contact.attach(ctHost3, { title: o.name, url: location.origin + "/offerings#" + o.id, id: o.id, label: "Обсудить выпуск" });
     }
-    if (lnd) { csMount(o); heroWire(o); stripWire(); }
+    if (lnd) { csMount(o); heroWire(o); stripWire(); growWire(); }
     document.querySelectorAll(".item").forEach(el => { var on = el.getAttribute("data-id") === id; el.classList.toggle("active", on); if (on) el.setAttribute("aria-current", "true"); else el.removeAttribute("aria-current"); });
     history.replaceState(null, "", "#" + id);
     if (fromUser && window.matchMedia("(max-width: 920px)").matches) panel.classList.add("open");
