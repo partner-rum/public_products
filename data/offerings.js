@@ -36,6 +36,12 @@ window.OFFERINGS = {
      "file": "docs/kid-sp-1-59.pdf",
      "ext": "PDF",
      "size": "241 КБ"
+    },
+    {
+     "name": "Презентация",
+     "file": "docs/preso-sp-1-59.pdf",
+     "ext": "PDF",
+     "size": "491 КБ"
     }
    ]
   }
