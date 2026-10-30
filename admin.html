@@ -268,6 +268,7 @@
   <div class="tabs" role="tablist" aria-label="Разделы админки">
     <button class="tab on" data-f="f-board" type="button">Текущий продукт</button>
     <button class="tab" data-f="f-offering" type="button">На размещении</button>
+    <button class="tab" data-f="f-today" type="button">Цена на сегодня</button>
     <button class="tab" data-f="f-placement" type="button">Размещённый выпуск</button>
     <button class="tab" data-f="f-digest" type="button">Идея в дайджест</button>
     <button class="tab" data-f="f-dpdf" type="button">Выпуск недели</button>
@@ -599,6 +600,43 @@
 
     <button class="send" type="submit">Отправить на одобрение</button>
     <div class="msg" id="m-offering"></div>
+  </form>
+
+  <!-- ══════════ ЦЕНА НА СЕГОДНЯ ══════════
+       Цена и объём к продаже по выпуску на размещении. Меняются каждый день,
+       поэтому пишутся сразу, без одобрения (как сделки партнёров). -->
+  <form id="f-today" onsubmit="return false">
+    <details class="help"><summary>Как это работает<span class="cv">▾</span></summary>
+      <div class="hbody"><ol>
+        <li>Выберите выпуск — ниже будет видно, что сейчас стоит на сайте.</li>
+        <li>Впишите <b>цену на сегодня</b> в % от номинала (как в стакане: 103,5) и <b>объём
+          к продаже</b> в штуках облигаций. Под полями видно, сколько это в рублях.</li>
+        <li><b>Обновить на сайте</b> — цифры появятся на странице выпуска примерно через минуту,
+          одобрение не нужно. Руслану уходит уведомление с прежними и новыми цифрами.</li>
+        <li>Цена отличается от прежней больше чем на 25% — форма переспросит: так ловится лишний ноль.</li>
+        <li>Продажи закончились — поставьте объём 0. Цифры больше не нужны — «Убрать с сайта».</li>
+      </ol></div>
+    </details>
+    <div class="grp"><div class="gt">Выпуск</div>
+      <label style="margin:0"><span class="k">Выпуск на размещении <b>*</b></span>
+        <select name="oid" id="ot-pick"><option value="">Загрузка…</option></select></label>
+      <div class="hint" id="ot-now"></div>
+    </div>
+    <div class="grp"><div class="gt">На сегодня</div>
+      <div class="row">
+        <label><span class="k">Цена, % номинала <b>*</b></span>
+          <input name="price" id="ot-price" inputmode="decimal" placeholder="103,5" maxlength="9" autocomplete="off">
+          <span class="hint" id="ot-price-rub"></span></label>
+        <label><span class="k">Объём к продаже, шт. <b>*</b></span>
+          <input name="volume" id="ot-vol" inputmode="numeric" placeholder="1 200" maxlength="12" autocomplete="off">
+          <span class="hint" id="ot-vol-rub"></span></label>
+      </div>
+    </div>
+    <button class="send" type="button" id="ot-send">Обновить на сайте</button>
+    <button class="send" type="button" id="ot-clear"
+            style="background:transparent;border:1px solid var(--line);color:var(--ink);margin-top:10px">
+      Убрать цену и объём с сайта</button>
+    <div class="msg" id="m-today"></div>
   </form>
 
   <!-- ══════════ РАЗМЕЩЁННЫЙ ВЫПУСК ══════════ -->
@@ -1328,6 +1366,7 @@
       if (target === "f-placement") loadPlacementRefs();
       if (target === "f-webinar" && window.wbEnter) window.wbEnter();
       if (target === "f-talk") tkEnter();
+      if (target === "f-today") otLoad();
     });
   });
 
@@ -2241,6 +2280,10 @@
   // Сервер отдаёт коды вроде telegram_failed или kv_not_configured — печатать их
   // сейлзу как есть означает отправить его к Руслану за переводом.
   var ERR_RU = {
+    ot_bad_price: "Цена — в % от номинала, от 0,01 до 1000.",
+    ot_bad_volume: "Объём — целое число облигаций, 0 или больше.",
+    ot_not_found: "Этого выпуска уже нет на сайте — обновите страницу.",
+    ot_publish_failed: "Сайт не принял обновление (GitHub). Подождите минуту и нажмите ещё раз — цифры в форме сохранены.",
     no_rights: "Ваш ключ открывает только вкладку «Выступление». Остальное — через сейлзов или Руслана.",
     talk_no_org: "Впишите площадку или издание.",
     talk_no_title: "Впишите заголовок.",
@@ -2962,6 +3005,125 @@
     }
     window.open("instrument.html?preview=1", "_blank", "noopener");
   });
+
+  // ── ЦЕНА НА СЕГОДНЯ ──
+  // Поле today у размещения: цена в % номинала и объём к продаже в штуках, с
+  // датой и временем по МСК (их ставит сервер). Пишется сразу, без одобрения.
+  // Сервер отбивает скачок цены больше 25% без подтверждения — форма переспрашивает.
+  var otAll = {}, otLocal = {};                  // id -> запись; id -> today после нашей правки
+  var otPick = document.getElementById("ot-pick");
+  var otNow = document.getElementById("ot-now");
+  var otPrice = document.getElementById("ot-price");
+  var otVol = document.getElementById("ot-vol");
+  var otMsg = document.getElementById("m-today");
+  var otFmt2 = function (v) { return Number(v).toLocaleString("ru-RU", { maximumFractionDigits: 2 }); };
+  var otRub = function (v) {
+    if (v >= 1e9) return otFmt2(Math.round(v / 1e7) / 100) + " млрд ₽";
+    if (v >= 1e6) return otFmt2(Math.round(v / 1e4) / 100) + " млн ₽";
+    if (v >= 1e3) return Math.round(v / 1e3).toLocaleString("ru-RU") + " тыс. ₽";
+    return Math.round(v).toLocaleString("ru-RU") + " ₽";
+  };
+  // «103,5», «103.5», «1 200» — запятая, точка и пробелы разрядов
+  var otNum = function (s) {
+    s = String(s || "").replace(/[\s ]/g, "").replace(",", ".");
+    return s === "" ? null : Number(s);
+  };
+  function otToday(id) { return otLocal.hasOwnProperty(id) ? otLocal[id] : ((otAll[id] || {}).today || null); }
+
+  function otShow() {
+    var id = otPick.value, o = otAll[id];
+    if (!o) { otNow.textContent = ""; return; }
+    var t = otToday(id);
+    otNow.textContent = t
+      ? "Сейчас на сайте: " + otFmt2(t.price) + "% · " + Number(t.volume).toLocaleString("ru-RU") + " шт. — на " +
+        String(t.date || "").split("-").reverse().join(".") + (t.time ? ", " + t.time + " МСК" : "") + "."
+      : "Цены на сегодня на сайте ещё нет" + (o.price != null ? " — карточка показывает цену размещения " + otFmt2(o.price) + "%." : ".");
+    otPrice.value = t ? String(t.price).replace(".", ",") : "";
+    otVol.value = t ? String(t.volume) : "";
+    otCalc();
+  }
+  function otCalc() {
+    var o = otAll[otPick.value] || {}, nom = Number(o.nominal) || 1000;
+    var p = otNum(otPrice.value), v = otNum(otVol.value);
+    document.getElementById("ot-price-rub").textContent = p > 0 ? "≈ " + Math.round(nom * p / 100).toLocaleString("ru-RU") + " ₽ за облигацию" : "";
+    document.getElementById("ot-vol-rub").textContent = v === 0 ? "Сегодня к продаже нет"
+      : (v > 0 && p > 0 ? "≈ " + otRub(v * nom * p / 100) + " по этой цене" : "");
+  }
+  otPrice.addEventListener("input", otCalc);
+  otVol.addEventListener("input", otCalc);
+  otPick.addEventListener("change", function () { otMsg.className = "msg"; otMsg.textContent = ""; otShow(); });
+  [otPrice, otVol].forEach(function (el) {
+    el.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); document.getElementById("ot-send").click(); } });
+  });
+
+  function otLoad() {
+    fetchData("data/offerings.js").then(function (t) {
+      var d = dataObj(t, "OFFERINGS") || {}, keep = otPick.value, opts = [];
+      otAll = {};
+      ((d.items) || []).forEach(function (o) {
+        if (!o || !o.id || o.hidden) return;
+        otAll[o.id] = o;
+        opts.push('<option value="' + esc(o.id) + '">' + esc(o.name || o.id) + (o.serial ? " · " + esc(o.serial) : "") + "</option>");
+      });
+      otPick.innerHTML = opts.length ? opts.join("") : '<option value="">Выпусков на размещении нет</option>';
+      if (keep && otAll[keep]) otPick.value = keep;
+      otShow();
+    }).catch(function () { otNow.textContent = "Список выпусков не загрузился — обновите страницу."; });
+  }
+
+  // Ответ сервера разбираем сами: на скачок цены он отвечает ot_big_change с
+  // прежней ценой, и форму надо переспросить, а не показать общую ошибку.
+  function otPost(body) {
+    return fetch(ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
+      .then(function (r) { return r.json().then(function (d) { return { s: r.status, d: d }; }); });
+  }
+  function otSend(clear, confirmed) {
+    otMsg.className = "msg";
+    var key = keyEl.value.trim();
+    if (!key) { otMsg.className = "msg err"; otMsg.textContent = "Введите ваш персональный ключ (в самом верху страницы)."; keyEl.focus(); return; }
+    var id = otPick.value;
+    if (!otAll[id]) { otMsg.className = "msg err"; otMsg.textContent = "Выберите выпуск."; return; }
+    var body = { key: key, action: "offering_today", id: id };
+    if (clear) {
+      if (!otToday(id)) { otMsg.className = "msg err"; otMsg.textContent = "На сайте у этого выпуска цены на сегодня и так нет."; return; }
+      if (!window.confirm("Убрать цену и объём на сегодня у «" + (otAll[id].name || id) + "»? На сайте останется цена размещения.")) return;
+      body.clear = true;
+    } else {
+      var p = otNum(otPrice.value), v = otNum(otVol.value);
+      if (!(p > 0 && p <= 1000)) { otMsg.className = "msg err"; otMsg.textContent = "Цена — в % от номинала, от 0,01 до 1000. Например 103,5."; otPrice.focus(); return; }
+      if (v == null || !(v >= 0) || Math.floor(v) !== v) { otMsg.className = "msg err"; otMsg.textContent = "Объём — целое число облигаций, 0 или больше. Например 1200."; otVol.focus(); return; }
+      body.price = Math.round(p * 100) / 100; body.volume = v;
+      if (confirmed) body.confirm = true;
+    }
+    var btns = [document.getElementById("ot-send"), document.getElementById("ot-clear")];
+    btns.forEach(function (b) { b.disabled = true; });
+    var retry = false;   // подтвердили скачок — повтор после того, как этот запрос закончится
+    otPost(body).then(function (x) {
+      if (x.d && x.d.error === "ot_big_change" && !confirmed) {
+        retry = window.confirm("Цена " + otFmt2(body.price) + "% отличается от прежней (" + otFmt2(x.d.prev) +
+          "%) больше чем на 25%. Это не опечатка?");
+        if (!retry) { otMsg.className = "msg err"; otMsg.textContent = "Не отправлено — проверьте цену."; }
+        return;
+      }
+      if (!(x.d && x.d.ok)) throw new Error(serverError(x));
+      otLocal[id] = x.d.today || null;
+      otShow();
+      otMsg.className = "msg ok";
+      otMsg.textContent = x.d.unchanged
+        ? (clear ? "На сайте и так пусто." : "Эти же цифры уже стоят на сайте сегодня — обновлять нечего.")
+        : (clear ? "Убрано ✅ Через минуту на странице выпуска останется цена размещения."
+                 : "Обновлено ✅ Через минуту на странице выпуска: " + otFmt2(body.price) + "% · " +
+                   body.volume.toLocaleString("ru-RU") + " шт.") +
+          (x.d.notified === false ? " Уведомление Руслану не ушло — напишите ему сами." : "");
+    }).catch(function (err) {
+      otMsg.className = "msg err"; otMsg.textContent = String((err && err.message) || err);
+    }).finally(function () {
+      btns.forEach(function (b) { b.disabled = false; });
+      if (retry) otSend(false, true);
+    });
+  }
+  document.getElementById("ot-send").addEventListener("click", function () { otSend(false, false); });
+  document.getElementById("ot-clear").addEventListener("click", function () { otSend(true, false); });
 
   // ── НА РАЗМЕЩЕНИИ ──
   var fOff = document.getElementById("f-offering");

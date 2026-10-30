@@ -1337,7 +1337,7 @@ async function buildCatalog(env) {
     lines.push("", "НА РАЗМЕЩЕНИИ СЕЙЧАС (первичный рынок):");
     for (const o of offers) {
       lines.push("- [" + o.id + "] " + [o.name, o.reference && "базовый актив: " + o.reference,
-        o.price != null && "цена " + o.price + "% номинала", o.tenor && "срок " + o.tenor,
+        o.price != null && "цена " + o.price + "% номинала", offerTodayTxt(o), o.tenor && "срок " + o.tenor,
         o.isin && "ISIN " + o.isin, o.statusLabel].filter(Boolean).join(" · "));
     }
   }
@@ -1370,6 +1370,17 @@ async function buildCatalog(env) {
 // текст не трогаем, а чату отдаём копию: без внутренних id (модель печатала их клиенту) и с
 // пометкой «индикативно» у каждой цены — модель повторяет формулировку каталога
 // (слово Руслана 05.10.2026: «везде индикативно»).
+// Цена и объём к продаже на сегодня (поле today размещения, его ставит сейлз
+// из админки) — строкой для каталога ассистента. Формат «цена N% номинала …»
+// нужен chatCatalogText: он дописывает к такой цене «(индикативно)».
+function offerTodayTxt(o) {
+  const t = o && o.today;
+  if (!t || t.price == null) return "";
+  const d = String(t.date || "").split("-").reverse().join(".");
+  return "цена " + t.price + "% номинала на " + d +
+    (Number(t.volume) > 0 ? ", к продаже " + t.volume + " шт." : ", сегодня к продаже нет");
+}
+
 function chatCatalogText(text) {
   return String(text)
     .replace(/^- \[[^\]\n]+\] /gm, "- ")
@@ -1447,7 +1458,8 @@ function productContext(cat, pageUrl) {
     if (o) {
       return [
         "Название: " + o.name, o.kind && "Тип: " + o.kind, o.reference && "Базовый актив: " + o.reference,
-        o.price != null && "Цена размещения: " + o.price + "% номинала", o.tenor && "Срок: " + o.tenor,
+        o.price != null && "Цена размещения: " + o.price + "% номинала",
+        offerTodayTxt(o) && "Сегодня: " + offerTodayTxt(o), o.tenor && "Срок: " + o.tenor,
         o.isin && "ISIN: " + o.isin, o.venue && "Площадка: " + o.venue, o.statusLabel && "Статус: " + o.statusLabel,
         o.teaser,
       ].filter(Boolean).join("\n");
@@ -4826,6 +4838,54 @@ async function handleSubmit(request, env, cors, ctx) {
     return json({ ok: true, direct: true, notified: notified }, 200, cors);
   }
 
+  // ── Цена и объём к продаже на сегодня у размещения ──
+  // Сейлз обновляет их каждый день, поэтому БЕЗ одобрения (как сделки
+  // партнёров): ✅ раз в день на каждый выпуск превратился бы в рутину Руслана,
+  // а цена ждала бы его ответа. Ему уходит отбивка, след — в коммите. Опечатку
+  // в разряде ловит порог: скачок больше OT_JUMP от прежней цены сервер
+  // принимает только с подтверждением (confirm), форма его спрашивает.
+  if (data.action === "offering_today") {
+    const oid = cleanStr(data.id, 60);
+    if (!oid) return json({ ok: false, error: "no_id" }, 422, cors);
+    const clear = data.clear === true;
+    let price = null, volume = null;
+    if (!clear) {
+      price = Number(data.price);
+      if (!isFinite(price) || price <= 0 || price > 1000) return json({ ok: false, error: "ot_bad_price" }, 422, cors);
+      price = Math.round(price * 100) / 100;
+      volume = Number(data.volume);
+      if (!Number.isInteger(volume) || volume < 0 || volume > 1e8) return json({ ok: false, error: "ot_bad_volume" }, 422, cors);
+    }
+    const now = new Date(Date.now() + 3 * 3600 * 1000);
+    const stamp = { date: mskDate().key, time: String(now.getUTCHours()).padStart(2, "0") + ":" + String(now.getUTCMinutes()).padStart(2, "0") };
+    let res;
+    try {
+      res = await setOfferingToday(env, { oid, price, volume, clear, by: author, confirm: data.confirm === true, stamp });
+    } catch (e) {
+      const m = String((e && e.message) || e);
+      if (m === "not_found") return json({ ok: false, error: "ot_not_found" }, 404, cors);
+      if (m === "big_change") return json({ ok: false, error: "ot_big_change", prev: e.prev }, 409, cors);
+      if (m === "github_not_configured") return json({ ok: false, error: "not_configured" }, 503, cors);
+      return json({ ok: false, error: "ot_publish_failed" }, 502, cors);
+    }
+    if (res.unchanged) return json({ ok: true, direct: true, unchanged: true, today: res.today || null }, 200, cors);
+    const was = res.prev;
+    const fmtT = (t) => t ? String(t.price).replace(".", ",") + "% · " + Number(t.volume).toLocaleString("ru-RU") + " шт." : "не было";
+    const otext =
+      (clear ? "🧹 <b>Цена и объём сняты с витрины</b>" : "💱 <b>Цена и объём на сегодня</b>") +
+      " (без одобрения) · от <b>" + esc(author) + "</b>\n" +
+      esc(res.name || oid) + "\n" +
+      (clear ? "Было: " + esc(fmtT(was)) : "Стало: <b>" + esc(fmtT(res.today)) + "</b>" + (was ? " · было " + esc(fmtT(was)) : ""));
+    let notified = false;
+    try {
+      const nr = await tg(env, "sendMessage", {
+        chat_id: env.ADMIN_CHAT_ID, text: otext, parse_mode: "HTML", disable_web_page_preview: true,
+      });
+      notified = !!(nr && nr.ok);
+    } catch (e) { /* отбивка не критична, цена уже на сайте */ }
+    return json({ ok: true, direct: true, today: res.today || null, notified: notified }, 200, cors);
+  }
+
   const section = cleanStr(data.section, 20);
   if (!SUBMIT_SECTIONS[section]) return json({ ok: false, error: "bad_section" }, 422, cors);
 
@@ -5317,6 +5377,51 @@ function docSize(bytes) {
   const kb = bytes / 1024;
   if (kb < 1024) return Math.round(kb) + " КБ";
   return (Math.round(kb / 1024 * 10) / 10).toString().replace(".", ",") + " МБ";
+}
+
+// Цена и объём к продаже на сегодня (action "offering_today"): поле today у
+// размещения в data/offerings.js — { price: % номинала, volume: штук, date, time
+// по МСК }. Пишется сразу коммитом, без одобрения. clear — убрать поле совсем.
+// Повтор тех же цифр в тот же день коммита не делает: сейлз жмёт кнопку дважды,
+// а история git не должна пухнуть пустыми правками.
+const OT_JUMP = 0.25;   // скачок цены больше 25% — только с подтверждением
+async function setOfferingToday(env, p) {
+  if (!env.GITHUB_TOKEN || !env.GITHUB_REPO) throw new Error("github_not_configured");
+  const branch = env.GITHUB_BRANCH || "main";
+  const api = "https://api.github.com/repos/" + env.GITHUB_REPO + "/contents/data/offerings.js";
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const g = await fetch(api + "?ref=" + branch, { headers: ghHeaders(env) });
+    if (!g.ok) throw new Error("github_get_" + g.status);
+    const meta = await g.json();
+    const text = b64decodeUtf8(meta.content);
+    const obj = JSON.parse(text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1));
+    const off = (obj.items || []).find((i) => i.id === p.oid);
+    if (!off) throw new Error("not_found");
+    const prev = off.today && off.today.price != null ? off.today : null;
+    let msg;
+    if (p.clear) {
+      if (!off.today) return { unchanged: true, name: off.name, today: null };
+      delete off.today;
+      msg = "Админка: цена и объём сняты — " + (off.name || off.id) + " (от " + p.by + ")";
+    } else {
+      if (prev && prev.price === p.price && prev.volume === p.volume && prev.date === p.stamp.date) {
+        return { unchanged: true, name: off.name, today: prev };
+      }
+      const ref = prev ? Number(prev.price) : Number(off.price);
+      if (!p.confirm && ref > 0 && Math.abs(p.price / ref - 1) > OT_JUMP) {
+        const e = new Error("big_change"); e.prev = ref; throw e;
+      }
+      off.today = { price: p.price, volume: p.volume, date: p.stamp.date, time: p.stamp.time };
+      msg = "Админка: цена и объём на сегодня — " + (off.name || off.id) + ": " + p.price + "% · " +
+        p.volume + " шт. (от " + p.by + ")";
+    }
+    const put = await fetch(api, { method: "PUT", headers: ghHeaders(env), body: JSON.stringify({
+      message: msg, content: b64encodeUtf8(renderDataFile("data/offerings.js", obj)), sha: meta.sha, branch }) });
+    if (put.ok) return { name: off.name, today: off.today || null, prev: prev };
+    if (put.status !== 409 && put.status !== 422) throw new Error("github_put_" + put.status);
+    // sha устарел (параллельная правка) — перечитываем и пробуем ещё раз
+  }
+  throw new Error("github_conflict");
 }
 
 // Прикрепление документа к РАЗМЕЩЕНИЮ: байты забираются из KV (там файл ждал

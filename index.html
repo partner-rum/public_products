@@ -1919,7 +1919,12 @@
               '<a href="https://t.me/+NHbVOoUI5IBkN2Uy" target="_blank" rel="noopener">Написать в Telegram' + AR + '</a>' +
             '</span></div>')
       : offerItems.map(function (o) {
-      var ps = [["срок", o.tenor], ["защита", o.protection], ["участие", o.participation]]
+      // Цена на сегодня (o.today, сейлз ставит её из админки) — только свежая:
+      // вчерашняя в колонке главной выглядела бы сегодняшней
+      var td = o.today && Number(o.today.price) > 0 &&
+        o.today.date === new Date(Date.now() + 3 * 3600 * 1000).toISOString().slice(0, 10)
+        ? String(Math.round(Number(o.today.price) * 100) / 100).replace(".", ",") + "%" : "";
+      var ps = [["сегодня", td], ["срок", o.tenor], ["защита", o.protection], ["участие", o.participation]]
         .filter(function (p) { return p[1]; })
         .map(function (p) { return p[0] + ' <b>' + esc(p[1]) + '</b>'; }).join(" · ");
       return '<a class="om" href="offerings.html#' + encodeURIComponent(o.id) + '">' +
@@ -2548,7 +2553,7 @@
   else setTimeout(start, 1200);
 })();
 </script>
-<script src="tabs.js?v=23"></script>
+<script src="tabs.js?v=24"></script>
 <script src="ptr.js?v=3" defer></script>
 </body>
 

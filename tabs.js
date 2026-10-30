@@ -1419,12 +1419,25 @@
         // Обложка — та же картинка, что у героя страницы выпуска (Dribbble: Travel от Ronas IT и
         // Furniture от Nixtio — крупные карточки с изображением). У ролика кадр вертикальный —
         // кадрируем выше середины, где спутник
+        // Цифры карточки. Есть цена и объём на сегодня (o.today, сейлз ставит их из
+        // админки) — показываем их вместо цены размещения и номинала: по ним и
+        // покупают. Не сегодняшние — подписаны датой, а не «сегодня».
+        var offNums = function (o) {
+          var t = o.today, td = t && Number(t.price) > 0 && /^\d{4}-\d{2}-\d{2}$/.test(String(t.date || "")) ? t : null;
+          var dm = td ? td.date.slice(8, 10) + "." + td.date.slice(5, 7) : "";
+          var fresh = td && td.date === new Date(Date.now() + 3 * 3600 * 1000).toISOString().slice(0, 10);
+          var pr = td ? "<div><b>" + fq(Number(td.price)) + "%</b><span>" + (fresh ? "цена сегодня" : "цена на " + dm) + "</span></div>"
+            : (o.price != null ? "<div><b>" + fq(o.price) + "%</b><span>цена</span></div>" : "");
+          var last = td ? "<div><b>" + (Number(td.volume) > 0 ? Number(td.volume).toLocaleString("ru-RU") + " шт." : "нет") + "</b><span>к продаже</span></div>"
+            : (o.nominal ? "<div><b>" + Number(o.nominal).toLocaleString("ru-RU") + " ₽</b><span>номинал</span></div>" : "");
+          return pr + (o.tenor ? "<div><b>" + esc(o.tenor) + "</b><span>срок</span></div>" : "") + last;
+        };
         O.forEach(function (o) {
           // hero.cover — своя обложка карточки (схема по центру); иначе кадр героя
           var hp = o.hero && (o.hero.cover || o.hero.poster);
           var cov = hp ? '<span class="tg-cov"><img src="' + esc(hp) + '" alt="" loading="lazy" decoding="async"' + (o.hero.wide ? "" : ' style="object-position:50% 34%"') + "></span>" : "";
           body += '<a class="tg-card tg-off' + (cov ? " tg-hasc" : "") + '" href="offerings.html#' + esc(o.id) + '">' + cov + '<span class="tg-stat">' + esc(o.statusLabel || "") + "</span><h2><span>" + esc(o.name) + "</span>" + CHEV + "</h2>" + (o.isin ? '<p class="tg-isin">ISIN ' + esc(o.isin) + "</p>" : "") + "<p>" + esc(o.lead || o.kind || "") + "</p>" +
-            '<div class="tg-nums">' + (o.price != null ? "<div><b>" + fq(o.price) + "%</b><span>цена</span></div>" : "") + (o.tenor ? "<div><b>" + esc(o.tenor) + "</b><span>срок</span></div>" : "") + (o.nominal ? "<div><b>" + Number(o.nominal).toLocaleString("ru-RU") + " ₽</b><span>номинал</span></div>" : "") + "</div>" +
+            '<div class="tg-nums">' + offNums(o) + "</div>" +
             lifeBar(o) + "</a>";
         });
         return body;

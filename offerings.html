@@ -380,6 +380,24 @@
   .terms-cta { margin-top: 22px; }
   .terms-cta .o-doc-btn { background: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; }
 
+  /* Цена и объём к продаже на сегодня (поле today, его ставит сейлз из админки).
+     Строка над фактами: заголовок с датой и две крупные цифры. Цифры не сегодняшние
+     (сейлз ещё не обновил) — заголовок называет дату, а не «сегодня». */
+  .tdy { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 36px; align-items: end;
+         margin-top: 8px; padding: 20px 0 18px; border-bottom: 1px solid var(--border-soft); }
+  .tdy-h { align-self: center; font-size: 14.5px; font-weight: 600; color: var(--ink); display: flex; flex-direction: column; gap: 4px; }
+  .tdy-h .dt { display: inline-flex; align-items: center; gap: 8px; }
+  .tdy-h .dt i { width: 7px; height: 7px; border-radius: 50%; background: var(--up); flex: none; }
+  .tdy.old .tdy-h .dt i { background: rgba(242,243,247,0.4); }
+  .tdy-h .tm { font-size: 12.5px; font-weight: 400; color: var(--faint); }
+  .tdy-c { min-width: 0; container-type: inline-size; }
+  .tdy-c .v { font-family: var(--f-mono); font-size: 34px; font-size: min(34px, 10.4cqi); font-weight: 500; letter-spacing: -0.02em; line-height: 1; color: var(--solar); white-space: nowrap; }
+  .tdy-c.none .v { color: var(--hushed); }
+  .tdy-c .k { margin-top: 10px; font-size: 14.5px; font-weight: 600; }
+  .tdy-c .d { margin-top: 5px; font-size: 13px; line-height: 1.5; color: var(--hushed); }
+  @media (max-width: 1023px) { .tdy { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px 28px; } .tdy-h { grid-column: 1 / -1; } }
+  @media (max-width: 720px) { .tdy { grid-template-columns: 1fr; gap: 14px; padding: 16px 0 14px; } .tdy-c .v { font-size: 28px; font-size: min(28px, 10.4cqi); } }
+
   /* ── ДЕТАЛИ: свёрнутые разделы ─────────────────────────────────────────── */
   .fd { border-bottom: 1px solid var(--border-soft); }
   .fd summary { cursor: pointer; list-style: none; display: flex; align-items: baseline; gap: 14px; padding: 17px 2px; min-height: 44px; }
@@ -825,14 +843,52 @@
     return String(n).replace(".", ",") + " " + word;
   }
 
+  // Цена и объём к продаже на сегодня (o.today: price — % номинала, volume — штук,
+  // date и time по МСК). Сейлз обновляет их из админки без одобрения. Дата не
+  // сегодняшняя — подписываем её, а не «сегодня»: вчерашняя цена не должна
+  // выглядеть сегодняшней.
+  function todayOf(o) {
+    var t = o && o.today;
+    if (!t || !(Number(t.price) > 0) || !/^\d{4}-\d{2}-\d{2}$/.test(String(t.date || ""))) return null;
+    var now = new Date(Date.now() + 3 * 3600 * 1000).toISOString().slice(0, 10);
+    var dm = t.date.slice(8, 10) + "." + t.date.slice(5, 7);
+    return { price: Number(t.price), volume: Math.max(0, Number(t.volume) || 0), date: t.date, dm: dm,
+             time: /^\d{2}:\d{2}$/.test(String(t.time || "")) ? t.time : "", fresh: t.date === now };
+  }
+  function rubShort(v) {
+    var f = x => (Math.round(x * 100) / 100).toLocaleString("ru-RU");
+    if (v >= 1e9) return f(v / 1e9) + " млрд ₽";
+    if (v >= 1e6) return f(v / 1e6) + " млн ₽";
+    if (v >= 1e3) return Math.round(v / 1e3).toLocaleString("ru-RU") + " тыс. ₽";
+    return Math.round(v).toLocaleString("ru-RU") + " ₽";
+  }
+  function todayHTML(o) {
+    var td = todayOf(o);
+    if (!td) return "";
+    var nom = Number(o.nominal) || 1000, one = nom * td.price / 100;
+    return '<div class="tdy' + (td.fresh ? '' : ' old') + '">' +
+      '<div class="tdy-h"><span class="dt"><i></i>' + (td.fresh ? 'Сегодня, ' + td.dm : 'На ' + td.dm) + '</span>' +
+        '<span class="tm">' + (td.time ? 'обновлено в ' + td.time + ' МСК · ' : '') + 'индикативно</span></div>' +
+      '<div class="tdy-c"><div class="v">' + fmt2(td.price) + '%</div><div class="k">' + (td.fresh ? 'цена на сегодня' : 'цена на ' + td.dm) + '</div>' +
+        '<div class="d">от номинала: ≈ ' + Math.round(one).toLocaleString("ru-RU") + ' ₽ за облигацию</div></div>' +
+      (td.volume > 0
+        ? '<div class="tdy-c"><div class="v">' + td.volume.toLocaleString("ru-RU") + ' шт.</div><div class="k">к продаже</div>' +
+            '<div class="d">≈ ' + rubShort(td.volume * one) + ' по этой цене</div></div>'
+        : '<div class="tdy-c none"><div class="v">нет</div><div class="k">к продаже ' + (td.fresh ? 'сегодня' : 'на ' + td.dm) + '</div>' +
+            '<div class="d">когда появится объём — уточните у менеджера</div></div>') +
+    '</div>';
+  }
+
   // ── Список ──
   var STF = { all: "Все", live: "Идут", upcoming: "Скоро" };
   var filter = "all", selected = null;
 
   function itemHTML(o) {
     var c = famCol(o), st = o.status === "live" ? "live" : "up";
+    // В списке — цена на сегодня, если сейлз её ставил: по ней и покупают
+    var td = todayOf(o), pr = td ? td.price : o.price;
     return '<button class="item' + (o.id === selected ? " active" : "") + '"' + (o.id === selected ? ' aria-current="true"' : '') + ' data-id="' + o.id + '" style="--fc:' + c + '">' +
-      '<div class="r1"><span class="nm">' + S.esc(o.name) + '</span><span class="pr">' + (o.price != null ? fmt2(o.price) + '%' : '') + '</span></div>' +
+      '<div class="r1"><span class="nm">' + S.esc(o.name) + '</span><span class="pr">' + (pr != null ? fmt2(pr) + '%' : '') + '</span></div>' +
       '<div class="r2"><span class="sub">' + [S.esc(o.reference), S.esc(o.tenor)].filter(Boolean).join(" · ") + '</span>' +
         '<span class="st ' + st + '"><span class="dot"></span>' + (S.esc(o.statusLabel) || (o.status === "live" ? "идёт" : "")) + '</span></div>' +
     '</button>';
@@ -867,7 +923,11 @@
     var badge = o.status === "live"
       ? '<span class="badge live"><span class="dot"></span>' + (S.esc(o.statusLabel) || "Идёт размещение") + '</span>'
       : '<span class="badge up"><span class="dot"></span>' + S.esc(o.statusLabel) + '</span>';
-    var tiles = "";
+    var tiles = "", td = todayOf(o);
+    if (td) {
+      tiles += tile(fmt2(td.price) + "%", td.fresh ? "цена на сегодня" : "цена на " + td.dm, true);
+      tiles += tile(td.volume > 0 ? td.volume.toLocaleString("ru-RU") + " шт." : "нет", td.fresh ? "к продаже сегодня" : "к продаже на " + td.dm);
+    }
     if (o.protection) tiles += tile(o.protection, "защита капитала", true);
     if (o.participation) tiles += tile(o.participation, "участие в росте", true);
     if (o.price != null) tiles += tile(fmt2(o.price) + "%", "цена размещения", true);
@@ -1370,10 +1430,12 @@
     // ── УСЛОВИЯ: шесть фактов крупно. Шестой — про ноль, и он стоит в одном ряду
     //    с остальными, а не сноской.
     var tr = isTrack(o), t = o.track || {};
+    // Есть цена на сегодня — акцент у неё (строка над фактами), цена размещения тише
+    var hiPx = todayOf(o) ? '' : 'hi';
     // Трекер: вместо потолка — сколько акции в одной облигации, вместо «0 ₽,
     // если корзина не выросла» — уровень риска из КИД: защиты нет вовсе.
     var facts = tr ? [
-      [ fmt2(price) + '%', 'цена размещения', 'от номинала: ≈ ' + RUB(inv) + ' ₽ за бумагу*', 'hi' ],
+      [ fmt2(price) + '%', 'цена размещения', 'от номинала: ≈ ' + RUB(inv) + ' ₽ за бумагу*', hiPx ],
       [ fmt2(t.units) + ' акции', esc(t.asset) + ' в одной облигации', 'по цене входа $' + money2(t.entry) + ' за акцию', 'hi' ],
       [ tenorTxt(o.tenor), 'срок', 'погашение ' + esc(o.maturity) + (t.ipo ? '; ориентир IPO — ' + esc(t.ipo) : '') ],
       [ esc(o.minBuy || ""), 'порог входа', esc(o.venue || "") ],
@@ -1381,7 +1443,7 @@
       [ (o.kidRisk ? esc(o.kidRisk) + ' из 7' : 'нет'), o.kidRisk ? 'уровень риска по КИД' : 'защиты капитала',
         'защиты капитала нет: выплата падает вместе с оценкой ' + esc(t.asset) + ', вплоть до нуля', 'loss' ],
     ] : [
-      [ fmt2(price) + '%', 'цена входа', 'от номинала: ' + RUB(inv) + ' ₽ за бумагу', 'hi' ],
+      [ fmt2(price) + '%', 'цена входа', 'от номинала: ' + RUB(inv) + ' ₽ за бумагу', hiPx ],
       [ fmt2(cap) + '%', 'потолок выплаты', 'от номинала: до ' + fmt2(Math.round((100 + capMax) / 10) / 10) + '× на вложенное*', 'hi' ],
       [ tenorTxt(o.tenor), 'срок', 'погашение ' + esc(o.maturity) ],
       [ esc(o.placement || ""), (o.placementLabel || 'приём заявок'), esc(o.venue || "") + (o.minBuy ? ', ' + esc(o.minBuy) : '') ],
@@ -1389,6 +1451,7 @@
       [ '0 ₽', 'если корзина не выросла', 'выплаты нет, вложенные ' + RUB(inv) + ' ₽ теряются', 'loss' ],
     ];
     var termsSec = sec("Условия", "",
+      todayHTML(o) +
       '<div class="facts">' + facts.map(f => '<div class="fc' + (f[3] ? ' ' + f[3] : '') + '"><div class="v">' + f[0] + '</div>' +
         '<div class="k">' + f[1] + '</div><div class="d">' + f[2] + '</div></div>').join("") + '</div>' +
       '<p class="src">' + (tr ? esc(t.note || "")
