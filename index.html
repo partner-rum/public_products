@@ -2002,6 +2002,23 @@
     const stream = document.getElementById("mk-stream");
     let v = 0.5, nextI = 0, offset = 0;
     const candles = [], nodes = [];
+    // Полоса, в которой график виден. На экране шире 1440 svg режется сверху и
+    // снизу (slice), и блуждание по всей высоте уводило свечи под шапку — на
+    // широком мониторе график пропадал целиком. Поэтому границы считаются в
+    // пикселях экрана по фактическому масштабу: ниже шапки и выше затухания фона.
+    let vLo = 0.08, vHi = 0.92, labY = 99.5;
+    function band() {
+      const r = svg.getBoundingClientRect();
+      if (!r.width || !r.height) return;
+      const s = Math.max(r.width / W, r.height / H);
+      const y0 = (H - r.height / s) / 2;
+      const toV = (yy) => 1 - (yy - PT) / (H - PT - PB);
+      vHi = Math.min(0.92, toV(y0 + 130 / s));
+      vLo = Math.max(0.08, toV(y0 + 470 / s));
+      labY = y0 + 100 / s;
+    }
+    band();
+    v = (vLo + vHi) / 2;
     function drawCandle(c) {
       const cx = c.i * STEP + STEP / 2;
       const col = c.c >= c.o ? UP : DOWN;
@@ -2016,8 +2033,8 @@
       const x = i * STEP, z = zoneOf(i);
       const g = el("g", {});
       g.appendChild(el("line", { x1: x, y1: 0, x2: x, y2: H, stroke: GRID, "stroke-width": 1, "stroke-dasharray": "3 6" }));
-      g.appendChild(el("rect", { x: x - 3.5, y: 96, width: 7, height: 7, transform: "rotate(45 " + x + " 99.5)", fill: MARK }));
-      const t = el("text", { x: x + 11, y: 104, "font-size": "10.5", "font-family": "JetBrains Mono, monospace", "letter-spacing": "0.12em", fill: LAB });
+      g.appendChild(el("rect", { x: x - 3.5, y: (labY - 3.5).toFixed(1), width: 7, height: 7, transform: "rotate(45 " + x + " " + labY.toFixed(1) + ")", fill: MARK }));
+      const t = el("text", { x: x + 11, y: (labY + 4.5).toFixed(1), "font-size": "10.5", "font-family": "JetBrains Mono, monospace", "letter-spacing": "0.12em", fill: LAB });
       t.textContent = z.label.toUpperCase();
       g.appendChild(t);
       stream.appendChild(g);
@@ -2026,10 +2043,13 @@
     function genTo(maxI) {
       while (nextI <= maxI) {
         if (nextI % ZLEN === 0) drawBoundary(nextI);
-        let step = (Math.random() - 0.5) * 0.13 + 0.003;
         const o = v;
+        // Лёгкая тяга к середине полосы; вне её (после смены размера окна)
+        // шаг всегда ведёт обратно, без скачка.
+        let step = (Math.random() - 0.5) * 0.13 + 0.003 + ((vLo + vHi) / 2 - o) * 0.04;
+        if (o > vHi) step = -Math.abs(step); else if (o < vLo) step = Math.abs(step);
         let c = o + step;
-        if (c > 0.92 || c < 0.08) c = o - step;
+        if (o >= vLo && o <= vHi && (c > vHi || c < vLo)) c = o - step;
         const cd = { i: nextI, o, c, h: Math.max(o, c) + Math.random() * 0.03, l: Math.min(o, c) - Math.random() * 0.03 };
         candles.push(cd);
         drawCandle(cd);
@@ -2042,6 +2062,7 @@
       while (candles.length > 130) candles.shift();
     }
     genTo(Math.ceil(W / STEP) - 1);
+    window.addEventListener("resize", band);
     if (isStatic) return;
     // На телефоне фон скрыт (display:none), а цикл всё равно перестраивал его
     // каждый кадр и занимал главный поток в каждом кадре листания (правка
