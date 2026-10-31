@@ -470,9 +470,9 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 56.51,
-     "px": 52.18,
+     "px": 52.2,
      "pxTime": "2026-10-31",
-     "perfPct": -7.7
+     "perfPct": -7.6
     }
    ],
    "dates": {
@@ -488,7 +488,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 100.0,
     "protectionPct": 0.0
    },
-   "perfPct": -7.7
+   "perfPct": -7.6
   },
   {
    "isin": "RU000A10CVF9",
@@ -825,7 +825,7 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26230",
      "w": 1.0,
      "f0": 63.766,
-     "px": 57.158,
+     "px": 57.156,
      "pxTime": "2026-10-31",
      "perfPct": -10.4
     }
@@ -1071,7 +1071,7 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 58.826,
-     "px": 52.18,
+     "px": 52.2,
      "pxTime": "2026-10-31",
      "perfPct": -11.3
     }
@@ -1151,7 +1151,7 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 55.449,
-     "px": 52.18,
+     "px": 52.2,
      "pxTime": "2026-10-31",
      "perfPct": -5.9
     }
@@ -1238,7 +1238,7 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 56.31,
-     "px": 52.18,
+     "px": 52.2,
      "pxTime": "2026-10-31",
      "perfPct": -7.3
     }
@@ -1279,7 +1279,7 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 60.2,
-     "px": 52.18,
+     "px": 52.2,
      "pxTime": "2026-10-31",
      "perfPct": -13.3
     }
@@ -1320,7 +1320,7 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 60.9,
-     "px": 52.18,
+     "px": 52.2,
      "pxTime": "2026-10-31",
      "perfPct": -14.3
     }
@@ -1361,7 +1361,7 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 61.19,
-     "px": 52.18,
+     "px": 52.2,
      "pxTime": "2026-10-31",
      "perfPct": -14.7
     }
@@ -1440,9 +1440,9 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 61.3,
-     "px": 52.18,
+     "px": 52.2,
      "pxTime": "2026-10-31",
-     "perfPct": -14.9
+     "perfPct": -14.8
     }
    ],
    "dates": {
@@ -1458,7 +1458,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 100.0,
     "protectionPct": 0.0
    },
-   "perfPct": -14.9
+   "perfPct": -14.8
   },
   {
    "isin": "RU000A10ASJ1",
@@ -1519,7 +1519,7 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 60.89,
-     "px": 52.18,
+     "px": 52.2,
      "pxTime": "2026-10-31",
      "perfPct": -14.3
     }
@@ -1598,7 +1598,7 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 62.65,
-     "px": 52.18,
+     "px": 52.2,
      "pxTime": "2026-10-31",
      "perfPct": -16.7
     }
@@ -1639,7 +1639,7 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 61.175,
-     "px": 52.18,
+     "px": 52.2,
      "pxTime": "2026-10-31",
      "perfPct": -14.7
     }
@@ -1680,7 +1680,7 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26246",
      "w": 1.0,
      "f0": 90.79,
-     "px": 81.169,
+     "px": 81.189,
      "pxTime": "2026-10-31",
      "perfPct": -10.6
     }
@@ -1721,9 +1721,9 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 59.4,
-     "px": 52.18,
+     "px": 52.2,
      "pxTime": "2026-10-31",
-     "perfPct": -12.2
+     "perfPct": -12.1
     }
    ],
    "dates": {
@@ -1739,7 +1739,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 190.0,
     "protectionPct": 100.0
    },
-   "perfPct": -12.2
+   "perfPct": -12.1
   },
   {
    "isin": "RU000A10BUD8",
@@ -1762,7 +1762,7 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 58.857,
-     "px": 52.18,
+     "px": 52.2,
      "pxTime": "2026-10-31",
      "perfPct": -11.3
     }
@@ -1803,7 +1803,7 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 58.857,
-     "px": 52.18,
+     "px": 52.2,
      "pxTime": "2026-10-31",
      "perfPct": -11.3
     }
@@ -1885,9 +1885,9 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 54.73,
-     "px": 52.18,
+     "px": 52.2,
      "pxTime": "2026-10-31",
-     "perfPct": -4.7
+     "perfPct": -4.6
     }
    ],
    "dates": {
@@ -1903,7 +1903,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 190.0,
     "protectionPct": 100.0
    },
-   "perfPct": -4.7
+   "perfPct": -4.6
   },
   {
    "isin": "RU000A10BA01",
@@ -1917,7 +1917,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2025-05-06",
    "maturity": "2028-05-19",
    "fx": true,
-   "bid": 90.0,
+   "bid": 90.25,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -1926,7 +1926,7 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 52.942,
-     "px": 52.18,
+     "px": 52.2,
      "pxTime": "2026-10-31",
      "perfPct": -1.4
     }
@@ -1967,7 +1967,7 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 53.078,
-     "px": 52.18,
+     "px": 52.2,
      "pxTime": "2026-10-31",
      "perfPct": -1.7
     }
@@ -2049,16 +2049,16 @@ window.PLACEMENTS_DATA = {
      "n": "МКПАО \"Хэдхантер\"",
      "w": 1.0,
      "f0": 3183.0,
-     "px": 2697.0,
+     "px": 2691.0,
      "pxTime": "2026-10-31",
-     "perfPct": -15.3
+     "perfPct": -15.5
     },
     {
      "t": "MOEX",
      "n": "МосБиржа",
      "w": 1.0,
      "f0": 201.8,
-     "px": 164.87,
+     "px": 164.96,
      "pxTime": "2026-10-31",
      "perfPct": -18.3
     },
@@ -2067,7 +2067,7 @@ window.PLACEMENTS_DATA = {
      "n": "Татнефть (ао)",
      "w": 1.0,
      "f0": 682.3,
-     "px": 647.5,
+     "px": 647.7,
      "pxTime": "2026-10-31",
      "perfPct": -5.1
     },
@@ -2201,9 +2201,9 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 53.34,
-     "px": 52.18,
+     "px": 52.2,
      "pxTime": "2026-10-31",
-     "perfPct": -2.2
+     "perfPct": -2.1
     }
    ],
    "dates": {
@@ -2219,7 +2219,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 200.0,
     "protectionPct": 100.0
    },
-   "perfPct": -2.2
+   "perfPct": -2.1
   },
   {
    "isin": "RU000A10A9B2",
