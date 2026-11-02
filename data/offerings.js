@@ -3,7 +3,7 @@
 // оставаться СТРОГИМ JSON (двойные кавычки, без комментариев внутри). Новый выпуск = объект
 // в НАЧАЛО items[]. status: "upcoming" | "live". Материалы кладём в docs/.
 window.OFFERINGS = {
- "updated": "2026-10-30",
+ "updated": "2026-11-02",
  "items": [
   {
    "id": "sp-1-59",
@@ -467,7 +467,13 @@ window.OFFERINGS = {
      "short": "КИД",
      "top": true
     }
-   ]
+   ],
+   "today": {
+    "price": 102.76,
+    "volume": 50000,
+    "date": "2026-11-02",
+    "time": "10:27"
+   }
   }
  ]
 };
