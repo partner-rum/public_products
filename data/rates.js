@@ -3,7 +3,7 @@
 // Источники: ЦБ (ключевая, RUONIA), MOEX ISS (RUSFAR, БПИФы, ОФЗ),
 // Финуслуги (вклады и накопительные счета — витрина МосБиржи).
 window.RATES = {
-  "updated": "2026-11-02 19:32",
+  "updated": "2026-11-03 10:32",
   "cbr": {
     "key": {
       "rate": 14.0,
@@ -50,49 +50,49 @@ window.RATES = {
     {
       "id": "BCSD",
       "name": "БКС Денежный рынок",
-      "price": 14.627,
+      "price": 14.638,
       "ter": 0.2,
       "rate": 13.92
     },
     {
       "id": "MONY",
       "name": "АК БАРС Денежный рынок",
-      "price": 135.13,
+      "price": 135.47,
       "ter": 0.2,
       "rate": 13.92
     },
     {
       "id": "LQDT",
       "name": "Ликвидность (ВИМ)",
-      "price": 2.1237,
+      "price": 2.1252,
       "ter": 0.29,
       "rate": 13.83
     },
     {
       "id": "SBMM",
       "name": "Первая Сберегательный",
-      "price": 19.7555,
+      "price": 19.7705,
       "ter": 0.3,
       "rate": 13.82
     },
     {
       "id": "AMNR",
       "name": "АТОН Накопительный",
-      "price": 159.614,
+      "price": 159.736,
       "ter": 0.3,
       "rate": 13.82
     },
     {
       "id": "AKMM",
       "name": "Альфа Денежный рынок",
-      "price": 180.73,
+      "price": 180.85,
       "ter": 0.69,
       "rate": 13.43
     },
     {
       "id": "TMON",
       "name": "Т-Капитал Денежный рынок",
-      "price": 167.13,
+      "price": 167.24,
       "ter": 1.15,
       "rate": 12.97
     }
@@ -103,21 +103,21 @@ window.RATES = {
       "name": "ОФЗ 26207",
       "maturity": "2027-02-03",
       "years": 0.25,
-      "rate": 13.25
+      "rate": 13.04
     },
     {
       "id": "SU26232RMFS7",
       "name": "ОФЗ 26232",
       "maturity": "2027-10-06",
-      "years": 0.93,
-      "rate": 13.24
+      "years": 0.92,
+      "rate": 13.19
     },
     {
       "id": "SU26212RMFS9",
       "name": "ОФЗ 26212",
       "maturity": "2028-01-19",
       "years": 1.21,
-      "rate": 13.83
+      "rate": 13.62
     }
   ],
   "deposits": [
@@ -586,22 +586,6 @@ window.RATES = {
       "feature": null
     },
     {
-      "bank": "Банк Уралсиб",
-      "name": "Доход. Частный (% в конце срока)",
-      "rate": 14.15,
-      "kind": "deposit",
-      "termMonths": 9,
-      "daysFrom": 31,
-      "daysTo": 1100,
-      "minAmount": 10000000,
-      "url": "https://finuslugi.ru/vklady/bank_uralsib_dohod_private_v_konce_sroka",
-      "promo": false,
-      "floating": false,
-      "refill": false,
-      "capitalization": false,
-      "feature": null
-    },
-    {
       "bank": "Газпромбанк",
       "name": "ГПБ-счет (на минимальный остаток)",
       "rate": 14.0,
@@ -872,54 +856,6 @@ window.RATES = {
       "refill": false,
       "capitalization": false,
       "feature": "Для новых накоплений"
-    },
-    {
-      "bank": "Трансстройбанк",
-      "name": "Стабильный",
-      "rate": 13.5,
-      "kind": "deposit",
-      "termMonths": 9,
-      "daysFrom": 181,
-      "daysTo": 550,
-      "minAmount": 100000,
-      "url": "https://finuslugi.ru/vklady/transstrojbank_stabilnyj",
-      "promo": false,
-      "floating": false,
-      "refill": true,
-      "capitalization": true,
-      "feature": null
-    },
-    {
-      "bank": "РосДорБанк",
-      "name": "ONLINE-Ключевая минус 0,5%",
-      "rate": 13.5,
-      "kind": "deposit",
-      "termMonths": 9,
-      "daysFrom": 62,
-      "daysTo": 546,
-      "minAmount": 100000,
-      "url": "https://finuslugi.ru/vklady/rosdorbank_online_klyuchevaya_minus_0_5",
-      "promo": false,
-      "floating": false,
-      "refill": true,
-      "capitalization": true,
-      "feature": null
-    },
-    {
-      "bank": "Банк Уралсиб",
-      "name": "Доход. Частный (% ежемесячно)",
-      "rate": 13.49,
-      "kind": "deposit",
-      "termMonths": 9,
-      "daysFrom": 91,
-      "daysTo": 1100,
-      "minAmount": 10000000,
-      "url": "https://finuslugi.ru/vklady/bank_uralsib_dohod_private",
-      "promo": false,
-      "floating": false,
-      "refill": false,
-      "capitalization": true,
-      "feature": null
     },
     {
       "bank": "Газпромбанк",
