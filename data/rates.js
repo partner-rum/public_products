@@ -3,7 +3,7 @@
 // Источники: ЦБ (ключевая, RUONIA), MOEX ISS (RUSFAR, БПИФы, ОФЗ),
 // Финуслуги (вклады и накопительные счета — витрина МосБиржи).
 window.RATES = {
-  "updated": "2026-11-06 10:32",
+  "updated": "2026-11-06 13:32",
   "cbr": {
     "key": {
       "rate": 14.0,
@@ -19,82 +19,82 @@ window.RATES = {
       "id": "RUSFAR",
       "term": "овернайт",
       "days": 1,
-      "rate": 13.75
+      "rate": 13.66
     },
     {
       "id": "RUSFAR1W",
       "term": "1 неделя",
       "days": 7,
-      "rate": 13.82
+      "rate": 13.77
     },
     {
       "id": "RUSFAR2W",
       "term": "2 недели",
       "days": 14,
-      "rate": 13.9
+      "rate": 13.89
     },
     {
       "id": "RUSFAR1M",
       "term": "1 месяц",
       "days": 30,
-      "rate": 14.0
+      "rate": 13.98
     },
     {
       "id": "RUSFAR3M",
       "term": "3 месяца",
       "days": 90,
-      "rate": 14.06
+      "rate": 14.05
     }
   ],
   "funds": [
     {
       "id": "BCSD",
       "name": "БКС Денежный рынок",
-      "price": 14.656,
+      "price": 14.655,
       "ter": 0.2,
-      "rate": 13.55
+      "rate": 13.46
     },
     {
       "id": "MONY",
       "name": "АК БАРС Денежный рынок",
-      "price": 135.25,
+      "price": 135.28,
       "ter": 0.2,
-      "rate": 13.55
+      "rate": 13.46
     },
     {
       "id": "LQDT",
       "name": "Ликвидность (ВИМ)",
       "price": 2.1284,
       "ter": 0.29,
-      "rate": 13.46
+      "rate": 13.37
     },
     {
       "id": "SBMM",
       "name": "Первая Сберегательный",
-      "price": 19.8,
+      "price": 19.8005,
       "ter": 0.3,
-      "rate": 13.45
+      "rate": 13.36
     },
     {
       "id": "AMNR",
       "name": "АТОН Накопительный",
-      "price": 159.972,
+      "price": 159.969,
       "ter": 0.3,
-      "rate": 13.45
+      "rate": 13.36
     },
     {
       "id": "AKMM",
       "name": "Альфа Денежный рынок",
       "price": 181.09,
       "ter": 0.69,
-      "rate": 13.06
+      "rate": 12.97
     },
     {
       "id": "TMON",
       "name": "Т-Капитал Денежный рынок",
-      "price": 167.61,
+      "price": 167.47,
       "ter": 1.15,
-      "rate": 12.6
+      "rate": 12.51
     }
   ],
   "ofz": [
@@ -103,21 +103,21 @@ window.RATES = {
       "name": "ОФЗ 26207",
       "maturity": "2027-02-03",
       "years": 0.24,
-      "rate": 12.9
+      "rate": 12.93
     },
     {
       "id": "SU26232RMFS7",
       "name": "ОФЗ 26232",
       "maturity": "2027-10-06",
       "years": 0.92,
-      "rate": 13.32
+      "rate": 13.34
     },
     {
       "id": "SU26212RMFS9",
       "name": "ОФЗ 26212",
       "maturity": "2028-01-19",
       "years": 1.2,
-      "rate": 13.75
+      "rate": 13.72
     }
   ],
   "deposits": [
@@ -611,6 +611,22 @@ window.RATES = {
       "daysTo": 1100,
       "minAmount": 10000000,
       "url": "https://finuslugi.ru/vklady/bank_uralsib_dohod_private_v_konce_sroka",
+      "promo": false,
+      "floating": false,
+      "refill": false,
+      "capitalization": false,
+      "feature": null
+    },
+    {
+      "bank": "Банк Уралсиб",
+      "name": "Доход. Премиум (% в конце срока)",
+      "rate": 14.05,
+      "kind": "deposit",
+      "termMonths": 9,
+      "daysFrom": 31,
+      "daysTo": 1100,
+      "minAmount": 10000000,
+      "url": "https://finuslugi.ru/vklady/bank_uralsib_dohod_premium_v_konce_sroka",
       "promo": false,
       "floating": false,
       "refill": false,
