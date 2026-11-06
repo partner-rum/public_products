@@ -741,7 +741,7 @@
     ];
     if (isCS) {
       const capNet = capRub - premiumRub;
-      wScen.push([uGrew + " на 70% — выше потолка", "Выплата " + S.fmtInt(capRub) + " ₽ — максимум", (capNet >= 0 ? "+" : "−") + S.fmtInt(Math.abs(capNet)) + " ₽", capNet >= 0 ? "var(--up)" : "var(--loss)"]);
+      wScen.push([uGrew + " на " + S.fmtSmart(K2 - 100 + 20) + "% — выше потолка", "Выплата " + S.fmtInt(capRub) + " ₽ — максимум", (capNet >= 0 ? "+" : "−") + S.fmtInt(Math.abs(capNet)) + " ₽", capNet >= 0 ? "var(--up)" : "var(--loss)"]);
     }
     wScen.push([uNo, "Выплаты нет", "−" + S.fmtInt(premiumRub) + " ₽", "var(--loss)"]);
     const wFacts = isWO ? [woFact, ["Страйк", strikeTxt]] : [["Страйк", strikeTxt]];

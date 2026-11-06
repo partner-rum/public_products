@@ -2172,6 +2172,66 @@ window.SITE_DATA = {
       "chg": 0,
       "minNom": 1000000,
       "src": "sales"
+    },
+    {
+      "id": "W-AVG4-AICLOUD-CS200-3Y",
+      "type": "warrant",
+      "structure": "cs",
+      "name": "CS 100–200 · среднее по корзине · 3 года",
+      "underlying": "Nebius / CoreWeave / IREN / Applied Digital",
+      "basket": [
+        "NBIS",
+        "CRWV",
+        "IREN",
+        "APLD"
+      ],
+      "basketMode": "avg",
+      "basketW": [
+        25,
+        25,
+        25,
+        25
+      ],
+      "cls": "Акции США",
+      "currency": "USD",
+      "strike": 100,
+      "strike2": 200,
+      "spot": 100,
+      "tenor": "3 года",
+      "quote": 40,
+      "chg": 0,
+      "minNom": 1000000,
+      "src": "sales"
+    },
+    {
+      "id": "W-AVG4-AICLOUD-CS200-5Y",
+      "type": "warrant",
+      "structure": "cs",
+      "name": "CS 100–200 · среднее по корзине · 5 лет",
+      "underlying": "Nebius / CoreWeave / IREN / Applied Digital",
+      "basket": [
+        "NBIS",
+        "CRWV",
+        "IREN",
+        "APLD"
+      ],
+      "basketMode": "avg",
+      "basketW": [
+        25,
+        25,
+        25,
+        25
+      ],
+      "cls": "Акции США",
+      "currency": "USD",
+      "strike": 100,
+      "strike2": 200,
+      "spot": 100,
+      "tenor": "5 лет",
+      "quote": 38,
+      "chg": 0,
+      "minNom": 1000000,
+      "src": "sales"
     }
   ],
   "underlyings": {}
