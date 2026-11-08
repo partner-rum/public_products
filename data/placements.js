@@ -173,7 +173,7 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26248",
      "w": 1.0,
      "f0": 81.441,
-     "px": 79.482,
+     "px": 79.493,
      "pxTime": "2026-11-08",
      "perfPct": -2.4
     }
@@ -333,7 +333,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2026-07-02",
    "maturity": "2027-07-14",
    "fx": false,
-   "bid": 91.0,
+   "bid": 91.5,
    "kind": "coupon",
    "wrapper": "NOTE",
    "basket": [
@@ -342,7 +342,7 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26248",
      "w": 1.0,
      "f0": 79.969,
-     "px": 79.482,
+     "px": 79.493,
      "pxTime": "2026-11-08",
      "perfPct": -0.6
     }
@@ -470,9 +470,9 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 56.51,
-     "px": 51.807,
+     "px": 51.849,
      "pxTime": "2026-11-08",
-     "perfPct": -8.3
+     "perfPct": -8.2
     }
    ],
    "dates": {
@@ -488,7 +488,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 100.0,
     "protectionPct": 0.0
    },
-   "perfPct": -8.3
+   "perfPct": -8.2
   },
   {
    "isin": "RU000A10CVF9",
@@ -502,7 +502,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2026-04-23",
    "maturity": "2027-04-29",
    "fx": false,
-   "bid": 82.5,
+   "bid": 82.75,
    "kind": "coupon",
    "wrapper": "NOTE",
    "basket": [
@@ -511,9 +511,9 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26248",
      "w": 1.0,
      "f0": 89.873,
-     "px": 79.482,
+     "px": 79.493,
      "pxTime": "2026-11-08",
-     "perfPct": -11.6
+     "perfPct": -11.5
     }
    ],
    "dates": {
@@ -534,7 +534,7 @@ window.PLACEMENTS_DATA = {
      "barrierPct": 100.0
     }
    },
-   "perfPct": -11.6
+   "perfPct": -11.5
   },
   {
    "isin": "RU000A10CVE2",
@@ -557,7 +557,7 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26248",
      "w": 1.0,
      "f0": 88.549,
-     "px": 79.482,
+     "px": 79.493,
      "pxTime": "2026-11-08",
      "perfPct": -10.2
     }
@@ -603,7 +603,7 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26248",
      "w": 1.0,
      "f0": 88.4,
-     "px": 79.482,
+     "px": 79.493,
      "pxTime": "2026-11-08",
      "perfPct": -10.1
     }
@@ -649,9 +649,9 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26248",
      "w": 1.0,
      "f0": 86.356,
-     "px": 79.482,
+     "px": 79.493,
      "pxTime": "2026-11-08",
-     "perfPct": -8.0
+     "perfPct": -7.9
     }
    ],
    "dates": {
@@ -672,7 +672,7 @@ window.PLACEMENTS_DATA = {
      "barrierPct": 100.0
     }
    },
-   "perfPct": -8.0
+   "perfPct": -7.9
   },
   {
    "isin": "RU000A10B9W7",
@@ -770,7 +770,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2025-12-15",
    "maturity": "2026-12-11",
    "fx": false,
-   "bid": 79.25,
+   "bid": 79.5,
    "kind": "coupon",
    "wrapper": "NOTE",
    "basket": [
@@ -779,7 +779,7 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26248",
      "w": 1.0,
      "f0": 90.05,
-     "px": 79.482,
+     "px": 79.493,
      "pxTime": "2026-11-08",
      "perfPct": -11.7
     }
@@ -825,7 +825,7 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26230",
      "w": 1.0,
      "f0": 63.766,
-     "px": 56.816,
+     "px": 56.792,
      "pxTime": "2026-11-08",
      "perfPct": -10.9
     }
@@ -1071,7 +1071,7 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 58.826,
-     "px": 51.807,
+     "px": 51.849,
      "pxTime": "2026-11-08",
      "perfPct": -11.9
     }
@@ -1151,9 +1151,9 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 55.449,
-     "px": 51.807,
+     "px": 51.849,
      "pxTime": "2026-11-08",
-     "perfPct": -6.6
+     "perfPct": -6.5
     }
    ],
    "dates": {
@@ -1169,7 +1169,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 100.0,
     "protectionPct": 0.0
    },
-   "perfPct": -6.6
+   "perfPct": -6.5
   },
   {
    "isin": "RU000A10CBH7",
@@ -1192,7 +1192,7 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26248",
      "w": 1.0,
      "f0": 85.77,
-     "px": 79.482,
+     "px": 79.493,
      "pxTime": "2026-11-08",
      "perfPct": -7.3
     }
@@ -1238,9 +1238,9 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 56.31,
-     "px": 51.807,
+     "px": 51.849,
      "pxTime": "2026-11-08",
-     "perfPct": -8.0
+     "perfPct": -7.9
     }
    ],
    "dates": {
@@ -1256,7 +1256,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 100.0,
     "protectionPct": 0.0
    },
-   "perfPct": -8.0
+   "perfPct": -7.9
   },
   {
    "isin": "RU000A10CBF1",
@@ -1279,7 +1279,7 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 60.2,
-     "px": 51.807,
+     "px": 51.849,
      "pxTime": "2026-11-08",
      "perfPct": -13.9
     }
@@ -1320,7 +1320,7 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 60.9,
-     "px": 51.807,
+     "px": 51.849,
      "pxTime": "2026-11-08",
      "perfPct": -14.9
     }
@@ -1361,7 +1361,7 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 61.19,
-     "px": 51.807,
+     "px": 51.849,
      "pxTime": "2026-11-08",
      "perfPct": -15.3
     }
@@ -1440,9 +1440,9 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 61.3,
-     "px": 51.807,
+     "px": 51.849,
      "pxTime": "2026-11-08",
-     "perfPct": -15.5
+     "perfPct": -15.4
     }
    ],
    "dates": {
@@ -1458,7 +1458,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 100.0,
     "protectionPct": 0.0
    },
-   "perfPct": -15.5
+   "perfPct": -15.4
   },
   {
    "isin": "RU000A10ASJ1",
@@ -1519,9 +1519,9 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 60.89,
-     "px": 51.807,
+     "px": 51.849,
      "pxTime": "2026-11-08",
-     "perfPct": -14.9
+     "perfPct": -14.8
     }
    ],
    "dates": {
@@ -1537,7 +1537,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 100.0,
     "protectionPct": 0.0
    },
-   "perfPct": -14.9
+   "perfPct": -14.8
   },
   {
    "isin": "RU000A10ASH5",
@@ -1598,9 +1598,9 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 62.65,
-     "px": 51.807,
+     "px": 51.849,
      "pxTime": "2026-11-08",
-     "perfPct": -17.3
+     "perfPct": -17.2
     }
    ],
    "dates": {
@@ -1616,7 +1616,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 180.0,
     "protectionPct": 100.0
    },
-   "perfPct": -17.3
+   "perfPct": -17.2
   },
   {
    "isin": "RU000A10A9H9",
@@ -1639,9 +1639,9 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 61.175,
-     "px": 51.807,
+     "px": 51.849,
      "pxTime": "2026-11-08",
-     "perfPct": -15.3
+     "perfPct": -15.2
     }
    ],
    "dates": {
@@ -1657,7 +1657,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 100.0,
     "protectionPct": 0.0
    },
-   "perfPct": -15.3
+   "perfPct": -15.2
   },
   {
    "isin": "RU000A10BUG1",
@@ -1680,7 +1680,7 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26246",
      "w": 1.0,
      "f0": 90.79,
-     "px": 80.6,
+     "px": 80.606,
      "pxTime": "2026-11-08",
      "perfPct": -11.2
     }
@@ -1721,9 +1721,9 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 59.4,
-     "px": 51.807,
+     "px": 51.849,
      "pxTime": "2026-11-08",
-     "perfPct": -12.8
+     "perfPct": -12.7
     }
    ],
    "dates": {
@@ -1739,7 +1739,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 190.0,
     "protectionPct": 100.0
    },
-   "perfPct": -12.8
+   "perfPct": -12.7
   },
   {
    "isin": "RU000A10BUD8",
@@ -1762,9 +1762,9 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 58.857,
-     "px": 51.807,
+     "px": 51.849,
      "pxTime": "2026-11-08",
-     "perfPct": -12.0
+     "perfPct": -11.9
     }
    ],
    "dates": {
@@ -1780,7 +1780,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 190.0,
     "protectionPct": 100.0
    },
-   "perfPct": -12.0
+   "perfPct": -11.9
   },
   {
    "isin": "RU000A10BUE6",
@@ -1803,9 +1803,9 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 58.857,
-     "px": 51.807,
+     "px": 51.849,
      "pxTime": "2026-11-08",
-     "perfPct": -12.0
+     "perfPct": -11.9
     }
    ],
    "dates": {
@@ -1821,7 +1821,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 300.0,
     "protectionPct": 100.0
    },
-   "perfPct": -12.0
+   "perfPct": -11.9
   },
   {
    "isin": "RU000A10B9V9",
@@ -1885,7 +1885,7 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 54.73,
-     "px": 51.807,
+     "px": 51.849,
      "pxTime": "2026-11-08",
      "perfPct": -5.3
     }
@@ -1917,7 +1917,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2025-05-06",
    "maturity": "2028-05-19",
    "fx": true,
-   "bid": 89.25,
+   "bid": 89.5,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -1926,7 +1926,7 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 52.942,
-     "px": 51.807,
+     "px": 51.849,
      "pxTime": "2026-11-08",
      "perfPct": -2.1
     }
@@ -1958,7 +1958,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2025-04-25",
    "maturity": "2027-05-07",
    "fx": true,
-   "bid": 90.0,
+   "bid": 90.25,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -1967,9 +1967,9 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 53.078,
-     "px": 51.807,
+     "px": 51.849,
      "pxTime": "2026-11-08",
-     "perfPct": -2.4
+     "perfPct": -2.3
     }
    ],
    "dates": {
@@ -1985,7 +1985,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 150.0,
     "protectionPct": 95.0
    },
-   "perfPct": -2.4
+   "perfPct": -2.3
   },
   {
    "isin": "RU000A10B9U1",
@@ -2049,16 +2049,16 @@ window.PLACEMENTS_DATA = {
      "n": "МКПАО \"Хэдхантер\"",
      "w": 1.0,
      "f0": 3183.0,
-     "px": 2757.0,
+     "px": 2746.0,
      "pxTime": "2026-11-08",
-     "perfPct": -13.4
+     "perfPct": -13.7
     },
     {
      "t": "MOEX",
      "n": "МосБиржа",
      "w": 1.0,
      "f0": 201.8,
-     "px": 163.71,
+     "px": 163.58,
      "pxTime": "2026-11-08",
      "perfPct": -18.9
     },
@@ -2067,9 +2067,9 @@ window.PLACEMENTS_DATA = {
      "n": "Татнефть (ао)",
      "w": 1.0,
      "f0": 682.3,
-     "px": 611.6,
+     "px": 610.5,
      "pxTime": "2026-11-08",
-     "perfPct": -10.4
+     "perfPct": -10.5
     },
     {
      "t": "X5",
@@ -2201,9 +2201,9 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 53.34,
-     "px": 51.807,
+     "px": 51.849,
      "pxTime": "2026-11-08",
-     "perfPct": -2.9
+     "perfPct": -2.8
     }
    ],
    "dates": {
@@ -2219,7 +2219,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 200.0,
     "protectionPct": 100.0
    },
-   "perfPct": -2.9
+   "perfPct": -2.8
   },
   {
    "isin": "RU000A10A9B2",
