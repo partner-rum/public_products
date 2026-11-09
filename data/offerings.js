@@ -824,10 +824,10 @@ window.OFFERINGS = {
     }
    ],
    "today": {
-    "price": 104.02,
+    "price": 104.3,
     "volume": 50000,
-    "date": "2026-11-05",
-    "time": "12:00"
+    "date": "2026-11-09",
+    "time": "10:54"
    }
   }
  ]
