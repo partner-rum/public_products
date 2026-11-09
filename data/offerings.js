@@ -305,6 +305,14 @@ window.OFFERINGS = {
    ],
    "docs": [
     {
+     "name": "Презентация выпуска «Гуманоидная робототехника»",
+     "file": "docs/preso-sp-1-61.pdf",
+     "ext": "PDF",
+     "size": "2,5 МБ",
+     "top": true,
+     "short": "Презентация"
+    },
+    {
      "name": "Ключевые условия выпуска (КУВ) · СП-1-61",
      "file": "docs/kuv-sp-1-61.pdf",
      "ext": "PDF",
