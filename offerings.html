@@ -349,6 +349,43 @@
   .bs-leg b { font-family: var(--f-mono); font-weight: 500; color: var(--ink); }
   .btbl .bsec i { display: inline-block; margin-right: 8px; vertical-align: 1px; }
 
+  /* Схема «из чего собран робот» (o.anatomy): рисунок с номерами узлов и список
+     компаний рядом. Номер на рисунке и строка списка — одна пара: наведение,
+     фокус или нажатие на любую из них подсвечивает обе. Вместо полосы весов:
+     веса почти равные, а состав по ролям объясняет корзину лучше. */
+  .anat { margin-top: 34px; padding-top: 24px; border-top: 1px solid var(--border-soft); }
+  .an-h { margin: 0; font-family: var(--display); font-size: 20px; font-weight: 400; letter-spacing: -0.01em; }
+  .an-grid { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 40px; align-items: start; margin-top: 16px; }
+  /* Список длиннее рисунка — рисунок едет рядом, пока читают строки */
+  .an-fig { position: sticky; top: 84px; aspect-ratio: 3 / 4; }
+  .an-fig img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .an-pt { position: absolute; width: 30px; height: 30px; margin: -15px 0 0 -15px; border-radius: 50%; padding: 0; cursor: pointer;
+           border: 1.5px solid rgba(240,110,8,0.9); background: rgba(21,22,42,0.86); color: var(--ink);
+           font-family: var(--f-mono); font-size: 13px; font-weight: 500; line-height: 1; display: grid; place-items: center;
+           transition: background .2s var(--ease), color .2s, transform .2s var(--ease); }
+  .an-pt::before { content: ""; position: absolute; inset: -7px; border-radius: 50%; }
+  .an-pt::after { content: ""; position: absolute; inset: -1.5px; border-radius: 50%; border: 1.5px solid rgba(240,110,8,0.6); opacity: 0; }
+  .an-pt.on { background: var(--solar); color: #191A2F; transform: scale(1.14); }
+  .an-pt.on::after { animation: an-ring 1.6s ease-out infinite; }
+  @keyframes an-ring { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(1.9); } }
+  .an-list { list-style: none; margin: 0; padding: 0; }
+  .an-li { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; column-gap: 14px; align-items: start;
+           padding: 12px 10px 12px 0; border-bottom: 1px solid var(--border-soft); cursor: default; transition: background .2s; }
+  .an-li:first-child { border-top: 1px solid var(--border-soft); }
+  .an-n { width: 26px; height: 26px; margin-top: 1px; border-radius: 50%; border: 1.5px solid rgba(242,243,247,0.32); display: grid; place-items: center;
+          font-family: var(--f-mono); font-size: 12px; color: var(--hushed); transition: border-color .2s, color .2s, background .2s; }
+  .an-whole .an-n { border-style: dashed; }
+  .an-p { font-size: 12.5px; color: var(--hushed); }
+  .an-co { margin-top: 2px; font-size: 16px; font-weight: 600; line-height: 1.3; }
+  .an-tk { margin-left: 6px; font-family: var(--f-mono); font-size: 11.5px; font-weight: 400; color: var(--faint); white-space: nowrap; }
+  .an-d { margin-top: 4px; font-size: 13.5px; line-height: 1.5; color: var(--hushed); text-wrap: pretty; }
+  .an-w { font-family: var(--f-mono); font-size: 20px; font-weight: 500; letter-spacing: -0.02em; line-height: 1.2; }
+  .an-li.on { background: linear-gradient(to right, rgba(240,110,8,0.08), rgba(240,110,8,0)); }
+  .an-li.on .an-n { border-color: var(--solar); background: var(--solar); color: #191A2F; }
+  .an-k2 { margin: 22px 0 8px; font-size: 12.5px; color: var(--hushed); }
+  @media (hover: hover) { .an-pt:hover { transform: scale(1.14); } }
+  @media (prefers-reduced-motion: reduce) { .an-pt, .an-li, .an-n { transition: none; } .an-pt.on::after { animation: none; } }
+
   /* ── Разделы ───────────────────────────────────────────────────────────── */
   .ls { margin-top: 44px; }
   .ls-hd { padding-bottom: 10px; border-bottom: 1px solid var(--border); }
@@ -627,6 +664,11 @@
     .lh.wide.art .lh-bg img { object-position: 100% 55%; transform: scale(1.25); transform-origin: 100% 100%; }
     .lh.wide.art .lh-grid { margin-top: -34px; }
     .paths, .chain { grid-template-columns: 1fr; }
+    .an-grid { grid-template-columns: 1fr; gap: 18px; }
+    .an-fig { position: relative; top: auto; width: min(100%, 290px); margin: 0 auto; }
+    .an-h { font-size: 18px; }
+    .an-li { grid-template-columns: 28px minmax(0, 1fr) auto; column-gap: 12px; padding-right: 0; }
+    .an-w { font-size: 18px; }
     .cli { grid-template-columns: 1fr; gap: 3px; }
     .lb-row { gap: 8px; }
     .lb-v { font-size: 12px; }
@@ -674,7 +716,7 @@
   <div class="layout">
     <aside class="aside">
       <div class="filters" id="filters"></div>
-      <div class="list" id="list"><!-- seo:start --><div class="seo-pre"><p>Выпуски Rumberg на размещении: параметры, документы и порядок подачи заявок.</p><h2>На размещении</h2><ul><li>Pre-IPO Crusoe, Биржевая структурная облигация · Pre-IPO, базовый актив — Индекс RUMPREIPO.2 · привилегированные акции Crusoe (серия A), срок 5 лет, ISIN RU000A10CRU6, Размещение с 30.10.2026.</li></ul></div><!-- seo:end --></div>
+      <div class="list" id="list"><!-- seo:start --><div class="seo-pre"><p>Выпуски Rumberg на размещении: параметры, документы и порядок подачи заявок.</p><h2>На размещении</h2><ul><li>Гуманоидная робототехника, Биржевая структурная облигация · колл-спред 100–200%, базовый актив — Индекс RUMEQB · корзина из 7 акций робототехники, срок 3 года, ISIN RU000A10CRW2, Приём заявок до 20.11.2026.</li><li>Pre-IPO Crusoe, Биржевая структурная облигация · Pre-IPO, базовый актив — Индекс RUMPREIPO.2 · привилегированные акции Crusoe (серия A), срок 5 лет, ISIN RU000A10CRU6, Размещение с 30.10.2026.</li></ul></div><!-- seo:end --></div>
     </aside>
     <div class="panel" id="panel"><button class="panel-close" id="close">← К списку</button><div id="panel-body"></div></div>
   </div>
@@ -1370,6 +1412,57 @@
     }, { threshold: 0.4 });
     io.observe(el);
   }
+  // Схема «из чего собран робот» (o.anatomy): рисунок + номера узлов поверх него
+  // (x/y — проценты от рисунка) и список компаний. Блок появляется только у
+  // выпусков с этим полем; без него в «Зачем» остаётся полоса весов.
+  function anPct(v) { var n = Number(v); return isFinite(n) ? Math.max(0, Math.min(100, n)) : 50; }
+  function anatomyHTML(o) {
+    var a = o.anatomy;
+    if (!a || !a.img || !a.parts || !a.parts.length) return "";
+    var row = function (p, i, num) {
+      return '<li class="an-li"' + (num ? ' data-an="' + i + '"' : '') + '><span class="an-n" aria-hidden="true">' + (num ? i + 1 : '') + '</span>' +
+        '<div><div class="an-p">' + esc(p.part) + '</div><div class="an-co">' + esc(p.co) + (p.tk ? '<span class="an-tk">' + esc(p.tk) + '</span>' : '') + '</div>' +
+        (p.d ? '<div class="an-d">' + esc(p.d) + '</div>' : '') + '</div>' +
+        (p.w != null ? '<span class="an-w">' + esc(p.w) + '%</span>' : '') + '</li>';
+    };
+    var pts = a.parts.map((p, i) => '<button type="button" class="an-pt" data-an="' + i + '" style="left:' + anPct(p.x) + '%;top:' + anPct(p.y) + '%"' +
+      ' aria-label="' + esc((i + 1) + '. ' + p.part + ' — ' + p.co) + '">' + (i + 1) + '</button>').join("");
+    var whole = (a.whole || []).map(p => row(p, 0, false)).join("");
+    return '<div class="anat" id="anat">' + (a.title ? '<h4 class="an-h">' + esc(a.title) + '</h4>' : '') +
+      '<div class="an-grid"><div class="an-fig"><img src="' + esc(a.img) + '" alt="Схема человекоподобного робота с отмеченными узлами" loading="lazy">' + pts + '</div>' +
+      '<div><ol class="an-list">' + a.parts.map((p, i) => row(p, i, true)).join("") + '</ol>' +
+      (whole ? '<div class="an-k2">' + esc(a.wholeTitle || "Кто собирает роботов целиком") + '</div><ul class="an-list an-whole">' + whole + '</ul>' : '') +
+      '</div></div></div>';
+  }
+  // Пара «номер на рисунке — строка списка»: наведение, фокус и нажатие на любую
+  // из них подсвечивают обе. Стартовая подсветка — первый узел, чтобы было видно,
+  // что номера живые.
+  function anatWire() {
+    var box = document.getElementById("anat");
+    if (!box) return;
+    var set = function (i) {
+      box.querySelectorAll("[data-an]").forEach(el => el.classList.toggle("on", el.getAttribute("data-an") === String(i)));
+    };
+    var pick = function (e) { var t = e.target.closest && e.target.closest("[data-an]"); if (t) set(t.getAttribute("data-an")); };
+    box.addEventListener("mouseover", pick);
+    box.addEventListener("focusin", pick);
+    box.addEventListener("click", pick);
+    set(0);
+  }
+  // Название в герое не переносится внутри слова: длинное («робототехника»)
+  // вылезало за колонку под плеер. Уменьшаем кегль, пока самое длинное слово
+  // не встанет в строку; короткие названия остаются в своём размере. Повторяем
+  // после загрузки шрифта и при смене ширины.
+  function fitName() {
+    var n = document.querySelector(".lh-name");
+    if (!n) return;
+    n.style.fontSize = "";
+    var fs = parseFloat(getComputedStyle(n).fontSize);
+    while (n.scrollWidth > n.clientWidth + 1 && fs > 26) { fs -= 1; n.style.fontSize = fs + "px"; }
+  }
+  var fitT = 0;
+  window.addEventListener("resize", function () { cancelAnimationFrame(fitT); fitT = requestAnimationFrame(fitName); });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitName);
   // Свёрнутый раздел деталей: строка-заголовок с подсказкой, содержимое за тапом.
   function fold(title, hint, inner) {
     return '<details class="fd"><summary><span class="fd-t">' + esc(title) + '</span>' +
@@ -1424,7 +1517,7 @@
     var whySec = (o.why && o.why.length)
       ? sec("Зачем", "", '<div class="why">' + o.why.map(w =>
           '<div class="wh"><div class="n">' + esc(w.n) + '</div><div class="t">' + esc(w.t) + '</div><div class="d">' + esc(w.d) + '</div></div>').join("") +
-          '</div>' + basketStrip(o) + vbars(o.bars) + (o.whySrc ? '<p class="src">' + esc(o.whySrc) + '</p>' : ''))
+          '</div>' + (anatomyHTML(o) || basketStrip(o)) + vbars(o.bars) + (o.whySrc ? '<p class="src">' + esc(o.whySrc) + '</p>' : ''))
       : "";
 
     // ── УСЛОВИЯ: шесть фактов крупно. Шестой — про ноль, и он стоит в одном ряду
@@ -1613,7 +1706,7 @@
     if (ctHost3 && window.Contact) {
       Contact.attach(ctHost3, { title: o.name, url: location.origin + "/offerings#" + o.id, id: o.id, label: "Обсудить выпуск" });
     }
-    if (lnd) { csMount(o); heroWire(o); stripWire(); growWire(); }
+    if (lnd) { csMount(o); heroWire(o); stripWire(); growWire(); anatWire(); fitName(); }
     document.querySelectorAll(".item").forEach(el => { var on = el.getAttribute("data-id") === id; el.classList.toggle("active", on); if (on) el.setAttribute("aria-current", "true"); else el.removeAttribute("aria-current"); });
     history.replaceState(null, "", "#" + id);
     // Один выпуск (solo) уже стоит в странице — оверлей ему не нужен. С классом open
