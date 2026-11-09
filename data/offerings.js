@@ -306,7 +306,7 @@ window.OFFERINGS = {
    "docs": [
     {
      "name": "Презентация выпуска «Гуманоидная робототехника»",
-     "file": "docs/preso-sp-1-61.pdf",
+     "file": "docs/preso-sp-1-61.pdf?v=2",
      "ext": "PDF",
      "size": "2,5 МБ",
      "top": true,
