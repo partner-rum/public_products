@@ -3,7 +3,7 @@
 // Источники: ЦБ (ключевая, RUONIA), MOEX ISS (RUSFAR, БПИФы, ОФЗ),
 // Финуслуги (вклады и накопительные счета — витрина МосБиржи).
 window.RATES = {
-  "updated": "2026-11-09 19:32",
+  "updated": "2026-11-10 10:32",
   "cbr": {
     "key": {
       "rate": 14.0,
@@ -50,49 +50,49 @@ window.RATES = {
     {
       "id": "BCSD",
       "name": "БКС Денежный рынок",
-      "price": 14.661,
+      "price": 14.665,
       "ter": 0.2,
       "rate": 13.61
     },
     {
       "id": "MONY",
       "name": "АК БАРС Денежный рынок",
-      "price": 135.45,
+      "price": 135.72,
       "ter": 0.2,
       "rate": 13.61
     },
     {
       "id": "LQDT",
       "name": "Ликвидность (ВИМ)",
-      "price": 2.1292,
+      "price": 2.13,
       "ter": 0.29,
       "rate": 13.52
     },
     {
       "id": "SBMM",
       "name": "Первая Сберегательный",
-      "price": 19.8075,
+      "price": 19.8145,
       "ter": 0.3,
       "rate": 13.51
     },
     {
       "id": "AMNR",
       "name": "АТОН Накопительный",
-      "price": 160.022,
+      "price": 160.082,
       "ter": 0.3,
       "rate": 13.51
     },
     {
       "id": "AKMM",
       "name": "Альфа Денежный рынок",
-      "price": 181.19,
+      "price": 181.23,
       "ter": 0.69,
       "rate": 13.12
     },
     {
       "id": "TMON",
       "name": "Т-Капитал Денежный рынок",
-      "price": 167.5,
+      "price": 167.55,
       "ter": 1.15,
       "rate": 12.66
     }
@@ -102,14 +102,14 @@ window.RATES = {
       "id": "SU26207RMFS9",
       "name": "ОФЗ 26207",
       "maturity": "2027-02-03",
-      "years": 0.24,
+      "years": 0.23,
       "rate": 13.05
     },
     {
       "id": "SU26232RMFS7",
       "name": "ОФЗ 26232",
       "maturity": "2027-10-06",
-      "years": 0.91,
+      "years": 0.9,
       "rate": 13.21
     },
     {
@@ -117,7 +117,7 @@ window.RATES = {
       "name": "ОФЗ 26212",
       "maturity": "2028-01-19",
       "years": 1.19,
-      "rate": 13.7
+      "rate": 13.67
     }
   ],
   "deposits": [
@@ -570,6 +570,22 @@ window.RATES = {
       "feature": null
     },
     {
+      "bank": "Газпромбанк",
+      "name": "ГПБ-счет (на минимальный остаток)",
+      "rate": 14.5,
+      "kind": "saving",
+      "termMonths": 0,
+      "daysFrom": 1,
+      "daysTo": 61,
+      "minAmount": 50000,
+      "url": "https://finuslugi.ru/vklady/gazprombank_gpb_schet_na_minimalnyj_ostatok",
+      "promo": false,
+      "floating": false,
+      "refill": true,
+      "capitalization": true,
+      "feature": null
+    },
+    {
       "bank": "Банк ФИНАМ",
       "name": "Накопительный счет",
       "rate": 14.5,
@@ -682,22 +698,6 @@ window.RATES = {
       "feature": null
     },
     {
-      "bank": "Газпромбанк",
-      "name": "ГПБ-счет (на минимальный остаток)",
-      "rate": 14.0,
-      "kind": "saving",
-      "termMonths": 0,
-      "daysFrom": 1,
-      "daysTo": 61,
-      "minAmount": 50000,
-      "url": "https://finuslugi.ru/vklady/gazprombank_gpb_schet_na_minimalnyj_ostatok",
-      "promo": false,
-      "floating": false,
-      "refill": true,
-      "capitalization": true,
-      "feature": null
-    },
-    {
       "bank": "Банк «Приморье»",
       "name": "Подарок+ (% в конце срока)",
       "rate": 14.0,
@@ -807,6 +807,22 @@ window.RATES = {
       "floating": false,
       "refill": false,
       "capitalization": false,
+      "feature": null
+    },
+    {
+      "bank": "Газпромбанк",
+      "name": "ГПБ-счет (на ежедневный остаток)",
+      "rate": 13.75,
+      "kind": "saving",
+      "termMonths": 0,
+      "daysFrom": 1,
+      "daysTo": 61,
+      "minAmount": 50000,
+      "url": "https://finuslugi.ru/vklady/gazprombank_gpb_schet_na_ezhednevnyj_ostatok",
+      "promo": false,
+      "floating": false,
+      "refill": true,
+      "capitalization": true,
       "feature": null
     },
     {
@@ -986,22 +1002,6 @@ window.RATES = {
       "feature": null
     },
     {
-      "bank": "Альфа-Банк",
-      "name": "Альфа-Вклад Новые деньги (А-Клуб)",
-      "rate": 13.49,
-      "kind": "deposit",
-      "termMonths": 5,
-      "daysFrom": 62,
-      "daysTo": 1095,
-      "minAmount": 1000000,
-      "url": "https://finuslugi.ru/vklady/alfabank_alfa_vklad_novye_dengi_a_klub",
-      "promo": false,
-      "floating": false,
-      "refill": false,
-      "capitalization": true,
-      "feature": null
-    },
-    {
       "bank": "Банк Уралсиб",
       "name": "Доход. Частный (% ежемесячно)",
       "rate": 13.49,
@@ -1014,22 +1014,6 @@ window.RATES = {
       "promo": false,
       "floating": false,
       "refill": false,
-      "capitalization": true,
-      "feature": null
-    },
-    {
-      "bank": "Газпромбанк",
-      "name": "ГПБ-счет (на ежедневный остаток)",
-      "rate": 13.0,
-      "kind": "saving",
-      "termMonths": 0,
-      "daysFrom": 1,
-      "daysTo": 61,
-      "minAmount": 50000,
-      "url": "https://finuslugi.ru/vklady/gazprombank_gpb_schet_na_ezhednevnyj_ostatok",
-      "promo": false,
-      "floating": false,
-      "refill": true,
       "capitalization": true,
       "feature": null
     },
@@ -1064,6 +1048,22 @@ window.RATES = {
       "refill": false,
       "capitalization": false,
       "feature": "Для новых накоплений"
+    },
+    {
+      "bank": "ЛОКО-Банк",
+      "name": "«Локо-Счет Плюс» на ежедневный остаток",
+      "rate": 11.0,
+      "kind": "saving",
+      "termMonths": 0,
+      "daysFrom": 1,
+      "daysTo": 61,
+      "minAmount": 100001,
+      "url": "https://finuslugi.ru/vklady/loko_bank_loko_schet_plyus_na_ezhednevnyj_ostatok_",
+      "promo": false,
+      "floating": false,
+      "refill": true,
+      "capitalization": true,
+      "feature": null
     }
   ]
 };
