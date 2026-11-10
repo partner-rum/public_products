@@ -3,15 +3,15 @@
 // Источники: ЦБ (ключевая, RUONIA), MOEX ISS (RUSFAR, БПИФы, ОФЗ),
 // Финуслуги (вклады и накопительные счета — витрина МосБиржи).
 window.RATES = {
-  "updated": "2026-11-10 13:32",
+  "updated": "2026-11-10 16:32",
   "cbr": {
     "key": {
       "rate": 14.0,
       "date": "2026-07-27"
     },
     "ruonia": {
-      "rate": 13.72,
-      "date": "2026-11-06"
+      "rate": 13.93,
+      "date": "2026-11-09"
     }
   },
   "rusfar": [
@@ -50,49 +50,49 @@ window.RATES = {
     {
       "id": "BCSD",
       "name": "БКС Денежный рынок",
-      "price": 14.666,
+      "price": 14.667,
       "ter": 0.2,
       "rate": 13.55
     },
     {
       "id": "MONY",
       "name": "АК БАРС Денежный рынок",
-      "price": 135.44,
+      "price": 135.5,
       "ter": 0.2,
       "rate": 13.55
     },
     {
       "id": "LQDT",
       "name": "Ликвидность (ВИМ)",
-      "price": 2.13,
+      "price": 2.1299,
       "ter": 0.29,
       "rate": 13.46
     },
     {
       "id": "SBMM",
       "name": "Первая Сберегательный",
-      "price": 19.8145,
+      "price": 19.815,
       "ter": 0.3,
       "rate": 13.45
     },
     {
       "id": "AMNR",
       "name": "АТОН Накопительный",
-      "price": 160.082,
+      "price": 160.088,
       "ter": 0.3,
       "rate": 13.45
     },
     {
       "id": "AKMM",
       "name": "Альфа Денежный рынок",
-      "price": 181.22,
+      "price": 181.24,
       "ter": 0.69,
       "rate": 13.06
     },
     {
       "id": "TMON",
       "name": "Т-Капитал Денежный рынок",
-      "price": 167.52,
+      "price": 167.59,
       "ter": 1.15,
       "rate": 12.6
     }
@@ -103,21 +103,21 @@ window.RATES = {
       "name": "ОФЗ 26207",
       "maturity": "2027-02-03",
       "years": 0.23,
-      "rate": 13.1
+      "rate": 12.69
     },
     {
       "id": "SU26232RMFS7",
       "name": "ОФЗ 26232",
       "maturity": "2027-10-06",
       "years": 0.9,
-      "rate": 13.12
+      "rate": 13.18
     },
     {
       "id": "SU26212RMFS9",
       "name": "ОФЗ 26212",
       "maturity": "2028-01-19",
       "years": 1.19,
-      "rate": 13.72
+      "rate": 13.71
     }
   ],
   "deposits": [
@@ -315,6 +315,22 @@ window.RATES = {
     },
     {
       "bank": "Банк ПСБ",
+      "name": "Импульс",
+      "rate": 16.0,
+      "kind": "saving",
+      "termMonths": 0,
+      "daysFrom": 1,
+      "daysTo": 61,
+      "minAmount": 1,
+      "url": "https://finuslugi.ru/vklady/bank_psb_impuls",
+      "promo": false,
+      "floating": false,
+      "refill": true,
+      "capitalization": true,
+      "feature": null
+    },
+    {
+      "bank": "Банк ПСБ",
       "name": "Ярослав Мудрый",
       "rate": 16.0,
       "kind": "deposit",
@@ -435,22 +451,6 @@ window.RATES = {
       "daysTo": 91,
       "minAmount": 1,
       "url": "https://finuslugi.ru/vklady/sovcombank_nakopitelnyj_schet_onlajn_kopilka",
-      "promo": false,
-      "floating": false,
-      "refill": true,
-      "capitalization": true,
-      "feature": null
-    },
-    {
-      "bank": "ОЗОН Банк",
-      "name": "Накопительный счет",
-      "rate": 15.1,
-      "kind": "saving",
-      "termMonths": 0,
-      "daysFrom": 1,
-      "daysTo": 61,
-      "minAmount": 1,
-      "url": "https://finuslugi.ru/vklady/ozon_bank_nakopitelnyj_schet",
       "promo": false,
       "floating": false,
       "refill": true,
