@@ -3,7 +3,7 @@
 // Источники: ЦБ (ключевая, RUONIA), MOEX ISS (RUSFAR, БПИФы, ОФЗ),
 // Финуслуги (вклады и накопительные счета — витрина МосБиржи).
 window.RATES = {
-  "updated": "2026-11-10 19:32",
+  "updated": "2026-11-11 10:32",
   "cbr": {
     "key": {
       "rate": 14.0,
@@ -50,49 +50,49 @@ window.RATES = {
     {
       "id": "BCSD",
       "name": "БКС Денежный рынок",
-      "price": 14.667,
+      "price": 14.668,
       "ter": 0.2,
       "rate": 13.55
     },
     {
       "id": "MONY",
       "name": "АК БАРС Денежный рынок",
-      "price": 135.48,
+      "price": 135.3,
       "ter": 0.2,
       "rate": 13.55
     },
     {
       "id": "LQDT",
       "name": "Ликвидность (ВИМ)",
-      "price": 2.13,
+      "price": 2.1307,
       "ter": 0.29,
       "rate": 13.46
     },
     {
       "id": "SBMM",
       "name": "Первая Сберегательный",
-      "price": 19.815,
+      "price": 19.8215,
       "ter": 0.3,
       "rate": 13.45
     },
     {
       "id": "AMNR",
       "name": "АТОН Накопительный",
-      "price": 160.082,
+      "price": 160.143,
       "ter": 0.3,
       "rate": 13.45
     },
     {
       "id": "AKMM",
       "name": "Альфа Денежный рынок",
-      "price": 181.26,
+      "price": 181.32,
       "ter": 0.69,
       "rate": 13.06
     },
     {
       "id": "TMON",
       "name": "Т-Капитал Денежный рынок",
-      "price": 167.53,
+      "price": 167.62,
       "ter": 1.15,
       "rate": 12.6
     }
@@ -103,7 +103,7 @@ window.RATES = {
       "name": "ОФЗ 26207",
       "maturity": "2027-02-03",
       "years": 0.23,
-      "rate": 12.87
+      "rate": 12.36
     },
     {
       "id": "SU26232RMFS7",
@@ -117,7 +117,7 @@ window.RATES = {
       "name": "ОФЗ 26212",
       "maturity": "2028-01-19",
       "years": 1.19,
-      "rate": 13.75
+      "rate": 13.69
     }
   ],
   "deposits": [
@@ -227,6 +227,22 @@ window.RATES = {
       "daysTo": 122,
       "minAmount": 10000,
       "url": "https://finuslugi.ru/vklady/promsvyazbank_narodnyj_vklad",
+      "promo": true,
+      "floating": false,
+      "refill": false,
+      "capitalization": false,
+      "feature": null
+    },
+    {
+      "bank": "ВТБ",
+      "name": "Выгодное начало",
+      "rate": 20.0,
+      "kind": "deposit",
+      "termMonths": 2,
+      "daysFrom": 61,
+      "daysTo": 61,
+      "minAmount": 10000,
+      "url": "https://finuslugi.ru/vklady/vtb_vygodnoe_nachalo",
       "promo": true,
       "floating": false,
       "refill": false,
