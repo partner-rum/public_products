@@ -3,7 +3,7 @@
 // Источники: ЦБ (ключевая, RUONIA), MOEX ISS (RUSFAR, БПИФы, ОФЗ),
 // Финуслуги (вклады и накопительные счета — витрина МосБиржи).
 window.RATES = {
-  "updated": "2026-11-11 16:32",
+  "updated": "2026-11-11 19:32",
   "cbr": {
     "key": {
       "rate": 14.0,
@@ -50,14 +50,14 @@ window.RATES = {
     {
       "id": "BCSD",
       "name": "БКС Денежный рынок",
-      "price": 14.668,
+      "price": 14.669,
       "ter": 0.2,
       "rate": 13.62
     },
     {
       "id": "MONY",
       "name": "АК БАРС Денежный рынок",
-      "price": 135.45,
+      "price": 135.55,
       "ter": 0.2,
       "rate": 13.62
     },
@@ -71,7 +71,7 @@ window.RATES = {
     {
       "id": "SBMM",
       "name": "Первая Сберегательный",
-      "price": 19.8225,
+      "price": 19.822,
       "ter": 0.3,
       "rate": 13.52
     },
@@ -85,14 +85,14 @@ window.RATES = {
     {
       "id": "AKMM",
       "name": "Альфа Денежный рынок",
-      "price": 181.33,
+      "price": 181.32,
       "ter": 0.69,
       "rate": 13.13
     },
     {
       "id": "TMON",
       "name": "Т-Капитал Денежный рынок",
-      "price": 167.57,
+      "price": 167.62,
       "ter": 1.15,
       "rate": 12.67
     }
@@ -103,21 +103,21 @@ window.RATES = {
       "name": "ОФЗ 26207",
       "maturity": "2027-02-03",
       "years": 0.23,
-      "rate": 13.0
+      "rate": 12.91
     },
     {
       "id": "SU26232RMFS7",
       "name": "ОФЗ 26232",
       "maturity": "2027-10-06",
       "years": 0.9,
-      "rate": 13.16
+      "rate": 13.06
     },
     {
       "id": "SU26212RMFS9",
       "name": "ОФЗ 26212",
       "maturity": "2028-01-19",
       "years": 1.19,
-      "rate": 13.58
+      "rate": 13.53
     }
   ],
   "deposits": [
@@ -586,6 +586,22 @@ window.RATES = {
       "feature": null
     },
     {
+      "bank": "Банк Уралсиб",
+      "name": "Доход. Частный (% в конце срока)",
+      "rate": 14.15,
+      "kind": "deposit",
+      "termMonths": 9,
+      "daysFrom": 31,
+      "daysTo": 1100,
+      "minAmount": 10000000,
+      "url": "https://finuslugi.ru/vklady/bank_uralsib_dohod_private_v_konce_sroka",
+      "promo": false,
+      "floating": false,
+      "refill": false,
+      "capitalization": false,
+      "feature": null
+    },
+    {
       "bank": "Банк «Приморье»",
       "name": "Подарок+ (% в конце срока)",
       "rate": 14.0,
@@ -840,6 +856,38 @@ window.RATES = {
       "refill": false,
       "capitalization": false,
       "feature": "Для новых накоплений"
+    },
+    {
+      "bank": "Трансстройбанк",
+      "name": "Стабильный",
+      "rate": 13.5,
+      "kind": "deposit",
+      "termMonths": 9,
+      "daysFrom": 181,
+      "daysTo": 550,
+      "minAmount": 100000,
+      "url": "https://finuslugi.ru/vklady/transstrojbank_stabilnyj",
+      "promo": false,
+      "floating": false,
+      "refill": true,
+      "capitalization": true,
+      "feature": null
+    },
+    {
+      "bank": "РосДорБанк",
+      "name": "ONLINE-Ключевая минус 0,5%",
+      "rate": 13.5,
+      "kind": "deposit",
+      "termMonths": 9,
+      "daysFrom": 62,
+      "daysTo": 546,
+      "minAmount": 100000,
+      "url": "https://finuslugi.ru/vklady/rosdorbank_online_klyuchevaya_minus_0_5",
+      "promo": false,
+      "floating": false,
+      "refill": true,
+      "capitalization": true,
+      "feature": null
     },
     {
       "bank": "Газпромбанк",
