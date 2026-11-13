@@ -446,7 +446,9 @@
     if (!(cpn > 0 && cpn <= 60) || !(B >= 40 && B <= 100) || !(CB >= 40 && CB <= 100) || !(AC >= 80 && AC <= 130)) return null;
     if ([1, 2, 4, 12].indexOf(per) < 0 || !(nc >= 0 && nc <= 60) || !(yrs >= 0 && yrs <= 6)) return null;
     if (!bk.length || bk.length > 5) return null;
-    return { id: "chat-" + PQ, type: "autocall", name: clean(r.name), underlying: clean(r.underlying),
+    const price = r.price == null ? 100 : Number(r.price);   // цена входа, % номинала (режим «купон → цена»)
+    if (!(price >= 70 && price <= 110)) return null;
+    return { id: "chat-" + PQ, type: "autocall", name: clean(r.name), underlying: clean(r.underlying), price: price,
       basket: bk.length > 1 ? bk : null, currency: clean(r.currency) || "RUB", couponPa: cpn, couponBarrier: CB,
       callBarrier: AC, protectionPct: B, nonCall: Math.round(nc), obsPerYear: per, memory: r.memory === true ? true : r.memory === false ? false : null,
       years: yrs || null, tenor: clean(r.tenor), quote: cpn, minNom: 1000000, chat: true, at: Number(r.at) || 0 };
@@ -876,6 +878,14 @@
     const vline = (v, col, label, anchor) =>
       '<line x1="' + x(v) + '" y1="' + (PAD - 3) + '" x2="' + x(v) + '" y2="' + y(yMin) + '" stroke="' + col + '" stroke-width="1" stroke-dasharray="3 4"/>' +
       '<text x="' + (x(v) + (anchor === "end" ? -5 : 5)) + '" y="' + (PAD + 5) + '" text-anchor="' + (anchor || "start") + '" fill="' + col + '" font-size="10" ' + MONO + '>' + label + '</text>';
+    // Подпись барьера защиты ставим справа от точки, под линией номинала, если до следующего
+    // пунктира (купонный барьер или автоотзыв) хватает места; иначе — слева НАД линией номинала.
+    // Слева под линией она ложилась на «по перформансу» (низкий график), а справа у AC-BIGTECH
+    // (65% и 80%) её перечёркивал пунктир купонного барьера
+    const protLbl = "защита " + S.fmtSmart(prot) + "%";
+    const protW = protLbl.length * 10 * 0.62 + 7;
+    const nextV = cpn !== prot && cpn > prot ? cpn : call;
+    const protRight = x(nextV) - x(prot) > protW + 8;
     return '<svg viewBox="0 0 ' + CW + ' ' + HH + '" width="100%" style="display:block">' +
       '<line x1="' + PAD + '" y1="' + y(100) + '" x2="' + (CW - PAD) + '" y2="' + y(100) + '" stroke="' + C.axis + '" stroke-width="1" stroke-dasharray="4 4"/>' +
       '<text x="' + (CW - PAD) + '" y="' + (y(100) + 13) + '" text-anchor="end" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>номинал 100%</text>' +
@@ -883,14 +893,13 @@
       (cpn !== prot ? vline(cpn, C.lab, "купон " + S.fmtSmart(cpn) + "%", "end") : "") +
       '<path d="' + line + '" fill="none" stroke="' + C.line + '" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>' +
       '<circle cx="' + x(prot) + '" cy="' + y(100) + '" r="3.2" fill="' + C.line + '"/>' +
-      // Подпись барьера — справа от точки, под линией номинала: слева над наклонной стоит
-      // «по перформансу», и на низком графике (HH) подписи ложились одна на другую
-      '<text x="' + (x(prot) + 7) + '" y="' + (y(100) + 15) + '" text-anchor="start" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>защита ' + S.fmtSmart(prot) + '%</text>' +
+      '<text x="' + (x(prot) + (protRight ? 7 : -7)) + '" y="' + (protRight ? y(100) + 15 : y(100) - 6) + '" text-anchor="' + (protRight ? "start" : "end") + '" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>' + protLbl + '</text>' +
       // Отступ от САМОЙ ВЫСОКОЙ точки участка под рамкой подписи: ниже барьера
       // выплата идёт наклонной 1:1, и фиксированные 9px она прорезала насквозь
       (function () {
         const lb = "по перформансу";
-        const half = (lb.length * 10 * 0.62 / 2 + 5) / ((CW - PAD * 2) / (hi - lo));
+        const unit = (CW - PAD * 2) / (hi - lo);
+        const half = (lb.length * 10 * 0.62 / 2 + 5) / unit;
         const c0 = Math.max(lo + half, Math.min((lo + prot) / 2, prot - half));
         return '<text x="' + x(c0) + '" y="' + (y(Math.min(c0 + half, prot)) - 9) +
           '" text-anchor="middle" fill="' + C.lab + '" font-size="10" ' + MONO + '>' + lb + '</text>';
@@ -1080,17 +1089,20 @@
     // Коротко: у корзины объяснение и так впритык к сноске (лишняя строка выталкивает плитки)
     const memTxt = inst.memory === true ? " Пропущенный купон платится позже (память)."
       : inst.memory === false ? " Пропущенный купон не возвращается." : "";
+    // Цена входа: у доски и по умолчанию — номинал; расчёт чата «купон → цена» даёт свою
+    const px = inst.price || 100, buyRub = nom * px / 100;
     c = {
       badge: "Автоколл · структурная облигация",
-      subtitle: "Условный купон " + S.fmt2(cpnPa) + "% годовых " + (acBk ? "на корзину " + inst.underlying + " по принципу worst-of" : "на " + inst.underlying) + " · срок " + inst.tenor + " · " + S.ccyLabel(inst) + ".",
+      subtitle: "Условный купон " + S.fmt2(cpnPa) + "% годовых " + (acBk ? "на корзину " + inst.underlying + " по принципу worst-of" : "на " + inst.underlying) + " · срок " + inst.tenor + (px !== 100 ? " · цена " + S.fmt2(px) + "% номинала" : "") + " · " + S.ccyLabel(inst) + ".",
       quoteK: "купон · % годовых · индикативно",
       chart: chAutocall,
       chartCap: "Возврат номинала на погашении в % от него; по горизонтали — " + (acBk ? "уровень худшей бумаги корзины" : "уровень базового актива") + ". Купоны на графике не показаны.",
       params: [["Купон", S.fmt2(cpnPa) + "% годовых", true], ["Купонный барьер", S.fmtSmart(cpnB) + "%", false], ["Барьер автоотзыва", S.fmtSmart(call) + "%", false], ["Защита на погашении", S.fmtSmart(prot) + "%", false]],
-      exIntro: "Вход по номиналу " + S.fmtInt(nom) + " ₽ (100%) · купон " + S.fmt2(cpnPer) + "% за период = " + S.fmtInt(cpnRub) + " ₽",
+      exIntro: (px !== 100 ? "Номинал " + S.fmtInt(nom) + " ₽ · покупка по " + S.fmt2(px) + "% = " + S.fmtInt(buyRub) + " ₽"
+        : "Вход по номиналу " + S.fmtInt(nom) + " ₽ (100%)") + " · купон " + S.fmt2(cpnPer) + "% за период = " + S.fmtInt(cpnRub) + " ₽",
       scen: [
-        [(acBk ? "Корзина" : "Актив") + " выше " + S.fmtSmart(cpnB) + "% весь срок", "купоны за " + inst.tenor + " и номинал", "+" + S.fmtInt(holdRub - nom) + " ₽", "var(--up)"],
-        ["На погашении " + (acBk ? "худшая бумага" : "актив") + " на " + downLvl + "%", "выплата по перформансу " + S.fmtInt(downRub) + " ₽", "−" + S.fmtInt(nom - downRub) + " ₽", "var(--down)"]
+        [(acBk ? "Корзина" : "Актив") + " выше " + S.fmtSmart(cpnB) + "% весь срок", "купоны за " + inst.tenor + " и номинал", (holdRub >= buyRub ? "+" : "−") + S.fmtInt(Math.abs(holdRub - buyRub)) + " ₽", "var(--up)"],
+        ["На погашении " + (acBk ? "худшая бумага" : "актив") + " на " + downLvl + "%", "выплата по перформансу " + S.fmtInt(downRub) + " ₽", "−" + S.fmtInt(buyRub - downRub) + " ₽", "var(--down)"]
       ],
       explainer: (acBk ? "Условия считаются по <b>худшей бумаге</b> корзины (worst-of)" : "Условия считаются по уровню базового актива") + ", наблюдения — " + obsTxt + ". Выше " + S.fmtSmart(cpnB) + "% начисляется купон " + S.fmt2(cpnPer) + "% номинала за период; выше " + S.fmtSmart(call) + "% выпуск гасится досрочно." + (nonCall ? " " + S.nonCallText(nonCall) + " отзыв невозможен." : "") + memTxt + " На погашении номинал возвращается целиком, пока " + (acBk ? "worst-of" : "актив") + " не ниже " + S.fmtSmart(prot) + "%.",
       underLabel: acBk ? "Главный риск · падение корзины" : "Главный риск · падение актива",
