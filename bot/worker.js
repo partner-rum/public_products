@@ -1778,7 +1778,8 @@ const PRICE_UNLISTED_TIMEOUT_MS = 25000;  // тикер не из справоч
 const PRICE_CACHE_MS = 10 * 60 * 1000;
 const PRICE_DAYS_MIN = 7, PRICE_DAYS_MAX = 5 * 366;
 const PRICE_CACHE = new Map();      // условия + дата → готовый ответ; живёт в изоляте
-const PRICE_ONLY_TEXT = "В чате сейчас считаются обычные CALL и PUT и облигация с защитой капитала на один актив. " +
+const PRICE_ONLY_TEXT = "В чате сейчас считаются обычные CALL и PUT, облигация с защитой капитала на один актив " +
+  "и автоколл на российские акции. " +
   "Колл-спред и другие структуры посчитает менеджер — нажмите «Обсудить с Румбергом».";
 
 const PRICE_TOOL = {
@@ -1853,20 +1854,86 @@ const PROT_TOOL = {
   },
 };
 
+// ── Автоколл в чате (13.11.2026, «давай учить AI агента прайсить автоколы») ─────────────────
+// Автоколлируемая облигация (Phoenix): условный купон, досрочное погашение, барьер на погашении.
+// Корзина — по худшей бумаге (worst-of), как у автоколлов доски. Считает прайсер (его продукт
+// autocall). Продаём ПО 100% НОМИНАЛА, подбирается купон: цена прайсера + наша маржа 2% номинала
+// в год × срок (таблица маржи для автоколлов) = 100%. Только российские активы в рублях (решение
+// Руслана 13.11.2026): по акциям США у прайсера завышенная волатильность (TSLA 67%, NVDA 70%) —
+// купоны выходили 30–46% годовых против 16–20% у тех же корзин на доске.
+// Цена автоколла у прайсера — Монте-Карло, и случайные числа меняются от запроса к запросу: при
+// купоне 10,101…10,108% Сбер на 2 года стоил от 97,20 до 97,51 (n_sims на это не влияет —
+// проверено 13.11.2026). В ожидании цена линейна по купону (купон не меняет траекторий), поэтому
+// купон берём из прямой по четырём расчётам: 0% и 40%, затем ±3 п. вокруг первой оценки, — и
+// округляем вниз до 0,5%. Ошибка такой оценки — около 0,25 п. годовых.
+const AC_MARGIN_PA = 2;               // наша маржа, % номинала в год
+const AC_DAYS_MIN = 182, AC_DAYS_MAX = 5 * 366;
+const AC_MAX_UND = 5;                 // бумаг в корзине
+const AC_MAX_CALLS = 2;               // автоколлов в одном ответе (каждый — 4 расчёта)
+const AC_STEP = 0.5, AC_MIN_CPN = 2, AC_MAX_CPN = 60;   // купон, % годовых
+const AC_PROBE = [0, 40], AC_NEAR = 3;
+const AC_BARRIER_DEF = 70, AC_CALL_DEF = 100;
+const AC_FREQ = {
+  monthly: { per: 12, word: "раз в месяц", tag: "купон ежемесячно" },
+  quarterly: { per: 4, word: "раз в квартал", tag: "" },
+  semiannual: { per: 2, word: "раз в полгода", tag: "купон раз в полгода" },
+  annual: { per: 1, word: "раз в год", tag: "купон раз в год" },
+};
+const AC_FX_TEXT = "Автоколл в чате считаю на российские акции и индексы в рублях. По зарубежным активам расчёт в чате пока " +
+  "недоступен — нажмите «Обсудить с Румбергом», посчитает менеджер.";
+const AC_BOND_TEXT = "Автоколл на облигации в чате не считаю. Нажмите «Обсудить с Румбергом» — посчитает менеджер.";
+// Клиент назвал барьер или уровень досрочного погашения числом, а модель их не передала —
+// переспрашиваем, а не считаем по умолчанию.
+const AC_BARRIER_RE = /барьер\p{L}*[^\d\n]{0,30}\d{2,3}(?:[.,]\d+)?\s*%/iu;
+const AC_CALL_RE = /(?:авто)?(?:отзыв|колл)\p{L}*[^\d\n]{0,25}\d{2,3}(?:[.,]\d+)?\s*%|досрочн\p{L}*\s+погаш\p{L}*[^\d\n]{0,25}\d{2,3}(?:[.,]\d+)?\s*%/iu;
+
+const AC_TOOL = {
+  type: "function",
+  function: {
+    name: "price_autocall",
+    description: "Посчитать автоколл (автоколлируемую облигацию с условным купоном и досрочным погашением) на ОДИН " +
+      "российский актив или корзину до 5 российских бумаг по худшей бумаге (worst-of). Клиент платит 100% номинала; " +
+      "купон и ответ клиенту посчитает сервер.",
+    parameters: {
+      type: "object",
+      properties: {
+        underlyings: { type: "array", items: { type: "string" }, description: "Базовые активы: один или корзина до 5 бумаг. " +
+          "Тикеры как на бирже: SBER, GAZP, LKOH, YDEX, IMOEX. Не знаешь тикер — название компании как есть." },
+        tenor: { type: "string", description: "Срок: '2Y', '3Y', '18M' или дата погашения YYYY-MM-DD." },
+        barrier_pct: { type: "number", description: "Барьер защиты на погашении, % от начального уровня: если худшая бумага " +
+          "на погашении ниже него — выплата по её перформансу. По умолчанию 70. «Барьер 60%», «защита до −40%» → 60." },
+        coupon_barrier_pct: { type: "number", description: "Купонный барьер, % от начального уровня: купон платится, если " +
+          "худшая бумага не ниже него. По умолчанию равен барьеру защиты; передавай, только если клиент назвал его отдельно." },
+        autocall_pct: { type: "number", description: "Уровень досрочного погашения (автоотзыва), % от начального уровня. " +
+          "По умолчанию 100. «Отзыв от 105%» → 105." },
+        frequency: { type: "string", enum: ["monthly", "quarterly", "semiannual", "annual"],
+          description: "Как часто наблюдения и купоны. По умолчанию quarterly (раз в квартал); «ежемесячно» → monthly." },
+        no_call_months: { type: "number", description: "Сколько первых месяцев выпуск нельзя погасить досрочно, если клиент " +
+          "назвал: «первый год без отзыва» → 12, «первые полгода» → 6." },
+        memory: { type: "boolean", description: "Эффект памяти: пропущенные купоны выплачиваются позже. По умолчанию true; " +
+          "«без памяти» → false." },
+      },
+      required: ["underlyings", "tenor"],
+    },
+  },
+};
+
 const PRICING_PROMPT = `
 
-=== РАСЧЁТ ПРОДУКТОВ (инструменты price_warrant и price_protection) ===
-Ты считаешь цену ТОЛЬКО ТРЁХ продуктов, все на ОДИН базовый актив: обычный колл-опцион (CALL), обычный пут-опцион (PUT) — инструмент price_warrant — и облигацию с защитой капитала — инструмент price_protection. Больше ты не прайсишь НИЧЕГО.
+=== РАСЧЁТ ПРОДУКТОВ (инструменты price_warrant, price_protection и price_autocall) ===
+Ты считаешь цену ТОЛЬКО ЧЕТЫРЁХ продуктов: обычный колл-опцион (CALL) и обычный пут-опцион (PUT) на один базовый актив — инструмент price_warrant; облигацию с защитой капитала на один актив — инструмент price_protection; автоколл на один российский актив или корзину до 5 российских бумаг — инструмент price_autocall. Больше ты не прайсишь НИЧЕГО.
 Когда клиент просит посчитать, запрайсить, оценить или узнать цену колла или пута (колл-опциона, пут-опциона, CALL, PUT, варранта на рост или на падение) на конкретный актив — вызови price_warrant.
 Когда клиент просит посчитать защиту капитала (облигацию с защитой капитала, «капитал под защитой», «вернуть номинал и участвовать в росте») на конкретный актив — вызови price_protection.
-Ответ с ценой клиенту соберёт сервер: сам цену и участие не называй и не придумывай.
+Когда клиент просит посчитать автоколл (автоколлируемую облигацию, автокол, autocall, «феникс», облигацию с условным купоном и досрочным погашением) на актив или корзину — вызови price_autocall.
+Ответ с ценой клиенту соберёт сервер: сам цену, участие и купон не называй и не придумывай.
 - Тикер передавай как на бирже (SBER, GAZP, LKOH, YDEX, NVDA). Не знаешь тикер — передай название компании как есть.
 - Индекс, фонд и валюта — тоже ОДИН актив, их считаешь: индекс МосБиржи → IMOEX, индекс РТС → RTSI, S&P 500 → SPY, золото → GLD, биткоин → IBIT, юань → CNYRUB. Не отказывай словами «это индекс, а не один актив».
 - Срок обязателен. Не назван — спроси срок и инструмент не вызывай. Срок НИКОГДА не придумывай и не бери «по умолчанию». «2 года» → '2Y', «18 месяцев» → '18M', «полгода» → '6M'.
 - CALL и PUT: страйк по умолчанию 100% (на уровне текущей цены). «Страйк 110», «на 10% выше рынка» → strike_pct 110. Страйк деньгами («страйк 1500 рублей», «страйк 300 $») → strike_abs 1500 / 300, в проценты сам не пересчитывай.
 - Защита капитала: уровень защиты по умолчанию 100% номинала; «защита 90%», «с 80% защитой» → protection_pct 90 / 80. Цена защиты капитала всегда 100% номинала, участие в росте посчитает сервер — его клиент не задаёт; если клиент назвал участие, всё равно вызови price_protection с остальными условиями. Потолок роста передавай, ТОЛЬКО если клиент его назвал: «до +50%», «с потолком 50%» → cap_pct 50. «Рост засчитывается от +5%» → strike_pct 105.
-- Клиент меняет условия прошлого расчёта («а на 3 года?», «а страйк 110?», «а с потолком +50%?», «а с защитой 90%?») — вызови тот же инструмент снова, остальные условия возьми из прошлого расчёта.
-- ВСЁ ОСТАЛЬНОЕ НЕ СЧИТАЕШЬ И ИНСТРУМЕНТЫ НЕ ВЫЗЫВАЕШЬ: колл-спреды и опционы с потолком (потолок бывает только у защиты капитала), корзины и продукты на несколько активов, автоколлы, дисконтные облигации, бустеры, реверс-конвертиблы, купонные варранты и любые другие структуры. На такую просьбу ответь, что в чате сейчас считаются CALL, PUT и защита капитала на один актив, и предложи похожий продукт из каталога или кнопку «Обсудить с Румбергом» — посчитает менеджер. Цифр по таким продуктам не называй, кроме тех, что есть в каталоге.`;
+- Автоколл: все названные бумаги передай в underlyings — корзина считается по худшей бумаге (worst-of). Цена автоколла всегда 100% номинала, купон посчитает сервер — его клиент не задаёт; если клиент назвал купон, всё равно вызови price_autocall с остальными условиями. Условия по умолчанию: барьер защиты на погашении 70%, купонный барьер равен барьеру защиты, досрочное погашение при 100% начального уровня, наблюдения и купон раз в квартал, с эффектом памяти. Передавай только то, что клиент назвал сам: «барьер 60%» → barrier_pct 60; «купонный барьер 80%» → coupon_barrier_pct 80; «отзыв от 105%» → autocall_pct 105; «купон ежемесячно» → frequency monthly; «первый год без отзыва» → no_call_months 12; «без памяти» → memory false. Автоколл считается только на российские акции и индексы в рублях.
+- Клиент меняет условия прошлого расчёта («а на 3 года?», «а страйк 110?», «а с потолком +50%?», «а с защитой 90%?», «а с барьером 60%?», «а без Лукойла?») — вызови тот же инструмент снова, остальные условия возьми из прошлого расчёта.
+- ВСЁ ОСТАЛЬНОЕ НЕ СЧИТАЕШЬ И ИНСТРУМЕНТЫ НЕ ВЫЗЫВАЕШЬ: колл-спреды и опционы с потолком (потолок бывает только у защиты капитала), корзины в CALL, PUT и защите капитала (корзина бывает только у автоколла), дисконтные облигации, бустеры, реверс-конвертиблы, купонные варранты и любые другие структуры. На такую просьбу ответь, что в чате сейчас считаются CALL, PUT, защита капитала на один актив и автоколл на российские акции, и предложи похожий продукт из каталога или кнопку «Обсудить с Румбергом» — посчитает менеджер. Цифр по таким продуктам не называй, кроме тех, что есть в каталоге.`;
 
 function pricerEnabled(env) {
   return !!((env.PRICER_MCP_URL || "").trim() && (env.PRICER_MCP_KEY || "").trim());
@@ -2041,14 +2108,72 @@ function priceAssetName(ticker, raw, cat) {
 }
 
 function priceNamePick(rs) {
-  if (rs.status === "resolved" && rs.ticker) return { ticker: rs.ticker, name: rs.name || "", options: [] };
+  if (rs.status === "resolved" && rs.ticker) return { ticker: rs.ticker, name: rs.name || "", ccy: rs.currency || "", options: [] };
   const cands = (rs.matches || [])
     .filter((m) => m && /^[A-Z][A-Z0-9.-]{0,11}$/.test(m.ticker || ""))
     .sort((x, y) => (y.score || 0) - (x.score || 0));
   const pool = cands.filter((m) => !(/-RM$/.test(m.ticker) && cands.some((o) => o.ticker === m.ticker.replace(/-RM$/, ""))));
   const top = pool[0], second = pool[1];
-  if (top && (!second || (top.score || 0) > (second.score || 0))) return { ticker: top.ticker, name: top.name || "", options: [] };
+  if (top && (!second || (top.score || 0) > (second.score || 0))) return { ticker: top.ticker, name: top.name || "", ccy: top.currency || "", options: [] };
   return { ticker: "", name: "", options: pool.slice(0, 4).map((m) => m.ticker + (m.name ? " (" + m.name + ")" : "")) };
+}
+
+// Разбор базового актива для расчёта: тикер как есть, название компании — через справочник прайсера,
+// ОФЗ — в его тикер DOFZ<номер>. Вынесено из priceWarrant 13.11.2026 без изменений, чтобы автоколл
+// разбирал каждую бумагу корзины так же. Возвращает { fail: текст клиенту } или
+// { ticker, name, listed, isBond, ccy } — ccy: валюта котировки по справочнику (пусто, если не знает).
+async function priceResolve(underlying, env) {
+  const fail = (text) => ({ fail: text });
+  // Актив: тикер как есть; название компании — через справочник прайсера (1,4 тыс.
+  // инструментов, ответ из кэша, без похода в рыночные данные).
+  const rawU = String(underlying || "").trim().slice(0, 60);
+  if (!rawU) return fail("Уточните базовый актив — тикер или название компании.");
+  const tickerLike = /^[A-Za-z0-9][A-Za-z0-9._-]{0,19}$/.test(rawU);
+  // Тикер модель передаёт заглавными; «Tesla», «Sber» — это название компании.
+  // Название, которое справочник не узнал, всё же пробуем как тикер («Qbts»).
+  const asName = !tickerLike || rawU !== rawU.toUpperCase() || rawU.length > 8;
+  let ticker = tickerLike ? rawU.toUpperCase() : "", name = "", listed = false, isBond = false, ccy = "";
+  const ofz = priceOfzNum(rawU);
+  if (ofz) {
+    ticker = "DOFZ" + ofz; name = "ОФЗ " + ofz; isBond = true; ccy = "RUB";
+    try {
+      const rr = await mcpCall(env, "resolve_ticker", { query: ticker, mode: "fast" }, 20000);
+      const rs = rr.structuredContent || {};
+      const found = (rs.status === "resolved" && rs.ticker === ticker) || (rs.matches || []).some((m) => m && m.ticker === ticker);
+      if (!found) {
+        return fail("По ОФЗ " + ofz + " у прайсера пока нет рыночных данных — посчитать в чате не могу. " +
+          "Нажмите «Обсудить с Румбергом» — посчитает менеджер.");
+      }
+      listed = true;
+    } catch (e) {
+      listed = true;   // справочник не ответил — пробуем считать, прайсер сам скажет, если выпуска нет
+    }
+  } else try {
+    const rr = await mcpCall(env, "resolve_ticker", { query: asName ? rawU : ticker, mode: "fast" }, 20000);
+    const rs = rr.structuredContent || {};
+    const exact = (rs.matches || []).find((m) => m && m.ticker === ticker);
+    if (!asName) {
+      if (rs.status === "resolved" && rs.ticker === ticker) { name = rs.name || (exact && exact.name) || ""; ccy = rs.currency || (exact && exact.currency) || ""; listed = true; }
+      else if (exact) { name = exact.name || ""; ccy = exact.currency || ""; listed = true; }
+    } else {
+      const pick = priceNamePick(rs);
+      // «Ibm» — это тикер IBM, а не биржевой двойник IBM-RM: двойника не подставляем
+      if (pick.ticker && tickerLike && pick.ticker === ticker + "-RM") pick.ticker = "";
+      if (pick.ticker) { ticker = pick.ticker; name = pick.name; ccy = pick.ccy || ""; listed = true; }
+      else if (exact) { name = exact.name || ""; ccy = exact.currency || ""; listed = true; }
+      else if (!tickerLike || (pick.options.length > 1 && !pick.options.some((o) => o.startsWith(ticker + "-RM")))) {
+        return fail(pick.options.length
+          ? "Уточните актив «" + rawU + "»: " + pick.options.join(", ") + "?"
+          : "Не нашёл актив «" + rawU + "». Напишите его тикер — например, SBER или GAZP.");
+      }
+      // выпуск ОФЗ, найденный по названию: человеческое имя вместо «DUMMY OFZ …»
+      if (/^DOFZ\d{5}$/.test(ticker)) { name = priceShowTicker(ticker); isBond = true; ccy = "RUB"; }
+    }
+  } catch (e) {
+    if (!tickerLike) return fail("Не удалось найти актив «" + rawU + "» — справочник прайсера не ответил. Напишите тикер, например SBER.");
+    // тикер есть — считаем без имени
+  }
+  return { ticker, name, listed, isBond, ccy };
 }
 
 // Один расчёт. Всегда возвращает текст для клиента: и котировку, и честный отказ.
@@ -2073,55 +2198,10 @@ async function priceWarrant(a, env, who, cat, raw) {
   // это уже колл-спред: даже если модель его передала, сервер не считает.
   if (a.cap_pct != null && a.cap_pct !== "") return fail(PRICE_ONLY_TEXT);
 
-  // Актив: тикер как есть; название компании — через справочник прайсера (1,4 тыс.
-  // инструментов, ответ из кэша, без похода в рыночные данные).
-  const rawU = String(a.underlying || "").trim().slice(0, 60);
-  if (!rawU) return fail("Уточните базовый актив — тикер или название компании.");
-  const tickerLike = /^[A-Za-z0-9][A-Za-z0-9._-]{0,19}$/.test(rawU);
-  // Тикер модель передаёт заглавными; «Tesla», «Sber» — это название компании.
-  // Название, которое справочник не узнал, всё же пробуем как тикер («Qbts»).
-  const asName = !tickerLike || rawU !== rawU.toUpperCase() || rawU.length > 8;
-  let ticker = tickerLike ? rawU.toUpperCase() : "", name = "", listed = false, isBond = false;
-  const ofz = priceOfzNum(rawU);
-  if (ofz) {
-    ticker = "DOFZ" + ofz; name = "ОФЗ " + ofz; isBond = true;
-    try {
-      const rr = await mcpCall(env, "resolve_ticker", { query: ticker, mode: "fast" }, 20000);
-      const rs = rr.structuredContent || {};
-      const found = (rs.status === "resolved" && rs.ticker === ticker) || (rs.matches || []).some((m) => m && m.ticker === ticker);
-      if (!found) {
-        return fail("По ОФЗ " + ofz + " у прайсера пока нет рыночных данных — посчитать в чате не могу. " +
-          "Нажмите «Обсудить с Румбергом» — посчитает менеджер.");
-      }
-      listed = true;
-    } catch (e) {
-      listed = true;   // справочник не ответил — пробуем считать, прайсер сам скажет, если выпуска нет
-    }
-  } else try {
-    const rr = await mcpCall(env, "resolve_ticker", { query: asName ? rawU : ticker, mode: "fast" }, 20000);
-    const rs = rr.structuredContent || {};
-    const exact = (rs.matches || []).find((m) => m && m.ticker === ticker);
-    if (!asName) {
-      if (rs.status === "resolved" && rs.ticker === ticker) { name = rs.name || (exact && exact.name) || ""; listed = true; }
-      else if (exact) { name = exact.name || ""; listed = true; }
-    } else {
-      const pick = priceNamePick(rs);
-      // «Ibm» — это тикер IBM, а не биржевой двойник IBM-RM: двойника не подставляем
-      if (pick.ticker && tickerLike && pick.ticker === ticker + "-RM") pick.ticker = "";
-      if (pick.ticker) { ticker = pick.ticker; name = pick.name; listed = true; }
-      else if (exact) { name = exact.name || ""; listed = true; }
-      else if (!tickerLike || (pick.options.length > 1 && !pick.options.some((o) => o.startsWith(ticker + "-RM")))) {
-        return fail(pick.options.length
-          ? "Уточните актив «" + rawU + "»: " + pick.options.join(", ") + "?"
-          : "Не нашёл актив «" + rawU + "». Напишите его тикер — например, SBER или GAZP.");
-      }
-      // выпуск ОФЗ, найденный по названию: человеческое имя вместо «DUMMY OFZ …»
-      if (/^DOFZ\d{5}$/.test(ticker)) { name = priceShowTicker(ticker); isBond = true; }
-    }
-  } catch (e) {
-    if (!tickerLike) return fail("Не удалось найти актив «" + rawU + "» — справочник прайсера не ответил. Напишите тикер, например SBER.");
-    // тикер есть — считаем без имени
-  }
+  const rv = await priceResolve(a.underlying, env);
+  if (rv.fail) return fail(rv.fail);
+  let { ticker, name } = rv;
+  const { listed, isBond } = rv;
 
   // raw-объект { tool, args } — другой продукт прайсера (структура с защитой капитала): тот же
   // разбор актива, кэш и отказы. Облигации так не считаем — кривая прайсера для них падает.
@@ -2356,6 +2436,197 @@ async function priceProtection(a, env, who, cat) {
   return out;
 }
 
+// Автоколл: продаём по 100% номинала, купон подбираем (см. блок констант AC_*). Активы разбирает
+// тот же priceResolve, что у CALL/PUT; корзина — по худшей бумаге. Всегда возвращает текст для
+// клиента; log — строка для внутреннего лога (точки прайсера и подобранный купон).
+function acPlural(n, one, few, many) {
+  const a = Math.abs(n) % 100, b = a % 10;
+  return a > 10 && a < 20 ? many : b === 1 ? one : b >= 2 && b <= 4 ? few : many;
+}
+async function priceAutocall(a, env, who, cat) {
+  const fail = (text) => ({ ok: false, text: PRICE_LEAK_RE.test(text) ? PRICE_LEAK_TEXT : text });
+  const numOr = (v, d) => (v == null || v === "" ? d : Number(v));
+  const tenor = priceTenor(a.tenor);
+  if (!tenor) return fail("Уточните срок автоколла — например, 2 года или 3 года.");
+  if (tenor.days < AC_DAYS_MIN || tenor.days > AC_DAYS_MAX) {
+    return fail("Автоколл считаю на срок от полугода до пяти лет. Уточните срок.");
+  }
+  let und = a.underlyings;
+  if (typeof und === "string") und = und.split(/[,;/]+/);
+  if (!Array.isArray(und)) und = a.underlying ? [a.underlying] : [];
+  und = und.map((x) => String(x == null ? "" : x).trim()).filter(Boolean);
+  und = und.filter((x, i) => und.indexOf(x) === i);
+  if (!und.length) return fail("Уточните базовый актив — тикер или название компании, либо бумаги корзины.");
+  if (und.length > AC_MAX_UND) {
+    return fail("В чате считаю автоколл на корзину до " + AC_MAX_UND + " бумаг. Уберите лишние — или нажмите «Обсудить с Румбергом», посчитает менеджер.");
+  }
+  if (und.some((x) => priceOfzNum(x))) return fail(AC_BOND_TEXT);
+
+  const B = numOr(a.barrier_pct, AC_BARRIER_DEF);
+  const CB = numOr(a.coupon_barrier_pct, B);
+  const AC = numOr(a.autocall_pct, AC_CALL_DEF);
+  if (!isFinite(B) || B < 40 || B > 100) return fail("Барьер защиты считаю в пределах 40–100% от начального уровня. Уточните, пожалуйста.");
+  if (!isFinite(CB) || CB < 40 || CB > 100) return fail("Купонный барьер считаю в пределах 40–100% от начального уровня. Уточните, пожалуйста.");
+  if (!isFinite(AC) || AC < 80 || AC > 130) return fail("Уровень досрочного погашения считаю в пределах 80–130% от начального уровня. Уточните, пожалуйста.");
+  if (CB > AC) return fail("Купонный барьер не может быть выше уровня досрочного погашения. Уточните условия.");
+  const fqKey = String(a.frequency || "quarterly").toLowerCase();
+  const fq = AC_FREQ[fqKey];
+  if (!fq) return fail("Уточните, как часто наблюдения и купоны: раз в месяц, квартал, полгода или год.");
+  const T = tenor.days / 365;
+  const nObs = Math.round(T * fq.per);
+  if (nObs < 1) return fail("Срок короче одного периода наблюдений. Уточните срок или частоту купонов.");
+  if (nObs > 60) return fail("Столько дат наблюдения в чате не считаю — выберите купоны реже или срок короче.");
+  const ncm = numOr(a.no_call_months, 0);
+  if (!isFinite(ncm) || ncm < 0) return fail("Уточните, сколько первых месяцев выпуск нельзя погасить досрочно.");
+  const nonCall = Math.round(ncm * fq.per / 12);
+  if (nonCall >= nObs) return fail("Период без досрочного погашения должен быть короче срока. Уточните условия.");
+  const memory = !(a.memory === false || a.memory === "false");
+
+  // Активы — тем же разбором, что у CALL/PUT. Валюту справочник знает заранее: зарубежную
+  // бумагу отбиваем до расчёта, а не после четырёх прогонов прайсера.
+  const rs = await Promise.all(und.map((u) => priceResolve(u, env)));
+  for (const r of rs) if (r.fail) return fail(r.fail);
+  if (rs.some((r) => r.isBond)) return fail(AC_BOND_TEXT);
+  if (rs.some((r) => r.ccy && r.ccy !== "RUB")) return fail(AC_FX_TEXT);
+  const tickers = [], names = [];
+  for (const r of rs) {
+    if (tickers.indexOf(r.ticker) >= 0) continue;
+    tickers.push(r.ticker);
+    names.push(priceAssetName(r.ticker, r.name, cat));
+  }
+  const listed = rs.every((r) => r.listed);
+  const one = tickers.length === 1;
+
+  const key = ["ac", mskDate().key, tickers.join("/"), tenor.expiry, fqKey, B, CB, AC, nonCall, memory ? 1 : 0].join("|");
+  const hit = PRICE_CACHE.get(key);
+  if (hit && Date.now() - hit.at < PRICE_CACHE_MS) return hit.out;
+
+  const base = {
+    underlyings: tickers, frequency: fqKey, coupon_barrier: CB, barrier: B, autocall_trigger: AC,
+    non_call_periods: nonCall, memory, basket_type: "worst_of", currency: "RUB",
+    outputs: ["PV"], context: { user_id: who },
+  };
+  if (/^\d{4}-\d{2}-\d{2}$/.test(tenor.expiry)) base.maturity_date = tenor.expiry; else base.tenor = tenor.expiry;
+  const unavailable = "Расчёт сейчас недоступен. Попробуйте позже или нажмите «Обсудить с Румбергом» — посчитает менеджер.";
+  const shown = tickers.map(priceShowTicker).join(", ");
+  const pvAt = async (c) => {
+    let res;
+    try {
+      res = await mcpCall(env, "price_autocall", { ...base, coupon_pa: Math.round(c * 1000) / 1000 },
+        listed ? PRICE_TIMEOUT_MS : PRICE_UNLISTED_TIMEOUT_MS);
+    } catch (e) {
+      const m = String((e && e.message) || e);
+      if (m === "pricer_timeout" && !listed) return { fail: "По одному из активов (" + shown + ") не нашёл рыночных данных. Проверьте тикеры — например, SBER, GAZP или LKOH." };
+      return { fail: m === "pricer_timeout"
+        ? "Прайсер не успел посчитать. Попробуйте ещё раз через минуту или нажмите «Обсудить с Румбергом» — посчитает менеджер."
+        : unavailable };
+    }
+    const sc = res.structuredContent || {};
+    if (res.isError) {
+      const code = sc.error || "";
+      if (code === "rate_limited") return { fail: "Слишком много расчётов подряд. Попробуйте через минуту." };
+      if (code === "unknown_ticker" || code === "market_data_missing") {
+        return { fail: "По одному из активов (" + shown + ") нет рыночных данных — посчитать не могу. Проверьте тикеры." };
+      }
+      if (code === "invalid_term") return { fail: "С такими условиями посчитать не получилось. Проверьте срок и барьеры." };
+      return { fail: unavailable };
+    }
+    if (sc.status === "needs_input") {
+      const q = (sc.questions || [])[0] || {};
+      if (q.field === "underlyings") return { fail: "По одному из активов (" + shown + ") нет рыночных данных. Проверьте тикеры." };
+      if (/^(quanto|currency|underlying_currencies)$/.test(String(q.field || ""))) return { fail: AC_FX_TEXT };
+      return { fail: unavailable };
+    }
+    const r = sc.result || {}, t = sc.terms || {};
+    if (String(r.currency || t.currency || "RUB") !== "RUB") return { fail: AC_FX_TEXT };
+    const pv = Number(r.pv_pct);
+    if (!isFinite(pv) || pv <= 0) return { fail: unavailable };
+    return { pv, nFix: Number((t.schedule || {}).fixings_count) || 0 };
+  };
+  // Прямая по точкам (МНК): pv = A + K·купон
+  const fit = (P) => {
+    const n = P.length, mx = P.reduce((s, p) => s + p[0], 0) / n, my = P.reduce((s, p) => s + p[1], 0) / n;
+    let sxy = 0, sxx = 0;
+    for (const [x, y] of P) { sxy += (x - mx) * (y - my); sxx += (x - mx) * (x - mx); }
+    const k = sxx > 0 ? sxy / sxx : 0;
+    return { a: my - k * mx, k };
+  };
+
+  const margin = AC_MARGIN_PA * T;
+  const target = 100 - margin;   // справедливая цена: клиенту 100%, из них маржа 2% в год
+  const low = "При таких условиях купон выходит слишком маленьким — такой автоколл в чате не показываю. " +
+    "Попробуйте другой срок, барьер повыше или другие бумаги — либо нажмите «Обсудить с Румбергом», посчитает менеджер.";
+  const high = "При таких условиях купон выходит очень высоким — значит, и риск по этим бумагам высокий. В чате такой расчёт " +
+    "не показываю: нажмите «Обсудить с Румбергом» — посчитает менеджер.";
+  const r1 = await Promise.all(AC_PROBE.map(pvAt));
+  for (const r of r1) if (r.fail) return fail(r.fail);
+  const pts = AC_PROBE.map((c, i) => [c, r1[i].pv]);
+  let f = fit(pts);
+  if (!(f.k > 0.02)) return fail(unavailable);   // купон почти ничего не стоит — расчёт подозрительный
+  const c1 = (target - f.a) / f.k;
+  if (c1 < AC_MIN_CPN - AC_NEAR) return fail(low);
+  if (c1 > AC_MAX_CPN + 2 * AC_NEAR) return fail(high);
+  const near = [Math.max(0.1, c1 - AC_NEAR), c1 + AC_NEAR];
+  const r2 = await Promise.all(near.map(pvAt));
+  for (const r of r2) if (r.fail) return fail(r.fail);
+  near.forEach((c, i) => pts.push([c, r2[i].pv]));
+  f = fit(pts);
+  if (!(f.k > 0.02)) return fail(unavailable);
+  const raw = (target - f.a) / f.k;
+  const cpn = Math.floor(raw / AC_STEP + 1e-9) * AC_STEP;
+  if (cpn < AC_MIN_CPN) return fail(low);
+  if (cpn > AC_MAX_CPN) return fail(high);
+
+  const nFix = r1[0].nFix || nObs;
+  const pct = (x) => priceNum(x, 1) + "%";
+  const assets = tickers.map((t, i) => (names[i] ? names[i] + " (" + t + ")" : t));
+  const short = tickers.map((t, i) => names[i] || t);
+  // Имя — как у продуктов доски («Автоколл · Сбербанк / Газпром / Лукойл · 3 года»), условия не по
+  // умолчанию — тегами, как у защиты капитала
+  const tags = [];
+  if (B !== AC_BARRIER_DEF) tags.push("барьер " + pct(B));
+  if (CB !== B) tags.push("купонный барьер " + pct(CB));
+  if (AC !== AC_CALL_DEF) tags.push("отзыв от " + pct(AC));
+  if (fq.tag) tags.push(fq.tag);
+  if (nonCall) tags.push("без отзыва " + nonCall + " " + acPlural(nonCall, "период", "периода", "периодов"));
+  if (!memory) tags.push("без памяти");
+  const title = ["Автоколл", short.join(" / ")].concat(tags, [tenor.label]).join(" · ");
+  const head = ["Автоколл", one ? assets[0] : short.join(" / ")].concat(tags, [tenor.label]).join(" · ");
+  const worst = one ? "актив" : "худшая бумага корзины";
+  const ex = Math.max(10, B - 20);
+  const lines = [
+    "**" + head + "**",
+    "Купон: **" + priceNum(cpn) + "% годовых** — индикативно",
+    "• Цена: 100% номинала",
+    one ? null : "• Корзина: " + assets.join(", ") + " — условия считаются по худшей бумаге",
+    "• Купон " + priceNum(cpn / fq.per) + "% номинала " + fq.word + ", если " + worst + " не ниже " + pct(CB) + " начального уровня" +
+      (memory ? "; пропущенные купоны выплачиваются позже, когда условие снова выполнится" : "; пропущенный купон не возвращается"),
+    "• Досрочное погашение: на дату наблюдения " + (one ? "актив" : "все бумаги корзины") + " не ниже " + pct(AC) +
+      " — номинал и купон, выпуск гасится" +
+      (nonCall ? "; первые " + nonCall + " " + acPlural(nonCall, "наблюдение", "наблюдения", "наблюдений") + " без досрочного погашения" : ""),
+    "• На погашении: " + worst + " не ниже " + pct(B) + " — 100% номинала; ниже — выплата по " + (one ? "его" : "её") +
+      " перформансу: например, при " + ex + "% от начального уровня — " + ex + "% номинала",
+    "• Наблюдений за срок: " + nFix + " (" + fq.word + ")",
+    "• Риск — падение " + (one ? "актива" : "худшей бумаги") + " ниже " + pct(B) + " к погашению и кредитное качество эмитента",
+  ].filter(Boolean);
+  const out = {
+    ok: true, text: lines.join("\n"), ticker: tickers.join("/"), type: "autocall", tenor: tenor.expiry, strike: B,
+    log: tickers.join("/") + " автоколл · " + tenor.expiry + " · " + fqKey + " · купонный барьер " + CB + " · барьер " + B +
+      " · отзыв " + AC + (nonCall ? " · без отзыва " + nonCall : "") + (memory ? "" : " · без памяти") +
+      ": прайсер " + pts.map((p) => priceNum(p[0], 2) + "% → " + priceNum(p[1])).join("; ") +
+      "; цена 100 = прайсер " + priceNum(target) + " + маржа " + priceNum(margin) + ", купон " + priceNum(raw, 2) + "% → " + priceNum(cpn) + "%",
+  };
+  out.pq = await pqSave(env, {
+    v: 1, type: "autocall", basket: tickers, underlying: one ? assets[0] : short.join(" / "), name: title,
+    couponPa: cpn, couponBarrier: CB, callBarrier: AC, protectionPct: B, nonCall, obsPerYear: fq.per, memory,
+    years: Math.round(T * 100) / 100, tenor: tenor.label, quote: cpn, currency: "RUB", ticker: tickers.join("/"),
+    isBond: false, at: Date.now(),
+  });
+  PRICE_CACHE.set(key, { at: Date.now(), out });
+  if (PRICE_CACHE.size > 300) PRICE_CACHE.delete(PRICE_CACHE.keys().next().value);
+  return out;
+}
+
 // ── One-pager под расчёт чата ───────────────────────────────────────────────
 // Каждый удачный расчёт кладётся в KV `pq:<id>` (30 дней), а под ответом чата —
 // ссылка onepager.html?pq=<id>. Лист берёт цифры ТОЛЬКО отсюда: параметры в адресе
@@ -2410,7 +2681,7 @@ function priceFooter(partnerMode) {
 // 2) Страйк деньгами в тексте клиента — его берём сами, а не из разбора модели.
 // 3) Клиент назвал страйк, а модель его не передала — переспрашиваем, а не считаем от 100%.
 const PRICE_TENOR_RE = /\d+(?:[.,]\d+)?\s*-?\s*(?:год|года|лет|г\.|мес|месяц|месяца|месяцев|нед|недел|дн|день|дня|дней|years?|yrs?|months?|mos?|weeks?|wks?|days?)(?![\p{L}])|(?:^|[^\p{L}])(?:a|one|two|three|four|five|six|half\s+a|1\.5)[\s-]+(?:years?|months?)(?![\p{L}])|\d+\s*[ymwd](?![\p{L}])|(?:^|[^\p{L}])(?:полгода|полугод|полтора|год|годик|квартал|месяц)(?![\p{L}])|\d{4}-\d{2}-\d{2}|\d{1,2}\.\d{1,2}\.\d{2,4}|(?:январ|феврал|март|апрел|ма[йя]|июн|июл|август|сентябр|октябр|ноябр|декабр)/iu;
-const PRICE_HEAD_RE = /^\*\*(?:(?:CALL|PUT) [\d,]+|Защита капитала) · /m;
+const PRICE_HEAD_RE = /^\*\*(?:(?:CALL|PUT) [\d,]+|Защита капитала|Автоколл) · /m;
 const PRICE_STRIKE_ABS_RE = /страйк\p{L}*[^\d\n]{0,12}(\d[\d\s]*(?:[.,]\d+)?)\s*(?:руб|р\.|₽|\$|долл|usd|rub|юан|¥|евро|€)/iu;
 const PRICE_STRIKE_ANY_RE = /страйк\p{L}*[^\d\n]{0,12}\d/iu;
 // «в деньгах» (ITM) и «вне денег» (OTM) — это НЕ страйк 100: модель путала их с «на деньгах».
@@ -2470,10 +2741,38 @@ function priceGuardProt(a, messages) {
   return { a };
 }
 
+// Автоколл — те же проверки: срок только названный клиентом (или из прошлого расчёта); назвал
+// барьер или уровень досрочного погашения числом, а модель их не передала — переспрашиваем.
+function priceGuardAC(a, messages) {
+  const recent = [];
+  let follow = false;
+  for (let i = messages.length - 1; i >= 0 && recent.length < 4; i--) {
+    const m = messages[i];
+    if (m.role === "assistant" && PRICE_HEAD_RE.test(String(m.content || ""))) { follow = true; break; }
+    if (m.role === "user") recent.push(String(m.content || ""));
+  }
+  const last = recent[0] || "";
+  const und = Array.isArray(a.underlyings) ? a.underlyings.join(", ") : String(a.underlyings || "");
+  if (!follow && !recent.some((t) => PRICE_TENOR_RE.test(t))) {
+    return { ask: "На какой срок посчитать автоколл" + (und ? " на " + und.slice(0, 60) : "") + "? Например, 2 года или 3 года." };
+  }
+  const has = (v) => v != null && v !== "";
+  if (AC_BARRIER_RE.test(last) && !has(a.barrier_pct) && !has(a.coupon_barrier_pct)) {
+    return { ask: "Уточните барьер: ниже какого уровня худшей бумаги на погашении выплата идёт по перформансу — например, 70%?" };
+  }
+  if (AC_CALL_RE.test(last) && !has(a.autocall_pct)) {
+    return { ask: "Уточните уровень досрочного погашения в процентах от начального уровня — например, 100% или 105%?" };
+  }
+  return { a };
+}
+
 async function chatWithPricing(system, messages, env, opts) {
-  const first = await callDeepSeek(system + PRICING_PROMPT, messages, env, { tools: [PRICE_TOOL, PROT_TOOL], raw: true });
+  const first = await callDeepSeek(system + PRICING_PROMPT, messages, env, { tools: [PRICE_TOOL, PROT_TOOL, AC_TOOL], raw: true });
   const calls = (first.toolCalls || [])
-    .filter((c) => c && c.function && (c.function.name === "price_warrant" || c.function.name === "price_protection"))
+    .filter((c) => c && c.function && (c.function.name === "price_warrant" || c.function.name === "price_protection" ||
+      c.function.name === "price_autocall"))
+    .filter((c, _, all) => c.function.name !== "price_autocall" ||
+      all.filter((x) => x.function.name === "price_autocall").indexOf(c) < AC_MAX_CALLS)
     .slice(0, PRICE_MAX_CALLS);
   if (!calls.length) return { reply: first.content, priced: [] };
 
@@ -2488,6 +2787,11 @@ async function chatWithPricing(system, messages, env, opts) {
   const outs = await Promise.all(calls.map((c) => {
     let a = {};
     try { a = JSON.parse(c.function.arguments || "{}"); } catch { /* пустые аргументы → честный отказ */ }
+    if (c.function.name === "price_autocall") {
+      const ga = priceGuardAC(a, messages);
+      if (ga.ask) return { ok: false, text: ga.ask };
+      return priceAutocall(ga.a, env, opts.who || "site-chat", opts.cat);
+    }
     if (c.function.name === "price_protection") {
       const gp = priceGuardProt(a, messages);
       if (gp.ask) return { ok: false, text: gp.ask };

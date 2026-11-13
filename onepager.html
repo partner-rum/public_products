@@ -402,6 +402,7 @@
   const clean = (v) => String(v == null ? "" : v).replace(/[<>&"']/g, "").slice(0, 120);
   function pqItem(r) {
     if (r && r.type === "protection") return pqProt(r);
+    if (r && r.type === "autocall") return pqAuto(r);
     if (!r || r.type !== "warrant" || (r.structure !== "call" && r.structure !== "put")) return null;
     const q = Number(r.quote), k = Number(r.strike);
     if (!(q > 0 && q < 100) || !(k >= 20 && k <= 300)) return null;
@@ -434,6 +435,21 @@
     return { id: "chat-" + PQ, type: "protection", name: clean(r.name), underlying: clean(r.underlying),
       currency: clean(r.currency) || "RUB", strike: k, spot: 100, participation: part, protectionPct: floor,
       cap: cap, tenor: clean(r.tenor), quote: q, minNom: 1000000, chat: true, at: Number(r.at) || 0 };
+  }
+
+  // Автоколл из чата: купон, барьеры, частота, период без отзыва и бумаги — из записи расчёта.
+  // Одна бумага — basket не передаём: лист описывает её как базовый актив, а не как корзину.
+  function pqAuto(r) {
+    const cpn = Number(r.couponPa), B = Number(r.protectionPct), CB = Number(r.couponBarrier), AC = Number(r.callBarrier);
+    const per = Number(r.obsPerYear), nc = Number(r.nonCall) || 0, yrs = Number(r.years) || 0;
+    const bk = Array.isArray(r.basket) ? r.basket.map(clean).filter((t) => /^[A-Z0-9.-]{1,12}$/.test(t)) : [];
+    if (!(cpn > 0 && cpn <= 60) || !(B >= 40 && B <= 100) || !(CB >= 40 && CB <= 100) || !(AC >= 80 && AC <= 130)) return null;
+    if ([1, 2, 4, 12].indexOf(per) < 0 || !(nc >= 0 && nc <= 60) || !(yrs >= 0 && yrs <= 6)) return null;
+    if (!bk.length || bk.length > 5) return null;
+    return { id: "chat-" + PQ, type: "autocall", name: clean(r.name), underlying: clean(r.underlying),
+      basket: bk.length > 1 ? bk : null, currency: clean(r.currency) || "RUB", couponPa: cpn, couponBarrier: CB,
+      callBarrier: AC, protectionPct: B, nonCall: Math.round(nc), obsPerYear: per, memory: r.memory === true ? true : r.memory === false ? false : null,
+      years: yrs || null, tenor: clean(r.tenor), quote: cpn, minNom: 1000000, chat: true, at: Number(r.at) || 0 };
   }
 
   function boot(CHAT) {
@@ -867,7 +883,9 @@
       (cpn !== prot ? vline(cpn, C.lab, "купон " + S.fmtSmart(cpn) + "%", "end") : "") +
       '<path d="' + line + '" fill="none" stroke="' + C.line + '" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>' +
       '<circle cx="' + x(prot) + '" cy="' + y(100) + '" r="3.2" fill="' + C.line + '"/>' +
-      '<text x="' + (x(prot) - 7) + '" y="' + (y(100) + 15) + '" text-anchor="end" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>защита ' + S.fmtSmart(prot) + '%</text>' +
+      // Подпись барьера — справа от точки, под линией номинала: слева над наклонной стоит
+      // «по перформансу», и на низком графике (HH) подписи ложились одна на другую
+      '<text x="' + (x(prot) + 7) + '" y="' + (y(100) + 15) + '" text-anchor="start" fill="' + C.lab2 + '" font-size="10" ' + MONO + '>защита ' + S.fmtSmart(prot) + '%</text>' +
       // Отступ от САМОЙ ВЫСОКОЙ точки участка под рамкой подписи: ниже барьера
       // выплата идёт наклонной 1:1, и фиксированные 9px она прорезала насквозь
       (function () {
@@ -1052,25 +1070,31 @@
     const prot = inst.protectionPct || 65, cpnB = inst.couponBarrier || prot, call = inst.callBarrier || 120;
     const per = inst.obsPerYear || 4, nonCall = inst.nonCall || 0;
     const cpnPer = cpnPa / per, cpnRub = nom * cpnPer / 100;
-    const yrs = parseFloat(String(inst.tenor).replace(",", ".")) || 3;
+    // Срок: из записи расчёта чата (years) или из подписи — «18 месяцев» это 1,5 года, а не 18
+    const yrs = inst.years || S.tenorYears(inst) || 3;
     const holdRub = nom * (1 + cpnPa / 100 * yrs);
     const downLvl = Math.max(10, prot - 20), downRub = nom * downLvl / 100;
-    const obsTxt = per === 4 ? "ежеквартально" : per + " раза в год";
+    const obsTxt = per === 12 ? "ежемесячно" : per === 4 ? "ежеквартально" : per === 2 ? "раз в полгода" : per === 1 ? "раз в год" : per + " раза в год";
+    // Автоколл на одну бумагу (расчёт чата) описывается без корзины и worst-of
+    const acBk = isWO;
+    // Коротко: у корзины объяснение и так впритык к сноске (лишняя строка выталкивает плитки)
+    const memTxt = inst.memory === true ? " Пропущенный купон платится позже (память)."
+      : inst.memory === false ? " Пропущенный купон не возвращается." : "";
     c = {
       badge: "Автоколл · структурная облигация",
-      subtitle: "Условный купон " + S.fmt2(cpnPa) + "% годовых на корзину " + inst.underlying + " по принципу worst-of · срок " + inst.tenor + " · " + S.ccyLabel(inst) + ".",
+      subtitle: "Условный купон " + S.fmt2(cpnPa) + "% годовых " + (acBk ? "на корзину " + inst.underlying + " по принципу worst-of" : "на " + inst.underlying) + " · срок " + inst.tenor + " · " + S.ccyLabel(inst) + ".",
       quoteK: "купон · % годовых · индикативно",
       chart: chAutocall,
-      chartCap: "Возврат номинала на погашении в % от него; по горизонтали — уровень худшей бумаги корзины. Купоны на графике не показаны.",
+      chartCap: "Возврат номинала на погашении в % от него; по горизонтали — " + (acBk ? "уровень худшей бумаги корзины" : "уровень базового актива") + ". Купоны на графике не показаны.",
       params: [["Купон", S.fmt2(cpnPa) + "% годовых", true], ["Купонный барьер", S.fmtSmart(cpnB) + "%", false], ["Барьер автоотзыва", S.fmtSmart(call) + "%", false], ["Защита на погашении", S.fmtSmart(prot) + "%", false]],
       exIntro: "Вход по номиналу " + S.fmtInt(nom) + " ₽ (100%) · купон " + S.fmt2(cpnPer) + "% за период = " + S.fmtInt(cpnRub) + " ₽",
       scen: [
-        ["Корзина выше " + S.fmtSmart(cpnB) + "% весь срок", "купоны за " + inst.tenor + " и номинал", "+" + S.fmtInt(holdRub - nom) + " ₽", "var(--up)"],
-        ["На погашении худшая бумага на " + downLvl + "%", "выплата по перформансу " + S.fmtInt(downRub) + " ₽", "−" + S.fmtInt(nom - downRub) + " ₽", "var(--down)"]
+        [(acBk ? "Корзина" : "Актив") + " выше " + S.fmtSmart(cpnB) + "% весь срок", "купоны за " + inst.tenor + " и номинал", "+" + S.fmtInt(holdRub - nom) + " ₽", "var(--up)"],
+        ["На погашении " + (acBk ? "худшая бумага" : "актив") + " на " + downLvl + "%", "выплата по перформансу " + S.fmtInt(downRub) + " ₽", "−" + S.fmtInt(nom - downRub) + " ₽", "var(--down)"]
       ],
-      explainer: "Условия считаются по <b>худшей бумаге</b> корзины (worst-of), наблюдения — " + obsTxt + ". Выше " + S.fmtSmart(cpnB) + "% начисляется купон " + S.fmt2(cpnPer) + "% номинала за период; выше " + S.fmtSmart(call) + "% выпуск гасится досрочно." + (nonCall ? " " + S.nonCallText(nonCall) + " отзыв невозможен." : "") + " На погашении номинал возвращается целиком, пока worst-of не ниже " + S.fmtSmart(prot) + "%.",
-      underLabel: "Главный риск · падение корзины",
-      underDesc: "Если на дату погашения худшая бумага корзины опустится ниже " + S.fmtSmart(prot) + "% начального уровня, выплата считается по её перформансу — возможна потеря части или всей суммы вложения. Отдельно действует кредитный риск эмитента облигации."
+      explainer: (acBk ? "Условия считаются по <b>худшей бумаге</b> корзины (worst-of)" : "Условия считаются по уровню базового актива") + ", наблюдения — " + obsTxt + ". Выше " + S.fmtSmart(cpnB) + "% начисляется купон " + S.fmt2(cpnPer) + "% номинала за период; выше " + S.fmtSmart(call) + "% выпуск гасится досрочно." + (nonCall ? " " + S.nonCallText(nonCall) + " отзыв невозможен." : "") + memTxt + " На погашении номинал возвращается целиком, пока " + (acBk ? "worst-of" : "актив") + " не ниже " + S.fmtSmart(prot) + "%.",
+      underLabel: acBk ? "Главный риск · падение корзины" : "Главный риск · падение актива",
+      underDesc: "Если на дату погашения " + (acBk ? "худшая бумага корзины опустится" : "актив опустится") + " ниже " + S.fmtSmart(prot) + "% начального уровня, выплата считается по " + (acBk ? "её" : "его") + " перформансу — возможна потеря части или всей суммы вложения. Отдельно действует кредитный риск эмитента облигации."
     };
   } else if (inst.type === "revconv") {
     const cpnPa = inst.couponPa != null ? inst.couponPa : q;
