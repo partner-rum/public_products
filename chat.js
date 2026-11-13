@@ -66,8 +66,9 @@
   // появляется уже внутри открытого чата, второй репликой после приветствия (решение Руслана
   // 05.10.2026: «пусть этот дисклеймер будет, когда его уже откроет клиент»).
   var PRICE_GREETING = "Здравствуйте! Я AI-ассистент Rumberg. Объясню, как устроены структурные продукты, " +
-    "подскажу, где что на сайте, и посчитаю индикативную цену опциона или облигации с защитой капитала на ваш срок.";
-  var PRICE_NOTE = "Считаю CALL и PUT и облигацию с защитой капитала на один актив — акцию, индекс или фонд. " +
+    "подскажу, где что на сайте, и посчитаю индикативную цену опциона, облигации с защитой капитала или автоколла на ваш срок.";
+  var PRICE_NOTE = "Считаю CALL и PUT и облигацию с защитой капитала на один актив — акцию, индекс или фонд, " +
+    "а ещё автоколл на российские акции: одну бумагу или корзину, купон по цене или цену по купону. " +
     "Остальные структуры посчитает менеджер: кнопка «Обсудить с Румбергом» внизу.";
   var EXAMPLES = [
     "Чем автоколл отличается от облигации с защитой капитала?",
@@ -295,7 +296,7 @@
   var IC_STAR_HERO = '<svg width="28" height="28" viewBox="0 0 26 26" aria-hidden="true"><path d="M13 1 L15.6 10.4 L25 13 L15.6 15.6 L13 25 L10.4 15.6 L1 13 L10.4 10.4 Z" fill="#F06E08"/></svg>';
   var CARDS = [
     { t: "Объяснить продукт", s: "«Чем автоколл отличается от защиты капитала?»", q: EXAMPLES[0], ic: IC_BOOK },
-    { t: "Посчитать цену", s: "CALL, PUT и защита капитала на один актив · «колл на Сбербанк на 2 года»", q: EXAMPLES[1], ic: IC_PAY, qual: true },
+    { t: "Посчитать цену", s: "CALL, PUT, защита капитала и автоколл · «колл на Сбербанк на 2 года»", q: EXAMPLES[1], ic: IC_PAY, qual: true },
     { t: "Найти на сайте", s: "«Где посмотреть размещённые выпуски?»", q: EXAMPLES[2], ic: IC_FIND }
   ];
   var TYPED = ["Объясню, как устроен автоколл", "Посчитаю колл на Сбербанк на 2 года", "Подскажу, где размещённые выпуски"];
@@ -344,15 +345,48 @@
   // а не модель, поэтому формат стабилен. Меняется заголовок там — правь шаблоны здесь
   var RE_W = /^\*\*(CALL|PUT) ([\d,]+) · (.+?) · ([^·*\n]+)\*\*$/m;
   var RE_P = /^\*\*Защита капитала · ([^*\n]+)\*\*$/m;
+  // Автоколл (priceAutocall): «**Автоколл · актив или корзина · теги условий · срок**»; бумаги корзины —
+  // тикерами из строки «• Корзина: …»
+  var RE_A = /^\*\*Автоколл · ([^*\n]+)\*\*$/m, RE_A_BK = /^• Корзина: (.+?) — /m;
   var TEN_W = ["6 месяцев", "1 год", "2 года", "3 года"], TEN_P = ["1 год", "2 года", "3 года", "5 лет"];
+  var TEN_A = ["1 год", "2 года", "3 года"], BAR_A = ["60", "70", "80"];
   var STR_W = ["90", "100", "110", "120"], FLR_P = ["100", "90", "80"];
+  function tick(s) { var m = /\(([A-Z0-9.-]{1,12})\)\s*$/.exec(s); return m ? m[1] : s.trim(); }
+  function autoParams(text) {
+    var m = RE_A.exec(text || "");
+    if (!m) return null;
+    var parts = m[1].split(" · "), bk = RE_A_BK.exec(text);
+    var p = { kind: "a", assets: bk ? bk[1].split(", ").map(tick) : [tick(parts[0])], tenor: parts[parts.length - 1].trim(),
+      barrier: "70", cb: "", call: "", price: "", coupon: "", freq: "", per: 4, nc: 0, mem: true };
+    parts.slice(1, -1).forEach(function (t) {
+      var x;
+      if ((x = /^цена ([\d,]+)%$/.exec(t))) p.price = x[1];
+      else if ((x = /^купон ([\d,]+)%$/.exec(t))) p.coupon = x[1];
+      else if ((x = /^барьер ([\d,]+)%$/.exec(t))) p.barrier = x[1].replace(",", ".");
+      else if ((x = /^купонный барьер ([\d,]+)%$/.exec(t))) p.cb = x[1];
+      else if ((x = /^отзыв от ([\d,]+)%$/.exec(t))) p.call = x[1];
+      else if (t === "купон ежемесячно") { p.freq = t; p.per = 12; }
+      else if (t === "купон раз в полгода") { p.freq = t; p.per = 2; }
+      else if (t === "купон раз в год") { p.freq = t; p.per = 1; }
+      else if ((x = /^без отзыва (\d+) период/.exec(t))) p.nc = +x[1];
+      else if (t === "без памяти") p.mem = false;
+    });
+    return p;
+  }
+  function askAuto(p) {
+    var ncm = Math.round(p.nc * 12 / p.per);
+    return "Посчитай автоколл на " + p.assets.join(", ") + " на " + p.tenor +
+      (p.coupon ? ", купон " + p.coupon + "% годовых — посчитай цену" : p.price ? ", по цене " + p.price + "% номинала" : "") +
+      ", барьер " + pctS(p.barrier) + "%" + (p.cb ? ", купонный барьер " + p.cb + "%" : "") + (p.call ? ", отзыв от " + p.call + "%" : "") +
+      (p.freq ? ", " + p.freq : "") + (ncm ? ", первые " + ncm + " " + (ncm === 1 ? "месяц" : ncm < 5 ? "месяца" : "месяцев") + " без отзыва" : "") + (p.mem ? "" : ", без памяти");
+  }
   var CHEV_D = '<svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true"><path d="M2 3.5 5 6.5l3-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   function pctS(v) { return String(v).replace(".", ","); }
   function priceParams(text) {
     var m = RE_W.exec(text || "");
     if (m) return { kind: "w", type: m[1], strike: m[2].replace(",", "."), asset: m[3], tenor: m[4].trim() };
     m = RE_P.exec(text || "");
-    if (!m) return null;
+    if (!m) return autoParams(text);
     var parts = m[1].split(" · "), p = { kind: "p", asset: parts[0], tenor: parts[parts.length - 1].trim(), floor: "100", from: "", cap: "" };
     parts.slice(1, -1).forEach(function (t) {
       var x;
@@ -364,6 +398,7 @@
   }
   function askText(p) {
     if (p.kind === "w") return "Посчитай " + (p.type === "PUT" ? "пут" : "колл") + " со страйком " + pctS(p.strike) + "% на " + p.asset + " на " + p.tenor;
+    if (p.kind === "a") return askAuto(p);
     return "Посчитай защиту капитала на " + p.asset + " на " + p.tenor + (p.floor !== "100" ? ", защита " + pctS(p.floor) + "%" : "") +
       (p.from ? ", рост считается от " + p.from + "%" : "") + (p.cap ? ", потолок роста до +" + pctS(p.cap) + "%" : "");
   }
@@ -373,6 +408,7 @@
     var row = '<span class="ca-pp-k">Пересчитать:</span>';
     if (p.kind === "w") row += '<button type="button" class="ca-chip" data-pp="type">' + (p.type === "PUT" ? "колл вместо пута" : "пут вместо колла") + "</button>" +
       '<button type="button" class="ca-chip" data-pp="strike" aria-expanded="false">страйк ' + pctS(p.strike) + "%" + CHEV_D + "</button>";
+    else if (p.kind === "a") row += '<button type="button" class="ca-chip" data-pp="barrier" aria-expanded="false">барьер ' + pctS(p.barrier) + "%" + CHEV_D + "</button>";
     else row += '<button type="button" class="ca-chip" data-pp="floor" aria-expanded="false">защита ' + pctS(p.floor) + "%" + CHEV_D + "</button>";
     row += '<button type="button" class="ca-chip" data-pp="tenor" aria-expanded="false">' + esc(p.tenor) + CHEV_D + "</button>";
     var box = document.createElement("div");
@@ -394,10 +430,10 @@
     var opts = box.querySelector(".ca-pp-opts"), was = c.getAttribute("aria-expanded") === "true";
     [].forEach.call(box.querySelectorAll("[aria-expanded]"), function (x) { x.setAttribute("aria-expanded", "false"); });
     if (was) { opts.hidden = true; return; }
-    var list = k === "tenor" ? (p.kind === "w" ? TEN_W : TEN_P) : k === "strike" ? STR_W : FLR_P;
-    var cur = k === "tenor" ? p.tenor : k === "strike" ? p.strike : p.floor;
+    var list = k === "tenor" ? (p.kind === "w" ? TEN_W : p.kind === "a" ? TEN_A : TEN_P) : k === "strike" ? STR_W : k === "barrier" ? BAR_A : FLR_P;
+    var cur = k === "tenor" ? p.tenor : k === "strike" ? p.strike : k === "barrier" ? p.barrier : p.floor;
     opts.innerHTML = list.map(function (v) {
-      var lbl = k === "tenor" ? v : (k === "strike" ? "страйк " : "защита ") + v + "%";
+      var lbl = k === "tenor" ? v : (k === "strike" ? "страйк " : k === "barrier" ? "барьер " : "защита ") + v + "%";
       return '<button type="button" data-ppv="' + k + ":" + escA(v) + '"' + (v === cur ? ' aria-current="true" disabled' : "") + ">" + esc(lbl) + "</button>";
     }).join("");
     opts.hidden = false;

@@ -1864,13 +1864,20 @@ const PROT_TOOL = {
 // Маржа в обоих — 2% номинала в год × срок («давай его заложим 2% в год»). Только российские активы
 // в рублях (решение Руслана 13.11.2026): по акциям США у прайсера завышенная волатильность (TSLA 67%,
 // NVDA 70%) — купоны выходили 30–46% годовых против 16–20% у тех же корзин на доске.
-// Цена автоколла у прайсера — Монте-Карло, и случайные числа меняются от запроса к запросу: при
-// купоне 10,101…10,108% Сбер на 2 года стоил от 97,20 до 97,51 (n_sims на это не влияет —
-// проверено 13.11.2026). В ожидании цена линейна по купону (купон не меняет траекторий), поэтому в
+// Цена автоколла у прайсера — Монте-Карло, и случайные числа зависят от условий запроса: при тех же
+// условиях цена повторяется (и через часы), а при купоне 10,101…10,108% Сбер на 2 года стоил от
+// 97,20 до 97,51 (n_sims на это не влияет — проверено 13.11.2026). В ожидании цена линейна по
+// купону (купон не меняет траекторий), поэтому в
 // обоих режимах берём прямую по МНК по четырём расчётам: купон — по точкам 0% и 40%, затем ±3 п.
 // вокруг первой оценки; цена — по точкам ±1 и ±3 п. вокруг купона клиента. Ошибка — около 0,25 п.
 // купона или 0,1–0,2 п. цены. Купон округляем вниз до 0,5%, цену — вверх до 0,25%.
 const AC_MARGIN_PA = 2;               // наша маржа, % номинала в год
+// За какой срок берётся маржа. "term" — за полный срок выпуска (таблица маржи: 2% годовых × срок).
+// "life" — за ожидаемый срок жизни: автоколл с отзывом от 100% обычно гасится в первые кварталы
+// (Сбер, 2 года: в среднем меньше полугода), и маржа за полный срок съедает купон — 18% без маржи,
+// 6,5% с маржой 4 п. против 16% с маржой за срок жизни (замер 13.11.2026). Какое правило — решает
+// Руслан; пока он не решил, действует таблица.
+const AC_MARGIN_BASE = "term";
 const AC_DAYS_MIN = 182, AC_DAYS_MAX = 5 * 366;
 const AC_MAX_UND = 5;                 // бумаг в корзине
 const AC_MAX_CALLS = 2;               // автоколлов в одном ответе (каждый — 4 расчёта)
@@ -1888,14 +1895,43 @@ const AC_FX_TEXT = "Автоколл в чате считаю на россий�
   "недоступен — нажмите «Обсудить с Румбергом», посчитает менеджер.";
 const AC_BOND_TEXT = "Автоколл на облигации в чате не считаю. Нажмите «Обсудить с Румбергом» — посчитает менеджер.";
 // Клиент назвал барьер, уровень досрочного погашения, купон или цену числом, а модель их не
-// передала — переспрашиваем, а не считаем по умолчанию.
-const AC_BARRIER_RE = /барьер\p{L}*[^\d\n]{0,30}\d{2,3}(?:[.,]\d+)?\s*%/iu;
-const AC_CALL_RE = /(?:авто)?(?:отзыв|колл)\p{L}*[^\d\n]{0,25}\d{2,3}(?:[.,]\d+)?\s*%|досрочн\p{L}*\s+погаш\p{L}*[^\d\n]{0,25}\d{2,3}(?:[.,]\d+)?\s*%/iu;
-// «купон 15%», «купоном 12,5% годовых» — но не «купонный барьер 70%»
-const AC_COUPON_RE = /купон(?!н)\p{L}*\s*(?:в\s+|на\s+уровне\s+|[—:-]\s*)?\d{1,2}(?:[.,]\d+)?\s*%/iu;
-// «цена 98%», «по цене 97,5%», «за 99% номинала», «98% от номинала» — «цен» с начала слова: иначе
-// ловится «оцени на 12 месяцев»
-const AC_PRICE_RE = /(?:^|[^\p{L}])цен\p{L}*[^\d\n]{0,15}\d{2,3}(?:[.,]\d+)?\s*%|\d{2,3}(?:[.,]\d+)?\s*%\s*(?:от\s+)?номинал/iu;
+// передала — переспрашиваем, а не считаем по умолчанию. Что именно назвал клиент, разбирает
+// acSaid. Число относим к слову, только если между ними нет запятой и другого параметра: иначе
+// «автоколл на Сбер с барьером 60%» читалось как «отзыв при 60%» (слово «автоколл» + число), а
+// «первый год без отзыва, барьер 60%» — как уровень отзыва (поймано проверкой 13.11.2026: чат
+// переспрашивал про досрочное погашение при верно разобранной просьбе). И число должно быть
+// похоже на свой параметр: «цена при 15% купоне» — не цена 15%.
+const AC_GAP = "(?:(?!барьер|отзыв|триггер|купон|цен[аыеуо])[^\\d\\n,;()]){0,30}";
+const AC_NUM = "(\\d{1,3}(?:[.,]\\d+)?)\\s*%";
+const AC_SAID = {
+  // «барьер 60%», «барьером защиты на погашении 65%», «купонный барьер 80%»
+  barrier: [new RegExp("барьер\\p{L}*" + AC_GAP + AC_NUM, "giu"), 40, 100],
+  // «отзыв от 105%», «автоотзыв при 100%», «триггер 105%», «досрочное погашение при 105%», «автоколл при 105%»
+  call: [new RegExp("(?:(?:авто)?отзыв\\p{L}*|триггер\\p{L}*|досрочн\\p{L}*\\s+погаш\\p{L}*)" + AC_GAP + AC_NUM +
+    "|автокол\\p{L}*\\s+(?:при|от|на\\s+уровне)\\s+" + AC_NUM, "giu"), 80, 130],
+  // «купон 15%», «купоном не ниже 12,5% годовых», «15% купон» — но не «купонный барьер 70%»
+  // и не «барьер 60% купон ежемесячно»
+  coupon: [new RegExp("купон(?!н)\\p{L}*\\s*(?:в\\s+|на\\s+уровне\\s+|не\\s+ниже\\s+|от\\s+|около\\s+|[—–:=-]\\s*)?" + AC_NUM +
+    "|" + AC_NUM + "(?:-?\\p{L}{2,4})?(?:\\s+годовых)?\\s+купон(?!н)\\p{L}*(?!\\s+(?:ежемесячн|ежекварт|помесячн|раз\\s|кажд))", "giu"), 0.5, 60],
+  // «цена 98%», «по цене 97,5%», «за 99% номинала», «98% от номинала»; «цен» — с начала слова,
+  // иначе ловится «оцени на 12 месяцев»
+  price: [new RegExp("(?:^|[^\\p{L}])цен\\p{L}*" + AC_GAP + AC_NUM + "|" + AC_NUM + "\\s*(?:от\\s+)?номинал", "giu"), 70, 110],
+};
+function acSaid(text) {
+  const out = {};
+  for (const k in AC_SAID) {
+    const [re, lo, hi] = AC_SAID[k];
+    out[k] = false;
+    re.lastIndex = 0;
+    let m;
+    while ((m = re.exec(text))) {
+      const v = Number(String(m[1] || m[2] || "").replace(",", "."));
+      if (v >= lo && v <= hi) { out[k] = true; break; }
+    }
+    re.lastIndex = 0;
+  }
+  return out;
+}
 
 const AC_TOOL = {
   type: "function",
@@ -2539,10 +2575,10 @@ async function priceAutocall(a, env, who, cat) {
   if (/^\d{4}-\d{2}-\d{2}$/.test(tenor.expiry)) base.maturity_date = tenor.expiry; else base.tenor = tenor.expiry;
   const unavailable = "Расчёт сейчас недоступен. Попробуйте позже или нажмите «Обсудить с Румбергом» — посчитает менеджер.";
   const shown = tickers.map(priceShowTicker).join(", ");
-  const pvAt = async (c) => {
+  const pvAt = async (c, over) => {
     let res;
     try {
-      res = await mcpCall(env, "price_autocall", { ...base, coupon_pa: Math.round(c * 1000) / 1000 },
+      res = await mcpCall(env, "price_autocall", { ...base, ...(over || {}), coupon_pa: Math.round(c * 1000) / 1000 },
         listed ? PRICE_TIMEOUT_MS : PRICE_UNLISTED_TIMEOUT_MS);
     } catch (e) {
       const m = String((e && e.message) || e);
@@ -2587,11 +2623,21 @@ async function priceAutocall(a, env, who, cat) {
     return { a: my - k * mx, k };
   };
 
-  const margin = AC_MARGIN_PA * T;
-  let cpn, price, raw, pts, nFix;
+  // Маржа: 2% в год × срок. При AC_MARGIN_BASE = "life" срок — ожидаемый срок жизни выпуска
+  // (дисконтированный): купон без условия (купонный барьер 0) платится, пока выпуск жив, поэтому
+  // 1% годовых такого купона стоит ровно срок жизни в годах. Один расчёт сверх четырёх.
+  const lifeP = AC_MARGIN_BASE === "life" ? pvAt(40, { coupon_barrier: 0, memory: false }) : null;
+  const marginOf = async (pv0) => {
+    if (!lifeP) return { margin: AC_MARGIN_PA * T, life: T };
+    const u = await lifeP;
+    if (u.fail) return { fail: u.fail };
+    const life = Math.min(T, Math.max(0.05, (u.pv - pv0) / 40));
+    return { margin: AC_MARGIN_PA * life, life };
+  };
+  let cpn, price, raw, pts, nFix, margin, life;
   if (mode === "coupon") {
     // «Вот цена — посчитай купон»: цена прайсера + маржа = цена клиента
-    const target = priceIn - margin;
+    let target;
     const low = "При таких условиях купон выходит слишком маленьким — такой автоколл в чате не показываю. " +
       "Попробуйте барьер повыше, другие бумаги или период без досрочного погашения — либо нажмите " +
       "«Обсудить с Румбергом», посчитает менеджер.";
@@ -2601,6 +2647,9 @@ async function priceAutocall(a, env, who, cat) {
     if (r1.fail) return fail(r1.fail);
     let f = fit(r1.pts);
     if (!(f.k > 0.02)) return fail(unavailable);   // купон почти ничего не стоит — расчёт подозрительный
+    let mg = await marginOf(f.a);
+    if (mg.fail) return fail(mg.fail);
+    target = priceIn - mg.margin;
     const c1 = (target - f.a) / f.k;
     if (c1 < AC_MIN_CPN - AC_NEAR) return fail(low);
     if (c1 > AC_MAX_CPN + 2 * AC_NEAR) return fail(high);
@@ -2609,6 +2658,10 @@ async function priceAutocall(a, env, who, cat) {
     pts = r1.pts.concat(r2.pts); nFix = r1.nFix;
     f = fit(pts);
     if (!(f.k > 0.02)) return fail(unavailable);
+    mg = await marginOf(f.a);
+    if (mg.fail) return fail(mg.fail);
+    margin = mg.margin; life = mg.life;
+    target = priceIn - margin;
     raw = (target - f.a) / f.k;
     cpn = Math.floor(raw / AC_STEP + 1e-9) * AC_STEP;
     price = priceIn;
@@ -2623,6 +2676,9 @@ async function priceAutocall(a, env, who, cat) {
     if (r2.fail) return fail(r2.fail);
     pts = r1.pts.concat(r2.pts); nFix = r1.nFix;
     const f = fit(pts);
+    const mg = await marginOf(f.a);
+    if (mg.fail) return fail(mg.fail);
+    margin = mg.margin; life = mg.life;
     raw = f.a + f.k * cpnIn + margin;
     price = Math.ceil(raw / AC_PRICE_STEP - 1e-9) * AC_PRICE_STEP;
     cpn = cpnIn;
@@ -2670,15 +2726,16 @@ async function priceAutocall(a, env, who, cat) {
     "• Наблюдений за срок: " + nFix + " (" + fq.word + ")",
     "• Риск — падение " + (one ? "актива" : "худшей бумаги") + " ниже " + pct(B) + " к погашению и кредитное качество эмитента",
   ].filter(Boolean);
+  const lifeLog = AC_MARGIN_BASE === "life" ? " (2% × срок жизни " + priceNum(life, 2) + " г.)" : "";
   const out = {
     ok: true, text: lines.join("\n"), ticker: tickers.join("/"), type: "autocall", tenor: tenor.expiry, strike: B,
     log: tickers.join("/") + " автоколл · " + tenor.expiry + " · " + fqKey + " · купонный барьер " + CB + " · барьер " + B +
       " · отзыв " + AC + (nonCall ? " · без отзыва " + nonCall : "") + (memory ? "" : " · без памяти") +
       ": прайсер " + pts.map((p) => priceNum(p[0], 2) + "% → " + priceNum(p[1])).join("; ") +
       (mode === "coupon"
-        ? "; цена " + priceNum(priceIn) + " = прайсер " + priceNum(priceIn - margin) + " + маржа " + priceNum(margin) +
+        ? "; цена " + priceNum(priceIn) + " = прайсер " + priceNum(priceIn - margin) + " + маржа " + priceNum(margin) + lifeLog +
           ", купон " + priceNum(raw, 2) + "% → " + priceNum(cpn) + "%"
-        : "; купон " + priceNum(cpnIn) + "%: прайсер " + priceNum(raw - margin, 2) + " + маржа " + priceNum(margin) +
+        : "; купон " + priceNum(cpnIn) + "%: прайсер " + priceNum(raw - margin, 2) + " + маржа " + priceNum(margin) + lifeLog +
           " = " + priceNum(raw, 2) + " → цена " + priceNum(price) + "%"),
   };
   out.pq = await pqSave(env, {
@@ -2807,8 +2864,10 @@ function priceGuardProt(a, messages) {
 }
 
 // Автоколл — те же проверки: срок только названный клиентом (или из прошлого расчёта); назвал
-// барьер, уровень досрочного погашения, купон или цену числом, а модель их не передала —
-// переспрашиваем. Назвал и купон, и цену — спрашиваем, что считать.
+// барьер, уровень досрочного погашения, купон или цену числом (acSaid), а модель их не передала —
+// переспрашиваем. Назвал и купон, и цену — спрашиваем, что считать. Модель передала и купон, и
+// цену (в уточнении «а при купоне 14%?» тянет цену из прошлого расчёта) — оставляем то, что
+// клиент назвал в последнем сообщении.
 function priceGuardAC(a, messages) {
   const recent = [];
   let follow = false;
@@ -2823,20 +2882,25 @@ function priceGuardAC(a, messages) {
     return { ask: "На какой срок посчитать автоколл" + (und ? " на " + und.slice(0, 60) : "") + "? Например, 2 года или 3 года." };
   }
   const has = (v) => v != null && v !== "";
-  if (AC_BARRIER_RE.test(last) && !has(a.barrier_pct) && !has(a.coupon_barrier_pct)) {
+  const said = acSaid(last);
+  if (said.barrier && !has(a.barrier_pct) && !has(a.coupon_barrier_pct)) {
     return { ask: "Уточните барьер: ниже какого уровня худшей бумаги на погашении выплата идёт по перформансу — например, 70%?" };
   }
-  if (AC_CALL_RE.test(last) && !has(a.autocall_pct)) {
+  if (said.call && !has(a.autocall_pct)) {
     return { ask: "Уточните уровень досрочного погашения в процентах от начального уровня — например, 100% или 105%?" };
   }
-  const saysCpn = AC_COUPON_RE.test(last), saysPrice = AC_PRICE_RE.test(last);
-  if (saysCpn && saysPrice && has(a.coupon_pa) === has(a.price_pct)) {
-    return { ask: "Что посчитать: купон при названной цене или цену при названном купоне?" };
+  const which = "Что посчитать: купон при названной цене или цену при названном купоне?";
+  if (has(a.coupon_pa) && has(a.price_pct)) {
+    if (said.coupon === said.price) return { ask: which };
+    a = { ...a };
+    if (said.coupon) delete a.price_pct; else delete a.coupon_pa;
+    return { a };
   }
-  if (saysCpn && !saysPrice && !has(a.coupon_pa)) {
+  if (said.coupon && said.price && !has(a.coupon_pa) && !has(a.price_pct)) return { ask: which };
+  if (said.coupon && !said.price && !has(a.coupon_pa)) {
     return { ask: "Уточните купон в процентах годовых — например, 15%? По нему посчитаю цену." };
   }
-  if (saysPrice && !saysCpn && !has(a.price_pct)) {
+  if (said.price && !said.coupon && !has(a.price_pct)) {
     return { ask: "Уточните цену в процентах номинала — например, 98%? По ней посчитаю купон." };
   }
   return { a };
