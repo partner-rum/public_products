@@ -125,7 +125,7 @@
       </ul>
       <p class="best" id="best-start" hidden></p>
       <button class="btn" id="play" type="button">Играть</button>
-      <p class="note">У звезды три щита. Каждые 15 секунд — новый уровень: падает быстрее, свечей больше. Это игра, купоны в ней понарошку.</p>
+      <p class="note">У звезды три щита. Каждые 15 секунд — новый уровень: быстрее, больше свечей, звезда выше. Купоны в игре понарошку.</p>
     </div>
   </section>
 
@@ -195,7 +195,8 @@
     S = Math.max(0.85, Math.min(1.2, W / 390));
     P.r = 22 * S;
     // Звезда на ~70% высоты: ниже остаётся полоса под палец, и палец звезду не закрывает
-    P.y = H - Math.max(150, Math.min(260, H * 0.3));
+    P.y0 = H - Math.max(150, Math.min(260, H * 0.3));
+    P.y = starY();
     if (!placed) { P.x = P.tx = W / 2; placed = true; }
     else { P.x = clampX(P.x * kx); P.tx = clampX(P.tx * kx); }
     for (var i = 0; i < items.length; i++) { items[i].x *= kx; items[i].y *= ky; items[i].vy *= ky; }
@@ -210,6 +211,12 @@
   var CAP_T = 130;
   var LEVEL_SEC = 15;
   function level() { return 1 + Math.floor(t / LEVEL_SEC); }
+  // Звезда поднимается (13.11.2026, слово Руслана: «дополнительное усложнение»). Первый уровень стоит на нижней
+  // линии, со второго ровно идёт вверх и к CAP_T проходит четверть поля (с ~70% до ~45% высоты). Скорость
+  // падения считается от НИЖНЕЙ линии (P.y0), поэтому путь до звезды короче и времени на реакцию меньше.
+  var RISE_PART = 0.25;
+  function riseK() { return Math.max(0, Math.min(1, (t - LEVEL_SEC) / (CAP_T - LEVEL_SEC))); }
+  function starY() { return (P.y0 || 0) - riseK() * H * RISE_PART; }
   function fallTime() { return Math.max(0.75, 3.2 / (1 + t / 35)); }   // секунд на высоту поля: 3,2 → 1,6 (35 с) → 1,07 (70 с) → 0,75 (115 с)
   function every() { return Math.max(0.24, 0.8 / (1 + t / 55)); }      // пауза между падениями: 0,8 → 0,4 (55 с) → 0,24 (128 с)
   function candleP() { return Math.min(0.65, 0.2 + t * 0.005); }       // доля свечей: 20% → 55% (70 с) → 65% (90 с)
@@ -245,7 +252,7 @@
     do { x = m + Math.random() * (W - 2 * m); } while (bad(x) && ++tries < 12);
     lastX = x;
     var ft = attract ? 6 : fallTime() * (kind === "candle" ? 0.88 : 1) * (0.92 + Math.random() * 0.16);
-    items.push({ k: kind, x: x, y: -r * 2, r: r, vy: (P.y + r * 2) / (ft * 0.83), ph: Math.random() * 6.283, spin: 3 + Math.random() * 3 });
+    items.push({ k: kind, x: x, y: -r * 2, r: r, vy: (P.y0 + r * 2) / (ft * 0.83), ph: Math.random() * 6.283, spin: 3 + Math.random() * 3 });
     return x;
   }
 
@@ -282,6 +289,7 @@
   function update(dt) {
     if (state === "pause") return;
     clock += dt;
+    P.y = starY();
     var play = state === "play";
     if (play) {
       t += dt; sinceShield += dt;
@@ -367,12 +375,12 @@
 
   function drawBanner() {
     var a = Math.min(1, banner.life / 0.4, (1.8 - banner.life) / 0.2);
-    var y = H * 0.36 - (1.8 - banner.life) * 8 * S;
+    var y = Math.min(H * 0.36, P.y - 96 * S) - (1.8 - banner.life) * 8 * S;
     ctx.save(); ctx.globalAlpha = Math.max(0, a); ctx.textAlign = "center"; ctx.textBaseline = "middle";
     ctx.fillStyle = C.ink; ctx.font = "600 " + Math.round(32 * S) + "px Montserrat, sans-serif";
     ctx.fillText("Уровень " + banner.lv, W / 2, y);
     ctx.fillStyle = "rgba(242,243,247,.64)"; ctx.font = "400 " + Math.round(15 * S) + "px Onest, sans-serif";
-    ctx.fillText(t < CAP_T ? "быстрее и больше свечей" : "держитесь", W / 2, y + 30 * S);
+    ctx.fillText(t < CAP_T ? "быстрее, свечей больше, звезда выше" : "держитесь", W / 2, y + 30 * S);
     ctx.restore();
   }
 
