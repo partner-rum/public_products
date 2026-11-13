@@ -58,7 +58,9 @@
   .pause { position: absolute; right: 6px; top: 4px; width: 44px; height: 44px; border: 0; background: transparent; color: var(--mut);
     display: flex; align-items: center; justify-content: center; cursor: pointer; touch-action: manipulation; }
   .pause:hover { color: var(--ink); }
-  .hud-off .lives, .hud-off .pause { visibility: hidden; }
+  .lvl { position: absolute; left: 50%; top: 13px; transform: translateX(-50%); font-size: 13px; color: var(--mut); white-space: nowrap; pointer-events: none; }
+  .lvl.up { animation: bump .4s ease-out; }
+  .hud-off .lives, .hud-off .pause, .hud-off .lvl { visibility: hidden; }
 
   .ov { position: absolute; inset: 0; z-index: 4; display: flex; align-items: center; justify-content: center; padding: 20px 16px;
     background: rgba(25,26,47,.84); overflow-y: auto; }
@@ -105,6 +107,7 @@
   <div class="field" id="field"><canvas id="cv" role="img" aria-label="Игровое поле: звезда ловит падающие купоны"></canvas></div>
 
   <div class="lives" id="lives" aria-label="Щиты: 3 из 3"></div>
+  <div class="lvl" id="lvl">Уровень 1</div>
   <button class="pause" id="pause" type="button" aria-label="Пауза">
     <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><rect x="4" y="3" width="3.2" height="12" fill="currentColor"/><rect x="10.8" y="3" width="3.2" height="12" fill="currentColor"/></svg>
   </button>
@@ -122,13 +125,13 @@
       </ul>
       <p class="best" id="best-start" hidden></p>
       <button class="btn" id="play" type="button">Играть</button>
-      <p class="note">У звезды три щита. Это игра, купоны в ней понарошку.</p>
+      <p class="note">У звезды три щита. Каждые 15 секунд — новый уровень: падает быстрее, свечей больше. Это игра, купоны в ней понарошку.</p>
     </div>
   </section>
 
   <section class="ov" id="ov-end" role="dialog" aria-labelledby="t-end" hidden>
     <div class="card">
-      <div class="kick">Щиты закончились</div>
+      <div class="kick" id="end-k">Щиты закончились</div>
       <h2 id="t-end">Раунд окончен</h2>
       <div class="big"><b id="end-n">0</b><span id="end-w">купонов</span></div>
       <p class="rec" id="end-rec"></p>
@@ -164,6 +167,7 @@
   var t = 0, clock = 0, score = 0, lives = MAXL, best = readBest();
   var items = [], pops = [], spawnIn = 0.5, sinceShield = 0, lastX = -1;
   var hurtT = 0, shakeT = 0, flashT = 0, pulse = 0, dieT = 0;
+  var curLvl = 1, banner = null, gridPos = 0;
   var P = { x: 0, tx: 0, y: 0, r: 22 };
   var keys = { l: 0, r: 0 };
 
@@ -199,23 +203,49 @@
   function clampX(x) { var m = P.r + 6; return Math.max(m, Math.min(W - m, x)); }
 
   // ---------- темп ----------
-  function fallTime() { return Math.max(1.5, 3.3 - t * 0.025); }   // секунд на высоту поля
-  function every() { return Math.max(0.34, 0.8 - t * 0.006); }      // пауза между падениями
+  // Чем дольше раунд, тем быстрее падает и тем больше свечей (13.11.2026, слово Руслана).
+  // Рост плавный, каждые LEVEL_SEC секунд — новый уровень с табличкой на поле. Упоры — к ~2 минутам
+  // (дальше падение быстрее 0,75 с на экран человек уже не успевает разглядеть).
+  var CAP_T = 130;
+  var LEVEL_SEC = 15;
+  function level() { return 1 + Math.floor(t / LEVEL_SEC); }
+  function fallTime() { return Math.max(0.75, 3.2 / (1 + t / 35)); }   // секунд на высоту поля: 3,2 → 1,6 (35 с) → 1,07 (70 с) → 0,75 (115 с)
+  function every() { return Math.max(0.24, 0.8 / (1 + t / 55)); }      // пауза между падениями: 0,8 → 0,4 (55 с) → 0,24 (128 с)
+  function candleP() { return Math.min(0.65, 0.2 + t * 0.005); }       // доля свечей: 20% → 55% (70 с) → 65% (90 с)
+  function volley() {                                                   // сколько свечей падает разом
+    var n = 1;
+    if (t > 20 && Math.random() < Math.min(0.6, (t - 20) * 0.015)) n++;  // с 20 с — пары
+    if (t > 45 && Math.random() < Math.min(0.45, (t - 45) * 0.01)) n++;  // с 45 с — тройки
+    return n;
+  }
 
   function spawn(attract) {
     var kind = "coin";
     if (!attract) {
-      var cp = Math.min(0.42, 0.22 + t * 0.0035);
-      if (t > 12 && lives < MAXL && sinceShield > 14 && Math.random() < 0.3) { kind = "shield"; sinceShield = 0; }
-      else if (Math.random() < cp) kind = "candle";
+      if (t > 12 && lives < MAXL && sinceShield > 12 && Math.random() < 0.3) { kind = "shield"; sinceShield = 0; }
+      else if (Math.random() < candleP()) kind = "candle";
       else if (t > 6 && Math.random() < 0.08) kind = "big";
     } else if (Math.random() < 0.25) kind = "candle";
+    if (kind === "candle" && !attract) {
+      var n = volley(), xs = [];
+      for (var i = 0; i < n; i++) xs.push(drop("candle", xs, false));
+    } else drop(kind, null, attract);
+  }
+
+  // Свечи одного залпа ставятся не ближе четверти поля друг от друга — между ними всегда есть
+  // проход шире звезды; остальное просто не падает прямо под прошлым предметом.
+  function drop(kind, taken, attract) {
     var r = (kind === "big" ? 20 : kind === "shield" ? 22 : kind === "candle" ? 14 : 15) * S;
     var m = r + 10, x, tries = 0;
-    do { x = m + Math.random() * (W - 2 * m); } while (lastX >= 0 && Math.abs(x - lastX) < W * 0.14 && ++tries < 5);
+    var bad = function (x) {
+      if (taken && taken.length) { for (var j = 0; j < taken.length; j++) if (Math.abs(taken[j] - x) < W * 0.26) return true; return false; }
+      return lastX >= 0 && Math.abs(x - lastX) < W * 0.14;
+    };
+    do { x = m + Math.random() * (W - 2 * m); } while (bad(x) && ++tries < 12);
     lastX = x;
     var ft = attract ? 6 : fallTime() * (kind === "candle" ? 0.88 : 1) * (0.92 + Math.random() * 0.16);
     items.push({ k: kind, x: x, y: -r * 2, r: r, vy: (H + r * 4) / ft, ph: Math.random() * 6.283, spin: 3 + Math.random() * 3 });
+    return x;
   }
 
   function hits(it) {
@@ -254,6 +284,8 @@
     var play = state === "play";
     if (play) {
       t += dt; sinceShield += dt;
+      var lv = level();
+      if (lv !== curLvl) { curLvl = lv; banner = { lv: lv, life: 1.8 }; lvlHud(); }
       spawnIn -= dt;
       if (spawnIn <= 0) { spawn(false); spawnIn = every() * (0.8 + Math.random() * 0.4); }
       if (keys.l || keys.r) P.tx = clampX(P.tx + (keys.r - keys.l) * W * 1.25 * dt);
@@ -269,6 +301,8 @@
       if (it.y - it.r * 3 > H) items.splice(i, 1);
     }
     for (var j = pops.length - 1; j >= 0; j--) { pops[j].life -= dt; pops[j].y -= 46 * S * dt; if (pops[j].life <= 0) pops.splice(j, 1); }
+    if (banner) { banner.life -= dt; if (banner.life <= 0) banner = null; }
+    gridPos += dt * 22 * S * (play || state === "dying" ? 1 + t / 35 : 1);   // сетка едет быстрее вместе с темпом
     hurtT = Math.max(0, hurtT - dt); shakeT = Math.max(0, shakeT - dt);
     flashT = Math.max(0, flashT - dt * 3); pulse = Math.max(0, pulse - dt * 5);
     if (state === "dying") { dieT -= dt; if (dieT <= 0) endGame(); }
@@ -286,7 +320,7 @@
       ctx.translate((Math.random() * 2 - 1) * a, (Math.random() * 2 - 1) * a);
     }
     // сетка графика едет вниз — ощущение движения
-    var step = 56 * S, off = (clock * 22 * S) % step;
+    var step = 56 * S, off = gridPos % step;
     ctx.strokeStyle = "rgba(255,255,255,.035)"; ctx.lineWidth = 1;
     ctx.beginPath();
     for (var y = off - step; y < H; y += step) { ctx.moveTo(0, Math.round(y) + 0.5); ctx.lineTo(W, Math.round(y) + 0.5); }
@@ -303,6 +337,7 @@
       else if (it.k === "shield") drawShield(it);
       else drawCoin(it, it.k === "big");
     }
+    if (banner) drawBanner();
     drawStar();
 
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
@@ -315,6 +350,17 @@
     ctx.globalAlpha = 1;
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
     if (flashT > 0) { ctx.fillStyle = "rgba(224,112,90," + (0.2 * flashT).toFixed(3) + ")"; ctx.fillRect(0, 0, W, H); }
+  }
+
+  function drawBanner() {
+    var a = Math.min(1, banner.life / 0.4, (1.8 - banner.life) / 0.2);
+    var y = H * 0.36 - (1.8 - banner.life) * 8 * S;
+    ctx.save(); ctx.globalAlpha = Math.max(0, a); ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillStyle = C.ink; ctx.font = "600 " + Math.round(32 * S) + "px Montserrat, sans-serif";
+    ctx.fillText("Уровень " + banner.lv, W / 2, y);
+    ctx.fillStyle = "rgba(242,243,247,.64)"; ctx.font = "400 " + Math.round(15 * S) + "px Onest, sans-serif";
+    ctx.fillText(t < CAP_T ? "быстрее и больше свечей" : "держитесь", W / 2, y + 30 * S);
+    ctx.restore();
   }
 
   function drawCoin(it, big) {
@@ -390,6 +436,10 @@
     if (lost && s[lives]) { void s[lives].getBoundingClientRect(); s[lives].classList.add("hit"); }
     $("lives").setAttribute("aria-label", "Щиты: " + lives + " из " + MAXL);
   }
+  function lvlHud() {
+    var e = $("lvl"); e.textContent = "Уровень " + curLvl;
+    e.classList.remove("up"); void e.offsetWidth; if (curLvl > 1) e.classList.add("up");
+  }
   function scoreHud() {
     var b = $("score");
     b.textContent = score;
@@ -409,6 +459,7 @@
     state = "play"; t = 0; score = 0; lives = MAXL;
     items = []; pops = []; spawnIn = 0.6; sinceShield = 0; lastX = -1;
     hurtT = shakeT = flashT = pulse = 0;
+    curLvl = 1; banner = null; lvlHud();
     P.x = P.tx = W / 2;
     $("score").textContent = "0"; livesHud(false);
     show(null);
@@ -420,6 +471,7 @@
     state = "over";
     var isNew = score > best;
     if (isNew) { best = score; writeBest(best); }
+    $("end-k").textContent = "Щиты закончились · уровень " + curLvl;
     $("end-n").textContent = score;
     $("end-w").textContent = coupons(score);
     var rec = $("end-rec");
@@ -433,7 +485,7 @@
   function pause() {
     if (state !== "play") return;
     state = "pause"; keys.l = keys.r = 0;
-    $("pause-n").textContent = "Поймано " + score + " " + coupons(score) + ", щитов " + lives + " из " + MAXL + ".";
+    $("pause-n").textContent = "Уровень " + curLvl + ". Поймано " + score + " " + coupons(score) + ", щитов " + lives + " из " + MAXL + ".";
     show("ov-pause");
   }
   function resume() { if (state !== "pause") return; state = "play"; last = 0; show(null); }
@@ -503,7 +555,8 @@
   // служебное для проверки: состояние игры
   window.__game = { get: function () { return { state: state, score: score, lives: lives, t: t, items: items.length, best: best, W: W, H: H, P: P }; },
     items: function () { return items.map(function (it) { return { k: it.k, x: Math.round(it.x), y: Math.round(it.y) }; }); },
-    end: function () { lives = 0; state = "dying"; dieT = 0.01; } };
+    end: function () { lives = 0; state = "dying"; dieT = 0.01; },
+    warp: function (sec) { t = sec; sinceShield = 0; } };
 })();
 </script>
 </body>
