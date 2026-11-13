@@ -2655,6 +2655,10 @@ const MORNING_SLOTS = { "🌍": "world", "🇺🇸": "us", "🌏": "asia", "🇷
 // Азиатский базовый актив в строке каталога: по нему линт проверяет, что под блок
 // Азии взят хотя бы один продукт. Появится новый актив (Nikkei, Alibaba) — дописать сюда.
 const MORNING_ASIA_RE = /CSI\s*300|Hang\s*Seng|CNY|юан|Nikkei|Китай|Гонконг|Япони/i;
+// Сколько мест из пяти могут занять выпуски «На размещении» (13.11.2026). Остальное —
+// торговые идеи под тему дня: без потолка пять открытых размещений вытеснили бы их
+// целиком, а пост — это всё-таки ответ на утренние новости.
+const MORNING_OFFERS_MAX = 3;
 
 // Шапка data/research.js. Тот же принцип, что и у morning.js: комментарии только здесь.
 const RESEARCH_FILE_HEAD =
@@ -2825,10 +2829,43 @@ function withUtm(url, campaign) {
   return head + hash;
 }
 
+// Какие из пяти идей идут в ПОСТ, когда часть мест заняли размещения (13.11.2026).
+// Модель по-прежнему подбирает пять — их целиком получает сайт (колонка «Продукты дня»
+// на главной), а в пост помещается k = 5 − размещения. Срез первых k терял бы то, ради
+// чего писались правила подбора, поэтому порядок предпочтений такой: продукт на
+// азиатский актив (asiaId — когда блок Азии в статье есть), затем зацепки модели с
+// разными типами пэйоффа, затем остальные зацепки модели и только потом добор кода
+// с нейтральной фразой. Порядок внутри поста — как у модели.
+function morningPostIdeas(ideas, k, typeOf, asiaId) {
+  if (k >= ideas.length) return ideas.slice();
+  const pick = new Set(), types = new Set();
+  const pass = (fits) => {
+    for (let i = 0; i < ideas.length && pick.size < k; i++) {
+      if (pick.has(i) || !fits(ideas[i])) continue;
+      pick.add(i);
+      const ty = typeOf.get(ideas[i].id);
+      if (ty) types.add(ty);
+    }
+  };
+  if (asiaId) pass((it) => it.id === asiaId);
+  pass((it) => !it.fill && !types.has(typeOf.get(it.id)));
+  pass((it) => !it.fill);
+  pass(() => true);
+  return ideas.filter((it, i) => pick.has(i));
+}
+
 async function generateMorning(env, article) {
   let cat = { text: "", instr: [], offers: [], ideas: [] };
   try { cat = await buildCatalog(env); } catch (e) { /* без каталога продукты не подобрать */ }
   const base = (env.SITE_BASE || "https://invest.rumberg.ru/").replace(/\/?$/, "/");
+
+  // Выпуски с открытым размещением (status "live" — тот же признак, что у главной)
+  // идут в посте отдельной секцией «На размещении»: её собирает код из data/offerings.js,
+  // каждый день, пока выпуск размещается. Поэтому в дедуп-память они не пишутся, а из
+  // каталога для модели убираются — иначе выпуск встал бы в пост дважды, секцией и «идеей».
+  const placements = (cat.offers || []).filter((o) => o && o.id && o.status === "live")
+    .slice(0, MORNING_OFFERS_MAX);
+  const placedIds = placements.map((o) => o.id);
 
   // Память продуктов общая с «5 идеями» — утренние подборки тоже не должны повторяться.
   let recent = [];
@@ -2838,6 +2875,12 @@ async function generateMorning(env, article) {
   recent = recent.map((r) => (typeof r === "string" ? { id: "", name: r, head: "" } : r));
   const recentIds = recent.map((r) => r.id).filter(Boolean);
   let catText = cat.text;
+  if (placedIds.length && catText) {
+    catText = catText.split("\n").filter((line) => {
+      const mm = line.match(/^- \[([\w.\-]+)\]/);
+      return !(mm && placedIds.includes(mm[1]));
+    }).join("\n");
+  }
   if (recentIds.length && catText) {
     const filtered = catText.split("\n").filter((line) => {
       const mm = line.match(/^- \[([\w.\-]+)\]/);
@@ -2963,10 +3006,26 @@ async function generateMorning(env, article) {
       const ty = typeOf.get(r.id) || "";
       if (!ty || usedTypes.has(ty)) continue;
       usedTypes.set(ty, 1);
-      ideas.push({ id: r.id, head: "", body: MORNING_HOOK_FALLBACK, prodUrl: r.url, prodName: r.name });
+      ideas.push({ id: r.id, head: "", body: MORNING_HOOK_FALLBACK, prodUrl: r.url, prodName: r.name, fill: true });
       filled.push(r.name);
     }
   }
+
+  // Секция «На размещении»: название, лид со страницы выпуска и ссылка. Текст берём из
+  // data/offerings.js как есть, модель его не пишет — это опубликованная формулировка,
+  // и выдумать в ней цифру нечем. lead есть у выпусков с лендингом, у остальных — teaser.
+  // Цену в пост не ставим: её сейлз меняет в течение дня (поле today), за ней — по ссылке.
+  const placed = placements.map((o) => ({
+    id: o.id, name: o.name || o.id,
+    text: String(o.lead || o.teaser || "").trim(),
+    today: !!(o.today && o.today.price != null),
+    url: withUtm(base + "offerings.html#" + o.id, "morning"),
+  }));
+  // Идеи для поста: размещения занимают свои места, идей остаётся 5 − размещения.
+  // blocks уже без заглушек, так что флаг 🌏 в них = блок Азии в статье есть.
+  const asiaIdea = blocks.some((b) => b.flag === "🌏")
+    ? ideas.find((it) => MORNING_ASIA_RE.test(idSet.get(it.id) || "")) : null;
+  const postIdeas = morningPostIdeas(ideas, 5 - placed.length, typeOf, asiaIdea ? asiaIdea.id : "");
 
   // Дедуп-память и отметка «сегодня пост собран» (для напоминалки в cron)
   if (env.POST_KV) {
@@ -2989,9 +3048,11 @@ async function generateMorning(env, article) {
   // Добор кодом виден в посте (нейтральная фраза вместо зацепки) — не молчим о нём
   if (filled.length) {
     warn.push("до пяти идей добрано кодом (" + filled.join(", ") +
-      ") — модель не дала пять непересекающихся по типу, у этих позиций общая фраза без цифр");
+      ") — модель не дала пять непересекающихся по типу, у этих позиций общая фраза без цифр" +
+      // места в посте заняли размещения — добор виден только на сайте, искать его в посте незачем
+      (postIdeas.some((it) => it.fill) ? "" : "; в пост они не вошли, только в подборку для сайта"));
   }
-  return { blocks, ideas, warn };
+  return { blocks, ideas, placed, postIdeas, warn };
 }
 
 // Рыночный контекст для /chat: сжатый утренний обзор из KV, не старше 3 дней
@@ -3040,13 +3101,28 @@ async function sendMorningDraft(env, article, chatId) {
 
   // Продукт: свой заголовок жирным → зацепка → название-ссылка каптионом. Заголовок
   // продаёт, название только опознаёт — если заголовка нет, ссылка выходит наверх.
+  // Всего позиций пять, нумерация сквозная: сначала выпуски «На размещении», за ними
+  // «Торговые идеи» на оставшиеся места (решение Руслана 13.11.2026 — до этого сейлз
+  // дописывал размещение руками шестой строкой). Нет открытых размещений — пять идей
+  // без подзаголовков, как раньше.
   const nums = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣"];
-  const lines = res.ideas.slice(0, 5).map((it, i) => {
+  const placed = (res.placed || []).slice(0, 5);
+  const placedLines = placed.map((o, i) =>
+    nums[i] + " <b>" + esc(o.name) + "</b>\n" + (o.text ? esc(o.text) + "\n" : "") +
+    '<a href="' + o.url + '">' + (o.today ? "Цена и объём на сегодня" : "Условия и документы") +
+    " — на странице продукта →</a>");
+  const shown = placed.length ? (res.postIdeas || res.ideas).slice(0, 5 - placed.length) : res.ideas.slice(0, 5);
+  const lines = shown.map((it, i) => {
+    const n = nums[placed.length + i];
     const link = '<a href="' + it.prodUrl + '">' + esc(it.prodName) + " →</a>";
     return it.head
-      ? nums[i] + " <b>" + esc(it.head) + "</b>\n" + postToTgHtml(it.body) + "\n" + link
-      : nums[i] + " " + link + "\n" + postToTgHtml(it.body);
+      ? n + " <b>" + esc(it.head) + "</b>\n" + postToTgHtml(it.body) + "\n" + link
+      : n + " " + link + "\n" + postToTgHtml(it.body);
   });
+  const picksHtml = placed.length
+    ? "📌 <b>На размещении</b>\n\n" + placedLines.join("\n\n") +
+      "\n\n🎯 <b>Торговые идеи</b>\n\n" + lines.join("\n\n")
+    : lines.join("\n\n");
 
   // Превью выключено: в подборке 5 продуктов, а карточка была бы одна — перекашивает
   // внимание к первому (пробовали, откатили по решению Руслана 04.08.2026).
@@ -3054,7 +3130,7 @@ async function sendMorningDraft(env, article, chatId) {
 
   const text = "☕️ <b>Утро на рынках</b> · " + esc(mskDate().human) + "\n\n" +
     newsHtml +
-    "\n\n💡 <b>Что предложить клиенту сегодня</b>\n\n" + lines.join("\n\n") +
+    "\n\n💡 <b>Что предложить клиенту сегодня</b>\n\n" + picksHtml +
     "\n\n<i>" + esc(POST_DISCLAIMER) + "</i>";
   // Готовый HTML поста — в KV: кнопка «📢 В канал» публикует его сервером с выключенным
   // превью. Копипаста превью НЕ выключает (клиент строит его заново) — потому и кнопка.
@@ -3065,6 +3141,8 @@ async function sendMorningDraft(env, article, chatId) {
   // независимыми списками — ровно так их и собирает конвейер. Пары «новость №1 —
   // продукт №1» не существует, и на витрине её изображать нельзя.
   // Ссылка на полный разбор пока не проставляется: разборы заводятся руками.
+  // На сайт уходят все ПЯТЬ идей модели, даже когда в посте часть мест заняли
+  // размещения: у главной для выпусков своя колонка, а «Продукты дня» свёрстаны под пять.
   if (env.POST_KV) {
     const d = mskDate();
     // Разбор и короткая новость — из ОДНОГО блока: title общий, lead — короткая
