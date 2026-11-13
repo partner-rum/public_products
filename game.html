@@ -27,7 +27,7 @@
 -->
 <style>
   :root { --bg:#191A2F; --card:#22243B; --card2:#292C44; --ink:#F2F3F7; --mut:rgba(242,243,247,.64); --faint:rgba(242,243,247,.5);
-    --line:rgba(255,255,255,.08); --or:#F06E08; --orh:#F48834; --dn:#E0705A; --sh:#4F86E6; }
+    --line:rgba(255,255,255,.08); --or:#F06E08; --orh:#F48834; --dn:#E0705A; --sh:#4F86E6; --up:#55C08A; --uph:#74D0A2; }
   * { box-sizing: border-box; }
   html { height: 100%; -webkit-text-size-adjust: 100%; overscroll-behavior: none; }
   body { margin: 0; height: 100%; height: 100dvh; display: flex; flex-direction: column; overflow: hidden;
@@ -43,7 +43,7 @@
   .score span { font-size: 13px; color: var(--mut); }
   .score b { font-family: Montserrat, sans-serif; font-weight: 600; font-size: 24px; line-height: 1; min-width: 1.4em; text-align: right; display: inline-block; }
   .score b.bump { animation: bump .22s ease-out; }
-  @keyframes bump { 40% { transform: scale(1.22); color: var(--orh); } }
+  @keyframes bump { 40% { transform: scale(1.22); color: var(--uph); } }
 
   .stage { flex: 1; min-height: 0; position: relative; width: 100%; max-width: 480px; margin: 0 auto; }
   .field { position: absolute; left: 0; right: 0; top: 0; bottom: env(safe-area-inset-bottom, 0px); }
@@ -75,7 +75,7 @@
   .leg li { display: grid; grid-template-columns: 30px 1fr auto; align-items: center; gap: 10px; font-size: 14.5px; }
   .leg svg { width: 30px; height: 30px; display: block; }
   .leg em { font-style: normal; font-family: Montserrat, sans-serif; font-weight: 600; font-size: 14px; white-space: nowrap; }
-  .leg .p { color: var(--orh); } .leg .m { color: var(--dn); } .leg .s { color: #7FA6EE; }
+  .leg .p { color: var(--uph); } .leg .m { color: var(--dn); } .leg .s { color: #7FA6EE; }
   .best { margin: 16px 0 0; font-size: 14px; color: var(--mut); }
   .best b { color: var(--ink); font-weight: 600; }
   .btn { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 50px; margin-top: 16px; padding: 0 18px;
@@ -86,7 +86,7 @@
   .btn.ghost:hover { border-color: rgba(255,255,255,.34); background: transparent; }
   .note { margin: 14px 0 0; font-size: 12px; line-height: 1.4; color: var(--faint); }
   .big { margin: 14px 0 0; display: flex; align-items: baseline; gap: 10px; }
-  .big b { font-family: Montserrat, sans-serif; font-weight: 600; font-size: 56px; line-height: 1; color: var(--orh); }
+  .big b { font-family: Montserrat, sans-serif; font-weight: 600; font-size: 56px; line-height: 1; color: var(--uph); }
   .big span { font-size: 17px; color: var(--mut); }
   .rec { margin: 8px 0 0; font-size: 15px; color: var(--mut); }
   .rec.new { color: var(--orh); font-weight: 600; }
@@ -118,8 +118,8 @@
       <h1 id="t-start">Лови купоны</h1>
       <p class="lead" id="lead">Водите пальцем внизу экрана, звезда поедет следом. Ловите купоны и уходите от красных свечей.</p>
       <ul class="leg">
-        <li><svg viewBox="0 0 30 30" aria-hidden="true"><circle cx="15" cy="15" r="12" fill="#F06E08"/><circle cx="15" cy="15" r="8.6" fill="none" stroke="rgba(25,26,47,.3)" stroke-width="1.6"/><text x="15" y="19.6" text-anchor="middle" font-family="Montserrat, sans-serif" font-weight="700" font-size="12.5" fill="#191A2F">%</text></svg><span>Купон</span><em class="p">+1</em></li>
-        <li><svg viewBox="0 0 30 30" aria-hidden="true"><circle cx="15" cy="15" r="14" fill="none" stroke="#F48834" stroke-width="1.4" opacity=".7"/><circle cx="15" cy="15" r="11.5" fill="#F48834"/><text x="15" y="19.2" text-anchor="middle" font-family="Montserrat, sans-serif" font-weight="700" font-size="11" fill="#191A2F">×3</text></svg><span>Крупный купон</span><em class="p">+3</em></li>
+        <li><svg viewBox="0 0 30 30" aria-hidden="true"><circle cx="15" cy="15" r="12" fill="#55C08A"/><circle cx="15" cy="15" r="8.6" fill="none" stroke="rgba(25,26,47,.3)" stroke-width="1.6"/><text x="15" y="19.6" text-anchor="middle" font-family="Montserrat, sans-serif" font-weight="700" font-size="12.5" fill="#191A2F">%</text></svg><span>Купон</span><em class="p">+1</em></li>
+        <li><svg viewBox="0 0 30 30" aria-hidden="true"><circle cx="15" cy="15" r="14" fill="none" stroke="#74D0A2" stroke-width="1.4" opacity=".7"/><circle cx="15" cy="15" r="11.5" fill="#74D0A2"/><text x="15" y="19.2" text-anchor="middle" font-family="Montserrat, sans-serif" font-weight="700" font-size="11" fill="#191A2F">×3</text></svg><span>Крупный купон</span><em class="p">+3</em></li>
         <li><svg viewBox="0 0 30 30" aria-hidden="true"><line x1="15" y1="2" x2="15" y2="28" stroke="#E0705A" stroke-width="2"/><rect x="10" y="7" width="10" height="16" fill="#E0705A"/></svg><span>Свеча-просадка</span><em class="m">−1 щит</em></li>
         <li><svg viewBox="0 0 30 30" aria-hidden="true"><path d="M15 2.5 L26 6.5 V14 C26 20.5 21.5 25 15 28 C8.5 25 4 20.5 4 14 V6.5 Z" fill="#4F86E6"/><text x="15" y="18.4" text-anchor="middle" font-family="Montserrat, sans-serif" font-weight="700" font-size="7.6" fill="#F2F3F7">100%</text></svg><span>Защита капитала</span><em class="s">+1 щит</em></li>
       </ul>
@@ -156,7 +156,7 @@
   "use strict";
   var $ = function (id) { return document.getElementById(id); };
   var cv = $("cv"), ctx = cv.getContext("2d"), stage = $("stage");
-  var C = { bg: "#191A2F", ink: "#F2F3F7", or: "#F06E08", orh: "#F48834", dn: "#E0705A", sh: "#4F86E6", dark: "#191A2F" };
+  var C = { bg: "#191A2F", ink: "#F2F3F7", or: "#F06E08", orh: "#F48834", dn: "#E0705A", sh: "#4F86E6", up: "#55C08A", uph: "#74D0A2", dark: "#191A2F" };
   var mm = function (q) { return !!(window.matchMedia && window.matchMedia(q).matches); };
   var REDUCED = mm("(prefers-reduced-motion: reduce)");
   var COARSE = mm("(pointer: coarse)");
@@ -267,10 +267,10 @@
     }
     if (it.k === "shield") {
       if (lives < MAXL) { lives++; pop(it.x, it.y, "+1 щит", "#7FA6EE"); livesHud(false); }
-      else { score += 3; pop(it.x, it.y, "+3", C.orh); scoreHud(); }
+      else { score += 3; pop(it.x, it.y, "+3", C.uph); scoreHud(); }
     } else {
       var v = it.k === "big" ? 3 : 1;
-      score += v; pop(it.x, it.y, "+" + v, C.orh); scoreHud();
+      score += v; pop(it.x, it.y, "+" + v, C.uph); scoreHud();
     }
     pulse = 1;
     return true;
@@ -381,10 +381,10 @@
     ctx.save(); ctx.translate(it.x, it.y); ctx.scale(sx, 1);
     if (big) {
       ctx.beginPath(); ctx.arc(0, 0, it.r + 4 * S, 0, 6.283);
-      ctx.strokeStyle = "rgba(244,136,52,.6)"; ctx.lineWidth = 1.5 * S; ctx.stroke();
+      ctx.strokeStyle = "rgba(116,208,162,.6)"; ctx.lineWidth = 1.5 * S; ctx.stroke();
     }
     ctx.beginPath(); ctx.arc(0, 0, it.r, 0, 6.283);
-    ctx.fillStyle = big ? C.orh : C.or; ctx.fill();
+    ctx.fillStyle = big ? C.uph : C.up; ctx.fill();
     ctx.beginPath(); ctx.arc(0, 0, it.r * 0.72, 0, 6.283);
     ctx.strokeStyle = "rgba(25,26,47,.3)"; ctx.lineWidth = Math.max(1.4, it.r * 0.11); ctx.stroke();
     if (sx > 0.62) {
