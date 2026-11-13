@@ -116,7 +116,7 @@
     <div class="card">
       <div class="kick">Игра на минуту</div>
       <h1 id="t-start">Лови купоны</h1>
-      <p class="lead" id="lead">Водите пальцем по экрану, звезда поедет следом. Ловите купоны и уходите от красных свечей.</p>
+      <p class="lead" id="lead">Водите пальцем внизу экрана, звезда поедет следом. Ловите купоны и уходите от красных свечей.</p>
       <ul class="leg">
         <li><svg viewBox="0 0 30 30" aria-hidden="true"><circle cx="15" cy="15" r="12" fill="#F06E08"/><circle cx="15" cy="15" r="8.6" fill="none" stroke="rgba(25,26,47,.3)" stroke-width="1.6"/><text x="15" y="19.6" text-anchor="middle" font-family="Montserrat, sans-serif" font-weight="700" font-size="12.5" fill="#191A2F">%</text></svg><span>Купон</span><em class="p">+1</em></li>
         <li><svg viewBox="0 0 30 30" aria-hidden="true"><circle cx="15" cy="15" r="14" fill="none" stroke="#F48834" stroke-width="1.4" opacity=".7"/><circle cx="15" cy="15" r="11.5" fill="#F48834"/><text x="15" y="19.2" text-anchor="middle" font-family="Montserrat, sans-serif" font-weight="700" font-size="11" fill="#191A2F">×3</text></svg><span>Крупный купон</span><em class="p">+3</em></li>
@@ -194,7 +194,8 @@
     W = nw; H = nh;
     S = Math.max(0.85, Math.min(1.2, W / 390));
     P.r = 22 * S;
-    P.y = H - Math.max(84, Math.min(140, H * 0.17));
+    // Звезда на ~70% высоты: ниже остаётся полоса под палец, и палец звезду не закрывает
+    P.y = H - Math.max(150, Math.min(260, H * 0.3));
     if (!placed) { P.x = P.tx = W / 2; placed = true; }
     else { P.x = clampX(P.x * kx); P.tx = clampX(P.tx * kx); }
     for (var i = 0; i < items.length; i++) { items[i].x *= kx; items[i].y *= ky; items[i].vy *= ky; }
@@ -244,7 +245,7 @@
     do { x = m + Math.random() * (W - 2 * m); } while (bad(x) && ++tries < 12);
     lastX = x;
     var ft = attract ? 6 : fallTime() * (kind === "candle" ? 0.88 : 1) * (0.92 + Math.random() * 0.16);
-    items.push({ k: kind, x: x, y: -r * 2, r: r, vy: (H + r * 4) / ft, ph: Math.random() * 6.283, spin: 3 + Math.random() * 3 });
+    items.push({ k: kind, x: x, y: -r * 2, r: r, vy: (P.y + r * 2) / (ft * 0.83), ph: Math.random() * 6.283, spin: 3 + Math.random() * 3 });
     return x;
   }
 
@@ -325,6 +326,18 @@
     ctx.beginPath();
     for (var y = off - step; y < H; y += step) { ctx.moveTo(0, Math.round(y) + 0.5); ctx.lineTo(W, Math.round(y) + 0.5); }
     ctx.stroke();
+    // полоса под палец: чуть светлее фона, в начале раунда — подсказка
+    var zt = P.y + P.r + 18 * S;
+    ctx.fillStyle = "rgba(255,255,255,.028)"; ctx.fillRect(0, zt, W, H - zt);
+    ctx.fillStyle = "rgba(255,255,255,.06)"; ctx.fillRect(0, Math.round(zt), W, 1);
+    var ha = state === "play" ? Math.max(0, Math.min(1, (6 - t) / 1.2)) : 0;
+    if (ha > 0) {
+      var hy = zt + (H - zt) / 2;
+      ctx.save(); ctx.globalAlpha = ha * 0.75; ctx.fillStyle = C.ink; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.font = "400 " + Math.round(14 * S) + "px Onest, sans-serif";
+      ctx.fillText("‹   ведите пальцем здесь   ›", W / 2, hy);
+      ctx.restore();
+    }
     // дорожка звезды
     ctx.save();
     ctx.setLineDash([3 * S, 7 * S]); ctx.strokeStyle = "rgba(242,243,247,.14)";
