@@ -24,6 +24,11 @@
   Без гейта квалинвестора (ни продуктов, ни котировок) и без ptr.js (жест «потянуть вниз»
   спорил бы с управлением). Счёт — очки, а не деньги: «купоны понарошку» сказано на экранах.
   Цели Метрики: game_start, game_over (в интерфейсе Метрики не заведены).
+  Между уровнями (14.11.2026, Руслан: «между уровнями — какую-то новость или что за продукты сегодня,
+  короткий месседж»): волна дочищается, игра встаёт, карточка — продукт дня, новость утреннего обзора
+  или выпуск на размещении, по очереди; «Дальше» — следующий уровень. Данные — те же файлы, что у
+  главной (data/morning.js, instruments.js, offerings.js), цифра — копия figure() главной, имя — pname().
+  В конце раунда — «Встретились в игре» со ссылками. Нет данных — паузы нет, уровни идут как раньше.
 -->
 <style>
   :root { --bg:#191A2F; --card:#22243B; --card2:#292C44; --ink:#F2F3F7; --mut:rgba(242,243,247,.64); --faint:rgba(242,243,247,.5);
@@ -90,6 +95,28 @@
   .big span { font-size: 17px; color: var(--mut); }
   .rec { margin: 8px 0 0; font-size: 15px; color: var(--mut); }
   .rec.new { color: var(--orh); font-weight: 600; }
+  /* пауза между уровнями */
+  .brk .msg { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
+  .mk { font-size: 13px; font-weight: 600; color: var(--uph); }
+  .mk.n { color: #7FA6EE; }
+  .brk h2 { font-size: 22px; line-height: 1.2; margin-top: 6px; }
+  .ms { margin: 6px 0 0; font-size: 14.5px; line-height: 1.45; color: var(--mut); }
+  .mf { margin: 12px 0 0; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+  .mf b { font-family: Montserrat, sans-serif; font-weight: 600; font-size: 30px; line-height: 1; }
+  .mf span { font-size: 13px; color: var(--mut); }
+  .brk [hidden] { display: none; }   /* .mf — flex, и без этого прошлая цифра оставалась на карточке новости */
+  .mx { margin: 8px 0 0; font-size: 13px; color: var(--mut); }
+  /* что встретилось за раунд */
+  .seen { margin: 18px 0 0; padding-top: 12px; border-top: 1px solid var(--line); }
+  .seen h3 { margin: 0 0 2px; font-size: 13px; font-weight: 500; color: var(--mut); }
+  .seen a { display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 7px 0; border-bottom: 1px solid var(--line); }
+  .seen a:last-of-type { border-bottom: 0; }
+  .seen .tt { flex: 1; min-width: 0; }
+  .seen .tt small { display: block; font-size: 12px; color: var(--mut); }
+  .seen .tt b { display: block; font-size: 14.5px; font-weight: 500; line-height: 1.3; }
+  .seen .fv { flex: none; text-align: right; font-family: Montserrat, sans-serif; font-weight: 600; font-size: 15px; line-height: 1.2; }
+  .seen .fv small { display: block; font-family: 'Onest', sans-serif; font-weight: 400; font-size: 11.5px; color: var(--mut); }
+  .seen .ar { flex: none; color: var(--mut); }
   @media (max-width: 340px) {
     h1 { font-size: 26px; }
     .card { padding: 20px 16px 16px; }
@@ -137,7 +164,23 @@
       <p class="rec" id="end-rec"></p>
       <button class="btn" id="again" type="button">Ещё раз</button>
       <a class="btn ghost" id="to-prod" href="board.html">Смотреть продукты</a>
+      <div class="seen" id="end-seen" hidden></div>
       <p class="note">Купоны в игре понарошку. Настоящие условия выплат — в карточке каждого продукта.</p>
+    </div>
+  </section>
+
+  <section class="ov" id="ov-brk" role="dialog" aria-labelledby="t-brk" hidden>
+    <div class="card brk">
+      <div class="kick" id="brk-k">Уровень 1 пройден</div>
+      <div class="msg">
+        <div class="mk" id="brk-mk"></div>
+        <h2 id="t-brk"></h2>
+        <p class="ms" id="brk-s"></p>
+        <div class="mf" id="brk-f" hidden></div>
+        <p class="mx" id="brk-x" hidden></p>
+      </div>
+      <button class="btn" id="brk-go" type="button">Дальше</button>
+      <p class="note" id="brk-n">Ссылка — в конце раунда. Котировки индикативные, не рекомендация.</p>
     </div>
   </section>
 
@@ -151,6 +194,10 @@
   </section>
 </main>
 
+<!-- данные для пауз между уровнями: те же файлы и версии, что у главной (кэш общий) -->
+<script src="data/morning.js?v=1" defer></script>
+<script src="data/instruments.js?v=fx7" defer></script>
+<script src="data/offerings.js?v=srv23" defer></script>
 <script>
 (function () {
   "use strict";
@@ -163,11 +210,12 @@
   var MAXL = 3, BEST_KEY = "so_game_best";
 
   var W = 0, H = 0, DPR = 1, S = 1, placed = false;
-  var state = "start";            // start | play | pause | dying | over
+  var state = "start";            // start | play | clear (волна дочищается) | brk (пауза между уровнями) | pause | dying | over
   var t = 0, clock = 0, score = 0, lives = MAXL, best = readBest();
   var items = [], pops = [], spawnIn = 0.5, sinceShield = 0, lastX = -1;
   var hurtT = 0, shakeT = 0, flashT = 0, pulse = 0, dieT = 0;
   var curLvl = 1, banner = null, gridPos = 0;
+  var MSG = null, msgI = 0, shown = [], brk = null, clearT = 0;
   var P = { x: 0, tx: 0, y: 0, r: 22 };
   var keys = { l: 0, r: 0 };
 
@@ -285,6 +333,98 @@
 
   function pop(x, y, txt, col) { pops.push({ x: x, y: y, txt: txt, col: col, life: 0.9 }); }
 
+  // ---------- между уровнями: продукт дня, новость утра, выпуск на размещении ----------
+  function todayMsk() { return new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10); }
+  function daysAgo(iso) { var a = Date.parse(String(iso || "").slice(0, 10)), b = Date.parse(todayMsk()); return isFinite(a) ? Math.round((b - a) / 864e5) : 99; }
+  function dm(iso) { var p = String(iso || "").split("-"); return p.length === 3 ? p[2] + "." + p[1] : ""; }
+  function fmt(n) { return String(n).replace(".", ","); }
+  function cut(s, n) { s = String(s || "").trim(); if (s.length <= n) return s; s = s.slice(0, n - 1); return s.replace(/[\s,.;:—-]+\S*$/, "") + "…"; }
+  function esc(v) { return String(v == null ? "" : v).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  // Копия figure() главной (index.html): правишь одну — сверь вторую
+  function figure(r) {
+    if (r.type === "protection") {
+      if (r.participation != null) return { v: Math.round(r.participation * 100) + "%", n: "участие" };
+      return { v: r.protectionPct != null ? r.protectionPct + "%" : "—", n: "защита" };
+    }
+    if (r.quote == null) return { v: "—", n: "" };
+    if (r.type === "booster") return { v: Math.round(r.ku || r.quote) + "%", n: "коэффициент" };
+    if (r.type === "autocall" || r.type === "revconv") return { v: fmt(r.couponPa != null ? r.couponPa : r.quote) + "% г.", n: "купон" };
+    if (r.type === "rcdigital") return { v: fmt(r.couponPct != null ? r.couponPct : r.quote) + "%", n: "купон за срок" };
+    if (r.type === "discount") return { v: fmt(r.quote) + "%", n: "цена" };
+    return { v: fmt(r.quote) + "%", n: "премия" };
+  }
+  // Копия pname() главной
+  function pname(r) {
+    var parts = String(r.name || "").split(" · "), head = parts.shift() || "";
+    if (!parts.length) parts = [r.underlying, r.tenor].filter(Boolean);
+    if (r.type === "warrant" && !/^варрант/i.test(head)) head = "Варрант " + head.replace(/^Call\b/i, "CALL");
+    function glue(s) { return s.replace(/(CALL|PUT|ОФЗ) (\d)/g, "$1\u00a0$2"); }
+    return { head: glue(head), rest: glue(parts.join(" · ")) };
+  }
+  function buildMsgs() {
+    var inst = (window.SITE_DATA && window.SITE_DATA.instruments) || [];
+    if (!inst.length && !window.MORNING) return null;             // данные ещё не доехали — спросим на следующем уровне
+    var M = window.MORNING || {}, age = daysAgo(M.date), fresh = age >= 0 && age <= 3, by = {};
+    inst.forEach(function (r) { by[r.id] = r; });
+    // продукты — пятёрка утреннего обзора; обзор старый — по одному продукту каждого типа с доски
+    var prods = fresh ? (M.products || []).map(function (id) { return by[id]; }).filter(Boolean) : [];
+    if (!prods.length) { var ty = {}; inst.forEach(function (r) { if (!ty[r.type] && prods.length < 5) { ty[r.type] = 1; prods.push(r); } }); }
+    var P = prods.map(function (r) {
+      var nm = pname(r), f = figure(r);
+      return { kind: "prod", kick: fresh && age === 0 ? "Продукт дня" : "Актуальный продукт", title: nm.head, sub: nm.rest,
+        fig: f.v !== "—" ? { v: f.v, n: f.n + " · индикативно" } : null, link: "instrument.html?id=" + encodeURIComponent(r.id) };
+    });
+    var N = fresh ? (M.news || []).filter(function (n) { return n && n.title; }).map(function (n) {
+      return { kind: "news", kick: "Утро на рынках" + (n.rubric ? " · " + n.rubric : "") + (age > 0 ? " · " + dm(M.date) : ""),
+        title: n.title, sub: cut(n.body, 170), link: n.link || "research.html" };
+    }) : [];
+    var O = ((window.OFFERINGS && window.OFFERINGS.items) || []).filter(function (o) { return o && o.status === "live" && !o.hidden && o.name; }).map(function (o) {
+      var td = o.today && Number(o.today.price) > 0 && /^\d{4}-\d{2}-\d{2}$/.test(String(o.today.date || "")) ? o.today : null;
+      var pr = td ? Number(td.price) : Number(o.price) > 0 ? Number(o.price) : null;
+      var n = td ? (td.date === todayMsk() ? "цена сегодня" : "цена на " + dm(td.date)) : "цена размещения";
+      return { kind: "off", kick: "На размещении", title: o.name, sub: o.reference || "", note: o.statusLabel || "",
+        fig: pr ? { v: fmt(Math.round(pr * 100) / 100) + "%", n: n + " · индикативно" } : null, link: "offerings.html#" + encodeURIComponent(o.id) };
+    });
+    // по очереди: продукт, новость, размещение — первым идёт продукт дня
+    var out = [], i = 0;
+    while (i < P.length || i < N.length || i < O.length) {
+      if (P[i]) out.push(P[i]); if (N[i]) out.push(N[i]); if (O[i]) out.push(O[i]); i++;
+    }
+    return out;
+  }
+  function nextMsg() {
+    if (!MSG) MSG = buildMsgs();
+    if (!MSG || msgI >= MSG.length) return null;
+    return MSG[msgI++];
+  }
+  function openBrk() {
+    state = "brk"; keys.l = keys.r = 0; items = []; pops = []; banner = null;
+    var m = brk.m; shown.push(m);
+    $("brk-k").textContent = "Уровень " + (brk.lv - 1) + " пройден";
+    var mk = $("brk-mk"); mk.textContent = m.kick; mk.className = "mk" + (m.kind === "news" ? " n" : "");
+    $("t-brk").textContent = m.title;
+    var s = $("brk-s"); s.textContent = m.sub || ""; s.hidden = !m.sub;
+    var f = $("brk-f"); f.hidden = !m.fig;
+    if (m.fig) f.innerHTML = "<b>" + esc(m.fig.v) + "</b><span>" + esc(m.fig.n) + "</span>";
+    var x = $("brk-x"); x.textContent = m.note || ""; x.hidden = !m.note;
+    $("brk-n").textContent = m.kind === "news" ? "Разбор целиком — по ссылке в конце раунда." : "Ссылка — в конце раунда. Котировки индикативные, не рекомендация.";
+    $("brk-go").textContent = "Дальше · уровень " + brk.lv;
+    show("ov-brk");
+  }
+  function closeBrk() {
+    if (state !== "brk") return;
+    curLvl = brk.lv; lvlHud(); banner = { lv: curLvl, life: 1.8 };
+    brk = null; state = "play"; spawnIn = 0.45; last = 0;
+    show(null);
+  }
+  function seenHtml() {
+    var ar = '<svg class="ar" width="8" height="13" viewBox="0 0 8 13" fill="none" aria-hidden="true"><path d="M1.5 1.5 6.5 6.5 1.5 11.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    return "<h3>Встретились в игре</h3>" + shown.slice(0, 6).map(function (m) {
+      return '<a href="' + esc(m.link) + '"><span class="tt"><small>' + esc(m.kick) + "</small><b>" + esc(m.title) + "</b></span>" +
+        (m.fig ? '<span class="fv">' + esc(m.fig.v) + "<small>" + esc(m.fig.n.replace(" · индикативно", "")) + "</small></span>" : "") + ar + "</a>";
+    }).join("") + '<p class="note">Котировки индикативные. Не является индивидуальной инвестиционной рекомендацией.</p>';
+  }
+
   // ---------- шаг ----------
   function update(dt) {
     if (state === "pause") return;
@@ -294,9 +434,21 @@
     if (play) {
       t += dt; sinceShield += dt;
       var lv = level();
-      if (lv !== curLvl) { curLvl = lv; banner = { lv: lv, life: 1.8 }; lvlHud(); }
-      spawnIn -= dt;
-      if (spawnIn <= 0) { spawn(false); spawnIn = every() * (0.8 + Math.random() * 0.4); }
+      if (lv !== curLvl) {
+        var m = nextMsg();
+        // есть что показать — новых предметов не бросаем, падающие долетают, потом пауза с карточкой.
+        // Время раунда стоит на границе уровня: темп и подъём звезды продолжатся с того же места
+        if (m) { brk = { lv: lv, m: m }; state = "clear"; play = false; clearT = 0; t = (lv - 1) * LEVEL_SEC; banner = { lv: curLvl, done: true, life: 1.6 }; }
+        else { curLvl = lv; banner = { lv: lv, life: 1.8 }; lvlHud(); }
+      }
+      if (play) {
+        spawnIn -= dt;
+        if (spawnIn <= 0) { spawn(false); spawnIn = every() * (0.8 + Math.random() * 0.4); }
+      }
+    }
+    var act = play || state === "clear";
+    if (state === "clear") { clearT += dt; if ((!items.length && clearT > 0.5) || clearT > 3) openBrk(); }
+    if (act) {
       if (keys.l || keys.r) P.tx = clampX(P.tx + (keys.r - keys.l) * W * 1.25 * dt);
       P.x += (P.tx - P.x) * (1 - Math.exp(-dt * 18));
     } else if (state === "start" || state === "over") {
@@ -306,12 +458,12 @@
     for (var i = items.length - 1; i >= 0; i--) {
       var it = items[i];
       it.y += it.vy * dt; it.ph += it.spin * dt;
-      if (play && hits(it) && take(it)) { items.splice(i, 1); continue; }
+      if (act && state !== "brk" && hits(it) && take(it)) { items.splice(i, 1); continue; }
       if (it.y - it.r * 3 > H) items.splice(i, 1);
     }
     for (var j = pops.length - 1; j >= 0; j--) { pops[j].life -= dt; pops[j].y -= 46 * S * dt; if (pops[j].life <= 0) pops.splice(j, 1); }
     if (banner) { banner.life -= dt; if (banner.life <= 0) banner = null; }
-    gridPos += dt * 22 * S * (play || state === "dying" ? 1 + t / 35 : 1);   // сетка едет быстрее вместе с темпом
+    gridPos += dt * 22 * S * (act || state === "dying" ? 1 + t / 35 : 1);   // сетка едет быстрее вместе с темпом
     hurtT = Math.max(0, hurtT - dt); shakeT = Math.max(0, shakeT - dt);
     flashT = Math.max(0, flashT - dt * 3); pulse = Math.max(0, pulse - dt * 5);
     if (state === "dying") { dieT -= dt; if (dieT <= 0) endGame(); }
@@ -378,9 +530,9 @@
     var y = Math.min(H * 0.36, P.y - 96 * S) - (1.8 - banner.life) * 8 * S;
     ctx.save(); ctx.globalAlpha = Math.max(0, a); ctx.textAlign = "center"; ctx.textBaseline = "middle";
     ctx.fillStyle = C.ink; ctx.font = "600 " + Math.round(32 * S) + "px Montserrat, sans-serif";
-    ctx.fillText("Уровень " + banner.lv, W / 2, y);
+    ctx.fillText("Уровень " + banner.lv + (banner.done ? " пройден" : ""), W / 2, y);
     ctx.fillStyle = "rgba(242,243,247,.64)"; ctx.font = "400 " + Math.round(15 * S) + "px Onest, sans-serif";
-    ctx.fillText(t < CAP_T ? "быстрее, свечей больше, звезда выше" : "держитесь", W / 2, y + 30 * S);
+    ctx.fillText(banner.done ? "короткая пауза" : t < CAP_T ? "быстрее, свечей больше, звезда выше" : "держитесь", W / 2, y + 30 * S);
     ctx.restore();
   }
 
@@ -468,7 +620,7 @@
   }
 
   // ---------- экраны ----------
-  var OVS = ["ov-start", "ov-end", "ov-pause"];
+  var OVS = ["ov-start", "ov-end", "ov-pause", "ov-brk"];
   function show(id) {
     OVS.forEach(function (o) { $(o).hidden = o !== id; });
     stage.classList.toggle("hud-off", !!id && id !== "ov-pause");
@@ -481,6 +633,7 @@
     items = []; pops = []; spawnIn = 0.6; sinceShield = 0; lastX = -1;
     hurtT = shakeT = flashT = pulse = 0;
     curLvl = 1; banner = null; lvlHud();
+    MSG = null; msgI = 0; shown = []; brk = null;
     P.x = P.tx = W / 2;
     $("score").textContent = "0"; livesHud(false);
     show(null);
@@ -499,6 +652,7 @@
     rec.className = "rec" + (isNew && score > 0 ? " new" : "");
     rec.textContent = isNew && score > 0 ? "Новый рекорд!" : "Ваш рекорд — " + best + " " + coupons(best);
     $("to-prod").href = mm("(max-width: 860px)") ? "index.html#prod" : "board.html";
+    var sn = $("end-seen"); sn.hidden = !shown.length; sn.innerHTML = shown.length ? seenHtml() : "";
     show("ov-end");
     goal("game_over", { score: score });
   }
@@ -522,17 +676,18 @@
   $("restart").addEventListener("click", start);
   $("resume").addEventListener("click", resume);
   $("pause").addEventListener("click", pause);
+  $("brk-go").addEventListener("click", closeBrk);
 
   // ---------- управление ----------
   function localX(e) { var r = cv.getBoundingClientRect(); return clampX(e.clientX - r.left); }
   cv.addEventListener("pointerdown", function (e) {
-    if (state !== "play") return;
+    if (state !== "play" && state !== "clear") return;
     if (e.pointerType !== "mouse" && cv.setPointerCapture) { try { cv.setPointerCapture(e.pointerId); } catch (x) {} }
     P.tx = localX(e);
     e.preventDefault();
   });
   cv.addEventListener("pointermove", function (e) {
-    if (state !== "play") return;
+    if (state !== "play" && state !== "clear") return;
     if (e.pointerType === "mouse" || e.buttons || e.pressure > 0) P.tx = localX(e);
   });
   cv.addEventListener("contextmenu", function (e) { e.preventDefault(); });
@@ -542,7 +697,7 @@
   window.addEventListener("keydown", function (e) {
     if (e.key === "ArrowLeft") { keys.l = 1; if (state === "play") e.preventDefault(); }
     else if (e.key === "ArrowRight") { keys.r = 1; if (state === "play") e.preventDefault(); }
-    else if (e.key === "Escape" || e.key === "p" || e.key === "з") { if (state === "play") pause(); else if (state === "pause") resume(); }
+    else if (e.key === "Escape" || e.key === "p" || e.key === "з") { if (state === "play") pause(); else if (state === "pause") resume(); else if (state === "brk") closeBrk(); }
   });
   window.addEventListener("keyup", function (e) {
     if (e.key === "ArrowLeft") keys.l = 0;
@@ -577,7 +732,9 @@
   window.__game = { get: function () { return { state: state, score: score, lives: lives, t: t, items: items.length, best: best, W: W, H: H, P: P }; },
     items: function () { return items.map(function (it) { return { k: it.k, x: Math.round(it.x), y: Math.round(it.y) }; }); },
     end: function () { lives = 0; state = "dying"; dieT = 0.01; },
-    warp: function (sec) { t = sec; sinceShield = 0; } };
+    warp: function (sec) { t = sec; sinceShield = 0; },
+    msgs: function () { return (MSG || buildMsgs() || []).map(function (m) { return m.kind + ": " + m.title; }); },
+    shown: function () { return shown.length; } };
 })();
 </script>
 </body>
