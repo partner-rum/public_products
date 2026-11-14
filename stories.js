@@ -305,6 +305,10 @@
     ".st-toast b{display:block;font-weight:600;margin-bottom:4px;word-break:normal;}",
     "@media (prefers-reduced-motion:reduce){.st-v,.st-card{transition:none;}}",
     // окно расширили обратно — ряд прячем, на десктопе героя он не трогает
+    // кружок игры «Лови купоны» (14.11.2026): зелёное кольцо, внутри идёт игра (game-mini.js)
+    ".st-game{text-decoration:none;}",
+    ".st-game .st-ring{background:conic-gradient(from 200deg,#55C08A,#9BE3BE,#55C08A,#2F8A5E,#55C08A);}",
+    ".st-gin{overflow:hidden;background:#22243B;padding:0;}.st-gin canvas{width:100%;height:100%;display:block;border-radius:50%;}",
     "@media (min-width:861px){.st-row,.st-sp{display:none;}}"
   ].join("");
   document.head.appendChild(css);
@@ -326,9 +330,23 @@
   hero.appendChild(sp);
   var groups = [];
 
+  // Кружок «Игра» — первым в ряду (14.11.2026, выбор Руслана «4 и 2 вместе»: вход в игру с вводной
+  // глазом не цеплялся). Это ссылка на game.html, а не история: data-i у него нет. Узел один на всю
+  // жизнь страницы — ряд перерисовывается, а игра в кружке не начинается заново
+  var gameC = null;
+  function gameCircle() {
+    if (!gameC) {
+      gameC = document.createElement("a");
+      gameC.className = "st-c st-game"; gameC.href = "game.html?from=story";
+      gameC.setAttribute("role", "listitem"); gameC.setAttribute("aria-label", "Игра «Лови купоны»");
+      gameC.innerHTML = '<span class="st-ring"><span class="st-in st-gin"><canvas data-mini="story" aria-hidden="true"></canvas></span></span><span class="t">Игра</span>';
+    }
+    return gameC;
+  }
+
   function paintRow() {
     groups = build();
-    row.hidden = !groups.length;
+    row.hidden = false;                 // кружок игры есть всегда, даже без историй
     row.innerHTML = groups.map(function (g, i) {
       var inner = g.thumb
         ? '<span class="st-in" style="background-image:' + esc(cssUrl(g.thumb)) + '"></span>'
@@ -336,6 +354,8 @@
       return '<button class="st-c' + (g.seen ? " seen" : "") + '" type="button" role="listitem" data-i="' + i + '" aria-label="История «' + esc(g.label) + '»' + (g.seen ? ", просмотрена" : "") + '">' +
         '<span class="st-ring">' + inner + '</span><span class="t">' + esc(g.short || g.label) + '</span></button>';
     }).join("");
+    row.insertBefore(gameCircle(), row.firstChild);
+    if (window.soMiniAll) window.soMiniAll(row);
   }
   paintRow();
   // Строки ставок и имя продукта главная отдаёт функциями ниже по странице (window.soRates,
@@ -346,7 +366,7 @@
   window.addEventListener("so-lazy", function () { if (!viewer) paintRow(); });
   row.addEventListener("click", function (e) {
     var b = e.target.closest ? e.target.closest(".st-c") : null;
-    if (b) open(+b.getAttribute("data-i"), b, true);
+    if (b && b.hasAttribute("data-i")) open(+b.getAttribute("data-i"), b, true);   // кружок игры — обычная ссылка
   });
 
   // ── Просмотр ───────────────────────────────────────────────────────────────
@@ -457,7 +477,7 @@
     document.documentElement.classList.remove("st-lock");
     document.removeEventListener("keydown", onKey, true);
     paintRow();
-    if (opener) { var b = row.querySelector(".st-c"); try { (b || opener).focus({ preventScroll: true }); } catch (e) {} }
+    if (opener) { var b = row.querySelector(".st-c[data-i]"); try { (b || opener).focus({ preventScroll: true }); } catch (e) {} }
   }
   function close() {
     if (!viewer) return;
@@ -572,7 +592,7 @@
         document.documentElement.classList.contains("qg-lock");
       if (!busy) {
         var i = -1; groups.forEach(function (g, k) { if (g.id === want) i = k; });
-        if (i >= 0) open(i, row.children[i], false);
+        if (i >= 0) open(i, row.querySelector('.st-c[data-i="' + i + '"]'), false);
         else if (tries < 12) { tries++; setTimeout(waitFree, 500); }   // данные (дайджест) могли ещё не доехать
         return;
       }

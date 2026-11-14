@@ -1490,10 +1490,11 @@
     // Вход в подбор (Dribbble: VibeMove — «Не знаете, что выбрать?» на главной). Тоже стоит в каркасе
     var PICK = '<button type="button" class="tg-pick" data-quiz><span class="tg-pick-ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h9M18 7h1M5 17h3M12 17h7"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></span>' +
       '<span class="tg-pick-t"><b>Не знаете, что выбрать?</b><small>Подберём продукты за 3 вопроса</small></span>' + CHEV + "</button>";
-    // Вход в игру «Лови купоны» (13.11.2026, вариант Б Руслана: строка под подбором). Та же разметка
-    // стоит в каркасе index.html — первая отрисовка берёт её оттуда
-    var GAME = '<a class="tg-pick tg-game" href="game.html"><span class="tg-pick-ic" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><circle cx="12" cy="12" r="10" fill="#F06E08"/><circle cx="12" cy="12" r="7" fill="none" stroke="rgba(25,26,47,.32)" stroke-width="1.4"/><text x="12" y="15.6" text-anchor="middle" font-family="Montserrat, sans-serif" font-weight="700" font-size="10" fill="#191A2F">%</text></svg></span>' +
-      '<span class="tg-pick-t"><b>Есть минута?</b><small>Сыграйте в «Лови купоны»</small></span>' + CHEV + "</a>";
+    // Вход в игру «Лови купоны»: живой значок — в квадрате идёт сама игра (game-mini.js). Строка
+    // «Есть минута?» (13.11.2026) глазом не цеплялась, на 320×568 стояла под панелью вкладок; 14.11.2026
+    // Руслан выбрал «4 и 2 вместе» — этот значок и кружок «Игра» в ряду историй (stories.js).
+    // Та же разметка стоит в каркасе index.html — первая отрисовка берёт её оттуда
+    var GAME = '<a class="tg-gcard" href="game.html?from=main"><canvas data-mini="card" aria-hidden="true"></canvas><span class="t"><b>Лови купоны</b><small class="tg-gbest">Игра на минуту</small></span><span class="tg-gplay">Играть</span></a>';
     var LEAD = "Формула выплаты известна до сделки\u00a0— её можно посчитать на\u00a0своей сумме заранее.";
     function daysAgo(iso) { var a = Date.parse(String(iso || "").slice(0, 10)), b = Date.parse(TODAY); return isFinite(a) ? Math.round((b - a) / 864e5) : 99; }
     function viewHome() {
@@ -1572,6 +1573,10 @@
       var slot = document.getElementById("tg-stories");
       if (slot && storyRow) slot.appendChild(storyRow);
       if (slot && (!storyRow || storyRow.hidden)) slot.classList.add("tg-empty");
+      // Мини-игра в значке входа (и в кружке истории, если ряд только что переехал) + рекорд вместо подписи
+      if (window.soMiniAll) window.soMiniAll(app);
+      var gb = app.querySelector(".tg-gbest");
+      if (gb) { var best = 0; try { best = +localStorage.getItem("so_game_best") || 0; } catch (e) {} if (best > 0) gb.textContent = "Ваш рекорд — " + best; }
       var q = document.getElementById("tg-q");
       if (q) q.addEventListener("input", function () {
         S.prod.q = q.value; document.getElementById("tg-plist").innerHTML = prodList(); save();
