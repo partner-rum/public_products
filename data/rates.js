@@ -3,7 +3,7 @@
 // Источники: ЦБ (ключевая, RUONIA), MOEX ISS (RUSFAR, БПИФы, ОФЗ),
 // Финуслуги (вклады и накопительные счета — витрина МосБиржи).
 window.RATES = {
-  "updated": "2026-11-16 10:32",
+  "updated": "2026-11-16 13:32",
   "cbr": {
     "key": {
       "rate": 14.0,
@@ -25,39 +25,39 @@ window.RATES = {
       "id": "RUSFAR1W",
       "term": "1 неделя",
       "days": 7,
-      "rate": 13.82
+      "rate": 13.81
     },
     {
       "id": "RUSFAR2W",
       "term": "2 недели",
       "days": 14,
-      "rate": 13.86
+      "rate": 13.91
     },
     {
       "id": "RUSFAR1M",
       "term": "1 месяц",
       "days": 30,
-      "rate": 13.97
+      "rate": 13.92
     },
     {
       "id": "RUSFAR3M",
       "term": "3 месяца",
       "days": 90,
-      "rate": 14.03
+      "rate": 14.02
     }
   ],
   "funds": [
     {
       "id": "BCSD",
       "name": "БКС Денежный рынок",
-      "price": 14.699,
+      "price": 14.701,
       "ter": 0.2,
       "rate": 13.56
     },
     {
       "id": "MONY",
       "name": "АК БАРС Денежный рынок",
-      "price": 135.66,
+      "price": 135.78,
       "ter": 0.2,
       "rate": 13.56
     },
@@ -78,21 +78,21 @@ window.RATES = {
     {
       "id": "AMNR",
       "name": "АТОН Накопительный",
-      "price": 160.443,
+      "price": 160.438,
       "ter": 0.3,
       "rate": 13.46
     },
     {
       "id": "AKMM",
       "name": "Альфа Денежный рынок",
-      "price": 181.62,
+      "price": 181.6,
       "ter": 0.69,
       "rate": 13.07
     },
     {
       "id": "TMON",
       "name": "Т-Капитал Денежный рынок",
-      "price": 167.93,
+      "price": 167.88,
       "ter": 1.15,
       "rate": 12.61
     }
@@ -103,21 +103,21 @@ window.RATES = {
       "name": "ОФЗ 26207",
       "maturity": "2027-02-03",
       "years": 0.22,
-      "rate": 12.55
+      "rate": 12.97
     },
     {
       "id": "SU26232RMFS7",
       "name": "ОФЗ 26232",
       "maturity": "2027-10-06",
       "years": 0.89,
-      "rate": 13.13
+      "rate": 13.15
     },
     {
       "id": "SU26212RMFS9",
       "name": "ОФЗ 26212",
       "maturity": "2028-01-19",
       "years": 1.18,
-      "rate": 13.32
+      "rate": 13.52
     }
   ],
   "deposits": [
