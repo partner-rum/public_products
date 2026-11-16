@@ -20,6 +20,7 @@
          python make_ideas.py pre-ipo        (тематический выпуск из JSON)
          python make_ideas.py space          (космос, вебинар 06.10.2026)
          python make_ideas.py venture        (венчур в портфеле, вебинар 05.11.2026)
+         python make_ideas.py products-nov   (робототехника и Crusoe, вебинар 18.11.2026)
 """
 import glob
 import html
@@ -148,6 +149,15 @@ CONFIGS["space"] = {
 CONFIGS["venture"] = {
     "kind": "theme",
     "src": _res("venture-2026-11", "issue.json"),
+}
+# Актуальные продукты ноября — материал вебинара 18.11.2026 по колоде Андрея Туленты:
+# два выпуска на размещении, «Гуманоидная робототехника» (СП-1-61) и «Pre-IPO Crusoe»
+# (СП-1-59). Обзоров компаний нет — items нужны только обложке превью (имена
+# компаний плашками), поэтому их id с суффиксом -nov: без него якорь ideas.html#crusoe
+# перехватил бы ссылку на обзор Crusoe в выпуске Pre-IPO.
+CONFIGS["products-nov"] = {
+    "kind": "theme",
+    "src": _res("products-2026-11", "issue.json"),
 }
 THEME_BLOCKS = ("stages", "cards", "steps", "tiles", "bignum", "columns", "chain",
                 "glossary", "faq", "map", "profiles", "cta", "payoff")

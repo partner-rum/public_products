@@ -44,7 +44,7 @@ if "--out" in _argv:
 else:
     OUT_ARG = None
 ROOT = _argv[0] if _argv else os.path.dirname(os.path.abspath(__file__))
-OUT = OUT_ARG or os.path.join(ROOT, "og-ideas-6.jpg")
+OUT = OUT_ARG or os.path.join(ROOT, "og-ideas-7.jpg")
 # Chrome умеет снимать только PNG — снимаем во временный файл и сжимаем.
 RAW = os.path.join(ROOT, "_og_ideas_raw.png")
 TPL_NAME = "_og_ideas_tmp.html"
@@ -100,6 +100,12 @@ def current_issue():
     if not issues:
         raise SystemExit("В data/ideas.js нет выпусков — нечего рисовать")
     return issues[0]
+
+
+def nohyph(s):
+    """Слово с дефисом («Pre-IPO») не рвём: браузер переносит по дефису, и на
+    обложке оставалось «Pre-» в конце строки."""
+    return re.sub(r"([^\s<>]+-[^\s<>]+)", r'<span style="white-space:nowrap">\1</span>', s)
 
 
 def esc(s):
@@ -178,7 +184,7 @@ def build_html(iss):
 
     return (TEMPLATE
             .replace("{{KICKER}}", esc(kicker))
-            .replace("{{TITLE}}", esc(nb(title)))
+            .replace("{{TITLE}}", nohyph(esc(nb(title))))
             .replace("{{SIZE}}", str(fit_size(title)))
             .replace("{{SUB}}", esc(iss.get("ogSub") or
                                     "Компании по всей цепочке — от памяти и ускорителей "

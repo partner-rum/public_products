@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Рисует og-events-7.png — обложку превью для events.html (1200x630).
+Рисует og-events-8.png — обложку превью для events.html (1200x630).
 Имя с номером: Telegram кэширует превью по URL картинки и ?v= не понимает,
 поэтому сброс кэша — только переименованием файла (и правкой тега в events.html).
 
@@ -20,7 +20,7 @@ og:image в events.html — Telegram кэширует превью по URL ка
 import os, sys, re, json, socket, subprocess, threading, functools, http.server, shutil, datetime
 
 ROOT = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.join(ROOT, "og-events-7.png")
+OUT = os.path.join(ROOT, "og-events-8.png")
 TPL_NAME = "_og_event_tmp.html"
 
 CHROME_CANDIDATES = [
@@ -81,6 +81,12 @@ def nb(s):
     return re.sub(r"(?<![\w-])([А-Яа-яЁёA-Za-z]{1,2}) ", "\\1\u00a0", str(s or ""))
 
 
+def nohyph(s):
+    """Слово с дефисом («Pre-IPO») не рвём: браузер переносит по дефису, и на
+    обложке оставалось «Pre-» в конце строки."""
+    return re.sub(r"([^\s<>]+-[^\s<>]+)", r'<span style="white-space:nowrap">\1</span>', s)
+
+
 def esc(s):
     return (str(s or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;"))
 
@@ -113,7 +119,7 @@ def build_html(ev):
         '<span class="chip%s">%s</span>' % (" hot" if i == 0 else "", esc(c))
         for i, c in enumerate(chips))
     return TEMPLATE.replace("{{KICKER}}", esc(kicker)) \
-                   .replace("{{TITLE}}", esc(nb(title))) \
+                   .replace("{{TITLE}}", nohyph(esc(nb(title)))) \
                    .replace("{{SIZE}}", str(fit_size(title))) \
                    .replace("{{SUB}}", esc(sub)) \
                    .replace("{{CHIPS}}", chip_html)
