@@ -1978,7 +1978,7 @@ const PRICING_PROMPT = `
 Когда клиент просит посчитать автоколл (автоколлируемую облигацию, автокол, autocall, «феникс», облигацию с условным купоном и досрочным погашением) на актив или корзину — купон по цене или цену по купону — вызови price_autocall.
 Ответ с ценой клиенту соберёт сервер: сам цену, участие и купон не называй и не придумывай.
 - Тикер передавай как на бирже (SBER, GAZP, LKOH, YDEX, NVDA). Не знаешь тикер — передай название компании как есть.
-- Индекс, фонд и валюта — тоже ОДИН актив, их считаешь: индекс МосБиржи → IMOEX, индекс РТС → RTSI, S&P 500 → SPY, золото → GLD, биткоин → IBIT, юань → CNYRUB. Не отказывай словами «это индекс, а не один актив».
+- Индекс, фонд и валюта — тоже ОДИН актив, их считаешь: индекс МосБиржи → IMOEX, индекс РТС → RTSI, S&P 500 → SPY, золото → GLD (фонд в долларах), золото в рублях → GLDRUB, биткоин → IBIT, юань → CNYRUB. Не отказывай словами «это индекс, а не один актив».
 - Срок обязателен. Не назван — спроси срок и инструмент не вызывай. Срок НИКОГДА не придумывай и не бери «по умолчанию». «2 года» → '2Y', «18 месяцев» → '18M', «полгода» → '6M'.
 - CALL и PUT: страйк по умолчанию 100% (на уровне текущей цены). «Страйк 110», «на 10% выше рынка» → strike_pct 110. Страйк деньгами («страйк 1500 рублей», «страйк 300 $») → strike_abs 1500 / 300, в проценты сам не пересчитывай.
 - Защита капитала: уровень защиты по умолчанию 100% номинала; «защита 90%», «с 80% защитой» → protection_pct 90 / 80. Цена защиты капитала всегда 100% номинала, участие в росте посчитает сервер — его клиент не задаёт; если клиент назвал участие, всё равно вызови price_protection с остальными условиями. Потолок роста передавай, ТОЛЬКО если клиент его назвал: «до +50%», «с потолком 50%» → cap_pct 50. «Рост засчитывается от +5%» → strike_pct 105.
@@ -2136,7 +2136,17 @@ async function priceBondRate(env) {
 // Имя актива в ответе — как на витрине («Газпром (GAZP)», «Золото (GLD)»), а не сырое имя
 // справочника прайсера («ГАЗПРОМ ао», «Currency Pair CNY/RUB», «SPDR Gold Shares (GLD)»).
 // Сначала каталог доски по тикеру, затем словарь популярных, затем очистка имени прайсера.
+// Рублёвые активы, которых нет в справочнике прайсера: без явной валюты он считает их долларовыми
+// (ставка USD, «8 500 $»). Для них в расчёт уходит currency и underlying_currencies = RUB.
+const PRICE_RUB_ASSETS = { GLDRUB: "Золото в рублях" };
+const PRICE_RUB_RE = /^(?:gldrub|gldrub_tom)$|золот[а-яё]*\s+в\s+руб|золот[а-яё]*\s+руб|gold\s*(?:in\s+)?rub/i;
+function priceRubArgs(tickers) {
+  const m = {};
+  for (const t of tickers) if (PRICE_RUB_ASSETS[t]) m[t] = "RUB";
+  return Object.keys(m).length ? { currency: "RUB", underlying_currencies: m } : null;
+}
 const PRICE_NAMES = {
+  GLDRUB: "Золото в рублях",
   CNYRUB: "Юань", USDRUB: "Доллар США", EURRUB: "Евро", IMOEX: "Индекс МосБиржи", RTSI: "Индекс РТС",
   AAPL: "Apple", TSLA: "Tesla", AMZN: "Amazon", GOOGL: "Alphabet", GOOG: "Alphabet", MSFT: "Microsoft",
   META: "Meta", AMD: "AMD", INTC: "Intel", NFLX: "Netflix",
@@ -2179,6 +2189,7 @@ async function priceResolve(underlying, env) {
   // инструментов, ответ из кэша, без похода в рыночные данные).
   const rawU = String(underlying || "").trim().slice(0, 60);
   if (!rawU) return fail("Уточните базовый актив — тикер или название компании.");
+  if (PRICE_RUB_RE.test(rawU)) return { ticker: "GLDRUB", name: PRICE_RUB_ASSETS.GLDRUB, listed: true, isBond: false, ccy: "RUB" };
   const tickerLike = /^[A-Za-z0-9][A-Za-z0-9._-]{0,19}$/.test(rawU);
   // Тикер модель передаёт заглавными; «Tesla», «Sber» — это название компании.
   // Название, которое справочник не узнал, всё же пробуем как тикер («Qbts»).
@@ -2268,6 +2279,8 @@ async function priceWarrant(a, env, who, cat, raw) {
     outputs: ["PV"], context: { user_id: who },
   };
   if (isBond) args.rate_override = await priceBondRate(env);
+  const rubA = priceRubArgs([ticker]);
+  if (rubA) Object.assign(args, rubA);
   if (strikeAbs) args.strike_abs = strikeAbs;
   if (note) Object.assign(args, note.args);
   const tool = note ? note.tool : "price_vanilla";
@@ -2572,6 +2585,8 @@ async function priceAutocall(a, env, who, cat) {
     non_call_periods: nonCall, memory, basket_type: "worst_of", currency: "RUB",
     outputs: ["PV"], context: { user_id: who },
   };
+  const rubB = priceRubArgs(tickers);
+  if (rubB) base.underlying_currencies = rubB.underlying_currencies;
   if (/^\d{4}-\d{2}-\d{2}$/.test(tenor.expiry)) base.maturity_date = tenor.expiry; else base.tenor = tenor.expiry;
   const unavailable = "Расчёт сейчас недоступен. Попробуйте позже или нажмите «Обсудить с Румбергом» — посчитает менеджер.";
   const shown = tickers.map(priceShowTicker).join(", ");
