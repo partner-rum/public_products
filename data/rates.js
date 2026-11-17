@@ -3,15 +3,15 @@
 // Источники: ЦБ (ключевая, RUONIA), MOEX ISS (RUSFAR, БПИФы, ОФЗ),
 // Финуслуги (вклады и накопительные счета — витрина МосБиржи).
 window.RATES = {
-  "updated": "2026-11-17 13:32",
+  "updated": "2026-11-17 16:32",
   "cbr": {
     "key": {
       "rate": 14.0,
       "date": "2026-07-27"
     },
     "ruonia": {
-      "rate": 13.95,
-      "date": "2026-11-13"
+      "rate": 13.88,
+      "date": "2026-11-16"
     }
   },
   "rusfar": [
@@ -50,7 +50,7 @@ window.RATES = {
     {
       "id": "BCSD",
       "name": "БКС Денежный рынок",
-      "price": 14.701,
+      "price": 14.702,
       "ter": 0.2,
       "rate": 13.58
     },
@@ -64,7 +64,7 @@ window.RATES = {
     {
       "id": "LQDT",
       "name": "Ликвидность (ВИМ)",
-      "price": 2.1354,
+      "price": 2.1353,
       "ter": 0.29,
       "rate": 13.49
     },
@@ -78,21 +78,21 @@ window.RATES = {
     {
       "id": "AMNR",
       "name": "АТОН Накопительный",
-      "price": 160.504,
+      "price": 160.497,
       "ter": 0.3,
       "rate": 13.48
     },
     {
       "id": "AKMM",
       "name": "Альфа Денежный рынок",
-      "price": 181.67,
+      "price": 181.68,
       "ter": 0.69,
       "rate": 13.09
     },
     {
       "id": "TMON",
       "name": "Т-Капитал Денежный рынок",
-      "price": 167.97,
+      "price": 167.98,
       "ter": 1.15,
       "rate": 12.63
     }
@@ -103,28 +103,28 @@ window.RATES = {
       "name": "ОФЗ 26207",
       "maturity": "2027-02-03",
       "years": 0.21,
-      "rate": 12.93
+      "rate": 13.03
     },
     {
       "id": "SU26232RMFS7",
       "name": "ОФЗ 26232",
       "maturity": "2027-10-06",
       "years": 0.88,
-      "rate": 13.21
+      "rate": 13.28
     },
     {
       "id": "SU26212RMFS9",
       "name": "ОФЗ 26212",
       "maturity": "2028-01-19",
       "years": 1.17,
-      "rate": 13.55
+      "rate": 13.49
     },
     {
       "id": "SU26236RMFS8",
       "name": "ОФЗ 26236",
       "maturity": "2028-05-17",
       "years": 1.5,
-      "rate": 16.85
+      "rate": 16.83
     }
   ],
   "deposits": [
@@ -270,6 +270,22 @@ window.RATES = {
       "floating": false,
       "refill": false,
       "capitalization": true,
+      "feature": null
+    },
+    {
+      "bank": "Банк «Хлынов»",
+      "name": "Старт",
+      "rate": 19.0,
+      "kind": "deposit",
+      "termMonths": 3,
+      "daysFrom": 91,
+      "daysTo": 91,
+      "minAmount": 5000,
+      "url": "https://finuslugi.ru/vklady/bank_hlynov_start",
+      "promo": true,
+      "floating": false,
+      "refill": false,
+      "capitalization": false,
       "feature": null
     },
     {
@@ -458,22 +474,6 @@ window.RATES = {
       "daysTo": 61,
       "minAmount": 1,
       "url": "https://finuslugi.ru/vklady/mts_bank_mts_schet",
-      "promo": false,
-      "floating": false,
-      "refill": true,
-      "capitalization": true,
-      "feature": null
-    },
-    {
-      "bank": "Совкомбанк",
-      "name": "Копилка",
-      "rate": 15.5,
-      "kind": "saving",
-      "termMonths": 0,
-      "daysFrom": 1,
-      "daysTo": 91,
-      "minAmount": 1,
-      "url": "https://finuslugi.ru/vklady/sovcombank_nakopitelnyj_schet_onlajn_kopilka",
       "promo": false,
       "floating": false,
       "refill": true,
