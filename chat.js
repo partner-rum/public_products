@@ -147,6 +147,18 @@
     ".ca-sub{font-size:12px;color:rgba(34,36,59,.62);margin-top:1px;}" +
     ".ca-x{margin-left:auto;width:44px;height:44px;border:0;background:none;color:rgba(34,36,59,.55);font-size:20px;line-height:1;cursor:pointer;border-radius:2px;flex:none;}" +
     ".ca-x:hover{color:#22243B;background:rgba(34,36,59,.07);}" +
+    /* — размер окна: «Развернуть» и уголок слева сверху (окно прижато к правому нижнему углу,
+         поэтому тянуть его можно только за левый верхний) — */
+    ".ca-sz{margin-left:auto;width:44px;height:44px;border:0;background:none;color:rgba(34,36,59,.55);cursor:pointer;border-radius:2px;flex:none;display:grid;place-items:center;}" +
+    ".ca-sz+.ca-x{margin-left:0;}" +
+    ".ca-sz:hover{color:#22243B;background:rgba(34,36,59,.07);}" +
+    ".ca-sz:focus-visible{outline:2px solid #F06E08;outline-offset:3px;}" +
+    ".ca-grip{position:absolute;left:0;top:0;width:18px;height:18px;z-index:2;cursor:nwse-resize;touch-action:none;}" +
+    ".ca-grip::before{content:\"\";position:absolute;left:3px;top:3px;width:9px;height:9px;border-left:2px solid rgba(34,36,59,.28);border-top:2px solid rgba(34,36,59,.28);}" +
+    ".ca-grip:hover::before,.ca-panel.sizing .ca-grip::before{border-color:#F06E08;}" +
+    ".ca-panel.sizing{transition:none;user-select:none;}" +
+    "@media(max-width:480px){.ca-sz,.ca-grip{display:none;}.ca-panel{width:auto!important;height:min(560px,calc(100dvh - 16px))!important;}}" +
+    "html.tg-on .ca-sz,html.tg-on .ca-grip{display:none;}" +
     /* Клавиатурный фокус: у кнопок виджета его не было вовсе (outline:none на
        полях, ни одного правила :focus-visible), а страницы объявляют рамку
        только на <a> — виджет выпадал из обхода незаметно для глаза. */
@@ -762,6 +774,77 @@
       }, { passive: true });
     })();
 
+    // Размер окна. Обычный — 360×480 (CSS), развёрнутый — почти весь экран, между ними — как
+    // растянули за уголок. Ширина и высота ставятся инлайном и только там, где окно не на весь
+    // экран (шире 480 px и не вкладка AI главной), иначе снимаются.
+    function sizing(panel) {
+      var KEY = "so_chat_sz", W0 = 360, H0 = 480, WMIN = 320, HMIN = 380, GAP = 40;
+      var btn = panel.querySelector(".ca-sz"), grip = panel.querySelector(".ca-grip");
+      var IC_UP = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M9.5 2.5h4v4M13.5 2.5 9 7M6.5 13.5h-4v-4M2.5 13.5 7 9"/></svg>';
+      var IC_DN = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M13 7H9V3M9 7l4.5-4.5M3 9h4v4M7 9l-4.5 4.5"/></svg>';
+      var sz = null;
+      try { sz = JSON.parse(localStorage.getItem(KEY) || "null"); } catch (e) { sz = null; }
+      function allowed() {
+        return window.innerWidth > 480 && !document.documentElement.classList.contains("tg-on");
+      }
+      function maxW() { return Math.max(WMIN, window.innerWidth - GAP); }
+      function maxH() { return Math.max(HMIN, window.innerHeight - GAP); }
+      function bigW() { return Math.min(760, maxW()); }
+      function isBig() { return !!sz && (sz.w > W0 + 8 || sz.h > H0 + 8); }
+      function apply() {
+        if (!allowed() || !sz) { panel.style.width = ""; panel.style.height = ""; }
+        else {
+          panel.style.width = Math.max(WMIN, Math.min(sz.w, maxW())) + "px";
+          panel.style.height = Math.max(HMIN, Math.min(sz.h, maxH())) + "px";
+        }
+        var big = isBig();
+        btn.innerHTML = big ? IC_DN : IC_UP;
+        btn.setAttribute("aria-label", big ? "Вернуть обычный размер окна" : "Развернуть окно");
+        btn.title = big ? "Обычный размер" : "Развернуть";
+      }
+      function save() {
+        try { if (sz) localStorage.setItem(KEY, JSON.stringify(sz)); else localStorage.removeItem(KEY); } catch (e) {}
+      }
+      btn.addEventListener("click", function () {
+        if (isBig()) { sz = null; goal("chat_size_small"); }
+        else { sz = { w: bigW(), h: maxH() }; goal("chat_size_big"); }
+        save(); apply();
+      });
+      // Уголок: окно прижато справа и снизу, поэтому тянем влево-вверх — ширина и высота растут.
+      grip.addEventListener("pointerdown", function (e) {
+        if (!allowed() || e.button > 0) return;
+        e.preventDefault();
+        var r = panel.getBoundingClientRect(), x0 = e.clientX, y0 = e.clientY;
+        panel.classList.add("sizing");
+        try { grip.setPointerCapture(e.pointerId); } catch (er) {}
+        function mv(ev) {
+          sz = {
+            w: Math.round(Math.max(WMIN, Math.min(maxW(), r.width + (x0 - ev.clientX)))),
+            h: Math.round(Math.max(HMIN, Math.min(maxH(), r.height + (y0 - ev.clientY))))
+          };
+          apply();
+        }
+        function up() {
+          grip.removeEventListener("pointermove", mv);
+          grip.removeEventListener("pointerup", up);
+          grip.removeEventListener("pointercancel", up);
+          panel.classList.remove("sizing");
+          if (sz && sz.w <= W0 + 8 && sz.h <= H0 + 8) sz = null;   // дотянули до исходного — это и есть обычный
+          save(); apply(); goal("chat_size_drag");
+        }
+        grip.addEventListener("pointermove", mv);
+        grip.addEventListener("pointerup", up);
+        grip.addEventListener("pointercancel", up);
+      });
+      // Двойной щелчок по уголку — вернуть обычный размер.
+      grip.addEventListener("dblclick", function () { sz = null; save(); apply(); });
+      var t = 0;
+      window.addEventListener("resize", function () { clearTimeout(t); t = setTimeout(apply, 120); });
+      apply();
+      return apply;
+    }
+    var szApply = null;
+
     var panel = document.createElement("div");
     panel.className = "ca-panel"; panel.setAttribute("role", "dialog"); panel.setAttribute("aria-label", "AI-ассистент");
     panel.innerHTML =
@@ -769,7 +852,9 @@
         '<span class="ca-ava">' + ICON_STAR_SM + '</span>' +
         '<div><div class="ca-ttl-row"><span class="ca-ttl">AI-ассистент</span></div>' +
         '<div class="ca-sub">Rumberg · структурные продукты</div></div>' +
+        '<button class="ca-sz" type="button" aria-label="Развернуть окно" title="Развернуть"></button>' +
         '<button class="ca-x" aria-label="Закрыть">&times;</button></div>' +
+      '<div class="ca-grip" aria-hidden="true" title="Потяните, чтобы изменить размер"></div>' +
       '<div class="ca-log" role="log" aria-live="polite" aria-label="Диалог с ассистентом"></div>' +
       '<div class="ca-foot">' +
         (SETUP.desk ? "" : '<button class="ca-discuss" type="button">' + ICON_CHAT + 'Обсудить с Румбергом</button>') +
@@ -788,6 +873,7 @@
 
     var opened = false;
     function open() {
+      if (szApply) szApply();
       panel.classList.add("on"); dock.classList.add("hide"); mini.classList.add("hide");
       if (qualOk()) els.input.placeholder = "Ваш вопрос…";   // длинная подсказка на телефоне рвалась в две строки
       if (!opened && !msgs.length && heroMode()) {
@@ -843,6 +929,7 @@
       else dockIn.focus();
     });
     panel.querySelector(".ca-x").addEventListener("click", close);
+    szApply = sizing(panel);
     var disc = panel.querySelector(".ca-discuss");
     if (disc) disc.addEventListener("click", showLeadForm);
     els.send.addEventListener("click", send);
