@@ -422,7 +422,7 @@
     }
     return { id: "chat-" + PQ, type: "warrant", structure: r.structure, name: name,
       underlying: und, currency: clean(r.currency) || "RUB", strike: k, strike2: null,
-      spot: 100, tenor: clean(r.tenor), quote: q, minNom: 1000000, chat: true, at: Number(r.at) || 0 };
+      spot: 100, tenor: clean(r.tenor), quote: q, minNom: 1000000, chat: true, at: Number(r.at) || 0, code: clean(r.code) };
   }
 
   // Защита капитала из чата: цена, участие, защита, страйк и потолок — из записи расчёта.
@@ -434,7 +434,7 @@
     if (cap != null && !(cap > 0 && cap <= 200)) return null;
     return { id: "chat-" + PQ, type: "protection", name: clean(r.name), underlying: clean(r.underlying),
       currency: clean(r.currency) || "RUB", strike: k, spot: 100, participation: part, protectionPct: floor,
-      cap: cap, tenor: clean(r.tenor), quote: q, minNom: 1000000, chat: true, at: Number(r.at) || 0 };
+      cap: cap, tenor: clean(r.tenor), quote: q, minNom: 1000000, chat: true, at: Number(r.at) || 0, code: clean(r.code) };
   }
 
   // Автоколл из чата: купон, барьеры, частота, период без отзыва и бумаги — из записи расчёта.
@@ -451,7 +451,7 @@
     return { id: "chat-" + PQ, type: "autocall", name: clean(r.name), underlying: clean(r.underlying), price: price,
       basket: bk.length > 1 ? bk : null, currency: clean(r.currency) || "RUB", couponPa: cpn, couponBarrier: CB,
       callBarrier: AC, protectionPct: B, nonCall: Math.round(nc), obsPerYear: per, memory: r.memory === true ? true : r.memory === false ? false : null,
-      years: yrs || null, tenor: clean(r.tenor), quote: cpn, minNom: 1000000, chat: true, at: Number(r.at) || 0 };
+      years: yrs || null, tenor: clean(r.tenor), quote: cpn, minNom: 1000000, chat: true, at: Number(r.at) || 0, code: clean(r.code) };
   }
 
   function boot(CHAT) {
@@ -1337,7 +1337,8 @@
         esc(OVERRIDDEN.join(", ")) + '). Это не котировка витрины.</div>'
       : '') +
     '<div class="c-foot">' + (inst.chat
-      ? "Котировка рассчитана Rumberg по рыночным данным на дату листа и может измениться. "
+      ? "Котировка рассчитана Rumberg по рыночным данным на дату листа и может измениться. " +
+        (/^[A-Z2-9]{8}$/.test(inst.code || "") ? "Код расчёта " + inst.code.slice(0, 4) + "-" + inst.code.slice(4) + ". " : "")
       : "") + 'Пример иллюстративный, без учёта комиссий и налогов.</div>' +
     '</section>';
 

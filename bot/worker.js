@@ -1533,11 +1533,11 @@ async function handleChat(request, env, cors, ctx) {
   // Валидная пара — тот же deskLogin, что у /stats и /picks — включает блок про
   // выпуски партнёра. Невалидная или отсутствующая просто игнорируется: чат
   // отвечает как обычному посетителю, ошибкой это не является.
-  let partnerMode = false, partnerCtx = "", partnerHasDeals = false;
+  let partnerMode = false, partnerCtx = "", partnerHasDeals = false, partnerRef = "";
   if (data.partner && data.partner.id && data.partner.key) {
     const pwho = await deskLogin(env, data.partner.id, data.partner.key);
     if (pwho) {
-      partnerMode = true;
+      partnerMode = true; partnerRef = pwho.ref;
       await recordAct(env, pwho.ref, "ask", "");
       try {
         const pdeals = await dealsGet(env, pwho.ref);
@@ -1582,6 +1582,7 @@ async function handleChat(request, env, cors, ctx) {
       const out = await chatWithPricing(system, messages, env, {
         partnerMode,
         who: partnerMode ? "site-desk" : "site-chat",
+        page: pageUrl, title: pageTitle, partnerRef,
         limiter: env.CHAT_RATE_LIMIT,
         ip: request.headers.get("CF-Connecting-IP") || "anon",
         cat,
@@ -1603,9 +1604,9 @@ async function handleChat(request, env, cors, ctx) {
   // У расчётов в лог (внутренний) добавляется справедливая цена прайсера — видно наценку.
   if (env.CHAT_LOG_CHAT_ID && reply) {
     const q = messages[messages.length - 1].content.slice(0, 600);
-    const fairs = priced.filter((o) => o.ok).map((o) => o.log ||
+    const fairs = priced.filter((o) => o.ok).map((o) => (o.code ? "[" + calcShow(o.code) + "] " : "") + (o.log ||
       (o.ticker + " " + o.type + " " + o.strike + " " + o.tenor +
-      ": прайсер " + priceNum(o.fair) + "%, клиенту " + priceNum(o.quote) + "%"));
+      ": прайсер " + priceNum(o.fair) + "%, клиенту " + priceNum(o.quote) + "%")));
     const logP = tg(env, "sendMessage", {
       chat_id: env.CHAT_LOG_CHAT_ID, parse_mode: "HTML", disable_web_page_preview: true,
       text: "💬 <b>AI-чат</b>" + (pageTitle ? " · " + esc(pageTitle) : "") +
@@ -2018,6 +2019,7 @@ async function mcpCall(env, name, args, timeoutMs) {
   if (!r.ok) throw new Error("pricer_http_" + r.status);
   const msg = mcpParse(text, r.headers.get("content-type") || "");
   if (!msg || msg.error || !msg.result) throw new Error("pricer_rpc");
+  if (env.__trace && name !== "resolve_ticker") env.__trace.push(calcTraceItem(name, args, msg.result));
   return msg.result;   // { content, structuredContent, isError }
 }
 
@@ -2781,9 +2783,88 @@ function pqId() {
 }
 async function pqSave(env, rec) {
   if (!env.POST_KV) return "";
+  if (env.__code) rec.code = env.__code;
   const id = pqId();
   try { await env.POST_KV.put("pq:" + id, JSON.stringify(rec), { expirationTtl: PQ_TTL }); return id; }
   catch (e) { return ""; }
+}
+// ── Код расчёта ─────────────────────────────────────────────────────────────
+// Под каждым ответом с ценой чат печатает «Код расчёта: XXXX-XXXX». По коду в KV лежит запись
+// calc:<код> на год — всё, что нужно, чтобы восстановить, что именно считалось: вопрос, страница,
+// разбор модели, каждый вызов прайсера (аргументы, набор данных, цена спот и вола, request_id и
+// ссылка в терминал), справедливая цена и цена клиенту. Запись наружу не отдаётся НИКОГДА (там
+// справедливая цена) — только командой боту /calc для доверенных. Код же печатается на one-pager.
+const CALC_TTL = 365 * 24 * 3600;
+const CALC_ABC = "ABCDEFGHIJKMNPQRSTUVWXYZ23456789";   // без L, O, 0, 1 — не спутать на слух
+function calcCode() {
+  const b = new Uint8Array(8);
+  crypto.getRandomValues(b);
+  let out = "";
+  for (const x of b) out += CALC_ABC[x % 32];   // 256 % 32 = 0 — без перекоса
+  return out;
+}
+function calcShow(c) { return c ? c.slice(0, 4) + "-" + c.slice(4) : ""; }
+function calcNorm(s) {
+  const c = String(s || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+  return c.length === 8 && [...c].every((ch) => CALC_ABC.indexOf(ch) >= 0) ? c : "";
+}
+function calcTraceItem(name, args, result) {
+  const sc = (result && result.structuredContent) || {};
+  const r = sc.result || {}, t = sc.terms || {}, md = sc.market_data_used || {};
+  const a = Object.assign({}, args); delete a.context;
+  return {
+    tool: name, at: Date.now(), args: a, error: result && result.isError ? (sc.error || "error") : "",
+    pv: r.pv_pct == null ? null : r.pv_pct, currency: r.currency || t.currency || "",
+    dataset: md.dataset || t.dataset || "", model: t.model || "", pricing_date: md.pricing_date || t.pricing_date || "",
+    maturity: (t.schedule && t.schedule.maturity_date) || "", strike_abs: t.strike_abs == null ? null : t.strike_abs,
+    spots: md.spots || null, ref_spots: md.ref_spots || null, vols: md.atm_vols || null,
+    divs: md.div_yields || null, rate: md.rate || null,
+    request_id: sc.request_id || "", terminal: sc.terminal_url || "",
+  };
+}
+async function calcSave(env, rec) {
+  if (!env.POST_KV || !rec.code) return false;
+  try { await env.POST_KV.put("calc:" + rec.code, JSON.stringify(rec), { expirationTtl: CALC_TTL }); return true; }
+  catch (e) { return false; }
+}
+// /calc <код | ссылка на one-pager | id из ?pq=> → карточка расчёта для доверенных
+async function calcCard(env, input) {
+  let code = calcNorm(input);
+  if (!code && env.POST_KV) {
+    const m = String(input || "").match(/pq=([a-z0-9]{16})/) || String(input || "").trim().match(/^([a-z0-9]{16})$/);
+    if (m) {
+      try { const pq = await env.POST_KV.get("pq:" + m[1], "json"); code = (pq && calcNorm(pq.code)) || ""; } catch (e) {}
+      if (!code) return "По этой ссылке кода расчёта нет: лист сделан до 17.11.2026 или уже удалён (хранится 30 дней).";
+    }
+  }
+  if (!code) return "Пришлите код расчёта (8 знаков, например K7M2-QX9F) или ссылку на one-pager из чата.";
+  let rec = null;
+  try { rec = await env.POST_KV.get("calc:" + code, "json"); } catch (e) {}
+  if (!rec) return "Расчёт " + calcShow(code) + " не найден (коды хранятся год).";
+  const dt = new Date(Number(rec.at) || 0).toLocaleString("ru-RU", { timeZone: "Europe/Moscow" });
+  const L = ["🧮 <b>Расчёт " + calcShow(code) + "</b> · " + esc(dt) + " МСК"];
+  if (rec.partner) L.push("Рабочий стол партнёра: " + esc(rec.partner));
+  if (rec.page) L.push("Страница: " + esc(rec.page));
+  if (rec.question) L.push("Вопрос: «" + esc(String(rec.question).slice(0, 400)) + "»");
+  if (rec.answer) L.push("Ответ клиенту:\n" + esc(String(rec.answer).replace(/\*\*/g, "").slice(0, 700)));
+  L.push("Цена клиенту: " + (rec.quote == null ? "—" : priceNum(rec.quote) + "%") +
+    (rec.fair == null ? "" : " · справедливая (прайсер): " + priceNum(rec.fair) + "%"));
+  if (rec.pq) L.push("One-pager: " + esc((env.SITE_BASE || "https://invest.rumberg.ru/").replace(/\/?$/, "/") + "onepager.html?pq=" + rec.pq));
+  if (rec.model_args) L.push("Разбор модели: <code>" + esc(JSON.stringify(rec.model_args).slice(0, 400)) + "</code>");
+  const tr = rec.trace || [];
+  L.push(tr.length ? "Вызовы прайсера (" + tr.length + "):" : "Вызовов прайсера нет — ответ взят из кэша расчёта (до 10 минут).");
+  tr.slice(0, 6).forEach((x, i) => {
+    const sp = x.spots ? Object.entries(x.spots).map(([k, v]) => k + " " + v).join(", ") : "";
+    const vo = x.vols ? Object.entries(x.vols).map(([k, v]) => k + " " + (v && typeof v === "object" ? v.short + "/" + v.long : v)).join(", ") : "";
+    L.push((i + 1) + ") " + esc(x.tool) + (x.error ? " — ошибка " + esc(x.error) : " — PV " + priceNum(x.pv) + "% " + esc(x.currency)) +
+      "\n   набор " + esc(x.dataset || "?") + ", дата " + esc(x.pricing_date || "?") + (x.maturity ? ", погашение " + esc(x.maturity) : "") +
+      (sp ? "\n   спот: " + esc(sp) : "") + (vo ? " · вола: " + esc(vo) : "") + (x.rate ? " · ставка: " + esc(String(x.rate)) : "") +
+      "\n   <code>" + esc(JSON.stringify(x.args).slice(0, 350)) + "</code>" +
+      (x.terminal ? "\n   <a href=\"" + esc(x.terminal) + "\">терминал</a>" : "") +
+      (x.request_id ? " · request_id <code>" + esc(x.request_id.slice(0, 16)) + "…</code>" : ""));
+  });
+  if (tr.length > 6) L.push("…и ещё " + (tr.length - 6));
+  return L.join("\n").slice(0, 4000);
 }
 async function handlePricedQuote(request, env, cors) {
   const origin = request.headers.get("Origin");
@@ -2939,25 +3020,47 @@ async function chatWithPricing(system, messages, env, opts) {
       }
     } catch (e) { /* биндинг недоступен — не блокируем */ }
   }
-  const outs = await Promise.all(calls.map((c) => {
+  // Каждому расчёту — свой код и свой след вызовов прайсера (env с __trace/__code поверх общего:
+  // mcpCall пишет туда каждый вызов, pqSave кладёт код в запись one-pager).
+  const question = String(((messages[messages.length - 1] || {}).content) || "").slice(0, 600);
+  const outs = await Promise.all(calls.map(async (c) => {
     let a = {};
     try { a = JSON.parse(c.function.arguments || "{}"); } catch { /* пустые аргументы → честный отказ */ }
+    const trace = [], code = calcCode();
+    const envT = Object.create(env);
+    envT.__trace = trace; envT.__code = code;
+    let o, used = a;
     if (c.function.name === "price_autocall") {
       const ga = priceGuardAC(a, messages);
       if (ga.ask) return { ok: false, text: ga.ask };
-      return priceAutocall(ga.a, env, opts.who || "site-chat", opts.cat);
-    }
-    if (c.function.name === "price_protection") {
+      used = ga.a; o = await priceAutocall(ga.a, envT, opts.who || "site-chat", opts.cat);
+    } else if (c.function.name === "price_protection") {
       const gp = priceGuardProt(a, messages);
       if (gp.ask) return { ok: false, text: gp.ask };
-      return priceProtection(gp.a, env, opts.who || "site-chat", opts.cat);
+      used = gp.a; o = await priceProtection(gp.a, envT, opts.who || "site-chat", opts.cat);
+    } else {
+      const g = priceGuard(a, messages);
+      if (g.ask) return { ok: false, text: g.ask };
+      used = g.a; o = await priceWarrant(g.a, envT, opts.who || "site-chat", opts.cat);
     }
-    const g = priceGuard(a, messages);
-    if (g.ask) return { ok: false, text: g.ask };
-    return priceWarrant(g.a, env, opts.who || "site-chat", opts.cat);
+    if (!o || !o.ok) return o;
+    // Ответ из кэша (тот же расчёт за последние 10 минут): код тот же, что у первого показа —
+    // цифры и one-pager у них одни. Новый расчёт — новый код и запись.
+    if (!o.code) {
+      o.code = code;
+      await calcSave(env, {
+        v: 1, code, at: Date.now(), kind: c.function.name, question, page: opts.page || "",
+        title: opts.title || "", partner: opts.partnerRef || "", model_args: used,
+        answer: o.text, quote: o.quote == null ? null : o.quote, fair: o.fair == null ? null : o.fair,
+        pq: o.pq || "", trace,
+      });
+    }
+    return o;
   }));
-  // Под каждым удачным расчётом — ссылка на one-pager (chat.js рисует её кнопкой).
-  const reply = outs.map((o) => o.text + (o.ok && o.pq ? "\n\n[One-pager для клиента](onepager.html?pq=" + o.pq + ")" : ""))
+  // Под каждым удачным расчётом — код расчёта и ссылка на one-pager (chat.js рисует её кнопкой).
+  const reply = outs.map((o) => o.text +
+    (o.ok && o.code ? "\n\nКод расчёта: **" + calcShow(o.code) + "** — назовите его менеджеру, если будете обсуждать этот расчёт." : "") +
+    (o.ok && o.pq ? "\n\n[One-pager для клиента](onepager.html?pq=" + o.pq + ")" : ""))
     .join("\n\n") + (outs.some((o) => o.ok) ? "\n\n" + priceFooter(opts.partnerMode) : "");
   return { reply, priced: outs };
 }
@@ -6462,6 +6565,15 @@ async function handleTelegram(request, env, ctx) {
       // См. комментарий у «Пересобрать»: вебхук отвечает сразу, генерация — после ответа
       const job = sendMorningDraft(env, msg.text, msg.chat.id);
       if (ctx) ctx.waitUntil(job); else await job;
+      return new Response("ok");
+    }
+
+    // ---- Код расчёта из чата: /calc <код | ссылка на one-pager>. Руслан и доверенные, в личке.
+    if (/^\/calc(?:@\w+)?(?:\s|$)/.test(msg.text)) {
+      if (trusted.includes(String(from.id)) && msg.chat && msg.chat.type === "private") {
+        const card = await calcCard(env, msg.text.replace(/^\/calc(?:@\w+)?\s*/, ""));
+        await tg(env, "sendMessage", { chat_id: msg.chat.id, text: card, parse_mode: "HTML", disable_web_page_preview: true });
+      }
       return new Response("ok");
     }
 
