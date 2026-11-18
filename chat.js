@@ -68,6 +68,7 @@
   var PRICE_GREETING = "Здравствуйте! Я AI-ассистент Rumberg. Объясню, как устроены структурные продукты, " +
     "подскажу, где что на сайте, и посчитаю индикативную цену опциона, облигации с защитой капитала или автоколла на ваш срок.";
   var PRICE_NOTE = "Считаю CALL и PUT и облигацию с защитой капитала на один актив — акцию, индекс или фонд, " +
+    "колл на корзину до 5 бумаг — по среднему или по худшей бумаге, " +
     "а ещё автоколл на российские акции: одну бумагу или корзину, купон по цене или цену по купону. " +
     "Остальные структуры посчитает менеджер: кнопка «Обсудить с Румбергом» внизу.";
   var EXAMPLES = [
@@ -418,7 +419,9 @@
     var p = priceParams(text);
     if (!p) return;
     var row = '<span class="ca-pp-k">Пересчитать:</span>';
-    if (p.kind === "w") row += '<button type="button" class="ca-chip" data-pp="type">' + (p.type === "PUT" ? "колл вместо пута" : "пут вместо колла") + "</button>" +
+    // Колл на корзину («… · среднее по корзине: … · …», «… · худшая из корзины: … · …») — без «пут вместо колла»:
+    // пута на корзину чат не считает
+    if (p.kind === "w") row += (/корзин/.test(p.asset) ? "" : '<button type="button" class="ca-chip" data-pp="type">' + (p.type === "PUT" ? "колл вместо пута" : "пут вместо колла") + "</button>") +
       '<button type="button" class="ca-chip" data-pp="strike" aria-expanded="false">страйк ' + pctS(p.strike) + "%" + CHEV_D + "</button>";
     else if (p.kind === "a") row += '<button type="button" class="ca-chip" data-pp="barrier" aria-expanded="false">барьер ' + pctS(p.barrier) + "%" + CHEV_D + "</button>";
     else row += '<button type="button" class="ca-chip" data-pp="floor" aria-expanded="false">защита ' + pctS(p.floor) + "%" + CHEV_D + "</button>";

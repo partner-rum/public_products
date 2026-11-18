@@ -406,6 +406,21 @@
     if (!r || r.type !== "warrant" || (r.structure !== "call" && r.structure !== "put")) return null;
     const q = Number(r.quote), k = Number(r.strike);
     if (!(q > 0 && q < 100) || !(k >= 20 && k <= 300)) return null;
+    // Колл на корзину (чат, 18.11.2026): бумаги, режим и веса — в те же поля, что у корзин доски, лист
+    // описывает их общим S.basketOf («среднее по корзине» / «худшая из корзины»).
+    const bk = Array.isArray(r.basket) ? r.basket.map(clean).filter((t) => /^[A-Z0-9._-]{1,12}$/.test(t)) : [];
+    if (bk.length > 1) {
+      if (bk.length > 5 || r.structure !== "call") return null;
+      const avg = r.basketMode === "avg";
+      let bw = null;
+      if (avg && Array.isArray(r.basketW) && r.basketW.length === bk.length) {
+        const ws = r.basketW.map(Number), sum = ws.reduce((x, y) => x + y, 0);
+        if (ws.every((x) => isFinite(x) && x >= 0) && Math.abs(sum - 100) < 0.6) bw = ws;
+      }
+      return { id: "chat-" + PQ, type: "warrant", structure: "call", name: clean(r.name), underlying: clean(r.underlying),
+        basket: bk, basketMode: avg ? "avg" : "wo", basketW: bw, currency: clean(r.currency) || "RUB", strike: k, strike2: null,
+        spot: 100, tenor: clean(r.tenor), quote: q, minNom: 1000000, chat: true, at: Number(r.at) || 0, code: clean(r.code) };
+    }
     // Актив — по названию из каталога витрины, если тикер там есть: у прайсера свои
     // имена («ЛУКОЙЛ»), а описание компании на листе ищется по имени витрины («Лукойл (LKOH)»).
     let und = clean(r.underlying), name = clean(r.name);

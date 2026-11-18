@@ -1801,8 +1801,8 @@ const PRICE_UNLISTED_TIMEOUT_MS = 25000;  // тикер не из справоч
 const PRICE_CACHE_MS = 10 * 60 * 1000;
 const PRICE_DAYS_MIN = 7, PRICE_DAYS_MAX = 5 * 366;
 const PRICE_CACHE = new Map();      // условия + дата → готовый ответ; живёт в изоляте
-const PRICE_ONLY_TEXT = "В чате сейчас считаются обычные CALL и PUT, облигация с защитой капитала на один актив " +
-  "и автоколл на российские акции. " +
+const PRICE_ONLY_TEXT = "В чате сейчас считаются обычные CALL и PUT, колл на корзину до 5 бумаг (по среднему или по худшей бумаге), " +
+  "облигация с защитой капитала на один актив и автоколл на российские акции. " +
   "Колл-спред и другие структуры посчитает менеджер — нажмите «Обсудить с Румбергом».";
 
 const PRICE_TOOL = {
@@ -1992,11 +1992,51 @@ const AC_TOOL = {
   },
 };
 
+// ── Колл на корзину в чате (18.11.2026, «давай добавлять возможность прайсить опционы на корзину (avg,
+// worst-of)»). Продукт прайсера call_on_basket: CALL на 2–5 бумаг; уровень корзины — СРЕДНЕЕ изменение бумаг
+// (с весами или поровну, basket_type average) или ХУДШАЯ бумага (worst_of). Пута на корзину у прайсера нет.
+// Цена — как у обычного колла: справедливая ÷ 0,8, вверх до 0,25, не ниже 1,5%; вола +5 на каждую бумагу
+// (PRICE_VOL_SLIP). Модель прайсера — LocalVol (Монте-Карло): при тех же условиях цена повторяется.
+// Бумаги — в одной валюте (рублёвая корзина или долларовая): смешанная — это quanto, его в чате не считаем.
+// Названия — как у корзин на доске: «CALL 100 · среднее по корзине · 1 год», «… · худшая из корзины · …».
+const BK_MAX_UND = 5;
+const BK_STRIKE_MIN = 50, BK_STRIKE_MAX = 200;
+const BK_FX_TEXT = "Корзину в чате считаю из бумаг, которые торгуются в одной валюте — например, только российские " +
+  "или только американские акции. Смешанную корзину посчитает менеджер: нажмите «Обсудить с Румбергом».";
+const BK_BOND_TEXT = "Корзину с облигациями в чате не считаю. Нажмите «Обсудить с Румбергом» — посчитает менеджер.";
+const BK_CCY_NAME = { USD: "доллары США", EUR: "евро", CNY: "юани" };
+const BK_TOOL = {
+  type: "function",
+  function: {
+    name: "price_basket",
+    description: "Посчитать индикативную цену колл-опциона (CALL) на корзину из 2–5 бумаг: по СРЕДНЕМУ изменению бумаг " +
+      "(average, можно с весами) или по ХУДШЕЙ бумаге (worst_of). Пут на корзину этим инструментом не считается. " +
+      "Ответ с ценой клиенту соберёт сервер.",
+    parameters: {
+      type: "object",
+      properties: {
+        underlyings: { type: "array", items: { type: "string" }, description: "Бумаги корзины, от 2 до 5. Тикеры как на " +
+          "бирже: SBER, GAZP, LKOH, NVDA, AMD. Не знаешь тикер — название компании как есть." },
+        basket_type: { type: "string", enum: ["average", "worst_of"], description: "average — уровень корзины по среднему " +
+          "изменению бумаг («на среднее», «средняя динамика», «среднее по корзине», с весами); worst_of — по худшей бумаге " +
+          "(«худшая из корзины», «worst-of»)." },
+        weights_pct: { type: "array", items: { type: "number" }, description: "Веса бумаг в процентах, в том же порядке, " +
+          "что underlyings, в сумме 100. Только для average и только если клиент их назвал: «50/30/20» → [50, 30, 20]. " +
+          "Не назвал — не передавай (веса равные)." },
+        tenor: { type: "string", description: "Срок: '1Y', '2Y', '18M', '6M' или дата экспирации YYYY-MM-DD." },
+        strike_pct: { type: "number", description: "Страйк в % от начального уровня корзины. По умолчанию 100." },
+      },
+      required: ["underlyings", "basket_type", "tenor"],
+    },
+  },
+};
+
 const PRICING_PROMPT = `
 
-=== РАСЧЁТ ПРОДУКТОВ (инструменты price_warrant, price_protection и price_autocall) ===
-Ты считаешь цену ТОЛЬКО ЧЕТЫРЁХ продуктов: обычный колл-опцион (CALL) и обычный пут-опцион (PUT) на один базовый актив — инструмент price_warrant; облигацию с защитой капитала на один актив — инструмент price_protection; автоколл на один российский актив или корзину до 5 российских бумаг — инструмент price_autocall. Больше ты не прайсишь НИЧЕГО.
+=== РАСЧЁТ ПРОДУКТОВ (инструменты price_warrant, price_basket, price_protection и price_autocall) ===
+Ты считаешь цену ТОЛЬКО ПЯТИ продуктов: обычный колл-опцион (CALL) и обычный пут-опцион (PUT) на один базовый актив — инструмент price_warrant; колл-опцион на корзину из 2–5 бумаг — по среднему изменению бумаг или по худшей бумаге — инструмент price_basket; облигацию с защитой капитала на один актив — инструмент price_protection; автоколл на один российский актив или корзину до 5 российских бумаг — инструмент price_autocall. Больше ты не прайсишь НИЧЕГО.
 Когда клиент просит посчитать, запрайсить, оценить или узнать цену колла или пута (колл-опциона, пут-опциона, CALL, PUT, варранта на рост или на падение) на конкретный актив — вызови price_warrant.
+Когда клиент просит посчитать колл (колл-опцион, CALL, варрант на рост) на корзину или сразу на несколько бумаг — «на среднее», «на среднюю динамику», «среднее по корзине», «худшую из корзины», «worst-of» — вызови price_basket.
 Когда клиент просит посчитать защиту капитала (облигацию с защитой капитала, «капитал под защитой», «вернуть номинал и участвовать в росте») на конкретный актив — вызови price_protection.
 Когда клиент просит посчитать автоколл (автоколлируемую облигацию, автокол, autocall, «феникс», облигацию с условным купоном и досрочным погашением) на актив или корзину — купон по цене или цену по купону — вызови price_autocall.
 Ответ с ценой клиенту соберёт сервер: сам цену, участие и купон не называй и не придумывай.
@@ -2005,9 +2045,10 @@ const PRICING_PROMPT = `
 - Срок обязателен. Не назван — спроси срок и инструмент не вызывай. Срок НИКОГДА не придумывай и не бери «по умолчанию». «2 года» → '2Y', «18 месяцев» → '18M', «полгода» → '6M'.
 - CALL и PUT: страйк по умолчанию 100% (на уровне текущей цены). «Страйк 110», «на 10% выше рынка» → strike_pct 110. Страйк деньгами («страйк 1500 рублей», «страйк 300 $») → strike_abs 1500 / 300, в проценты сам не пересчитывай.
 - Защита капитала: уровень защиты по умолчанию 100% номинала; «защита 90%», «с 80% защитой» → protection_pct 90 / 80. Цена защиты капитала всегда 100% номинала, участие в росте посчитает сервер — его клиент не задаёт; если клиент назвал участие, всё равно вызови price_protection с остальными условиями. Потолок роста передавай, ТОЛЬКО если клиент его назвал: «до +50%», «с потолком 50%» → cap_pct 50. «Рост засчитывается от +5%» → strike_pct 105.
+- Колл на корзину: все названные бумаги передай в underlyings (от 2 до 5). basket_type: average — уровень корзины по среднему изменению бумаг («на среднее», «средняя динамика», «среднее по корзине», клиент назвал веса); worst_of — по худшей бумаге («худшая из корзины», «по худшей», «worst-of»). Клиент не сказал, как считать корзину, — спроси «по среднему изменению бумаг или по худшей бумаге?» и инструмент не вызывай. Веса — weights_pct в процентах в порядке бумаг, только если клиент их назвал; не назвал — веса равные. Страйк — strike_pct в % от начального уровня корзины, по умолчанию 100. Пут на корзину не считается.
 - Автоколл: все названные бумаги передай в underlyings — корзина считается по худшей бумаге (worst-of). Считается в двух режимах. 1) Клиент назвал цену («по цене 98%», «за 97,5% номинала») — передай price_pct, сервер посчитает купон. 2) Клиент назвал купон («купон 15% годовых», «с купоном 12%») — передай coupon_pa, сервер посчитает цену. Не назвал ни цену, ни купон — не передавай ни то, ни другое: цена будет 100% номинала, сервер посчитает купон. price_pct и coupon_pa вместе не передавай никогда; если клиент назвал и цену, и купон и непонятно, что считать, — спроси. Клиент в уточнении меняет режим («а какая цена при купоне 14%?») — передай только новое, прежнее не повторяй. Условия по умолчанию: барьер защиты на погашении 70%, купонный барьер равен барьеру защиты, досрочное погашение при 100% начального уровня, наблюдения и купон раз в квартал, с эффектом памяти. Передавай только то, что клиент назвал сам: «барьер 60%» → barrier_pct 60; «купонный барьер 80%» → coupon_barrier_pct 80; «отзыв от 105%» → autocall_pct 105; «купон ежемесячно» → frequency monthly; «первый год без отзыва» → no_call_months 12; «без памяти» → memory false. Автоколл считается только на российские акции и индексы в рублях.
-- Клиент меняет условия прошлого расчёта («а на 3 года?», «а страйк 110?», «а с потолком +50%?», «а с защитой 90%?», «а с барьером 60%?», «а без Лукойла?») — вызови тот же инструмент снова, остальные условия возьми из прошлого расчёта.
-- ВСЁ ОСТАЛЬНОЕ НЕ СЧИТАЕШЬ И ИНСТРУМЕНТЫ НЕ ВЫЗЫВАЕШЬ: колл-спреды и опционы с потолком (потолок бывает только у защиты капитала), корзины в CALL, PUT и защите капитала (корзина бывает только у автоколла), дисконтные облигации, бустеры, реверс-конвертиблы, купонные варранты и любые другие структуры. На такую просьбу ответь, что в чате сейчас считаются CALL, PUT, защита капитала на один актив и автоколл на российские акции, и предложи похожий продукт из каталога или кнопку «Обсудить с Румбергом» — посчитает менеджер. Цифр по таким продуктам не называй, кроме тех, что есть в каталоге.`;
+- Клиент меняет условия прошлого расчёта («а на 3 года?», «а страйк 110?», «а по худшей?», «а с весами 50/30/20?», «а с потолком +50%?», «а с защитой 90%?», «а с барьером 60%?», «а без Лукойла?») — вызови тот же инструмент снова, остальные условия возьми из прошлого расчёта.
+- ВСЁ ОСТАЛЬНОЕ НЕ СЧИТАЕШЬ И ИНСТРУМЕНТЫ НЕ ВЫЗЫВАЕШЬ: колл-спреды и опционы с потолком (потолок бывает только у защиты капитала), пут на корзину, защита капитала на корзину (корзина бывает только у колла — price_basket — и у автоколла), дисконтные облигации, бустеры, реверс-конвертиблы, купонные варранты и любые другие структуры. На такую просьбу ответь, что в чате сейчас считаются CALL, PUT, колл на корзину, защита капитала на один актив и автоколл на российские акции, и предложи похожий продукт из каталога или кнопку «Обсудить с Румбергом» — посчитает менеджер. Цифр по таким продуктам не называй, кроме тех, что есть в каталоге.`;
 
 function pricerEnabled(env) {
   return !!((env.PRICER_MCP_URL || "").trim() && (env.PRICER_MCP_KEY || "").trim());
@@ -2546,6 +2587,134 @@ async function priceProtection(a, env, who, cat) {
   return out;
 }
 
+// Колл на корзину (см. блок констант BK_*). Всегда возвращает текст для клиента; log — строка для внутреннего лога.
+async function priceBasket(a, env, who, cat) {
+  const fail = (text) => ({ ok: false, text: PRICE_LEAK_RE.test(text) ? PRICE_LEAK_TEXT : text });
+  const tenor = priceTenor(a.tenor);
+  if (!tenor) return fail("Уточните срок — например, 1 год, 18 месяцев или полгода.");
+  if (tenor.days < PRICE_DAYS_MIN || tenor.days > PRICE_DAYS_MAX) {
+    return fail("Колл на корзину считаю на срок от недели до 5 лет. Уточните срок.");
+  }
+  let und = a.underlyings;
+  if (typeof und === "string") und = und.split(/[,;\/]+/);
+  if (!Array.isArray(und)) und = a.underlying ? [a.underlying] : [];
+  und = und.map((x) => String(x == null ? "" : x).trim()).filter(Boolean);
+  und = und.filter((x, i) => und.indexOf(x) === i);
+  if (!und.length) return fail("Уточните бумаги корзины — тикеры или названия компаний.");
+  if (und.length > BK_MAX_UND) {
+    return fail("В чате считаю корзину до " + BK_MAX_UND + " бумаг. Уберите лишние — или нажмите «Обсудить с Румбергом», посчитает менеджер.");
+  }
+  if (und.some((x) => priceOfzNum(x))) return fail(BK_BOND_TEXT);
+  const strike = a.strike_pct == null || a.strike_pct === "" ? 100 : Number(a.strike_pct);
+  if (!isFinite(strike) || strike < BK_STRIKE_MIN || strike > BK_STRIKE_MAX) {
+    return fail("Страйк корзины считаю в пределах " + BK_STRIKE_MIN + "–" + BK_STRIKE_MAX + "% от её начального уровня. Уточните страйк.");
+  }
+  // Одна бумага — это обычный колл
+  if (und.length === 1) return priceWarrant({ underlying: und[0], option_type: "call", tenor: a.tenor, strike_pct: strike }, env, who, cat);
+  const bt = String(a.basket_type || "").toLowerCase().replace(/[\s-]+/g, "_");
+  const avg = bt === "average" || bt === "avg", wo = bt === "worst_of" || bt === "wo";
+  if (!avg && !wo) return fail("Как считать уровень корзины: по среднему изменению бумаг или по худшей бумаге (worst-of)?");
+  let w = null;
+  if (Array.isArray(a.weights_pct) && a.weights_pct.length) {
+    if (wo) return fail("У корзины по худшей бумаге весов нет — выплата считается по самой слабой бумаге. Посчитать по среднему с этими весами?");
+    w = a.weights_pct.map(Number);
+    if (w.length !== und.length || w.some((x) => !isFinite(x) || x < 0)) {
+      return fail("Уточните веса: по одному на каждую бумагу корзины, в процентах — например, 50/30/20.");
+    }
+    const sum = w.reduce((x, y) => x + y, 0);
+    if (Math.abs(sum - 1) < 0.006) w = w.map((x) => x * 100);   // доли вместо процентов
+    else if (Math.abs(sum - 100) > 0.6) return fail("Веса бумаг должны в сумме давать 100% (сейчас " + priceNum(sum) + "%). Уточните веса.");
+    if (w.every((x) => Math.abs(x - w[0]) < 1e-9)) w = null;    // равные — как без весов
+  }
+
+  const rs = await Promise.all(und.map((u) => priceResolve(u, env)));
+  for (const r of rs) if (r.fail) return fail(r.fail);
+  if (rs.some((r) => r.isBond)) return fail(BK_BOND_TEXT);
+  if (new Set(rs.map((r) => r.ccy).filter(Boolean)).size > 1) return fail(BK_FX_TEXT);
+  const tickers = rs.map((r) => r.ticker);
+  if (new Set(tickers).size !== tickers.length) return fail("В корзине одна и та же бумага названа дважды. Уточните состав корзины.");
+  const names = rs.map((r) => priceAssetName(r.ticker, r.name, cat));
+  const listed = rs.every((r) => r.listed);
+
+  const key = ["bk", mskDate().key, tickers.join("/"), avg ? "avg" : "wo", w ? w.join("/") : "", tenor.expiry, strike].join("|");
+  const hit = PRICE_CACHE.get(key);
+  if (hit && Date.now() - hit.at < PRICE_CACHE_MS) return hit.out;
+
+  const args = {
+    underlyings: tickers, basket_type: avg ? "average" : "worst_of", expiry: tenor.expiry, call_strike: strike,
+    participation: 100, wrapper: "warrant", vol_shift: PRICE_VOL_SLIP, outputs: ["PV"], context: { user_id: who },
+  };
+  if (w) args.weights = Object.fromEntries(tickers.map((t, i) => [t, w[i]]));
+  const rubA = priceRubArgs(tickers);
+  if (rubA) Object.assign(args, rubA);
+  const unavailable = "Расчёт сейчас недоступен. Попробуйте позже или нажмите «Обсудить с Румбергом» — посчитает менеджер.";
+  const shown = tickers.map(priceShowTicker).join(", ");
+  let res;
+  try {
+    res = await mcpCall(env, "price_call_on_basket", args, listed ? PRICE_TIMEOUT_MS : PRICE_UNLISTED_TIMEOUT_MS);
+  } catch (e) {
+    const m = String((e && e.message) || e);
+    if (m === "pricer_timeout" && !listed) return fail("По одной из бумаг (" + shown + ") не нашёл рыночных данных. Проверьте тикеры.");
+    return fail(m === "pricer_timeout"
+      ? "Прайсер не успел посчитать. Попробуйте ещё раз через минуту или нажмите «Обсудить с Румбергом» — посчитает менеджер."
+      : unavailable);
+  }
+  const sc = res.structuredContent || {};
+  if (res.isError) {
+    const code = sc.error || "";
+    if (code === "rate_limited") return fail("Слишком много расчётов подряд. Попробуйте через минуту.");
+    if (code === "unknown_ticker" || code === "market_data_missing") {
+      return fail("По одной из бумаг (" + shown + ") нет рыночных данных — посчитать не могу. Проверьте тикеры.");
+    }
+    if (code === "invalid_term") return fail("С такими условиями посчитать не получилось. Проверьте срок, страйк и веса.");
+    return fail(unavailable);
+  }
+  if (sc.status === "needs_input") {
+    const q = (sc.questions || [])[0] || {};
+    if (q.field === "underlyings") return fail("По одной из бумаг (" + shown + ") нет рыночных данных. Проверьте тикеры.");
+    if (/^(quanto|currency|underlying_currencies)$/.test(String(q.field || ""))) return fail(BK_FX_TEXT);
+    return fail(unavailable);
+  }
+  const r = sc.result || {}, t = sc.terms || {};
+  const pv = Number(r.pv_pct);
+  if (!(pv > 0)) return fail(PRICE_LOW_TEXT);
+  const q = priceQuote(pv);
+  if (q < PRICE_MIN_QUOTE) return fail(PRICE_LOW_TEXT);
+  const ccy = String(r.currency || t.currency || "RUB");
+
+  const short = tickers.map((tk, i) => names[i] || priceShowTicker(tk));
+  const assets = tickers.map((tk, i) => (names[i] ? names[i] + " (" + tk + ")" : tk));
+  const label = avg ? "среднее по корзине" : "худшая из корзины";
+  const list = short.map((n, i) => n + (w ? " " + priceNum(w[i]) + "%" : "")).join(" / ");
+  const head = "CALL " + priceNum(strike) + " · " + label + ": " + list + " · " + tenor.label;
+  const lines = [
+    "**" + head + "**",
+    "Премия: **" + priceNum(q) + "% номинала** — индикативно",
+    "• Корзина: " + assets.join(", ") + (avg
+      ? " — уровень корзины считается по СРЕДНЕМУ изменению бумаг, " + (w ? "с весами " + tickers.map((tk, i) => tk + " " + priceNum(w[i]) + "%").join(", ") : "с равными весами")
+      : " — выплата считается по ХУДШЕЙ бумаге: той, что к экспирации выросла меньше всех"),
+    "• Страйк: " + priceNum(strike) + "% от начального уровня " + (avg ? "корзины" : "каждой бумаги"),
+    "• Выплата: " + (avg ? "рост корзины в среднем" : "рост худшей бумаги") + " выше страйка, в % номинала",
+    "• Безубыток: " + (avg ? "корзина в среднем" : "худшая бумага") + " выше " + priceNum(strike + q) + "% от начального уровня",
+    ccy !== "RUB" ? "• Номинал в валюте: " + (BK_CCY_NAME[ccy] || ccy) : null,
+    "• Риск ограничен уплаченной премией",
+  ].filter(Boolean);
+  const out = {
+    ok: true, text: lines.join("\n"), fair: pv, quote: q, ticker: tickers.join("/"), type: "call", tenor: tenor.expiry, strike,
+    log: tickers.join("/") + " колл на корзину · " + (avg ? "среднее" + (w ? " " + w.join("/") : "") : "worst-of") + " · K " + strike +
+      " · " + tenor.expiry + ": прайсер (вола +" + PRICE_VOL_SLIP + ") " + priceNum(pv) + "%, клиенту " + priceNum(q) + "%",
+  };
+  out.pq = await pqSave(env, {
+    v: 1, type: "warrant", structure: "call", strike, spot: 100,
+    name: "CALL " + priceNum(strike) + " · " + label + " · " + tenor.label,
+    underlying: short.join(" / "), ticker: tickers.join("/"), basket: tickers, basketMode: avg ? "avg" : "wo",
+    basketW: w, tenor: tenor.label, quote: q, currency: ccy, isBond: false, at: Date.now(),
+  });
+  PRICE_CACHE.set(key, { at: Date.now(), out });
+  if (PRICE_CACHE.size > 300) PRICE_CACHE.delete(PRICE_CACHE.keys().next().value);
+  return out;
+}
+
 // Автоколл: два режима (см. блок констант AC_*) — «цена → купон» и «купон → цена», маржа 2% в год
 // × срок в обоих. Активы разбирает тот же priceResolve, что у CALL/PUT; корзина — по худшей бумаге.
 // Всегда возвращает текст для клиента; log — строка для внутреннего лога (точки прайсера и итог).
@@ -3030,6 +3199,37 @@ function priceGuard(a, messages) {
   return { a };
 }
 
+// Колл на корзину — те же проверки срока; плюс клиент должен сказать, как считать корзину (по среднему или по
+// худшей), — иначе модель выберет сама. Назвал веса, а модель их не передала — переспрашиваем, а не считаем
+// поровну. Страйк деньгами у корзины не бывает — только в процентах от начального уровня.
+const BK_TYPE_RE = /средн|average|avg|худш|worst|(?:^|[^\p{L}])wo(?![\p{L}])/iu;
+const BK_W_RE = /(?:^|[^\p{L}])вес(?:а|ами|ам|ов|ом|у|е)?(?![\p{L}])|weights?|(?:^|[^\d.,\/])\d{1,3}(?:[.,]\d+)?\s*%?\s*\/\s*\d{1,3}(?:[.,]\d+)?\s*%?(?![\d.\/])|\d{1,3}(?:[.,]\d+)?\s*%?\s*\/\s*\d{1,3}(?:[.,]\d+)?\s*%?\s*\/(?!\s*\d{4})|\d{1,3}(?:[.,]\d+)?\s*%[^\n%]{1,30}\/[^\n%]{1,30}\d{1,3}(?:[.,]\d+)?\s*%/iu;
+function priceGuardBK(a, messages) {
+  const recent = [];
+  let follow = false;
+  for (let i = messages.length - 1; i >= 0 && recent.length < 4; i--) {
+    const m = messages[i];
+    if (m.role === "assistant" && PRICE_HEAD_RE.test(String(m.content || ""))) { follow = true; break; }
+    if (m.role === "user") recent.push(String(m.content || ""));
+  }
+  const last = recent[0] || "";
+  const und = Array.isArray(a.underlyings) ? a.underlyings.join(", ") : String(a.underlyings || "");
+  const what = "колл на корзину" + (und ? " " + und.slice(0, 60) : "");
+  if (!follow && !recent.some((t) => PRICE_TENOR_RE.test(t))) {
+    return { ask: "На какой срок посчитать " + what + "? Например, 1 год, 18 месяцев или полгода." };
+  }
+  if (!follow && !recent.some((t) => BK_TYPE_RE.test(t) || BK_W_RE.test(t))) {   // веса бывают только у среднего
+    return { ask: "Как считать уровень корзины: по среднему изменению бумаг или по худшей бумаге (worst-of)?" };
+  }
+  if (BK_W_RE.test(last) && !(Array.isArray(a.weights_pct) && a.weights_pct.length)) {
+    return { ask: "Уточните веса бумаг в процентах, в сумме 100% — например, 50/30/20." };
+  }
+  if (PRICE_STRIKE_ABS_RE.test(last)) {
+    return { ask: "У корзины страйк считается в процентах от её начального уровня — например, 100% или 110%. Какой взять?" };
+  }
+  return { a };
+}
+
 // Защита капитала — те же проверки, что у CALL/PUT, без страйка деньгами: срок только
 // названный клиентом (или из прошлого расчёта); назвал потолок, а модель его не передала —
 // переспрашиваем, а не считаем без потолка.
@@ -3099,10 +3299,10 @@ function priceGuardAC(a, messages) {
 }
 
 async function chatWithPricing(system, messages, env, opts) {
-  const first = await callDeepSeek(system + PRICING_PROMPT, messages, env, { tools: [PRICE_TOOL, PROT_TOOL, AC_TOOL], raw: true });
+  const first = await callDeepSeek(system + PRICING_PROMPT, messages, env, { tools: [PRICE_TOOL, BK_TOOL, PROT_TOOL, AC_TOOL], raw: true });
   const calls = (first.toolCalls || [])
     .filter((c) => c && c.function && (c.function.name === "price_warrant" || c.function.name === "price_protection" ||
-      c.function.name === "price_autocall"))
+      c.function.name === "price_autocall" || c.function.name === "price_basket"))
     .filter((c, _, all) => c.function.name !== "price_autocall" ||
       all.filter((x) => x.function.name === "price_autocall").indexOf(c) < AC_MAX_CALLS)
     .slice(0, PRICE_MAX_CALLS);
@@ -3130,6 +3330,10 @@ async function chatWithPricing(system, messages, env, opts) {
       const ga = priceGuardAC(a, messages);
       if (ga.ask) return { ok: false, text: ga.ask };
       used = ga.a; o = await priceAutocall(ga.a, envT, opts.who || "site-chat", opts.cat);
+    } else if (c.function.name === "price_basket") {
+      const gb = priceGuardBK(a, messages);
+      if (gb.ask) return { ok: false, text: gb.ask };
+      used = gb.a; o = await priceBasket(gb.a, envT, opts.who || "site-chat", opts.cat);
     } else if (c.function.name === "price_protection") {
       const gp = priceGuardProt(a, messages);
       if (gp.ask) return { ok: false, text: gp.ask };
