@@ -2612,7 +2612,9 @@ async function priceBasket(a, env, who, cat) {
   // Одна бумага — это обычный колл
   if (und.length === 1) return priceWarrant({ underlying: und[0], option_type: "call", tenor: a.tenor, strike_pct: strike }, env, who, cat);
   const bt = String(a.basket_type || "").toLowerCase().replace(/[\s-]+/g, "_");
-  const avg = bt === "average" || bt === "avg", wo = bt === "worst_of" || bt === "wo";
+  // веса без типа корзины — среднее: у корзины по худшей бумаге весов не бывает
+  const avg = bt === "average" || bt === "avg" || (!bt && Array.isArray(a.weights_pct) && a.weights_pct.length > 0);
+  const wo = bt === "worst_of" || bt === "wo";
   if (!avg && !wo) return fail("Как считать уровень корзины: по среднему изменению бумаг или по худшей бумаге (worst-of)?");
   let w = null;
   if (Array.isArray(a.weights_pct) && a.weights_pct.length) {
@@ -3203,7 +3205,7 @@ function priceGuard(a, messages) {
 // худшей), — иначе модель выберет сама. Назвал веса, а модель их не передала — переспрашиваем, а не считаем
 // поровну. Страйк деньгами у корзины не бывает — только в процентах от начального уровня.
 const BK_TYPE_RE = /средн|average|avg|худш|worst|(?:^|[^\p{L}])wo(?![\p{L}])/iu;
-const BK_W_RE = /(?:^|[^\p{L}])вес(?:а|ами|ам|ов|ом|у|е)?(?![\p{L}])|weights?|(?:^|[^\d.,\/])\d{1,3}(?:[.,]\d+)?\s*%?\s*\/\s*\d{1,3}(?:[.,]\d+)?\s*%?(?![\d.\/])|\d{1,3}(?:[.,]\d+)?\s*%?\s*\/\s*\d{1,3}(?:[.,]\d+)?\s*%?\s*\/(?!\s*\d{4})|\d{1,3}(?:[.,]\d+)?\s*%[^\n%]{1,30}\/[^\n%]{1,30}\d{1,3}(?:[.,]\d+)?\s*%/iu;
+const BK_W_RE = /(?:^|[^\p{L}])вес(?:а|ами|ам|ов|ом|у|е)?(?![\p{L}])|weights?|(?:^|[^\d.,\/])\d{1,3}(?:[.,]\d+)?\s*%?\s*\/\s*\d{1,3}(?:[.,]\d+)?\s*%?(?![\d.\/])|\d{1,3}(?:[.,]\d+)?\s*%?\s*\/\s*\d{1,3}(?:[.,]\d+)?\s*%?\s*\/(?!\s*\d{4})|\d{1,3}(?:[.,]\d+)?\s*%[^\n%]{1,30}\/[^\n%]{1,30}\d{1,3}(?:[.,]\d+)?\s*%|\p{L}{2,}\)?\s*[—–:-]?\s*\d{1,3}(?:[.,]\d+)?\s*%\s*(?:[,;]|и(?![\p{L}]))\s*\p{L}{2,}\)?\s*[—–:-]?\s*\d{1,3}(?:[.,]\d+)?\s*%|\d{1,3}(?:[.,]\d+)?\s*%\s*(?:на\s+)?\p{L}{2,}\s*(?:[,;]|и(?![\p{L}]))\s*\d{1,3}(?:[.,]\d+)?\s*%\s*(?:на\s+)?\p{L}{2,}/iu;
 function priceGuardBK(a, messages) {
   const recent = [];
   let follow = false;
@@ -3218,7 +3220,8 @@ function priceGuardBK(a, messages) {
   if (!follow && !recent.some((t) => PRICE_TENOR_RE.test(t))) {
     return { ask: "На какой срок посчитать " + what + "? Например, 1 год, 18 месяцев или полгода." };
   }
-  if (!follow && !recent.some((t) => BK_TYPE_RE.test(t) || BK_W_RE.test(t))) {   // веса бывают только у среднего
+  const hasW = Array.isArray(a.weights_pct) && a.weights_pct.length > 0;   // модель разобрала веса — их назвал клиент
+  if (!follow && !hasW && !recent.some((t) => BK_TYPE_RE.test(t) || BK_W_RE.test(t))) {   // веса бывают только у среднего
     return { ask: "Как считать уровень корзины: по среднему изменению бумаг или по худшей бумаге (worst-of)?" };
   }
   if (BK_W_RE.test(last) && !(Array.isArray(a.weights_pct) && a.weights_pct.length)) {
