@@ -1796,6 +1796,10 @@ const PRICE_MAX_CALLS = 3;          // расчётов в одном ответ
 // пут на худшую бумагу) — вола ниже. Сдвигается вся поверхность (vol_shift сервера прайсинга, скью и кривизна
 // сохраняются). Маржа (÷ 0,8 у CALL/PUT, 2% × срок у защиты и автоколла) — сверх этого.
 const PRICE_VOL_SLIP = 5;
+// У автоколла слиппадж меньше (решение Руслана 18.11.2026: «прайсинг автоколов очень плохой, давай слиппадж
+// уменьшать»): −5 волов поверх маржи 2% × срок срезали купон на 2–3,5 п. (Сбер 2 года — 3,5% годовых).
+// Каждый вол — примерно 0,5–1 п. купона.
+const AC_VOL_SLIP = 2;
 const PRICE_TIMEOUT_MS = 60000;     // прайсер на прогретом сервере отвечает за 3–6 с
 const PRICE_UNLISTED_TIMEOUT_MS = 25000;  // тикер не из справочника: существующий находится за секунды
 const PRICE_CACHE_MS = 10 * 60 * 1000;
@@ -2838,7 +2842,7 @@ async function priceAutocall(a, env, who, cat) {
   const base = {
     underlyings: tickers, frequency: fqKey, coupon_barrier: CB, barrier: B, autocall_trigger: AC,
     non_call_periods: nonCall, memory, basket_type: "worst_of", currency: "RUB",
-    vol_shift: -PRICE_VOL_SLIP, outputs: ["PV"], context: { user_id: who },
+    vol_shift: -AC_VOL_SLIP, outputs: ["PV"], context: { user_id: who },
   };
   const rubB = priceRubArgs(tickers);
   if (rubB) base.underlying_currencies = rubB.underlying_currencies;
