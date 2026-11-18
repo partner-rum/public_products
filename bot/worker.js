@@ -13,7 +13,10 @@
 //   ANTHROPIC_API_KEY — (claude, запасной) ключ Claude API. Нужен только при CHAT_PROVIDER=claude.
 //   CHAT_MODEL        — (опц.) модель Claude, по умолчанию claude-haiku-4-5.
 //   CHAT_RATE_LIMIT   — (опц.) биндинг Rate Limiting (Worker → Settings → Bindings → Rate limiting)
-//                        для антиспама на /chat, напр. 15 запросов / 60 сек с одного IP. При превышении — 429.
+//                        для антиспама на /chat, /lead и расчётах: 50 запросов / 60 сек с адреса посетителя
+//                        (wrangler.toml). Адрес — clientIp(): за нашим nginx берётся X-Real-IP. При превышении — 429.
+//   PROXY_IPS         — (опц.) адреса нашего сервера через запятую (IPv4 и IPv6), с которых воркер верит X-Real-IP.
+//                        По умолчанию — VPS invest.rumberg.ru (PROXY_IPS_DEF).
 //   CHAT_LOG_CHAT_ID  — (опц.) id TG-чата/канала для лога вопросов AI-чата (без контактов:
 //                        вопрос/ответ/страница). Не задан — лог не ведётся.
 //   CHAT_BLOCKED_COUNTRIES — (опц.) страны (ISO-2, через запятую), где AI-чат отключён. По умолчанию ПУСТО
@@ -115,7 +118,7 @@ async function handleLead(request, env, cors) {
   // СВОИМ ключом: иначе разговор с ассистентом съедал бы квоту заявки, а именно
   // заявка — то, что терять нельзя. Биндинга нет — шаг пропускается, как в /chat.
   if (env.CHAT_RATE_LIMIT) {
-    const ip = request.headers.get("CF-Connecting-IP") || "anon";
+    const ip = clientIp(request, env);
     try {
       const rl = await env.CHAT_RATE_LIMIT.limit({ key: "lead:" + ip });
       if (rl && rl.success === false) return json({ ok: false, error: "rate_limited" }, 429, cors);
@@ -1486,6 +1489,20 @@ function productContext(cat, pageUrl) {
   return "";
 }
 
+// Адрес посетителя. Сайт ходит в воркер через наш сервер (nginx /api/ → workers.dev), поэтому в
+// CF-Connecting-IP стоит адрес сервера, и лимиты по нему были общими на всех посетителей. Настоящий
+// адрес nginx кладёт в X-Real-IP. Верим ему, ТОЛЬКО если запрос пришёл с нашего сервера: иначе любой
+// подставит заголовок, зайдя на workers.dev напрямую, и обойдёт лимит. Адреса сервера — PROXY_IPS
+// (через запятую), по умолчанию IPv4 и IPv6 VPS invest.rumberg.ru.
+const PROXY_IPS_DEF = "5.42.116.58,2a03:6f00:a::2:db23";
+function clientIp(request, env) {
+  const cf = String(request.headers.get("CF-Connecting-IP") || "").trim();
+  const real = String(request.headers.get("X-Real-IP") || "").trim();
+  const proxies = String((env && env.PROXY_IPS) || PROXY_IPS_DEF).split(",").map((x) => x.trim().toLowerCase()).filter(Boolean);
+  if (cf && real && proxies.includes(cf.toLowerCase()) && /^[0-9a-fA-F:.]{3,45}$/.test(real)) return real;
+  return cf || "anon";
+}
+
 async function handleChat(request, env, cors, ctx) {
   // Защита от абуза: только с нашего сайта (если задан ALLOW_ORIGIN)
   const origin = request.headers.get("Origin") || "";
@@ -1493,9 +1510,9 @@ async function handleChat(request, env, cors, ctx) {
     return json({ ok: false, error: "forbidden_origin" }, 403, cors);
   }
 
-  // Антиспам по IP (если настроен биндинг Rate Limiting CHAT_RATE_LIMIT; иначе шаг пропускается)
+  // Антиспам по IP посетителя (если настроен биндинг Rate Limiting CHAT_RATE_LIMIT; иначе шаг пропускается)
   if (env.CHAT_RATE_LIMIT) {
-    const ip = request.headers.get("CF-Connecting-IP") || "anon";
+    const ip = clientIp(request, env);
     try {
       const rl = await env.CHAT_RATE_LIMIT.limit({ key: ip });
       if (rl && rl.success === false) return json({ ok: false, error: "rate_limited" }, 429, cors);
@@ -1584,7 +1601,7 @@ async function handleChat(request, env, cors, ctx) {
         who: partnerMode ? "site-desk" : "site-chat",
         page: pageUrl, title: pageTitle, partnerRef,
         limiter: env.CHAT_RATE_LIMIT,
-        ip: request.headers.get("CF-Connecting-IP") || "anon",
+        ip: clientIp(request, env),
         cat,
       });
       reply = out.reply; priced = out.priced;
@@ -1994,7 +2011,23 @@ function pricerEnabled(env) {
 // MCP Streamable HTTP в stateless-режиме: один POST tools/call без initialize и
 // без сессии. Ответ — SSE-событие (event: message / data: {...}) или обычный
 // JSON, в зависимости от настройки сервера; разбираем оба.
+// Один повтор, если сбой проходит сам: сервер прайсинга не ответил, ответил 502–504, прислал битый
+// ответ или сказал «бэкенд недоступен» (так выглядит холодный старт прайсера). Таймаут не повторяем —
+// клиент и так ждал минуту; отказы по условиям, лимиту и тикеру тоже: повтор дал бы то же самое.
+const PRICE_RETRY_MS = 1500;
 async function mcpCall(env, name, args, timeoutMs) {
+  const again = () => new Promise((r) => setTimeout(r, PRICE_RETRY_MS)).then(() => mcpCallOnce(env, name, args, timeoutMs));
+  let res;
+  try {
+    res = await mcpCallOnce(env, name, args, timeoutMs);
+  } catch (e) {
+    if (/^pricer_(?:unreachable|rpc|http_50[234])$/.test(String((e && e.message) || e))) return again();
+    throw e;
+  }
+  if (res && res.isError && ((res.structuredContent || {}).error === "backend_unavailable")) return again();
+  return res;
+}
+async function mcpCallOnce(env, name, args, timeoutMs) {
   const ac = new AbortController();
   const tm = setTimeout(() => ac.abort(), timeoutMs || PRICE_TIMEOUT_MS);
   let r, text;
@@ -2083,6 +2116,12 @@ function priceNum(x, digits) {
   return new Intl.NumberFormat("ru-RU", { maximumFractionDigits: digits == null ? 2 : digits }).format(x);
 }
 const PRICE_CCY = { RUB: "₽", USD: "$", EUR: "€", CNY: "¥" };
+// Индексы котируются в пунктах: страйк индекса МосБиржи — «2 495,86 пункта», а не «₽».
+const PRICE_INDEX_RE = /^(?:IMOEX2?|RTSI|RTS|RGBI(?:TR)?|MCFTRR?|MOEX(?:BC|BMI|OG|FN|IT|MM|EU|TL|CH|CN|RE|TN|MT)|SPX|NDX|DJI|CSI_300|HSI|N225|RUM[A-Z_]+)$/;
+function priceUnit(ticker, x, sign) {
+  if (!PRICE_INDEX_RE.test(String(ticker || ""))) return sign;
+  return Number(x) % 1 ? "пункта" : acPlural(Math.round(Number(x)), "пункт", "пункта", "пунктов");
+}
 
 // Маржа и округление: котировка = цена прайсера / (1 − 0,2), вверх до шага доски.
 function priceQuote(pv) {
@@ -2345,7 +2384,7 @@ async function priceWarrant(a, env, who, cat, raw) {
     if (!(sp > 0)) return fail("Не удалось перевести страйк в проценты от текущей цены. Назовите страйк в процентах — например, 110%.");
     strike = Math.round(strikeAbs / sp * 1000) / 10;
     if (strike < 20 || strike > 300) {
-      const c0 = String(r.currency || t.currency || "RUB"), u = isBond ? "% номинала" : " " + (PRICE_CCY[c0] || c0);
+      const c0 = String(r.currency || t.currency || "RUB"), u = isBond ? "% номинала" : " " + priceUnit(ticker, strikeAbs, PRICE_CCY[c0] || c0);
       return fail("Страйк " + priceNum(strikeAbs) + u + " — это " + priceNum(strike, 1) + "% от текущей цены (" + priceNum(sp) + u +
         "). Считаю страйк в пределах 20–300% от текущей цены — уточните, пожалуйста.");
     }
@@ -2383,7 +2422,7 @@ async function priceWarrant(a, env, who, cat, raw) {
     "**" + head + " · " + asset + " · " + tenor.label + "**",
     "Премия: **" + priceNum(q) + "% номинала** — индикативно",
     "• Страйк: " + priceNum(strike) + "% от текущей цены" +
-      (isFinite(kAbs) ? " — " + priceNum(kAbs) + (isBond ? "% номинала облигации" : " " + sign) : ""),
+      (isFinite(kAbs) ? " — " + priceNum(kAbs) + (isBond ? "% номинала облигации" : " " + priceUnit(ticker, kAbs, sign)) : ""),
   ];
   lines.push(type === "put"
     ? "• Выплата: падение актива ниже страйка, в % номинала"
@@ -2784,6 +2823,7 @@ function pqId() {
 async function pqSave(env, rec) {
   if (!env.POST_KV) return "";
   if (env.__code) rec.code = env.__code;
+  env.__pqRec = rec;   // chatWithPricing кладёт запись листа рядом с ответом в кэше — для повторов
   const id = pqId();
   try { await env.POST_KV.put("pq:" + id, JSON.stringify(rec), { expirationTtl: PQ_TTL }); return id; }
   catch (e) { return ""; }
@@ -2824,8 +2864,57 @@ function calcTraceItem(name, args, result) {
 }
 async function calcSave(env, rec) {
   if (!env.POST_KV || !rec.code) return false;
-  try { await env.POST_KV.put("calc:" + rec.code, JSON.stringify(rec), { expirationTtl: CALC_TTL }); return true; }
+  try { await env.POST_KV.put("calc:" + rec.code, JSON.stringify(rec), { expirationTtl: CALC_TTL }); }
   catch (e) { return false; }
+  // Оглавление для /calcs: ключ упорядочен от новых к старым, всё для строки списка — в metadata
+  // (список читается одним list без get на каждую запись). Хранится 90 дней, сама запись — год.
+  try {
+    const lines = String(rec.answer || "").split("\n");
+    const fig = ((lines[1] || "").match(/\*\*([^*]{1,40})\*\*/) || [])[1] || "";
+    await env.POST_KV.put("calcx:" + String(9999999999999 - Number(rec.at)).padStart(13, "0") + ":" + rec.code, "", {
+      expirationTtl: CALCX_TTL,
+      metadata: { at: rec.at, h: (lines[0] || "").replace(/\*\*/g, "").slice(0, 110), v: fig, pr: rec.partner || "",
+        p: calcPath(rec.page), c: rec.cached_from || "" },
+    });
+  } catch (e) { /* оглавление необязательно */ }
+  return true;
+}
+const CALCX_TTL = 90 * 24 * 3600;
+function calcPath(u) {
+  try { const x = new URL(String(u || "")); return (x.pathname + x.search).replace(/^\/$/, "/index.html").slice(0, 40); }
+  catch (e) { return ""; }
+}
+// /calcs [число | текст] — последние расчёты клиентов в чате (по умолчанию 15, до 40); текст — фильтр
+// по заголовку, странице, столу партнёра и коду среди последних 300.
+async function calcList(env, arg) {
+  if (!env.POST_KV) return "Хранилище (POST_KV) не подключено.";
+  const s = String(arg || "").trim().slice(0, 40);
+  const isN = /^\d{1,3}$/.test(s);
+  const n = isN ? Math.min(40, Math.max(1, Number(s))) : 15;
+  const filt = s && !isN ? s.toLowerCase() : "";
+  let keys = [];
+  try { keys = ((await env.POST_KV.list({ prefix: "calcx:", limit: filt ? 300 : n })).keys) || []; }
+  catch (e) { return "Не удалось прочитать список расчётов."; }
+  if (filt) {
+    keys = keys.filter((k) => (k.name + " " + JSON.stringify(k.metadata || {})).toLowerCase()
+      .indexOf(filt.replace(/-/g, "")) >= 0 || (k.name + " " + JSON.stringify(k.metadata || {})).toLowerCase().indexOf(filt) >= 0).slice(0, n);
+  }
+  if (!keys.length) {
+    return filt ? "Среди последних 300 расчётов «" + esc(s) + "» нет."
+      : "Расчётов из чата пока нет (список ведётся с 18.11.2026).";
+  }
+  const L = ["🧮 <b>Расчёты из чата</b>" + (filt ? " · «" + esc(s) + "»" : "") + ", последние " + keys.length + ":"];
+  for (const k of keys) {
+    const m = k.metadata || {}, code = k.name.split(":").pop();
+    const dt = new Date(Number(m.at) || 0).toLocaleString("ru-RU", { timeZone: "Europe/Moscow",
+      day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+    const line = "<code>" + calcShow(code) + "</code> " + esc(dt) + " · " + esc(m.h || "?") + (m.v ? " — " + esc(m.v) : "") +
+      (m.pr ? " · стол " + esc(m.pr) : "") + (m.p ? " · " + esc(m.p) : "") + (m.c ? " · повтор " + calcShow(m.c) : "");
+    if (L.join("\n").length + line.length > 3800) { L.push("…список обрезан — уточните: /calcs 10 или /calcs SBER"); break; }
+    L.push(line);
+  }
+  L.push("Подробно по одному: /calc КОД");
+  return L.join("\n");
 }
 // /calc <код | ссылка на one-pager | id из ?pq=> → карточка расчёта для доверенных
 async function calcCard(env, input) {
@@ -2852,7 +2941,9 @@ async function calcCard(env, input) {
   if (rec.pq) L.push("One-pager: " + esc((env.SITE_BASE || "https://invest.rumberg.ru/").replace(/\/?$/, "/") + "onepager.html?pq=" + rec.pq));
   if (rec.model_args) L.push("Разбор модели: <code>" + esc(JSON.stringify(rec.model_args).slice(0, 400)) + "</code>");
   const tr = rec.trace || [];
-  L.push(tr.length ? "Вызовы прайсера (" + tr.length + "):" : "Вызовов прайсера нет — ответ взят из кэша расчёта (до 10 минут).");
+  L.push(tr.length ? "Вызовы прайсера (" + tr.length + "):"
+    : rec.cached_from ? "Повтор расчёта " + calcShow(rec.cached_from) + " из кэша (до 10 минут): прайсер не вызывался, вызовы — в /calc " + calcShow(rec.cached_from) + "."
+    : "Вызовов прайсера нет — ответ взят из кэша расчёта (до 10 минут).");
   tr.slice(0, 6).forEach((x, i) => {
     const sp = x.spots ? Object.entries(x.spots).map(([k, v]) => k + " " + v).join(", ") : "";
     const vo = x.vols ? Object.entries(x.vols).map(([k, v]) => k + " " + (v && typeof v === "object" ? v.short + "/" + v.long : v)).join(", ") : "";
@@ -3044,18 +3135,23 @@ async function chatWithPricing(system, messages, env, opts) {
       used = g.a; o = await priceWarrant(g.a, envT, opts.who || "site-chat", opts.cat);
     }
     if (!o || !o.ok) return o;
-    // Ответ из кэша (тот же расчёт за последние 10 минут): код тот же, что у первого показа —
-    // цифры и one-pager у них одни. Новый расчёт — новый код и запись.
-    if (!o.code) {
-      o.code = code;
-      await calcSave(env, {
-        v: 1, code, at: Date.now(), kind: c.function.name, question, page: opts.page || "",
-        title: opts.title || "", partner: opts.partnerRef || "", model_args: used,
-        answer: o.text, quote: o.quote == null ? null : o.quote, fair: o.fair == null ? null : o.fair,
-        pq: o.pq || "", trace,
-      });
+    // Ответ из кэша (тот же расчёт у кого-то за последние 10 минут): прайсер не вызывался, цифры те же,
+    // но у показа свой код, своя запись (со ссылкой на первый расчёт и ЭТИМ вопросом) и своя копия листа.
+    const first = o.code || "";
+    const r = Object.assign({}, o, { code });
+    if (first) {
+      if (o._pq) r.pq = await pqSave(envT, Object.assign({}, o._pq, { at: Date.now() }));
+    } else {
+      o.code = code;   // объект лежит в кэше: следующий показ поймёт, что это повтор
+      if (envT.__pqRec) Object.defineProperty(o, "_pq", { value: envT.__pqRec, enumerable: false, writable: true });
     }
-    return o;
+    await calcSave(env, {
+      v: 1, code, at: Date.now(), kind: c.function.name, question, page: opts.page || "",
+      title: opts.title || "", partner: opts.partnerRef || "", model_args: used,
+      answer: r.text, quote: r.quote == null ? null : r.quote, fair: r.fair == null ? null : r.fair,
+      pq: r.pq || "", trace, cached_from: first,
+    });
+    return r;
   }));
   // Под каждым удачным расчётом — код расчёта и ссылка на one-pager (chat.js рисует её кнопкой).
   const reply = outs.map((o) => o.text +
@@ -6565,6 +6661,15 @@ async function handleTelegram(request, env, ctx) {
       // См. комментарий у «Пересобрать»: вебхук отвечает сразу, генерация — после ответа
       const job = sendMorningDraft(env, msg.text, msg.chat.id);
       if (ctx) ctx.waitUntil(job); else await job;
+      return new Response("ok");
+    }
+
+    // ---- Последние расчёты из чата: /calcs [число | текст]. Руслан и доверенные, в личке.
+    if (/^\/calcs(?:@\w+)?(?:\s|$)/.test(msg.text)) {
+      if (trusted.includes(String(from.id)) && msg.chat && msg.chat.type === "private") {
+        const list = await calcList(env, msg.text.replace(/^\/calcs(?:@\w+)?\s*/, ""));
+        await tg(env, "sendMessage", { chat_id: msg.chat.id, text: list, parse_mode: "HTML", disable_web_page_preview: true });
+      }
       return new Response("ok");
     }
 
