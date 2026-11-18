@@ -3,7 +3,7 @@
 // Источники: ЦБ (ключевая, RUONIA), MOEX ISS (RUSFAR, БПИФы, ОФЗ),
 // Финуслуги (вклады и накопительные счета — витрина МосБиржи).
 window.RATES = {
-  "updated": "2026-11-18 10:32",
+  "updated": "2026-11-18 13:32",
   "cbr": {
     "key": {
       "rate": 14.0,
@@ -19,82 +19,82 @@ window.RATES = {
       "id": "RUSFAR",
       "term": "овернайт",
       "days": 1,
-      "rate": 13.78
+      "rate": 13.84
     },
     {
       "id": "RUSFAR1W",
       "term": "1 неделя",
       "days": 7,
-      "rate": 13.85
+      "rate": 13.88
     },
     {
       "id": "RUSFAR2W",
       "term": "2 недели",
       "days": 14,
-      "rate": 13.91
+      "rate": 13.93
     },
     {
       "id": "RUSFAR1M",
       "term": "1 месяц",
       "days": 30,
-      "rate": 13.98
+      "rate": 14.0
     },
     {
       "id": "RUSFAR3M",
       "term": "3 месяца",
       "days": 90,
-      "rate": 14.07
+      "rate": 14.06
     }
   ],
   "funds": [
     {
       "id": "BCSD",
       "name": "БКС Денежный рынок",
-      "price": 14.711,
+      "price": 14.71,
       "ter": 0.2,
-      "rate": 13.58
+      "rate": 13.64
     },
     {
       "id": "MONY",
       "name": "АК БАРС Денежный рынок",
-      "price": 135.62,
+      "price": 135.84,
       "ter": 0.2,
-      "rate": 13.58
+      "rate": 13.64
     },
     {
       "id": "LQDT",
       "name": "Ликвидность (ВИМ)",
       "price": 2.1362,
       "ter": 0.29,
-      "rate": 13.49
+      "rate": 13.55
     },
     {
       "id": "SBMM",
       "name": "Первая Сберегательный",
-      "price": 19.8745,
+      "price": 19.875,
       "ter": 0.3,
-      "rate": 13.48
+      "rate": 13.54
     },
     {
       "id": "AMNR",
       "name": "АТОН Накопительный",
-      "price": 160.557,
+      "price": 160.56,
       "ter": 0.3,
-      "rate": 13.48
+      "rate": 13.54
     },
     {
       "id": "AKMM",
       "name": "Альфа Денежный рынок",
-      "price": 181.74,
+      "price": 181.72,
       "ter": 0.69,
-      "rate": 13.09
+      "rate": 13.15
     },
     {
       "id": "TMON",
       "name": "Т-Капитал Денежный рынок",
       "price": 168.03,
       "ter": 1.15,
-      "rate": 12.63
+      "rate": 12.69
     }
   ],
   "ofz": [
@@ -103,7 +103,7 @@ window.RATES = {
       "name": "ОФЗ 26207",
       "maturity": "2027-02-03",
       "years": 0.21,
-      "rate": 12.78
+      "rate": 12.95
     },
     {
       "id": "SU26232RMFS7",
@@ -117,14 +117,14 @@ window.RATES = {
       "name": "ОФЗ 26212",
       "maturity": "2028-01-19",
       "years": 1.17,
-      "rate": 13.37
+      "rate": 13.58
     },
     {
       "id": "SU26236RMFS8",
       "name": "ОФЗ 26236",
       "maturity": "2028-05-17",
       "years": 1.5,
-      "rate": 14.67
+      "rate": 14.66
     }
   ],
   "deposits": [
@@ -250,6 +250,22 @@ window.RATES = {
       "daysTo": 61,
       "minAmount": 10000,
       "url": "https://finuslugi.ru/vklady/vtb_vygodnoe_nachalo",
+      "promo": true,
+      "floating": false,
+      "refill": false,
+      "capitalization": false,
+      "feature": null
+    },
+    {
+      "bank": "ВТБ",
+      "name": "Вместе",
+      "rate": 20.0,
+      "kind": "deposit",
+      "termMonths": 2,
+      "daysFrom": 61,
+      "daysTo": 370,
+      "minAmount": 10000,
+      "url": "https://finuslugi.ru/vklady/vtb_vmeste",
       "promo": true,
       "floating": false,
       "refill": false,
@@ -465,22 +481,6 @@ window.RATES = {
       "feature": null
     },
     {
-      "bank": "МТС Банк",
-      "name": "МТС Счет (на ежедневный остаток)",
-      "rate": 15.5,
-      "kind": "saving",
-      "termMonths": 0,
-      "daysFrom": 1,
-      "daysTo": 61,
-      "minAmount": 1,
-      "url": "https://finuslugi.ru/vklady/mts_bank_mts_schet",
-      "promo": false,
-      "floating": false,
-      "refill": true,
-      "capitalization": true,
-      "feature": null
-    },
-    {
       "bank": "ЛОКО-Банк",
       "name": "«Локо-Счет Плюс» на минимальный остаток",
       "rate": 15.0,
@@ -529,20 +529,20 @@ window.RATES = {
       "feature": null
     },
     {
-      "bank": "Вайлдберриз Банк",
-      "name": "Оптимальный",
+      "bank": "Московский Кредитный Банк",
+      "name": "МКБ. Перспектива (% в конце срока)",
       "rate": 14.7,
       "kind": "deposit",
       "termMonths": 6,
-      "daysFrom": 90,
-      "daysTo": 365,
-      "minAmount": 50000,
-      "url": "https://finuslugi.ru/vklady/wbbank_optimalnyy",
+      "daysFrom": 95,
+      "daysTo": 1100,
+      "minAmount": 10000,
+      "url": "https://finuslugi.ru/vklady/mkb_mkb_perspektiva_procenty_v_konce_sroka",
       "promo": false,
       "floating": false,
       "refill": false,
       "capitalization": false,
-      "feature": null
+      "feature": "Повышенный процент за покупки"
     },
     {
       "bank": "Газпромбанк",
