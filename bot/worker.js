@@ -2001,6 +2001,17 @@ const AC_TOOL = {
 // Названия — как у корзин на доске: «CALL 100 · среднее по корзине · 1 год», «… · худшая из корзины · …».
 const BK_MAX_UND = 5;
 const BK_STRIKE_MIN = 50, BK_STRIKE_MAX = 200;
+// Шум Монте-Карло (ревью 18.11.2026): тот же запрос прайсер повторяет точь-в-точь, а соседние условия дают цену
+// с разбросом σ ≈ 0,35 п. у среднего и 0,25 п. у худшей бумаги (страйк 100,00…100,05 — клиенту 21 или 22%).
+// Поэтому корзина считается шесть раз с участием около 100% — цена строго пропорциональна участию — и берётся
+// среднее, приведённое к участию 100%: разброс среднего в √6 раз меньше, а цифра при тех же условиях повторяется.
+const BK_POINTS = [99.5, 99.7, 99.9, 100.1, 100.3, 100.5];
+const BK_POINTS_MIN = 4;   // столько расчётов из BK_POINTS должно удаться; меньше — честный отказ
+const BK_W_TOL = 1;   // веса в сумме 99–101% (66,6/33,3; 33/33/33) — доводим до 100, дальше — переспрос
+const BK_PUT_TEXT = "Пут на корзину в чате не считаю — по корзине считаю только колл: по среднему изменению бумаг или по " +
+  "худшей бумаге. Пут посчитаю на одну бумагу, а пут на корзину посчитает менеджер: нажмите «Обсудить с Румбергом».";
+const BK_BEST_TEXT = "Корзину по лучшей бумаге (best-of) в чате не считаю — только по среднему изменению бумаг или по худшей " +
+  "бумаге (worst-of). Посчитать один из этих вариантов?";
 const BK_FX_TEXT = "Корзину в чате считаю из бумаг, которые торгуются в одной валюте — например, только российские " +
   "или только американские акции. Смешанную корзину посчитает менеджер: нажмите «Обсудить с Румбергом».";
 const BK_BOND_TEXT = "Корзину с облигациями в чате не считаю. Нажмите «Обсудить с Румбергом» — посчитает менеджер.";
@@ -2166,7 +2177,8 @@ const PRICE_CCY = { RUB: "₽", USD: "$", EUR: "€", CNY: "¥" };
 const PRICE_INDEX_RE = /^(?:IMOEX2?|RTSI|RTS|RGBI(?:TR)?|MCFTRR?|MOEX(?:BC|BMI|OG|FN|IT|MM|EU|TL|CH|CN|RE|TN|MT)|SPX|NDX|DJI|CSI_300|HSI|N225|RUM[A-Z_]+)$/;
 function priceUnit(ticker, x, sign) {
   if (!PRICE_INDEX_RE.test(String(ticker || ""))) return sign;
-  return Number(x) % 1 ? "пункта" : acPlural(Math.round(Number(x)), "пункт", "пункта", "пунктов");
+  const r = Math.round(Number(x) * 100) / 100;   // как печатает priceNum: 2 496,004 → «2 496 пунктов», а не «пункта»
+  return r % 1 ? "пункта" : acPlural(Math.round(r), "пункт", "пункта", "пунктов");
 }
 
 // Маржа и округление: котировка = цена прайсера / (1 − 0,2), вверх до шага доски.
@@ -2528,6 +2540,11 @@ async function priceProtection(a, env, who, cat) {
     args: Object.assign({ participation: p, protection: floor, wrapper: "note", currency: "RUB" }, cap != null ? { cap: 100 + cap } : {}) });
   const n1 = await priceWarrant(base, env, who, cat, note(100));
   if (!n1.ok) return n1;
+  // Готовый ответ — в кэш, как у колла и корзины: повтор тех же условий в течение 10 минут — тот же объект,
+  // и chatWithPricing запишет его как повтор (свой код со ссылкой на первый расчёт, своя копия листа).
+  const pkey = ["prot", mskDate().key, n1.ticker, floor, K, cap == null ? "" : cap, tenor.expiry].join("|");
+  const phit = PRICE_CACHE.get(pkey);
+  if (phit && Date.now() - phit.at < PRICE_CACHE_MS) return phit.out;
   // Тикер второго расчёта — уже разобранный: справочник второй раз не нужен
   const n2 = await priceWarrant({ ...base, underlying: n1.ticker }, env, who, cat, note(200));
   if (!n2.ok) return n2;
@@ -2584,6 +2601,8 @@ async function priceProtection(a, env, who, cat) {
     name: title, underlying: asset, ticker: n1.ticker, tenor: tenor.label, quote: 100,
     currency: "RUB", isBond: false, at: Date.now(),
   });
+  PRICE_CACHE.set(pkey, { at: Date.now(), out });
+  if (PRICE_CACHE.size > 300) PRICE_CACHE.delete(PRICE_CACHE.keys().next().value);
   return out;
 }
 
@@ -2617,16 +2636,23 @@ async function priceBasket(a, env, who, cat) {
   const wo = bt === "worst_of" || bt === "wo";
   if (!avg && !wo) return fail("Как считать уровень корзины: по среднему изменению бумаг или по худшей бумаге (worst-of)?");
   let w = null;
-  if (Array.isArray(a.weights_pct) && a.weights_pct.length) {
+  const wIn = bkWeightsArr(a.weights_pct, und);
+  const wAsk = "Уточните веса: по одному на каждую бумагу корзины, в процентах — например, 50/30/20.";
+  if (wIn === false) return fail(wAsk);
+  if (wIn) {
     if (wo) return fail("У корзины по худшей бумаге весов нет — выплата считается по самой слабой бумаге. Посчитать по среднему с этими весами?");
-    w = a.weights_pct.map(Number);
-    if (w.length !== und.length || w.some((x) => !isFinite(x) || x < 0)) {
-      return fail("Уточните веса: по одному на каждую бумагу корзины, в процентах — например, 50/30/20.");
+    w = wIn;
+    if (w.length !== und.length || w.some((x) => !isFinite(x) || x < 0)) return fail(wAsk);
+    let sum = w.reduce((x, y) => x + y, 0);
+    if (Math.abs(sum - 1) < 0.011) { w = w.map((x) => x * 100); sum *= 100; }   // доли вместо процентов
+    if (Math.abs(sum - 100) > BK_W_TOL) return fail("Веса бумаг должны в сумме давать 100% (сейчас " + priceNum(sum) + "%). Уточните веса.");
+    // «66,6/33,3»: прайсер требует ровно 100 (± 0,01) — пропорционально до сотых, остаток — последней бумаге
+    if (Math.abs(sum - 100) > 1e-9) {
+      w = w.map((x) => Math.round(x * 10000 / sum) / 100);
+      const head = w.slice(0, -1).reduce((x, y) => x + y, 0);
+      w[w.length - 1] = Math.round((100 - head) * 100) / 100;
     }
-    const sum = w.reduce((x, y) => x + y, 0);
-    if (Math.abs(sum - 1) < 0.006) w = w.map((x) => x * 100);   // доли вместо процентов
-    else if (Math.abs(sum - 100) > 0.6) return fail("Веса бумаг должны в сумме давать 100% (сейчас " + priceNum(sum) + "%). Уточните веса.");
-    if (w.every((x) => Math.abs(x - w[0]) < 1e-9)) w = null;    // равные — как без весов
+    if (w.every((x) => Math.abs(x - w[0]) < 0.011)) w = null;   // равные (и 33/33/33) — как без весов
   }
 
   const rs = await Promise.all(und.map((u) => priceResolve(u, env)));
@@ -2651,38 +2677,49 @@ async function priceBasket(a, env, who, cat) {
   if (rubA) Object.assign(args, rubA);
   const unavailable = "Расчёт сейчас недоступен. Попробуйте позже или нажмите «Обсудить с Румбергом» — посчитает менеджер.";
   const shown = tickers.map(priceShowTicker).join(", ");
-  let res;
-  try {
-    res = await mcpCall(env, "price_call_on_basket", args, listed ? PRICE_TIMEOUT_MS : PRICE_UNLISTED_TIMEOUT_MS);
-  } catch (e) {
-    const m = String((e && e.message) || e);
-    if (m === "pricer_timeout" && !listed) return fail("По одной из бумаг (" + shown + ") не нашёл рыночных данных. Проверьте тикеры.");
-    return fail(m === "pricer_timeout"
-      ? "Прайсер не успел посчитать. Попробуйте ещё раз через минуту или нажмите «Обсудить с Румбергом» — посчитает менеджер."
-      : unavailable);
-  }
-  const sc = res.structuredContent || {};
-  if (res.isError) {
-    const code = sc.error || "";
-    if (code === "rate_limited") return fail("Слишком много расчётов подряд. Попробуйте через минуту.");
-    if (code === "unknown_ticker" || code === "market_data_missing") {
-      return fail("По одной из бумаг (" + shown + ") нет рыночных данных — посчитать не могу. Проверьте тикеры.");
+  // Один расчёт с участием p; цена приводится к участию 100% (выплата варранта строго пропорциональна участию).
+  const one = async (p) => {
+    let res;
+    try {
+      res = await mcpCall(env, "price_call_on_basket", { ...args, participation: p }, listed ? PRICE_TIMEOUT_MS : PRICE_UNLISTED_TIMEOUT_MS);
+    } catch (e) {
+      const m = String((e && e.message) || e);
+      if (m === "pricer_timeout" && !listed) return { fail: "По одной из бумаг (" + shown + ") не нашёл рыночных данных. Проверьте тикеры." };
+      return { fail: m === "pricer_timeout"
+        ? "Прайсер не успел посчитать. Попробуйте ещё раз через минуту или нажмите «Обсудить с Румбергом» — посчитает менеджер."
+        : unavailable };
     }
-    if (code === "invalid_term") return fail("С такими условиями посчитать не получилось. Проверьте срок, страйк и веса.");
-    return fail(unavailable);
-  }
-  if (sc.status === "needs_input") {
-    const q = (sc.questions || [])[0] || {};
-    if (q.field === "underlyings") return fail("По одной из бумаг (" + shown + ") нет рыночных данных. Проверьте тикеры.");
-    if (/^(quanto|currency|underlying_currencies)$/.test(String(q.field || ""))) return fail(BK_FX_TEXT);
-    return fail(unavailable);
-  }
-  const r = sc.result || {}, t = sc.terms || {};
-  const pv = Number(r.pv_pct);
+    const sc = res.structuredContent || {};
+    if (res.isError) {
+      const code = sc.error || "";
+      if (code === "rate_limited") return { fail: "Слишком много расчётов подряд. Попробуйте через минуту." };
+      if (code === "unknown_ticker" || code === "market_data_missing") {
+        return { fail: "По одной из бумаг (" + shown + ") нет рыночных данных — посчитать не могу. Проверьте тикеры." };
+      }
+      if (code === "invalid_term") return { fail: "С такими условиями посчитать не получилось. Проверьте срок, страйк и веса." };
+      return { fail: unavailable };
+    }
+    if (sc.status === "needs_input") {
+      const qq = (sc.questions || [])[0] || {};
+      if (qq.field === "underlyings") return { fail: "По одной из бумаг (" + shown + ") нет рыночных данных. Проверьте тикеры." };
+      if (/^(quanto|currency|underlying_currencies)$/.test(String(qq.field || ""))) return { fail: BK_FX_TEXT };
+      return { fail: unavailable };
+    }
+    const r = sc.result || {}, t = sc.terms || {};
+    const v = Number(r.pv_pct);
+    if (!isFinite(v) || v < 0) return { fail: unavailable };
+    return { pv: v * 100 / p, ccy: String(r.currency || t.currency || "RUB") };
+  };
+  const rr = await Promise.all(BK_POINTS.map(one));
+  const good = rr.filter((x) => !x.fail);
+  // Отказ по существу (тикер, валюта, лимит) приходит во всех точках; одиночная осечка сети — нет
+  if (good.length < BK_POINTS_MIN) return fail(rr.find((x) => x.fail).fail);
+  const pvs = good.map((x) => x.pv);
+  const pv = pvs.reduce((x, y) => x + y, 0) / pvs.length;
   if (!(pv > 0)) return fail(PRICE_LOW_TEXT);
   const q = priceQuote(pv);
   if (q < PRICE_MIN_QUOTE) return fail(PRICE_LOW_TEXT);
-  const ccy = String(r.currency || t.currency || "RUB");
+  const ccy = good[0].ccy;
 
   const short = tickers.map((tk, i) => names[i] || priceShowTicker(tk));
   const assets = tickers.map((tk, i) => (names[i] ? names[i] + " (" + tk + ")" : tk));
@@ -2704,7 +2741,8 @@ async function priceBasket(a, env, who, cat) {
   const out = {
     ok: true, text: lines.join("\n"), fair: pv, quote: q, ticker: tickers.join("/"), type: "call", tenor: tenor.expiry, strike,
     log: tickers.join("/") + " колл на корзину · " + (avg ? "среднее" + (w ? " " + w.join("/") : "") : "worst-of") + " · K " + strike +
-      " · " + tenor.expiry + ": прайсер (вола +" + PRICE_VOL_SLIP + ") " + priceNum(pv) + "%, клиенту " + priceNum(q) + "%",
+      " · " + tenor.expiry + ": прайсер (вола +" + PRICE_VOL_SLIP + ", среднее " + pvs.length + " расчётов, разброс " +
+      priceNum(Math.min(...pvs)) + "–" + priceNum(Math.max(...pvs)) + ") " + priceNum(pv) + "%, клиенту " + priceNum(q) + "%",
   };
   out.pq = await pqSave(env, {
     v: 1, type: "warrant", structure: "call", strike, spot: 100,
@@ -3204,27 +3242,96 @@ function priceGuard(a, messages) {
 // Колл на корзину — те же проверки срока; плюс клиент должен сказать, как считать корзину (по среднему или по
 // худшей), — иначе модель выберет сама. Назвал веса, а модель их не передала — переспрашиваем, а не считаем
 // поровну. Страйк деньгами у корзины не бывает — только в процентах от начального уровня.
-const BK_TYPE_RE = /средн|average|avg|худш|worst|(?:^|[^\p{L}])wo(?![\p{L}])/iu;
-const BK_W_RE = /(?:^|[^\p{L}])вес(?:а|ами|ам|ов|ом|у|е)?(?![\p{L}])|weights?|(?:^|[^\d.,\/])\d{1,3}(?:[.,]\d+)?\s*%?\s*\/\s*\d{1,3}(?:[.,]\d+)?\s*%?(?![\d.\/])|\d{1,3}(?:[.,]\d+)?\s*%?\s*\/\s*\d{1,3}(?:[.,]\d+)?\s*%?\s*\/(?!\s*\d{4})|\d{1,3}(?:[.,]\d+)?\s*%[^\n%]{1,30}\/[^\n%]{1,30}\d{1,3}(?:[.,]\d+)?\s*%|\p{L}{2,}\)?\s*[—–:-]?\s*\d{1,3}(?:[.,]\d+)?\s*%\s*(?:[,;]|и(?![\p{L}]))\s*\p{L}{2,}\)?\s*[—–:-]?\s*\d{1,3}(?:[.,]\d+)?\s*%|\d{1,3}(?:[.,]\d+)?\s*%\s*(?:на\s+)?\p{L}{2,}\s*(?:[,;]|и(?![\p{L}]))\s*\d{1,3}(?:[.,]\d+)?\s*%\s*(?:на\s+)?\p{L}{2,}/iu;
+const BK_TYPE_RE = /средн(?!есрочн)|average|avg|худш|worst|(?:^|[^\p{L}])wo(?![\p{L}])/iu;
+// Равные веса словами — это корзина по среднему: «равновзвешенная», «поровну», «в равных долях», «без весов».
+const BK_EQ_SRC = String.raw`равновзвеш\p{L}*|равн\p{L}*\s+(?:дол\p{L}*|вес\p{L}*)|вес\p{L}*\s+равн\p{L}*|поровну|(?:^|[^\p{L}])без\s+вес\p{L}*|equal(?:ly)?[\s-]?weight\p{L}*`;
+const BK_EQ_RE = new RegExp(BK_EQ_SRC, "iu"), BK_EQ_ALL = new RegExp(BK_EQ_SRC, "giu");
+const BK_BEST_RE = /лучш\p{L}*\s+(?:бумаг|акци|актив|из(?![\p{L}]))|(?:^|[^\p{L}])best[\s-]?of(?![\p{L}])/iu;
+const BK_PUT_RE = /(?:^|[^\p{L}])(?:пут(?:а|ом|у|ы|ов|ам)?|put)(?![\p{L}])|(?:^|[^\p{L}])на\s+падени\p{L}*/iu;
+const BK_CALL_RE = /(?:^|[^\p{L}])(?:колл\p{L}*|call)(?![\p{L}])|(?:^|[^\p{L}])на\s+рост/iu;
+const BK_HEAD_RE = /^\*\*CALL [\d,]+ · (среднее по корзине|худшая из корзины): /m;
+// Веса от модели — массив, объект {SBER: 50, …} или строка «50/30/20». null — весов нет, false — не разобрать.
+function bkWeightsArr(v, und) {
+  if (v == null || v === "") return null;
+  let arr;
+  if (Array.isArray(v)) arr = v;
+  else if (typeof v === "string") arr = v.split(v.includes("/") ? "/" : /[;,\s]+/).filter((x) => x.trim());
+  else if (typeof v === "object") {
+    const keys = Object.keys(v), low = (x) => String(x).trim().toLowerCase();
+    const byKey = (und || []).map((u) => { const k = keys.find((kk) => low(kk) === low(u)); return k == null ? undefined : v[k]; });
+    arr = byKey.length && byKey.every((x) => x !== undefined) ? byKey : Object.values(v);
+  } else return false;
+  if (!arr.length) return null;
+  return arr.map((x) => Number(typeof x === "string" ? x.replace("%", "").replace(",", ".").trim() : x));
+}
+// Назвал ли клиент веса: слово «вес» (кроме «равных весов») или числа, которые в сумме дают 100 — «50/30/20»,
+// «Сбербанк 50%, Газпром 30%, Лукойл 20%», «60% на Сбер и 40% на Газпром». «На 1/2 года», «24/7», «до 15/12» —
+// не веса: сумма не 100.
+function bkWeightsSaid(text) {
+  const t = String(text || "").replace(BK_EQ_ALL, " ");
+  if (/(?:^|[^\p{L}])(?:вес(?:а|ами|ам|ов|ом|у|е)?|weights?)(?![\p{L}])/iu.test(t)) return true;
+  const near = (x) => Math.abs(x - 100) <= BK_W_TOL || Math.abs(x - 1) <= 0.011;
+  const num = (x) => Number(String(x).replace("%", "").replace(",", ".").trim());
+  const run = (xs) => {   // есть ли подряд идущие ≥ 2 числа с суммой 100
+    for (let i = 0; i < xs.length; i++) {
+      let sum = xs[i];
+      for (let j = i + 1; j < xs.length; j++) { sum += xs[j]; if (near(sum)) return true; }
+    }
+    return false;
+  };
+  for (const m of t.matchAll(/\d{1,3}(?:[.,]\d+)?\s*%?(?:\s*\/\s*\d{1,3}(?:[.,]\d+)?\s*%?)+/g)) {
+    if (run(m[0].split("/").map(num))) return true;
+  }
+  const ps = [...t.matchAll(/(\d{1,3}(?:[.,]\d+)?)\s*%/g)];
+  let grp = [];
+  for (let i = 0; i < ps.length; i++) {
+    if (i) {
+      const gap = t.slice(ps[i - 1].index + ps[i - 1][0].length, ps[i].index);
+      if (!(gap.length <= 40 && !/\n/.test(gap) && /[,;\/]|(?:^|[^\p{L}])и(?![\p{L}])/u.test(gap))) {
+        if (run(grp)) return true;
+        grp = [];
+      }
+    }
+    grp.push(num(ps[i][1]));
+  }
+  return run(grp);
+}
 function priceGuardBK(a, messages) {
   const recent = [];
-  let follow = false;
+  let follow = false, prevHead = "";
   for (let i = messages.length - 1; i >= 0 && recent.length < 4; i--) {
-    const m = messages[i];
-    if (m.role === "assistant" && PRICE_HEAD_RE.test(String(m.content || ""))) { follow = true; break; }
-    if (m.role === "user") recent.push(String(m.content || ""));
+    const m = messages[i], c = String(m.content || "");
+    if (m.role === "assistant" && PRICE_HEAD_RE.test(c)) { follow = true; prevHead = c; break; }
+    if (m.role === "user") recent.push(c);
   }
   const last = recent[0] || "";
-  const und = Array.isArray(a.underlyings) ? a.underlyings.join(", ") : String(a.underlyings || "");
+  const undArr = Array.isArray(a.underlyings) ? a.underlyings.map(String) : String(a.underlyings || "").split(/[,;\/]+/).map((x) => x.trim()).filter(Boolean);
+  const und = undArr.join(", ");
   const what = "колл на корзину" + (und ? " " + und.slice(0, 60) : "");
+  // Пут и best-of у корзины прайсер не считает — не полагаемся на то, что модель сама не позовёт колл
+  if (BK_PUT_RE.test(last) && !BK_CALL_RE.test(last)) return { ask: BK_PUT_TEXT };
+  if (BK_BEST_RE.test(last)) return { ask: BK_BEST_TEXT };
   if (!follow && !recent.some((t) => PRICE_TENOR_RE.test(t))) {
     return { ask: "На какой срок посчитать " + what + "? Например, 1 год, 18 месяцев или полгода." };
   }
-  const hasW = Array.isArray(a.weights_pct) && a.weights_pct.length > 0;   // модель разобрала веса — их назвал клиент
-  if (!follow && !hasW && !recent.some((t) => BK_TYPE_RE.test(t) || BK_W_RE.test(t))) {   // веса бывают только у среднего
+  a = { ...a };
+  const bt = String(a.basket_type || "").toLowerCase().replace(/[\s-]+/g, "_");
+  const wo = bt === "worst_of" || bt === "wo";
+  const wa = bkWeightsArr(a.weights_pct, undArr);
+  let hasW = Array.isArray(wa) && wa.length > 0;   // модель разобрала веса — их назвал клиент
+  const eqLast = BK_EQ_RE.test(last), eq = recent.some((t) => BK_EQ_RE.test(t));
+  // «А по худшей?» или «а поровну?» после расчёта с весами: модель тащит веса из прошлого ответа
+  if (hasW && (wo || eqLast) && !bkWeightsSaid(last)) { delete a.weights_pct; hasW = false; }
+  if (eq && !bt && !hasW) a.basket_type = "average";   // «равновзвешенная» — это среднее
+  // Уточнение прошлого расчёта корзины («а на 2 года?»): как считать корзину — как в прошлом ответе
+  const pm = prevHead.match(BK_HEAD_RE);
+  if (pm && !a.basket_type && !hasW) a.basket_type = pm[1] === "худшая из корзины" ? "worst_of" : "average";
+  // Тип корзины после прошлого расчёта НЕ корзины тоже обязателен: «а на корзину Сбер и Газпром?» после колла на Сбер
+  if (!pm && !hasW && !eq && !recent.some((t) => BK_TYPE_RE.test(t) || bkWeightsSaid(t))) {
     return { ask: "Как считать уровень корзины: по среднему изменению бумаг или по худшей бумаге (worst-of)?" };
   }
-  if (BK_W_RE.test(last) && !(Array.isArray(a.weights_pct) && a.weights_pct.length)) {
+  // Веса названы (в этом сообщении или раньше, пока не было расчёта), а модель их не передала
+  if (!hasW && !eqLast && recent.some((t) => bkWeightsSaid(t))) {
     return { ask: "Уточните веса бумаг в процентах, в сумме 100% — например, 50/30/20." };
   }
   if (PRICE_STRIKE_ABS_RE.test(last)) {
