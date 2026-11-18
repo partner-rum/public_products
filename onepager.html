@@ -403,6 +403,7 @@
   function pqItem(r) {
     if (r && r.type === "protection") return pqProt(r);
     if (r && r.type === "autocall") return pqAuto(r);
+    if (r && r.type === "discount") return pqDisc(r);
     if (!r || r.type !== "warrant" || (r.structure !== "call" && r.structure !== "put")) return null;
     const q = Number(r.quote), k = Number(r.strike);
     if (!(q > 0 && q < 100) || !(k >= 20 && k <= 300)) return null;
@@ -450,6 +451,19 @@
     return { id: "chat-" + PQ, type: "protection", name: clean(r.name), underlying: clean(r.underlying),
       currency: clean(r.currency) || "RUB", strike: k, spot: 100, participation: part, protectionPct: floor,
       cap: cap, tenor: clean(r.tenor), quote: q, minNom: 1000000, chat: true, at: Number(r.at) || 0, code: clean(r.code) };
+  }
+
+  // Дисконтная облигация из чата (18.11.2026): цена покупки, компания и срок — из записи расчёта;
+  // лист рисуется тем же шаблоном, что дисконтные облигации доски.
+  function pqDisc(r) {
+    const q = Number(r.quote);
+    if (!(q > 0 && q < 100)) return null;
+    // описание компании — у дисконтной облигации доски на ту же компанию
+    const und = clean(r.underlying);
+    const L = (window.SITE_DATA && (SITE_DATA.instruments || SITE_DATA.items)) || [];
+    const hit = L.find((x) => x && x.type === "discount" && x.underlying === und && x.about);
+    return { id: "chat-" + PQ, type: "discount", name: clean(r.name), underlying: und, currency: "RUB", about: hit ? hit.about : "",
+      tenor: clean(r.tenor), quote: q, minNom: 1000000, chat: true, at: Number(r.at) || 0, code: clean(r.code) };
   }
 
   // Автоколл из чата: купон, барьеры, частота, период без отзыва и бумаги — из записи расчёта.
@@ -583,6 +597,12 @@
   const QUAL = "Только для квалифицированных инвесторов<br>Не является индивидуальной инвестиционной рекомендацией";
 
   function underDesc() {
+    // Дисконтная облигация: выплата зависит не от цены, а от кредитного качества компании (референс-энтити).
+    // Общая фраза «от динамики которого зависит выплата» для неё неверна (так печаталось до 18.11.2026).
+    if (inst.type === "discount") {
+      return (inst.about ? inst.about + " " : "") + "Выплата зависит не от рыночных цен, а от кредитного качества " +
+        "компании: если по ней не случится кредитного события, на погашении — 100% номинала.";
+    }
     return S.underlyingLong(inst.underlying) || (U && U.desc) ||
       (inst.underlying + " — базовый актив, от динамики которого зависит выплата по продукту.");
   }
@@ -1078,6 +1098,7 @@
     const buyRub = nom * q / 100;
     c = {
       badge: "Дисконтная облигация",
+      underLabel: "О компании · " + inst.underlying,
       subtitle: "Покупка дешевле номинала, погашение по 100% — доход зафиксирован в день сделки.",
       chart: chDiscount,
       chartCap: "Покупка дешевле номинала, погашение по 100%. Доход — разница, зафиксированная в момент покупки.",

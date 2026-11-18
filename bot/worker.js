@@ -2046,14 +2046,165 @@ const BK_TOOL = {
   },
 };
 
+// ── Дисконтная облигация (CLN) в чате (18.11.2026, «давай учить прайсить CLN наш чат … прайсим дисконтные облигации») ──
+// Считаем сами, ровно как доска (Floater_tool.py): FV = 100 / (1 + zero(T) + DM(T))^T, где zero — бескупонная ставка
+// из кривой IRS KEYRATE bid (годовые par-свопы, бутстрап, лог-линейная интерполяция дисконт-фактора), DM — спред
+// эмитента по его флоатерам из выгрузки Cbonds (линейно по сроку, за краями плоско). Цена клиенту = FV + маржа,
+// вверх до целого. Маржа — решение Руслана 18.11.2026 «линейно»: на доске 3 года +5, 5 лет +9 п.п., между и вокруг —
+// прямая через эти точки: 1 год +1, 2 года +3, 4 года +7. Эмитенты — только пять с доски (его же решение).
+// Кривая и спреды лежат в KV под ключом cln:data (собирает _demo/cln/make_cln_data.py, в репозиторий не попадают):
+// поменялась кривая или выгрузка — пересобрать файл и загрузить, деплой воркера не нужен.
+const CLN_TOOL = {
+  type: "function",
+  function: {
+    name: "price_discount",
+    description: "Посчитать дисконтную облигацию (CLN) на кредит одной из пяти компаний: ВЭБ.РФ, Газпром нефть, Магнит, " +
+      "Ростелеком, Северсталь. Облигация покупается ниже номинала, на погашении — 100% номинала, если по компании не " +
+      "случилось кредитного события. Цену и ответ клиенту посчитает сервер.",
+    parameters: {
+      type: "object",
+      properties: {
+        issuer: { type: "string", description: "Компания, на кредит которой выпуск: ВЭБ.РФ, Газпром нефть, Магнит, " +
+          "Ростелеком или Северсталь — как назвал клиент." },
+        tenor: { type: "string", description: "Срок: '1Y', '2Y', '3Y', '5Y', '18M' или дата погашения YYYY-MM-DD." },
+      },
+      required: ["issuer", "tenor"],
+    },
+  },
+};
+// имя для клиента; формы для фраз «по …» и «кредитное качество …»
+const CLN_ISSUERS = {
+  VEB: { re: /вэб|veb|внешэконом/i, name: "ВЭБ.РФ", dat: "ВЭБ.РФ", gen: "ВЭБ.РФ" },
+  GPN: { re: /газпром\s*-?\s*нефт|газпромнефт|gazprom\s*-?\s*neft|\bsibn\b|(?<![а-яё])гпн(?![а-яё])/i, name: "Газпром нефть", dat: "«Газпром нефти»", gen: "«Газпром нефти»" },
+  MGNT: { re: /магнит|magnit|\bmgnt\b/i, name: "Магнит", dat: "«Магниту»", gen: "«Магнита»" },
+  RTKM: { re: /ростелеком|rostelecom|\brtkm\b/i, name: "Ростелеком", dat: "«Ростелекому»", gen: "«Ростелекома»" },
+  CHMF: { re: /северстал|severstal|\bchmf\b/i, name: "Северсталь", dat: "«Северстали»", gen: "«Северстали»" },
+};
+const CLN_LIST = "ВЭБ.РФ, «Газпром нефть», «Магнит», «Ростелеком» и «Северсталь»";
+const CLN_OTHER_TEXT = "Дисконтную облигацию в чате считаю на пять компаний: " + CLN_LIST + ". По другим компаниям " +
+  "нажмите «Обсудить с Румбергом» — посчитает менеджер.";
+const CLN_T_MIN = 1, CLN_T_MAX = 5;          // срок, лет
+const clnMargin = (T) => 5 + 2 * (T - 3);    // п.п. номинала: 1 год +1 … 3 года +5 … 5 лет +9
+const CLN_CACHE_MS = 10 * 60 * 1000;
+let CLN_CACHE = null;
+async function clnData(env) {
+  if (CLN_CACHE && Date.now() - CLN_CACHE.at < CLN_CACHE_MS) return CLN_CACHE.data;
+  let d = null;
+  try { d = env.POST_KV ? await env.POST_KV.get("cln:data", "json") : null; } catch (e) { d = null; }
+  const ok = d && Array.isArray(d.par) && d.par.length >= 2 && Array.isArray(d.issuers);
+  if (ok) CLN_CACHE = { at: Date.now(), data: d };
+  return ok ? d : null;
+}
+// годовые par-ставки (% , срок ≥ 1 года) → дисконт-факторы, как build_curve в Floater_tool.py
+function clnCurve(par) {
+  const yr = par.filter((p) => Number(p[0]) >= 1).map((p) => [Number(p[0]), Number(p[1]) / 100]).sort((a, b) => a[0] - b[0]);
+  const DF = [[0, 1]];
+  let sum = 0;
+  for (const [t, s] of yr) {
+    const df = (1 - s * sum) / (1 + s);
+    DF.push([t, df]);
+    sum += df;
+  }
+  return DF;
+}
+function clnDF(DF, T) {
+  if (T <= 0) return 1;
+  let i = DF.findIndex((p) => p[0] >= T);
+  if (i < 0) { i = DF.length - 1; T = DF[i][0]; }
+  const a = DF[i - 1], b = DF[i];
+  const w = (T - a[0]) / (b[0] - a[0]);
+  return Math.exp((1 - w) * Math.log(a[1]) + w * Math.log(b[1]));
+}
+function clnDM(pts, T) {
+  const p = pts.map((x) => [Number(x[0]), Number(x[1])]).sort((a, b) => a[0] - b[0]);
+  if (!p.length) return null;
+  if (T <= p[0][0]) return p[0][1];
+  if (T >= p[p.length - 1][0]) return p[p.length - 1][1];
+  const i = p.findIndex((x) => x[0] >= T);
+  const a = p[i - 1], b = p[i];
+  return b[0] === a[0] ? b[1] : a[1] + ((b[1] - a[1]) * (T - a[0])) / (b[0] - a[0]);
+}
+function clnIssuer(raw) {
+  const s = String(raw || "");
+  for (const [key, x] of Object.entries(CLN_ISSUERS)) if (x.re.test(s)) return key;
+  return "";
+}
+async function priceDiscount(a, env) {
+  const fail = (text) => ({ ok: false, text });
+  const key = clnIssuer(a.issuer || a.underlying);
+  if (!key) return fail(CLN_OTHER_TEXT);
+  const tenor = priceTenor(a.tenor);
+  if (!tenor) return fail("Уточните срок дисконтной облигации — например, 3 года или 5 лет.");
+  const T = Math.round((tenor.days / 365) * 1000) / 1000;
+  if (T < CLN_T_MIN - 0.01 || T > CLN_T_MAX + 0.01) {
+    return fail("Дисконтную облигацию в чате считаю на срок от 1 года до 5 лет. Уточните срок.");
+  }
+  const d = await clnData(env);
+  const it = d && d.issuers.find((x) => x.key === key);
+  if (!d || !it || !Array.isArray(it.pts) || !it.pts.length) {
+    return fail("Расчёт сейчас недоступен. Попробуйте позже или нажмите «Обсудить с Румбергом» — посчитает менеджер.");
+  }
+  const I = CLN_ISSUERS[key];
+  const zero = Math.pow(1 / clnDF(clnCurve(d.par), T), 1 / T) - 1;
+  const dm = clnDM(it.pts, T);
+  const fv = 100 / Math.pow(1 + zero + dm / 1e4, T);
+  const margin = clnMargin(T);
+  const px = Math.ceil(fv + margin - 1e-9);
+  if (!(px > 0 && px < 100)) return fail("Расчёт сейчас недоступен. Попробуйте позже или нажмите «Обсудить с Румбергом» — посчитает менеджер.");
+  if (env.__trace) {
+    env.__trace.push({
+      tool: "discount", at: Date.now(), args: { issuer: key, tenor: tenor.expiry, years: T }, error: "",
+      pv: Math.round(fv * 100) / 100, currency: "RUB",
+      dataset: (d.curve || "кривая") + " · спреды Cbonds " + (d.dm_date || "?"), model: "zero + DM",
+      pricing_date: d.curve_date || "", maturity: "", strike_abs: null, spots: null, ref_spots: null, vols: null, divs: null,
+      rate: "zero " + priceNum(zero * 100, 3) + "% + DM " + priceNum(dm, 1) + " бп (" + (it.base || "?") + "), маржа " + priceNum(margin, 2) + " п.п.",
+      request_id: "", terminal: "",
+    });
+  }
+  const name = "Дисконтная облигация на " + I.name + " · " + tenor.label;
+  const pq = await pqSave(env, { type: "discount", name, underlying: I.name, tenor: tenor.label, quote: px, at: Date.now() });
+  const lines = [
+    "**Дисконтная облигация · " + I.name + " · " + tenor.label + "**",
+    "Цена: **" + priceNum(px) + "% номинала** — индикативно",
+    "• На погашении: 100% номинала через " + tenor.label + ", если по " + I.dat + " не случится кредитного события",
+    "• Пример: 1 000 000 ₽ номинала покупаются за " + priceNum(px * 10000, 0) + " ₽, на погашении — 1 000 000 ₽",
+    "• Купонов нет: весь доход — разница между ценой покупки и номиналом, она известна в день сделки",
+    "• Кредитное событие по " + I.dat + " (дефолт, реструктуризация долга, банкротство) — выплата снижается вплоть до нуля; убыток не больше вложенной суммы",
+    "• Риск — кредитное качество " + I.gen + " и эмитента выпуска",
+  ];
+  return {
+    ok: true, text: lines.join("\n"), ticker: key, type: "discount", tenor: tenor.expiry, strike: null,
+    quote: px, fair: Math.round(fv * 100) / 100, pq,
+    log: key + " дисконтная · " + tenor.expiry + ": zero " + priceNum(zero * 100, 2) + "% + DM " + priceNum(dm, 0) +
+      " бп → FV " + priceNum(fv) + " + маржа " + priceNum(margin, 2) + " → клиенту " + priceNum(px) + "%",
+  };
+}
+// Срок — только названный клиентом (или из прошлого расчёта), как у защиты капитала.
+function priceGuardDisc(a, messages) {
+  const recent = [];
+  let follow = false;
+  for (let i = messages.length - 1; i >= 0 && recent.length < 4; i--) {
+    const m = messages[i];
+    if (m.role === "assistant" && PRICE_HEAD_RE.test(String(m.content || ""))) { follow = true; break; }
+    if (m.role === "user") recent.push(String(m.content || ""));
+  }
+  if (!clnIssuer(a.issuer || a.underlying)) return { ask: CLN_OTHER_TEXT };
+  if (!follow && !recent.some((t) => PRICE_TENOR_RE.test(t))) {
+    return { ask: "На какой срок посчитать дисконтную облигацию на " + CLN_ISSUERS[clnIssuer(a.issuer || a.underlying)].name +
+      "? Например, 3 года или 5 лет — в чате считаю от 1 года до 5 лет." };
+  }
+  return { a };
+}
+
 const PRICING_PROMPT = `
 
-=== РАСЧЁТ ПРОДУКТОВ (инструменты price_warrant, price_basket, price_protection и price_autocall) ===
-Ты считаешь цену ТОЛЬКО ПЯТИ продуктов: обычный колл-опцион (CALL) и обычный пут-опцион (PUT) на один базовый актив — инструмент price_warrant; колл-опцион на корзину из 2–5 бумаг — по среднему изменению бумаг или по худшей бумаге — инструмент price_basket; облигацию с защитой капитала на один актив — инструмент price_protection; автоколл на один российский актив или корзину до 5 российских бумаг — инструмент price_autocall. Больше ты не прайсишь НИЧЕГО.
+=== РАСЧЁТ ПРОДУКТОВ (инструменты price_warrant, price_basket, price_protection, price_autocall и price_discount) ===
+Ты считаешь цену ТОЛЬКО ШЕСТИ продуктов: обычный колл-опцион (CALL) и обычный пут-опцион (PUT) на один базовый актив — инструмент price_warrant; колл-опцион на корзину из 2–5 бумаг — по среднему изменению бумаг или по худшей бумаге — инструмент price_basket; облигацию с защитой капитала на один актив — инструмент price_protection; автоколл на один российский актив или корзину до 5 российских бумаг — инструмент price_autocall; дисконтную облигацию (CLN) на кредит одной из пяти компаний — ВЭБ.РФ, Газпром нефть, Магнит, Ростелеком, Северсталь — инструмент price_discount. Больше ты не прайсишь НИЧЕГО.
 Когда клиент просит посчитать, запрайсить, оценить или узнать цену колла или пута (колл-опциона, пут-опциона, CALL, PUT, варранта на рост или на падение) на конкретный актив — вызови price_warrant.
 Когда клиент просит посчитать колл (колл-опцион, CALL, варрант на рост) на корзину или сразу на несколько бумаг — «на среднее», «на среднюю динамику», «среднее по корзине», «худшую из корзины», «worst-of» — вызови price_basket.
 Когда клиент просит посчитать защиту капитала (облигацию с защитой капитала, «капитал под защитой», «вернуть номинал и участвовать в росте») на конкретный актив — вызови price_protection.
 Когда клиент просит посчитать автоколл (автоколлируемую облигацию, автокол, autocall, «феникс», облигацию с условным купоном и досрочным погашением) на актив или корзину — купон по цене или цену по купону — вызови price_autocall.
+Когда клиент просит посчитать дисконтную облигацию (CLN, кредитную облигацию, бескупонную облигацию «на кредит» компании, облигацию «ниже номинала с погашением по 100%») на ВЭБ.РФ, Газпром нефть, Магнит, Ростелеком или Северсталь — вызови price_discount.
 Ответ с ценой клиенту соберёт сервер: сам цену, участие и купон не называй и не придумывай.
 - Тикер передавай как на бирже (SBER, GAZP, LKOH, YDEX, NVDA). Не знаешь тикер — передай название компании как есть.
 - Индекс, фонд и валюта — тоже ОДИН актив, их считаешь: индекс МосБиржи → IMOEX, индекс РТС → RTSI, S&P 500 → SPY, золото → GLD (фонд в долларах), золото в рублях → GLDRUB, биткоин → IBIT, юань → CNYRUB. Не отказывай словами «это индекс, а не один актив».
@@ -2062,8 +2213,9 @@ const PRICING_PROMPT = `
 - Защита капитала: уровень защиты по умолчанию 100% номинала; «защита 90%», «с 80% защитой» → protection_pct 90 / 80. Цена защиты капитала всегда 100% номинала, участие в росте посчитает сервер — его клиент не задаёт; если клиент назвал участие, всё равно вызови price_protection с остальными условиями. Потолок роста передавай, ТОЛЬКО если клиент его назвал: «до +50%», «с потолком 50%» → cap_pct 50. «Рост засчитывается от +5%» → strike_pct 105.
 - Колл на корзину: все названные бумаги передай в underlyings (от 2 до 5). basket_type: average — уровень корзины по среднему изменению бумаг («на среднее», «средняя динамика», «среднее по корзине», клиент назвал веса); worst_of — по худшей бумаге («худшая из корзины», «по худшей», «worst-of»). Клиент не сказал, как считать корзину, — спроси «по среднему изменению бумаг или по худшей бумаге?» и инструмент не вызывай. Веса — weights_pct в процентах в порядке бумаг, только если клиент их назвал; не назвал — веса равные. Страйк — strike_pct в % от начального уровня корзины, по умолчанию 100. Пут на корзину не считается.
 - Автоколл: все названные бумаги передай в underlyings — корзина считается по худшей бумаге (worst-of). Считается в двух режимах. 1) Клиент назвал цену («по цене 98%», «за 97,5% номинала») — передай price_pct, сервер посчитает купон. 2) Клиент назвал купон («купон 15% годовых», «с купоном 12%») — передай coupon_pa, сервер посчитает цену. Не назвал ни цену, ни купон — не передавай ни то, ни другое: цена будет 100% номинала, сервер посчитает купон. price_pct и coupon_pa вместе не передавай никогда; если клиент назвал и цену, и купон и непонятно, что считать, — спроси. Клиент в уточнении меняет режим («а какая цена при купоне 14%?») — передай только новое, прежнее не повторяй. Условия по умолчанию: барьер защиты на погашении 70%, купонный барьер равен барьеру защиты, досрочное погашение при 100% начального уровня, наблюдения и купон раз в квартал, с эффектом памяти. Передавай только то, что клиент назвал сам: «барьер 60%» → barrier_pct 60; «купонный барьер 80%» → coupon_barrier_pct 80; «отзыв от 105%» → autocall_pct 105; «купон ежемесячно» → frequency monthly; «первый год без отзыва» → no_call_months 12; «без памяти» → memory false. Автоколл считается только на российские акции и индексы в рублях.
+- Дисконтная облигация (CLN): issuer — компания, как назвал клиент; считается ТОЛЬКО на ВЭБ.РФ, Газпром нефть, Магнит, Ростелеком и Северсталь, срок от 1 года до 5 лет. «Газпром» — это не «Газпром нефть»: на Газпром и любые другие компании price_discount не вызывай — ответь, что в чате дисконтная облигация считается на эти пять компаний, по другим посчитает менеджер. Цену посчитает сервер, её не называй.
 - Клиент меняет условия прошлого расчёта («а на 3 года?», «а страйк 110?», «а по худшей?», «а с весами 50/30/20?», «а с потолком +50%?», «а с защитой 90%?», «а с барьером 60%?», «а без Лукойла?») — вызови тот же инструмент снова, остальные условия возьми из прошлого расчёта.
-- ВСЁ ОСТАЛЬНОЕ НЕ СЧИТАЕШЬ И ИНСТРУМЕНТЫ НЕ ВЫЗЫВАЕШЬ: колл-спреды и опционы с потолком (потолок бывает только у защиты капитала), пут на корзину, защита капитала на корзину (корзина бывает только у колла — price_basket — и у автоколла), дисконтные облигации, бустеры, реверс-конвертиблы, купонные варранты и любые другие структуры. На такую просьбу ответь, что в чате сейчас считаются CALL, PUT, колл на корзину, защита капитала на один актив и автоколл на российские акции, и предложи похожий продукт из каталога или кнопку «Обсудить с Румбергом» — посчитает менеджер. Цифр по таким продуктам не называй, кроме тех, что есть в каталоге.`;
+- ВСЁ ОСТАЛЬНОЕ НЕ СЧИТАЕШЬ И ИНСТРУМЕНТЫ НЕ ВЫЗЫВАЕШЬ: колл-спреды и опционы с потолком (потолок бывает только у защиты капитала), пут на корзину, защита капитала на корзину (корзина бывает только у колла — price_basket — и у автоколла), дисконтные облигации на компании вне списка пяти, бустеры, реверс-конвертиблы, купонные варранты и любые другие структуры. На такую просьбу ответь, что в чате сейчас считаются CALL, PUT, колл на корзину, защита капитала на один актив, автоколл на российские акции и дисконтная облигация на пять компаний, и предложи похожий продукт из каталога или кнопку «Обсудить с Румбергом» — посчитает менеджер. Цифр по таким продуктам не называй, кроме тех, что есть в каталоге.`;
 
 function pricerEnabled(env) {
   return !!((env.PRICER_MCP_URL || "").trim() && (env.PRICER_MCP_KEY || "").trim());
@@ -3208,7 +3360,7 @@ function priceFooter(partnerMode) {
 // 2) Страйк деньгами в тексте клиента — его берём сами, а не из разбора модели.
 // 3) Клиент назвал страйк, а модель его не передала — переспрашиваем, а не считаем от 100%.
 const PRICE_TENOR_RE = /\d+(?:[.,]\d+)?\s*-?\s*(?:год|года|лет|г\.|мес|месяц|месяца|месяцев|нед|недел|дн|день|дня|дней|years?|yrs?|months?|mos?|weeks?|wks?|days?)(?![\p{L}])|(?:^|[^\p{L}])(?:a|one|two|three|four|five|six|half\s+a|1\.5)[\s-]+(?:years?|months?)(?![\p{L}])|\d+\s*[ymwd](?![\p{L}])|(?:^|[^\p{L}])(?:полгода|полугод|полтора|год|годик|квартал|месяц)(?![\p{L}])|\d{4}-\d{2}-\d{2}|\d{1,2}\.\d{1,2}\.\d{2,4}|(?:январ|феврал|март|апрел|ма[йя]|июн|июл|август|сентябр|октябр|ноябр|декабр)/iu;
-const PRICE_HEAD_RE = /^\*\*(?:(?:CALL|PUT) [\d,]+|Защита капитала|Автоколл) · /m;
+const PRICE_HEAD_RE = /^\*\*(?:(?:CALL|PUT) [\d,]+|Защита капитала|Автоколл|Дисконтная облигация) · /m;
 const PRICE_STRIKE_ABS_RE = /страйк\p{L}*[^\d\n]{0,12}(\d[\d\s]*(?:[.,]\d+)?)\s*(?:руб|р\.|₽|\$|долл|usd|rub|юан|¥|евро|€)/iu;
 const PRICE_STRIKE_ANY_RE = /страйк\p{L}*[^\d\n]{0,12}\d/iu;
 // «в деньгах» (ITM) и «вне денег» (OTM) — это НЕ страйк 100: модель путала их с «на деньгах».
@@ -3413,10 +3565,10 @@ function priceGuardAC(a, messages) {
 }
 
 async function chatWithPricing(system, messages, env, opts) {
-  const first = await callDeepSeek(system + PRICING_PROMPT, messages, env, { tools: [PRICE_TOOL, BK_TOOL, PROT_TOOL, AC_TOOL], raw: true });
+  const first = await callDeepSeek(system + PRICING_PROMPT, messages, env, { tools: [PRICE_TOOL, BK_TOOL, PROT_TOOL, AC_TOOL, CLN_TOOL], raw: true });
   const calls = (first.toolCalls || [])
     .filter((c) => c && c.function && (c.function.name === "price_warrant" || c.function.name === "price_protection" ||
-      c.function.name === "price_autocall" || c.function.name === "price_basket"))
+      c.function.name === "price_autocall" || c.function.name === "price_basket" || c.function.name === "price_discount"))
     .filter((c, _, all) => c.function.name !== "price_autocall" ||
       all.filter((x) => x.function.name === "price_autocall").indexOf(c) < AC_MAX_CALLS)
     .slice(0, PRICE_MAX_CALLS);
@@ -3448,6 +3600,10 @@ async function chatWithPricing(system, messages, env, opts) {
       const gb = priceGuardBK(a, messages);
       if (gb.ask) return { ok: false, text: gb.ask };
       used = gb.a; o = await priceBasket(gb.a, envT, opts.who || "site-chat", opts.cat);
+    } else if (c.function.name === "price_discount") {
+      const gd = priceGuardDisc(a, messages);
+      if (gd.ask) return { ok: false, text: gd.ask };
+      used = gd.a; o = await priceDiscount(gd.a, envT);
     } else if (c.function.name === "price_protection") {
       const gp = priceGuardProt(a, messages);
       if (gp.ask) return { ok: false, text: gp.ask };
