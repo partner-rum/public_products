@@ -1623,7 +1623,7 @@ async function handleChat(request, env, cors, ctx) {
     const q = messages[messages.length - 1].content.slice(0, 600);
     const fairs = priced.filter((o) => o.ok).map((o) => (o.code ? "[" + calcShow(o.code) + "] " : "") + (o.log ||
       (o.ticker + " " + o.type + " " + o.strike + " " + o.tenor +
-      ": прайсер " + priceNum(o.fair) + "%, клиенту " + priceNum(o.quote) + "%")));
+      ": прайсер (вола +" + PRICE_VOL_SLIP + ") " + priceNum(o.fair) + "%, клиенту " + priceNum(o.quote) + "%")));
     const logP = tg(env, "sendMessage", {
       chat_id: env.CHAT_LOG_CHAT_ID, parse_mode: "HTML", disable_web_page_preview: true,
       text: "💬 <b>AI-чат</b>" + (pageTitle ? " · " + esc(pageTitle) : "") +
@@ -1791,6 +1791,11 @@ const PRICE_LOW_TEXT = "При таких условиях опцион стои
   "Попробуйте страйк ближе к текущей цене или срок длиннее, либо нажмите «Обсудить с Румбергом» — посчитает менеджер.";
 const PRICE_STEP = 0.25;            // котировка клиенту — вверх до 0,25 п. (шаг доски)
 const PRICE_MAX_CALLS = 3;          // расчётов в одном ответе, не больше
+// Вол-слиппадж (решение Руслана 18.11.2026): волатильность сдвигается на 5 волов ПРОТИВ клиента. CALL, PUT и
+// колл внутри защиты капитала клиент покупает — вола выше; в автоколле клиент продаёт волатильность (условный
+// пут на худшую бумагу) — вола ниже. Сдвигается вся поверхность (vol_shift сервера прайсинга, скью и кривизна
+// сохраняются). Маржа (÷ 0,8 у CALL/PUT, 2% × срок у защиты и автоколла) — сверх этого.
+const PRICE_VOL_SLIP = 5;
 const PRICE_TIMEOUT_MS = 60000;     // прайсер на прогретом сервере отвечает за 3–6 с
 const PRICE_UNLISTED_TIMEOUT_MS = 25000;  // тикер не из справочника: существующий находится за секунды
 const PRICE_CACHE_MS = 10 * 60 * 1000;
@@ -2317,7 +2322,7 @@ async function priceWarrant(a, env, who, cat, raw) {
 
   const args = {
     underlying: ticker, option_type: type, expiry: tenor.expiry, strike, wrapper: "warrant",
-    outputs: ["PV"], context: { user_id: who },
+    vol_shift: PRICE_VOL_SLIP, outputs: ["PV"], context: { user_id: who },
   };
   if (isBond) args.rate_override = await priceBondRate(env);
   const rubA = priceRubArgs([ticker]);
@@ -2624,7 +2629,7 @@ async function priceAutocall(a, env, who, cat) {
   const base = {
     underlyings: tickers, frequency: fqKey, coupon_barrier: CB, barrier: B, autocall_trigger: AC,
     non_call_periods: nonCall, memory, basket_type: "worst_of", currency: "RUB",
-    outputs: ["PV"], context: { user_id: who },
+    vol_shift: -PRICE_VOL_SLIP, outputs: ["PV"], context: { user_id: who },
   };
   const rubB = priceRubArgs(tickers);
   if (rubB) base.underlying_currencies = rubB.underlying_currencies;
@@ -2937,7 +2942,7 @@ async function calcCard(env, input) {
   if (rec.question) L.push("Вопрос: «" + esc(String(rec.question).slice(0, 400)) + "»");
   if (rec.answer) L.push("Ответ клиенту:\n" + esc(String(rec.answer).replace(/\*\*/g, "").slice(0, 700)));
   L.push("Цена клиенту: " + (rec.quote == null ? "—" : priceNum(rec.quote) + "%") +
-    (rec.fair == null ? "" : " · справедливая (прайсер): " + priceNum(rec.fair) + "%"));
+    (rec.fair == null ? "" : " · прайсер (со слиппаджем волы): " + priceNum(rec.fair) + "%"));
   if (rec.pq) L.push("One-pager: " + esc((env.SITE_BASE || "https://invest.rumberg.ru/").replace(/\/?$/, "/") + "onepager.html?pq=" + rec.pq));
   if (rec.model_args) L.push("Разбор модели: <code>" + esc(JSON.stringify(rec.model_args).slice(0, 400)) + "</code>");
   const tr = rec.trace || [];
