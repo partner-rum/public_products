@@ -3,7 +3,7 @@
 // Источники: ЦБ (ключевая, RUONIA), MOEX ISS (RUSFAR, БПИФы, ОФЗ),
 // Финуслуги (вклады и накопительные счета — витрина МосБиржи).
 window.RATES = {
-  "updated": "2026-11-18 19:32",
+  "updated": "2026-11-19 10:32",
   "cbr": {
     "key": {
       "rate": 14.0,
@@ -50,7 +50,7 @@ window.RATES = {
     {
       "id": "BCSD",
       "name": "БКС Денежный рынок",
-      "price": 14.711,
+      "price": 14.719,
       "ter": 0.2,
       "rate": 13.64
     },
@@ -64,35 +64,35 @@ window.RATES = {
     {
       "id": "LQDT",
       "name": "Ликвидность (ВИМ)",
-      "price": 2.1362,
+      "price": 2.137,
       "ter": 0.29,
       "rate": 13.55
     },
     {
       "id": "SBMM",
       "name": "Первая Сберегательный",
-      "price": 19.8745,
+      "price": 19.882,
       "ter": 0.3,
       "rate": 13.54
     },
     {
       "id": "AMNR",
       "name": "АТОН Накопительный",
-      "price": 160.56,
+      "price": 160.616,
       "ter": 0.3,
       "rate": 13.54
     },
     {
       "id": "AKMM",
       "name": "Альфа Денежный рынок",
-      "price": 181.74,
+      "price": 181.84,
       "ter": 0.69,
       "rate": 13.15
     },
     {
       "id": "TMON",
       "name": "Т-Капитал Денежный рынок",
-      "price": 168.03,
+      "price": 168.1,
       "ter": 1.15,
       "rate": 12.69
     }
@@ -103,27 +103,27 @@ window.RATES = {
       "name": "ОФЗ 26207",
       "maturity": "2027-02-03",
       "years": 0.21,
-      "rate": 12.95
+      "rate": 13.11
     },
     {
       "id": "SU26232RMFS7",
       "name": "ОФЗ 26232",
       "maturity": "2027-10-06",
       "years": 0.88,
-      "rate": 13.38
+      "rate": 13.28
     },
     {
       "id": "SU26212RMFS9",
       "name": "ОФЗ 26212",
       "maturity": "2028-01-19",
       "years": 1.17,
-      "rate": 13.55
+      "rate": 13.5
     },
     {
       "id": "SU26236RMFS8",
       "name": "ОФЗ 26236",
       "maturity": "2028-05-17",
-      "years": 1.5,
+      "years": 1.49,
       "rate": 14.67
     }
   ],
@@ -513,22 +513,6 @@ window.RATES = {
       "feature": null
     },
     {
-      "bank": "ЛОКО-Банк",
-      "name": "«Локо-Счет Плюс» на ежедневный остаток",
-      "rate": 14.75,
-      "kind": "saving",
-      "termMonths": 0,
-      "daysFrom": 1,
-      "daysTo": 61,
-      "minAmount": 100001,
-      "url": "https://finuslugi.ru/vklady/loko_bank_loko_schet_plyus_na_ezhednevnyj_ostatok_",
-      "promo": false,
-      "floating": false,
-      "refill": true,
-      "capitalization": true,
-      "feature": null
-    },
-    {
       "bank": "Московский Кредитный Банк",
       "name": "МКБ. Перспектива (% в конце срока)",
       "rate": 14.7,
@@ -586,6 +570,22 @@ window.RATES = {
       "daysTo": 0,
       "minAmount": 1000,
       "url": "https://finuslugi.ru/vklady/realist_bank_na_minimalnyj_ostatok",
+      "promo": false,
+      "floating": false,
+      "refill": true,
+      "capitalization": true,
+      "feature": null
+    },
+    {
+      "bank": "ЛОКО-Банк",
+      "name": "«Локо-Счет Плюс» на ежедневный остаток",
+      "rate": 14.25,
+      "kind": "saving",
+      "termMonths": 0,
+      "daysFrom": 1,
+      "daysTo": 61,
+      "minAmount": 100001,
+      "url": "https://finuslugi.ru/vklady/loko_bank_loko_schet_plyus_na_ezhednevnyj_ostatok_",
       "promo": false,
       "floating": false,
       "refill": true,
