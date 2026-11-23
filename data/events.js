@@ -136,7 +136,7 @@ window.EVENTS = {
      "label": "Материал: Pre-IPO"
     },
     {
-     "url": "about.html#preipo",
+     "url": "lib-preipo.html",
      "label": "Библиотека: Pre-IPO"
     }
    ],

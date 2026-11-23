@@ -701,7 +701,7 @@ def prod_html(p, gcode):
     o.append("</div></header>")
     ours = OURS.get(p["code"])
     if ours:
-        lk = '<a href="about.html#%s">Статья «%s» в Библиотеке<span class="ar" aria-hidden="true">→</span></a>' % (ours[0], esc(ours[1]))
+        lk = '<a href="lib-%s.html">Статья «%s» в Библиотеке<span class="ar" aria-hidden="true">→</span></a>' % (ours[0], esc(ours[1]))
         if ours[2]:
             lk += '<a href="%s">Продукты на доске<span class="ar" aria-hidden="true">→</span></a>' % ours[2]
         o.append('<div class="ours"><span class="k lbl">есть на витрине</span>%s</div>' % lk)

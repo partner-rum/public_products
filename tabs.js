@@ -187,7 +187,7 @@
       el.innerHTML = '<div class="tg-tip-bg" data-tipx></div><div class="tg-tip-card">' +
         '<div class="tg-tip-k">Что значит цифра · котировки индикативные</div>' +
         '<h3 id="tg-tip-h">' + T.h + "</h3><p>" + T.t + "</p>" + (ex ? '<p class="tg-tip-ex">' + esc(ex) + "</p>" : "") +
-        '<div class="tg-tip-act">' + (T.lib ? '<a href="about.html#' + T.lib + '">Подробнее в Библиотеке</a>' : "") +
+        '<div class="tg-tip-act">' + (T.lib ? '<a href="lib-' + T.lib + '.html">Подробнее в Библиотеке</a>' : "") +
         '<button type="button" data-tipx>Понятно</button></div></div>';
       el.addEventListener("click", function (e) { if (e.target.closest("[data-tipx]")) closeTip(false); });
       document.body.appendChild(el);

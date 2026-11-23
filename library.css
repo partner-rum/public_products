@@ -1,0 +1,275 @@
+  :root {
+    --canvas: #191A2F; --card: #22243B;
+    --ink: #F2F3F7; --hushed: rgba(242,243,247,0.64); --faint: rgba(242,243,247,0.56);
+    --border: rgba(255,255,255,0.11); --border-soft: rgba(255,255,255,0.07);
+    --solar: #F06E08; --solar-l: #F48834;
+    --steel: #4F86E6; --amber-t: #E0A24A; --down: #F06E08;
+    --f-body: 'Onest', system-ui, sans-serif; --f-mono: 'JetBrains Mono', Consolas, monospace; --display:Montserrat,'Onest',system-ui,sans-serif;
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--canvas); color: var(--ink); font-family: var(--f-body); -webkit-font-smoothing: antialiased; }
+  a { text-decoration: none; color: inherit; }
+  ::selection { background: rgba(240,110,8,0.35); color: var(--ink); }
+  a:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 2px; }
+  .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+  .wrap { max-width: 1160px; margin: 0 auto; padding: 0 44px; }
+
+  .skip { position: absolute; left: -9999px; top: 0; z-index: 100; background: var(--solar); color: #191A2F; padding: 10px 16px; border-radius: 0 0 2px 0; font-size: 14px; }
+  .skip:focus { left: 0; }
+
+  .nav { position: sticky; top: 0; z-index: 30; background: rgba(25,26,47,0.82); backdrop-filter: none; -webkit-backdrop-filter: none; border-bottom: 1px solid var(--border); }
+  .nav-in { max-width: 1160px; margin: 0 auto; padding: 0 44px; height: 62px; display: flex; align-items: center; gap: 12px; }
+  .brand { display: flex; align-items: center; gap: 10px; } .brand-name { font-size: 14.5px; font-weight: 600; }
+  .topnav { margin-left: auto; display: flex; align-items: center; gap: 22px; font-size: 14px; font-weight: 500; }
+  .topnav a { color: var(--hushed); transition: color .2s; } .topnav a:hover { color: var(--ink); }
+  .topnav a[aria-current="page"] { color: var(--ink); font-weight: 600; }
+  .btn-solar { background: var(--solar); color: #191A2F !important; border-radius: 2px; padding: 8px 14px; display: inline-flex; align-items: center; gap: 7px; transition: background .3s ease-in-out; }
+  .btn-solar:hover { background: var(--solar-l); }
+
+  .page-head { padding: 46px 0 4px; }
+  .page-head h1, .page-head .ph-t { margin: 0 0 14px; font-family: var(--display); font-size: clamp(32px, 4.5vw, 44px); font-weight: 500; line-height: 1.08; letter-spacing: -0.01em; text-wrap: balance; }
+  .page-head p { margin: 0; font-size: 16px; line-height: 1.6; color: var(--hushed); max-width: 640px; text-wrap: pretty; }
+
+  .principles { display: grid; grid-template-columns: repeat(3, 1fr); padding: 34px 0 0; }
+  .principle { padding: 4px 26px 8px 0; }
+  .principle + .principle { border-left: 1px solid var(--border-soft); padding-left: 26px; }
+  .principle .k { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--faint); margin-bottom: 8px; }
+  .principle .v { font-size: 13.5px; line-height: 1.55; color: var(--hushed); text-wrap: pretty; }
+
+  /* ── Содержание (общее) + статья (частное) ── */
+  .layout { display: grid; grid-template-columns: 296px minmax(0, 1fr); gap: 40px; align-items: start; margin-top: 34px; }
+  .toc { position: sticky; top: 82px; }
+  .toc-h { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--faint); margin-bottom: 8px; }
+  /* Две группы содержания: сначала из чего собраны продукты, потом сами продукты */
+  .toc-sec { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--faint); padding: 0 9px 7px; }
+  .toc-sec + .toc-sec, .toc-i + .toc-sec, .toc-kids + .toc-sec { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border-soft); }
+  .toc-i { display: flex; gap: 11px; align-items: baseline; width: 100%; text-align: left; background: none; border: none; cursor: pointer; padding: 8px 9px; border-radius: 2px; font-family: var(--f-body); color: var(--ink); text-decoration: none; }
+  .toc-i:hover { background: rgba(255,255,255,0.05); }
+  .toc-i.active { background: rgba(255, 255, 255, 0.072); color: var(--ink); }
+  .toc-i.active .sub, .toc-i.active .cnt { color: rgba(242,243,247,0.72); }
+  .toc-i .dot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--fc); position: relative; top: -1px; }
+  .toc-i .tx { flex: 1; min-width: 0; }
+  .toc-i .nm { font-size: 14px; font-weight: 600; line-height: 1.3; }
+  .toc-i .sub { font-family: var(--f-mono); font-size: 11px; color: var(--faint); margin-top: 2px; }
+  .toc-i .cnt { font-family: var(--f-mono); font-size: 11px; color: var(--faint); white-space: nowrap; }
+  .toc-kids { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .3s var(--ease); margin-left: 12px; }
+  .toc-kids.open { grid-template-rows: 1fr; }
+  .toc-kids-in { overflow: hidden; min-height: 0; padding-left: 13px; border-left: 1px solid var(--border-soft); }
+  .toc-kids .toc-i { padding: 6px 9px; }
+  .toc-kids .toc-i .nm { font-size: 13px; font-weight: 500; }
+  .toc-link { display: flex; gap: 11px; align-items: baseline; padding: 8px 9px; border-radius: 2px; color: var(--ink); transition: background .15s; }
+  .toc-link:hover { background: rgba(255,255,255,0.05); }
+  .toc-link .dot { flex: none; width: 9px; height: 9px; border-radius: 50%; background: var(--fc); position: relative; top: -1px; }
+  .toc-link .tx { flex: 1; min-width: 0; }
+  .toc-link .nm { font-size: 14px; font-weight: 600; line-height: 1.3; }
+  .toc-link .sub { font-family: var(--f-mono); font-size: 11px; color: var(--faint); margin-top: 2px; }
+  .toc-link .ar { flex: none; color: var(--solar); align-self: center; font-size: 14px; }
+  .toc-i .chev { flex: none; color: var(--faint); transition: transform .25s var(--ease); align-self: center; }
+  .toc-i.exp .chev { transform: rotate(180deg); }
+  .toc-i.exp { background: rgba(255,255,255,0.05); }
+  .toc-i.exp.active { background: rgba(255, 255, 255, 0.072); }
+
+  /* Статья */
+  /* Текст статьи в исходнике страницы (его собирает make_library.py для поиска). Скрипт
+     заменяет его готовой статьёй; на медленной сети он виден мгновение до загрузки
+     library.js, поэтому набран как обычная статья, а не голым текстом */
+  .seo-pre h1, .seo-pre h2 { font-family: var(--display); font-weight: 500; letter-spacing: -0.01em; line-height: 1.1; margin: 0 0 12px; max-width: 620px; }
+  .seo-pre h1 { font-size: clamp(27px, 3.4vw, 37px); }
+  .seo-pre h2 { font-size: 20px; margin-top: 28px; }
+  .seo-pre p, .seo-pre li { font-size: 15px; line-height: 1.6; color: var(--hushed); max-width: 640px; }
+  .seo-pre p { margin: 0 0 12px; }
+  .seo-pre ul { margin: 0 0 12px; padding-left: 18px; }
+  .seo-pre a { color: var(--ink); }
+  .art-title { margin: 0 0 9px; font-family: var(--display); font-size: clamp(27px, 3.4vw, 37px); font-weight: 500; letter-spacing: -0.01em; line-height: 1.1; max-width: 620px; }
+  .art-kind { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--fc); margin: 0 0 10px; }
+  .art-kind .mapc { color: var(--hushed); border-bottom: 1px solid var(--border); }
+  .art-kind .mapc:hover { color: var(--ink); border-bottom-color: var(--fc); }
+  .maplink { margin-top: 14px !important; font-size: 14px !important; }
+  .maplink a { color: var(--ink); font-weight: 600; border-bottom: 1px solid rgba(240,110,8,0.5); }
+  .maplink a:hover { border-bottom-color: var(--solar); }
+  .art-sub { font-size: 15px; line-height: 1.55; color: var(--hushed); max-width: 640px; text-wrap: pretty; }
+  .art-bar { width: 56px; height: 4px; background: var(--fc); margin: 16px 0 22px; }
+  .art-grid { display: grid; grid-template-columns: 1.25fr 1fr; gap: 28px; align-items: start; }
+  .kv { margin: 0 0 18px; } .kv:last-child { margin-bottom: 0; }
+  .kv .k { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--faint); margin-bottom: 7px; }
+  .kv .v { font-size: 14.5px; line-height: 1.62; color: var(--hushed); text-wrap: pretty; }
+  .metrics { display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 18px; }
+  .metric { min-width: 150px; flex: 1; }
+  .metric .k { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--faint); }
+  .metric .v { font-size: 13.5px; color: var(--hushed); margin-top: 4px; line-height: 1.5; }
+  .plaque { padding: 12px 14px; border: 1px solid var(--border-soft); background: rgba(255,255,255,0.03); border-radius: 2px; font-size: 13px; line-height: 1.55; color: var(--hushed); margin-bottom: 18px; }
+  .plaque .k { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--down); margin-bottom: 6px; }
+  .usecase { display: flex; gap: 12px; align-items: flex-start; background: rgba(255, 255, 255, 0.054); border: 1px solid rgba(240,110,8,0.22); border-radius: 2px; padding: 13px 16px; margin-bottom: 20px; }
+  .usecase .ic { flex: none; line-height: 0; margin-top: 1px; }
+  .usecase .k { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--solar); margin-bottom: 5px; }
+  .usecase .v { font-size: 15px; line-height: 1.55; color: var(--ink); font-weight: 500; text-wrap: pretty; }
+  .boardlink { display: inline-flex; align-items: center; gap: 7px; margin-top: 4px; font-size: 14px; font-weight: 600; color: var(--fc); }
+  .boardlink .cnt { font-family: var(--f-mono); font-size: 11.5px; font-weight: 400; color: var(--faint); }
+
+  /* «Сейчас на доске»: живые продукты этого типа, ссылками в карточки */
+  .live { margin-top: 22px; border-top: 1px solid var(--border-soft); padding-top: 14px; }
+  .live .k { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--faint); margin-bottom: 4px; }
+  .lrow { display: flex; align-items: center; gap: 10px; padding: 9px 0; font-size: 13.5px; color: var(--hushed); border-bottom: 1px solid var(--border-soft); transition: color .18s; }
+  .lrow:hover { color: var(--ink); }
+  .lrow .nm { flex: 1; min-width: 0; line-height: 1.4; }
+  .lrow svg { flex: none; opacity: 0.55; }
+  .live .empty { font-size: 13.5px; line-height: 1.55; color: var(--hushed); padding: 8px 0 10px; text-wrap: pretty; }
+  .live .boardlink { margin-top: 12px; }
+  /* ── Базовые бумаги ──
+     Тройка «вид купона» / «характер бумаги» вынесена ПОД две колонки во всю
+     ширину: в левой колонке она давала 1400px текста против 460px графика,
+     и справа зияла пустота. Тройкой это ещё и читается как сравнение,
+     чем она и является. Разделители — как у .principles в шапке страницы */
+  .rows-k { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--faint); margin: 30px 0 0; }
+  .lrow .cnt { font-family: var(--f-mono); font-size: 11.5px; color: var(--faint); white-space: nowrap; }
+  .trio { display: grid; grid-template-columns: repeat(3, 1fr); margin: 10px 0 4px; border-top: 1px solid var(--border); }
+  .trio > div { padding: 14px 26px 6px 0; }
+  .trio > div + div { border-left: 1px solid var(--border-soft); padding-left: 26px; }
+  .trio .t { font-size: 15px; font-weight: 600; line-height: 1.3; }
+  .trio .en { display: block; font-family: var(--f-mono); font-size: 11px; font-weight: 400; color: var(--faint); margin-top: 4px; }
+  .trio .d { font-size: 13.5px; line-height: 1.6; color: var(--hushed); margin-top: 9px; text-wrap: pretty; }
+  .trio a { color: var(--ink); font-weight: 600; border-bottom: 1px solid rgba(240,110,8,0.5); }
+  .trio a:hover { border-bottom-color: var(--solar); }
+  /* Колонка, которая и есть наш продукт: единственная точка, где базовая бумага
+     смыкается с витриной, — помечена акцентной планкой, а не заливкой */
+  .trio .ours { box-shadow: inset 0 2px 0 var(--solar); }
+  .trio .ours .t { color: var(--solar); }
+
+  /* Легенда сравнительного графика (акция) */
+  .lgnd { margin-top: 12px; display: grid; gap: 7px; }
+  .lgi { display: flex; gap: 9px; align-items: baseline; font-size: 12.5px; line-height: 1.45; color: var(--hushed); }
+  .lgi i { flex: none; width: 16px; height: 3px; border-radius: 2px; background: var(--lc); position: relative; top: -3px; }
+  .lgi b { color: var(--ink); font-weight: 600; }
+
+  .gloss { margin-top: 26px; border-top: 1px solid var(--border-soft); padding-top: 16px; }
+  .gloss summary { cursor: pointer; font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--faint); list-style: none; display: flex; align-items: center; gap: 8px; }
+  .gloss summary::-webkit-details-marker { display: none; }
+  .gloss summary::before { content: "+"; color: var(--fc); font-size: 15px; line-height: 1; width: 12px; }
+  .gloss[open] summary::before { content: "\2212"; }
+  .gloss summary:hover { color: var(--hushed); }
+  .gloss dl { margin: 16px 0 0; display: grid; gap: 14px; }
+  .gloss dt { font-size: 14px; font-weight: 600; color: var(--ink); }
+  .gloss dt .en { font-family: var(--f-mono); font-size: 11px; font-weight: 400; color: var(--faint); margin-left: 6px; }
+  .gloss dd { margin: 3px 0 0; font-size: 13.5px; line-height: 1.55; color: var(--hushed); text-wrap: pretty; }
+  .backmx { display: inline-flex; align-items: center; gap: 7px; background: none; border: none; cursor: pointer; font-family: var(--f-body); font-size: 13px; color: var(--hushed); padding: 0 0 14px; }
+  .backmx:hover { color: var(--ink); }
+
+  .viz { background: var(--card); border: 1px solid var(--border-soft); border-radius: 2px; padding: 18px 20px 14px; }
+  .pf svg { display: block; width: 100%; height: auto; }
+  .pf-axis { font-family: var(--f-mono); font-size: 11px; color: var(--faint); text-align: right; margin-top: 3px; }
+  .pf-cap { font-size: 12px; line-height: 1.5; color: var(--faint); margin-top: 10px; text-wrap: pretty; }
+  .pf-line { transition: stroke-dashoffset 1.05s var(--ease); }
+  .pf-bar { transform-box: fill-box; transform-origin: bottom; transform: scaleY(0); transition: transform .8s var(--ease); }
+  .pf.grown .pf-bar { transform: scaleY(1); }
+
+  .prot-ctrls { display: flex; flex-wrap: wrap; gap: 18px; margin-bottom: 14px; }
+  .ctrl .k { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--faint); margin-bottom: 7px; }
+  .seg { display: inline-flex; background: rgba(255,255,255,0.06); border-radius: 2px; padding: 3px; gap: 2px; }
+  .seg button { border: none; background: none; cursor: pointer; font-family: var(--f-mono); font-size: 12.5px; color: var(--hushed); padding: 6px 12px; border-radius: 2px; transition: background .18s, color .18s; }
+  /* Выбранная кнопка: #4F86E6 на подложке #343852 давал 4,03:1 при кегле 12,5px —
+     ниже порога 4,5. Осветлённый тон того же синего — 4,89:1 */
+  .seg button.on { background: #343852; color: #6796EC; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.35); }
+  .prot-read { font-size: 13px; line-height: 1.55; color: var(--hushed); margin-top: 12px; text-wrap: pretty; }
+  .prot-read b { color: var(--ink); }
+
+  /* Матрица варрантов (обзор) */
+  .mx { display: grid; grid-template-columns: 86px 1fr 1fr 1fr; gap: 10px; margin-top: 4px; }
+  .mx .hd { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.04em; color: var(--faint); display: flex; align-items: flex-end; padding-bottom: 6px; }
+  .mx .rl { display: flex; flex-direction: column; justify-content: center; }
+  .mx .rl .t { font-size: 15px; font-weight: 600; color: var(--amber-t); }
+  .mx .rl .s { font-family: var(--f-mono); font-size: 11px; color: var(--faint); margin-top: 2px; }
+  /* color обязателен: <button> не наследует цвет от body, а берёт системный
+     buttontext (чёрный). Без этой строки названия шести типов варрантов
+     печатались чёрным по тёмной карточке — контраст 1,16:1, то есть их не было
+     видно вовсе, при живых подписи и ссылке под ними */
+  .cell { background: var(--card); border: 1px solid var(--border-soft); border-radius: 2px; padding: 10px 11px 9px; cursor: pointer; text-align: left; font-family: var(--f-body); color: var(--ink); transition: box-shadow .18s, transform .18s, border-color .18s; }
+  .cell:hover { transform: none; box-shadow: 0 8px 20px rgba(0,0,0,0.4); }
+  .cell svg { display: block; width: 100%; height: auto; }
+  .cell svg text { display: none; }
+  .cell .nm { font-size: 13px; font-weight: 600; margin-top: 7px; }
+  .cell .tg { font-size: 11.5px; line-height: 1.4; color: var(--hushed); margin-top: 2px; }
+  .cell .more { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; color: var(--amber-t); margin-top: 8px; }
+
+  .nextprev { display: flex; justify-content: space-between; gap: 14px; margin-top: 34px; border-top: 1px solid var(--border); padding-top: 18px; }
+  .np { background: none; border: none; cursor: pointer; font-family: var(--f-body); color: var(--hushed); text-align: left; padding: 6px 0; max-width: 46%; }
+  .np:hover { color: var(--ink); } .np.r { text-align: right; }
+  .np .l { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--faint); }
+  .np .n { font-size: 14.5px; margin-top: 3px; }
+  .np[disabled] { visibility: hidden; }
+
+  footer { margin-top: 64px; background: var(--canvas); border-top: 1px solid var(--border); color: var(--hushed); }
+  .footer-in { padding: 34px 0 44px; display: flex; justify-content: space-between; gap: 32px; flex-wrap: wrap; }
+  .footer-brand .row { display: flex; align-items: center; gap: 10px; color: var(--ink); font-size: 14px; font-weight: 600; }
+  .footer-brand .sub { font-family: Onest, system-ui, sans-serif; font-size: 11px; letter-spacing: normal; text-transform: none; color: var(--faint); margin-top: 8px; }
+  .footer-right { display: flex; flex-direction: column; gap: 10px; max-width: 460px; }
+  .disclaimer { font-size: 12.5px; line-height: 1.55; }
+  .updated { font-family: var(--f-mono); font-size: 11.5px; color: var(--faint); }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .pf-line { transition: none !important; } .pf-bar { transition: none !important; }
+    .cell, .btn-solar, .topnav a, .seg button { transition: none; }
+    .toc-kids { transition: none; } .toc-i .chev { transition: none; }
+  }
+  @media (max-width: 960px) {
+    .wrap { padding: 0 20px; } .nav-in { padding: 0 20px; }
+    .principles { grid-template-columns: 1fr; padding-top: 26px; }
+    .principle + .principle { border-left: none; border-top: 1px solid var(--border-soft); padding-left: 0; padding-top: 18px; }
+    .layout { grid-template-columns: 1fr; gap: 22px; }
+    .toc { position: static; }
+    .art-grid { grid-template-columns: 1fr; }
+    .trio { grid-template-columns: 1fr; }
+    .trio > div { padding: 14px 0 4px; }
+    .trio > div + div { border-left: none; border-top: 1px solid var(--border-soft); padding-left: 0; }
+    .trio .ours { box-shadow: inset 2px 0 0 var(--solar); padding-left: 14px; }
+    .mx { grid-template-columns: 1fr; }
+    .mx .hd, .mx .rl { display: none; }
+  }
+  @media (max-width: 860px) {
+    .nav-in { height: auto; flex-wrap: wrap; padding: 12px 20px; row-gap: 10px; }
+    .topnav { margin-left: 0; width: 100%; gap: 16px; font-size: 13.5px; }
+    /* Тач-цели ≥44px: без этого главное действие страницы («Смотреть на доске»)
+       было 18px, а «Термины Pre-IPO» — 15px */
+    /* .brand и бургер держит nav-about.js (общая шапка сайта) — тут их не трогаем */
+    .btn-solar { min-height: 44px; padding: 8px 15px; }
+    .seg button { min-height: 44px; padding: 8px 14px; }
+    .backmx { padding: 12px 0 16px; }
+    .boardlink { min-height: 44px; }
+    .lrow { min-height: 44px; }
+    .gloss summary { min-height: 44px; }
+    .art-kind .mapc, .maplink a { display: inline-flex; align-items: center; min-height: 44px; }
+    .toc-link { min-height: 44px; align-items: center; }
+  }
+  /* ── Телефон: Библиотека в два уровня — список статей, по тапу статья отдельным
+     экраном со строкой «← Библиотека». Классы lib-m / lib-a ставит скрипт (libMode)
+     только при max-width:900px и не для поисковых роботов: им отдаём всё сразу ── */
+  .lib-back { display: none; }
+  @media (max-width: 900px) {
+    html.lib-m .principles, html.lib-m .maplink { display: none; }
+    html.lib-m .page-head { padding-top: 26px; }
+    html.lib-m .page-head h1, html.lib-m .page-head .ph-t { font-size: 30.1px; margin-bottom: 8px; }
+    html.lib-m .page-head p { font-size: 15px; line-height: 1.55; }
+    html.lib-m .layout { margin-top: 14px; }
+    html.lib-m:not(.lib-a) .layout > main { display: none; }
+    html.lib-m .toc-sec { padding: 0 2px 6px; }
+    html.lib-m .toc-sec + .toc-sec, html.lib-m .toc-i + .toc-sec, html.lib-m .toc-kids + .toc-sec { margin-top: 20px; padding-top: 0; border-top: 0; }
+    html.lib-m .toc-i, html.lib-m .toc-link { min-height: 56px; align-items: center; padding: 8px 2px; border-radius: 0; border-top: 1px solid var(--border-soft); }
+    html.lib-m .toc-sec + .toc-i, html.lib-m .toc-sec + .toc-link { border-top: 0; }
+    html.lib-m .toc-i .nm, html.lib-m .toc-link .nm { font-size: 16px; }
+    html.lib-m .toc-i .sub, html.lib-m .toc-link .sub { font-size: 12px; margin-top: 3px; }
+    html.lib-m .toc-i .dot, html.lib-m .toc-link .dot { top: 0; }
+    html.lib-m .toc-i.active { background: none; }
+    html.lib-m.lib-was .toc-i.active .nm { color: var(--solar); }
+    html.lib-m .toc-kids .toc-i { padding-left: 22px; min-height: 50px; }
+    html.lib-a .page-head, html.lib-a .toc { display: none; }
+    html.lib-a .layout { margin-top: 0; }
+    html.lib-a .lib-back { display: flex; align-items: center; gap: 8px; position: sticky; top: var(--navh, 57px); z-index: 25;
+      width: calc(100% + 40px); height: 48px; margin: 0 -20px 14px; padding: 0 20px; background: var(--canvas);
+      border: 0; border-bottom: 1px solid var(--border-soft); color: var(--ink); font-family: var(--f-body); font-size: 15px; font-weight: 500; cursor: pointer; text-align: left; }
+    html.lib-a .lib-back svg { color: var(--solar); }
+    html.lib-a .art-grid > .viz { order: -1; }
+    html.lib-a .metrics { flex-direction: column; gap: 12px; }
+    html.lib-a .metric { min-width: 0; }
+  }
