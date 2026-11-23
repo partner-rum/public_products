@@ -29,7 +29,7 @@ window.MORNING = {
  "products": [
   "RCD-OFZ248-K100-1Y",
   "W-OFZ248-C100-1028",
-  "P-SPY-2Y",
+  "P-SPY-FX-2Y",
   "D-VEB-3Y",
   "P-PLZL-2Y"
  ]
