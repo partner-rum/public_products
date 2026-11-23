@@ -6688,13 +6688,18 @@ function shellDescOffering(o) {
 // Есть ли персональная og-картинка продукта в репо (её рендерит make_og_products.py локально).
 // Новый продукт из админки картинки ещё не имеет → отдаём общую обложку, чтобы превью
 // не оказалось битым; после локального прогона превью само станет персональным.
+// Папка og2/ и имя общей обложки с номером: Telegram кэширует картинку превью по её
+// адресу, поэтому новый вид обложек = новые адреса. Те же константы — в
+// make_product_pages.py (OG_DIR, OG_FALLBACK) и make_og_products.py.
+const OG_DIR = "og2";
+const OG_FALLBACK = "og-cover-2.jpg";
 async function ogImageFor(env, id, branch) {
-  const fallback = "og-cover.png";
+  const fallback = OG_FALLBACK;
   if (!env.GITHUB_TOKEN || !env.GITHUB_REPO) return fallback;
   try {
     const r = await fetch("https://api.github.com/repos/" + env.GITHUB_REPO +
-      "/contents/og/" + encodeURIComponent(id) + ".png?ref=" + branch, { headers: ghHeaders(env) });
-    return r.ok ? "og/" + id + ".png" : fallback;
+      "/contents/" + OG_DIR + "/" + encodeURIComponent(id) + ".jpg?ref=" + branch, { headers: ghHeaders(env) });
+    return r.ok ? OG_DIR + "/" + id + ".jpg" : fallback;
   } catch (e) { return fallback; }
 }
 // section: "board" → редирект на карточку инструмента, "offering" → на выпуск первички
@@ -6716,7 +6721,7 @@ function productShell(item, section, ogimg) {
   const canon = isOffering ? B + "/offerings.html" : B + "/instrument.html?id=" + id;
   const title = shellEsc(item.name || id);
   const desc = shellEsc(isOffering ? shellDescOffering(item) : shellDesc(item));
-  const img = ogimg || "og-cover.png";
+  const img = ogimg || OG_FALLBACK;
   return [
     '<!DOCTYPE html>', '<html lang="ru">', '<head>', '<meta charset="utf-8">',
     '<meta name="viewport" content="width=device-width, initial-scale=1">',
@@ -6731,10 +6736,10 @@ function productShell(item, section, ogimg) {
     '<meta property="og:image:width" content="1200">', '<meta property="og:image:height" content="630">',
     '<meta property="og:image:alt" content="Rumberg — структурные продукты">',
     '<meta name="twitter:card" content="summary_large_image">',
-    '<meta name="theme-color" content="#0B0C10">',
+    '<meta name="theme-color" content="#191A2F">',
     '<link rel="canonical" href="' + canon + '">',
     '<script>location.replace(' + redir + ');</script>',
-    "<style>html,body{margin:0;height:100%}body{background:#0B0C10;color:rgba(242,243,247,.6);font-family:'Onest',system-ui,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px}a{color:#EE7D1B}</style>",
+    "<style>html,body{margin:0;height:100%}body{background:#191A2F;color:rgba(242,243,247,.6);font-family:'Onest',system-ui,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px}a{color:#F06E08}</style>",
     '</head>',
     '<body>Открываем продукт… <a href="' + target + '">перейти вручную</a></body>',
     '</html>', '',

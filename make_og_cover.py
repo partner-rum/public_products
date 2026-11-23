@@ -1,22 +1,25 @@
 # -*- coding: utf-8 -*-
 """
-Перегенерирует og-cover.png — ОБЩУЮ обложку превью (1200x630). Она уходит в мессенджер
+Перегенерирует ОБЩУЮ обложку превью (1200x630) — og-cover-2.jpg. Она уходит в мессенджер
 для всех страниц без персональной картинки: главная, доска, дайджест, размещения,
 выпуски, Библиотека, путеводитель, «О компании», карточка, one-pager, 404.
 
-Зачем понадобилось: на прежней обложке (20.07.2026) был чип «Барьерная нота» —
-слово «Нота» на витрине запрещено, а зачистка 22.07 обложку не задела: она рисуется
-отдельным скриптом, которого не было в репозитории.
+Имя с номером: Telegram кэширует превью по URL картинки и ?v= не понимает, поэтому
+новая обложка = новое имя файла и правка og:image на страницах (OUT ниже, тег
+og:image в *.html, запасная обложка в make_product_pages.py и в productShell воркера).
+Прежняя og-cover.png оставлена в репозитории: по ней разосланы ссылки.
 
-Дизайн повторяет продуктовые карточки (make_og_products.py): та же палитра, сетка,
-свечение, бренд-строка. Чипы — типы, которые реально есть на доске.
+Вид — по брендбуку Rumberg Capital, как у обложек событий и разборов
+(make_og_event.py): логотип из brand/logo.svg, Montserrat, фон #191A2F, оранжевый
+#F06E08 только на главном, углы 2px, без свечений. Чипы — типы, которые есть на доске.
 
 Запуск: python make_og_cover.py [путь-к-репозиторию]
 """
 import os, sys, socket, subprocess, threading, functools, http.server, shutil
 
-ROOT = sys.argv[1] if len(sys.argv) > 1 else r"C:\Users\ruslan.sabirov\Documents\сайт\сайт СО\pythonProject1"
-OUT = os.path.join(ROOT, "og-cover.png")
+ROOT = sys.argv[1] if len(sys.argv) > 1 else os.path.dirname(os.path.abspath(__file__))
+OUT = os.path.join(ROOT, "og-cover-2.jpg")
+RAW = os.path.join(ROOT, "_og_cover_raw.png")
 TPL_NAME = "_og_cover_tmp.html"
 
 CHROME_CANDIDATES = [
@@ -46,8 +49,25 @@ def free_port():
     return p
 
 
+# Целевой вес превью. Chrome снимает только PNG, а PNG с градиентом весит ~225 КБ
+# (и PNG под 90 КБ Telegram однажды не взял вовсе — см. make_og_ideas.py), поэтому
+# снимок сжимается в JPEG. Ниже качества 72 не опускаемся: тёмный фон начинает полосить.
+TARGET_KB = 70
+
+
+def to_jpeg(src, dst):
+    from PIL import Image
+    im = Image.open(src).convert("RGB")
+    for q in (88, 84, 80, 76, 72):
+        im.save(dst, "JPEG", quality=q, optimize=True, progressive=True, subsampling=1)
+        if os.path.getsize(dst) / 1024 <= TARGET_KB:
+            break
+    return os.path.getsize(dst) / 1024
+
+
 def serve(port):
     handler = functools.partial(http.server.SimpleHTTPRequestHandler, directory=ROOT)
+    handler.log_message = lambda *a, **k: None
     httpd = http.server.ThreadingHTTPServer(("127.0.0.1", port), handler)
     threading.Thread(target=httpd.serve_forever, daemon=True).start()
     return httpd
@@ -58,40 +78,40 @@ TEMPLATE = """<!DOCTYPE html>
 <head>
 <meta charset="utf-8">
 <link href="fonts/fonts.css?v=2" rel="stylesheet">
+<link href="brand/brand.css?v=1" rel="stylesheet">
 <style>
-  :root{--bg:#0B0C10;--card:#14161C;--ink:#F2F3F7;--mut:rgba(242,243,247,.64);
-    --mut2:rgba(242,243,247,.40);--bd:rgba(255,255,255,.11);--or:#EE7D1B;
-    --f:'Onest',sans-serif;--m:'JetBrains Mono',monospace;--d:'Rubik',sans-serif;}
+  :root{--bg:#191A2F;--card:#22243B;--ink:#F2F3F7;--mut:rgba(242,243,247,.70);
+    --mut2:rgba(242,243,247,.46);--bd:rgba(255,255,255,.12);--or:#F06E08;
+    --f:'Onest',sans-serif;--m:'JetBrains Mono',monospace;--d:'Montserrat',sans-serif;}
   *{box-sizing:border-box;margin:0;padding:0}
-  html,body{background:#22242b}
+  html,body{background:#2a2c44}
   body{display:flex;align-items:center;justify-content:center;min-height:100vh;
        color:var(--ink);font-family:var(--f);-webkit-font-smoothing:antialiased}
-  .og{position:relative;width:1200px;height:630px;background:var(--bg);overflow:hidden;
-      display:flex;flex-direction:column;padding:52px 60px;border-left:10px solid var(--or)}
-  .grid{position:absolute;inset:0;opacity:.55;
-    background:linear-gradient(rgba(255,255,255,.02) 1px,transparent 1px) 0 0/100% 42px}
-  .glow{position:absolute;right:-140px;bottom:-200px;width:660px;height:660px;border-radius:50%;
-    background:radial-gradient(circle,rgba(238,125,27,.22),transparent 62%);filter:blur(6px)}
+  .og{position:relative;width:1200px;height:630px;overflow:hidden;
+      background:linear-gradient(135deg,#191A2F 0%,#1B1C35 55%,#22244A 100%);
+      display:flex;flex-direction:column;padding:56px 64px}
+  .grid{position:absolute;inset:0;
+    background:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px) 0 0/48px 48px,
+               linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px) 0 0/48px 48px;
+    -webkit-mask:linear-gradient(110deg,transparent 35%,#000 100%);mask:linear-gradient(110deg,transparent 35%,#000 100%)}
   .top{position:relative;z-index:2;display:flex;justify-content:space-between;align-items:center}
-  .wm{display:inline-flex;align-items:center;gap:12px;font-family:var(--d);font-weight:700;
-      font-size:23px;letter-spacing:.16em}
-  .dot{width:11px;height:11px;border-radius:50%;background:var(--or);box-shadow:0 0 16px var(--or)}
-  .qual{font-family:var(--m);font-size:12px;letter-spacing:.1em;color:var(--mut2);text-transform:uppercase}
+  .logo{height:38px;width:150px;background:url(brand/logo.svg) left center/contain no-repeat}
+  .qual{font-size:15px;color:var(--mut2)}
   .mid{position:relative;z-index:2;flex:1;display:flex;flex-direction:column;justify-content:center}
-  h1{font-family:var(--d);font-weight:800;line-height:1.02;letter-spacing:-.025em;font-size:78px}
-  .sub{font-size:24px;color:var(--mut);margin-top:20px}
+  h1{font-family:var(--d);font-weight:600;line-height:1.06;letter-spacing:-.01em;font-size:76px}
+  .sub{font-size:24px;line-height:1.4;color:var(--mut);margin-top:22px;max-width:920px}
   .bot{position:relative;z-index:2;display:flex;align-items:center;gap:12px}
-  .chip{background:var(--card);border:1px solid var(--bd);border-radius:10px;
-        padding:11px 20px;font-size:19px;color:var(--ink)}
-  .chip.hot{background:var(--or);border-color:var(--or);color:#0C0A08;font-weight:600}
-  .site{margin-left:auto;font-family:var(--m);font-size:15px;color:var(--mut2);letter-spacing:.02em}
+  .chip{border:1px solid var(--bd);background:rgba(34,36,59,.85);border-radius:2px;
+        padding:11px 18px;font-size:19px;color:var(--ink);white-space:nowrap}
+  .chip.hot{background:var(--or);border-color:var(--or);color:#191A2F;font-weight:600}
+  .site{margin-left:auto;font-family:var(--m);font-size:21px;color:var(--mut);letter-spacing:.01em}
 </style>
 </head>
 <body>
 <div class="og">
-  <div class="grid"></div><div class="glow"></div>
+  <div class="grid"></div>
   <div class="top">
-    <span class="wm"><span class="dot"></span>RUMBERG</span>
+    <span class="logo" role="img" aria-label="Rumberg Capital"></span>
     <span class="qual">только для квалифицированных инвесторов</span>
   </div>
   <div class="mid">
@@ -122,7 +142,7 @@ def main():
         cmd = [chrome, "--headless=new", "--disable-gpu", "--no-sandbox", "--hide-scrollbars",
                "--force-device-scale-factor=1", "--window-size=1200,630",
                "--virtual-time-budget=5000", "--user-data-dir=" + profile,
-               "--screenshot=" + OUT, "http://127.0.0.1:%d/%s" % (port, TPL_NAME)]
+               "--screenshot=" + RAW, "http://127.0.0.1:%d/%s" % (port, TPL_NAME)]
         subprocess.run(cmd, capture_output=True)
     finally:
         srv.shutdown()
@@ -130,10 +150,11 @@ def main():
             os.remove(tpl_path)
         except OSError:
             pass
-    if os.path.exists(OUT) and os.path.getsize(OUT) > 8000:
-        print("готово: %s (%.0f КБ)" % (OUT, os.path.getsize(OUT) / 1024))
-    else:
+    if not (os.path.exists(RAW) and os.path.getsize(RAW) > 8000):
         raise SystemExit("рендер не удался")
+    kb = to_jpeg(RAW, OUT)
+    os.remove(RAW)
+    print("готово: %s (%.0f КБ)" % (OUT, kb))
 
 
 if __name__ == "__main__":

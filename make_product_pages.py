@@ -99,10 +99,10 @@ TEMPLATE = """<!DOCTYPE html>
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Rumberg — структурные продукты">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="theme-color" content="#0B0C10">
+<meta name="theme-color" content="#191A2F">
 <link rel="canonical" href="{canonical}">
 <script>location.replace({redir});</script>
-<style>html,body{{margin:0;height:100%}}body{{background:#0B0C10;color:rgba(242,243,247,.6);font-family:'Onest',system-ui,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px}}a{{color:#EE7D1B}}</style>
+<style>html,body{{margin:0;height:100%}}body{{background:#191A2F;color:rgba(242,243,247,.6);font-family:'Onest',system-ui,sans-serif;display:flex;align-items:center;justify-content:center;gap:8px}}a{{color:#F06E08}}</style>
 </head>
 <body>Открываем продукт… <a href="{target}">перейти вручную</a></body>
 </html>
@@ -204,11 +204,17 @@ def describe_offering(o):
     return " · ".join(parts)
 
 
+OG_DIR = "og2"
+OG_FALLBACK = "og-cover-2.jpg"
+
+
 def og_image(pid):
     # персональная картинка превью, если её уже отрендерил make_og_products.py;
-    # иначе — общая обложка. ТО ЖЕ правило зашито в productShell() воркера.
-    rel = os.path.join("og", pid + ".png")
-    return "og/" + pid + ".png" if os.path.exists(os.path.join(ROOT, rel)) else "og-cover.png"
+    # иначе — общая обложка. ТО ЖЕ правило зашито в ogImageFor() воркера.
+    # Папка og2/ и имя общей обложки с номером: Telegram кэширует картинку превью
+    # по её адресу, поэтому новый вид обложек = новые адреса (см. make_og_products.py).
+    rel = os.path.join(OG_DIR, pid + ".jpg")
+    return OG_DIR + "/" + pid + ".jpg" if os.path.exists(os.path.join(ROOT, rel)) else OG_FALLBACK
 
 
 def main():
@@ -221,7 +227,7 @@ def main():
         pid = inst["id"]
         wanted.add(pid)
         img = og_image(pid)
-        personal += img != "og-cover.png"
+        personal += img != OG_FALLBACK
         redir, target = redirect_parts(pid)
         html = TEMPLATE.format(title=esc(inst.get("name", pid)), desc=esc(describe(inst)),
                                base=BASE, id=pid, ogimg=img, redir=redir, target=target,
@@ -231,7 +237,7 @@ def main():
         pid = o["id"]
         wanted.add(pid)
         img = og_image(pid)
-        personal += img != "og-cover.png"
+        personal += img != OG_FALLBACK
         redir, target = redirect_parts(pid, offering=True)
         canon = canonical_url(pid, offering=True)
         html = TEMPLATE.format(title=esc(o.get("name", pid)), desc=esc(describe_offering(o)),
