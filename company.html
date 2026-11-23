@@ -269,7 +269,7 @@
     </div>
     <div class="bz-r">
       <div class="n">Выпускаем</div>
-      <p class="d">Выпуск получает ISIN, КУВ и КИД — купить его можно у своего брокера. За два года 62 выпуска на ≈30 млрд ₽: от ОФЗ и российских акций до биткоин-ETF, урана и NVIDIA.</p>
+      <p class="d">Выпуск получает ISIN, КУВ и КИД — купить его можно у своего брокера. За два года <span data-iss="n">63</span> <span data-iss="w">выпуска</span> на ≈30 млрд ₽: от ОФЗ и российских акций до биткоин-ETF, урана и NVIDIA.</p>
     </div>
     <div class="bz-r">
       <div class="n">Сопровождаем</div>
@@ -343,7 +343,7 @@
       </div>
       <div class="ob-leg">
         <div class="st"><div class="v"><span data-cnt="25" data-suf="+">25+</span></div><div class="k">базовых активов в выпусках и на витрине</div></div>
-        <div class="st"><div class="v"><span data-cnt="62">62</span></div><div class="k">выпуска за два года</div></div>
+        <div class="st"><div class="v"><span data-cnt="63" data-iss="n">63</span></div><div class="k"><span data-iss="w">выпуска</span> за два года</div></div>
         <div class="st"><div class="v"><span data-cnt="9">9</span></div><div class="k">собственных индексов Румберг</div></div>
         <div class="lg"><i style="background:#F06E08"></i>иностранные · 8</div>
         <div class="lg"><i style="background:rgba(242,243,247,0.85)"></i>локальные · 9</div>
@@ -359,15 +359,42 @@
 
       // ── появление секций + счётчики при входе в кадр
       function countUp(sp) {
-        var n = +sp.getAttribute("data-cnt"), pre = sp.getAttribute("data-pre") || "", suf = sp.getAttribute("data-suf") || "";
+        var pre = sp.getAttribute("data-pre") || "", suf = sp.getAttribute("data-suf") || "";
         if (RM) return;
         var t0 = performance.now(), dur = 1300;
+        sp._run = true;
         (function tick(t) {
+          // Цель читается на каждом кадре: число выпусков может прийти из данных
+          // посреди счёта (см. блок «число выпусков» ниже).
+          var n = +sp.getAttribute("data-cnt");
           var p = Math.min(1, (t - t0) / dur);
           sp.textContent = pre + Math.round(n * ease(p)) + suf;
-          if (p < 1) requestAnimationFrame(tick);
+          if (p < 1) requestAnimationFrame(tick); else sp._run = false;
         })(t0);
       }
+
+      // ── число выпусков — из data/placements.js, того же файла, что рисует «Размещённые
+      // выпуски». Странице он нужен ради одной цифры, поэтому грузится после первой
+      // отрисовки; пока файл не пришёл (или не пришёл вовсе), стоит число из разметки.
+      (function () {
+        function put() {
+          var n = ((window.PLACEMENTS_DATA || {}).issues || []).length;
+          if (!n) return;
+          var a = n % 100, b = n % 10;
+          var w = a > 10 && a < 20 ? "выпусков" : b === 1 ? "выпуск" : b > 1 && b < 5 ? "выпуска" : "выпусков";
+          document.querySelectorAll('[data-iss="n"]').forEach(function (e) {
+            if (e.hasAttribute("data-cnt")) e.setAttribute("data-cnt", n);
+            if (!e._run) e.textContent = n;
+          });
+          document.querySelectorAll('[data-iss="w"]').forEach(function (e) { e.textContent = w; });
+        }
+        function load() {
+          var s = document.createElement("script");
+          s.src = "data/placements.js"; s.onload = put;
+          document.head.appendChild(s);
+        }
+        if ("requestIdleCallback" in window) requestIdleCallback(load, { timeout: 2500 }); else setTimeout(load, 1200);
+      })();
       var io = new IntersectionObserver(function (es) {
         es.forEach(function (e) {
           if (!e.isIntersecting) return;

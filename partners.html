@@ -212,9 +212,9 @@
       </ul>
       <div class="trk-h">С чего начать</div>
       <ol class="trk-s">
-        <li>Напишите нам — доступ выдаём вручную, самостоятельной регистрации нет.</li>
-        <li>Получаете ID и ключ от рабочего стола.</li>
-        <li>Отправляете клиенту ссылку на продукт.</li>
+        <li>Смотрите цены и документы: витрина открыта всем, регистрация не нужна.</li>
+        <li>Отправляете клиенту ссылку на продукт или пишете нам — подберём и посчитаем под его задачу.</li>
+        <li>После первой сделки выдаём ID и ключ от рабочего стола.</li>
       </ol>
       <div class="trk-act">
         <span id="ct-ag"></span>
@@ -234,7 +234,7 @@
 
   <div class="cap">Что за нами</div>
   <div class="nums">
-    <div class="nm"><div class="v">62</div><div class="k">выпуска за два года, первый — апрель 2024</div></div>
+    <div class="nm"><div class="v" data-iss="n">63</div><div class="k"><span data-iss="w">выпуска</span> за два года, первый — апрель 2024</div></div>
     <div class="nm"><div class="v">≈30 млрд ₽</div><div class="k">объём выпущенных продуктов</div></div>
     <div class="nm"><div class="v" data-n="instr">118</div><div class="k"><span data-w="instr">инструментов</span> с ценами на доске прямо сейчас</div></div>
     <div class="nm"><div class="v" data-n="ua">34</div><div class="k"><span data-w="ua">базовых актива</span>: от ОФЗ и акций РФ до биткоин-ETF и урана</div></div>
@@ -284,6 +284,26 @@
     };
     document.querySelectorAll("[data-n]").forEach(function (e) { e.textContent = n[e.getAttribute("data-n")]; });
     document.querySelectorAll("[data-w]").forEach(function (e) { e.textContent = w[e.getAttribute("data-w")]; });
+  })();
+
+  // Число выпусков — из data/placements.js, того же файла, что рисует «Размещённые выпуски».
+  // Странице он нужен ради одной цифры, поэтому грузится после первой отрисовки; пока файл
+  // не пришёл (или не пришёл вовсе), стоит число из разметки.
+  (function () {
+    function put() {
+      var n = ((window.PLACEMENTS_DATA || {}).issues || []).length;
+      if (!n) return;
+      var a = n % 100, b = n % 10;
+      var w = a > 10 && a < 20 ? "выпусков" : b === 1 ? "выпуск" : b > 1 && b < 5 ? "выпуска" : "выпусков";
+      document.querySelectorAll('[data-iss="n"]').forEach(function (e) { e.textContent = n; });
+      document.querySelectorAll('[data-iss="w"]').forEach(function (e) { e.textContent = w; });
+    }
+    function load() {
+      var s = document.createElement("script");
+      s.src = "data/placements.js"; s.onload = put;
+      document.head.appendChild(s);
+    }
+    if ("requestIdleCallback" in window) requestIdleCallback(load, { timeout: 2500 }); else setTimeout(load, 1200);
   })();
 </script>
 <script src="contact.js?v=11"></script>
