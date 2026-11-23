@@ -10,12 +10,22 @@
 <meta name="apple-mobile-web-app-title" content="Rumberg">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Лучшие продукты — разборы и идеи</title>
-<meta name="description" content="Разборы рынка и продукты под них.">
-<!-- Страница СКРЫТАЯ, пока копится: ссылок на неё нет ни в одной шапке,
-     в sitemap.xml она не лежит, поисковикам закрыта. Когда наберётся
-     достаточно записей — убрать noindex, добавить в sitemap и в навигацию. -->
-<meta name="robots" content="noindex, nofollow">
+<title>Лучшие продукты — ежедневные разборы рынка и продукты под них · Rumberg</title>
+<meta name="description" content="Ежедневный разбор рынков — мир, США, Азия, Россия — и структурные продукты под эти идеи. Для квалифицированных инвесторов.">
+<!-- Страница открыта поиску с 23.11.2026: разборы выходят каждый рабочий день.
+     Адрес выпуска из архива — research.html?i=<дата>; canonical и заголовок
+     под выбранный выпуск ставит скрипт (selectIssue). -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Rumberg">
+<meta property="og:locale" content="ru_RU">
+<meta property="og:title" content="Лучшие продукты — ежедневные разборы рынка">
+<meta property="og:description" content="Что происходит на рынках сегодня и какими структурными продуктами эти идеи можно взять.">
+<meta property="og:url" content="https://invest.rumberg.ru/research.html">
+<link rel="canonical" id="canon" href="https://invest.rumberg.ru/research.html">
+<meta property="og:image" content="https://invest.rumberg.ru/og-cover.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#191A2F">
 <link href="fonts/fonts.css?v=2" rel="stylesheet">
 <link href="brand/brand.css?v=1" rel="stylesheet">
@@ -77,7 +87,7 @@
   .pick.open .pick-menu { opacity:1; visibility:visible; transform:none; transition:opacity .18s ease, transform .18s var(--ease), visibility 0s; }
   .pick-mh { font-family:Onest, system-ui, sans-serif; font-size:11px; letter-spacing:normal; text-transform:none; color:var(--dim); padding:8px 10px 6px; }
   .pick-i { display:block; width:100%; text-align:left; background:none; border:none; border-radius:2px; padding:10px 11px;
-    cursor:pointer; font-family:inherit; color:var(--tx); }
+    cursor:pointer; font-family:inherit; color:var(--tx); text-decoration:none; }
   .pick-i:hover { background:rgba(255,255,255,0.06); }
   .pick-i.active { background:rgba(255, 255, 255, 0.045); }
   .pick-i .d { display:flex; align-items:baseline; gap:10px; }
@@ -222,6 +232,7 @@
   (function () {
     var ISSUES = (window.RESEARCH && RESEARCH.issues) || [];
     var list = document.getElementById("list");
+    var BASE_TITLE = document.title;
     var issue = null;      // выбранный выпуск
     var active = "all";    // выбранная рубрика внутри выпуска
 
@@ -255,12 +266,15 @@
     }
     function renderPicker() {
       document.getElementById("pick-cur").textContent = issue.label || dmy(issue.date);
-      document.getElementById("pick-list").innerHTML = ISSUES.map(function (x) {
+      // Пункты архива — ссылки, а не кнопки: по ним поисковый робот находит адреса
+      // прошлых выпусков. Человеку клик по-прежнему меняет выпуск без перезагрузки.
+      document.getElementById("pick-list").innerHTML = ISSUES.map(function (x, k) {
         var n = (x.items || []).length;
-        return '<button class="pick-i' + (x.id === issue.id ? " active" : "") + '" data-iss="' + esc(x.id) + '">' +
+        return '<a class="pick-i' + (x.id === issue.id ? " active" : "") + '" data-iss="' + esc(x.id) + '" href="' +
+          (k === 0 ? "research.html" : "research.html?i=" + encodeURIComponent(x.id)) + '">' +
           '<span class="d"><span class="t">' + esc(x.label || dmy(x.date)) + '</span>' +
           '<span class="c">' + n + " " + plural(n, "разбор", "разбора", "разборов") + '</span></span>' +
-          (x.summary ? '<span class="s">' + esc(x.summary) + '</span>' : '') + '</button>';
+          (x.summary ? '<span class="s">' + esc(x.summary) + '</span>' : '') + '</a>';
       }).join("");
     }
     if (ISSUES.length > 1) {
@@ -272,6 +286,9 @@
       document.getElementById("pick-list").addEventListener("click", function (e) {
         var b = e.target.closest(".pick-i");
         if (!b) return;
+        // Ctrl/⌘/Shift/средняя кнопка — обычное открытие ссылки в новой вкладке
+        if (e.ctrlKey || e.metaKey || e.shiftKey || e.button) return;
+        e.preventDefault();
         setPickOpen(false);
         selectIssue(b.getAttribute("data-iss"), true);
       });
@@ -320,6 +337,15 @@
       if (push) {
         history.replaceState(null, "", location.pathname + (issue.id === ISSUES[0].id ? "" : "?i=" + encodeURIComponent(issue.id)));
       }
+      // Свежий выпуск живёт на research.html, выпуск из архива — на своём адресе ?i=<дата>.
+      // Canonical и заголовок вкладки ставим под выбранный выпуск, иначе все адреса архива
+      // выглядели бы для поиска копиями одной страницы.
+      var old = issue.id !== ISSUES[0].id;
+      var canon = document.getElementById("canon");
+      if (canon) canon.href = "https://invest.rumberg.ru/research.html" + (old ? "?i=" + encodeURIComponent(issue.id) : "");
+      document.title = old
+        ? "Разборы рынка от " + dmy(issue.date) + " — Лучшие продукты · Rumberg"
+        : BASE_TITLE;
     }
 
     // Что показывать цифрой у продукта. У защиты капитала котировка всегда 100%
