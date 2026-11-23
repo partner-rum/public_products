@@ -110,6 +110,9 @@ window.SITE = (function () {
     iir: "Не является индивидуальной инвестиционной рекомендацией.",
     qual: "Материал предназначен исключительно для квалифицированных инвесторов.",
     fx: "Базовый актив номинирован в иностранной валюте — выплата и пример расчёта приведены без учёта изменения валютного курса.",
+    // Защита капитала с переоценкой по курсу (поле fxGrowth): курс здесь НЕ «не учтён»,
+    // он часть формулы, поэтому общая оговорка fx для такого продукта была бы неправдой.
+    fxGrowth: "Номинал возвращается в рублях. Доход по росту базового актива умножается на изменение курса доллара ЦБ: курс на погашении делится на курс в день покупки. Где не сказано иное, выплата приведена при неизменном курсе.",
     onepager: [
       "Настоящий материал содержит информацию, предназначенную исключительно для квалифицированных инвесторов. Копирование, распространение, передача или пересылка настоящего материала либо любой информации из него допускается только с предварительного письменного согласия компании.",
       "У читателя отсутствует обязанность получать статус квалифицированного инвестора при отсутствии потребности совершать действия, которые в соответствии с применимым законодательством и разъяснениями Банка России могут совершаться только квалифицированными инвесторами. Решение о получении статуса квалифицированного инвестора принимается читателем самостоятельно после ознакомления с правовыми последствиями такого статуса. Подробности — у вашего брокера.",
@@ -279,8 +282,10 @@ window.SITE = (function () {
       }
       return null;
     },
-    // Выплата в % от номинала при заданном ходе БА (move, %).
-    pct(r, move) {
+    // Выплата в % от номинала при заданном ходе БА (move, %). fx — отношение курса
+    // на погашении к курсу в день покупки; нужно только защите капитала с переоценкой
+    // по курсу (fxGrowth). Без него курс считается неизменным (1).
+    pct(r, move, fx) {
       if (r.type === "warrant") {
         const lvl = (r.spot || 100) * (1 + move / 100);
         return r.structure === "put" ? PAYOFF.put(lvl, r.strike || 100) : PAYOFF.pct(lvl, r.strike, r.strike2);
@@ -295,9 +300,11 @@ window.SITE = (function () {
       // защита 100%, поэтому их цифры не меняются (floor = 100 → прежняя формула).
       if (r.type === "protection") {
         const p = r.participation, floor = r.protectionPct != null ? r.protectionPct : 100, K = r.strike || 100;
-        let v = floor + p * Math.max(100 + move - K, 0);
-        if (r.cap != null) v = Math.min(v, floor + p * Math.max(100 + r.cap - K, 0));
-        return v;
+        let g = p * Math.max(100 + move - K, 0);
+        if (r.cap != null) g = Math.min(g, p * Math.max(100 + r.cap - K, 0));
+        // Переоценка по курсу (fxGrowth): курсом умножается только доход по росту,
+        // номинал (floor) остаётся в рублях — выплата = 100% + КУ × рост × курс_фин ÷ курс_нач.
+        return floor + g * (r.fxGrowth && fx != null && fx > 0 ? fx : 1);
       }
       if (r.type === "digital") return PAYOFF.digital(100 + move, r.strike || 100, r.digitalPct || 0, r.floorPct || 0);
       if (r.type === "booster") return PAYOFF.booster(100 + move, r.strike || 100, r.strike2 || 110, (r.ku || 175) / 100);
@@ -859,8 +866,18 @@ window.SITE = (function () {
   }
 
   const CCY_SIGN = { RUB: "₽", USD: "$", EUR: "€", CNY: "¥" };
+  // Защита капитала с переоценкой по курсу: номинал в рублях, доход по росту
+  // умножается на курс_фин ÷ курс_нач (поле fxGrowth — код валюты, обычно USD).
+  // Возвращает код валюты или null. Слова — в fxGrowthWords для текстов витрины.
+  const CCY_GEN = { USD: "доллара", EUR: "евро", CNY: "юаня" }, CCY_NOM = { USD: "доллар", EUR: "евро", CNY: "юань" };
+  function fxGrowth(r) { return r && r.type === "protection" && r.fxGrowth ? String(r.fxGrowth) : null; }
+  function fxGrowthWords(r) {
+    const c = fxGrowth(r);
+    return c ? { code: c, gen: CCY_GEN[c] || c, nom: CCY_NOM[c] || c, sign: CCY_SIGN[c] || c } : null;
+  }
   function ccyLabel(r) {
     const c = (r && r.currency) || "RUB", s = r && r.settle;
+    if (fxGrowth(r)) return c + " · рост по курсу " + fxGrowth(r);
     if (!s || s === c) return c;
     return c + " · расчёты в " + (CCY_SIGN[s] || s);
   }
@@ -873,6 +890,6 @@ window.SITE = (function () {
     return /S&P|NASDAQ|NVDA|NVIDIA|NBIS|Nebius|BTC|IBIT|GLD|SPY|COPX|CSI|URA|Uranium|Bitcoin|Gold|USD|\$/i.test(n);
   }
 
-  return { esc, TYPES, INSTRUMENTS, PAYOFF, LEGAL, calc, displayName, isAtPar, basketOf, tenorYears, revconvBreakeven, revconvCoupons, rcdCoupon, findInstrument, instrumentsOfType, underlyingInfo, underlyingLong, isFxSensitive, ccyLabel, nonCallText, history, fmtInt, fmt2, fmt1, fmtSmart, quoteBig, daysTo, chartFrame, niceTicks, payoffChart, discountChart, AXIS_X, AXIS_Y };
+  return { esc, TYPES, INSTRUMENTS, PAYOFF, LEGAL, calc, displayName, isAtPar, basketOf, tenorYears, revconvBreakeven, revconvCoupons, rcdCoupon, findInstrument, instrumentsOfType, underlyingInfo, underlyingLong, isFxSensitive, ccyLabel, fxGrowth, fxGrowthWords, nonCallText, history, fmtInt, fmt2, fmt1, fmtSmart, quoteBig, daysTo, chartFrame, niceTicks, payoffChart, discountChart, AXIS_X, AXIS_Y };
 
 })();

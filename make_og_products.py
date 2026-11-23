@@ -283,7 +283,9 @@ function chip(cap, val, sub){
     ? (item.kind || TYPE_KICK[fam] || "Выпуск на размещении")
     : ((TYPE_KICK[fam]||"Структурный продукт") + (item.structure==="cs" ? " · колл-спред" : (item.structure==="call" ? " · CALL" : (item.structure==="put" ? " · PUT" : ""))));
   document.getElementById("kick").textContent = kick;
-  document.getElementById("name").textContent = item.name || item.id;
+  /* «S&P 500» и «5 лет» не рвём между строк: «S&P» в конце строки и «500» в начале следующей читались как два слова */
+  document.getElementById("name").textContent = String(item.name || item.id).replace(/S&P 500/g, "S&P" + String.fromCharCode(160) + "500")
+    .replace(/(\d) (лет|года?|месяц)/g, "$1" + String.fromCharCode(160) + "$2");
 
   var ua = isOffer ? (item.reference||"") : (item.underlying||"");
   document.getElementById("ua").innerHTML = ua ? "Базовый актив: <b>"+ua+"</b>" : "";

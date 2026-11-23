@@ -438,7 +438,7 @@
 </div>
 
 <script src="data/instruments.js?v=fx8"></script>
-<script src="data/lib.js?v=ax9"></script>
+<script src="data/lib.js?v=ax10"></script>
 <script src="data/harden.js?v=1"></script>
 <script src="contact.js?v=11"></script>
 <script src="share.js?v=9"></script>
@@ -1033,20 +1033,26 @@
     const upPct = protOff + 20;
     const payoutUp = nom * S.calc.pct(inst, upPct) / 100;   // calc.pct учитывает страйк
     const partS = Math.round(inst.participation * 100) + "%";
+    // Переоценка по курсу (fxGrowth) — тот же текст и тот же второй пример, что в паспорте доски
+    const FXW = S.fxGrowthWords(inst);
+    const payoutUpFx = FXW ? nom * S.calc.pct(inst, upPct, 1.1) / 100 : 0;
     content = {
       badge: "облигация · защита капитала" + woBadge,
       subtitle: "Облигация с защитой капитала · " + (isWO ? "корзина " : "") + inst.underlying +
         (isWO ? " — участие " + (BK.avg ? "по среднему уровню" : BK.by) : "") + " · срок " + inst.tenor +
-        (protOff > 0 ? " · участие с роста +" + S.fmtSmart(protOff) + "%" : ""),
+        (protOff > 0 ? " · участие с роста +" + S.fmtSmart(protOff) + "%" : "") +
+        (FXW ? " · рост пересчитывается по курсу " + FXW.gen : ""),
       explainer: "Облигация возвращает 100% номинала при любом сценарии — рыночного убытка нет. " +
         (protOff > 0
           ? "Сверху выплачивается " + partS + " роста " + uGen + ", который он покажет ВЫШЕ страйка " + S.fmtSmart(protK) + "% начального уровня: первые " + S.fmtSmart(protOff) + "% роста в выплату не идут."
           : "Если " + uNom + " на дату погашения выше начального уровня S₀, дополнительно выплачивается " + partS + " роста " + uGen + ".") +
+        (FXW ? " Этот доход пересчитывается по курсу " + FXW.gen + " ЦБ: если за срок " + FXW.nom + " подорожал на 10%, доход по росту тоже больше на 10%, подешевел — меньше. Номинал возвращается в рублях при любом курсе." : "") +
         " Если " + (isWO ? lc(BK.fell) : "актив упал") + " — вы получаете номинал целиком. Купонов нет; результат определяется на дату погашения.",
       payoff: chartPayoff,
       payoffCaption: "Выплата на погашение в % от номинала" + (isWO ? " (" + BK.by + ")" : "") +
         ": не ниже 100% при любом сценарии, выше " +
-        (protOff > 0 ? "страйка " + S.fmtSmart(protK) + "%" : "S₀") + " — участие в росте.",
+        (protOff > 0 ? "страйка " + S.fmtSmart(protK) + "%" : "S₀") + " — участие в росте." +
+        (FXW ? " Курс " + FXW.gen + " на графике не меняется." : ""),
       metrics: [
         ["Цена входа", S.fmt2(inst.quote) + "% ном."],
         ["Защита капитала", S.fmtSmart(inst.protectionPct != null ? inst.protectionPct : 100) + "%"],
@@ -1057,12 +1063,18 @@
       ].concat(isWO ? [woMetric("участие")] : [], [["Мин. номинал", S.fmtInt(nom) + " ₽"]]),
       exampleIntro: "Номинал " + S.fmtInt(nom) + " ₽ · вход по " + S.fmt2(inst.quote) + "% = " + S.fmtInt(entryRub) + " ₽",
       scenarios: [
-        [uGrew + " на " + S.fmtSmart(upPct) + "%", "Выплата " + S.fmtInt(payoutUp) + " ₽ — 100% + участие", "+" + S.fmtInt(payoutUp - entryRub) + " ₽", "var(--up)"],
+        [uGrew + " на " + S.fmtSmart(upPct) + "%" + (FXW ? ", курс тот же" : ""), "Выплата " + S.fmtInt(payoutUp) + " ₽ — 100% + участие", "+" + S.fmtInt(payoutUp - entryRub) + " ₽", "var(--up)"]
+      ].concat(FXW ? [
+        [uGrew + " на " + S.fmtSmart(upPct) + "%, " + FXW.nom + " +10%", "Выплата " + S.fmtInt(payoutUpFx) + " ₽ — доход по росту ×1,1", "+" + S.fmtInt(payoutUpFx - entryRub) + " ₽", "var(--up)"]
+      ] : [], [
         [uFell + " на 15%", "Сработала защита: выплата " + S.fmtInt(nom) + " ₽", "0 ₽", "rgba(242,243,247,0.60)"]
-      ],
+      ]),
       facts: (isWO ? [woFact] : []).concat([
         ["Защита", "100% номинала при любом сценарии"],
-        ["Участие", partS + " роста" + (protOff > 0 ? " выше страйка " + S.fmtSmart(protK) + "%" : " базового актива") + ", без потолка"],
+        ["Участие", partS + " роста" + (protOff > 0 ? " выше страйка " + S.fmtSmart(protK) + "%" : " базового актива") + ", без потолка"]
+      ], FXW ? [
+        ["Курс", "Доход по росту × курс " + FXW.gen + " на погашении ÷ курс в день покупки; номинал — в рублях"]
+      ] : [], [
         ["Купоны", "Нет — результат на дату погашения"],
         ["Стиль", "Европейский — выплата на дату погашения"],
         ["Риск", "Кредитный риск эмитента облигации"],
@@ -1218,7 +1230,7 @@
   document.getElementById("example-intro").textContent = content.exampleIntro;
   document.getElementById("scenarios").innerHTML = content.scenarios.map(s =>
     '<div class="scenario"><div class="l">' + s[0] + '</div><div class="d">' + s[1] + '</div><div class="r" style="color:' + s[3] + '">' + s[2] + '</div></div>').join("") +
-    (S.isFxSensitive(S.esc(inst.underlying)) ? '<div style="margin-top:12px;padding:9px 13px;border-left:3px solid #F06E08;background:rgba(240,110,8,0.12);border-radius:0 7px 7px 0;font-size:12.5px;line-height:1.5;color:#EAB286">' + S.LEGAL.fx + '</div>' : '');
+    (S.isFxSensitive(S.esc(inst.underlying)) ? '<div style="margin-top:12px;padding:9px 13px;border-left:3px solid #F06E08;background:rgba(240,110,8,0.12);border-radius:0 7px 7px 0;font-size:12.5px;line-height:1.5;color:#EAB286">' + (S.fxGrowth(inst) ? S.LEGAL.fxGrowth : S.LEGAL.fx) + '</div>' : '');
 
   document.getElementById("explainer").textContent = content.explainer;
   // Телефон: описание на два экрана сворачиваем под «Подробнее»
@@ -1284,7 +1296,7 @@
       const bk = S.basketOf(inst), uCalc = bk.on ? bk.gen : inst.underlying;
       if (inst.type === "warrant" && inst.structure === "put") noteEl.textContent = clampNote + "Экспозиция на номинал " + S.fmtInt(Math.round(nominal)) + " ₽ за премию = сумму вложения. Безубыток — при падении " + uCalc + " примерно на " + S.fmtSmart(Math.abs(be)) + "%; выше — выплата не покрывает премию.";
       else if (inst.type === "warrant") noteEl.textContent = clampNote + "Экспозиция на номинал " + S.fmtInt(Math.round(nominal)) + " ₽ за премию = сумму вложения. Безубыток — при росте " + uCalc + " примерно на +" + S.fmtSmart(be) + "%; ниже — выплата не покрывает премию.";
-      else if (inst.type === "protection") noteEl.textContent = clampNote + "Номинал " + S.fmtInt(Math.round(nominal)) + " ₽. Защита " + prot + "%: при падении возвращается " + prot + "% номинала.";
+      else if (inst.type === "protection") noteEl.textContent = clampNote + "Номинал " + S.fmtInt(Math.round(nominal)) + " ₽. Защита " + prot + "%: при падении возвращается " + prot + "% номинала." + (S.fxGrowth(inst) ? " Доход по росту — при неизменном курсе " + S.fxGrowthWords(inst).gen + "." : "");
       else if (inst.type === "booster") noteEl.textContent = clampNote + "Вложение = номинал " + S.fmtInt(Math.round(nominal)) + " ₽. Рост ×КУ внутри диапазона до потолка; при падении — участие 1:1, как в самом активе.";
       else if (inst.type === "rcdigital") noteEl.textContent = clampNote + "Вложение = номинал " + S.fmtInt(Math.round(nominal)) + " ₽. Показана выплата за срок. На страйке " + S.fmtSmart(inst.strike || 100) + "% и выше — номинал плюс купон " + S.fmtSmart(S.rcdCoupon(inst)) + "%; ниже страйка купона нет вовсе, а номинал считается по перформансу от страйка.";
       else if (inst.type === "revconv") noteEl.textContent = clampNote + "Вложение = номинал " + S.fmtInt(Math.round(nominal)) + " ₽. Показана полная выплата за срок — тело плюс купоны, они начисляются независимо от уровня актива. На страйке " + S.fmtSmart(inst.strike || 100) + "% и выше тело возвращается целиком, ниже — по перформансу от страйка.";

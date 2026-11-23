@@ -315,7 +315,7 @@
 <div id="deck"></div>
 
 <script src="data/instruments.js?v=fx8"></script>
-<script src="data/lib.js?v=ax9"></script>
+<script src="data/lib.js?v=ax10"></script>
 <script src="data/offerings.js?v=srv19"></script>
 <script src="share.js?v=9"></script>
 <script src="contact.js?v=11"></script>
@@ -596,7 +596,11 @@
   const uPoss = isWO ? BK.poss : "его";
   const woLabel = isWO ? "О корзине · " + inst.underlying : null;
   const woDesc = isWO ? BK.desc : null;
-  const fxShort = "Расчёт в валюте базового актива — изменение курса рубля к ней не учтено.";
+  const FXW = S.fxGrowthWords(inst);
+  // Защита капитала с переоценкой по курсу: курс в формуле есть, «не учтено» было бы неправдой
+  const fxShort = FXW
+    ? "Номинал — в рублях. Доход по росту умножается на курс " + FXW.gen + " ЦБ на погашении ÷ курс в день покупки; в примере курс не меняется."
+    : "Расчёт в валюте базового актива — изменение курса рубля к ней не учтено.";
 
   document.title = "One-pager — " + name;
   { const bl = document.getElementById("back-link"); bl.href = backHref; bl.textContent = backText; }
@@ -1297,7 +1301,8 @@
     const downRub = nom * payDownPct / 100;
 
     let subtitle, chartCap, explainer;
-    if (floor >= 100 && cap == null) subtitle = "Возврат 100% номинала при любом падении и участие в росте " + uName + " без потолка.";
+    if (floor >= 100 && cap == null && FXW) subtitle = "Возврат 100% номинала в рублях при любом падении и участие в росте " + uName + " с пересчётом по курсу " + FXW.gen + ".";
+    else if (floor >= 100 && cap == null) subtitle = "Возврат 100% номинала при любом падении и участие в росте " + uName + " без потолка.";
     else if (floor >= 100) subtitle = "Полная защита номинала и участие в росте " + uName + " — с потолком выплаты " + capPay + "%.";
     else if (cap == null) subtitle = "Гарантированный минимум " + S.fmtSmart(floor) + "% номинала и участие в росте " + uName + " без потолка.";
     else subtitle = "Гарантированный минимум " + S.fmtSmart(floor) + "% номинала и участие в росте " + uName + " с потолком " + capPay + "%.";
@@ -1308,7 +1313,9 @@
 
     explainer = "Облигация возвращает " + (floor >= 100 ? "100% номинала при любом сценарии" : "не менее " + S.fmtSmart(floor) + "% номинала (риск ограничен " + S.fmtSmart(100 - floor) + "%)") +
       ". Если " + uGrewLow + (protOff > 0 ? " выше страйка " + S.fmtSmart(protK) + "% начального уровня" : "") + " — " + (partPct === 100 ? "засчитывается весь " + uPoss + " рост" : "сверху выплачивается " + partPct + "% этого роста") +
-      (cap != null ? ", но не выше потолка " + capPay + "% номинала" : ", без ограничения сверху") + ". Риск — кредитное качество эмитента.";
+      (cap != null ? ", но не выше потолка " + capPay + "% номинала" : ", без ограничения сверху") +
+      (FXW ? ". Этот доход пересчитывается по курсу " + FXW.gen + " ЦБ: " + FXW.nom + " подорожал за срок — доход больше, подешевел — меньше" : "") +
+      ". Риск — кредитное качество эмитента.";
 
     c = {
       badge: "Облигация · защита капитала",
@@ -1406,7 +1413,7 @@
   // Слайд 3 — дисклеймер
   html += '<section class="slide d-slide">' +
     '<div><div class="d-title">Ограничение ответственности</div><div class="d-bar"></div></div>' +
-    '<div class="d-body">' + (isForeign ? [S.LEGAL.fx].concat(S.LEGAL.onepager) : S.LEGAL.onepager).map(p => "<p>" + p + "</p>").join("") + '</div>' +
+    '<div class="d-body">' + (isForeign ? [FXW ? S.LEGAL.fxGrowth : S.LEGAL.fx].concat(S.LEGAL.onepager) : S.LEGAL.onepager).map(p => "<p>" + p + "</p>").join("") + '</div>' +
     '<div class="d-meta">' + dateS + ' · Инвестиционные решения</div>' +
     '</section>';
 
