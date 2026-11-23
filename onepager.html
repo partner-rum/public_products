@@ -404,6 +404,7 @@
     if (r && r.type === "protection") return pqProt(r);
     if (r && r.type === "autocall") return pqAuto(r);
     if (r && r.type === "discount") return pqDisc(r);
+    if (r && r.type === "revconv") return pqRc(r);
     if (!r || r.type !== "warrant" || (r.structure !== "call" && r.structure !== "put")) return null;
     const q = Number(r.quote), k = Number(r.strike);
     if (!(q > 0 && q < 100) || !(k >= 20 && k <= 300)) return null;
@@ -464,6 +465,17 @@
     const hit = L.find((x) => x && x.type === "discount" && x.underlying === und && x.about);
     return { id: "chat-" + PQ, type: "discount", name: clean(r.name), underlying: und, currency: "RUB", about: hit ? hit.about : "",
       tenor: clean(r.tenor), quote: q, minNom: 1000000, chat: true, at: Number(r.at) || 0, code: clean(r.code) };
+  }
+
+  // Реверс-конвертибл из чата (23.11.2026): купон, страйк, цена входа и срок — из записи расчёта. Купон в чате
+  // платится один раз, на погашении (cpnAtEnd); years — срок числом, подпись tenor — месяцами или годами.
+  function pqRc(r) {
+    const cpn = Number(r.couponPa), K = Number(r.strike), yrs = Number(r.years) || 0;
+    const price = r.price == null ? 100 : Number(r.price);
+    if (!(cpn > 0 && cpn <= 60) || !(K >= 50 && K <= 110) || !(yrs > 0 && yrs <= 6) || !(price >= 70 && price <= 110)) return null;
+    return { id: "chat-" + PQ, type: "revconv", name: clean(r.name), underlying: clean(r.underlying), currency: "RUB",
+      strike: K, couponPa: cpn, price: price, cpnAtEnd: r.cpnAtEnd === true, years: yrs, tenor: clean(r.tenor), quote: cpn,
+      minNom: 1000000, chat: true, at: Number(r.at) || 0, code: clean(r.code) };
   }
 
   // Автоколл из чата: купон, барьеры, частота, период без отзыва и бумаги — из записи расчёта.
@@ -793,8 +805,11 @@
   function chRevconv() {
     const HH = CH - 22;
     const K = inst.strike || 100;
-    const cpn = S.revconvCoupons(inst);
-    const be = S.revconvBreakeven(inst);
+    // У расчёта из чата срок числом (years) и цена входа (price, режим «купон → цена»): точка безубытка —
+    // там, где полная выплата равна цене входа. У продуктов доски обоих полей нет — формула та же, что в lib.js.
+    const P = inst.price || 100;
+    const cpn = inst.years ? (inst.couponPa || 0) * inst.years : S.revconvCoupons(inst);
+    const be = cpn > 0 ? (cpn >= P ? 0 : K * (P - cpn) / 100) : null;
     const lo = Math.max(5, Math.min(K - 35, be != null && be > 0 ? be - 10 : 999, 60));
     const hi = Math.max(K + 25, 125);
     const body = v => Math.min(100, v / K * 100);
@@ -823,10 +838,10 @@
         (gapPx >= 13 ? '<text x="' + x(K + (hi - K) * 0.45) + '" y="' + ((y(100) + y(100 + cpn)) / 2 + 4) +
           '" text-anchor="middle" fill="' + C.or + '" font-size="10" ' + MONO + '>купон</text>' : "")
       : "";
-    // Точка выхода в ноль — там, где полная выплата пересекает номинал.
+    // Точка выхода в ноль — там, где полная выплата пересекает цену входа (у доски — номинал).
     const zero = (cpn > 0 && be != null && be > lo && be < K - 1)
-      ? '<circle cx="' + x(be) + '" cy="' + y(100) + '" r="3.4" fill="' + C.or + '"/>' +
-        '<text x="' + (x(be) + 6) + '" y="' + (y(100) + 14) + '" fill="' + C.or + '" font-size="10" ' + MONO +
+      ? '<circle cx="' + x(be) + '" cy="' + y(P) + '" r="3.4" fill="' + C.or + '"/>' +
+        '<text x="' + (x(be) + 6) + '" y="' + (y(P) + 14) + '" fill="' + C.or + '" font-size="10" ' + MONO +
         '>б/у ' + S.fmtSmart(be) + '%</text>'
       : "";
     return '<svg viewBox="0 0 ' + CW + ' ' + HH + '" width="100%" style="display:block">' +
@@ -1146,16 +1161,22 @@
     };
   } else if (inst.type === "revconv") {
     const cpnPa = inst.couponPa != null ? inst.couponPa : q;
-    const K = inst.strike || 100, per = inst.obsPerYear || 4;
-    const cpnPer = cpnPa / per, cpnRub = nom * cpnPer / 100;
-    const yrs = S.tenorYears(inst) || 1;
+    // Расчёт из чата: купон один раз на погашении (cpnAtEnd), срок числом (years), цена входа (price)
+    const atEnd = inst.cpnAtEnd === true;
+    const K = inst.strike || 100, per = atEnd ? 0 : (inst.obsPerYear || 4);
+    const yrs = inst.years || S.tenorYears(inst) || 1;
+    const cpnPer = atEnd ? cpnPa * yrs : cpnPa / per, cpnRub = nom * cpnPer / 100;
     const cpnAll = nom * cpnPa / 100 * yrs;
+    const px = inst.price || 100, buyRub = nom * px / 100;
     const holdRub = nom + cpnAll;
-    const be = S.revconvBreakeven(inst);
+    const be = inst.years || px !== 100
+      ? (cpnPa * yrs > 0 ? (cpnPa * yrs >= px ? 0 : K * (px - cpnPa * yrs) / 100) : null)
+      : S.revconvBreakeven(inst);
     const downLvl = Math.max(10, Math.round((be != null && be > 0 ? be : K - 30) - 15));
     const bodyPct = S.PAYOFF.revconv(downLvl, K);
     const downRub = nom * bodyPct / 100 + cpnAll;
-    const obsTxt = per === 12 ? "ежемесячно" : per === 4 ? "ежеквартально" : per === 2 ? "раз в полгода" : per + " раза в год";
+    const obsTxt = atEnd ? "на погашении" : per === 12 ? "ежемесячно" : per === 4 ? "ежеквартально" : per === 2 ? "раз в полгода" : per + " раза в год";
+    const cpW = atEnd ? "купон" : "купоны";
     const isWOrc = BK.on;
     const uName = isWOrc ? BK.nom : inst.underlying;
     const uGrewRc = isWOrc ? BK.grew : inst.underlying + " вырос";
@@ -1163,26 +1184,30 @@
       badge: "Реверс-конвертибл · структурная облигация",
       subtitle: "Повышенный купон " + S.fmt2(cpnPa) + "% годовых на " +
         (isWOrc ? "корзину " + inst.underlying + (BK.avg ? " по среднему уровню" : " по принципу worst-of") : inst.underlying) +
-        " — платится при любом сценарии · страйк " + S.fmtSmart(K) + "% · срок " + inst.tenor + " · " + S.ccyLabel(inst) + ".",
+        (atEnd ? " — платится на погашении при любом сценарии" : " — платится при любом сценарии") +
+        " · страйк " + S.fmtSmart(K) + "% · срок " + inst.tenor + (px !== 100 ? " · цена " + S.fmt2(px) + "% номинала" : "") + " · " + S.ccyLabel(inst) + ".",
       quoteK: "купон · % годовых · индикативно",
       chart: chRevconv,
-      chartCap: "Полная выплата за срок в % от номинала — тело плюс купоны; по горизонтали — " +
-        (isWOrc ? BK.axis : "уровень базового актива") + ". Пунктир — тело без купонов: зазор между линиями и есть купон.",
-      params: [["Купон", S.fmt2(cpnPa) + "% годовых", true], ["Выплаты", obsTxt, false], ["Страйк", S.fmtSmart(K) + "%", false],
+      chartCap: "Полная выплата за срок в % от номинала — тело плюс " + cpW + "; по горизонтали — " +
+        (isWOrc ? BK.axis : "уровень базового актива") + ". Пунктир — тело без " + (atEnd ? "купона" : "купонов") + ": зазор между линиями и есть купон.",
+      params: [["Купон", S.fmt2(cpnPa) + "% годовых", true], [atEnd ? "Выплата купона" : "Выплаты", obsTxt, false], ["Страйк", S.fmtSmart(K) + "%", false],
         be != null && be > 0 ? ["Купон покрывает до", S.fmtSmart(be) + "%", false] : ["Участие в росте", "нет", false]],
-      exIntro: "Вход по номиналу " + S.fmtInt(nom) + " ₽ (100%) · купон " + S.fmt2(cpnPer) + "% за период = " + S.fmtInt(cpnRub) + " ₽",
+      exIntro: (px !== 100 ? "Номинал " + S.fmtInt(nom) + " ₽ · покупка по " + S.fmt2(px) + "% = " + S.fmtInt(buyRub) + " ₽"
+        : "Вход по номиналу " + S.fmtInt(nom) + " ₽ (100%)") +
+        (atEnd ? " · купон за срок " + S.fmt2(cpnPer) + "% = " + S.fmtInt(cpnRub) + " ₽ на погашении"
+          : " · купон " + S.fmt2(cpnPer) + "% за период = " + S.fmtInt(cpnRub) + " ₽"),
       scen: [
-        [uName + " на " + S.fmtSmart(K) + "% и выше", "номинал и купоны за " + inst.tenor,
-          "+" + S.fmtInt(cpnAll) + " ₽", "var(--up)", roiTxt(cpnAll, nom)],
-        ["На погашении " + uName + " на " + downLvl + "%", "тело " + S.fmt1(bodyPct) + "% плюс купоны: " + S.fmtInt(downRub) + " ₽",
-          (downRub >= nom ? "+" : "−") + S.fmtInt(Math.abs(downRub - nom)) + " ₽", downRub >= nom ? "var(--up)" : "var(--down)",
-          roiTxt(downRub - nom, nom)]
+        [uName + " на " + S.fmtSmart(K) + "% и выше", "номинал и " + cpW + " за " + inst.tenor,
+          (holdRub >= buyRub ? "+" : "−") + S.fmtInt(Math.abs(holdRub - buyRub)) + " ₽", "var(--up)", roiTxt(holdRub - buyRub, buyRub)],
+        ["На погашении " + uName + " на " + downLvl + "%", "тело " + S.fmt1(bodyPct) + "% плюс " + cpW + ": " + S.fmtInt(downRub) + " ₽",
+          (downRub >= buyRub ? "+" : "−") + S.fmtInt(Math.abs(downRub - buyRub)) + " ₽", downRub >= buyRub ? "var(--up)" : "var(--down)",
+          roiTxt(downRub - buyRub, buyRub)]
       ],
-      explainer: "Купон " + S.fmt2(cpnPa) + "% годовых платится " + obsTxt + " <b>независимо</b> от уровня актива — это плата за принятый риск. " +
+      explainer: "Купон " + S.fmt2(cpnPa) + "% годовых платится " + (atEnd ? "один раз, на погашении," : obsTxt) + " <b>независимо</b> от уровня актива — это плата за принятый риск. " +
         "Тело на погашении возвращается полностью, пока актив не ниже страйка " + S.fmtSmart(K) + "%; в росте выше страйка выпуск не участвует. " +
         "Ниже страйка тело идёт по перформансу <b>от страйка</b>. Расчёт денежный, бумаги не поставляются.",
       underLabel: "Главный риск · падение актива",
-      underDesc: "Если на дату погашения " + uName + " опустится ниже страйка " + S.fmtSmart(K) + "% начального уровня, тело считается по перформансу от страйка — возможна потеря значительной части вложения; купоны при этом остаются у инвестора. Отдельно действует кредитный риск эмитента облигации."
+      underDesc: "Если на дату погашения " + uName + " опустится ниже страйка " + S.fmtSmart(K) + "% начального уровня, тело считается по перформансу от страйка — возможна потеря значительной части вложения; " + (atEnd ? "купон при этом выплачивается" : "купоны при этом остаются у инвестора") + ". Отдельно действует кредитный риск эмитента облигации."
     };
   } else if (inst.type === "rcdigital") {
     const K = inst.strike || 100, cpn = S.rcdCoupon(inst);

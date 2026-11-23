@@ -1806,7 +1806,7 @@ const PRICE_CACHE_MS = 10 * 60 * 1000;
 const PRICE_DAYS_MIN = 7, PRICE_DAYS_MAX = 5 * 366;
 const PRICE_CACHE = new Map();      // условия + дата → готовый ответ; живёт в изоляте
 const PRICE_ONLY_TEXT = "В чате сейчас считаются обычные CALL и PUT, колл на корзину до 5 бумаг (по среднему или по худшей бумаге), " +
-  "облигация с защитой капитала на один актив и автоколл на российские акции. " +
+  "облигация с защитой капитала на один актив, автоколл и реверс-конвертибл на российские акции. " +
   "Колл-спред и другие структуры посчитает менеджер — нажмите «Обсудить с Румбергом».";
 
 const PRICE_TOOL = {
@@ -1992,6 +1992,77 @@ const AC_TOOL = {
           "«без памяти» → false." },
       },
       required: ["underlyings", "tenor"],
+    },
+  },
+};
+
+// ── Реверс-конвертибл в чате (23.11.2026, «реверс конвертибл может агент прайсить? Типо Deposit + Put опцион,
+// премия по которому выдаётся через купон?»). Отдельного продукта у прайсера нет — собираем из двух расчётов
+// price_vanilla на тот же пут: в обёртке warrant (премия пута) и в обёртке note с защитой 100% (номинал на
+// погашении плюс пут). Разница — номинал, дисконтированный по кривой прайсера (сверено 23.11.2026 с дисконтом
+// из price_participation: 86,905 против 86,910 у Сбера на год). Обе цены — модель Analytic, повторяются точь-в-точь.
+// Выплата — как у реверс-конвертиблов доски (lib.js PAYOFF.revconv): актив на погашении не ниже страйка K —
+// 100% номинала, ниже — 100·S/K; купон платится при любом уровне актива. Справедливая цена при купоне за срок c:
+//   100·DF − (100/K)·пут + c·DF.
+// Решения Руслана 23.11.2026: маржа 2% номинала в год × срок; волатильность −5 волов (клиент продаёт пут — против
+// него работает низкая вола, как у опционов, только в другую сторону); купон один раз — на погашении; только
+// российские активы в рублях; два режима, как у автоколла: «цена → купон» (цена не названа — 100%) и «купон → цена».
+const RC_MARGIN_PA = 2;               // наша маржа, % номинала в год
+const RC_VOL_SLIP = 5;                // вола −5: клиент продаёт пут
+const RC_DAYS_MIN = 91, RC_DAYS_MAX = 5 * 366;
+const RC_STRIKE_MIN = 50, RC_STRIKE_MAX = 110;
+const RC_STEP = 0.5, RC_MIN_CPN = 2, RC_MAX_CPN = 60;              // купон, % годовых, вниз до 0,5
+const RC_PRICE_STEP = 0.25, RC_PRICE_MIN = 70, RC_PRICE_MAX = 110; // цена клиенту, % номинала, вверх до 0,25
+const RC_FX_TEXT = "Реверс-конвертибл в чате считаю на российские акции и индексы в рублях. По зарубежным активам расчёт в чате пока " +
+  "недоступен — нажмите «Обсудить с Румбергом», посчитает менеджер.";
+const RC_BOND_TEXT = "Реверс-конвертибл на облигации в чате не считаю. Нажмите «Обсудить с Румбергом» — посчитает менеджер.";
+const RC_BASKET_TEXT = "Реверс-конвертибл в чате считаю на одну бумагу или индекс. На корзину посчитает менеджер — нажмите " +
+  "«Обсудить с Румбергом».";
+// Клиент назвал страйк, купон или цену числом, а модель их не передала — переспрашиваем (как у автоколла).
+const RC_SAID = {
+  strike: [new RegExp("страйк\\p{L}*" + AC_GAP + AC_NUM, "giu"), RC_STRIKE_MIN, RC_STRIKE_MAX],
+  coupon: AC_SAID.coupon,
+  price: AC_SAID.price,
+};
+function rcSaid(text) {
+  const out = {};
+  for (const k in RC_SAID) {
+    const [re, lo, hi] = RC_SAID[k];
+    out[k] = false;
+    re.lastIndex = 0;
+    let m;
+    while ((m = re.exec(text))) {
+      const v = Number(String(m[1] || m[2] || "").replace(",", "."));
+      if (v >= lo && v <= hi) { out[k] = true; break; }
+    }
+    re.lastIndex = 0;
+  }
+  return out;
+}
+
+const RC_TOOL = {
+  type: "function",
+  function: {
+    name: "price_revconv",
+    description: "Посчитать реверс-конвертибл (облигацию с повышенным купоном и риском по базовому активу: депозит плюс " +
+      "проданный пут) на ОДИН российский актив или индекс. Купон платится на погашении при любом уровне актива; номинал " +
+      "возвращается полностью, если актив на погашении не ниже страйка, ниже — по перформансу от страйка. Два режима: клиент " +
+      "назвал цену (или не назвал ничего — цена 100% номинала) — сервер посчитает купон; клиент назвал купон — сервер " +
+      "посчитает цену. Ответ клиенту соберёт сервер.",
+    parameters: {
+      type: "object",
+      properties: {
+        underlying: { type: "string", description: "Тикер базового актива, как на бирже: SBER, GAZP, LKOH, YDEX, IMOEX. " +
+          "Не знаешь тикер — название компании как есть." },
+        tenor: { type: "string", description: "Срок: '6M', '1Y', '18M', '2Y' или дата погашения YYYY-MM-DD." },
+        strike_pct: { type: "number", description: "Страйк в % от текущей цены актива: ниже него номинал идёт по перформансу. " +
+          "По умолчанию 100. «Страйк 90%», «номинал целиком, пока актив не упадёт больше чем на 10%» → 90." },
+        price_pct: { type: "number", description: "Цена для клиента в % номинала, если клиент её назвал и просит посчитать " +
+          "купон: «по цене 98%» → 98. Не назвал ни цену, ни купон — не передавай (будет 100%)." },
+        coupon_pa: { type: "number", description: "Купон в % годовых, если клиент его назвал и просит посчитать цену: " +
+          "«купон 20%» → 20. Вместе с price_pct не передавай." },
+      },
+      required: ["underlying", "tenor"],
     },
   },
 };
@@ -2198,13 +2269,14 @@ function priceGuardDisc(a, messages) {
 
 const PRICING_PROMPT = `
 
-=== РАСЧЁТ ПРОДУКТОВ (инструменты price_warrant, price_basket, price_protection, price_autocall и price_discount) ===
-Ты считаешь цену ТОЛЬКО ШЕСТИ продуктов: обычный колл-опцион (CALL) и обычный пут-опцион (PUT) на один базовый актив — инструмент price_warrant; колл-опцион на корзину из 2–5 бумаг — по среднему изменению бумаг или по худшей бумаге — инструмент price_basket; облигацию с защитой капитала на один актив — инструмент price_protection; автоколл на один российский актив или корзину до 5 российских бумаг — инструмент price_autocall; дисконтную облигацию (CLN) на кредит одной из пяти компаний — ВЭБ.РФ, Газпром нефть, Магнит, Ростелеком, Северсталь — инструмент price_discount. Больше ты не прайсишь НИЧЕГО.
+=== РАСЧЁТ ПРОДУКТОВ (инструменты price_warrant, price_basket, price_protection, price_autocall, price_revconv и price_discount) ===
+Ты считаешь цену ТОЛЬКО СЕМИ продуктов: обычный колл-опцион (CALL) и обычный пут-опцион (PUT) на один базовый актив — инструмент price_warrant; колл-опцион на корзину из 2–5 бумаг — по среднему изменению бумаг или по худшей бумаге — инструмент price_basket; облигацию с защитой капитала на один актив — инструмент price_protection; автоколл на один российский актив или корзину до 5 российских бумаг — инструмент price_autocall; реверс-конвертибл на один российский актив или индекс — инструмент price_revconv; дисконтную облигацию (CLN) на кредит одной из пяти компаний — ВЭБ.РФ, Газпром нефть, Магнит, Ростелеком, Северсталь — инструмент price_discount. Больше ты не прайсишь НИЧЕГО.
 Когда клиент просит посчитать, запрайсить, оценить или узнать цену колла или пута (колл-опциона, пут-опциона, CALL, PUT, варранта на рост или на падение) на конкретный актив — вызови price_warrant.
 Когда клиент просит посчитать колл (колл-опцион, CALL, варрант на рост) на корзину или сразу на несколько бумаг — «на среднее», «на среднюю динамику», «среднее по корзине», «худшую из корзины», «worst-of» — вызови price_basket.
 Когда клиент просит посчитать защиту капитала (облигацию с защитой капитала, «капитал под защитой», «вернуть номинал и участвовать в росте») на конкретный актив — вызови price_protection.
 Когда клиент просит посчитать автоколл (автоколлируемую облигацию, автокол, autocall, «феникс», облигацию с условным купоном и досрочным погашением) на актив или корзину — купон по цене или цену по купону — вызови price_autocall.
 Когда клиент просит посчитать дисконтную облигацию (CLN, кредитную облигацию, бескупонную облигацию «на кредит» компании, облигацию «ниже номинала с погашением по 100%») на ВЭБ.РФ, Газпром нефть, Магнит, Ростелеком или Северсталь — вызови price_discount.
+Когда клиент просит посчитать реверс-конвертибл (reverse convertible, RC, облигацию с повышенным купоном и риском по акции, «депозит плюс проданный пут», «купон за счёт продажи пута») на один актив — купон по цене или цену по купону — вызови price_revconv.
 Ответ с ценой клиенту соберёт сервер: сам цену, участие и купон не называй и не придумывай.
 - Тикер передавай как на бирже (SBER, GAZP, LKOH, YDEX, NVDA). Не знаешь тикер — передай название компании как есть.
 - Индекс, фонд и валюта — тоже ОДИН актив, их считаешь: индекс МосБиржи → IMOEX, индекс РТС → RTSI, S&P 500 → SPY, золото → GLD (фонд в долларах), золото в рублях → GLDRUB, биткоин → IBIT, юань → CNYRUB. Не отказывай словами «это индекс, а не один актив».
@@ -2213,9 +2285,10 @@ const PRICING_PROMPT = `
 - Защита капитала: уровень защиты по умолчанию 100% номинала; «защита 90%», «с 80% защитой» → protection_pct 90 / 80. Цена защиты капитала всегда 100% номинала, участие в росте посчитает сервер — его клиент не задаёт; если клиент назвал участие, всё равно вызови price_protection с остальными условиями. Потолок роста передавай, ТОЛЬКО если клиент его назвал: «до +50%», «с потолком 50%» → cap_pct 50. «Рост засчитывается от +5%» → strike_pct 105.
 - Колл на корзину: все названные бумаги передай в underlyings (от 2 до 5). basket_type: average — уровень корзины по среднему изменению бумаг («на среднее», «средняя динамика», «среднее по корзине», клиент назвал веса); worst_of — по худшей бумаге («худшая из корзины», «по худшей», «worst-of»). Клиент не сказал, как считать корзину, — спроси «по среднему изменению бумаг или по худшей бумаге?» и инструмент не вызывай. Веса — weights_pct в процентах в порядке бумаг, только если клиент их назвал; не назвал — веса равные. Страйк — strike_pct в % от начального уровня корзины, по умолчанию 100. Пут на корзину не считается.
 - Автоколл: все названные бумаги передай в underlyings — корзина считается по худшей бумаге (worst-of). Считается в двух режимах. 1) Клиент назвал цену («по цене 98%», «за 97,5% номинала») — передай price_pct, сервер посчитает купон. 2) Клиент назвал купон («купон 15% годовых», «с купоном 12%») — передай coupon_pa, сервер посчитает цену. Не назвал ни цену, ни купон — не передавай ни то, ни другое: цена будет 100% номинала, сервер посчитает купон. price_pct и coupon_pa вместе не передавай никогда; если клиент назвал и цену, и купон и непонятно, что считать, — спроси. Клиент в уточнении меняет режим («а какая цена при купоне 14%?») — передай только новое, прежнее не повторяй. Условия по умолчанию: барьер защиты на погашении 70%, купонный барьер равен барьеру защиты, досрочное погашение при 100% начального уровня, наблюдения и купон раз в квартал, с эффектом памяти. Передавай только то, что клиент назвал сам: «барьер 60%» → barrier_pct 60; «купонный барьер 80%» → coupon_barrier_pct 80; «отзыв от 105%» → autocall_pct 105; «купон ежемесячно» → frequency monthly; «первый год без отзыва» → no_call_months 12; «без памяти» → memory false. Автоколл считается только на российские акции и индексы в рублях.
+- Реверс-конвертибл: ОДИН актив в underlying; корзины у реверс-конвертибла в чате нет — на просьбу о корзине ответь, что реверс-конвертибл считается на одну бумагу или индекс, а на корзину посчитает менеджер. Режимы — как у автоколла: клиент назвал цену — передай price_pct, сервер посчитает купон; назвал купон — передай coupon_pa, сервер посчитает цену; не назвал ни того, ни другого — не передавай ничего (цена 100%). Вместе не передавай никогда. Страйк — strike_pct в % от текущей цены, по умолчанию 100: «страйк 90%» → 90. Купон платится один раз на погашении. Считается только на российские акции и индексы в рублях.
 - Дисконтная облигация (CLN): issuer — компания, как назвал клиент; считается ТОЛЬКО на ВЭБ.РФ, Газпром нефть, Магнит, Ростелеком и Северсталь, срок от 1 года до 5 лет. «Газпром» — это не «Газпром нефть»: на Газпром и любые другие компании price_discount не вызывай — ответь, что в чате дисконтная облигация считается на эти пять компаний, по другим посчитает менеджер. Цену посчитает сервер, её не называй.
-- Клиент меняет условия прошлого расчёта («а на 3 года?», «а страйк 110?», «а по худшей?», «а с весами 50/30/20?», «а с потолком +50%?», «а с защитой 90%?», «а с барьером 60%?», «а без Лукойла?») — вызови тот же инструмент снова, остальные условия возьми из прошлого расчёта.
-- ВСЁ ОСТАЛЬНОЕ НЕ СЧИТАЕШЬ И ИНСТРУМЕНТЫ НЕ ВЫЗЫВАЕШЬ: колл-спреды и опционы с потолком (потолок бывает только у защиты капитала), пут на корзину, защита капитала на корзину (корзина бывает только у колла — price_basket — и у автоколла), дисконтные облигации на компании вне списка пяти, бустеры, реверс-конвертиблы, купонные варранты и любые другие структуры. На такую просьбу ответь, что в чате сейчас считаются CALL, PUT, колл на корзину, защита капитала на один актив, автоколл на российские акции и дисконтная облигация на пять компаний, и предложи похожий продукт из каталога или кнопку «Обсудить с Румбергом» — посчитает менеджер. Цифр по таким продуктам не называй, кроме тех, что есть в каталоге.`;
+- Клиент меняет условия прошлого расчёта («а на 3 года?», «а страйк 110?», «а по худшей?», «а с весами 50/30/20?», «а с потолком +50%?», «а с защитой 90%?», «а с барьером 60%?», «а без Лукойла?», «а при купоне 20%?») — вызови тот же инструмент снова, остальные условия возьми из прошлого расчёта.
+- ВСЁ ОСТАЛЬНОЕ НЕ СЧИТАЕШЬ И ИНСТРУМЕНТЫ НЕ ВЫЗЫВАЕШЬ: колл-спреды и опционы с потолком (потолок бывает только у защиты капитала), пут на корзину, защита капитала на корзину (корзина бывает только у колла — price_basket — и у автоколла), дисконтные облигации на компании вне списка пяти, бустеры, реверс-конвертибл на корзину и с условным купоном, купонные варранты и любые другие структуры. На такую просьбу ответь, что в чате сейчас считаются CALL, PUT, колл на корзину, защита капитала на один актив, автоколл и реверс-конвертибл на российские акции и дисконтная облигация на пять компаний, и предложи похожий продукт из каталога или кнопку «Обсудить с Румбергом» — посчитает менеджер. Цифр по таким продуктам не называй, кроме тех, что есть в каталоге.`;
 
 function pricerEnabled(env) {
   return !!((env.PRICER_MCP_URL || "").trim() && (env.PRICER_MCP_KEY || "").trim());
@@ -3175,6 +3248,186 @@ async function priceAutocall(a, env, who, cat) {
   return out;
 }
 
+// Реверс-конвертибл: депозит + проданный пут (см. блок констант RC_*). Два расчёта price_vanilla на один пут —
+// warrant и note с защитой 100% — дают премию пута и дисконт номинала; режимы и маржа — как у автоколла.
+// Всегда возвращает текст для клиента; log — строка для внутреннего лога.
+async function priceRevconv(a, env, who, cat) {
+  const fail = (text) => ({ ok: false, text: PRICE_LEAK_RE.test(text) ? PRICE_LEAK_TEXT : text });
+  const numOr = (v, d) => (v == null || v === "" ? d : Number(v));
+  const tenor = priceTenor(a.tenor);
+  if (!tenor) return fail("Уточните срок реверс-конвертибла — например, 6 месяцев, 1 год или 2 года.");
+  if (tenor.days < RC_DAYS_MIN || tenor.days > RC_DAYS_MAX) {
+    return fail("Реверс-конвертибл считаю на срок от 3 месяцев до 5 лет. Уточните срок.");
+  }
+  // Один актив. Модель иногда кладёт корзину в underlying через запятую или массивом — это не наш продукт.
+  let und = [].concat(a.underlying == null ? [] : a.underlying, Array.isArray(a.underlyings) ? a.underlyings : [])
+    .flatMap((x) => String(x == null ? "" : x).split(/[,;\/]+/)).map((x) => x.trim()).filter(Boolean);
+  und = und.filter((x, i) => und.indexOf(x) === i);
+  if (!und.length) return fail("Уточните базовый актив — тикер или название компании.");
+  if (und.length > 1) return fail(RC_BASKET_TEXT);
+  if (priceOfzNum(und[0])) return fail(RC_BOND_TEXT);
+  const K = numOr(a.strike_pct, 100);
+  if (!isFinite(K) || K < RC_STRIKE_MIN || K > RC_STRIKE_MAX) {
+    return fail("Страйк реверс-конвертибла считаю в пределах " + RC_STRIKE_MIN + "–" + RC_STRIKE_MAX + "% от текущей цены актива. Уточните страйк.");
+  }
+  const hasCpn = a.coupon_pa != null && a.coupon_pa !== "";
+  const hasPrice = a.price_pct != null && a.price_pct !== "";
+  if (hasCpn && hasPrice) return fail("Что посчитать: купон при названной цене или цену при названном купоне? Назовите что-то одно.");
+  const mode = hasCpn ? "price" : "coupon";
+  const cpnIn = hasCpn ? Number(a.coupon_pa) : null;
+  const priceIn = hasPrice ? Number(a.price_pct) : 100;
+  if (hasCpn && (!isFinite(cpnIn) || cpnIn <= 0 || cpnIn > RC_MAX_CPN)) {
+    return fail("Купон считаю в пределах до " + RC_MAX_CPN + "% годовых. Уточните купон.");
+  }
+  if (!isFinite(priceIn) || priceIn < RC_PRICE_MIN || priceIn > RC_PRICE_MAX) {
+    return fail("Цену считаю в пределах " + RC_PRICE_MIN + "–" + RC_PRICE_MAX + "% номинала. Уточните цену.");
+  }
+
+  const rv = await priceResolve(und[0], env);
+  if (rv.fail) return fail(rv.fail);
+  if (rv.isBond) return fail(RC_BOND_TEXT);
+  if (rv.ccy && rv.ccy !== "RUB") return fail(RC_FX_TEXT);
+  const ticker = rv.ticker, name = priceAssetName(ticker, rv.name, cat);
+  const key = ["rc", mskDate().key, ticker, tenor.expiry, K, mode, mode === "price" ? cpnIn : priceIn].join("|");
+  const hit = PRICE_CACHE.get(key);
+  if (hit && Date.now() - hit.at < PRICE_CACHE_MS) return hit.out;
+
+  const args = {
+    underlying: ticker, option_type: "put", expiry: tenor.expiry, strike: K,
+    vol_shift: -RC_VOL_SLIP, outputs: ["PV"], context: { user_id: who },
+  };
+  const rubA = priceRubArgs([ticker]);
+  if (rubA) Object.assign(args, rubA);
+  const unavailable = "Расчёт сейчас недоступен. Попробуйте позже или нажмите «Обсудить с Румбергом» — посчитает менеджер.";
+  const shown = priceShowTicker(ticker);
+  const one = async (wrapper) => {
+    let res;
+    try {
+      res = await mcpCall(env, "price_vanilla", Object.assign({}, args, wrapper === "note" ? { wrapper, protection: 100 } : { wrapper }),
+        rv.listed ? PRICE_TIMEOUT_MS : PRICE_UNLISTED_TIMEOUT_MS);
+    } catch (e) {
+      const m = String((e && e.message) || e);
+      if (m === "pricer_timeout" && !rv.listed) return { fail: "По тикеру " + shown + " не нашёл рыночных данных. Проверьте тикер — например, SBER, GAZP или LKOH." };
+      return { fail: m === "pricer_timeout"
+        ? "Прайсер не успел посчитать. Попробуйте ещё раз через минуту или нажмите «Обсудить с Румбергом» — посчитает менеджер."
+        : unavailable };
+    }
+    const sc = res.structuredContent || {};
+    if (res.isError) {
+      const code = sc.error || "";
+      if (code === "rate_limited") return { fail: "Слишком много расчётов подряд. Попробуйте через минуту." };
+      if (code === "unknown_ticker" || code === "market_data_missing") {
+        return { fail: "По активу " + shown + " нет рыночных данных — посчитать не могу. Проверьте тикер." };
+      }
+      if (code === "invalid_term") return { fail: "С такими условиями посчитать не получилось. Проверьте срок и страйк." };
+      return { fail: unavailable };
+    }
+    if (sc.status === "needs_input") {
+      const q = (sc.questions || [])[0] || {};
+      if (q.field === "underlyings" || q.field === "underlying") return { fail: "По активу " + shown + " нет рыночных данных. Проверьте тикер." };
+      if (/^(quanto|currency|underlying_currencies)$/.test(String(q.field || ""))) return { fail: RC_FX_TEXT };
+      return { fail: unavailable };
+    }
+    const r = sc.result || {}, t = sc.terms || {}, md = sc.market_data_used || {};
+    if (String(r.currency || t.currency || "RUB") !== "RUB") return { fail: RC_FX_TEXT };
+    const pv = Number(r.pv_pct);
+    if (!isFinite(pv) || pv < 0) return { fail: unavailable };
+    return { pv, spot: Number((md.spots || {})[ticker]) };
+  };
+  const [w, n] = await Promise.all([one("warrant"), one("note")]);
+  if (w.fail) return fail(w.fail);
+  if (n.fail) return fail(n.fail);
+  const put = w.pv;                // премия пута, % номинала
+  const dep = n.pv - w.pv;         // номинал на погашении, дисконтированный по кривой прайсера: 100 × DF
+  const DF = dep / 100;
+  if (!(DF > 0.3 && DF <= 1.0001)) return fail(unavailable);
+  const T = tenor.days / 365;
+  const margin = RC_MARGIN_PA * T;
+  const loss = 100 / K * put;      // проданный пут в масштабе тела: ниже страйка тело — 100·S/K
+  const fairAt = (cT) => dep - loss + cT * DF;   // справедливая цена при купоне за срок cT (% номинала)
+
+  let cpn, price, raw;
+  if (mode === "coupon") {
+    // «Вот цена — посчитай купон»: справедливая цена + маржа = цена клиента
+    raw = (priceIn - margin - dep + loss) / DF / T;
+    cpn = Math.floor(raw / RC_STEP + 1e-9) * RC_STEP;
+    price = priceIn;
+    if (cpn < RC_MIN_CPN) {
+      return fail("При таких условиях купон выходит слишком маленьким — такой реверс-конвертибл в чате не показываю. " +
+        "Попробуйте страйк выше или срок длиннее — либо нажмите «Обсудить с Румбергом», посчитает менеджер.");
+    }
+    if (cpn > RC_MAX_CPN) {
+      return fail("При таких условиях купон выходит очень высоким — значит, и риск по этому активу высокий. В чате такой расчёт " +
+        "не показываю: нажмите «Обсудить с Румбергом» — посчитает менеджер.");
+    }
+  } else {
+    // «Вот купон — посчитай цену»: цена клиенту = справедливая цена + маржа, вверх до 0,25
+    raw = fairAt(cpnIn * T) + margin;
+    price = Math.ceil(raw / RC_PRICE_STEP - 1e-9) * RC_PRICE_STEP;
+    cpn = cpnIn;
+    if (price < RC_PRICE_MIN || price > RC_PRICE_MAX) {
+      return fail("С таким купоном цена выходит " + (price < RC_PRICE_MIN ? "ниже " + RC_PRICE_MIN : "выше " + RC_PRICE_MAX) +
+        "% номинала — в чате такой расчёт не показываю. Попробуйте другой купон или нажмите «Обсудить с Румбергом», посчитает менеджер.");
+    }
+  }
+  const cTot = cpn * T;            // купон за срок, % номинала — платится на погашении
+  if (!(price < 100 + cTot)) return fail(unavailable);   // цена выше наибольшей выплаты — расчёт подозрительный
+  const fairP = fairAt(cTot);
+  // Уровень актива, где выплата (тело + купон) равна цене входа; ≤ 0 — купон покрывает любое падение
+  const be = price - cTot <= 0 ? 0 : K * (price - cTot) / 100;
+
+  const pct = (x) => priceNum(x, 1) + "%";
+  const asset = name ? name + " (" + ticker + ")" : ticker;
+  const tags = [];
+  if (K !== 100) tags.push("страйк " + pct(K));
+  if (mode === "coupon" && priceIn !== 100) tags.push("цена " + priceNum(priceIn) + "%");
+  if (mode === "price") tags.push("купон " + priceNum(cpnIn) + "%");
+  const head = ["Реверс-конвертибл", asset].concat(tags, [tenor.label]).join(" · ");
+  // Срок для листа — месяцами или годами («15 месяцев»): «1 год 3 месяца» лист прочитал бы как 3 месяца
+  const mo = Math.round(tenor.days / (365 / 12));
+  const tenorPq = mo % 12 ? mo + " " + acPlural(mo, "месяц", "месяца", "месяцев") : mo / 12 + " " + acPlural(mo / 12, "год", "года", "лет");
+  const title = ["Реверс-конвертибл", name || shown].concat(tags, [tenorPq]).join(" · ");
+  const kAbs = isFinite(w.spot) && w.spot > 0 ? w.spot * K / 100 : NaN;
+  const ex = Math.max(10, Math.round((Math.min(K, be > 0 ? be : K) - 20) / 5) * 5);
+  const lines = [
+    "**" + head + "**",
+    mode === "coupon"
+      ? "Купон: **" + priceNum(cpn) + "% годовых** — индикативно"
+      : "Цена: **" + priceNum(price) + "% номинала** — индикативно",
+    mode === "coupon" ? "• Цена: " + priceNum(price) + "% номинала" : "• Купон: " + priceNum(cpn) + "% годовых",
+    Math.abs(cTot - cpn) < 0.005
+      ? "• Купон выплачивается один раз — на погашении, при любом уровне актива"
+      : "• Купон за срок: " + priceNum(cTot) + "% номинала — выплачивается на погашении при любом уровне актива",
+    "• Страйк: " + pct(K) + " от текущей цены" + (isFinite(kAbs) ? " — " + priceNum(kAbs) + " " + priceUnit(ticker, kAbs, "₽") : ""),
+    "• На погашении: актив не ниже страйка — 100% номинала; ниже — номинал по перформансу от страйка: например, при " +
+      ex + "% от текущей цены — " + pct(100 * ex / K) + " номинала плюс купон",
+    be > 0
+      ? "• Купон покрывает падение актива до " + pct(be) + " от текущей цены — ниже начинается убыток"
+      : "• Купон покрывает любое падение актива",
+    "• В росте актива выше страйка выпуск не участвует — доход ограничен купоном",
+    "• Риск — падение актива ниже страйка к погашению и кредитное качество эмитента",
+  ];
+  const rate = (Math.pow(1 / DF, 1 / T) - 1) * 100;   // ставка прайсера по номиналу — только для лога
+  const out = {
+    ok: true, text: lines.join("\n"), ticker, type: "revconv", tenor: tenor.expiry, strike: K,
+    quote: price, fair: Math.round(fairP * 100) / 100,
+    log: ticker + " реверс-конвертибл · K " + K + " · " + tenor.expiry + ": прайсер (вола −" + RC_VOL_SLIP + ") пут " + priceNum(put, 3) +
+      "%, депозит " + priceNum(dep, 3) + " (≈" + priceNum(rate, 1) + "% годовых); " +
+      (mode === "coupon"
+        ? "цена " + priceNum(priceIn) + " = справедливая " + priceNum(priceIn - margin) + " + маржа " + priceNum(margin) +
+          ", купон " + priceNum(raw, 2) + "% → " + priceNum(cpn) + "%"
+        : "купон " + priceNum(cpnIn) + "%: справедливая " + priceNum(fairP) + " + маржа " + priceNum(margin) + " = " +
+          priceNum(raw, 2) + " → цена " + priceNum(price) + "%"),
+  };
+  out.pq = await pqSave(env, {
+    v: 1, type: "revconv", name: title, underlying: asset, ticker, strike: K, couponPa: cpn, price, cpnAtEnd: true,
+    years: Math.round(T * 100) / 100, tenor: tenorPq, quote: cpn, currency: "RUB", isBond: false, at: Date.now(),
+  });
+  PRICE_CACHE.set(key, { at: Date.now(), out });
+  if (PRICE_CACHE.size > 300) PRICE_CACHE.delete(PRICE_CACHE.keys().next().value);
+  return out;
+}
+
 // ── One-pager под расчёт чата ───────────────────────────────────────────────
 // Каждый удачный расчёт кладётся в KV `pq:<id>` (30 дней), а под ответом чата —
 // ссылка onepager.html?pq=<id>. Лист берёт цифры ТОЛЬКО отсюда: параметры в адресе
@@ -3360,7 +3613,7 @@ function priceFooter(partnerMode) {
 // 2) Страйк деньгами в тексте клиента — его берём сами, а не из разбора модели.
 // 3) Клиент назвал страйк, а модель его не передала — переспрашиваем, а не считаем от 100%.
 const PRICE_TENOR_RE = /\d+(?:[.,]\d+)?\s*-?\s*(?:год|года|лет|г\.|мес|месяц|месяца|месяцев|нед|недел|дн|день|дня|дней|years?|yrs?|months?|mos?|weeks?|wks?|days?)(?![\p{L}])|(?:^|[^\p{L}])(?:a|one|two|three|four|five|six|half\s+a|1\.5)[\s-]+(?:years?|months?)(?![\p{L}])|\d+\s*[ymwd](?![\p{L}])|(?:^|[^\p{L}])(?:полгода|полугод|полтора|год|годик|квартал|месяц)(?![\p{L}])|\d{4}-\d{2}-\d{2}|\d{1,2}\.\d{1,2}\.\d{2,4}|(?:январ|феврал|март|апрел|ма[йя]|июн|июл|август|сентябр|октябр|ноябр|декабр)/iu;
-const PRICE_HEAD_RE = /^\*\*(?:(?:CALL|PUT) [\d,]+|Защита капитала|Автоколл|Дисконтная облигация) · /m;
+const PRICE_HEAD_RE = /^\*\*(?:(?:CALL|PUT) [\d,]+|Защита капитала|Автоколл|Реверс-конвертибл|Дисконтная облигация) · /m;
 const PRICE_STRIKE_ABS_RE = /страйк\p{L}*[^\d\n]{0,12}(\d[\d\s]*(?:[.,]\d+)?)\s*(?:руб|р\.|₽|\$|долл|usd|rub|юан|¥|евро|€)/iu;
 const PRICE_STRIKE_ANY_RE = /страйк\p{L}*[^\d\n]{0,12}\d/iu;
 // «в деньгах» (ITM) и «вне денег» (OTM) — это НЕ страйк 100: модель путала их с «на деньгах».
@@ -3564,11 +3817,52 @@ function priceGuardAC(a, messages) {
   return { a };
 }
 
+// Реверс-конвертибл — проверки автоколла: срок только названный клиентом (или из прошлого расчёта); назвал страйк,
+// купон или цену числом (rcSaid), а модель их не передала — переспрашиваем; страйк деньгами — просим в процентах.
+function priceGuardRC(a, messages) {
+  const recent = [];
+  let follow = false;
+  for (let i = messages.length - 1; i >= 0 && recent.length < 4; i--) {
+    const m = messages[i];
+    if (m.role === "assistant" && PRICE_HEAD_RE.test(String(m.content || ""))) { follow = true; break; }
+    if (m.role === "user") recent.push(String(m.content || ""));
+  }
+  const last = recent[0] || "";
+  const und = Array.isArray(a.underlying) ? a.underlying.join(", ") : String(a.underlying || "");
+  if (!follow && !recent.some((t) => PRICE_TENOR_RE.test(t))) {
+    return { ask: "На какой срок посчитать реверс-конвертибл" + (und ? " на " + und.slice(0, 40) : "") + "? Например, 6 месяцев, 1 год или 2 года." };
+  }
+  const has = (v) => v != null && v !== "";
+  if (PRICE_STRIKE_ABS_RE.test(last)) {
+    return { ask: "У реверс-конвертибла страйк считаю в процентах от текущей цены актива — например, 90% или 100%. Какой взять?" };
+  }
+  const said = rcSaid(last);
+  if (said.strike && !has(a.strike_pct)) {
+    return { ask: "Уточните страйк в процентах от текущей цены — например, 90%? Ниже него номинал идёт по перформансу." };
+  }
+  const which = "Что посчитать: купон при названной цене или цену при названном купоне?";
+  if (has(a.coupon_pa) && has(a.price_pct)) {
+    if (said.coupon === said.price) return { ask: which };
+    a = { ...a };
+    if (said.coupon) delete a.price_pct; else delete a.coupon_pa;
+    return { a };
+  }
+  if (said.coupon && said.price && !has(a.coupon_pa) && !has(a.price_pct)) return { ask: which };
+  if (said.coupon && !said.price && !has(a.coupon_pa)) {
+    return { ask: "Уточните купон в процентах годовых — например, 20%? По нему посчитаю цену." };
+  }
+  if (said.price && !said.coupon && !has(a.price_pct)) {
+    return { ask: "Уточните цену в процентах номинала — например, 98%? По ней посчитаю купон." };
+  }
+  return { a };
+}
+
 async function chatWithPricing(system, messages, env, opts) {
-  const first = await callDeepSeek(system + PRICING_PROMPT, messages, env, { tools: [PRICE_TOOL, BK_TOOL, PROT_TOOL, AC_TOOL, CLN_TOOL], raw: true });
+  const first = await callDeepSeek(system + PRICING_PROMPT, messages, env, { tools: [PRICE_TOOL, BK_TOOL, PROT_TOOL, AC_TOOL, RC_TOOL, CLN_TOOL], raw: true });
   const calls = (first.toolCalls || [])
     .filter((c) => c && c.function && (c.function.name === "price_warrant" || c.function.name === "price_protection" ||
-      c.function.name === "price_autocall" || c.function.name === "price_basket" || c.function.name === "price_discount"))
+      c.function.name === "price_autocall" || c.function.name === "price_basket" || c.function.name === "price_discount" ||
+      c.function.name === "price_revconv"))
     .filter((c, _, all) => c.function.name !== "price_autocall" ||
       all.filter((x) => x.function.name === "price_autocall").indexOf(c) < AC_MAX_CALLS)
     .slice(0, PRICE_MAX_CALLS);
@@ -3600,6 +3894,10 @@ async function chatWithPricing(system, messages, env, opts) {
       const gb = priceGuardBK(a, messages);
       if (gb.ask) return { ok: false, text: gb.ask };
       used = gb.a; o = await priceBasket(gb.a, envT, opts.who || "site-chat", opts.cat);
+    } else if (c.function.name === "price_revconv") {
+      const gr = priceGuardRC(a, messages);
+      if (gr.ask) return { ok: false, text: gr.ask };
+      used = gr.a; o = await priceRevconv(gr.a, envT, opts.who || "site-chat", opts.cat);
     } else if (c.function.name === "price_discount") {
       const gd = priceGuardDisc(a, messages);
       if (gd.ask) return { ok: false, text: gd.ask };
