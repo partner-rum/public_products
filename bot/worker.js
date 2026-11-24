@@ -46,6 +46,7 @@
 //   POST /lead   — форма-заявка с сайта  → сообщение в CHAT_ID
 //   POST /chat   — сообщение чат-ассистента → Claude API → ответ обратно на сайт
 //   POST /pq     — расчёт из чата по id (для one-pager под запрос прайсинга, onepager.html?pq=)
+//   POST /calcs  — история расчётов из чата для UI рыночных данных, по ключу из /calcskey
 //   POST /submit — админка сейлзов: продукт → карточка с кнопками ✅/❌ в ADMIN_CHAT_ID
 //   POST /tg     — вебхук Telegram: callback-кнопки модерации (✅ публикует коммитом в GitHub),
 //                  /start <id> приветствует клиента и шлёт лид в CHAT_ID, прочее пересылает в CHAT_ID;
@@ -66,6 +67,7 @@ export default {
     if (url.pathname === "/stats" && request.method === "POST") return handleStats(request, env, cors);
     if (url.pathname === "/picks" && request.method === "POST") return handlePicks(request, env, cors);
     if (url.pathname === "/boss" && request.method === "POST") return handleBoss(request, env, cors);
+    if (url.pathname === "/calcs" && request.method === "POST") return handleCalcs(request, env, cors);
     if (url.pathname === "/act" && request.method === "POST") return handleAct(request, env, cors);
     if (url.pathname === "/chat" && request.method === "POST") return handleChat(request, env, cors, ctx);
     if (url.pathname === "/pq" && request.method === "POST") return handlePricedQuote(request, env, cors);
@@ -3619,6 +3621,71 @@ async function calcCard(env, input) {
   });
   if (tr.length > 6) L.push("…и ещё " + (tr.length - 6));
   return L.join("\n").slice(0, 4000);
+}
+// ── История расчётов для UI рыночных данных (сервер invest.rumberg.ru, /md/) ─────────────────────────
+// POST /calcs {key, after?, limit?} — записи calc:<код> НОВЕЕ after (мс), от старых к новым, не больше
+// limit (по умолчанию и максимум 100); more=true — за after осталось ещё, повторить с after = last.
+// POST /calcs {key, all: true, cursor?, limit?} — все записи calc: страницами (для первой загрузки:
+// оглавление calcx: живёт 90 дней и начато 18.11.2026, записи — год). Запись — ровно то, что пишет
+// calcSave(): в ней цена без маржи, поэтому маршрут только по ключу. Ключ выдаёт бот командой
+// /calcskey (только Руслан); в KV лежит хэш (ckey:main, соль «calcs»), как у сводного кабинета.
+const CALCS_MAX = 100;
+const CALCS_INDEX_PAGES = 5;   // до 5000 строк оглавления за вызов: при опросе раз в минуту хватит с запасом
+async function calcsLogin(env, key) {
+  const want = String(key || "").trim();
+  if (!want) return false;
+  if (!env.POST_KV) return "storage";
+  if (!KEY_SHAPE.test(want)) return false;   // мусор не стоит обращения к хранилищу
+  try {
+    const rec = await env.POST_KV.get("ckey:main", "json");
+    return !!(rec && rec.h && safeEq(rec.h, await keyHash("calcs", want)));
+  } catch (e) { return "storage"; }
+}
+async function handleCalcs(request, env, cors) {
+  let d;
+  try { d = await request.json(); } catch (e) { return json({ ok: false, error: "bad_json" }, 400, cors); }
+  const who = await calcsLogin(env, d && d.key);
+  if (who === "storage") return json({ ok: false, error: "no_storage" }, 503, cors);
+  if (!who) return json({ ok: false, error: "bad_key" }, 403, cors);
+  const lim = Math.min(CALCS_MAX, Math.max(1, Math.floor(Number(d.limit) || CALCS_MAX)));
+  const read = async (codes) => {
+    const out = [];
+    for (const c of codes) {
+      try { const r = await env.POST_KV.get("calc:" + c, "json"); if (r && r.code) out.push(r); } catch (e) { /* пропуск */ }
+    }
+    return out;
+  };
+  try {
+    if (d.all) {
+      const r = await env.POST_KV.list({ prefix: "calc:", limit: lim, cursor: d.cursor ? String(d.cursor) : undefined });
+      const items = await read((r.keys || []).map((k) => k.name.slice(5)));
+      return json({ ok: true, items, cursor: r.list_complete ? null : r.cursor }, 200, cors);
+    }
+    const after = Math.max(0, Number(d.after) || 0);
+    // Оглавление упорядочено от новых к старым: идём, пока не дойдём до after.
+    const seen = [];
+    let cursor, pages = 0, stop = false;
+    do {
+      const r = await env.POST_KV.list({ prefix: "calcx:", limit: 1000, cursor });
+      for (const k of r.keys || []) {
+        const at = Number((k.metadata && k.metadata.at) || 0);
+        if (!at) continue;
+        if (at <= after) { stop = true; break; }
+        seen.push({ at, code: k.name.split(":").pop() });
+      }
+      cursor = r.list_complete ? undefined : r.cursor;
+    } while (!stop && cursor && ++pages < CALCS_INDEX_PAGES);
+    // Не дошли до after за CALCS_INDEX_PAGES страниц: отдать «серединку» нельзя — следующий вызов с after =
+    // её концом пропустил бы всё, что между. Пусть забирающий перейдёт на all.
+    if (!stop && cursor) return json({ ok: false, error: "too_far" }, 409, cors);
+    seen.sort((a, b) => a.at - b.at);
+    const take = seen.slice(0, lim);
+    const items = (await read(take.map((x) => x.code))).sort((a, b) => (a.at || 0) - (b.at || 0));
+    const last = items.length ? items[items.length - 1].at : (take.length ? take[take.length - 1].at : after);
+    return json({ ok: true, items, more: seen.length > take.length, last }, 200, cors);
+  } catch (e) {
+    return json({ ok: false, error: "no_storage" }, 503, cors);
+  }
 }
 async function handlePricedQuote(request, env, cors) {
   const origin = request.headers.get("Origin");
@@ -7501,6 +7568,23 @@ async function handleTelegram(request, env, ctx) {
         const card = await calcCard(env, msg.text.replace(/^\/calc(?:@\w+)?\s*/, ""));
         await tg(env, "sendMessage", { chat_id: msg.chat.id, text: card, parse_mode: "HTML", disable_web_page_preview: true });
       }
+      return new Response("ok");
+    }
+
+    // ---- Ключ истории расчётов для UI рыночных данных: /calcskey. ТОЛЬКО Руслан, в личке.
+    if (/^\/calcskey(?:@\w+)?(?:\s|$)/.test(msg.text)) {
+      const isAdmin = env.ADMIN_CHAT_ID && String(from.id) === String(env.ADMIN_CHAT_ID);
+      if (!isAdmin || !msg.chat || msg.chat.type !== "private") return new Response("ok");
+      const say = function (t) {
+        return tg(env, "sendMessage", { chat_id: msg.chat.id, text: t, parse_mode: "HTML", disable_web_page_preview: true });
+      };
+      if (!env.POST_KV) { await say("Хранилище (POST_KV) не подключено — ключ записать некуда."); return new Response("ok"); }
+      const ck = makeDeskKey();
+      await env.POST_KV.put("ckey:main", JSON.stringify({ h: await keyHash("calcs", ck), ts: Date.now() }));
+      await say("<b>Ключ истории расчётов</b>\n<code>" + esc(ck) + "</code>\n\n" +
+                "Для UI рыночных данных на сервере: установщик спросит его сам. Прежний ключ перестаёт " +
+                "работать (хранилище обновляется до минуты).\n<i>По ключу видны все расчёты клиентов из чата " +
+                "вместе с ценой прайсера без маржи — никому не передавайте, в чаты не вставляйте.</i>");
       return new Response("ok");
     }
 
