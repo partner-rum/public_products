@@ -1,8 +1,8 @@
 // Файл собирается скриптом выгрузки из бэкофиса и админкой сейлзов — руками не править.
 // Выпуски с "src": "sales" добавлены через админку; при перегенерации сохраняются,
-// пока их ISIN не появится в выгрузке. Обновлено: 2026-11-24
+// пока их ISIN не появится в выгрузке. Обновлено: 2026-11-25
 window.PLACEMENTS_DATA = {
- "updated": "2026-11-24",
+ "updated": "2026-11-25",
  "issues": [
   {
    "isin": "RU000A10E6K5",
@@ -173,9 +173,9 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26248",
      "w": 1.0,
      "f0": 81.441,
-     "px": 78.061,
-     "pxTime": "2026-11-24",
-     "perfPct": -4.2
+     "px": 78.069,
+     "pxTime": "2026-11-25",
+     "perfPct": -4.1
     }
    ],
    "dates": {
@@ -196,7 +196,7 @@ window.PLACEMENTS_DATA = {
      "barrierPct": null
     }
    },
-   "perfPct": -4.2
+   "perfPct": -4.1
   },
   {
    "isin": "RU000A10BZ44",
@@ -333,7 +333,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2026-07-02",
    "maturity": "2027-07-14",
    "fx": false,
-   "bid": 94.5,
+   "bid": 94.25,
    "kind": "coupon",
    "wrapper": "NOTE",
    "basket": [
@@ -342,8 +342,8 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26248",
      "w": 1.0,
      "f0": 79.969,
-     "px": 78.061,
-     "pxTime": "2026-11-24",
+     "px": 78.069,
+     "pxTime": "2026-11-25",
      "perfPct": -2.4
     }
    ],
@@ -420,7 +420,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2026-06-16",
    "maturity": "2029-02-13",
    "fx": true,
-   "bid": 34.25,
+   "bid": 34.5,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -470,8 +470,8 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 56.51,
-     "px": 50.546,
-     "pxTime": "2026-11-24",
+     "px": 50.5,
+     "pxTime": "2026-11-25",
      "perfPct": -10.6
     }
    ],
@@ -511,8 +511,8 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26248",
      "w": 1.0,
      "f0": 89.873,
-     "px": 78.061,
-     "pxTime": "2026-11-24",
+     "px": 78.069,
+     "pxTime": "2026-11-25",
      "perfPct": -13.1
     }
    ],
@@ -548,7 +548,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2026-03-31",
    "maturity": "2027-04-08",
    "fx": false,
-   "bid": 87.0,
+   "bid": 87.25,
    "kind": "coupon",
    "wrapper": "NOTE",
    "basket": [
@@ -557,8 +557,8 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26248",
      "w": 1.0,
      "f0": 88.549,
-     "px": 78.061,
-     "pxTime": "2026-11-24",
+     "px": 78.069,
+     "pxTime": "2026-11-25",
      "perfPct": -11.8
     }
    ],
@@ -594,7 +594,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2026-03-06",
    "maturity": "2027-03-17",
    "fx": false,
-   "bid": 86.25,
+   "bid": 86.5,
    "kind": "coupon",
    "wrapper": "NOTE",
    "basket": [
@@ -603,8 +603,8 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26248",
      "w": 1.0,
      "f0": 88.4,
-     "px": 78.061,
-     "pxTime": "2026-11-24",
+     "px": 78.069,
+     "pxTime": "2026-11-25",
      "perfPct": -11.7
     }
    ],
@@ -640,7 +640,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2026-02-09",
    "maturity": "2027-02-17",
    "fx": false,
-   "bid": 89.25,
+   "bid": 89.0,
    "kind": "coupon",
    "wrapper": "NOTE",
    "basket": [
@@ -649,8 +649,8 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26248",
      "w": 1.0,
      "f0": 86.356,
-     "px": 78.061,
-     "pxTime": "2026-11-24",
+     "px": 78.069,
+     "pxTime": "2026-11-25",
      "perfPct": -9.6
     }
    ],
@@ -686,7 +686,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2026-01-22",
    "maturity": "2027-02-18",
    "fx": true,
-   "bid": 81.75,
+   "bid": 82.5,
    "kind": "coupon",
    "wrapper": "NOTE",
    "basket": [
@@ -695,9 +695,9 @@ window.PLACEMENTS_DATA = {
      "n": "iShares Bitcoin Trust ETF",
      "w": 1.0,
      "f0": 40.11,
-     "px": 33.64,
-     "pxTime": "2026-11-24",
-     "perfPct": -16.1
+     "px": 33.76,
+     "pxTime": "2026-11-25",
+     "perfPct": -15.8
     }
    ],
    "dates": {
@@ -718,7 +718,7 @@ window.PLACEMENTS_DATA = {
      "barrierPct": 500.0
     }
    },
-   "perfPct": -16.1
+   "perfPct": -15.8
   },
   {
    "isin": "RU000A10ASL7",
@@ -779,8 +779,8 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26248",
      "w": 1.0,
      "f0": 90.05,
-     "px": 78.061,
-     "pxTime": "2026-11-24",
+     "px": 78.069,
+     "pxTime": "2026-11-25",
      "perfPct": -13.3
     }
    ],
@@ -825,9 +825,9 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26230",
      "w": 1.0,
      "f0": 63.766,
-     "px": 55.518,
-     "pxTime": "2026-11-24",
-     "perfPct": -12.9
+     "px": 55.508,
+     "pxTime": "2026-11-25",
+     "perfPct": -13.0
     }
    ],
    "dates": {
@@ -843,7 +843,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 100.0,
     "protectionPct": 0.0
    },
-   "perfPct": -12.9
+   "perfPct": -13.0
   },
   {
    "isin": "RU000A10CV88",
@@ -907,9 +907,9 @@ window.PLACEMENTS_DATA = {
      "n": "SPDR Gold Shares (GLD)",
      "w": 1.0,
      "f0": 393.24,
-     "px": 326.72,
-     "pxTime": "2026-11-24",
-     "perfPct": -16.9
+     "px": 325.45,
+     "pxTime": "2026-11-25",
+     "perfPct": -17.2
     }
    ],
    "dates": {
@@ -925,7 +925,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 70.0,
     "protectionPct": 100.0
    },
-   "perfPct": -16.9
+   "perfPct": -17.2
   },
   {
    "isin": "RU000A10DES6",
@@ -948,9 +948,9 @@ window.PLACEMENTS_DATA = {
      "n": "SPDR S&P 500 ETF Trust",
      "w": 1.0,
      "f0": 689.17,
-     "px": 712.96,
-     "pxTime": "2026-11-24",
-     "perfPct": 3.5
+     "px": 718.78,
+     "pxTime": "2026-11-25",
+     "perfPct": 4.3
     }
    ],
    "dates": {
@@ -966,7 +966,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 70.0,
     "protectionPct": 100.0
    },
-   "perfPct": 3.5
+   "perfPct": 4.3
   },
   {
    "isin": "RU000A10CV70",
@@ -1030,9 +1030,9 @@ window.PLACEMENTS_DATA = {
      "n": "Global X Uranium ETF",
      "w": 1.0,
      "f0": 49.2,
-     "px": 27.2,
-     "pxTime": "2026-11-24",
-     "perfPct": -44.7
+     "px": 27.6,
+     "pxTime": "2026-11-25",
+     "perfPct": -43.9
     }
    ],
    "dates": {
@@ -1048,7 +1048,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 30.0,
     "protectionPct": 100.0
    },
-   "perfPct": -44.7
+   "perfPct": -43.9
   },
   {
    "isin": "RU000A10CVB8",
@@ -1071,9 +1071,9 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 58.826,
-     "px": 50.546,
-     "pxTime": "2026-11-24",
-     "perfPct": -14.1
+     "px": 50.5,
+     "pxTime": "2026-11-25",
+     "perfPct": -14.2
     }
    ],
    "dates": {
@@ -1090,7 +1090,7 @@ window.PLACEMENTS_DATA = {
     "acBarrierPct": null,
     "protection": null
    },
-   "perfPct": -14.1
+   "perfPct": -14.2
   },
   {
    "isin": "RU000A10CV62",
@@ -1151,9 +1151,9 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 55.449,
-     "px": 50.546,
-     "pxTime": "2026-11-24",
-     "perfPct": -8.8
+     "px": 50.5,
+     "pxTime": "2026-11-25",
+     "perfPct": -8.9
     }
    ],
    "dates": {
@@ -1169,7 +1169,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 100.0,
     "protectionPct": 0.0
    },
-   "perfPct": -8.8
+   "perfPct": -8.9
   },
   {
    "isin": "RU000A10CBH7",
@@ -1192,8 +1192,8 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26248",
      "w": 1.0,
      "f0": 85.77,
-     "px": 78.061,
-     "pxTime": "2026-11-24",
+     "px": 78.069,
+     "pxTime": "2026-11-25",
      "perfPct": -9.0
     }
    ],
@@ -1238,9 +1238,9 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 56.31,
-     "px": 50.546,
-     "pxTime": "2026-11-24",
-     "perfPct": -10.2
+     "px": 50.5,
+     "pxTime": "2026-11-25",
+     "perfPct": -10.3
     }
    ],
    "dates": {
@@ -1256,7 +1256,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 100.0,
     "protectionPct": 0.0
    },
-   "perfPct": -10.2
+   "perfPct": -10.3
   },
   {
    "isin": "RU000A10CBF1",
@@ -1279,9 +1279,9 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 60.2,
-     "px": 50.546,
-     "pxTime": "2026-11-24",
-     "perfPct": -16.0
+     "px": 50.5,
+     "pxTime": "2026-11-25",
+     "perfPct": -16.1
     }
    ],
    "dates": {
@@ -1297,7 +1297,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 100.0,
     "protectionPct": 0.0
    },
-   "perfPct": -16.0
+   "perfPct": -16.1
   },
   {
    "isin": "RU000A10CBE4",
@@ -1320,9 +1320,9 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 60.9,
-     "px": 50.546,
-     "pxTime": "2026-11-24",
-     "perfPct": -17.0
+     "px": 50.5,
+     "pxTime": "2026-11-25",
+     "perfPct": -17.1
     }
    ],
    "dates": {
@@ -1338,7 +1338,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 100.0,
     "protectionPct": 0.0
    },
-   "perfPct": -17.0
+   "perfPct": -17.1
   },
   {
    "isin": "RU000A10CBD6",
@@ -1361,9 +1361,9 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 61.19,
-     "px": 50.546,
-     "pxTime": "2026-11-24",
-     "perfPct": -17.4
+     "px": 50.5,
+     "pxTime": "2026-11-25",
+     "perfPct": -17.5
     }
    ],
    "dates": {
@@ -1379,7 +1379,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 100.0,
     "protectionPct": 0.0
    },
-   "perfPct": -17.4
+   "perfPct": -17.5
   },
   {
    "isin": "RU000A10ASK9",
@@ -1440,9 +1440,9 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 61.3,
-     "px": 50.546,
-     "pxTime": "2026-11-24",
-     "perfPct": -17.5
+     "px": 50.5,
+     "pxTime": "2026-11-25",
+     "perfPct": -17.6
     }
    ],
    "dates": {
@@ -1458,7 +1458,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 100.0,
     "protectionPct": 0.0
    },
-   "perfPct": -17.5
+   "perfPct": -17.6
   },
   {
    "isin": "RU000A10ASJ1",
@@ -1519,9 +1519,9 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 60.89,
-     "px": 50.546,
-     "pxTime": "2026-11-24",
-     "perfPct": -17.0
+     "px": 50.5,
+     "pxTime": "2026-11-25",
+     "perfPct": -17.1
     }
    ],
    "dates": {
@@ -1537,7 +1537,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 100.0,
     "protectionPct": 0.0
    },
-   "perfPct": -17.0
+   "perfPct": -17.1
   },
   {
    "isin": "RU000A10ASH5",
@@ -1598,9 +1598,9 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 62.65,
-     "px": 50.546,
-     "pxTime": "2026-11-24",
-     "perfPct": -19.3
+     "px": 50.5,
+     "pxTime": "2026-11-25",
+     "perfPct": -19.4
     }
    ],
    "dates": {
@@ -1616,7 +1616,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 180.0,
     "protectionPct": 100.0
    },
-   "perfPct": -19.3
+   "perfPct": -19.4
   },
   {
    "isin": "RU000A10A9H9",
@@ -1639,8 +1639,8 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 61.175,
-     "px": 50.546,
-     "pxTime": "2026-11-24",
+     "px": 50.5,
+     "pxTime": "2026-11-25",
      "perfPct": -17.4
     }
    ],
@@ -1680,8 +1680,8 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26246",
      "w": 1.0,
      "f0": 90.79,
-     "px": 79.603,
-     "pxTime": "2026-11-24",
+     "px": 79.619,
+     "pxTime": "2026-11-25",
      "perfPct": -12.3
     }
    ],
@@ -1721,9 +1721,9 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 59.4,
-     "px": 50.546,
-     "pxTime": "2026-11-24",
-     "perfPct": -14.9
+     "px": 50.5,
+     "pxTime": "2026-11-25",
+     "perfPct": -15.0
     }
    ],
    "dates": {
@@ -1739,7 +1739,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 190.0,
     "protectionPct": 100.0
    },
-   "perfPct": -14.9
+   "perfPct": -15.0
   },
   {
    "isin": "RU000A10BUD8",
@@ -1762,9 +1762,9 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 58.857,
-     "px": 50.546,
-     "pxTime": "2026-11-24",
-     "perfPct": -14.1
+     "px": 50.5,
+     "pxTime": "2026-11-25",
+     "perfPct": -14.2
     }
    ],
    "dates": {
@@ -1780,7 +1780,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 190.0,
     "protectionPct": 100.0
    },
-   "perfPct": -14.1
+   "perfPct": -14.2
   },
   {
    "isin": "RU000A10BUE6",
@@ -1803,9 +1803,9 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 58.857,
-     "px": 50.546,
-     "pxTime": "2026-11-24",
-     "perfPct": -14.1
+     "px": 50.5,
+     "pxTime": "2026-11-25",
+     "perfPct": -14.2
     }
    ],
    "dates": {
@@ -1821,7 +1821,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 300.0,
     "protectionPct": 100.0
    },
-   "perfPct": -14.1
+   "perfPct": -14.2
   },
   {
    "isin": "RU000A10B9V9",
@@ -1844,9 +1844,9 @@ window.PLACEMENTS_DATA = {
      "n": "iShares Bitcoin Trust ETF",
      "w": 1.0,
      "f0": 58.67,
-     "px": 33.64,
-     "pxTime": "2026-11-24",
-     "perfPct": -42.7
+     "px": 33.76,
+     "pxTime": "2026-11-25",
+     "perfPct": -42.5
     }
    ],
    "dates": {
@@ -1862,7 +1862,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 100.0,
     "protectionPct": 100.0
    },
-   "perfPct": -42.7
+   "perfPct": -42.5
   },
   {
    "isin": "RU000A10BA19",
@@ -1885,9 +1885,9 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 54.73,
-     "px": 50.546,
-     "pxTime": "2026-11-24",
-     "perfPct": -7.6
+     "px": 50.5,
+     "pxTime": "2026-11-25",
+     "perfPct": -7.7
     }
    ],
    "dates": {
@@ -1903,7 +1903,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 190.0,
     "protectionPct": 100.0
    },
-   "perfPct": -7.6
+   "perfPct": -7.7
   },
   {
    "isin": "RU000A10BA01",
@@ -1917,7 +1917,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2025-05-06",
    "maturity": "2028-05-19",
    "fx": true,
-   "bid": 89.5,
+   "bid": 89.25,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -1926,9 +1926,9 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 52.942,
-     "px": 50.546,
-     "pxTime": "2026-11-24",
-     "perfPct": -4.5
+     "px": 50.5,
+     "pxTime": "2026-11-25",
+     "perfPct": -4.6
     }
    ],
    "dates": {
@@ -1944,7 +1944,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 190.0,
     "protectionPct": 100.0
    },
-   "perfPct": -4.5
+   "perfPct": -4.6
   },
   {
    "isin": "RU000A10B9Z0",
@@ -1967,9 +1967,9 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 53.078,
-     "px": 50.546,
-     "pxTime": "2026-11-24",
-     "perfPct": -4.8
+     "px": 50.5,
+     "pxTime": "2026-11-25",
+     "perfPct": -4.9
     }
    ],
    "dates": {
@@ -1985,7 +1985,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 150.0,
     "protectionPct": 95.0
    },
-   "perfPct": -4.8
+   "perfPct": -4.9
   },
   {
    "isin": "RU000A10B9U1",
@@ -2008,9 +2008,9 @@ window.PLACEMENTS_DATA = {
      "n": "Currency Pair USD/RUB",
      "w": 1.0,
      "f0": 81.5616,
-     "px": 82.535,
-     "pxTime": "2026-11-24",
-     "perfPct": 1.2
+     "px": 82.68,
+     "pxTime": "2026-11-25",
+     "perfPct": 1.4
     }
    ],
    "dates": {
@@ -2026,7 +2026,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 145.0,
     "protectionPct": 95.0
    },
-   "perfPct": 1.2
+   "perfPct": 1.4
   },
   {
    "isin": "RU000A10A9F3",
@@ -2049,36 +2049,36 @@ window.PLACEMENTS_DATA = {
      "n": "МКПАО \"Хэдхантер\"",
      "w": 1.0,
      "f0": 3183.0,
-     "px": 2576.0,
-     "pxTime": "2026-11-24",
-     "perfPct": -19.1
+     "px": 2567.0,
+     "pxTime": "2026-11-25",
+     "perfPct": -19.4
     },
     {
      "t": "MOEX",
      "n": "МосБиржа",
      "w": 1.0,
      "f0": 201.8,
-     "px": 159.07,
-     "pxTime": "2026-11-24",
-     "perfPct": -21.2
+     "px": 158.65,
+     "pxTime": "2026-11-25",
+     "perfPct": -21.4
     },
     {
      "t": "TATN",
      "n": "Татнефть (ао)",
      "w": 1.0,
      "f0": 682.3,
-     "px": 544.7,
-     "pxTime": "2026-11-24",
-     "perfPct": -20.2
+     "px": 541.4,
+     "pxTime": "2026-11-25",
+     "perfPct": -20.7
     },
     {
      "t": "X5",
      "n": "Корпоративный центр ИКС 5",
      "w": 1.0,
      "f0": 3528.0,
-     "px": 2324.0,
-     "pxTime": "2026-11-24",
-     "perfPct": -34.1
+     "px": 2338.0,
+     "pxTime": "2026-11-25",
+     "perfPct": -33.7
     }
    ],
    "dates": {
@@ -2099,7 +2099,7 @@ window.PLACEMENTS_DATA = {
      "barrierPct": null
     }
    },
-   "perfPct": -34.1
+   "perfPct": -33.7
   },
   {
    "isin": "RU000A10A9G1",
@@ -2113,7 +2113,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2025-03-26",
    "maturity": "2027-01-29",
    "fx": false,
-   "bid": 134.5,
+   "bid": 135.75,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -2122,9 +2122,9 @@ window.PLACEMENTS_DATA = {
      "n": "SPDR S&P 500 ETF Trust",
      "w": 1.0,
      "f0": 536.7,
-     "px": 712.96,
-     "pxTime": "2026-11-24",
-     "perfPct": 32.8
+     "px": 718.78,
+     "pxTime": "2026-11-25",
+     "perfPct": 33.9
     }
    ],
    "dates": {
@@ -2140,7 +2140,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 120.0,
     "protectionPct": 100.0
    },
-   "perfPct": 32.8
+   "perfPct": 33.9
   },
   {
    "isin": "RU000A10A9C0",
@@ -2192,7 +2192,7 @@ window.PLACEMENTS_DATA = {
    "issueStart": "2025-02-21",
    "maturity": "2028-03-07",
    "fx": false,
-   "bid": 88.5,
+   "bid": 88.25,
    "kind": "participation",
    "wrapper": null,
    "basket": [
@@ -2201,9 +2201,9 @@ window.PLACEMENTS_DATA = {
      "n": "ОФЗ 26238",
      "w": 1.0,
      "f0": 53.34,
-     "px": 50.546,
-     "pxTime": "2026-11-24",
-     "perfPct": -5.2
+     "px": 50.5,
+     "pxTime": "2026-11-25",
+     "perfPct": -5.3
     }
    ],
    "dates": {
@@ -2219,7 +2219,7 @@ window.PLACEMENTS_DATA = {
     "participationPct": 200.0,
     "protectionPct": 100.0
    },
-   "perfPct": -5.2
+   "perfPct": -5.3
   },
   {
    "isin": "RU000A10A9B2",
