@@ -3,7 +3,7 @@
 // Источники: ЦБ (ключевая, RUONIA), MOEX ISS (RUSFAR, БПИФы, ОФЗ),
 // Финуслуги (вклады и накопительные счета — витрина МосБиржи).
 window.RATES = {
-  "updated": "2026-11-26 10:32",
+  "updated": "2026-11-26 13:32",
   "cbr": {
     "key": {
       "rate": 14.0,
@@ -25,13 +25,13 @@ window.RATES = {
       "id": "RUSFAR1W",
       "term": "1 неделя",
       "days": 7,
-      "rate": 13.99
+      "rate": 13.97
     },
     {
       "id": "RUSFAR2W",
       "term": "2 недели",
       "days": 14,
-      "rate": 13.97
+      "rate": 13.98
     },
     {
       "id": "RUSFAR1M",
@@ -57,7 +57,7 @@ window.RATES = {
     {
       "id": "MONY",
       "name": "АК БАРС Денежный рынок",
-      "price": 136.26,
+      "price": 136.25,
       "ter": 0.2,
       "rate": 13.75
     },
@@ -71,21 +71,21 @@ window.RATES = {
     {
       "id": "SBMM",
       "name": "Первая Сберегательный",
-      "price": 19.9355,
+      "price": 19.935,
       "ter": 0.3,
       "rate": 13.65
     },
     {
       "id": "AMNR",
       "name": "АТОН Накопительный",
-      "price": 161.045,
+      "price": 161.043,
       "ter": 0.3,
       "rate": 13.65
     },
     {
       "id": "AKMM",
       "name": "Альфа Денежный рынок",
-      "price": 182.31,
+      "price": 182.3,
       "ter": 0.69,
       "rate": 13.26
     },
@@ -103,28 +103,28 @@ window.RATES = {
       "name": "ОФЗ 26207",
       "maturity": "2027-02-03",
       "years": 0.19,
-      "rate": 13.12
+      "rate": 13.18
     },
     {
       "id": "SU26232RMFS7",
       "name": "ОФЗ 26232",
       "maturity": "2027-10-06",
       "years": 0.86,
-      "rate": 13.45
+      "rate": 13.44
     },
     {
       "id": "SU26212RMFS9",
       "name": "ОФЗ 26212",
       "maturity": "2028-01-19",
       "years": 1.15,
-      "rate": 13.4
+      "rate": 13.62
     },
     {
       "id": "SU26236RMFS8",
       "name": "ОФЗ 26236",
       "maturity": "2028-05-17",
       "years": 1.47,
-      "rate": 14.65
+      "rate": 14.76
     }
   ],
   "deposits": [
